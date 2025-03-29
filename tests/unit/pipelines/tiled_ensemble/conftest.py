@@ -12,7 +12,7 @@ import torch
 import yaml
 
 from anomalib.data import AnomalibDataModule
-from anomalib.models import AnomalyModule
+from anomalib.models import AnomalibModule
 from anomalib.pipelines.tiled_ensemble.components.utils.ensemble_tiling import EnsembleTiler
 from anomalib.pipelines.tiled_ensemble.components.utils.helper_functions import (
     get_ensemble_datamodule,
@@ -29,7 +29,7 @@ def get_ensemble_config(dataset_path: Path) -> dict:
     with Path("tests/unit/pipelines/tiled_ensemble/dummy_config.yaml").open(encoding="utf-8") as file:
         config = yaml.safe_load(file)
         # dummy dataset
-        config["data"]["init_args"]["root"] = dataset_path / "mvtec"
+        config["data"]["init_args"]["root"] = dataset_path / "mvtecad"
 
         return config
 
@@ -39,11 +39,11 @@ def get_tiler(get_ensemble_config: dict) -> EnsembleTiler:
     """Return EnsembleTiler object based on test dummy config."""
     config = get_ensemble_config
 
-    return get_ensemble_tiler(config["tiling"], config["data"])
+    return get_ensemble_tiler(config["tiling"])
 
 
 @pytest.fixture(scope="module")
-def get_model(get_ensemble_config: dict, get_tiler: EnsembleTiler) -> AnomalyModule:
+def get_model(get_ensemble_config: dict, get_tiler: EnsembleTiler) -> AnomalibModule:
     """Return model prepared for tiled ensemble training."""
     config = get_ensemble_config
     tiler = get_tiler

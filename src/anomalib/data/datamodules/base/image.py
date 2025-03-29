@@ -28,6 +28,7 @@ Example:
 import copy
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -125,6 +126,8 @@ class AnomalibDataModule(LightningDataModule, ABC):
         self._category: str = ""
 
         self._is_setup = False  # flag to track if setup has been called
+
+        self.external_collate_fn: Callable | None = None
 
     @property
     def name(self) -> str:
@@ -359,7 +362,7 @@ class AnomalibDataModule(LightningDataModule, ABC):
             shuffle=True,
             batch_size=self.train_batch_size,
             num_workers=self.num_workers,
-            collate_fn=self.train_data.collate_fn,
+            collate_fn=self.external_collate_fn or self.train_data.collate_fn,
         )
 
     def val_dataloader(self) -> EVAL_DATALOADERS:
@@ -373,7 +376,7 @@ class AnomalibDataModule(LightningDataModule, ABC):
             shuffle=False,
             batch_size=self.eval_batch_size,
             num_workers=self.num_workers,
-            collate_fn=self.val_data.collate_fn,
+            collate_fn=self.external_collate_fn or self.val_data.collate_fn,
         )
 
     def test_dataloader(self) -> EVAL_DATALOADERS:
@@ -387,7 +390,7 @@ class AnomalibDataModule(LightningDataModule, ABC):
             shuffle=False,
             batch_size=self.eval_batch_size,
             num_workers=self.num_workers,
-            collate_fn=self.test_data.collate_fn,
+            collate_fn=self.external_collate_fn or self.test_data.collate_fn,
         )
 
     def predict_dataloader(self) -> EVAL_DATALOADERS:

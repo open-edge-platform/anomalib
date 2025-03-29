@@ -1,45 +1,84 @@
 """Helper functions for the tiled ensemble training."""
 
-import json
-
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+import json
+import logging
 from pathlib import Path
 
 from jsonargparse import ArgumentParser, Namespace
 from lightning import Trainer
+from torchvision.transforms.v2 import Compose, Resize, Transform
 
-from anomalib.data import AnomalibDataModule, get_datamodule
-from anomalib.models import AnomalyModule, get_model
+from anomalib.data import AnomalibDataModule, ImageBatch, get_datamodule
+from anomalib.models import AnomalibModule, get_model
 from anomalib.utils.normalization import NormalizationMethod
 
 from . import NormalizationStage
 from .ensemble_engine import TiledEnsembleEngine
 from .ensemble_tiling import EnsembleTiler, TileCollater
 
+logger = logging.getLogger(__name__)
 
-def get_ensemble_datamodule(data_args: dict, tiler: EnsembleTiler, tile_index: tuple[int, int]) -> AnomalibDataModule:
+
+def get_ensemble_datamodule(config: dict, tiler: EnsembleTiler, tile_index: tuple[int, int]) -> AnomalibDataModule:
     """Get Anomaly Datamodule adjusted for use in ensemble.
 
     Datamodule collate function gets replaced by TileCollater in order to tile all images before they are passed on.
 
     Args:
-        data_args: tiled ensemble data configuration.
+        config: tiled ensemble data configuration.
         tiler (EnsembleTiler): Tiler used to split the images to tiles for use in ensemble.
         tile_index (tuple[int, int]): Index of the tile in the split image.
 
     Returns:
         AnomalibDataModule: Anomalib Lightning DataModule
     """
-    datamodule = get_datamodule(data_args)
-    # set custom collate function that does the tiling
-    datamodule.collate_fn = TileCollater(tiler, tile_index)
+    datamodule = get_datamodule(config)
+
+    # add tiled ensemble image_size transform to datamodule
+    setup_transforms(datamodule, config)
+    datamodule.external_collate_fn = TileCollater(tiler, tile_index, default_collate_fn=ImageBatch.collate)
     datamodule.setup()
 
     return datamodule
 
 
-def get_ensemble_model(model_args: dict, tiler: EnsembleTiler) -> AnomalyModule:
+def setup_transforms(datamodule: AnomalibDataModule, config: dict) -> None:
+    """Modify datamodule resize transforms so the effective ensemble image_size is correct.
+
+    Args:
+        datamodule: datamodule where resize transform will be setup.
+        config: tiled ensemble config
+
+    """
+    tiled_ens_size = config["tiling"]["image_size"]
+    resize_transform = Resize(tiled_ens_size)
+
+    for subset_name in ["train", "val", "test"]:
+        default_aug = getattr(datamodule, f"{subset_name}_augmentations", None)
+
+        if isinstance(default_aug, Resize):
+            msg = f"Conflicting resize shapes found between dataset augmentations and tiled ensemble size. \
+                You are using a Resize transform in your input data augmentations. Please be aware that the \
+                tiled ensemble image size is determined by tiling config. The final effective input size as \
+                seen by individual model will be determined by the tile_size. To change \
+                the effective ensemble input size, please change the image_size in the tiling config. \
+                Augmentations: {default_aug.size}, Tiled ensemble base size: {tiled_ens_size}"
+            logger.warning(msg)
+            augmentations = resize_transform
+        elif isinstance(default_aug, Compose):
+            augmentations = Compose([*default_aug.transforms, resize_transform])
+        elif isinstance(default_aug, Transform):
+            augmentations = Compose([default_aug, resize_transform])
+        else:
+            augmentations = resize_transform
+        # add augmentations with resize to datamodule, ensuring that output images match effective size
+        setattr(datamodule, f"{subset_name}_augmentations", augmentations)
+
+
+def get_ensemble_model(model_args: dict, tiler: EnsembleTiler) -> AnomalibModule:
     """Get model prepared for ensemble training.
 
     Args:
@@ -56,12 +95,11 @@ def get_ensemble_model(model_args: dict, tiler: EnsembleTiler) -> AnomalyModule:
     return model
 
 
-def get_ensemble_tiler(tiling_args: dict, data_args: dict) -> EnsembleTiler:
+def get_ensemble_tiler(tiling_args: dict) -> EnsembleTiler:
     """Get tiler used for image tiling and to obtain tile dimensions.
 
     Args:
         tiling_args: tiled ensemble tiling configuration.
-        data_args: tiled ensemble data configuration.
 
     Returns:
         EnsembleTiler: tiler object.
@@ -69,7 +107,7 @@ def get_ensemble_tiler(tiling_args: dict, data_args: dict) -> EnsembleTiler:
     tiler = EnsembleTiler(
         tile_size=tiling_args["tile_size"],
         stride=tiling_args["stride"],
-        image_size=data_args["init_args"]["image_size"],
+        image_size=tiling_args["image_size"],
     )
 
     return tiler  # noqa: RET504

@@ -13,18 +13,18 @@ from anomalib.pipelines.tiled_ensemble.components.utils.helper_functions import 
 
 tiler_config = {
     "tiling": {
+        "image_size": 512,
         "tile_size": 256,
         "stride": 256,
     },
-    "data": {"init_args": {"image_size": 512}},
 }
 
 tiler_config_overlap = {
     "tiling": {
+        "image_size": 512,
         "tile_size": 256,
         "stride": 128,
     },
-    "data": {"init_args": {"image_size": 512}},
 }
 
 
@@ -44,8 +44,8 @@ class TestTiler:
     def test_basic_tile_for_ensemble(input_shape: torch.Size, config: dict, expected_shape: torch.Size) -> None:
         """Test basic tiling of data."""
         config = copy.deepcopy(config)
-        config["data"]["init_args"]["image_size"] = input_shape[-1]
-        tiler = get_ensemble_tiler(config["tiling"], config["data"])
+        config["tiling"]["image_size"] = input_shape[-1]
+        tiler = get_ensemble_tiler(config["tiling"])
 
         images = torch.rand(size=input_shape)
         tiled = tiler.tile(images)
@@ -65,9 +65,9 @@ class TestTiler:
     def test_basic_tile_reconstruction(input_shape: torch.Size, config: dict) -> None:
         """Test basic reconstruction of tiled data."""
         config = copy.deepcopy(config)
-        config["data"]["init_args"]["image_size"] = input_shape[-1]
+        config["tiling"]["image_size"] = input_shape[-1]
 
-        tiler = get_ensemble_tiler(config["tiling"], config["data"])
+        tiler = get_ensemble_tiler(config["tiling"])
 
         images = torch.rand(size=input_shape)
         tiled = tiler.tile(images.clone())
@@ -87,10 +87,10 @@ class TestTiler:
     def test_untile_different_instance(input_shape: torch.Size, config: dict) -> None:
         """Test untiling with different Tiler instance."""
         config = copy.deepcopy(config)
-        config["data"]["init_args"]["image_size"] = input_shape[-1]
-        tiler_1 = get_ensemble_tiler(config["tiling"], config["data"])
+        config["tiling"]["image_size"] = input_shape[-1]
+        tiler_1 = get_ensemble_tiler(config["tiling"])
 
-        tiler_2 = get_ensemble_tiler(config["tiling"], config["data"])
+        tiler_2 = get_ensemble_tiler(config["tiling"])
 
         images = torch.rand(size=input_shape)
         tiled = tiler_1.tile(images.clone())
@@ -115,5 +115,5 @@ class TestTileCollater:
         tile_w, tile_h = config["tiling"]["tile_size"]
 
         batch = next(iter(datamodule.train_dataloader()))
-        assert batch["image"].shape[1:] == (3, tile_w, tile_h)
-        assert batch["mask"].shape[1:] == (tile_w, tile_h)
+        assert batch.image.shape[1:] == (3, tile_w, tile_h)
+        assert batch.gt_mask.shape[1:] == (tile_w, tile_h)

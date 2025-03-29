@@ -1,14 +1,13 @@
 """Tiler used with ensemble of models."""
 
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Any
 
 from torch import Tensor
 
-from anomalib.data.base.datamodule import collate_fn
 from anomalib.data.utils.tiler import Tiler, compute_new_image_size
 
 
@@ -115,11 +114,13 @@ class TileCollater:
     Args:
         tiler (EnsembleTiler): Tiler used to split the images to tiles.
         tile_index (tuple[int, int]): Index of tile we want to return.
+        default_collate_fn (callable): default collate function from dataset
     """
 
-    def __init__(self, tiler: EnsembleTiler, tile_index: tuple[int, int]) -> None:
+    def __init__(self, tiler: EnsembleTiler, tile_index: tuple[int, int], default_collate_fn: Callable) -> None:
         self.tiler = tiler
         self.tile_index = tile_index
+        self.default_collate_fn = default_collate_fn
 
     def __call__(self, batch: list) -> dict[str, Any]:
         """Collate batch and tile images + masks from batch.
@@ -131,17 +132,17 @@ class TileCollater:
             dict[str, Any]: Collated batch dictionary with tiled images.
         """
         # use default collate
-        coll_batch = collate_fn(batch)
+        coll_batch = self.default_collate_fn(batch)
 
-        tiled_images = self.tiler.tile(coll_batch["image"])
+        tiled_images = self.tiler.tile(coll_batch.image)
         # return only tiles at given index
-        coll_batch["image"] = tiled_images[self.tile_index]
+        coll_batch.image = tiled_images[self.tile_index]
 
-        if "mask" in coll_batch:
+        if hasattr(coll_batch, "gt_mask"):
             # insert channel (as mask has just one)
-            tiled_masks = self.tiler.tile(coll_batch["mask"].unsqueeze(1))
+            tiled_masks = self.tiler.tile(coll_batch.gt_mask.unsqueeze(1))
 
             # return only tiled at given index, squeeze to remove previously added channel
-            coll_batch["mask"] = tiled_masks[self.tile_index].squeeze(1)
+            coll_batch.gt_mask = tiled_masks[self.tile_index].squeeze(1)
 
         return coll_batch
