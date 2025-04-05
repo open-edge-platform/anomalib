@@ -28,7 +28,7 @@ class TestHelperFunctions:
         """Test that datamodule is created and has correct collate function."""
         config = get_ensemble_config
         tiler = get_tiler
-        datamodule = get_ensemble_datamodule(config, tiler, (0, 0))
+        datamodule = get_ensemble_datamodule(config, config["tiling"]["image_size"], tiler, (0, 0))
 
         assert isinstance(datamodule.external_collate_fn, TileCollater)
 
@@ -37,7 +37,7 @@ class TestHelperFunctions:
         """Test that datamodule is created and has correct collate function."""
         config = get_ensemble_config
         tiler = get_tiler
-        datamodule = get_ensemble_datamodule(config, tiler, (0, 0))
+        datamodule = get_ensemble_datamodule(config, config["tiling"]["image_size"], tiler, (0, 0))
 
         data = datamodule.test_data[0]
 

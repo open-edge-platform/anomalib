@@ -60,7 +60,7 @@ def get_datamodule(get_ensemble_config: dict, get_tiler: EnsembleTiler) -> Anoma
     """Return ensemble datamodule."""
     config = get_ensemble_config
     tiler = get_tiler
-    datamodule = get_ensemble_datamodule(config, tiler, (0, 0))
+    datamodule = get_ensemble_datamodule(config, config["tiling"]["image_size"], tiler, (0, 0))
     datamodule.setup()
 
     return datamodule

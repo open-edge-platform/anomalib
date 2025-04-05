@@ -52,7 +52,6 @@ class TrainModelJob(Job):
         root_dir: Path,
         tile_index: tuple[int, int],
         normalization_stage: str,
-        metrics: dict,
         trainer_args: dict | None,
         model: AnomalibModule,
         datamodule: AnomalibDataModule,
@@ -63,7 +62,6 @@ class TrainModelJob(Job):
         self.root_dir = root_dir
         self.tile_index = tile_index
         self.normalization_stage = normalization_stage
-        self.metrics = metrics
         self.trainer_args = trainer_args
         self.model = model
         self.datamodule = datamodule
@@ -173,8 +171,9 @@ class TrainModelJobGenerator(JobGenerator):
         # go over all tile positions
         for tile_index in product(range(tiler.num_patches_h), range(tiler.num_patches_w)):
             # prepare datamodule with custom collate function that only provides specific tile of image
-            datamodule = get_ensemble_datamodule(self.data_args, tiler, tile_index)
-            model = get_ensemble_model(args["model"], normalization_stage=self.normalization_stage, tiler=tiler)
+            datamodule = get_ensemble_datamodule(data_config=self.data_args, image_size=self.tiling_args["image_size"],
+                                                 tiler=tiler, tile_index=tile_index)
+            model = get_ensemble_model(model_args=args["model"], normalization_stage=self.normalization_stage, tiler=tiler)
 
             # pass root_dir to engine so all models in ensemble have the same root dir
             yield TrainModelJob(
@@ -183,7 +182,6 @@ class TrainModelJobGenerator(JobGenerator):
                 root_dir=self.root_dir,
                 tile_index=tile_index,
                 normalization_stage=self.normalization_stage,
-                metrics=args["metrics"],
                 trainer_args=args.get("trainer", {}),
                 model=model,
                 datamodule=datamodule,

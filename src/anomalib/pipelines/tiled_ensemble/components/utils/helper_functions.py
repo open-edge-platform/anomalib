@@ -21,24 +21,24 @@ from .ensemble_tiling import EnsembleTiler, TileCollater
 logger = logging.getLogger(__name__)
 
 
-def get_ensemble_datamodule(config: dict, tiler: EnsembleTiler, tile_index: tuple[int, int]) -> AnomalibDataModule:
+def get_ensemble_datamodule(data_config: dict, image_size: int | tuple[int, int], tiler: EnsembleTiler, tile_index: tuple[int, int]) -> AnomalibDataModule:
     """Get Anomaly Datamodule adjusted for use in ensemble.
 
     Datamodule collate function gets replaced by TileCollater in order to tile all images before they are passed on.
 
     Args:
-        config: tiled ensemble data configuration.
+        data_config: tiled ensemble data configuration.
         tiler (EnsembleTiler): Tiler used to split the images to tiles for use in ensemble.
         tile_index (tuple[int, int]): Index of the tile in the split image.
 
     Returns:
         AnomalibDataModule: Anomalib Lightning DataModule
     """
-    datamodule = get_datamodule(config)
+    datamodule = get_datamodule(data_config)
     datamodule.setup()
 
     # add tiled ensemble image_size transform to datamodule
-    setup_transforms(datamodule, config)
+    setup_transforms(datamodule, image_size=image_size)
     datamodule.external_collate_fn = TileCollater(tiler, tile_index, default_collate_fn=ImageBatch.collate)
     # manually set setup, so later setup doesn't override the transforms...
     datamodule._is_setup = True
@@ -46,16 +46,15 @@ def get_ensemble_datamodule(config: dict, tiler: EnsembleTiler, tile_index: tupl
     return datamodule
 
 
-def setup_transforms(datamodule: AnomalibDataModule, config: dict) -> None:
+def setup_transforms(datamodule: AnomalibDataModule, image_size: int) -> None:
     """Modify datamodule resize transforms so the effective ensemble image_size is correct.
 
     Args:
         datamodule: datamodule where resize transform will be setup.
-        config: tiled ensemble config
+        image_size (int): tiled ensemble input image size
 
     """
-    tiled_ens_size = config["tiling"]["image_size"]
-    resize_transform = Resize(tiled_ens_size)
+    resize_transform = Resize(image_size)
 
     for subset_name in ["train", "val", "test"]:
         default_aug = getattr(datamodule, f"{subset_name}_augmentations", None)
@@ -66,7 +65,7 @@ def setup_transforms(datamodule: AnomalibDataModule, config: dict) -> None:
                 tiled ensemble image size is determined by tiling config. The final effective input size as \
                 seen by individual model will be determined by the tile_size. To change \
                 the effective ensemble input size, please change the image_size in the tiling config. \
-                Augmentations: {default_aug.size}, Tiled ensemble base size: {tiled_ens_size}"
+                Augmentations: {default_aug.size}, Tiled ensemble base size: {image_size}"
             logger.warning(msg)
             augmentations = resize_transform
         elif isinstance(default_aug, Compose):
