@@ -21,14 +21,14 @@ class TestPredictionData:
         """Store the tiled predictions in the EnsemblePredictions object."""
         tile_dict = {}
         for tile_index in [(0, 0), (0, 1), (1, 0), (1, 1)]:
-            datamodule.collate_fn.tile_index = tile_index
+            datamodule.external_collate_fn.tile_index = tile_index
 
             tile_prediction = []
             for batch in iter(datamodule.train_dataloader()):
                 # set mock maps to just one channel of image
-                batch["anomaly_maps"] = batch["image"].clone()[:, 0, :, :].unsqueeze(1)
+                batch.anomaly_maps = batch.image.clone()[:, 0, :, :].unsqueeze(1)
                 # set mock pred mask to mask but add channel
-                batch["pred_masks"] = batch["mask"].clone().unsqueeze(1)
+                batch.pred_masks = batch.gt_mask.clone().unsqueeze(1)
                 tile_prediction.append(batch)
             # save original
             tile_dict[tile_index] = copy.deepcopy(tile_prediction)
@@ -48,9 +48,9 @@ class TestPredictionData:
 
             # go over all indices of current batch of stored data
             for tile_index, stored_data_batch in curr_batch.items():
-                stored_data = stored_data_batch[name]
+                stored_data = getattr(stored_data_batch, name)
                 # get original data dict at current tile index and batch index
-                original_data = tile_dict[tile_index][batch_i][name]
+                original_data = getattr(tile_dict[tile_index][batch_i], name)
                 if isinstance(original_data, Tensor):
                     if not eq_funct(original_data, stored_data):
                         return False
@@ -65,5 +65,5 @@ class TestPredictionData:
         storage = EnsemblePredictions()
         original = self.store_all(storage, datamodule)
 
-        for name in original[0, 0][0]:
+        for name in original[0, 0][0].__dict__.keys():
             assert self.verify_equal(name, original, storage, torch.equal), f"{name} doesn't match"

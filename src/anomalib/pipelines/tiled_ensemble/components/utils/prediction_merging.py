@@ -6,6 +6,8 @@
 import torch
 from torch import Tensor
 
+from anomalib.data import ImageBatch
+
 from .ensemble_tiling import EnsembleTiler
 from .prediction_data import EnsemblePredictions
 
@@ -56,11 +58,11 @@ class PredictionMergingMechanism:
             Tensor: Tensor of tiles in original (stitched) shape.
         """
         # batch of tiles with index (0, 0) always exists, so we use it to get some basic information
-        first_tiles = batch_data[0, 0][tile_key]
+        first_tiles = getattr(batch_data[0, 0], tile_key)
         batch_size = first_tiles.shape[0]
         device = first_tiles.device
 
-        if tile_key == "mask":
+        if tile_key == "gt_mask":
             # in case of ground truth masks, we don't have channels
             merged_size = [
                 self.tiler.num_patches_h,
@@ -86,16 +88,16 @@ class PredictionMergingMechanism:
 
         # insert tile into merged tensor at right locations
         for (tile_i, tile_j), tile_data in batch_data.items():
-            merged_masks[tile_i, tile_j, ...] = tile_data[tile_key]
+            merged_masks[tile_i, tile_j, ...] = getattr(tile_data, tile_key)
 
-        if tile_key == "mask":
+        if tile_key == "gt_mask":
             # add channel as tiler needs it
             merged_masks = merged_masks.unsqueeze(3)
 
         # stitch tiles back into whole, output is [B, C, H, W]
         merged_output = self.tiler.untile(merged_masks)
 
-        if tile_key == "mask":
+        if tile_key == "gt_mask":
             # remove previously added channels
             merged_output = merged_output.squeeze(1)
 
@@ -114,19 +116,19 @@ class PredictionMergingMechanism:
             dict[str, Tensor]: Dictionary with "pred_labels" and "pred_scores"
         """
         # create accumulator with same shape as original
-        labels = torch.zeros(batch_data[0, 0]["pred_labels"].shape, dtype=torch.bool)
-        scores = torch.zeros(batch_data[0, 0]["pred_scores"].shape)
+        labels = torch.zeros(batch_data[0, 0].pred_label.shape, dtype=torch.bool)
+        scores = torch.zeros(batch_data[0, 0].pred_score.shape)
 
         for curr_tile_data in batch_data.values():
-            curr_labels = curr_tile_data["pred_labels"]
-            curr_scores = curr_tile_data["pred_scores"]
+            curr_labels = curr_tile_data.pred_label
+            curr_scores = curr_tile_data.pred_score
 
             labels = labels.logical_or(curr_labels)
             scores += curr_scores
 
         scores /= self.tiler.num_tiles
 
-        return {"pred_labels": labels, "pred_scores": scores}
+        return {"pred_label": labels, "pred_score": scores}
 
     def merge_tile_predictions(self, batch_index: int) -> dict[str, Tensor | list]:
         """Join predictions from ensemble into whole image level representation for batch at index batch_index.
@@ -142,26 +144,24 @@ class PredictionMergingMechanism:
         # take first tile as base prediction, keep items that are the same over all tiles:
         # image_path, label, mask_path
         merged_predictions = {
-            "image_path": current_batch_data[0, 0]["image_path"],
-            "label": current_batch_data[0, 0]["label"],
+            "image_path": current_batch_data[0, 0].image_path,
+            "gt_label": current_batch_data[0, 0].gt_label,
         }
         if "mask_path" in current_batch_data[0, 0]:
-            merged_predictions["mask_path"] = current_batch_data[0, 0]["mask_path"]
-        if "boxes" in current_batch_data[0, 0]:
-            merged_predictions["boxes"] = current_batch_data[0, 0]["boxes"]
+            merged_predictions["mask_path"] = current_batch_data[0, 0].mask_path
 
-        tiled_data = ["image", "mask"]
-        if "anomaly_maps" in current_batch_data[0, 0]:
-            tiled_data += ["anomaly_maps", "pred_masks"]
+        tiled_data = ["image", "gt_mask"]
+        if "anomaly_map" in current_batch_data[0, 0]:
+            tiled_data += ["anomaly_map", "pred_mask"]
 
         # merge all tiled data
         for t_key in tiled_data:
-            if t_key in current_batch_data[0, 0]:
+            if hasattr(current_batch_data[0, 0], t_key):
                 merged_predictions[t_key] = self.merge_tiles(current_batch_data, t_key)
 
         # label and score merging
         merged_scores_and_labels = self.merge_labels_and_scores(current_batch_data)
-        merged_predictions["pred_labels"] = merged_scores_and_labels["pred_labels"]
-        merged_predictions["pred_scores"] = merged_scores_and_labels["pred_scores"]
+        merged_predictions["pred_label"] = merged_scores_and_labels["pred_label"]
+        merged_predictions["pred_score"] = merged_scores_and_labels["pred_score"]
 
-        return merged_predictions
+        return ImageBatch(**merged_predictions)

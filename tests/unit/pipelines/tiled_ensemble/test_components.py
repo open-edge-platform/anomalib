@@ -10,7 +10,7 @@ from tempfile import TemporaryDirectory
 import pytest
 import torch
 
-from anomalib.data import get_datamodule
+from anomalib.data import ImageBatch, get_datamodule
 from anomalib.metrics import F1AdaptiveThreshold, ManualThreshold
 from anomalib.pipelines.tiled_ensemble.components import (
     MergeJobGenerator,
@@ -23,6 +23,7 @@ from anomalib.pipelines.tiled_ensemble.components import (
 from anomalib.pipelines.tiled_ensemble.components.metrics_calculation import MetricsCalculationJob
 from anomalib.pipelines.tiled_ensemble.components.smoothing import SmoothingJob
 from anomalib.pipelines.tiled_ensemble.components.utils import NormalizationStage
+from anomalib.pipelines.tiled_ensemble.components.utils.helper_functions import setup_transforms
 from anomalib.pipelines.tiled_ensemble.components.utils.prediction_data import EnsemblePredictions
 from anomalib.pipelines.tiled_ensemble.components.utils.prediction_merging import PredictionMergingMechanism
 
@@ -38,17 +39,18 @@ class TestMerging:
 
         # prepared original data
         datamodule = get_datamodule(config)
-        datamodule.prepare_data()
         datamodule.setup()
+        # to ensure that ensemble data image size matches reference data
+        setup_transforms(datamodule, config)
         original_data = next(iter(datamodule.test_dataloader()))
 
         batch = merger.ensemble_predictions.get_batch_tiles(0)
 
         merged_image = merger.merge_tiles(batch, "image")
-        assert merged_image.equal(original_data["image"])
+        assert merged_image.equal(original_data.image)
 
-        merged_mask = merger.merge_tiles(batch, "mask")
-        assert merged_mask.equal(original_data["mask"])
+        merged_mask = merger.merge_tiles(batch, "gt_mask")
+        assert merged_mask.equal(original_data.gt_mask)
 
     @staticmethod
     def test_label_and_score_merging(get_merging_mechanism: PredictionMergingMechanism) -> None:
@@ -56,18 +58,17 @@ class TestMerging:
         merger = get_merging_mechanism
         scores = torch.rand(4, 10)
         labels = scores > 0.5
+        mock_img = torch.rand(3, 10, 10)
 
-        mock_data = {(0, 0): {}, (0, 1): {}, (1, 0): {}, (1, 1): {}}
-
-        for i, data in enumerate(mock_data.values()):
-            data["pred_scores"] = scores[i]
-            data["pred_labels"] = labels[i]
+        mock_data = {}
+        for i, idx in enumerate([(0, 0), (0, 1), (1, 0), (1, 1)]):
+            mock_data[idx] = ImageBatch(image=mock_img, pred_score=scores[i], pred_label=labels[i])
 
         merged = merger.merge_labels_and_scores(mock_data)
 
-        assert merged["pred_scores"].equal(scores.mean(dim=0))
+        assert merged["pred_score"].equal(scores.mean(dim=0))
 
-        assert merged["pred_labels"].equal(labels.any(dim=0))
+        assert merged["pred_label"].equal(labels.any(dim=0))
 
     @staticmethod
     def test_merge_job(
@@ -87,14 +88,13 @@ class TestMerging:
         merged_with_job = merging_job.run()[0]
 
         # check that merging by job is same as with the mechanism directly
-        for key, value in merged_direct.items():
+        for name in merged_direct.__dict__.keys():
+            value = getattr(merged_direct, name)
+            job_value = getattr(merged_with_job, name)
             if isinstance(value, torch.Tensor):
-                assert merged_with_job[key].equal(value)
-            elif isinstance(value, list) and isinstance(value[0], torch.Tensor):
-                # boxes
-                assert all(j.equal(d) for j, d in zip(merged_with_job[key], value, strict=False))
+                assert job_value.equal(value)
             else:
-                assert merged_with_job[key] == value
+                assert job_value == value
 
 
 class TestStatsCalculation:

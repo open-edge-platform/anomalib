@@ -81,13 +81,13 @@ def get_tile_predictions(get_datamodule: AnomalibDataModule) -> EnsemblePredicti
         batch = next(iter(datamodule.test_dataloader()))
 
         # make mock labels and scores
-        batch.pred_scores = torch.rand(batch.gt_label.shape)
-        batch.pred_labels = batch.pred_scores > 0.5
+        batch.pred_score = torch.rand(batch.gt_label.shape)
+        batch.pred_label = batch.pred_score > 0.5
 
         # set mock maps to just one channel of image
-        batch.anomaly_maps = batch.image.clone()[:, 0, :, :].unsqueeze(1)
+        batch.anomaly_map = batch.image.clone()[:, 0, :, :].unsqueeze(1)
         # set mock pred mask to mask but add channel
-        batch.pred_masks = batch.gt_mask.clone().unsqueeze(1)
+        batch.pred_mask = batch.gt_mask.clone().unsqueeze(1)
 
         tile_prediction.append(batch)
 

@@ -3,7 +3,7 @@
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from torch import Tensor
+from anomalib.data import ImageBatch
 
 
 class EnsemblePredictions:
@@ -13,7 +13,7 @@ class EnsemblePredictions:
         super().__init__()
         self.all_data: dict[tuple[int, int], list] = {}
 
-    def add_tile_prediction(self, tile_index: tuple[int, int], tile_prediction: list[dict[str, Tensor | list]]) -> None:
+    def add_tile_prediction(self, tile_index: tuple[int, int], tile_prediction: list[ImageBatch]) -> None:
         """Add tile prediction data at provided index to class dictionary in main memory.
 
         Args:
@@ -26,7 +26,7 @@ class EnsemblePredictions:
 
         self.all_data[tile_index] = tile_prediction
 
-    def get_batch_tiles(self, batch_index: int) -> dict[tuple[int, int], dict]:
+    def get_batch_tiles(self, batch_index: int) -> dict[tuple[int, int], ImageBatch]:
         """Get all tiles of current batch from class dictionary.
 
         Called by merging mechanism.

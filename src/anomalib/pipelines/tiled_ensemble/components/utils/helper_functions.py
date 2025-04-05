@@ -40,6 +40,8 @@ def get_ensemble_datamodule(config: dict, tiler: EnsembleTiler, tile_index: tupl
     # add tiled ensemble image_size transform to datamodule
     setup_transforms(datamodule, config)
     datamodule.external_collate_fn = TileCollater(tiler, tile_index, default_collate_fn=ImageBatch.collate)
+    # manually set setup, so later setup doesn't override the transforms...
+    datamodule._is_setup = True
 
     return datamodule
 

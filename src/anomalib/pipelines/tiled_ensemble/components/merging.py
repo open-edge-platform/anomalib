@@ -102,7 +102,7 @@ class MergeJobGenerator(JobGenerator):
         """
         del args  # args not used here
 
-        tiler = get_ensemble_tiler(self.tiling_args, self.data_args)
+        tiler = get_ensemble_tiler(self.tiling_args)
         if prev_stage_result is not None:
             yield MergeJob(prev_stage_result, tiler)
         else:
