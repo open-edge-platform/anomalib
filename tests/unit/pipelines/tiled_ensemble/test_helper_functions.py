@@ -24,13 +24,25 @@ class TestHelperFunctions:
     """Test ensemble helper functions."""
 
     @staticmethod
-    def test_ensemble_datamodule(get_ensemble_config: dict, get_tiler: EnsembleTiler) -> None:
+    def test_ensemble_datamodule_collate_attr(get_ensemble_config: dict, get_tiler: EnsembleTiler) -> None:
         """Test that datamodule is created and has correct collate function."""
         config = get_ensemble_config
         tiler = get_tiler
         datamodule = get_ensemble_datamodule(config, tiler, (0, 0))
 
         assert isinstance(datamodule.external_collate_fn, TileCollater)
+
+    @staticmethod
+    def test_ensemble_datamodule_img_size(get_ensemble_config: dict, get_tiler: EnsembleTiler) -> None:
+        """Test that datamodule is created and has correct collate function."""
+        config = get_ensemble_config
+        tiler = get_tiler
+        datamodule = get_ensemble_datamodule(config, tiler, (0, 0))
+
+        data = datamodule.test_data[0]
+
+        # check that transforms were correctly set to dataset
+        assert list(data.image.shape[1:]) == config["tiling"]["image_size"]
 
     @staticmethod
     def test_ensemble_model(get_ensemble_config: dict, get_tiler: EnsembleTiler) -> None:

@@ -35,11 +35,11 @@ def get_ensemble_datamodule(config: dict, tiler: EnsembleTiler, tile_index: tupl
         AnomalibDataModule: Anomalib Lightning DataModule
     """
     datamodule = get_datamodule(config)
+    datamodule.setup()
 
     # add tiled ensemble image_size transform to datamodule
     setup_transforms(datamodule, config)
     datamodule.external_collate_fn = TileCollater(tiler, tile_index, default_collate_fn=ImageBatch.collate)
-    datamodule.setup()
 
     return datamodule
 
@@ -73,12 +73,18 @@ def setup_transforms(datamodule: AnomalibDataModule, config: dict) -> None:
             augmentations = Compose([default_aug, resize_transform])
         else:
             augmentations = resize_transform
-        # add augmentations with resize to datamodule, ensuring that output images match effective size
+        # add augmentations with resize to datamodule and datasets, ensuring that output images match effective size
         setattr(datamodule, f"{subset_name}_augmentations", augmentations)
+        data_subset = getattr(datamodule, f"{subset_name}_data", None)
+        if data_subset is not None:
+            data_subset.augmentations = augmentations
 
 
 def get_ensemble_model(
-    model_args: dict, threshold_stage: ThresholdStage, normalization_stage: NormalizationStage, tiler: EnsembleTiler
+    model_args: dict,
+    threshold_stage: ThresholdStage,
+    normalization_stage: NormalizationStage,
+    tiler: EnsembleTiler,
 ) -> AnomalibModule:
     """Get model prepared for ensemble training.
 

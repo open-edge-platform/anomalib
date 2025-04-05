@@ -75,19 +75,19 @@ def get_tile_predictions(get_datamodule: AnomalibDataModule) -> EnsemblePredicti
     data = EnsemblePredictions()
 
     for tile_index in [(0, 0), (0, 1), (1, 0), (1, 1)]:
-        datamodule.collate_fn.tile_index = tile_index
+        datamodule.external_collate_fn.tile_index = tile_index
 
         tile_prediction = []
         batch = next(iter(datamodule.test_dataloader()))
 
         # make mock labels and scores
-        batch["pred_scores"] = torch.rand(batch["label"].shape)
-        batch["pred_labels"] = batch["pred_scores"] > 0.5
+        batch.pred_scores = torch.rand(batch.gt_label.shape)
+        batch.pred_labels = batch.pred_scores > 0.5
 
         # set mock maps to just one channel of image
-        batch["anomaly_maps"] = batch["image"].clone()[:, 0, :, :].unsqueeze(1)
+        batch.anomaly_maps = batch.image.clone()[:, 0, :, :].unsqueeze(1)
         # set mock pred mask to mask but add channel
-        batch["pred_masks"] = batch["mask"].clone().unsqueeze(1)
+        batch.pred_masks = batch.gt_mask.clone().unsqueeze(1)
 
         tile_prediction.append(batch)
 
