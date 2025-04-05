@@ -9,7 +9,7 @@ import pytest
 from jsonargparse import Namespace
 from lightning.pytorch.callbacks import EarlyStopping
 
-from anomalib.pipelines.tiled_ensemble.components.utils import NormalizationStage, ThresholdStage
+from anomalib.pipelines.tiled_ensemble.components.utils import NormalizationStage, ThresholdingStage
 from anomalib.pipelines.tiled_ensemble.components.utils.ensemble_tiling import EnsembleTiler, TileCollater
 from anomalib.pipelines.tiled_ensemble.components.utils.helper_functions import (
     get_ensemble_datamodule,
@@ -52,7 +52,6 @@ class TestHelperFunctions:
         model = get_ensemble_model(
             config["TrainModels"]["model"],
             tiler=tiler,
-            threshold_stage=config["thresholding_stage"],
             normalization_stage=config["normalization_stage"],
         )
 
@@ -70,7 +69,6 @@ class TestHelperFunctions:
         model = get_ensemble_model(
             config["TrainModels"]["model"],
             tiler=tiler,
-            threshold_stage=config["thresholding_stage"],
             normalization_stage=normalization_stage,
         )
 
@@ -78,27 +76,6 @@ class TestHelperFunctions:
             assert model.post_processor.enable_normalization
         else:
             assert not model.post_processor.enable_normalization
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "threshold_stage",
-        [ThresholdStage.TILE, ThresholdStage.IMAGE],
-    )
-    def test_thresholding_stage(get_ensemble_config: dict, get_tiler: EnsembleTiler, threshold_stage) -> None:
-        """Test that model postprocessor has thresholding enabled only on tile level."""
-        config = get_ensemble_config
-        tiler = get_tiler
-        model = get_ensemble_model(
-            config["TrainModels"]["model"],
-            tiler=tiler,
-            threshold_stage=threshold_stage,
-            normalization_stage=config["normalization_stage"],
-        )
-
-        if threshold_stage == NormalizationStage.TILE:
-            assert model.post_processor.enable_thresholding
-        else:
-            assert not model.post_processor.enable_thresholding
 
     @staticmethod
     def test_tiler(get_ensemble_config: dict) -> None:

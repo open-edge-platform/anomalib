@@ -20,7 +20,7 @@ from anomalib.pipelines.tiled_ensemble.components import (
     ThresholdingJobGenerator,
     VisualizationJobGenerator,
 )
-from anomalib.pipelines.tiled_ensemble.components.utils import NormalizationStage, PredictData, ThresholdStage
+from anomalib.pipelines.tiled_ensemble.components.utils import NormalizationStage, PredictData, ThresholdingStage
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class EvalTiledEnsemble(Pipeline):
         tiling_args = args["tiling"]
         data_args = args["data"]
         normalization_stage = NormalizationStage(args["normalization_stage"])
-        threshold_stage = ThresholdStage(args["thresholding"]["stage"])
+        threshold_stage = ThresholdingStage(args["thresholding"]["stage"])
         model_args = args["TrainModels"]["model"]
         task = args["data"]["init_args"]["task"]
         metrics = args["TrainModels"]["metrics"]
@@ -101,7 +101,7 @@ class EvalTiledEnsemble(Pipeline):
         if normalization_stage == NormalizationStage.IMAGE:
             runners.append(SerialRunner(NormalizationJobGenerator(self.root_dir)))
         # 5. (optional) threshold to get labels from scores
-        if threshold_stage == ThresholdStage.IMAGE:
+        if threshold_stage == ThresholdingStage.IMAGE:
             runners.append(SerialRunner(ThresholdingJobGenerator(self.root_dir, normalization_stage)))
 
         # 6. visualize predictions

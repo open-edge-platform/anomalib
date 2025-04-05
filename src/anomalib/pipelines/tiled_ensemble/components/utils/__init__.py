@@ -19,7 +19,7 @@ class NormalizationStage(str, Enum):
     NONE = "none"
 
 
-class ThresholdStage(str, Enum):
+class ThresholdingStage(str, Enum):
     """Enum signaling at which stage the thresholding is applied.
 
     In case of tile, thresholding is applied for each tile location separately.
@@ -39,6 +39,6 @@ class PredictData(Enum):
 
 __all__ = [
     "NormalizationStage",
-    "ThresholdStage",
+    "ThresholdingStage",
     "PredictData",
 ]

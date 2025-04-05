@@ -11,11 +11,11 @@ from pathlib import Path
 from lightning import seed_everything
 
 from anomalib.data import AnomalibDataModule
-from anomalib.models import AnomalyModule
+from anomalib.models import AnomalibModule
 from anomalib.pipelines.components import Job, JobGenerator
 from anomalib.pipelines.types import GATHERED_RESULTS, PREV_STAGE_RESULT
 
-from .utils import NormalizationStage
+from .utils import NormalizationStage, ThresholdingStage
 from .utils.ensemble_engine import TiledEnsembleEngine
 from .utils.helper_functions import (
     get_ensemble_datamodule,
@@ -54,7 +54,7 @@ class TrainModelJob(Job):
         normalization_stage: str,
         metrics: dict,
         trainer_args: dict | None,
-        model: AnomalyModule,
+        model: AnomalibModule,
         datamodule: AnomalibDataModule,
     ) -> None:
         super().__init__()
@@ -94,8 +94,6 @@ class TrainModelJob(Job):
             accelerator=self.accelerator,
             devices=devices,
             root_dir=self.root_dir,
-            normalization_stage=self.normalization_stage,
-            metrics=self.metrics,
             trainer_args=self.trainer_args,
         )
         engine.fit(model=self.model, datamodule=self.datamodule)
@@ -166,7 +164,7 @@ class TrainModelJobGenerator(JobGenerator):
             raise ValueError(msg)
 
         # tiler used for splitting the image and getting the tile count
-        tiler = get_ensemble_tiler(self.tiling_args, self.data_args)
+        tiler = get_ensemble_tiler(self.tiling_args)
 
         logger.info(
             "Tiled ensemble training started. Separate models will be trained for %d tile locations.",
@@ -176,7 +174,7 @@ class TrainModelJobGenerator(JobGenerator):
         for tile_index in product(range(tiler.num_patches_h), range(tiler.num_patches_w)):
             # prepare datamodule with custom collate function that only provides specific tile of image
             datamodule = get_ensemble_datamodule(self.data_args, tiler, tile_index)
-            model = get_ensemble_model(args["model"], tiler)
+            model = get_ensemble_model(args["model"], normalization_stage=self.normalization_stage, tiler=tiler)
 
             # pass root_dir to engine so all models in ensemble have the same root dir
             yield TrainModelJob(

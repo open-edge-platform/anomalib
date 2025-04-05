@@ -11,12 +11,12 @@ from .prediction import PredictJobGenerator
 from .smoothing import SmoothingJobGenerator
 from .stats_calculation import StatisticsJobGenerator
 from .thresholding import ThresholdingJobGenerator
-from .utils import NormalizationStage, PredictData, ThresholdStage
+from .utils import NormalizationStage, PredictData, ThresholdingStage
 from .visualization import VisualizationJobGenerator
 
 __all__ = [
     "NormalizationStage",
-    "ThresholdStage",
+    "ThresholdingStage",
     "PredictData",
     "TrainModelJobGenerator",
     "PredictJobGenerator",

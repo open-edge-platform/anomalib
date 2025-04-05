@@ -14,7 +14,7 @@ from torchvision.transforms.v2 import Compose, Resize, Transform
 from anomalib.data import AnomalibDataModule, ImageBatch, get_datamodule
 from anomalib.models import AnomalibModule, get_model
 
-from . import NormalizationStage, ThresholdStage
+from . import NormalizationStage, ThresholdingStage
 from .ensemble_engine import TiledEnsembleEngine
 from .ensemble_tiling import EnsembleTiler, TileCollater
 
@@ -84,7 +84,6 @@ def setup_transforms(datamodule: AnomalibDataModule, config: dict) -> None:
 
 def get_ensemble_model(
     model_args: dict,
-    threshold_stage: ThresholdStage,
     normalization_stage: NormalizationStage,
     tiler: EnsembleTiler,
 ) -> AnomalibModule:
@@ -92,7 +91,6 @@ def get_ensemble_model(
 
     Args:
         model_args (dict): tiled ensemble model configuration.
-        threshold_stage (ThresholdStage): stage when thresholding performed.
         normalization_stage (NormalizationStage): stage when normalization performed.
         tiler (EnsembleTiler): tiler used to get tile dimensions.
 
@@ -102,8 +100,7 @@ def get_ensemble_model(
     model: AnomalibModule = get_model(model_args)
     # set model input size match tile size
     model.pre_processor = model.configure_pre_processor((tiler.tile_size_h, tiler.tile_size_w))
-    # set model normalisation and thresholding only if the stage is set to tile level
-    model.post_processor.enable_thresholding = threshold_stage == ThresholdStage.TILE
+    # set model normalisation only if the stage is set to tile level (but thresholding is always applied)
     model.post_processor.enable_normalization = normalization_stage == NormalizationStage.TILE
 
     return model
