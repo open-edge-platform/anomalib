@@ -8,9 +8,7 @@ tiling:
   stride: 50
 
 normalization_stage: image # on what level we normalize, options: [tile, image, none]
-thresholding:
-  method: F1AdaptiveThreshold # refer to documentation for thresholding methods
-  stage: image # stage at which we apply threshold, options: [tile, image]
+thresholding_stage: image # stage at which we apply threshold, options: [tile, image]
 
 data:
   class_path: anomalib.data.MVTecAD

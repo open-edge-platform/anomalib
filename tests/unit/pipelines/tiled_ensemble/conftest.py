@@ -48,7 +48,12 @@ def get_model(get_ensemble_config: dict, get_tiler: EnsembleTiler) -> AnomalibMo
     config = get_ensemble_config
     tiler = get_tiler
 
-    return get_ensemble_model(config["TrainModels"]["model"], tiler)
+    return get_ensemble_model(
+        config["TrainModels"]["model"],
+        tiler=tiler,
+        threshold_stage=config["thresholding_stage"],
+        normalization_stage=config["normalization_stage"],
+    )
 
 
 @pytest.fixture(scope="module")

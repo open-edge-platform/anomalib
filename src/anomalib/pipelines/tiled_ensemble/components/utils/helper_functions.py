@@ -13,9 +13,8 @@ from torchvision.transforms.v2 import Compose, Resize, Transform
 
 from anomalib.data import AnomalibDataModule, ImageBatch, get_datamodule
 from anomalib.models import AnomalibModule, get_model
-from anomalib.utils.normalization import NormalizationMethod
 
-from . import NormalizationStage
+from . import NormalizationStage, ThresholdStage
 from .ensemble_engine import TiledEnsembleEngine
 from .ensemble_tiling import EnsembleTiler, TileCollater
 
@@ -78,19 +77,26 @@ def setup_transforms(datamodule: AnomalibDataModule, config: dict) -> None:
         setattr(datamodule, f"{subset_name}_augmentations", augmentations)
 
 
-def get_ensemble_model(model_args: dict, tiler: EnsembleTiler) -> AnomalibModule:
+def get_ensemble_model(
+    model_args: dict, threshold_stage: ThresholdStage, normalization_stage: NormalizationStage, tiler: EnsembleTiler
+) -> AnomalibModule:
     """Get model prepared for ensemble training.
 
     Args:
-        model_args: tiled ensemble model configuration.
+        model_args (dict): tiled ensemble model configuration.
+        threshold_stage (ThresholdStage): stage when thresholding performed.
+        normalization_stage (NormalizationStage): stage when normalization performed.
         tiler (EnsembleTiler): tiler used to get tile dimensions.
 
     Returns:
         AnomalyModule: model with input_size setup
     """
-    model = get_model(model_args)
+    model: AnomalibModule = get_model(model_args)
     # set model input size match tile size
-    model.set_input_size((tiler.tile_size_h, tiler.tile_size_w))
+    model.pre_processor = model.configure_pre_processor((tiler.tile_size_h, tiler.tile_size_w))
+    # set model normalisation and thresholding only if the stage is set to tile level
+    model.post_processor.enable_thresholding = threshold_stage == ThresholdStage.TILE
+    model.post_processor.enable_normalization = normalization_stage == NormalizationStage.TILE
 
     return model
 
@@ -142,8 +148,6 @@ def get_ensemble_engine(
     accelerator: str,
     devices: list[int] | str | int,
     root_dir: Path,
-    normalization_stage: str,
-    metrics: dict | None = None,
     trainer_args: dict | None = None,
 ) -> TiledEnsembleEngine:
     """Prepare engine for ensemble training or prediction.
@@ -155,19 +159,11 @@ def get_ensemble_engine(
         accelerator (str): Accelerator (device) to use.
         devices (list[int] | str | int): device IDs used for training.
         root_dir (Path): Root directory to save checkpoints, stats and images.
-        normalization_stage (str): Config dictionary for ensemble post-processing.
-        metrics (dict): Dict containing pixel and image metrics names.
         trainer_args (dict): Trainer args dictionary. Empty dict if not present.
 
     Returns:
         TiledEnsembleEngine: set up engine for ensemble training/prediction.
     """
-    # if we want tile level normalization we set it here, otherwise it's done later on joined images
-    if normalization_stage == NormalizationStage.TILE:
-        normalization = NormalizationMethod.MIN_MAX
-    else:
-        normalization = NormalizationMethod.NONE
-
     # parse additional trainer args and callbacks if present in config
     trainer_kwargs = parse_trainer_kwargs(trainer_args)
     # remove keys that we already have
@@ -178,12 +174,9 @@ def get_ensemble_engine(
     # create engine for specific tile location
     engine = TiledEnsembleEngine(
         tile_index=tile_index,
-        normalization=normalization,
         accelerator=accelerator,
         devices=devices,
         default_root_dir=root_dir,
-        image_metrics=metrics.get("image", None) if metrics else None,
-        pixel_metrics=metrics.get("pixel", None) if metrics else None,
         **trainer_kwargs,
     )
 
