@@ -10,7 +10,6 @@ from typing import Any
 
 from tqdm import tqdm
 
-from anomalib.data.utils.image import save_image
 from anomalib.pipelines.components import Job, JobGenerator
 from anomalib.pipelines.tiled_ensemble.components.utils import NormalizationStage
 from anomalib.pipelines.types import GATHERED_RESULTS, RUN_RESULTS

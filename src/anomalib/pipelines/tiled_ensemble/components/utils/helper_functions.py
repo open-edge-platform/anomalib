@@ -104,7 +104,7 @@ def get_ensemble_model(model_args: dict, input_size, normalization_stage: Normal
     # since we can't modify input_size directly (needed during instantiation by some models like FastFlow)
     pre_processor = temp_model.configure_pre_processor(input_size)
     # make actual model with correct input size
-    model: AnomalibModule = get_model(model_args, pre_processor=pre_processor)
+    model: AnomalibModule = get_model(model_args, pre_processor=pre_processor, visualizer=False)
 
     # drop Resize in all cases since it gets copied to datamodule, and we don't want that!
     pre_transforms = model.pre_processor.transform

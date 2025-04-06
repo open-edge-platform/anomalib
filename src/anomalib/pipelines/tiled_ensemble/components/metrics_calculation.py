@@ -12,7 +12,6 @@ import pandas as pd
 from tqdm import tqdm
 
 from anomalib.metrics import Evaluator
-
 from anomalib.pipelines.components import Job, JobGenerator
 from anomalib.pipelines.types import GATHERED_RESULTS, PREV_STAGE_RESULT, RUN_RESULTS
 
