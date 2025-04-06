@@ -1,6 +1,6 @@
 """Fixtures that are used in tiled ensemble testing."""
 
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import json
@@ -11,7 +11,7 @@ import pytest
 import torch
 import yaml
 
-from anomalib.data import AnomalibDataModule
+from anomalib.data import AnomalibDataModule, ImageBatch
 from anomalib.models import AnomalibModule
 from anomalib.pipelines.tiled_ensemble.components.utils.ensemble_tiling import EnsembleTiler
 from anomalib.pipelines.tiled_ensemble.components.utils.helper_functions import (
@@ -101,15 +101,15 @@ def get_batch_predictions() -> list[dict]:
     """Return mock batched predictions."""
     mock_data = {
         "image": torch.rand((5, 3, 100, 100)),
-        "mask": (torch.rand((5, 100, 100)) > 0.5).type(torch.float32),
-        "anomaly_maps": torch.rand((5, 1, 100, 100)),
-        "label": torch.Tensor([0, 1, 1, 0, 1]),
-        "pred_scores": torch.rand(5),
-        "pred_labels": torch.ones(5),
-        "pred_masks": torch.zeros((5, 100, 100)),
+        "gt_mask": (torch.rand((5, 100, 100)) > 0.5).type(torch.float32),
+        "anomaly_map": torch.rand((5, 1, 100, 100)),
+        "gt_label": torch.Tensor([0, 1, 1, 0, 1]).type(torch.int32),
+        "pred_score": torch.rand(5),
+        "pred_label": torch.ones(5),
+        "pred_mask": torch.zeros((5, 100, 100)),
     }
 
-    return [mock_data, mock_data]
+    return [ImageBatch(**mock_data), ImageBatch(**mock_data)]
 
 
 @pytest.fixture(scope="module")

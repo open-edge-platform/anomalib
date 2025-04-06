@@ -326,10 +326,10 @@ class TestJoinSmoothing:
         join_index = smooth.tiler.tile_size_h, smooth.tiler.tile_size_w
 
         # join sections should be processed
-        assert not smoothed["anomaly_maps"][:, :, join_index].equal(original_data[0]["anomaly_maps"][:, :, join_index])
+        assert not smoothed.anomaly_map[:, join_index].equal(original_data[0].anomaly_map[:, join_index])
 
         # non-join section shouldn't be changed
-        assert smoothed["anomaly_maps"][:, :, 0, 0].equal(original_data[0]["anomaly_maps"][:, :, 0, 0])
+        assert smoothed.anomaly_map[:, 0, 0].equal(original_data[0].anomaly_map[:, 0, 0])
 
 
 def test_normalization(get_batch_predictions: list[dict], project_path: Path) -> None:
@@ -341,7 +341,7 @@ def test_normalization(get_batch_predictions: list[dict], project_path: Path) ->
         batch["pred_scores"] *= 100
 
     # # get and save stats using stats job on predictions
-    stats_job_generator = StatisticsJobGenerator(project_path, "F1AdaptiveThreshold")
+    stats_job_generator = StatisticsJobGenerator(project_path)
     stats_job = next(stats_job_generator.generate_jobs(prev_stage_result=original_predictions))
     stats = stats_job.run()
     stats_job.save(stats)

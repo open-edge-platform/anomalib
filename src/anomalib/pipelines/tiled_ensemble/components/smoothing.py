@@ -98,11 +98,11 @@ class SmoothingJob(Job):
 
         for data in tqdm(self.predictions, desc="Seam smoothing"):
             # move to specified accelerator for faster execution
-            data["anomaly_maps"] = data["anomaly_maps"].to(self.accelerator)
+            data.anomaly_map = data.anomaly_map.to(self.accelerator)
             # smooth the anomaly map and take only region around seams delimited by seam_mask
-            smoothed = self.blur(data["anomaly_maps"])
-            data["anomaly_maps"][:, :, self.seam_mask] = smoothed[:, :, self.seam_mask]
-            data["anomaly_maps"] = data["anomaly_maps"].cpu()
+            smoothed = self.blur(data.anomaly_map.unsqueeze(1))
+            data.anomaly_map[:, self.seam_mask] = smoothed[:, 0, self.seam_mask]
+            data.anomaly_map = data.anomaly_map.cpu()
 
         return self.predictions
 
@@ -153,7 +153,7 @@ class SmoothingJobGenerator(JobGenerator):
             msg = "SeamSmoothing job requires config args"
             raise ValueError(msg)
         # tiler is used to determine where seams appear
-        tiler = get_ensemble_tiler(self.tiling_args, self.data_args)
+        tiler = get_ensemble_tiler(self.tiling_args)
         if prev_stage_result is not None:
             yield SmoothingJob(
                 accelerator=self.accelerator,
