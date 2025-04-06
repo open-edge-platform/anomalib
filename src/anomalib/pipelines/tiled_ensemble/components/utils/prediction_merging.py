@@ -1,6 +1,6 @@
 """Class used as mechanism to merge ensemble predictions from each tile into complete whole-image representation."""
 
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import torch
@@ -62,8 +62,10 @@ class PredictionMergingMechanism:
         batch_size = first_tiles.shape[0]
         device = first_tiles.device
 
-        if tile_key == "gt_mask":
-            # in case of ground truth masks, we don't have channels
+        single_channel = False
+        if len(first_tiles.shape) == 3:
+            single_channel = True
+            # in some cases, we don't have channels but just B, H, W
             merged_size = [
                 self.tiler.num_patches_h,
                 self.tiler.num_patches_w,
@@ -72,7 +74,7 @@ class PredictionMergingMechanism:
                 self.tiler.tile_size_w,
             ]
         else:
-            # all tiles beside masks also have channels
+            # some tiles also have channels
             num_channels = first_tiles.shape[1]
             merged_size = [
                 self.tiler.num_patches_h,
@@ -84,20 +86,20 @@ class PredictionMergingMechanism:
             ]
 
         # create new empty tensor for merged tiles
-        merged_masks = torch.zeros(size=merged_size, device=device)
+        merge_buffer = torch.zeros(size=merged_size, device=device)
 
         # insert tile into merged tensor at right locations
         for (tile_i, tile_j), tile_data in batch_data.items():
-            merged_masks[tile_i, tile_j, ...] = getattr(tile_data, tile_key)
+            merge_buffer[tile_i, tile_j, ...] = getattr(tile_data, tile_key)
 
-        if tile_key == "gt_mask":
+        if single_channel:
             # add channel as tiler needs it
-            merged_masks = merged_masks.unsqueeze(3)
+            merge_buffer = merge_buffer.unsqueeze(3)
 
         # stitch tiles back into whole, output is [B, C, H, W]
-        merged_output = self.tiler.untile(merged_masks)
+        merged_output = self.tiler.untile(merge_buffer)
 
-        if tile_key == "gt_mask":
+        if single_channel:
             # remove previously added channels
             merged_output = merged_output.squeeze(1)
 
@@ -147,11 +149,11 @@ class PredictionMergingMechanism:
             "image_path": current_batch_data[0, 0].image_path,
             "gt_label": current_batch_data[0, 0].gt_label,
         }
-        if "mask_path" in current_batch_data[0, 0]:
+        if hasattr(current_batch_data[0, 0], "mask_path"):
             merged_predictions["mask_path"] = current_batch_data[0, 0].mask_path
 
         tiled_data = ["image", "gt_mask"]
-        if "anomaly_map" in current_batch_data[0, 0]:
+        if hasattr(current_batch_data[0, 0], "anomaly_map"):
             tiled_data += ["anomaly_map", "pred_mask"]
 
         # merge all tiled data

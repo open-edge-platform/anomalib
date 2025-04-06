@@ -1,6 +1,6 @@
 """Test working of tiled ensemble pipeline components."""
 
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import copy
@@ -41,7 +41,7 @@ class TestMerging:
         datamodule = get_datamodule(config)
         datamodule.setup()
         # to ensure that ensemble data image size matches reference data
-        setup_transforms(datamodule, config)
+        setup_transforms(datamodule, config["tiling"]["image_size"])
         original_data = next(iter(datamodule.test_dataloader()))
 
         batch = merger.ensemble_predictions.get_batch_tiles(0)
@@ -69,6 +69,25 @@ class TestMerging:
         assert merged["pred_score"].equal(scores.mean(dim=0))
 
         assert merged["pred_label"].equal(labels.any(dim=0))
+
+    @staticmethod
+    def test_all_merged(get_merging_mechanism: PredictionMergingMechanism) -> None:
+        """Test that all keys are present in merged output."""
+        merging_mechanism = get_merging_mechanism
+        merged_direct = merging_mechanism.merge_tile_predictions(0)
+
+        for key in [
+            "image_path",
+            "mask_path",
+            "gt_label",
+            "gt_mask",
+            "image",
+            "anomaly_map",
+            "pred_mask",
+            "pred_label",
+            "pred_score",
+        ]:
+            assert hasattr(merged_direct, key)
 
     @staticmethod
     def test_merge_job(
