@@ -1,6 +1,6 @@
 """Tiled ensemble - ensemble prediction job."""
 
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
@@ -12,7 +12,7 @@ from typing import Any
 from lightning import seed_everything
 from torch.utils.data import DataLoader
 
-from anomalib.models import AnomalyModule
+from anomalib.models import AnomalibModule
 from anomalib.pipelines.components import Job, JobGenerator
 from anomalib.pipelines.types import GATHERED_RESULTS, PREV_STAGE_RESULT
 
@@ -56,7 +56,7 @@ class PredictJob(Job):
         tile_index: tuple[int, int],
         normalization_stage: str,
         dataloader: DataLoader,
-        model: AnomalyModule | None,
+        model: AnomalibModule | None,
         engine: TiledEnsembleEngine | None,
         ckpt_path: Path | None,
     ) -> None:
@@ -102,7 +102,6 @@ class PredictJob(Job):
                 accelerator=self.accelerator,
                 devices=devices,
                 root_dir=self.root_dir,
-                normalization_stage=self.normalization_stage,
             )
 
         predictions = self.engine.predict(model=self.model, dataloaders=self.dataloader, ckpt_path=self.ckpt_path)
@@ -180,7 +179,7 @@ class PredictJobGenerator(JobGenerator):
         del args  # args not used here
 
         # tiler used for splitting the image and getting the tile count
-        tiler = get_ensemble_tiler(self.tiling_args, self.data_args)
+        tiler = get_ensemble_tiler(self.tiling_args)
 
         logger.info(
             "Tiled ensemble predicting started using %s data.",
@@ -189,7 +188,12 @@ class PredictJobGenerator(JobGenerator):
         # go over all tile positions
         for tile_index in product(range(tiler.num_patches_h), range(tiler.num_patches_w)):
             # prepare datamodule with custom collate function that only provides specific tile of image
-            datamodule = get_ensemble_datamodule(self.data_args, tiler, tile_index)
+            datamodule = get_ensemble_datamodule(
+                data_config=self.data_args,
+                image_size=self.tiling_args["image_size"],
+                tiler=tiler,
+                tile_index=tile_index,
+            )
 
             # check if predict step is positioned after training
             if prev_stage_result and tile_index in prev_stage_result:
@@ -201,7 +205,11 @@ class PredictJobGenerator(JobGenerator):
                 # any other case - predict is called standalone
                 engine = None
                 # we need to make new model instance as it's not inside engine
-                model = get_ensemble_model(self.model_args, tiler)
+                model = get_ensemble_model(
+                    model_args=self.model_args,
+                    normalization_stage=self.normalization_stage,
+                    input_size=self.tiling_args["tile_size"],
+                )
                 tile_i, tile_j = tile_index
                 # prepare checkpoint path for model on current tile location
                 ckpt_path = self.root_dir / "weights" / "lightning" / f"model{tile_i}_{tile_j}.ckpt"
@@ -210,9 +218,6 @@ class PredictJobGenerator(JobGenerator):
             dataloader = datamodule.test_dataloader()
             if self.data_source == PredictData.VAL:
                 dataloader = datamodule.val_dataloader()
-            # TODO(blaz-r): - this is tweak to avoid problem in engine:388
-            # 2254
-            dataloader.dataset.transform = None
 
             # pass root_dir to engine so all models in ensemble have the same root dir
             yield PredictJob(

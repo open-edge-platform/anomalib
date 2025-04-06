@@ -15,7 +15,7 @@ from anomalib.models import AnomalibModule
 from anomalib.pipelines.components import Job, JobGenerator
 from anomalib.pipelines.types import GATHERED_RESULTS, PREV_STAGE_RESULT
 
-from .utils import NormalizationStage, ThresholdingStage
+from .utils import NormalizationStage
 from .utils.ensemble_engine import TiledEnsembleEngine
 from .utils.helper_functions import (
     get_ensemble_datamodule,
@@ -171,9 +171,17 @@ class TrainModelJobGenerator(JobGenerator):
         # go over all tile positions
         for tile_index in product(range(tiler.num_patches_h), range(tiler.num_patches_w)):
             # prepare datamodule with custom collate function that only provides specific tile of image
-            datamodule = get_ensemble_datamodule(data_config=self.data_args, image_size=self.tiling_args["image_size"],
-                                                 tiler=tiler, tile_index=tile_index)
-            model = get_ensemble_model(model_args=args["model"], normalization_stage=self.normalization_stage, tiler=tiler)
+            datamodule = get_ensemble_datamodule(
+                data_config=self.data_args,
+                image_size=self.tiling_args["image_size"],
+                tiler=tiler,
+                tile_index=tile_index,
+            )
+            model = get_ensemble_model(
+                model_args=args["model"],
+                normalization_stage=self.normalization_stage,
+                input_size=self.tiling_args["tile_size"],
+            )
 
             # pass root_dir to engine so all models in ensemble have the same root dir
             yield TrainModelJob(

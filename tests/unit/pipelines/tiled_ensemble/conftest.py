@@ -46,12 +46,11 @@ def get_tiler(get_ensemble_config: dict) -> EnsembleTiler:
 def get_model(get_ensemble_config: dict, get_tiler: EnsembleTiler) -> AnomalibModule:
     """Return model prepared for tiled ensemble training."""
     config = get_ensemble_config
-    tiler = get_tiler
 
     return get_ensemble_model(
         config["TrainModels"]["model"],
-        tiler=tiler,
         normalization_stage=config["normalization_stage"],
+        input_size=config["tiling"]["tile_size"],
     )
 
 

@@ -13,15 +13,21 @@ from torchvision.transforms.v2 import Compose, Resize, Transform
 
 from anomalib.data import AnomalibDataModule, ImageBatch, get_datamodule
 from anomalib.models import AnomalibModule, get_model
+from anomalib.pre_processing.utils.transform import get_exportable_transform
 
-from . import NormalizationStage, ThresholdingStage
+from . import NormalizationStage
 from .ensemble_engine import TiledEnsembleEngine
 from .ensemble_tiling import EnsembleTiler, TileCollater
 
 logger = logging.getLogger(__name__)
 
 
-def get_ensemble_datamodule(data_config: dict, image_size: int | tuple[int, int], tiler: EnsembleTiler, tile_index: tuple[int, int]) -> AnomalibDataModule:
+def get_ensemble_datamodule(
+    data_config: dict,
+    image_size: int | tuple[int, int],
+    tiler: EnsembleTiler,
+    tile_index: tuple[int, int],
+) -> AnomalibDataModule:
     """Get Anomaly Datamodule adjusted for use in ensemble.
 
     Datamodule collate function gets replaced by TileCollater in order to tile all images before they are passed on.
@@ -81,24 +87,39 @@ def setup_transforms(datamodule: AnomalibDataModule, image_size: int) -> None:
             data_subset.augmentations = augmentations
 
 
-def get_ensemble_model(
-    model_args: dict,
-    normalization_stage: NormalizationStage,
-    tiler: EnsembleTiler,
-) -> AnomalibModule:
+def get_ensemble_model(model_args: dict, input_size, normalization_stage: NormalizationStage) -> AnomalibModule:
     """Get model prepared for ensemble training.
 
     Args:
         model_args (dict): tiled ensemble model configuration.
+        input_size (tuple[int, int]): individual model input size.
         normalization_stage (NormalizationStage): stage when normalization performed.
-        tiler (EnsembleTiler): tiler used to get tile dimensions.
 
     Returns:
         AnomalyModule: model with input_size setup
     """
-    model: AnomalibModule = get_model(model_args)
-    # set model input size match tile size
-    model.pre_processor = model.configure_pre_processor((tiler.tile_size_h, tiler.tile_size_w))
+    # first make temporary model to get object
+    temp_model = get_model(model_args)
+    # create custom pre_proc with correct input size
+    # since we can't modify input_size directly (needed during instantiation by some models like FastFlow)
+    pre_processor = temp_model.configure_pre_processor(input_size)
+    # make actual model with correct input size
+    model: AnomalibModule = get_model(model_args, pre_processor=pre_processor)
+
+    # drop Resize in all cases since it gets copied to datamodule, and we don't want that!
+    pre_transforms = model.pre_processor.transform
+    if isinstance(pre_transforms, Resize):
+        update_transform = []
+    elif isinstance(pre_transforms, Compose):
+        update_transform = Compose([
+            transform for transform in pre_transforms.transforms if not isinstance(transform, Resize)
+        ])
+    else:
+        update_transform = pre_transforms
+
+    model.pre_processor.transform = update_transform
+    model.pre_processor.export_transform = get_exportable_transform(update_transform)
+
     # set model normalisation only if the stage is set to tile level (but thresholding is always applied)
     model.post_processor.enable_normalization = normalization_stage == NormalizationStage.TILE
 

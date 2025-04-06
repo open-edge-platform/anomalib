@@ -9,7 +9,7 @@ import pytest
 from jsonargparse import Namespace
 from lightning.pytorch.callbacks import EarlyStopping
 
-from anomalib.pipelines.tiled_ensemble.components.utils import NormalizationStage, ThresholdingStage
+from anomalib.pipelines.tiled_ensemble.components.utils import NormalizationStage
 from anomalib.pipelines.tiled_ensemble.components.utils.ensemble_tiling import EnsembleTiler, TileCollater
 from anomalib.pipelines.tiled_ensemble.components.utils.helper_functions import (
     get_ensemble_datamodule,
@@ -48,14 +48,14 @@ class TestHelperFunctions:
     def test_ensemble_model(get_ensemble_config: dict, get_tiler: EnsembleTiler) -> None:
         """Test that model is successfully created with correct input shape."""
         config = get_ensemble_config
-        tiler = get_tiler
         model = get_ensemble_model(
             config["TrainModels"]["model"],
-            tiler=tiler,
             normalization_stage=config["normalization_stage"],
+            input_size=config["tiling"]["tile_size"],
         )
-
-        assert model.input_size == tuple(config["tiling"]["tile_size"])
+        if hasattr(model.model, "input_size"):
+            # if model has fixed input_size, it should be set to tile_size
+            assert model.model.input_size == tuple(config["tiling"]["tile_size"])
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -68,8 +68,8 @@ class TestHelperFunctions:
         tiler = get_tiler
         model = get_ensemble_model(
             config["TrainModels"]["model"],
-            tiler=tiler,
             normalization_stage=normalization_stage,
+            input_size=config["tiling"]["tile_size"],
         )
 
         if normalization_stage == NormalizationStage.TILE:
