@@ -10,12 +10,11 @@ from typing import Any
 
 from tqdm import tqdm
 
-from anomalib import TaskType
 from anomalib.data.utils.image import save_image
 from anomalib.pipelines.components import Job, JobGenerator
 from anomalib.pipelines.tiled_ensemble.components.utils import NormalizationStage
 from anomalib.pipelines.types import GATHERED_RESULTS, RUN_RESULTS
-from anomalib.utils.visualization import ImageVisualizer
+from anomalib.visualization import ImageVisualizer
 
 logger = logging.getLogger(__name__)
 
@@ -32,11 +31,10 @@ class VisualizationJob(Job):
 
     name = "Visualize"
 
-    def __init__(self, predictions: list[Any], root_dir: Path, task: TaskType, normalize: bool) -> None:
+    def __init__(self, predictions: list[Any], root_dir: Path, normalize: bool) -> None:
         super().__init__()
         self.predictions = predictions
         self.root_dir = root_dir / "images"
-        self.task = task
         self.normalize = normalize
 
     def run(self, task_id: int | None = None) -> list[Any]:
@@ -50,23 +48,12 @@ class VisualizationJob(Job):
         """
         del task_id  # not needed here
 
-        visualizer = ImageVisualizer(task=self.task, normalize=self.normalize)
+        visualizer = ImageVisualizer(output_dir=self.root_dir)
 
         logger.info("Starting visualization.")
 
         for data in tqdm(self.predictions, desc="Visualizing"):
-            for result in visualizer(outputs=data):
-                # Finally image path is root/defect_type/image_name
-                if result.file_name is not None:
-                    file_path = Path(result.file_name)
-                else:
-                    msg = "file_path should exist in returned Visualizer."
-                    raise ValueError(msg)
-
-                root = self.root_dir / file_path.parent.name
-                filename = file_path.name
-
-                save_image(image=result.image, root=root, filename=filename)
+            visualizer.on_test_batch_end(None, None, None, batch=data, batch_idx=0)
 
         return self.predictions
 
@@ -92,9 +79,8 @@ class VisualizationJobGenerator(JobGenerator):
         root_dir (Path): Root directory where images will be saved (root/images).
     """
 
-    def __init__(self, root_dir: Path, task: TaskType, normalization_stage: NormalizationStage) -> None:
+    def __init__(self, root_dir: Path, normalization_stage: NormalizationStage) -> None:
         self.root_dir = root_dir
-        self.task = task
         self.normalize = normalization_stage == NormalizationStage.NONE
 
     @property
@@ -119,7 +105,7 @@ class VisualizationJobGenerator(JobGenerator):
         del args  # args not used here
 
         if prev_stage_result is not None:
-            yield VisualizationJob(prev_stage_result, self.root_dir, self.task, self.normalize)
+            yield VisualizationJob(prev_stage_result, self.root_dir, self.normalize)
         else:
             msg = "Visualization job requires tile level predictions from previous step."
             raise ValueError(msg)
