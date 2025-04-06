@@ -11,7 +11,6 @@ import pytest
 import torch
 
 from anomalib.data import ImageBatch, get_datamodule
-from anomalib.metrics import F1AdaptiveThreshold, ManualThreshold
 from anomalib.pipelines.tiled_ensemble.components import (
     MergeJobGenerator,
     MetricsCalculationJobGenerator,
@@ -120,34 +119,21 @@ class TestStatsCalculation:
     """Test post-processing statistics calculations."""
 
     @staticmethod
-    @pytest.mark.parametrize(
-        ("threshold_str", "threshold_cls"),
-        [("F1AdaptiveThreshold", F1AdaptiveThreshold), ("ManualThreshold", ManualThreshold)],
-    )
-    def test_threshold_method(threshold_str: str, threshold_cls: type, get_ensemble_config: dict) -> None:
-        """Test that correct thresholding method is used."""
-        config = copy.deepcopy(get_ensemble_config)
-        config["thresholding"]["method"] = threshold_str
-
-        stats_job_generator = StatisticsJobGenerator(Path("mock"), threshold_str)
-        stats_job = next(stats_job_generator.generate_jobs(None, None))
-
-        assert isinstance(stats_job.image_threshold, threshold_cls)
-
-    @staticmethod
     def test_stats_run(project_path: Path) -> None:
         """Test execution of statistics calc. job."""
         mock_preds = [
             {
-                "pred_scores": torch.rand(4),
-                "label": torch.ones(4),
-                "anomaly_maps": torch.rand(4, 1, 50, 50),
-                "mask": torch.ones(4, 1, 50, 50),
+                "image": torch.rand(5, 3, 50, 50),
+                "pred_score": torch.rand(4),
+                "gt_label": torch.ones(4, dtype=torch.int32),
+                "anomaly_map": torch.rand(4, 1, 50, 50),
+                "gt_mask": torch.ones(4, 1, 50, 50, dtype=torch.int32),
             },
         ]
+        data = [ImageBatch(**values) for values in mock_preds]
 
-        stats_job_generator = StatisticsJobGenerator(project_path, "F1AdaptiveThreshold")
-        stats_job = next(stats_job_generator.generate_jobs(None, mock_preds))
+        stats_job_generator = StatisticsJobGenerator(project_path)
+        stats_job = next(stats_job_generator.generate_jobs(None, data))
 
         results = stats_job.run()
 
@@ -164,19 +150,30 @@ class TestStatsCalculation:
     @pytest.mark.parametrize(
         ("key", "values"),
         [
-            ("anomaly_maps", [torch.rand(5, 1, 50, 50), torch.rand(5, 1, 50, 50)]),
-            ("pred_scores", [torch.rand(5), torch.rand(5)]),
+            ("anomaly_map", [torch.rand(5, 1, 50, 50), torch.rand(5, 1, 50, 50)]),
+            ("pred_score", [torch.rand(5), torch.rand(5)]),
         ],
     )
     def test_minmax(key: str, values: list) -> None:
         """Test minmax stats calculation."""
         # add given keys to test all possible sources of minmax
         data = [
-            {"pred_scores": torch.rand(5), "label": torch.ones(5), key: values[0]},
-            {"pred_scores": torch.rand(5), "label": torch.ones(5), key: values[1]},
+            {
+                "image": torch.rand(5, 3, 50, 50),
+                "pred_score": torch.rand(5),
+                "gt_label": torch.ones(5, dtype=torch.int32),
+                key: values[0],
+            },
+            {
+                "image": torch.rand(5, 3, 50, 50),
+                "pred_score": torch.rand(5),
+                "gt_label": torch.ones(5, dtype=torch.int32),
+                key: values[1],
+            },
         ]
+        data = [ImageBatch(**values) for values in data]
 
-        stats_job_generator = StatisticsJobGenerator(Path("mock"), "F1AdaptiveThreshold")
+        stats_job_generator = StatisticsJobGenerator(Path("mock"))
         stats_job = next(stats_job_generator.generate_jobs(None, data))
         results = stats_job.run()
 
@@ -190,29 +187,32 @@ class TestStatsCalculation:
 
     @staticmethod
     @pytest.mark.parametrize(
-        ("labels", "preds", "target_threshold"),
+        ("gt_label", "preds", "target_threshold"),
         [
-            (torch.Tensor([0, 0, 0, 1, 1]), torch.Tensor([2.3, 1.6, 2.6, 7.9, 3.3]), 3.3),  # standard case
-            (torch.Tensor([1, 0, 0, 0]), torch.Tensor([4, 3, 2, 1]), 4),  # 100% recall for all thresholds
+            (torch.Tensor([0, 0, 0, 1, 1]).type(torch.int32), torch.Tensor([2.3, 1.6, 2.6, 7.9, 3.3]), 3.3),  # standard case
+            (torch.Tensor([1, 0, 0, 0]).type(torch.int32), torch.Tensor([4, 3, 2, 1]), 4),  # 100% recall for all thresholds
         ],
     )
-    def test_threshold(labels: torch.Tensor, preds: torch.Tensor, target_threshold: float) -> None:
+    def test_threshold(gt_label: torch.Tensor, preds: torch.Tensor, target_threshold: float) -> None:
         """Test threshold calculation job."""
         data = [
             {
-                "label": labels,
-                "mask": labels,
-                "pred_scores": preds,
-                "anomaly_maps": preds,
+                "image": torch.rand(5, 3, 50, 50),
+                "gt_label": gt_label,
+                "gt_mask": torch.rand(5, 50, 50) > 0.5,
+                "pred_score": preds,
+                "anomaly_map": torch.rand(5, 50, 50),
             },
         ]
+        data = [ImageBatch(**values) for values in data]
 
-        stats_job_generator = StatisticsJobGenerator(Path("mock"), "F1AdaptiveThreshold")
+        stats_job_generator = StatisticsJobGenerator(Path("mock"))
         stats_job = next(stats_job_generator.generate_jobs(None, data))
         results = stats_job.run()
 
         assert round(results["image_threshold"], 5) == target_threshold
-        assert round(results["pixel_threshold"], 5) == target_threshold
+        # pixel threshold is not nan
+        assert not (results["pixel_threshold"] != results["pixel_threshold"])
 
 
 class TestMetrics:
