@@ -22,7 +22,7 @@ def get_mock_environment(dataset_path: Path, project_path: Path) -> Path:
 
     # use separate project temp dir to avoid messing with other tests
     config["default_root_dir"] = str(ens_temp_dir)
-    config["data"]["init_args"]["root"] = str(dataset_path / "mvtec")
+    config["data"]["init_args"]["root"] = str(dataset_path / "mvtecad")
 
     with (Path(ens_temp_dir) / "tiled_ensemble.yaml").open("w", encoding="utf-8") as file:
         yaml.safe_dump(config, file)
@@ -43,7 +43,7 @@ def test_train(get_mock_environment: Path, capsys: pytest.CaptureFixture) -> Non
 
 def test_predict(get_mock_environment: Path, capsys: pytest.CaptureFixture) -> None:
     """Test prediction with the tiled ensemble."""
-    predict_pipeline = EvalTiledEnsemble(root_dir=get_mock_environment / "Padim" / "MVTec" / "dummy" / "v0")
+    predict_pipeline = EvalTiledEnsemble(root_dir=get_mock_environment / "Padim" / "MVTecAD" / "dummy" / "v0")
     predict_parser = predict_pipeline.get_parser()
     args = predict_parser.parse_args(["--config", str(get_mock_environment / "tiled_ensemble.yaml")])
     predict_pipeline.run(args)
@@ -54,9 +54,9 @@ def test_predict(get_mock_environment: Path, capsys: pytest.CaptureFixture) -> N
 
 def test_visualisation(get_mock_environment: Path) -> None:
     """Test that images were produced."""
-    assert (get_mock_environment / "Padim/MVTec/dummy/v0/images/bad/000.png").exists()
+    assert (get_mock_environment / "Padim/MVTecAD/dummy/v0/images/test/bad/000.png").exists()
 
 
 def test_metric_results(get_mock_environment: Path) -> None:
     """Test that metrics were saved."""
-    assert (get_mock_environment / "Padim/MVTec/dummy/v0/metric_results.csv").exists()
+    assert (get_mock_environment / "Padim/MVTecAD/dummy/v0/metric_results.csv").exists()

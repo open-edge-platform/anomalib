@@ -34,6 +34,7 @@ def get_ensemble_datamodule(
 
     Args:
         data_config: tiled ensemble data configuration.
+        image_size (int | tuple[int, int]): full effective image size of tiled ensemble.
         tiler (EnsembleTiler): Tiler used to split the images to tiles for use in ensemble.
         tile_index (tuple[int, int]): Index of the tile in the split image.
 
@@ -47,7 +48,7 @@ def get_ensemble_datamodule(
     setup_transforms(datamodule, image_size=image_size)
     datamodule.external_collate_fn = TileCollater(tiler, tile_index, default_collate_fn=ImageBatch.collate)
     # manually set setup, so later setup doesn't override the transforms...
-    datamodule._is_setup = True
+    datamodule._is_setup = True  # noqa: SLF001
 
     return datamodule
 
