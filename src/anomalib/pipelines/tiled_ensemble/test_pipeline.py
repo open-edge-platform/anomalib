@@ -104,7 +104,7 @@ class EvalTiledEnsemble(Pipeline):
 
         # 6. visualize predictions
         runners.append(
-            SerialRunner(VisualizationJobGenerator(self.root_dir, normalization_stage=normalization_stage)),
+            SerialRunner(VisualizationJobGenerator(self.root_dir, data_args=data_args)),
         )
         # calculate metrics
         runners.append(
