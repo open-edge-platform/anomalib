@@ -11,13 +11,13 @@ from typing import Any
 import pandas as pd
 from tqdm import tqdm
 
-from anomalib import TaskType
-from anomalib.metrics import AnomalibMetricCollection, create_metric_collection
+from anomalib.metrics import Evaluator
+
 from anomalib.pipelines.components import Job, JobGenerator
 from anomalib.pipelines.types import GATHERED_RESULTS, PREV_STAGE_RESULT, RUN_RESULTS
 
 from .utils import NormalizationStage
-from .utils.helper_functions import get_threshold_values
+from .utils.helper_functions import get_ensemble_model
 
 logger = logging.getLogger(__name__)
 
@@ -40,15 +40,13 @@ class MetricsCalculationJob(Job):
         accelerator: str,
         predictions: list[Any] | None,
         root_dir: Path,
-        image_metrics: AnomalibMetricCollection,
-        pixel_metrics: AnomalibMetricCollection,
+        evaluator: Evaluator,
     ) -> None:
         super().__init__()
         self.accelerator = accelerator
         self.predictions = predictions
         self.root_dir = root_dir
-        self.image_metrics = image_metrics
-        self.pixel_metrics = pixel_metrics
+        self.evaluator = evaluator
 
     def run(self, task_id: int | None = None) -> dict:
         """Run a job that calculates image and pixel level metrics.
@@ -65,22 +63,15 @@ class MetricsCalculationJob(Job):
 
         # add predicted data to metrics
         for data in tqdm(self.predictions, desc="Calculating metrics"):
-            self.image_metrics.update(data["pred_scores"], data["label"].int())
-            if "mask" in data and "anomaly_maps" in data:
-                self.pixel_metrics.update(data["anomaly_maps"], data["mask"].int())
+            # on_test_batch_end updates test metrics
+            self.evaluator.on_test_batch_end(None, None, None, batch=data, batch_idx=0)
 
         # compute all metrics on specified accelerator
         metrics_dict = {}
-        for name, metric in self.image_metrics.items():
+        for metric in self.evaluator.test_metrics:
             metric.to(self.accelerator)
-            metrics_dict[name] = metric.compute().item()
+            metrics_dict[metric.name] = metric.compute().item()
             metric.cpu()
-
-        if self.pixel_metrics.update_called:
-            for name, metric in self.pixel_metrics.items():
-                metric.to(self.accelerator)
-                metrics_dict[name] = metric.compute().item()
-                metric.cpu()
 
         for name, value in metrics_dict.items():
             print(f"{name}: {value:.4f}")
@@ -125,58 +116,16 @@ class MetricsCalculationJobGenerator(JobGenerator):
         self,
         accelerator: str,
         root_dir: Path,
-        task: TaskType,
-        metrics: dict,
-        normalization_stage: NormalizationStage,
+        model_args: dict,
     ) -> None:
         self.accelerator = accelerator
         self.root_dir = root_dir
-        self.task = task
-        self.metrics = metrics
-        self.normalization_stage = normalization_stage
+        self.model_args = model_args
 
     @property
     def job_class(self) -> type:
         """Return the job class."""
         return MetricsCalculationJob
-
-    def configure_ensemble_metrics(
-        self,
-        image_metrics: list[str] | dict[str, dict[str, Any]] | None = None,
-        pixel_metrics: list[str] | dict[str, dict[str, Any]] | None = None,
-    ) -> tuple[AnomalibMetricCollection, AnomalibMetricCollection]:
-        """Configure image and pixel metrics and put them into a collection.
-
-        Args:
-            image_metrics (list[str] | None): List of image-level metric names.
-            pixel_metrics (list[str] | None): List of pixel-level metric names.
-
-        Returns:
-            tuple[AnomalibMetricCollection, AnomalibMetricCollection]:
-                Image-metrics collection and pixel-metrics collection
-        """
-        image_metrics = [] if image_metrics is None else image_metrics
-
-        if pixel_metrics is None:
-            pixel_metrics = []
-        elif self.task == TaskType.CLASSIFICATION:
-            pixel_metrics = []
-            logger.warning(
-                "Cannot perform pixel-level evaluation when task type is classification. "
-                "Ignoring the following pixel-level metrics: %s",
-                pixel_metrics,
-            )
-
-        # if a single metric is passed, transform to list to fit the creation function
-        if isinstance(image_metrics, str):
-            image_metrics = [image_metrics]
-        if isinstance(pixel_metrics, str):
-            pixel_metrics = [pixel_metrics]
-
-        image_metrics_collection = create_metric_collection(image_metrics, "image_")
-        pixel_metrics_collection = create_metric_collection(pixel_metrics, "pixel_")
-
-        return image_metrics_collection, pixel_metrics_collection
 
     def generate_jobs(
         self,
@@ -194,24 +143,11 @@ class MetricsCalculationJobGenerator(JobGenerator):
         """
         del args  # args not used here
 
-        image_metrics_config = self.metrics.get("image", None)
-        pixel_metrics_config = self.metrics.get("pixel", None)
-
-        image_threshold, pixel_threshold = get_threshold_values(self.normalization_stage, self.root_dir)
-
-        image_metrics, pixel_metrics = self.configure_ensemble_metrics(
-            image_metrics=image_metrics_config,
-            pixel_metrics=pixel_metrics_config,
-        )
-
-        # set thresholds for metrics that need it
-        image_metrics.set_threshold(image_threshold)
-        pixel_metrics.set_threshold(pixel_threshold)
+        model = get_ensemble_model(self.model_args, normalization_stage=NormalizationStage.IMAGE, input_size=(10, 10))
 
         yield MetricsCalculationJob(
             accelerator=self.accelerator,
             predictions=prev_stage_result,
             root_dir=self.root_dir,
-            image_metrics=image_metrics,
-            pixel_metrics=pixel_metrics,
+            evaluator=model.evaluator,
         )

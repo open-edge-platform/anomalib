@@ -50,10 +50,10 @@ class ThresholdingJob(Job):
         logger.info("Starting thresholding.")
 
         for data in tqdm(self.predictions, desc="Thresholding"):
-            if "pred_scores" in data:
-                data["pred_labels"] = data["pred_scores"] >= self.image_threshold
-            if "anomaly_maps" in data:
-                data["pred_masks"] = data["anomaly_maps"] >= self.pixel_threshold
+            if hasattr(data, "pred_score") and data.pred_score is not None:
+                data.pred_label = data.pred_score >= self.image_threshold
+            if hasattr(data, "anomaly_map") and data.anomaly_map is not None:
+                data.pred_mask = data.anomaly_map >= self.pixel_threshold
 
         return self.predictions
 

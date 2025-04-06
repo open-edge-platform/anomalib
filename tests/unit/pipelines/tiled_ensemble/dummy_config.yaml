@@ -36,10 +36,6 @@ TrainModels:
   model:
     class_path: Fastflow
 
-  metrics:
-    pixel: AUROC
-    image: AUROC
-
   trainer:
     max_epochs: 1
     callbacks:

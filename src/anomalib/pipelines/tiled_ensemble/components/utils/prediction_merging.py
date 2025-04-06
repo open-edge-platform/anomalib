@@ -153,7 +153,7 @@ class PredictionMergingMechanism:
             merged_predictions["mask_path"] = current_batch_data[0, 0].mask_path
 
         tiled_data = ["image", "gt_mask"]
-        if hasattr(current_batch_data[0, 0], "anomaly_map"):
+        if hasattr(current_batch_data[0, 0], "anomaly_map") and current_batch_data[0, 0].anomaly_map is not None:
             tiled_data += ["anomaly_map", "pred_mask"]
 
         # merge all tiled data

@@ -189,8 +189,16 @@ class TestStatsCalculation:
     @pytest.mark.parametrize(
         ("gt_label", "preds", "target_threshold"),
         [
-            (torch.Tensor([0, 0, 0, 1, 1]).type(torch.int32), torch.Tensor([2.3, 1.6, 2.6, 7.9, 3.3]), 3.3),  # standard case
-            (torch.Tensor([1, 0, 0, 0]).type(torch.int32), torch.Tensor([4, 3, 2, 1]), 4),  # 100% recall for all thresholds
+            (
+                torch.Tensor([0, 0, 0, 1, 1]).type(torch.int32),
+                torch.Tensor([2.3, 1.6, 2.6, 7.9, 3.3]),
+                3.3,
+            ),  # standard case
+            (
+                torch.Tensor([1, 0, 0, 0]).type(torch.int32),
+                torch.Tensor([4, 3, 2, 1]),
+                4,
+            ),  # 100% recall for all thresholds
         ],
     )
     def test_threshold(gt_label: torch.Tensor, preds: torch.Tensor, target_threshold: float) -> None:
@@ -212,7 +220,7 @@ class TestStatsCalculation:
 
         assert round(results["image_threshold"], 5) == target_threshold
         # pixel threshold is not nan
-        assert not (results["pixel_threshold"] != results["pixel_threshold"])
+        assert results["pixel_threshold"] == results["pixel_threshold"]
 
 
 class TestMetrics:
@@ -230,9 +238,7 @@ class TestMetrics:
             metrics = MetricsCalculationJobGenerator(
                 config["accelerator"],
                 root_dir=Path(tmp_dir),
-                task=config["data"]["init_args"]["task"],
-                metrics=config["TrainModels"]["metrics"],
-                normalization_stage=NormalizationStage(config["normalization_stage"]),
+                model_args=config["TrainModels"]["model"],
             )
 
         mock_predictions = get_batch_predictions
@@ -264,7 +270,7 @@ class TestJoinSmoothing:
 
     @pytest.fixture(scope="class")
     @staticmethod
-    def get_join_smoothing_job(get_ensemble_config: dict, get_batch_predictions: list[dict]) -> SmoothingJob:
+    def get_join_smoothing_job(get_ensemble_config: dict, get_batch_predictions: list[ImageBatch]) -> SmoothingJob:
         """Make and return SmoothingJob instance."""
         config = get_ensemble_config
         job_gen = SmoothingJobGenerator(
@@ -291,7 +297,7 @@ class TestJoinSmoothing:
         assert not smooth.seam_mask[-1, -1]
 
     @staticmethod
-    def test_mask_overlapping(get_ensemble_config: dict, get_batch_predictions: list[dict]) -> None:
+    def test_mask_overlapping(get_ensemble_config: dict, get_batch_predictions: list[ImageBatch]) -> None:
         """Test seam mask in case where tiles overlap."""
         config = copy.deepcopy(get_ensemble_config)
         # tile size = 50, stride = 25 -> overlapping
@@ -315,7 +321,7 @@ class TestJoinSmoothing:
         assert not smooth.seam_mask[-1, -1]
 
     @staticmethod
-    def test_smoothing(get_join_smoothing_job: SmoothingJob, get_batch_predictions: list[dict]) -> None:
+    def test_smoothing(get_join_smoothing_job: SmoothingJob, get_batch_predictions: list[ImageBatch]) -> None:
         """Test smoothing job run."""
         original_data = get_batch_predictions
         # fixture makes a copy of data
@@ -332,13 +338,13 @@ class TestJoinSmoothing:
         assert smoothed.anomaly_map[:, 0, 0].equal(original_data[0].anomaly_map[:, 0, 0])
 
 
-def test_normalization(get_batch_predictions: list[dict], project_path: Path) -> None:
+def test_normalization(get_batch_predictions: list[ImageBatch], project_path: Path) -> None:
     """Test normalization step."""
     original_predictions = copy.deepcopy(get_batch_predictions)
 
     for batch in original_predictions:
-        batch["anomaly_maps"] *= 100
-        batch["pred_scores"] *= 100
+        batch.anomaly_map *= 100
+        batch.pred_score *= 100
 
     # # get and save stats using stats job on predictions
     stats_job_generator = StatisticsJobGenerator(project_path)
@@ -353,11 +359,11 @@ def test_normalization(get_batch_predictions: list[dict], project_path: Path) ->
     normalized_predictions = norm_job.run()
 
     for batch in normalized_predictions:
-        assert (batch["anomaly_maps"] >= 0).all()
-        assert (batch["anomaly_maps"] <= 1).all()
+        assert (batch.anomaly_map >= 0).all()
+        assert (batch.anomaly_map <= 1).all()
 
-        assert (batch["pred_scores"] >= 0).all()
-        assert (batch["pred_scores"] <= 1).all()
+        assert (batch.pred_score >= 0).all()
+        assert (batch.pred_score <= 1).all()
 
 
 class TestThresholding:
@@ -383,11 +389,11 @@ class TestThresholding:
         """Test anomaly score thresholding."""
         thresholding = get_threshold_job
 
-        data = [{"pred_scores": torch.tensor([0.7, 0.8, 0.1, 0.33, 0.5])}]
+        data = [ImageBatch(image=torch.rand(1, 3, 10, 10), pred_score=torch.tensor([0.7, 0.8, 0.1, 0.33, 0.5]))]
 
         thresholded = thresholding(data)[0]
 
-        assert thresholded["pred_labels"].equal(torch.tensor([True, True, False, False, True]))
+        assert thresholded.pred_label.equal(torch.tensor([True, True, False, False, True]))
 
     @staticmethod
     def test_anomap_threshold(get_threshold_job: callable) -> None:
@@ -395,12 +401,13 @@ class TestThresholding:
         thresholding = get_threshold_job
 
         data = [
-            {
-                "pred_scores": torch.tensor([0.7, 0.8, 0.1, 0.33, 0.5]),
-                "anomaly_maps": torch.tensor([[0.7, 0.8, 0.1], [0.33, 0.5, 0.1]]),
-            },
+            ImageBatch(
+                image=torch.rand(1, 3, 10, 10),
+                pred_score=torch.tensor([0.7, 0.8, 0.1, 0.33, 0.5]),
+                anomaly_map=torch.tensor([[0.7, 0.8, 0.1], [0.33, 0.5, 0.1]]),
+            ),
         ]
 
         thresholded = thresholding(data)[0]
 
-        assert thresholded["pred_masks"].equal(torch.tensor([[True, True, False], [False, True, False]]))
+        assert thresholded.pred_mask.equal(torch.tensor([[[True, True, False], [False, True, False]]]))

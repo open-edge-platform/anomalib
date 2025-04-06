@@ -55,18 +55,18 @@ class NormalizationJob(Job):
         logger.info("Starting normalization.")
 
         for data in tqdm(self.predictions, desc="Normalizing"):
-            data["pred_scores"] = normalize(
-                data["pred_scores"],
+            data.pred_score = normalize(
+                data.pred_score,
                 image_threshold,
-                minmax["pred_scores"]["min"],
-                minmax["pred_scores"]["max"],
+                minmax["pred_score"]["min"],
+                minmax["pred_score"]["max"],
             )
-            if "anomaly_maps" in data:
-                data["anomaly_maps"] = normalize(
-                    data["anomaly_maps"],
+            if hasattr(data, "anomaly_map"):
+                data.anomaly_map = normalize(
+                    data.anomaly_map,
                     pixel_threshold,
-                    minmax["anomaly_maps"]["min"],
-                    minmax["anomaly_maps"]["max"],
+                    minmax["anomaly_map"]["min"],
+                    minmax["anomaly_map"]["max"],
                 )
 
         return self.predictions
