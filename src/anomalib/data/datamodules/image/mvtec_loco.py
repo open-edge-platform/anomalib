@@ -77,14 +77,15 @@ class MVTecLOCO(AnomalibDataModule):
             Defaults to ``None``.
         augmentations (Transform | None): General augmentations to apply if stage-specific
             augmentations are not provided.
-        test_split_mode (TestSplitMode): Method to create test set.
+            Defaults to ``None``.
+        test_split_mode (TestSplitMode | str): Method to create test set.
             Defaults to ``TestSplitMode.FROM_DIR``.
-        test_split_ratio (float): Fraction of data to use for testing.
-            Defaults to ``0.2``.
-        val_split_mode (ValSplitMode): Method to create validation set.
-            Defaults to ``ValSplitMode.SAME_AS_TEST``.
-        val_split_ratio (float): Fraction of data to use for validation.
-            Defaults to ``0.5``.
+        val_split_mode (ValSplitMode | str): Method to create validation set.
+            Defaults to ``ValSplitMode.FROM_DIR``.
+        test_split_ratio (float | None): Fraction of data to use for testing.
+            Defaults to ``None``.
+        val_split_ratio (float | None): Fraction of data to use for validation.
+            Defaults to ``None``.
         seed (int | None, optional): Seed for reproducibility.
             Defaults to ``None``.
 
@@ -130,9 +131,9 @@ class MVTecLOCO(AnomalibDataModule):
         val_augmentations: Transform | None = None,
         test_augmentations: Transform | None = None,
         augmentations: Transform | None = None,
-        test_split_mode: TestSplitMode | str | None = None,
+        test_split_mode: TestSplitMode | str = TestSplitMode.FROM_DIR,
+        val_split_mode: ValSplitMode | str = ValSplitMode.FROM_DIR,
         test_split_ratio: float | None = None,
-        val_split_mode: ValSplitMode | str | None = None,
         val_split_ratio: float | None = None,
         seed: int | None = None,
     ) -> None:
@@ -145,8 +146,8 @@ class MVTecLOCO(AnomalibDataModule):
             test_augmentations=test_augmentations,
             augmentations=augmentations,
             test_split_mode=test_split_mode,
-            test_split_ratio=test_split_ratio,
             val_split_mode=val_split_mode,
+            test_split_ratio=test_split_ratio,
             val_split_ratio=val_split_ratio,
             seed=seed,
         )
