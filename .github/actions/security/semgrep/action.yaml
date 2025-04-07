@@ -102,11 +102,17 @@ runs:
       # Set the SEMGREP_RULES environment variable to specify which rules Semgrep should use.
       env:
         SEMGREP_RULES: ${{ inputs.config }}
+        IN_SCOPE: ${{ inputs.scan-scope }}
+        IN_PATHS: ${{ inputs.paths }}
+        IN_SEV_LVL: ${{ inputs.severity-level }}
+        IN_TIMEOUT: ${{ inputs.timeout }}
+        IN_OUTPUT: ${{ inputs.output-format }}
+        IN_FAIL: ${{ inputs.fail-on-findings }}
       run: |
         set +e
         # Map standard severity levels to Semgrep's levels
         # Semgrep does not support hierarchy, levels must be set explicitly
-        case "${{ inputs.severity }}" in
+        case "$IN_SEV_LVL" in
           "LOW")
             SEMGREP_SEVERITY="--severity INFO --severity WARNING --severity ERROR"
             ;;
@@ -124,30 +130,29 @@ runs:
         # Create results directory
         mkdir -p security-results/semgrep
 
-        REPORT_FILE="security-results/semgrep/semgrep-results.${{ inputs.output-format }}"
+        REPORT_FILE="security-results/semgrep/semgrep-results.$IN_OUTPUT"
 
-        if [[ "${{ inputs.scan-scope }}" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
+        if [[ "$IN_SCOPE" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
           echo "Running Semgrep on changed files, output results into workflow log only"
           FILES="${{ steps.changed-files.outputs.all_changed_files }}"
         semgrep \
           ${SEMGREP_SEVERITY} \
           --error \
-          --timeout ${{ inputs.timeout }} \
+          --timeout "$IN_TIMEOUT" \
           --metrics=off \
           ${FILES}
         exit_code="$?"
         echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
 
-        elif [[ "${{ inputs.scan-scope }}" == "all" ]] ; then
-          echo "Running Semgrep on all files in ${{ inputs.paths }}"
-          FILES="${{ inputs.paths }}"
+        elif [[ "$IN_SCOPE" == "all" ]] ; then
+          echo "Running Semgrep on all files in $IN_PATHS"
         semgrep \
           ${SEMGREP_SEVERITY} \
           --error \
           --metrics=off \
-          --timeout ${{ inputs.timeout }} \
-          --${{ inputs.output-format }} \
-          -o "${REPORT_FILE}" \
+          --timeout "$IN_TIMEOUT" \
+          --"$IN_OUTPUT" \
+          -o "$IN_PATHS" \
           ${FILES}
         exit_code="$?"
         echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
@@ -157,6 +162,6 @@ runs:
           echo "No files to scan found"
         fi
 
-        if [[ "${{ inputs.fail-on-findings }}" == "true" && -n "$exit_code" && "$exit_code" != "0" ]]; then
+        if [[ "$IN_FAIL" == "true" && -n "$exit_code" && "$exit_code" != "0" ]]; then
           exit $exit_code
         fi

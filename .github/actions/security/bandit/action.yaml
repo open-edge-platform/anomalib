@@ -115,7 +115,7 @@ runs:
         IN_SCOPE: ${{ inputs.scan-scope }}
         IN_PATHS: ${{ inputs.paths }}
         IN_CONFIG: ${{ inputs.config_file }}
-        IN_SEC_LVL: ${{ inputs.severity-level }}
+        IN_SEV_LVL: ${{ inputs.severity-level }}
         IN_CONF_LVL: ${{ inputs.confidence-level }}
         IN_OUTPUT: ${{ inputs.output-format }}
         IN_FAIL: ${{ inputs.fail-on-findings }}
@@ -124,7 +124,7 @@ runs:
         REPORT_FILE="bandit-report.$IN_OUTPUT"
 
         # Convert severity and confidence to lowercase
-        SEVERITY=$(echo "$IN_SEC_LVL" | tr '[:upper:]' '[:lower:]')
+        SEVERITY=$(echo "$IN_SEV_LVL" | tr '[:upper:]' '[:lower:]')
         CONFIDENCE=$(echo "$IN_CONF_LVL" | tr '[:upper:]' '[:lower:]')
 
         if [[ "$IN_SCOPE" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
