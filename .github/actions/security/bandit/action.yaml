@@ -131,7 +131,7 @@ runs:
           exit_code="$?"
           echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
 
-        else
+        elif [[ "${{ inputs.scan-scope }}" == "all" ]] ; then
           echo "Running Bandit on all files in ${{ inputs.paths }}"
           FILES="${{ inputs.paths }}"
           bandit \
@@ -144,6 +144,8 @@ runs:
           exit_code="$?"
           echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
           echo "report_path=${REPORT_FILE}" >> $GITHUB_OUTPUT
+        else
+          echo "No files to scan found"
         fi
 
         if [[ "${{ inputs.fail-on-findings }}" == "true" && -n "$exit_code" && "$exit_code" != "0" ]]; then
