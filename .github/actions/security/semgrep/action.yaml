@@ -152,8 +152,8 @@ runs:
           --metrics=off \
           --timeout "$IN_TIMEOUT" \
           --"$IN_OUTPUT" \
-          -o "$IN_PATHS" \
-          ${FILES}
+          -o "${REPORT_FILE}" \
+          "$IN_PATHS"
         exit_code="$?"
         echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
         echo "report_path=${REPORT_FILE}" >> $GITHUB_OUTPUT
