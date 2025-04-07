@@ -82,6 +82,10 @@ class MVTecLOCO(AnomalibDataModule):
             Defaults to ``TestSplitMode.FROM_DIR``.
         val_split_mode (ValSplitMode | str): Method to create validation set.
             Defaults to ``ValSplitMode.FROM_DIR``.
+        test_split_ratio (float | None): Fraction of data to use for testing.
+            Defaults to ``None``.
+        val_split_ratio (float | None): Fraction of data to use for validation.
+            Defaults to ``None``.
         seed (int | None, optional): Seed for reproducibility.
             Defaults to ``None``.
 
@@ -129,6 +133,8 @@ class MVTecLOCO(AnomalibDataModule):
         augmentations: Transform | None = None,
         test_split_mode: TestSplitMode | str = TestSplitMode.FROM_DIR,
         val_split_mode: ValSplitMode | str = ValSplitMode.FROM_DIR,
+        test_split_ratio: float | None = None,
+        val_split_ratio: float | None = None,
         seed: int | None = None,
     ) -> None:
         super().__init__(
@@ -141,6 +147,8 @@ class MVTecLOCO(AnomalibDataModule):
             augmentations=augmentations,
             test_split_mode=test_split_mode,
             val_split_mode=val_split_mode,
+            test_split_ratio=test_split_ratio,
+            val_split_ratio=val_split_ratio,
             seed=seed,
         )
 
