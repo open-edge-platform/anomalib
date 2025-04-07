@@ -282,7 +282,7 @@ follow_imports_for_stubs = true
 # BANDIT CONFIGURATION                                                        #
 [tool.bandit]
 skips = ["B101"]
-
+exclude_dirs = ["tests"]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # PYTEST CONFIGURATION                                                        #

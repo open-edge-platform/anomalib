@@ -55,22 +55,22 @@ inputs:
   paths:
     description: "Paths to scan when using all scope"
     required: false
-    default: "./src"
+    default: "." # all scope by default, exclude_dirs are taken from pyproject.toml
   config_file:
     description: "Path to pyproject.toml or custom bandit config"
     required: false
     default: "pyproject.toml"
-  severity_level:
+  severity-level:
     description: "Minimum severity level to report (all/LOW/MEDIUM/HIGH)"
     default: "LOW"
-  confidence_level:
+  confidence-level:
     description: "Minimum confidence level to report (all/LOW/MEDIUM/HIGH)"
     required: false
     default: "LOW"
   output-format:
-    description: "Format for scan results (json/txt/html/csv)"
+    description: "Format for scan results (json/txt/html/csv/sarif)"
     required: false
-    default: "json"
+    default: "sarif" # by default to upload into Security tab
   fail-on-findings:
     description: "Whether to fail the action if issues are found"
     required: false
@@ -96,12 +96,12 @@ runs:
       shell: bash
       run: |
         python -m pip install --upgrade pip
-        pip install bandit[toml]
+        pip install bandit[toml,sarif]
 
     - name: Get changed files
       if: inputs.scan-scope == 'changed'
       id: changed-files
-      uses: tj-actions/changed-files@v41
+      uses: tj-actions/changed-files@823fcebdb31bb35fdf2229d9f769b400309430d0 # v46.0.3
       with:
         files: |
           **/*.py
@@ -112,29 +112,39 @@ runs:
       id: run-bandit
       shell: bash
       run: |
+        set +e
         REPORT_FILE="bandit-report.${{ inputs.output-format }}"
 
+        # Convert severity and confidence to lowercase
+        SEVERITY=$(echo "${{ inputs.severity-level }}" | tr '[:upper:]' '[:lower:]')
+        CONFIDENCE=$(echo "${{ inputs.confidence-level }}" | tr '[:upper:]' '[:lower:]')
+
         if [[ "${{ inputs.scan-scope }}" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
-          echo "Running Bandit on changed files"
+          echo "Running Bandit on changed files, output results into workflow log only"
           FILES="${{ steps.changed-files.outputs.all_changed_files }}"
+          bandit \
+            -a file \
+            -c ${{ inputs.config_file }} \
+            --severity-level ${SEVERITY} \
+            --confidence-level ${CONFIDENCE} \
+            -r ${FILES}
+          exit_code="$?"
+          echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
+
         else
           echo "Running Bandit on all files in ${{ inputs.paths }}"
           FILES="${{ inputs.paths }}"
+          bandit \
+            -c ${{ inputs.config_file }} \
+            --severity-level ${SEVERITY} \
+            --confidence-level ${CONFIDENCE} \
+            -f ${{ inputs.output-format }} \
+            -o "${REPORT_FILE}" \
+            -r ${FILES}
+          exit_code="$?"
+          echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
+          echo "report_path=${REPORT_FILE}" >> $GITHUB_OUTPUT
         fi
-
-        # Convert severity and confidence to lowercase
-        SEVERITY=$(echo "${{ inputs.severity_level }}" | tr '[:upper:]' '[:lower:]')
-        CONFIDENCE=$(echo "${{ inputs.confidence_level }}" | tr '[:upper:]' '[:lower:]')
-
-        bandit \
-          -c ${{ inputs.config_file }} \
-          --severity-level ${SEVERITY} \
-          --confidence-level ${CONFIDENCE} \
-          -f ${{ inputs.output-format }} \
-          -o "${REPORT_FILE}" \
-          -r ${FILES} || echo "exit_code=$?" >> $GITHUB_OUTPUT
-
-        echo "report_path=${REPORT_FILE}" >> $GITHUB_OUTPUT
 
         if [[ "${{ inputs.fail-on-findings }}" == "true" && -n "$exit_code" && "$exit_code" != "0" ]]; then
           exit $exit_code

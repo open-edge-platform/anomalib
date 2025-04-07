@@ -59,7 +59,7 @@ inputs:
   config:
     description: "Semgrep rules or config to use"
     required: false
-    default: "p/default"
+    default: "p/default p/cwe-top-25 p/trailofbits p/owasp-top-ten"
   severity:
     description: "Minimum severity level to report (ERROR/WARNING/INFO)"
     required: false
@@ -88,21 +88,10 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.10"
-
-    - name: Install Semgrep
-      shell: bash
-      run: |
-        python -m pip install --upgrade pip
-        pip install semgrep
-
     - name: Get changed files
       if: inputs.scan-scope == 'changed'
       id: changed-files
-      uses: tj-actions/changed-files@v41
+      uses: tj-actions/changed-files@823fcebdb31bb35fdf2229d9f769b400309430d0 # v46.0.3
       with:
         files: |
           **/*.*
@@ -110,20 +99,25 @@ runs:
     - name: Run Semgrep scan
       id: run-semgrep
       shell: bash
+      # Set the SEMGREP_RULES environment variable to specify which rules Semgrep should use.
+      env:
+        SEMGREP_RULES: ${{ inputs.config }}
       run: |
+        set +e
         # Map standard severity levels to Semgrep's levels
+        # Semgrep does not support hierarchy, levels must be set explicitly
         case "${{ inputs.severity }}" in
           "LOW")
-            SEMGREP_SEVERITY="INFO"
+            SEMGREP_SEVERITY="--severity INFO --severity WARNING --severity ERROR"
             ;;
           "MEDIUM")
-            SEMGREP_SEVERITY="WARNING"
+            SEMGREP_SEVERITY="--severity WARNING --severity ERROR"
             ;;
           "HIGH"|"CRITICAL")
-            SEMGREP_SEVERITY="ERROR"
+            SEMGREP_SEVERITY="--severity ERROR"
             ;;
           *)
-            SEMGREP_SEVERITY="WARNING"
+            SEMGREP_SEVERITY="--severity WARNING --severity ERROR"
             ;;
         esac
 
@@ -133,22 +127,32 @@ runs:
         REPORT_FILE="security-results/semgrep/semgrep-results.${{ inputs.output-format }}"
 
         if [[ "${{ inputs.scan-scope }}" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
-          echo "Running Semgrep on changed files"
+          echo "Running Semgrep on changed files, output results into workflow log only"
           FILES="${{ steps.changed-files.outputs.all_changed_files }}"
+        semgrep \
+          ${SEMGREP_SEVERITY} \
+          --error \
+          --timeout ${{ inputs.timeout }} \
+          --metrics=off \
+          ${FILES}
+        exit_code="$?"
+        echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
+
         else
           echo "Running Semgrep on all files in ${{ inputs.paths }}"
           FILES="${{ inputs.paths }}"
-        fi
-
         semgrep \
-          --config ${{ inputs.config }} \
-          --severity $SEMGREP_SEVERITY \
+          ${SEMGREP_SEVERITY} \
+          --error \
+          --metrics=off \
           --timeout ${{ inputs.timeout }} \
           --${{ inputs.output-format }} \
           -o "${REPORT_FILE}" \
-          ${FILES} || echo "exit_code=$?" >> $GITHUB_OUTPUT
-
+          ${FILES}
+        exit_code="$?"
+        echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
         echo "report_path=${REPORT_FILE}" >> $GITHUB_OUTPUT
+        fi
 
         if [[ "${{ inputs.fail-on-findings }}" == "true" && -n "$exit_code" && "$exit_code" != "0" ]]; then
           exit $exit_code
