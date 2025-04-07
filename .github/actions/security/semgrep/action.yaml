@@ -104,7 +104,7 @@ runs:
         SEMGREP_RULES: ${{ inputs.config }}
         IN_SCOPE: ${{ inputs.scan-scope }}
         IN_PATHS: ${{ inputs.paths }}
-        IN_SEV_LVL: ${{ inputs.severity-level }}
+        IN_SEV_LVL: ${{ inputs.severity }}
         IN_TIMEOUT: ${{ inputs.timeout }}
         IN_OUTPUT: ${{ inputs.output-format }}
         IN_FAIL: ${{ inputs.fail-on-findings }}
