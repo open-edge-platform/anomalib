@@ -88,7 +88,7 @@ runs:
   using: composite
   steps:
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55 # v5.5.0
       with:
         python-version: "3.10"
 
@@ -111,36 +111,43 @@ runs:
     - name: Run Bandit scan
       id: run-bandit
       shell: bash
+      env:
+        IN_SCOPE: ${{ inputs.scan-scope }}
+        IN_PATHS: ${{ inputs.paths }}
+        IN_CONFIG: ${{ inputs.config_file }}
+        IN_SEC_LVL: ${{ inputs.severity-level }}
+        IN_CONF_LVL: ${{ inputs.confidence-level }}
+        IN_OUTPUT: ${{ inputs.output-format }}
+        IN_FAIL: ${{ inputs.fail-on-findings }}
       run: |
         set +e
-        REPORT_FILE="bandit-report.${{ inputs.output-format }}"
+        REPORT_FILE="bandit-report.$IN_OUTPUT"
 
         # Convert severity and confidence to lowercase
-        SEVERITY=$(echo "${{ inputs.severity-level }}" | tr '[:upper:]' '[:lower:]')
-        CONFIDENCE=$(echo "${{ inputs.confidence-level }}" | tr '[:upper:]' '[:lower:]')
+        SEVERITY=$(echo "$IN_SEC_LVL" | tr '[:upper:]' '[:lower:]')
+        CONFIDENCE=$(echo "$IN_CONF_LVL" | tr '[:upper:]' '[:lower:]')
 
-        if [[ "${{ inputs.scan-scope }}" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
+        if [[ "$IN_SCOPE" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
           echo "Running Bandit on changed files, output results into workflow log only"
           FILES="${{ steps.changed-files.outputs.all_changed_files }}"
           bandit \
             -a file \
-            -c ${{ inputs.config_file }} \
+            -c "$IN_CONFIG" \
             --severity-level ${SEVERITY} \
             --confidence-level ${CONFIDENCE} \
             -r ${FILES}
           exit_code="$?"
           echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
 
-        elif [[ "${{ inputs.scan-scope }}" == "all" ]] ; then
-          echo "Running Bandit on all files in ${{ inputs.paths }}"
-          FILES="${{ inputs.paths }}"
+        elif [[ "$IN_SCOPE" == "all" ]] ; then
+          echo "Running Bandit on all files in $IN_PATHS"
           bandit \
-            -c ${{ inputs.config_file }} \
+            -c "$IN_CONFIG" \
             --severity-level ${SEVERITY} \
             --confidence-level ${CONFIDENCE} \
-            -f ${{ inputs.output-format }} \
+            -f "$IN_OUTPUT" \
             -o "${REPORT_FILE}" \
-            -r ${FILES}
+            -r "$IN_PATHS"
           exit_code="$?"
           echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
           echo "report_path=${REPORT_FILE}" >> $GITHUB_OUTPUT
@@ -148,6 +155,6 @@ runs:
           echo "No files to scan found"
         fi
 
-        if [[ "${{ inputs.fail-on-findings }}" == "true" && -n "$exit_code" && "$exit_code" != "0" ]]; then
+        if [[ "$IN_FAIL" == "true" && -n "$exit_code" && "$exit_code" != "0" ]]; then
           exit $exit_code
         fi
