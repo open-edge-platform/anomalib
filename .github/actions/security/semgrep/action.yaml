@@ -102,17 +102,17 @@ runs:
       # Set the SEMGREP_RULES environment variable to specify which rules Semgrep should use.
       env:
         SEMGREP_RULES: ${{ inputs.config }}
-        IN_SCOPE: ${{ inputs.scan-scope }}
-        IN_PATHS: ${{ inputs.paths }}
-        IN_SEV_LVL: ${{ inputs.severity }}
-        IN_TIMEOUT: ${{ inputs.timeout }}
-        IN_OUTPUT: ${{ inputs.output-format }}
-        IN_FAIL: ${{ inputs.fail-on-findings }}
+        INPUTS_SCAN_SCOPE: ${{ inputs.scan-scope }}
+        INPUTS_PATHS: ${{ inputs.paths }}
+        INPUTS_SEVERITY: ${{ inputs.severity }}
+        INPUTS_TIMEOUT: ${{ inputs.timeout }}
+        INPUTS_OUTPUT_FORMAT: ${{ inputs.output-format }}
+        INPUTS_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
       run: |
         set +e
         # Map standard severity levels to Semgrep's levels
         # Semgrep does not support hierarchy, levels must be set explicitly
-        case "$IN_SEV_LVL" in
+        case "$INPUTS_SEVERITY" in
           "LOW")
             SEMGREP_SEVERITY="--severity INFO --severity WARNING --severity ERROR"
             ;;
@@ -130,30 +130,30 @@ runs:
         # Create results directory
         mkdir -p security-results/semgrep
 
-        REPORT_FILE="security-results/semgrep/semgrep-results.$IN_OUTPUT"
+        REPORT_FILE="security-results/semgrep/semgrep-results.$INPUTS_OUTPUT_FORMAT"
 
-        if [[ "$IN_SCOPE" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
+        if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
           echo "Running Semgrep on changed files, output results into workflow log only"
           FILES="${{ steps.changed-files.outputs.all_changed_files }}"
         semgrep \
           ${SEMGREP_SEVERITY} \
           --error \
-          --timeout "$IN_TIMEOUT" \
+          --timeout "$INPUTS_TIMEOUT" \
           --metrics=off \
           ${FILES}
         exit_code="$?"
         echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
 
-        elif [[ "$IN_SCOPE" == "all" ]] ; then
-          echo "Running Semgrep on all files in $IN_PATHS"
+        elif [[ "$INPUTS_SCAN_SCOPE" == "all" ]] ; then
+          echo "Running Semgrep on all files in $INPUTS_PATHS"
         semgrep \
           ${SEMGREP_SEVERITY} \
           --error \
           --metrics=off \
-          --timeout "$IN_TIMEOUT" \
-          --"$IN_OUTPUT" \
+          --timeout "$INPUTS_TIMEOUT" \
+          --"$INPUTS_OUTPUT_FORMAT" \
           -o "${REPORT_FILE}" \
-          "$IN_PATHS"
+          "$INPUTS_PATHS"
         exit_code="$?"
         echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
         echo "report_path=${REPORT_FILE}" >> $GITHUB_OUTPUT
@@ -162,6 +162,6 @@ runs:
           echo "No files to scan found"
         fi
 
-        if [[ "$IN_FAIL" == "true" && -n "$exit_code" && "$exit_code" != "0" ]]; then
+        if [[ "$INPUTS_FAIL_ON_FINDINGS" == "true" && -n "$exit_code" && "$exit_code" != "0" ]]; then
           exit $exit_code
         fi
