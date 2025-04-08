@@ -196,7 +196,7 @@ class TestAPI:
         if model_name == "dfkde":
             extra_args["n_pca_components"] = 2
 
-        if model_name == {"ai_vad", "fuvas"}:
+        if model_name in {"ai_vad", "fuvas"}:
             pytest.skip("Revisit video models tests")
         else:
             # EfficientAd requires that the batch size be lesser than the number of images in the dataset.

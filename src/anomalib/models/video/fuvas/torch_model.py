@@ -24,16 +24,14 @@ Notes:
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F  # noqa: N812
-from torchvision.models.video import Swin3D_B_Weights, swin3d_b
 from torchvision.models.feature_extraction import create_feature_extractor
+from torchvision.models.video import Swin3D_B_Weights, swin3d_b
+
 from anomalib import TaskType
-
 from anomalib.data import InferenceBatch
-
 from anomalib.models.components import PCA
 
 
@@ -111,7 +109,6 @@ class FUVASModel(nn.Module):
         net.eval()
         self.feature_extractor = create_feature_extractor(net, return_nodes=[layer])
 
-
     def fit(self, dataset: torch.Tensor) -> None:
         """Fit PCA model to dataset.
 
@@ -121,7 +118,11 @@ class FUVASModel(nn.Module):
         """
         self.pca_model.fit(dataset)
 
-    def compute_scores(self, features: torch.Tensor, feature_shapes: tuple) -> torch.Tensor| tuple[torch.Tensor, torch.Tensor]:
+    def compute_scores(
+        self,
+        features: torch.Tensor,
+        feature_shapes: tuple,
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         """Compute anomaly scores.
 
         Scores are PCA-based feature reconstruction error (FRE) scores.
@@ -141,10 +142,9 @@ class FUVASModel(nn.Module):
         fre = fre_prereshape.reshape(feature_shapes)
         score_map = torch.sum(fre, dim=(1, 2))  # NxTxCxHxW->NxHxW
         score = torch.sum(score_map, axis=(1, 2))  # NxHxW->N
-        if self.task=='segmentation':
-            return (score,score_map)
-        else:
-            return score
+        if self.task == "segmentation":
+            return (score, score_map)
+        return score
 
     def get_features(self, batch: torch.Tensor) -> torch.Tensor:
         """Extract features from the pretrained network.
@@ -197,14 +197,18 @@ class FUVASModel(nn.Module):
         """
         feature_vector, feature_shapes = self.get_features(batch)
         anomaly_map = None
-        if self.task=='segmentation':
+        if self.task == "segmentation":
             pred_score, anomaly_map = self.compute_scores(feature_vector, feature_shapes)
         else:
             pred_score = self.compute_scores(feature_vector, feature_shapes)
         if anomaly_map is not None:
             anomaly_map_with_c = torch.unsqueeze(anomaly_map, 1).to(batch.device)
-            anomaly_map_stack = F.interpolate(anomaly_map_with_c, size=batch.shape[-2:], mode="bilinear", align_corners=False)
-            # anomaly_map_stack = torch.squeeze(anomaly_map_stack,1)
+            anomaly_map_stack = F.interpolate(
+                anomaly_map_with_c,
+                size=batch.shape[-2:],
+                mode="bilinear",
+                align_corners=False,
+            )
             anomaly_map_stack = anomaly_map_stack.to(batch.device)
         pred_score = pred_score.to(batch.device)
         return InferenceBatch(pred_score=pred_score, anomaly_map=anomaly_map_stack)
