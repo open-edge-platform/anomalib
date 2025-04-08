@@ -26,8 +26,7 @@ from pathlib import Path
 import torch
 from pandas import DataFrame
 from torchvision.transforms.v2 import Transform
-from torchvision.transforms.v2.functional import to_dtype_image
-from torchvision.tv_tensors import Image, Mask
+from torchvision.tv_tensors import Mask
 
 from anomalib.data.dataclasses.torch import ImageItem
 from anomalib.data.datasets.base import AnomalibDataset
@@ -169,11 +168,11 @@ class MVTecLOCODataset(AnomalibDataset):
         item["semantic_mask"] = semantic_mask
 
         return ImageItem(
-            image=Image(to_dtype_image(image, torch.float32, scale=True)),
-            gt_mask=binary_mask,
+            image=item["image"],
+            gt_mask=item["gt_mask"],
             gt_label=torch.tensor(label_index),
             image_path=image_path,
-            mask_path=mask_path[0] if isinstance(mask_path, list) else mask_path,
+            mask_path=item["mask_path"][0] if isinstance(item["mask_path"], list) else item["mask_path"],
         )
 
 

@@ -327,7 +327,7 @@ def generate_output_filename(
             category_index = input_path.parts.index(category, dataset_index)
             start_index = category_index + 1
         except ValueError:
-            msg = f"Category '{category}' not found in the input path after the dataset name."
+            msg = f"Category '{category}' not found in the input path after the dataset name {dataset_name}."
             raise ValueError(msg) from None
 
     # Preserve all subdirectories after the category (or dataset if no category)
