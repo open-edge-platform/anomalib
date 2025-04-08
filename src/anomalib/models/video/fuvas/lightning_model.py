@@ -34,14 +34,13 @@ from typing import Any
 import torch
 from lightning.pytorch.utilities.types import STEP_OUTPUT
 
-from anomalib import LearningType
+from anomalib import LearningType, TaskType
 from anomalib.data import Batch
 from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule, MemoryBankMixin
 from anomalib.post_processing import PostProcessor
 from anomalib.pre_processing import PreProcessor
 from anomalib.visualization import Visualizer
-from anomalib import TaskType
 
 from .torch_model import FUVASModel
 
@@ -94,7 +93,7 @@ class Fuvas(MemoryBankMixin, AnomalibModule):
         spatial_pool: bool = True,
         pooling_kernel_size: int = 1,
         pca_level: float = 0.98,
-        task: TaskType|str = 'segmentation',
+        task: TaskType | str = "segmentation",
         pre_processor: PreProcessor | bool = True,
         post_processor: PostProcessor | bool = True,
         evaluator: Evaluator | bool = True,
