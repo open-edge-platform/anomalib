@@ -281,7 +281,9 @@ def get_model(model: DictConfig | str | dict | Namespace, *args, **kwdargs) -> A
                     msg = f"Module import from '{module_path}' is not allowed."
                     raise UnknownModelError(msg)
 
-                module = import_module(".".join(model.class_path.split(".")[:-1]))
+                # Use a whitelist approach to prevent arbitrary code execution
+                # semgrep: python.lang.security.audit.non-literal-import.non-literal-import
+                module = import_module(module_path)
             else:
                 module = import_module("anomalib.models")
         except ModuleNotFoundError as exception:
