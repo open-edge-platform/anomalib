@@ -89,6 +89,7 @@ class FUVASModel(nn.Module):
             # Common feature extraction layers:
             #   - blocks.6.dropout: 2048 dimensional features
             #   - blocks.5.res_blocks.2: Features before final layers
+            # nosec B614 - Loading from trusted source (Facebook's PyTorchVideo)
             net = torch.hub.load("facebookresearch/pytorchvideo", model=backbone, pretrained=pre_trained)
 
         elif backbone == "swin3d_b":
