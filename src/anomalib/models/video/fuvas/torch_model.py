@@ -30,7 +30,6 @@ from torch.nn import functional as F  # noqa: N812
 from torchvision.models.feature_extraction import create_feature_extractor
 from torchvision.models.video import Swin3D_B_Weights, swin3d_b
 
-from anomalib import TaskType
 from anomalib.data import InferenceBatch
 from anomalib.models.components import PCA
 
@@ -52,8 +51,6 @@ class FUVASModel(nn.Module):
             Defaults to ``4``.
         n_comps (float, optional): Ratio for PCA components calculation.
             Defaults to ``0.98``.
-        task (TaskType|str, optional): Whether to do video anomaly segmentation or detection
-            Default to ``segmentation``.
 
     Example:
         >>> model = FUVASModel(
@@ -72,14 +69,12 @@ class FUVASModel(nn.Module):
         pre_trained: bool = True,
         pooling_kernel_size: int = 4,
         n_comps: float = 0.98,
-        task: TaskType | str = "segmentation",
     ) -> None:
         super().__init__()
         self.backbone = backbone
         self.pooling_kernel_size = pooling_kernel_size
         self.n_components = n_comps
         self.pca_model = PCA(n_components=self.n_components)
-        self.task = task
         self.layer = layer
         self.spatial_pool = spatial_pool
         if backbone in {"i3d_r50", "x3d_l", "x3d_xs", "x3d_s", "x3d_m"}:
@@ -123,7 +118,7 @@ class FUVASModel(nn.Module):
         self,
         features: torch.Tensor,
         feature_shapes: tuple,
-    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Compute anomaly scores.
 
         Scores are PCA-based feature reconstruction error (FRE) scores.
@@ -134,7 +129,7 @@ class FUVASModel(nn.Module):
             feature_shapes (tuple): Shape of features tensor for anomaly map.
 
         Returns:
-            tuple[torch.Tensor, Optional[torch.Tensor]]: Tuple containing
+            tuple[torch.Tensor, torch.Tensor]: Tuple containing
                 (scores, anomaly_maps).
         """
         feats_projected = self.pca_model.transform(features)
@@ -143,9 +138,7 @@ class FUVASModel(nn.Module):
         fre = fre_prereshape.reshape(feature_shapes)
         score_map = torch.sum(fre, dim=(1, 2))  # NxTxCxHxW->NxHxW
         score = torch.sum(score_map, axis=(1, 2))  # NxHxW->N
-        if self.task == "segmentation":
-            return (score, score_map)
-        return score
+        return score, score_map
 
     def get_features(self, batch: torch.Tensor) -> torch.Tensor:
         """Extract features from the pretrained network.
@@ -198,10 +191,7 @@ class FUVASModel(nn.Module):
         """
         feature_vector, feature_shapes = self.get_features(batch)
         anomaly_map = None
-        if self.task == "segmentation":
-            pred_score, anomaly_map = self.compute_scores(feature_vector, feature_shapes)
-        else:
-            pred_score = self.compute_scores(feature_vector, feature_shapes)
+        pred_score, anomaly_map = self.compute_scores(feature_vector, feature_shapes)
         if anomaly_map is not None:
             anomaly_map_with_c = torch.unsqueeze(anomaly_map, 1).to(batch.device)
             anomaly_map_stack = F.interpolate(
