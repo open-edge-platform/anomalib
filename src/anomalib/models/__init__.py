@@ -75,7 +75,15 @@ from .image import (
     VlmAd,
     WinClip,
 )
-from .video import AiVad
+from .video import AiVad, Fuvas
+
+# Whitelist of allowed modules for dynamic imports
+ALLOWED_MODULES = {
+    "anomalib.models",
+    "anomalib.models.image",
+    "anomalib.models.video",
+    "anomalib.models.components",
+}
 
 
 class UnknownModelError(ModuleNotFoundError):
@@ -103,6 +111,7 @@ __all__ = [
     "VlmAd",
     "WinClip",
     "AiVad",
+    "Fuvas",
 ]
 
 logger = logging.getLogger(__name__)
@@ -262,7 +271,19 @@ def get_model(model: DictConfig | str | dict | Namespace, *args, **kwdargs) -> A
             model = OmegaConf.create(model)
         try:
             if len(model.class_path.split(".")) > 1:
-                module = import_module(".".join(model.class_path.split(".")[:-1]))
+                # Security check: Only allow imports from whitelisted modules
+                module_path = ".".join(model.class_path.split(".")[:-1])
+                if module_path not in ALLOWED_MODULES:
+                    logger.error(
+                        f"Module import from '{module_path}' is not allowed. "
+                        f"Only imports from {ALLOWED_MODULES} are permitted.",
+                    )
+                    msg = f"Module import from '{module_path}' is not allowed."
+                    raise UnknownModelError(msg)
+
+                # Use a whitelist approach to prevent arbitrary code execution
+                # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
+                module = import_module(module_path)
             else:
                 module = import_module("anomalib.models")
         except ModuleNotFoundError as exception:
