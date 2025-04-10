@@ -282,7 +282,7 @@ def get_model(model: DictConfig | str | dict | Namespace, *args, **kwdargs) -> A
                     raise UnknownModelError(msg)
 
                 # Use a whitelist approach to prevent arbitrary code execution
-                # semgrep: python.lang.security.audit.non-literal-import.non-literal-import
+                # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
                 module = import_module(module_path)
             else:
                 module = import_module("anomalib.models")
