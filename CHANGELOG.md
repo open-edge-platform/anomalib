@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 🚀 Add MVTec LOCO dataset by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2607
 - 🚀 Add VAD dataset by @abc-125 in https://github.com/open-edge-platform/anomalib/pull/2603
 - 🚀 Add Real-IAD dataset by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2545
+- 🚀 Add FUVAS Video Anomaly Detection Model by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2654
 - Add Intermediate environment variable usage in workflows by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/2617
 
 ### Removed
