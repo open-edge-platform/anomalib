@@ -22,6 +22,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### New Contributors
 
+## v2.1.0
+
+### Added
+
+- 🚀 Add `MVTecAD2` dataset by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2562
+- 🚀 Add MVTec LOCO dataset by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2607
+- 🚀 Add VAD dataset by @abc-125 in https://github.com/open-edge-platform/anomalib/pull/2603
+- 🚀 Add Real-IAD dataset by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2545
+- 🚀 Add FUVAS Video Anomaly Detection Model by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2654
+- Add Intermediate environment variable usage in workflows by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/2617
+
+### Removed
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+- 🐞 Fix model-specific transforms for DRÆM and DSR by @abc-125 in https://github.com/open-edge-platform/anomalib/pull/2624
+- 🐞 Replace the mandatory PatchCore center crop with an optional one, add the same to CFA by @abc-125 in https://github.com/open-edge-platform/anomalib/pull/2623
+- 🐞 fix: remove custom state dict handling in WinClip to fix inference tensor issues by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2630
+
+### New Contributors
+
+- @AlexanderBarabanov made their first contribution in https://github.com/open-edge-platform/anomalib/pull/2617
+
+**Full Changelog**: https://github.com/open-edge-platform/anomalib/compare/v2.0.0...v2.1.0
+
 ## v2.0.0
 
 ### Added
