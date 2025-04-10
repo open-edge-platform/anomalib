@@ -34,7 +34,7 @@ from typing import Any
 import torch
 from lightning.pytorch.utilities.types import STEP_OUTPUT
 
-from anomalib import LearningType, TaskType
+from anomalib import LearningType
 from anomalib.data import Batch
 from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule, MemoryBankMixin
@@ -64,9 +64,6 @@ class Fuvas(MemoryBankMixin, AnomalibModule):
         pca_level (float, optional): Ratio of variance to preserve in PCA.
             Must be between 0 and 1.
             Defaults to ``0.98``.
-        task (TaskType|str, optional): Whether to perform anomaly segmentation.
-            If segmentation, perform segmentation along with detection
-            Defaults to ``segmentation``.
         pre_processor (PreProcessor | bool, optional): Pre-processor to use.
             If ``True``, uses the default pre-processor.
             If ``False``, no pre-processing is performed.
@@ -93,7 +90,6 @@ class Fuvas(MemoryBankMixin, AnomalibModule):
         spatial_pool: bool = True,
         pooling_kernel_size: int = 1,
         pca_level: float = 0.98,
-        task: TaskType | str = "segmentation",
         pre_processor: PreProcessor | bool = True,
         post_processor: PostProcessor | bool = True,
         evaluator: Evaluator | bool = True,
@@ -112,7 +108,6 @@ class Fuvas(MemoryBankMixin, AnomalibModule):
             layer=layer,
             pooling_kernel_size=pooling_kernel_size,
             n_comps=pca_level,
-            task=task,
             spatial_pool=spatial_pool,
         )
         self.embeddings: list[torch.Tensor] = []
