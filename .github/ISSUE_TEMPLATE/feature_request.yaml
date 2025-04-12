@@ -1,0 +1,50 @@
+name: "✨ Feature Request"
+description: Suggest an idea for this project
+title: "[FEAT]: "
+labels: [enhancement]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: "**Is your feature request related to a problem? Please describe.**"
+  - type: textarea
+    id: problem-description
+    attributes:
+      label: Problem Description
+      description: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+      placeholder: Tell us what problem this feature solves.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: "**Describe the solution you'd like**"
+  - type: textarea
+    id: solution-description
+    attributes:
+      label: Proposed Solution
+      description: A clear and concise description of what you want to happen.
+      placeholder: Describe the solution you have in mind.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: "**Describe alternatives you've considered**"
+  - type: textarea
+    id: alternatives-considered
+    attributes:
+      label: Alternatives Considered
+      description: A clear and concise description of any alternative solutions or features you've considered.
+      placeholder: What other approaches have you thought about?
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: "**Additional context**"
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context or screenshots about the feature request here.
+      placeholder: Any extra details?
+    validations:
+      required: false
