@@ -13,6 +13,8 @@ from torchvision.transforms.v2 import Compose, Resize, Transform
 
 from anomalib.data import AnomalibDataModule, ImageBatch, get_datamodule
 from anomalib.models import AnomalibModule, get_model
+from anomalib.post_processing import PostProcessor
+from anomalib.pre_processing import PreProcessor
 from anomalib.pre_processing.utils.transform import get_exportable_transform
 
 from . import NormalizationStage
@@ -53,12 +55,12 @@ def get_ensemble_datamodule(
     return datamodule
 
 
-def setup_transforms(datamodule: AnomalibDataModule, image_size: int) -> None:
+def setup_transforms(datamodule: AnomalibDataModule, image_size: int | tuple[int, int]) -> None:
     """Modify datamodule resize transforms so the effective ensemble image_size is correct.
 
     Args:
         datamodule: datamodule where resize transform will be setup.
-        image_size (int): tiled ensemble input image size
+        image_size (int | tuple[int, int]): tiled ensemble input image size
 
     """
     resize_transform = Resize(image_size)
@@ -88,12 +90,16 @@ def setup_transforms(datamodule: AnomalibDataModule, image_size: int) -> None:
             data_subset.augmentations = augmentations
 
 
-def get_ensemble_model(model_args: dict, input_size, normalization_stage: NormalizationStage) -> AnomalibModule:
+def get_ensemble_model(
+    model_args: dict,
+    input_size: int | tuple[int, int],
+    normalization_stage: NormalizationStage,
+) -> AnomalibModule:
     """Get model prepared for ensemble training.
 
     Args:
         model_args (dict): tiled ensemble model configuration.
-        input_size (tuple[int, int]): individual model input size.
+        input_size (int | tuple[int, int]): individual model input size.
         normalization_stage (NormalizationStage): stage when normalization performed.
 
     Returns:
@@ -101,28 +107,36 @@ def get_ensemble_model(model_args: dict, input_size, normalization_stage: Normal
     """
     # first make temporary model to get object
     temp_model = get_model(model_args)
+    if isinstance(input_size, int):
+        input_size = (input_size, input_size)
     # create custom pre_proc with correct input size
     # since we can't modify input_size directly (needed during instantiation by some models like FastFlow)
     pre_processor = temp_model.configure_pre_processor(input_size)
     # make actual model with correct input size
     model: AnomalibModule = get_model(model_args, pre_processor=pre_processor, visualizer=False)
+    if model.pre_processor is not None:
+        model_pre_processor: PreProcessor = model.pre_processor
 
-    # drop Resize in all cases since it gets copied to datamodule, and we don't want that!
-    pre_transforms = model.pre_processor.transform
-    if isinstance(pre_transforms, Resize):
-        update_transform = []
-    elif isinstance(pre_transforms, Compose):
-        update_transform = Compose([
-            transform for transform in pre_transforms.transforms if not isinstance(transform, Resize)
-        ])
-    else:
-        update_transform = pre_transforms
+        # drop Resize in all cases since it gets copied to datamodule, and we don't want that!
+        pre_transforms = model_pre_processor.transform
+        if isinstance(pre_transforms, Resize):
+            update_transform = []
+        elif isinstance(pre_transforms, Compose):
+            update_transform = Compose([
+                transform for transform in pre_transforms.transforms if not isinstance(transform, Resize)
+            ])
+        elif pre_transforms is not None:
+            update_transform = pre_transforms
+        else:
+            update_transform = []
 
-    model.pre_processor.transform = update_transform
-    model.pre_processor.export_transform = get_exportable_transform(update_transform)
+        model_pre_processor.transform = update_transform
+        model_pre_processor.export_transform = get_exportable_transform(update_transform)
 
-    # set model normalisation only if the stage is set to tile level (but thresholding is always applied)
-    model.post_processor.enable_normalization = normalization_stage == NormalizationStage.TILE
+    if model.post_processor is not None:
+        model_post_processor: PostProcessor = model.post_processor
+        # set model normalisation only if the stage is set to tile level (but thresholding is always applied)
+        model_post_processor.enable_normalization = normalization_stage == NormalizationStage.TILE
 
     return model
 

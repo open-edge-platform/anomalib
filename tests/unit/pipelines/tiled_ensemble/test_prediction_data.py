@@ -1,6 +1,6 @@
 """Test tiled prediction storage class."""
 
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import copy
@@ -65,5 +65,5 @@ class TestPredictionData:
         storage = EnsemblePredictions()
         original = self.store_all(storage, datamodule)
 
-        for name in original[0, 0][0].__dict__.keys():
+        for name in original[0, 0][0].__dict__:
             assert self.verify_equal(name, original, storage, torch.equal), f"{name} doesn't match"

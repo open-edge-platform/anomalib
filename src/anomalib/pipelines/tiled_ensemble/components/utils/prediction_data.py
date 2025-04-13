@@ -1,6 +1,6 @@
 """Classes used to store ensemble predictions."""
 
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from anomalib.data import ImageBatch

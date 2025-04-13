@@ -43,7 +43,7 @@ def get_tiler(get_ensemble_config: dict) -> EnsembleTiler:
 
 
 @pytest.fixture(scope="module")
-def get_model(get_ensemble_config: dict, get_tiler: EnsembleTiler) -> AnomalibModule:
+def get_model(get_ensemble_config: dict) -> AnomalibModule:
     """Return model prepared for tiled ensemble training."""
     config = get_ensemble_config
 

@@ -1,6 +1,6 @@
 """Tiled ensemble - metrics calculation job."""
 
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
@@ -28,8 +28,6 @@ class MetricsCalculationJob(Job):
         accelerator (str): Accelerator (device) to use.
         predictions (list[Any]): List of batch predictions.
         root_dir (Path): Root directory to save checkpoints, stats and images.
-        image_metrics (AnomalibMetricCollection): Collection of all image-level metrics.
-        pixel_metrics (AnomalibMetricCollection): Collection of all pixel-level metrics.
     """
 
     name = "Metrics"
@@ -144,9 +142,13 @@ class MetricsCalculationJobGenerator(JobGenerator):
 
         model = get_ensemble_model(self.model_args, normalization_stage=NormalizationStage.IMAGE, input_size=(10, 10))
 
-        yield MetricsCalculationJob(
-            accelerator=self.accelerator,
-            predictions=prev_stage_result,
-            root_dir=self.root_dir,
-            evaluator=model.evaluator,
-        )
+        if model.evaluator is not None:
+            yield MetricsCalculationJob(
+                accelerator=self.accelerator,
+                predictions=prev_stage_result,
+                root_dir=self.root_dir,
+                evaluator=model.evaluator,
+            )
+        else:
+            msg = "Model passed to tiled ensemble has no evaluator module which is required to calculate metrics."
+            raise RuntimeError(msg)

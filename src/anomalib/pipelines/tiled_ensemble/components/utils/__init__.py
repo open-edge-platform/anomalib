@@ -1,9 +1,9 @@
 """Tiled ensemble utils and helper functions."""
 
-from enum import Enum
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+from enum import Enum
 
 
 class NormalizationStage(str, Enum):

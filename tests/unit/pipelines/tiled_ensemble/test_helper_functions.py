@@ -1,6 +1,6 @@
 """Test ensemble helper functions."""
 
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
@@ -45,7 +45,7 @@ class TestHelperFunctions:
         assert list(data.image.shape[1:]) == config["tiling"]["image_size"]
 
     @staticmethod
-    def test_ensemble_model(get_ensemble_config: dict, get_tiler: EnsembleTiler) -> None:
+    def test_ensemble_model(get_ensemble_config: dict) -> None:
         """Test that model is successfully created with correct input shape."""
         config = get_ensemble_config
         model = get_ensemble_model(
@@ -62,10 +62,9 @@ class TestHelperFunctions:
         "normalization_stage",
         [NormalizationStage.NONE, NormalizationStage.IMAGE, NormalizationStage.TILE],
     )
-    def test_normalisation_stage(get_ensemble_config: dict, get_tiler: EnsembleTiler, normalization_stage) -> None:
+    def test_normalisation_stage(get_ensemble_config: dict, normalization_stage: NormalizationStage) -> None:
         """Test that model postprocessor has normalisation enabled only on tile level."""
         config = get_ensemble_config
-        tiler = get_tiler
         model = get_ensemble_model(
             config["TrainModels"]["model"],
             normalization_stage=normalization_stage,

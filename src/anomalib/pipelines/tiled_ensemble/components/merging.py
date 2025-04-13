@@ -1,6 +1,6 @@
 """Tiled ensemble - prediction merging job."""
 
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import logging

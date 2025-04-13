@@ -106,7 +106,7 @@ class TestMerging:
         merged_with_job = merging_job.run()[0]
 
         # check that merging by job is same as with the mechanism directly
-        for name in merged_direct.__dict__.keys():
+        for name in merged_direct.__dict__:
             value = getattr(merged_direct, name)
             job_value = getattr(merged_with_job, name)
             if isinstance(value, torch.Tensor):

@@ -132,7 +132,7 @@ class PredictionMergingMechanism:
 
         return {"pred_label": labels, "pred_score": scores}
 
-    def merge_tile_predictions(self, batch_index: int) -> dict[str, Tensor | list]:
+    def merge_tile_predictions(self, batch_index: int) -> ImageBatch:
         """Join predictions from ensemble into whole image level representation for batch at index batch_index.
 
         Args:
