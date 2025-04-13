@@ -83,6 +83,7 @@ jobs:
     needs: [] # No dependencies, can run in parallel
     uses: ./.github/workflows/_reusable-security-scan.yaml
     with:
-      tools: "semgrep" # Security tools to run
+      tools: "semgrep,bandit" # Security tools to run
       scan-scope: "changed" # Only scan changed files
       severity-level: "MEDIUM" # Minimum severity to report
+      fail-on-findings: true # explicitly set
