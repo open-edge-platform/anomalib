@@ -6,6 +6,7 @@
 import json
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from jsonargparse import ArgumentParser, Namespace
 from lightning import Trainer
@@ -13,9 +14,11 @@ from torchvision.transforms.v2 import Compose, Resize, Transform
 
 from anomalib.data import AnomalibDataModule, ImageBatch, get_datamodule
 from anomalib.models import AnomalibModule, get_model
-from anomalib.post_processing import PostProcessor
-from anomalib.pre_processing import PreProcessor
 from anomalib.pre_processing.utils.transform import get_exportable_transform
+
+if TYPE_CHECKING:
+    from anomalib.post_processing import PostProcessor
+    from anomalib.pre_processing import PreProcessor
 
 from . import NormalizationStage
 from .ensemble_engine import TiledEnsembleEngine

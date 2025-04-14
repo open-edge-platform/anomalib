@@ -5,8 +5,10 @@
 
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from lightning.pytorch.callbacks import Callback
+if TYPE_CHECKING:
+    from lightning.pytorch.callbacks import Callback
 
 from anomalib.callbacks import ModelCheckpoint, TimerCallback
 from anomalib.engine import Engine

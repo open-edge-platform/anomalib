@@ -28,7 +28,6 @@ Example:
 import copy
 import logging
 from abc import ABC, abstractmethod
-from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -46,6 +45,8 @@ from anomalib.data.utils.synthetic import SyntheticAnomalyDataset
 from anomalib.utils.attrs import get_nested_attr
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from pandas import DataFrame
 
 
