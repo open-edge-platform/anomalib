@@ -1,6 +1,23 @@
-"""Tiled ensemble utils and helper functions."""
+"""Utility Functions for the Tiled Ensemble Pipeline.
 
-# Copyright (C) 2024 Intel Corporation
+This module provides auxiliary functions and classes that support the core
+components of the Tiled Ensemble approach.
+
+Included Utilities:
+    - `ensemble_engine`: Modified Anomalib Engine, adjusted to support ensemble training.
+    - `ensemble_tiling`: Functions to divide images into tiles and manage their positions.
+    - `helper_functions`: Miscellaneous helper functions used across the pipeline.
+    - `prediction_data`: Data structure to store and manage predictions.
+    - `prediction_merging`: Functions to merge predictions from different tiles.
+
+Reference:
+    Blaž Rolih, Dick Ameln, Ashwin Vaidya, Samet Akçay:
+    "Divide and Conquer: High-Resolution Industrial Anomaly Detection via
+    Memory Efficient Tiled Ensemble." Proceedings of the IEEE/CVF Conference
+    on Computer Vision and Pattern Recognition Workshops (VAND 2.0). 2024.
+"""
+
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
