@@ -77,7 +77,7 @@ pip install anomalib[full]
 For contributing or customizing the library:
 
 ```bash
-git clone https://github.com/openvinotoolkit/anomalib.git
+git clone https://github.com/open-edge-platform/anomalib.git
 cd anomalib
 pip install -e .
 
