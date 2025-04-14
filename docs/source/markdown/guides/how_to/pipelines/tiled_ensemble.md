@@ -9,7 +9,7 @@ It is compatible with any existing image anomaly detection model without the nee
 
 ```{note}
 This feature is experimental and may not work as expected.
-For any problems refer to [Issues](https://github.com/openvinotoolkit/anomalib/issues) and feel free to ask any question in [Discussions](https://github.com/openvinotoolkit/anomalib/discussions).
+For any problems refer to [Issues](https://github.com/open-edge-platform/anomalib/issues) and feel free to ask any question in [Discussions](https://github.com/open-edge-platform/anomalib/discussions).
 ```
 
 ## Training
@@ -50,7 +50,7 @@ General settings at the top of the config file are used to set up the random `se
 
 ```{code-block} yaml
 seed: 42
-accelerator: "gpu"
+accelerator: "cuda"
 default_root_dir: "results"
 ```
 
@@ -61,13 +61,14 @@ This section contains the following settings, used for image tiling:
 ```{code-block} yaml
 
 tiling:
-    tile_size: 256
-    stride: 256
+  image_size: [256, 256]
+  tile_size: [128, 128]
+  stride: 128
 ```
 
-These settings determine the tile size and stride. Another important parameter is image_size from `data` section later in the config. It determines the original size of the image.
+These settings determine the whole original image size, tile size, and tile stride.
 
-Input image is split into tiles, where each tile is of shape set by `tile_size` and tiles are taken with step set by `stride`.
+Input image is resized to `image_size` and split into tiles, where each tile is of shape set by `tile_size` and tiles are taken with step set by `stride`.
 For example: having image_size: 512, tile_size: 256, and stride: 256, results in 4 non-overlapping tile locations.
 
 ### Normalization and thresholding
@@ -76,40 +77,37 @@ Next up are the normalization and thresholding settings:
 
 ```{code-block} yaml
 normalization_stage: image
-thresholding:
-  method: F1AdaptiveThreshold
-  stage: image
+thresholding_stage: image
 ```
 
-- **Normalization**: Can be applied per each tile location separately (`tile` option), after combining prediction (`image` option), or skipped (`none` option).
+- **Normalization**: Can be applied per each tile location separately (`tile` option), after combining predictions (`image` option), or skipped (`none` option).
 
-- **Thresholding**: Can also be applied at different stages, but it is limited to `tile` and `image`. Another setting for thresholding is the method used. It can be specified as a string or by the class path.
+- **Thresholding**: Can also be applied at different stages, but it is limited to `tile` and `image`.
 
 ### Data
 
-The `data` section is used to configure the input `image_size` and other parameters for the dataset used.
+The `data` section is used to configure the parameters for the dataset used.
 
 ```{code-block} yaml
 data:
-  class_path: anomalib.data.MVTec
+  class_path: anomalib.data.MVTecAD
   init_args:
-    root: ./datasets/MVTec
+    root: ./datasets/MVTecAD
     category: bottle
     train_batch_size: 32
     eval_batch_size: 32
     num_workers: 8
-    task: segmentation
-    transform: null
-    train_transform: null
-    eval_transform: null
+    train_augmentations: null
+    val_augmentations: null
+    test_augmentations: null
+    augmentations: null
     test_split_mode: from_dir
     test_split_ratio: 0.2
     val_split_mode: same_as_test
     val_split_ratio: 0.5
-    image_size: [256, 256]
 ```
 
-Refer to [Data](../../reference/data/image/index.md) for more details on parameters.
+Refer to [Data](../../reference/data/index.md) for more details.
 
 ### SeamSmoothing
 
@@ -138,10 +136,6 @@ TrainModels:
   model:
     class_path: Fastflow
 
-  metrics:
-    pixel: AUROC
-    image: AUROC
-
   trainer:
     max_epochs: 500
     callbacks:
@@ -153,5 +147,16 @@ TrainModels:
 ```
 
 - **Model**: Specifies the model used. Refer to [Models](../../reference/models/image/index.md) for more details on the model parameters.
-- **Metrics**: Defines evaluation metrics for pixel and image level.
 - **Trainer**: _optional_ parameters, used to control the training process. Refer to [Engine](../../reference/engine/index.md) for more details.
+
+### Citation
+
+```BibTeX
+@inproceedings{rolih2024divide,
+  title={Divide and Conquer: High-Resolution Industrial Anomaly Detection via Memory Efficient Tiled Ensemble},
+  author={Rolih, Bla{\v{z}} and Ameln, Dick and Vaidya, Ashwin and Akcay, Samet},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+  pages={3866--3875},
+  year={2024}
+}
+```
