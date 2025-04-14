@@ -6,7 +6,7 @@ import copy
 class NetworkFeatureAggregator(torch.nn.Module):
     """Efficient extraction of network features."""
 
-    def __init__(self, backbone, layers_to_extract_from, train_backbone=False):
+    def __init__(self, backbone, layers_to_extract_from, pre_trained=False):
         super(NetworkFeatureAggregator, self).__init__()
         """Extraction of network features.
 
@@ -19,7 +19,7 @@ class NetworkFeatureAggregator(torch.nn.Module):
         """
         self.layers_to_extract_from = layers_to_extract_from
         self.backbone = backbone
-        self.train_backbone = train_backbone
+        self.pre_trained = pre_trained
         if not hasattr(backbone, "hook_handles"):
             self.backbone.hook_handles = []
         for handle in self.backbone.hook_handles:
@@ -33,7 +33,7 @@ class NetworkFeatureAggregator(torch.nn.Module):
 
     def forward(self, images, eval=True):
         self.outputs.clear()
-        if self.train_backbone and not eval:
+        if not self.pre_trained and not eval:
             self.backbone(images)
         else:
             with torch.no_grad():

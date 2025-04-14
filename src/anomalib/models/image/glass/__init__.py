@@ -1,1 +1,1 @@
-from .torch_model import GlassModel
+from .lightning_model import Glass

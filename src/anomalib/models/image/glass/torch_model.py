@@ -3,6 +3,8 @@ from torch import nn
 import torch.nn.functional as F
 from anomalib.models.components import NetworkFeatureAggregator
 import math
+import scipy.ndimage as ndimage
+import numpy as np
 
 def init_weight(m):
     if isinstance(m, torch.nn.Linear):
@@ -130,6 +132,25 @@ class PatchMaker:
         x = torch.max(x, dim=1).values
         return x
 
+class RescaleSegmentor:
+    def __init__(self, target_size=288):
+        self.target_size = target_size
+        self.smoothing = 4
+
+    def convert_to_segmentation(self, patch_scores):
+        with torch.no_grad():
+            if isinstance(patch_scores, np.ndarray):
+                patch_scores = torch.from_numpy(patch_scores)
+            _scores = patch_scores
+            _scores = _scores.unsqueeze(1)
+            _scores = F.interpolate(
+                _scores, size=self.target_size, mode="bilinear", align_corners=False
+            )
+            _scores = _scores.squeeze(1)
+            patch_scores = _scores.cpu().numpy()
+        return [ndimage.gaussian_filter(patch_score, sigma=self.smoothing) for patch_score in patch_scores]
+
+
 class GlassModel(nn.Module):
     def __init__(
         self,
@@ -137,13 +158,14 @@ class GlassModel(nn.Module):
         pretrain_embed_dim,
         target_embed_dim,
         backbone: nn.Module,
-        patchsize: int =3,
-        patchstride: int =1,
-        pre_trained: bool =True,
+        patchsize: int = 3,
+        patchstride: int = 1,
+        pre_trained: bool = True,
         layers: list[str] = ["layer1", "layer2", "layer3"],
         pre_proj: int = 1,
-        dsc_layers=2,
-        dsc_hidden=1024
+        dsc_layers:int = 2,
+        dsc_hidden:int = 1024,
+        dsc_margin:int = 0.5
     ) -> None:
         super().__init__()
         self.backbone = backbone
@@ -169,9 +191,14 @@ class GlassModel(nn.Module):
         if self.pre_proj > 0:
             self.pre_projection = Projection(self.target_embed_dimension, self.target_embed_dimension, pre_proj)
 
-        self.discriminator = Discriminator(self.target_embed_dimension, n_layers=dsc_layers, hidden=dsc_hidden)
+        self.dsc_layers = dsc_layers
+        self.dsc_hidden = dsc_hidden
+        self.dsc_margin = dsc_margin
+        self.discriminator = Discriminator(self.target_embed_dimension, n_layers=self.dsc_layers, hidden=self.dsc_hidden)
 
         self.patch_maker = PatchMaker(patchsize, stride=patchstride)
+
+        self.anomaly_segmentor = RescaleSegmentor()
 
     def generate_embeddings(self, images, provide_patch_shapes=False, eval=False):
         if not eval and not self.pre_trained:
@@ -223,15 +250,16 @@ class GlassModel(nn.Module):
 
         return patch_features, patch_shapes
     
-    def forward(self, images, eval=False):
-        self.forward_modules.eval()
-        with torch.no_grad():
-            if self.pre_proj > 0:
-                outputs = self.pre_proj(self.generate_embeddings(images, eval))
-                outputs = outputs[0] if len(outputs) == 2 else outputs
-            else:
-                outputs = self.generate_embeddings(images, eval)[0]
-            outputs = outputs[0] if len(outputs) == 2 else outputs
-            outputs = outputs.reshape(images.shape[0], -1, outputs.shape[-1])
-        return outputs
-            
+    def forward(self, img, aug, eval=False):
+        if self.pre_proj > 0:
+                fake_feats = self.pre_projection(self.generate_embeddings(aug, evaluation=eval)[0])
+                fake_feats = fake_feats[0] if len(fake_feats) == 2 else fake_feats
+                true_feats = self.pre_projection(self.generate_embeddings(img, evaluation=eval)[0])
+                true_feats = true_feats[0] if len(true_feats) == 2 else true_feats
+        else:
+            fake_feats = self.generate_embeddings(aug, evaluation=eval)[0]
+            fake_feats.requires_grad = True
+            true_feats = self.generate_embeddings(img, evaluation=eval)[0]
+            true_feats.requires_grad = True
+
+        return true_feats, fake_feats
