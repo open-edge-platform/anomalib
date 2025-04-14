@@ -102,7 +102,7 @@ def get_batch_predictions() -> list[dict]:
         "image": torch.rand((5, 3, 100, 100)),
         "gt_mask": (torch.rand((5, 100, 100)) > 0.5).type(torch.float32),
         "anomaly_map": torch.rand((5, 1, 100, 100)),
-        "gt_label": torch.Tensor([0, 1, 1, 0, 1]).type(torch.int32),
+        "gt_label": torch.tensor([0, 1, 1, 0, 1]).type(torch.int32),
         "pred_score": torch.rand(5),
         "pred_label": torch.ones(5),
         "pred_mask": torch.zeros((5, 100, 100)),

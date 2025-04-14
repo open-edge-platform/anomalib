@@ -190,13 +190,13 @@ class TestStatsCalculation:
         ("gt_label", "preds", "target_threshold"),
         [
             (
-                torch.Tensor([0, 0, 0, 1, 1]).type(torch.int32),
-                torch.Tensor([2.3, 1.6, 2.6, 7.9, 3.3]),
+                torch.tensor([0, 0, 0, 1, 1]).type(torch.int32),
+                torch.tensor([2.3, 1.6, 2.6, 7.9, 3.3]),
                 3.3,
             ),  # standard case
             (
-                torch.Tensor([1, 0, 0, 0]).type(torch.int32),
-                torch.Tensor([4, 3, 2, 1]),
+                torch.tensor([1, 0, 0, 0]).type(torch.int32),
+                torch.tensor([4, 3, 2, 1]),
                 4,
             ),  # 100% recall for all thresholds
         ],
