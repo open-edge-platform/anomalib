@@ -108,12 +108,12 @@ def get_intro() -> Markdown:
         >>> intro = get_intro()
         >>> print(intro)
         # Anomalib CLI Guide
-        Github Repository: https://github.com/openvinotoolkit/anomalib
+        Github Repository: https://github.com/open-edge-platform/anomalib
         Documentation: https://anomalib.readthedocs.io/
     """
     intro_markdown = (
         "# Anomalib CLI Guide\n\n"
-        "Github Repository: [https://github.com/openvinotoolkit/anomalib](https://github.com/openvinotoolkit/anomalib)."
+        "Github Repository: [https://github.com/open-edge-platform/anomalib](https://github.com/open-edge-platform/anomalib)."
         "\n\n"
         "A better guide is provided by the [documentation](https://anomalib.readthedocs.io/en/latest/index.html)."
     )

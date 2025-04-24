@@ -38,8 +38,8 @@ guidelines [here](https://www.intel.com/content/www/us/en/security-center/vulner
 Users interested in keeping up-to-date with security announcements and updates
 can:
 
-- Follow the [GitHub repository](https://github.com/openvinotoolkit/anomalib) 🌐
-- Check the [Releases](https://github.com/openvinotoolkit/anomalib/releases)
+- Follow the [GitHub repository](https://github.com/open-edge-platform/anomalib) 🌐
+- Check the [Releases](https://github.com/open-edge-platform/anomalib/releases)
   section of our GitHub project 📦
 
 We encourage users to report security issues and contribute to the security of
