@@ -294,16 +294,16 @@ class GlassModel(nn.Module):
 
         return patch_features, patch_shapes
 
-    def forward(self, img, aug, eval=False):
+    def forward(self, img, aug, evaluation=False):
         if self.pre_proj > 0:
-            fake_feats = self.pre_projection(self.generate_embeddings(aug, evaluation=eval)[0])
+            fake_feats = self.pre_projection(self.generate_embeddings(aug, evaluation=evaluation)[0])
             fake_feats = fake_feats[0] if len(fake_feats) == 2 else fake_feats
-            true_feats = self.pre_projection(self.generate_embeddings(img, evaluation=eval)[0])
+            true_feats = self.pre_projection(self.generate_embeddings(img, evaluation=evaluation)[0])
             true_feats = true_feats[0] if len(true_feats) == 2 else true_feats
         else:
-            fake_feats = self.generate_embeddings(aug, evaluation=eval)[0]
+            fake_feats = self.generate_embeddings(aug, evaluation=evaluation)[0]
             fake_feats.requires_grad = True
-            true_feats = self.generate_embeddings(img, evaluation=eval)[0]
+            true_feats = self.generate_embeddings(img, evaluation=evaluation)[0]
             true_feats.requires_grad = True
 
         return true_feats, fake_feats
