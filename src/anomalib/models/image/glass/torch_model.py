@@ -1,10 +1,16 @@
-import torch
-from torch import nn
-import torch.nn.functional as F
-from anomalib.models.components import NetworkFeatureAggregator
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import math
-import scipy.ndimage as ndimage
+
 import numpy as np
+import torch
+import torch.nn.functional as F
+from scipy import ndimage
+from torch import nn
+
+from anomalib.models.components import NetworkFeatureAggregator
+
 
 def init_weight(m):
     if isinstance(m, torch.nn.Linear):
@@ -14,6 +20,7 @@ def init_weight(m):
         m.bias.data.fill_(0)
     elif isinstance(m, torch.nn.Conv2d):
         m.weight.data.normal_(0.0, 0.02)
+
 
 class Preprocessing(torch.nn.Module):
     def __init__(self, input_dims, output_dim):
@@ -28,7 +35,7 @@ class Preprocessing(torch.nn.Module):
 
     def forward(self, features):
         _features = []
-        for module, feature in zip(self.preprocessing_modules, features):
+        for module, feature in zip(self.preprocessing_modules, features, strict=False):
             _features.append(module(feature))
         return torch.stack(_features, dim=1)
 
@@ -54,6 +61,7 @@ class Aggregator(torch.nn.Module):
         features = F.adaptive_avg_pool1d(features, self.target_dim)
         return features.reshape(len(features), -1)
 
+
 class Projection(torch.nn.Module):
     def __init__(self, in_planes, out_planes=None, n_layers=1, layer_type=0):
         super(Projection, self).__init__()
@@ -69,14 +77,14 @@ class Projection(torch.nn.Module):
             self.layers.add_module(f"{i}fc", torch.nn.Linear(_in, _out))
             if i < n_layers - 1:
                 if layer_type > 1:
-                    self.layers.add_module(f"{i}relu", torch.nn.LeakyReLU(.2))
+                    self.layers.add_module(f"{i}relu", torch.nn.LeakyReLU(0.2))
         self.apply(init_weight)
 
     def forward(self, x):
-
         x = self.layers(x)
         return x
-    
+
+
 class Discriminator(torch.nn.Module):
     def __init__(self, in_planes, n_layers=2, hidden=None):
         super(Discriminator, self).__init__()
@@ -86,20 +94,22 @@ class Discriminator(torch.nn.Module):
         for i in range(n_layers - 1):
             _in = in_planes if i == 0 else _hidden
             _hidden = int(_hidden // 1.5) if hidden is None else hidden
-            self.body.add_module('block%d' % (i + 1),
-                                 torch.nn.Sequential(
-                                     torch.nn.Linear(_in, _hidden),
-                                     torch.nn.BatchNorm1d(_hidden),
-                                     torch.nn.LeakyReLU(0.2)
-                                 ))
-        self.tail = torch.nn.Sequential(torch.nn.Linear(_hidden, 1, bias=False),
-                                        torch.nn.Sigmoid())
+            self.body.add_module(
+                "block%d" % (i + 1),
+                torch.nn.Sequential(
+                    torch.nn.Linear(_in, _hidden),
+                    torch.nn.BatchNorm1d(_hidden),
+                    torch.nn.LeakyReLU(0.2),
+                ),
+            )
+        self.tail = torch.nn.Sequential(torch.nn.Linear(_hidden, 1, bias=False), torch.nn.Sigmoid())
         self.apply(init_weight)
 
     def forward(self, x):
         x = self.body(x)
         x = self.tail(x)
         return x
+
 
 class PatchMaker:
     def __init__(self, patchsize, top_k=0, stride=None):
@@ -116,7 +126,10 @@ class PatchMaker:
             n_patches = (s + 2 * padding - 1 * (self.patchsize - 1) - 1) / self.stride + 1
             number_of_total_patches.append(int(n_patches))
         unfolded_features = unfolded_features.reshape(
-            *features.shape[:2], self.patchsize, self.patchsize, -1
+            *features.shape[:2],
+            self.patchsize,
+            self.patchsize,
+            -1,
         )
         unfolded_features = unfolded_features.permute(0, 4, 1, 2, 3)
 
@@ -132,6 +145,7 @@ class PatchMaker:
         x = torch.max(x, dim=1).values
         return x
 
+
 class RescaleSegmentor:
     def __init__(self, target_size=288):
         self.target_size = target_size
@@ -144,7 +158,10 @@ class RescaleSegmentor:
             _scores = patch_scores
             _scores = _scores.unsqueeze(1)
             _scores = F.interpolate(
-                _scores, size=self.target_size, mode="bilinear", align_corners=False
+                _scores,
+                size=self.target_size,
+                mode="bilinear",
+                align_corners=False,
             )
             _scores = _scores.squeeze(1)
             patch_scores = _scores.cpu().numpy()
@@ -155,17 +172,17 @@ class GlassModel(nn.Module):
     def __init__(
         self,
         input_shape,
-        pretrain_embed_dim,
-        target_embed_dim,
-        backbone: nn.Module,
+        pretrain_embed_dim: int = 1024,
+        target_embed_dim: int = 1024,
+        backbone: str | nn.Module = "resnet18",
         patchsize: int = 3,
         patchstride: int = 1,
         pre_trained: bool = True,
         layers: list[str] = ["layer1", "layer2", "layer3"],
         pre_proj: int = 1,
-        dsc_layers:int = 2,
-        dsc_hidden:int = 1024,
-        dsc_margin:int = 0.5
+        dsc_layers: int = 2,
+        dsc_hidden: int = 1024,
+        dsc_margin: float = 0.5,
     ) -> None:
         super().__init__()
         self.backbone = backbone
@@ -174,7 +191,9 @@ class GlassModel(nn.Module):
 
         self.forward_modules = torch.ModuleDict({})
         feature_aggregator = NetworkFeatureAggregator(
-            self.backbone, self.layers, pre_trained
+            self.backbone,
+            self.layers,
+            pre_trained,
         )
         feature_dimensions = feature_aggregator.feature_dimensions(input_shape)
         self.forward_modules["feature_aggregator"] = feature_aggregator
@@ -194,11 +213,31 @@ class GlassModel(nn.Module):
         self.dsc_layers = dsc_layers
         self.dsc_hidden = dsc_hidden
         self.dsc_margin = dsc_margin
-        self.discriminator = Discriminator(self.target_embed_dimension, n_layers=self.dsc_layers, hidden=self.dsc_hidden)
+        self.discriminator = Discriminator(
+            self.target_embed_dimension,
+            n_layers=self.dsc_layers,
+            hidden=self.dsc_hidden,
+        )
 
         self.patch_maker = PatchMaker(patchsize, stride=patchstride)
 
         self.anomaly_segmentor = RescaleSegmentor()
+
+    def calculate_mean(self, images):
+        self.forward_modules.eval()
+        with torch.no_grad():
+            if self.pre_proj > 0:
+                outputs = self.pre_projection(self.generate_embeddings(images))
+                outputs = outputs[0] if len(outputs) == 2 else outputs
+            else:
+                outputs = self._embed(images, evaluation=False)[0]
+
+            outputs = outputs[0] if len(outputs) == 2 else outputs
+            outputs = outputs.reshape(images.shape[0], -1, outputs.shape[-1])
+
+            batch_mean = torch.mean(outputs, dim=0)
+
+        return batch_mean
 
     def generate_embeddings(self, images, provide_patch_shapes=False, eval=False):
         if not eval and not self.pre_trained:
@@ -208,7 +247,7 @@ class GlassModel(nn.Module):
             self.forward_modules["feature_aggregator"].eval()
             with torch.no_grad():
                 features = self.forward_modules["feature_aggregator"](images)
-        
+
         features = [features[layer] for layer in self.layers_to_extract_from]
         for i, feat in enumerate(features):
             if len(feat.shape) == 3:
@@ -225,7 +264,10 @@ class GlassModel(nn.Module):
             patch_dims = patch_shapes[i]
 
             _features = _features.reshape(
-                _features.shape[0], patch_dims[0], patch_dims[1], *_features.shape[2:]
+                _features.shape[0],
+                patch_dims[0],
+                patch_dims[1],
+                *_features.shape[2:],
             )
             _features = _features.permute(0, 3, 4, 5, 1, 2)
             perm_base_shape = _features.shape
@@ -238,7 +280,9 @@ class GlassModel(nn.Module):
             )
             _features = _features.squeeze(1)
             _features = _features.reshape(
-                *perm_base_shape[:-2], ref_num_patches[0], ref_num_patches[1]
+                *perm_base_shape[:-2],
+                ref_num_patches[0],
+                ref_num_patches[1],
             )
             _features = _features.permute(0, 4, 5, 1, 2, 3)
             _features = _features.reshape(len(_features), -1, *_features.shape[-3:])
@@ -249,13 +293,13 @@ class GlassModel(nn.Module):
         patch_features = self.forward_modules["preadapt_aggregator"](patch_features)
 
         return patch_features, patch_shapes
-    
+
     def forward(self, img, aug, eval=False):
         if self.pre_proj > 0:
-                fake_feats = self.pre_projection(self.generate_embeddings(aug, evaluation=eval)[0])
-                fake_feats = fake_feats[0] if len(fake_feats) == 2 else fake_feats
-                true_feats = self.pre_projection(self.generate_embeddings(img, evaluation=eval)[0])
-                true_feats = true_feats[0] if len(true_feats) == 2 else true_feats
+            fake_feats = self.pre_projection(self.generate_embeddings(aug, evaluation=eval)[0])
+            fake_feats = fake_feats[0] if len(fake_feats) == 2 else fake_feats
+            true_feats = self.pre_projection(self.generate_embeddings(img, evaluation=eval)[0])
+            true_feats = true_feats[0] if len(true_feats) == 2 else true_feats
         else:
             fake_feats = self.generate_embeddings(aug, evaluation=eval)[0]
             fake_feats.requires_grad = True

@@ -1,6 +1,12 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import torchvision.models as models
 import timm
 
+"""copy from: https://github.com/cqylunlun/GLASS/blob/main/backbones.py
+This provides mechanism to import any of the given backbones using its name.
+"""
 _BACKBONES = {
     "alexnet": "models.alexnet(pretrained=True)",
     "resnet18": "models.resnet18(pretrained=True)",
