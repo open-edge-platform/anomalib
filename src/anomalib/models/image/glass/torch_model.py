@@ -11,6 +11,8 @@ from torch import nn
 
 from anomalib.models.components import NetworkFeatureAggregator
 
+from .backbones import load
+
 
 def init_weight(m):
     if isinstance(m, torch.nn.Linear):
@@ -168,6 +170,12 @@ class RescaleSegmentor:
         return [ndimage.gaussian_filter(patch_score, sigma=self.smoothing) for patch_score in patch_scores]
 
 
+def process_backbone(backbone):
+    if isinstance(backbone, str):
+        return load(backbone)
+    return backbone
+
+
 class GlassModel(nn.Module):
     def __init__(
         self,
@@ -185,7 +193,8 @@ class GlassModel(nn.Module):
         dsc_margin: float = 0.5,
     ) -> None:
         super().__init__()
-        self.backbone = backbone
+
+        self.backbone = process_backbone(backbone)
         self.layers = layers
         self.input_shape = input_shape
 
