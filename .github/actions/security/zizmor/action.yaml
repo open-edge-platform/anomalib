@@ -94,7 +94,7 @@ runs:
           echo "Running Zizmor on changed files, output results into workflow log only"
           FILES="${{ steps.changed-files.outputs.all_changed_files }}"
 
-          uvx zizmor=="$ZIZMOR_VERSION"
+          uvx zizmor=="$ZIZMOR_VERSION" \
               --min-confidence ${CONFIDENCE} \
               --min-severity ${SEVERITY} \
               ${FILES} \
@@ -103,7 +103,7 @@ runs:
 
         elif [[ "$INPUTS_SCAN_SCOPE" == "all" ]] ; then
           echo "Running Zizmor on all files in $INPUTS_PATHS"
-          uvx zizmor=="$ZIZMOR_VERSION"
+          uvx zizmor=="$ZIZMOR_VERSION" \
               --min-confidence ${CONFIDENCE} \
               --min-severity ${SEVERITY} \
               --format "$INPUTS_OUTPUT_FORMAT"
