@@ -69,3 +69,10 @@ repos:
     rev: v0.41.0
     hooks:
       - id: markdownlint
+
+  # zizmor detects security issues in GitHub Actions workflows.
+  - repo: https://github.com/woodruffw/zizmor-pre-commit
+    rev: v1.6.0
+    hooks:
+      - id: zizmor
+        args: ["--min-severity", "medium", "--min-confidence", "high"]
