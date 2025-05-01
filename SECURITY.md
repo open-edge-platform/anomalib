@@ -23,7 +23,7 @@ security scanning (on pre-commit, PR and periodically) with the following tools:
 | CodeQL     |            | ✅        | ✅       |
 | Semgrep    |            | ✅        | ✅       |
 | Bandit     | ✅         | ✅        | ✅       |
-| Zizmor     | ✅         |           |          |
+| Zizmor     | ✅         | ✅        | ✅       |
 | Trivy      |            |           | ✅       |
 | Dependabot |            |           | ✅       |
 
