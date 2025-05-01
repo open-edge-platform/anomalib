@@ -106,7 +106,7 @@ runs:
           uvx zizmor=="$ZIZMOR_VERSION" \
               --min-confidence ${CONFIDENCE} \
               --min-severity ${SEVERITY} \
-              --format "$INPUTS_OUTPUT_FORMAT"
+              --format "$INPUTS_OUTPUT_FORMAT" \
               "$INPUTS_PATHS" \
               > results.sarif
 
