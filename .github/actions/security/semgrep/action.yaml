@@ -61,9 +61,9 @@ inputs:
     required: false
     default: "p/default p/cwe-top-25 p/trailofbits p/owasp-top-ten"
   severity:
-    description: "Minimum severity level to report (ERROR/WARNING/INFO)"
+    description: "Minimum severity level to report (LOW/MEDIUM/HIGH/CRITICAL)"
     required: false
-    default: "WARNING"
+    default: "LOW"
   timeout:
     description: "Maximum time to run semgrep in seconds"
     required: false
