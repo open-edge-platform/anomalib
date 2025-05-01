@@ -1,0 +1,122 @@
+# Zizmor Scanner Action
+#
+# This composite action executes GitHub Actions workflows scanning using zizmor,
+# providing configurable security analysis capabilities.
+#
+# Required Inputs:
+# - scan-scope: Files to scan
+# - severity_level: Issue severity threshold
+# - fail-on-findings: Whether to fail on issues
+#
+# Outputs:
+# - scan_result: Scan exit code
+# - report_path: Results location
+#
+# Example Usage:
+# steps:
+#   - uses: ./.github/actions/security/zizmor
+#     with:
+#       scan-scope: "changed"
+#       severity_level: "MEDIUM"
+#
+# If necessary, put zizmor configuration into default location .github/zizmor.yml"
+# zizmor will discover and us it
+
+name: "Zizmor Security Scan"
+description: "Runs Zizmor with configurable options"
+
+inputs:
+  scan-scope:
+    description: "Scope of files to scan (all/changed)"
+    required: false
+    default: "changed"
+  paths:
+    description: "Paths to scan when using all scope"
+    required: false
+    default: "." # all scope by default
+  severity-level:
+    description: "Minimum severity level to report (LOW/MEDIUM/HIGH)"
+    default: "LOW"
+  confidence-level:
+    description: "Minimum confidence level to report (LOW/MEDIUM/HIGH)"
+    required: false
+    default: "LOW"
+  output-format:
+    description: "Format for scan results (json/txt/html/csv/sarif)"
+    required: false
+    default: "sarif" # by default to upload into Security tab
+  fail-on-findings:
+    description: "Whether to fail the action if issues are found"
+    required: false
+    default: "true"
+
+outputs:
+  scan_result:
+    description: "Exit code of the Zizmor scan"
+    value: ${{ steps.run-zizmor.outputs.exit_code }}
+  report_path:
+    description: "Path to the generated report file"
+    value: ${{ steps.run-zizmor.outputs.report_path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install uv
+      uses: astral-sh/setup-uv@22695119d769bdb6f7032ad67b9bca0ef8c4a174 # v5.4.0
+
+    - name: Get changed files
+      if: inputs.scan-scope == 'changed'
+      id: changed-files
+      uses: tj-actions/changed-files@823fcebdb31bb35fdf2229d9f769b400309430d0 # v46.0.3
+      with:
+        files: .github/**
+
+    - name: Run Zizmor
+      id: run-zizmor
+      shell: bash
+      env:
+        INPUTS_SCAN_SCOPE: ${{ inputs.scan-scope }}
+        INPUTS_PATHS: ${{ inputs.paths }}
+        INPUTS_SEVERITY_LEVEL: ${{ inputs.severity-level }}
+        INPUTS_CONFIDENCE_LEVEL: ${{ inputs.confidence-level }}
+        INPUTS_OUTPUT_FORMAT: ${{ inputs.output-format }}
+        INPUTS_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
+        ZIZMOR_VERSION: 1.6.0
+      run: |
+        set +e
+        REPORT_FILE="zizmor-report.$INPUTS_OUTPUT_FORMAT"
+
+        # Convert severity and confidence to lowercase
+        SEVERITY=$(echo "$INPUTS_SEVERITY_LEVEL" | tr '[:upper:]' '[:lower:]')
+        CONFIDENCE=$(echo "$INPUTS_CONFIDENCE_LEVEL" | tr '[:upper:]' '[:lower:]')
+
+        if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
+          echo "Running Zizmor on changed files, output results into workflow log only"
+          FILES="${{ steps.changed-files.outputs.all_changed_files }}"
+
+          uvx zizmor=="$ZIZMOR_VERSION"
+              --min-confidence ${CONFIDENCE} \
+              --min-severity ${SEVERITY} \
+              ${FILES} \
+          exit_code="$?"
+          echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
+
+        elif [[ "$INPUTS_SCAN_SCOPE" == "all" ]] ; then
+          echo "Running Zizmor on all files in $INPUTS_PATHS"
+          uvx zizmor=="$ZIZMOR_VERSION"
+              --min-confidence ${CONFIDENCE} \
+              --min-severity ${SEVERITY} \
+              --format "$INPUTS_OUTPUT_FORMAT"
+              "$INPUTS_PATHS" \
+              > results.sarif
+
+          exit_code="$?"
+          echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
+          echo "report_path=${REPORT_FILE}" >> $GITHUB_OUTPUT
+        else
+          echo "No files to scan found"
+        fi
+
+        if [[ "$INPUTS_FAIL_ON_FINDINGS" == "true" && -n "$exit_code" && "$exit_code" != "0" ]]; then
+          exit $exit_code
+        fi

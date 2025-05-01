@@ -1,0 +1,48 @@
+name: Reusable Security Scan
+
+permissions:
+  contents: read
+  security-events: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      scan-scope:
+        description: "Scan scope"
+        required: true
+        type: choice
+        options:
+          - all
+          - changed
+        default: "all"
+      severity-level:
+        description: "Minimum severity level"
+        required: true
+        type: choice
+        options:
+          - LOW
+          - MEDIUM
+          - HIGH
+        default: "LOW"
+      confidence-level:
+        description: "Minimum confidence level"
+        required: true
+        type: choice
+        options:
+          - LOW
+          - MEDIUM
+          - HIGH
+        default: "LOW"
+
+jobs:
+  zizmor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run zizmor scan
+        uses: ./.github/actions/security/zizmor
+        with:
+          scan-scope: ${{ inputs.scan-scope }}
+          severity-level: ${{ inputs.severity-level }}
+          confidence-level: ${{ inputs.confidence-level }}
+          fail-on-findings: true
