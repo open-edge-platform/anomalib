@@ -80,6 +80,15 @@ on:
           - MEDIUM
           - HIGH
         default: "LOW"
+      confidence-level:
+        description: "Minimum confidence level"
+        required: true
+        type: choice
+        options:
+          - LOW
+          - MEDIUM
+          - HIGH
+        default: "LOW"
 
 permissions:
   contents: read
