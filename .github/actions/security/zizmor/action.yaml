@@ -120,6 +120,8 @@ runs:
         if [[ "$INPUTS_FAIL_ON_FINDINGS" == "true" && -n "$exit_code" && "$exit_code" != "0" ]]; then
           exit $exit_code
         fi
+
+      # Upload results after full scope analysis
     - name: Upload reports
       if: hashFiles('zizmor-report.*') != '' # if any report is available
       uses: actions/upload-artifact@v4
@@ -127,3 +129,8 @@ runs:
         name: zizmor-results
         path: zizmor-report.*
         retention-days: 7
+    - name: Upload sarif
+      if: hashFiles('zizmor-report.sarif') != '' # if SARIF is available, upload it
+      uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.8
+      with:
+        sarif_file: zizmor-report.sarif
