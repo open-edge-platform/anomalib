@@ -102,5 +102,5 @@ jobs:
       tools: ${{ github.event_name == 'schedule' && 'bandit,clamav,semgrep,trivy' || inputs.tools }}
       scan-scope: ${{ github.event_name == 'schedule' && 'all' || inputs.scan-scope }}
       severity-level: ${{ github.event_name == 'schedule' && 'LOW' || inputs.severity-level }}
-      confidence-level: ${{ github.event_name == 'schedule' && 'LOW' || inputs.severity-level }}
+      confidence-level: ${{ github.event_name == 'schedule' && 'LOW' || inputs.confidence-level }}
       fail-on-findings: false # reports only
