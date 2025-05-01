@@ -97,7 +97,7 @@ runs:
           uvx zizmor=="$ZIZMOR_VERSION" \
               --min-confidence ${CONFIDENCE} \
               --min-severity ${SEVERITY} \
-              ${FILES} \
+              ${FILES}
           exit_code="$?"
           echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
 
@@ -120,3 +120,11 @@ runs:
         if [[ "$INPUTS_FAIL_ON_FINDINGS" == "true" && -n "$exit_code" && "$exit_code" != "0" ]]; then
           exit $exit_code
         fi
+
+    - name: Upload reports
+      if: hashFiles('zizmor-report.*') != '' # if any report is available
+      uses: actions/upload-artifact@v4
+      with:
+        name: zizmor-results
+        path: zizmor-report.*
+        retention-days: 7
