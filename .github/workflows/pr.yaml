@@ -86,4 +86,5 @@ jobs:
       tools: "semgrep,bandit" # Security tools to run
       scan-scope: "changed" # Only scan changed files
       severity-level: "MEDIUM" # Minimum severity to report
+      confidence-level: "HIGH" # High confidence to report
       fail-on-findings: true # explicitly set
