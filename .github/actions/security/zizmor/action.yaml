@@ -3,21 +3,19 @@
 # This composite action executes GitHub Actions workflows scanning using zizmor,
 # providing configurable security analysis capabilities.
 #
-# Required Inputs:
-# - scan-scope: Files to scan
-# - severity_level: Issue severity threshold
-# - fail-on-findings: Whether to fail on issues
-#
-# Outputs:
-# - scan_result: Scan exit code
-# - report_path: Results location
-#
 # Example Usage:
-# steps:
-#   - uses: ./.github/actions/security/zizmor
-#     with:
-#       scan-scope: "changed"
-#       severity_level: "MEDIUM"
+#jobs:
+#  zizmor:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Run zizmor scan
+#        uses: ./.github/actions/security/zizmor
+#        with:
+#          scan-scope: all
+#          severity-level: MEDIUM
+#          confidence-level: HIGH
+#          fail-on-findings: true
 #
 # If necessary, put zizmor configuration into default location .github/zizmor.yml"
 # zizmor will discover and us it
@@ -42,7 +40,7 @@ inputs:
     required: false
     default: "LOW"
   output-format:
-    description: "Format for scan results (plain/json/sarif/)"
+    description: "Format for scan results (plain/json/sarif)"
     required: false
     default: "sarif" # by default to upload into Security tab
   fail-on-findings:

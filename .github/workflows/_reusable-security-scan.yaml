@@ -46,7 +46,7 @@ on:
   workflow_call:
     inputs:
       tools:
-        description: "Security tools to run (comma-separated: bandit,clamav,semgrep,trivy)"
+        description: "Security tools to run (comma-separated: bandit,clamav,semgrep,trivy,zizmor)"
         type: string
         default: "bandit,semgrep"
       scan-scope:
@@ -148,8 +148,21 @@ jobs:
           path: security-results/clamav
           retention-days: 7
 
+  zizmor:
+    if: contains(inputs.tools, 'zizmor')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Zizmor scan
+        uses: ./.github/actions/security/zizmor
+        with:
+          scan-scope: ${{ inputs.scan-scope }}
+          severity-level: ${{ inputs.severity-level }}
+          confidence-level: ${{ inputs.confidence-level }}
+          fail-on-findings: ${{ inputs.fail-on-findings }}
+
   summarize:
-    needs: [bandit, semgrep, trivy, clamav]
+    needs: [bandit, semgrep, trivy, clamav, zizmor]
     if: always()
     runs-on: ubuntu-latest
     outputs:
