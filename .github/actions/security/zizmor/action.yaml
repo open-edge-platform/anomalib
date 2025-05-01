@@ -42,7 +42,7 @@ inputs:
     required: false
     default: "LOW"
   output-format:
-    description: "Format for scan results (json/txt/html/csv/sarif)"
+    description: "Format for scan results (plain/json/sarif/)"
     required: false
     default: "sarif" # by default to upload into Security tab
   fail-on-findings:

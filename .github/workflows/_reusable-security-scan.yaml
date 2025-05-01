@@ -83,16 +83,6 @@ jobs:
           severity-level: ${{ inputs.severity-level }}
           confidence-level: ${{ inputs.confidence-level }}
           fail-on-findings: ${{ inputs.fail-on-findings }}
-      - uses: actions/upload-artifact@v4
-        if: hashFiles('bandit-report.*') != '' # if any report is available
-        with:
-          name: bandit-results
-          path: bandit-report.*
-          retention-days: 7
-      - uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.8
-        if: hashFiles('bandit-report.sarif') != '' # if SARIF is available, upload it
-        with:
-          sarif_file: bandit-report.sarif
 
   semgrep:
     if: contains(inputs.tools, 'semgrep')
@@ -107,16 +97,6 @@ jobs:
           scan-scope: ${{ inputs.scan-scope }}
           severity: ${{ inputs.severity-level }}
           fail-on-findings: ${{ inputs.fail-on-findings }}
-      - uses: actions/upload-artifact@v4
-        if: hashFiles('security-results/semgrep/*') != '' # if any report is available
-        with:
-          name: semgrep-results
-          path: security-results/semgrep
-          retention-days: 7
-      - uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.8
-        if: hashFiles('security-results/semgrep/semgrep-results.sarif') != '' # if SARIF is available, upload it
-        with:
-          sarif_file: security-results/semgrep/semgrep-results.sarif
 
   trivy:
     if: contains(inputs.tools, 'trivy')
