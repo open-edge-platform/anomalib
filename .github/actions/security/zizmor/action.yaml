@@ -90,6 +90,11 @@ runs:
         INPUTS_OUTPUT_FORMAT: ${{ inputs.output-format }}
         INPUTS_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
         ZIZMOR_VERSION: ${{ inputs.zizmor-version }}
+
+      # For changed scope: if changes in .github/** are detected, we rescan all files because
+      # providing individual non-workflow files (even yaml) to Zizmor causes errors ("invalid GitHub Actions workflow").
+      # Based on the assumption that workflows are maintained in a valid state, this will not trigger alerts unrelated to the PR.
+
       run: |
         set +e
         REPORT_FILE="zizmor-report.$INPUTS_OUTPUT_FORMAT"
@@ -99,13 +104,11 @@ runs:
         CONFIDENCE=$(echo "$INPUTS_CONFIDENCE_LEVEL" | tr '[:upper:]' '[:lower:]')
 
         if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
-          echo "Running Zizmor on changed files, output results into workflow log only"
-          FILES="${{ steps.changed-files.outputs.all_changed_files }}"
-
+          echo "There are some changes detected in .github/, checking with Zizmor"
           uvx zizmor=="$ZIZMOR_VERSION" \
               --min-confidence ${CONFIDENCE} \
               --min-severity ${SEVERITY} \
-              ${FILES}
+              .
           exit_code="$?"
           echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
 
