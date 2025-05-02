@@ -53,8 +53,6 @@ jobs:
           fail-on-findings: false
 ```
 
-If necessary, put zizmor configuration into default location `.github/zizmor.yml` - zizmor will discover and us it.
-
 ## Inputs
 
 | Name               | Type    | Description                                          | Default Value | Required |
@@ -65,6 +63,8 @@ If necessary, put zizmor configuration into default location `.github/zizmor.yml
 | `confidence-level` | String  | Minimum confidence level to report (LOW/MEDIUM/HIGH) | `LOW`         | No       |
 | `output-format`    | String  | Format for scan results (plain/json/sarif)           | `sarif`       | No       |
 | `fail-on-findings` | boolean | Whether to fail the action if issues are found       | `true`        | No       |
+
+If necessary, put zizmor configuration into default location `.github/zizmor.yml` - zizmor will discover and us it.
 
 ## Outputs
 
