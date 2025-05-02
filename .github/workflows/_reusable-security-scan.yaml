@@ -141,12 +141,6 @@ jobs:
         with:
           scan-scope: ${{ inputs.scan-scope }}
           fail-on-findings: ${{ inputs.fail-on-findings }}
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: clamav-results
-          path: security-results/clamav
-          retention-days: 7
 
   zizmor:
     if: contains(inputs.tools, 'zizmor')

@@ -165,3 +165,11 @@ runs:
             exit 1
           fi
           "
+      # Upload results
+    - name: Upload reports
+      if: hashFiles('security-results/clamav*') != '' # if any report is available
+      uses: actions/upload-artifact@v4
+      with:
+        name: clamav-results
+        path: security-results/clamav
+        retention-days: 7
