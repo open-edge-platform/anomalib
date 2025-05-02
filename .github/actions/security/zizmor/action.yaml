@@ -47,6 +47,11 @@ inputs:
     description: "Whether to fail the action if issues are found"
     required: false
     default: "true"
+  # There's no top-level YAML way to declare a variable scoped to a composite action and available in step options.
+  zizmor-version:
+    description: "Zizmor version"
+    required: false
+    default: "1.6.0"
 
 outputs:
   scan_result:
@@ -60,7 +65,12 @@ runs:
   using: composite
   steps:
     - name: Install uv
-      uses: astral-sh/setup-uv@22695119d769bdb6f7032ad67b9bca0ef8c4a174 # v5.4.0
+      uses: astral-sh/setup-uv@6b9c6063abd6010835644d4c2e1bef4cf5cd0fca # v6.0.1
+      with:
+        enable-cache: true
+        activate-environment: true
+        cache-suffix: ${{ inputs.zizmor-version }}
+        cache-dependency-glob: ""
 
     - name: Get changed files
       if: inputs.scan-scope == 'changed'
@@ -79,7 +89,7 @@ runs:
         INPUTS_CONFIDENCE_LEVEL: ${{ inputs.confidence-level }}
         INPUTS_OUTPUT_FORMAT: ${{ inputs.output-format }}
         INPUTS_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
-        ZIZMOR_VERSION: 1.6.0
+        ZIZMOR_VERSION: ${{ inputs.zizmor-version }}
       run: |
         set +e
         REPORT_FILE="zizmor-report.$INPUTS_OUTPUT_FORMAT"

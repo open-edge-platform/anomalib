@@ -63,8 +63,11 @@ jobs:
 | `confidence-level` | String  | Minimum confidence level to report (LOW/MEDIUM/HIGH) | `LOW`         | No       |
 | `output-format`    | String  | Format for scan results (plain/json/sarif)           | `sarif`       | No       |
 | `fail-on-findings` | boolean | Whether to fail the action if issues are found       | `true`        | No       |
+| `zizmor-version`   | String  | Zizmor version                                       | `1.6.0`       | No       |
 
 If necessary, put zizmor configuration into default location `.github/zizmor.yml` - zizmor will discover and us it.
+
+There's no top-level YAML way to declare a variable scoped to a composite action and available in step options, therefore we use input to pass Zizmor version.
 
 ## Outputs
 
