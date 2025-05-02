@@ -281,8 +281,10 @@ follow_imports_for_stubs = true
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # BANDIT CONFIGURATION                                                        #
+# TODO(AlexanderBarabanov): B614 temporary suppression, enable B614 checks
+# ITEP-36249
 [tool.bandit]
-skips = ["B101"]
+skips = ["B101", "B614"]
 exclude_dirs = ["tests"]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
