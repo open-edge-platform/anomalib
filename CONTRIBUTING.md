@@ -118,6 +118,45 @@ However, make sure to address any pre-commit issues before finalizing your pull 
 
    For more on signing commits, see [GitHub's guide on signing commits](https://docs.github.com/en/github/authenticating-to-github/managing-commit-signature-verification/signing-commits).
 
+<details>
+<summary>Suppressing False Positives</summary>
+
+If necessary, to suppress _false_ positives, add inline comment with specific syntax.
+Please also add a comment explaining _why_ you decided to disable a rule or provide a risk-acceptance reason.
+
+#### Bandit
+
+Findings can be ignored inline with `# nosec BXXX` comments.
+
+```python
+import subprocess # nosec B404 # this is actually fine
+```
+
+[Details](https://bandit.readthedocs.io/en/latest/config.html#exclusions) in Bandit docs.
+
+#### Zizmor
+
+Findings can be ignored inline with `# zizmor: ignore[rulename]` comments.
+
+```yaml
+uses: actions/checkout@v3 # zizmor: ignore[artipacked] this is actually fine
+```
+
+[Details](https://woodruffw.github.io/zizmor/usage/#with-comments) in Zizmor docs.
+
+#### Semgrep
+
+Findings can be ignored inline with `# nosemgrep: rule-id` comments.
+
+```python
+    # nosemgrep: python.lang.security.audit.dangerous-system-call.dangerous-system-call # this is actually fine
+    r = os.system(' '.join(command))
+```
+
+[Details](https://semgrep.dev/docs/ignoring-files-folders-code) in Semgrep docs.
+
+</details>
+
 ### Submitting Pull Requests
 
 Once you've followed the above steps and are satisfied with your changes:
