@@ -16,8 +16,9 @@ from anomalib.pre_processing import PreProcessor
 from anomalib.visualization import Visualizer
 
 from .loss import FocalLoss
-from .perlin import PerlinNoise
 from .torch_model import GlassModel
+
+from anomalib.data.utils.generators.perlin import PerlinAnomalyGenerator
 
 
 class Glass(AnomalibModule):
@@ -54,7 +55,7 @@ class Glass(AnomalibModule):
             visualizer=visualizer,
         )
 
-        self.perlin = PerlinNoise(anomaly_source_path)
+        self.augmentor = PerlinAnomalyGenerator(anomaly_source_path)
 
         self.model = GlassModel(
             input_shape=input_shape,
@@ -82,31 +83,27 @@ class Glass(AnomalibModule):
 
         self.focal_loss = FocalLoss()
 
+        if pre_proj > 0:
+            self.proj_opt = optim.AdamW(self.model.pre_projection.parameters(), self.lr, weight_decay=1e-5)
+        else:
+            self.proj_opt = None
+
+        if not pre_trained:
+            self.backbone_opt = optim.AdamW(self.model.foward_modules["feature_aggregator"].backbone.parameters(), self.lr)
+        else:
+            self.backbone_opt = None
+
     def configure_optimizers(self) -> list[optim.Optimizer]:
-        optimizers = []
-        if not self.model.pre_trained:
-            backbone_opt = optim.AdamW(self.model.foward_modules["feature_aggregator"].backbone.parameters(), self.lr)
-            optimizers.append(backbone_opt)
-        else:
-            optimizers.append(None)
-
-        if self.model.pre_proj > 0:
-            proj_opt = optim.AdamW(self.model.pre_projection.parameters(), self.lr, weight_decay=1e-5)
-            optimizers.append(proj_opt)
-        else:
-            optimizers.append(None)
-
         dsc_opt = optim.AdamW(self.model.discriminator.parameters(), lr=self.lr * 2)
-        optimizers.append(dsc_opt)
 
-        return optimizers
+        return dsc_opt
 
     def training_step(
         self,
         batch: Batch,
         batch_idx: int,
     ) -> STEP_OUTPUT:
-        backbone_opt, proj_opt, dsc_opt = self.optimizers()
+        dsc_opt = self.optimizers()
 
         self.model.forward_modules.eval()
         if self.model.pre_proj > 0:
@@ -114,13 +111,13 @@ class Glass(AnomalibModule):
         self.model.discriminator.train()
 
         dsc_opt.zero_grad()
-        if proj_opt is not None:
-            proj_opt.zero_grad()
-        if backbone_opt is not None:
-            backbone_opt.zero_grad()
+        if self.proj_opt is not None:
+            self.proj_opt.zero_grad()
+        if self.backbone_opt is not None:
+            self.backbone_opt.zero_grad()
 
         img = batch.image
-        aug, mask_s = self.perlin(img)
+        aug, mask_s = self.augmentor(img)
 
         true_feats, fake_feats = self.model(img, aug)
 
@@ -191,10 +188,10 @@ class Glass(AnomalibModule):
         loss = bce_loss + focal_loss
         loss.backward()
 
-        if proj_opt is not None:
-            proj_opt.step()
-        if backbone_opt is not None:
-            backbone_opt.step()
+        if self.proj_opt is not None:
+            self.proj_opt.step()
+        if self.backbone_opt is not None:
+            self.backbone_opt.step()
         dsc_opt.step()
 
     def on_train_start(self) -> None:

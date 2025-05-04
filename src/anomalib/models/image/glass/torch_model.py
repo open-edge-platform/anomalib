@@ -198,7 +198,7 @@ class GlassModel(nn.Module):
         self.layers = layers
         self.input_shape = input_shape
 
-        self.forward_modules = torch.ModuleDict({})
+        self.forward_modules = torch.nn.ModuleDict({})
         feature_aggregator = NetworkFeatureAggregator(
             self.backbone,
             self.layers,
@@ -257,7 +257,7 @@ class GlassModel(nn.Module):
             with torch.no_grad():
                 features = self.forward_modules["feature_aggregator"](images)
 
-        features = [features[layer] for layer in self.layers_to_extract_from]
+        features = [features[layer] for layer in self.layers]
         for i, feat in enumerate(features):
             if len(feat.shape) == 3:
                 B, L, C = feat.shape

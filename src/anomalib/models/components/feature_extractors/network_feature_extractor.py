@@ -29,7 +29,6 @@ class NetworkFeatureAggregator(torch.nn.Module):
         for extract_layer in layers_to_extract_from:
             self.register_hook(extract_layer)
 
-        self.to(self.device)
 
     def forward(self, images, eval=True):
         self.outputs.clear()
@@ -45,7 +44,7 @@ class NetworkFeatureAggregator(torch.nn.Module):
 
     def feature_dimensions(self, input_shape):
         """Computes the feature dimensions for all layers given input_shape."""
-        _input = torch.ones([1] + list(input_shape)).to(self.device)
+        _input = torch.ones([1] + list(input_shape))
         _output = self(_input)
         return [_output[layer].shape[1] for layer in self.layers_to_extract_from]
 
