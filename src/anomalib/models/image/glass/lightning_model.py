@@ -23,7 +23,7 @@ from .torch_model import GlassModel
 class Glass(AnomalibModule):
     def __init__(
         self,
-        input_shape,
+        input_shape: tuple[int, int, int],
         anomaly_source_path: str,
         backbone: str | nn.Module = "resnet18",
         pretrain_embed_dim: int = 1024,

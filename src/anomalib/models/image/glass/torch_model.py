@@ -179,7 +179,7 @@ def process_backbone(backbone):
 class GlassModel(nn.Module):
     def __init__(
         self,
-        input_shape,
+        input_shape: tuple[int, int, int],
         pretrain_embed_dim: int = 1024,
         target_embed_dim: int = 1024,
         backbone: str | nn.Module = "resnet18",
