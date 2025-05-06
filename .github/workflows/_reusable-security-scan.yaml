@@ -20,6 +20,7 @@
 # - tools: Comma-separated list of tools to run
 # - scan-scope: Scope of scanning
 # - severity-level: Minimum severity threshold
+# - confidence-level: Minimum confidence threshold
 # - fail-on-findings: Whether to fail on security findings
 #
 # Outputs:
@@ -33,6 +34,7 @@
 #         tools: "bandit,semgrep"
 #         scan-scope: "changed"
 #         severity-level: "MEDIUM"
+#         confidence-level: "HIGH"
 #         fail-on-findings: true
 #
 # Note: Different security tools may require specific permissions
@@ -44,7 +46,7 @@ on:
   workflow_call:
     inputs:
       tools:
-        description: "Security tools to run (comma-separated: bandit,clamav,semgrep,trivy)"
+        description: "Security tools to run (comma-separated: bandit,clamav,semgrep,trivy,zizmor)"
         type: string
         default: "bandit,semgrep"
       scan-scope:
@@ -53,6 +55,10 @@ on:
         default: "changed"
       severity-level:
         description: "Minimum severity level (LOW/MEDIUM/HIGH)"
+        type: string
+        default: "LOW"
+      confidence-level:
+        description: "Minimum confidence level (LOW/MEDIUM/HIGH)"
         type: string
         default: "LOW"
       fail-on-findings:
@@ -75,17 +81,8 @@ jobs:
         with:
           scan-scope: ${{ inputs.scan-scope }}
           severity-level: ${{ inputs.severity-level }}
+          confidence-level: ${{ inputs.confidence-level }}
           fail-on-findings: ${{ inputs.fail-on-findings }}
-      - uses: actions/upload-artifact@v4
-        if: hashFiles('bandit-report.*') != '' # if any report is available
-        with:
-          name: bandit-results
-          path: bandit-report.*
-          retention-days: 7
-      - uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.8
-        if: hashFiles('bandit-report.sarif') != '' # if SARIF is available, upload it
-        with:
-          sarif_file: bandit-report.sarif
 
   semgrep:
     if: contains(inputs.tools, 'semgrep')
@@ -100,16 +97,6 @@ jobs:
           scan-scope: ${{ inputs.scan-scope }}
           severity: ${{ inputs.severity-level }}
           fail-on-findings: ${{ inputs.fail-on-findings }}
-      - uses: actions/upload-artifact@v4
-        if: hashFiles('security-results/semgrep/*') != '' # if any report is available
-        with:
-          name: semgrep-results
-          path: security-results/semgrep
-          retention-days: 7
-      - uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.8
-        if: hashFiles('security-results/semgrep/semgrep-results.sarif') != '' # if SARIF is available, upload it
-        with:
-          sarif_file: security-results/semgrep/semgrep-results.sarif
 
   trivy:
     if: contains(inputs.tools, 'trivy')
@@ -154,15 +141,22 @@ jobs:
         with:
           scan-scope: ${{ inputs.scan-scope }}
           fail-on-findings: ${{ inputs.fail-on-findings }}
-      - uses: actions/upload-artifact@v4
-        if: always()
+
+  zizmor:
+    if: contains(inputs.tools, 'zizmor')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Zizmor scan
+        uses: ./.github/actions/security/zizmor
         with:
-          name: clamav-results
-          path: security-results/clamav
-          retention-days: 7
+          scan-scope: ${{ inputs.scan-scope }}
+          severity-level: ${{ inputs.severity-level }}
+          confidence-level: ${{ inputs.confidence-level }}
+          fail-on-findings: ${{ inputs.fail-on-findings }}
 
   summarize:
-    needs: [bandit, semgrep, trivy, clamav]
+    needs: [bandit, semgrep, trivy, clamav, zizmor]
     if: always()
     runs-on: ubuntu-latest
     outputs:

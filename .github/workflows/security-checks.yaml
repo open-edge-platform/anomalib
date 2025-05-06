@@ -59,8 +59,8 @@ on:
         required: true
         type: choice
         options:
-          - "bandit,semgrep,trivy" # Default set
-          - "bandit,clamav,semgrep,trivy" # Full set
+          - "bandit,semgrep,trivy,zizmor" # Default set
+          - "bandit,clamav,semgrep,trivy,zizmor" # Full set
           - "bandit,semgrep" # Minimal set
         default: "bandit,semgrep,trivy"
       scan-scope:
@@ -80,6 +80,15 @@ on:
           - MEDIUM
           - HIGH
         default: "LOW"
+      confidence-level:
+        description: "Minimum confidence level"
+        required: true
+        type: choice
+        options:
+          - LOW
+          - MEDIUM
+          - HIGH
+        default: "LOW"
 
 permissions:
   contents: read
@@ -90,7 +99,8 @@ jobs:
     uses: ./.github/workflows/_reusable-security-scan.yaml
     with:
       # For scheduled runs, use full scan configuration
-      tools: ${{ github.event_name == 'schedule' && 'bandit,clamav,semgrep,trivy' || inputs.tools }}
+      tools: ${{ github.event_name == 'schedule' && 'bandit,clamav,semgrep,trivy,zizmor' || inputs.tools }}
       scan-scope: ${{ github.event_name == 'schedule' && 'all' || inputs.scan-scope }}
       severity-level: ${{ github.event_name == 'schedule' && 'LOW' || inputs.severity-level }}
+      confidence-level: ${{ github.event_name == 'schedule' && 'LOW' || inputs.confidence-level }}
       fail-on-findings: false # reports only

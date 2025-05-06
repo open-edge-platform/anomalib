@@ -190,7 +190,7 @@ class TestAPI:
         """
         # set extra model args
         # TODO(ashwinvaidya17): Fix these Edge cases
-        # https://github.com/openvinotoolkit/anomalib/issues/1478
+        # https://github.com/open-edge-platform/anomalib/issues/1478
 
         extra_args = {}
         if model_name == "dfkde":
@@ -220,7 +220,7 @@ class TestAPI:
             max_epochs=1,
             devices=1,
             # TODO(ashwinvaidya17): Fix these Edge cases
-            # https://github.com/openvinotoolkit/anomalib/issues/1478
+            # https://github.com/open-edge-platform/anomalib/issues/1478
             max_steps=70000 if model_name == "efficient_ad" else -1,
         )
         return model, dataset, engine

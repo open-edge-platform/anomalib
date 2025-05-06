@@ -34,11 +34,21 @@ repos:
         exclude: "tests"
 
   # add bandit for security checks
+  # semgrep does not support Windows, therefore it is not currently used in pre-commit
+  # https://github.com/semgrep/semgrep/issues/1330
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.9
+    rev: 1.8.3
     hooks:
       - id: bandit
-        args: ["-c", "pyproject.toml"]
+        args:
+          [
+            "-c",
+            "pyproject.toml",
+            "--severity-level",
+            "medium",
+            "--confidence-level",
+            "high",
+          ]
         additional_dependencies: ["bandit[toml]"]
 
   # notebooks.
@@ -59,3 +69,10 @@ repos:
     rev: v0.41.0
     hooks:
       - id: markdownlint
+
+  # zizmor detects security issues in GitHub Actions workflows.
+  - repo: https://github.com/woodruffw/zizmor-pre-commit
+    rev: v1.6.0
+    hooks:
+      - id: zizmor
+        args: ["--min-severity", "medium", "--min-confidence", "high"]

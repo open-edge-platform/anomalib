@@ -14,7 +14,7 @@ The validation functions include:
 - Ground truth validation
 
 TODO(jpcbertoldo): Move validations to a common place and reuse them across the
-codebase. https://github.com/openvinotoolkit/anomalib/issues/2093
+codebase. https://github.com/open-edge-platform/anomalib/issues/2093
 
 Example:
     >>> from anomalib.metrics.pimo._validate import is_rate

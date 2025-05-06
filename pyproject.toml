@@ -281,8 +281,10 @@ follow_imports_for_stubs = true
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # BANDIT CONFIGURATION                                                        #
+# TODO(AlexanderBarabanov): B614 temporary suppression, enable B614 checks
+# ITEP-36249
 [tool.bandit]
-skips = ["B101"]
+skips = ["B101", "B614"]
 exclude_dirs = ["tests"]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -325,8 +327,8 @@ ruff = ["--ignore=E402"]
 # LINK CHECKER CONFIGURATION                                                  #
 [tool.md_dead_link_check]
 exclude_links = [
-    "https://github.com/openvinotoolkit/anomalib/settings/actions/runners/new",
-    "https://openvinotoolkit.github.io/anomalib/*", # Remove it after publish documentation
+    "https://github.com/open-edge-platform/anomalib/settings/actions/runners/new",
+    "https://open-edge-platform.github.io/anomalib/*", # Remove it after publish documentation
 ]
 exclude_files = ["docs/*"]
 force_get_requests_for_links = ["https://secure.ethicspoint.com/*"]
