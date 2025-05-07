@@ -22,8 +22,8 @@ echo "# Activate the virtual environment (Windows)"
 echo "$ .venv\\Scripts\\activate"
 
 echo -e "\n2. Clone the repository"
-echo "$ git clone https://github.com/openvinotoolkit/anomalib.git"
-# git clone https://github.com/openvinotoolkit/anomalib.git
+echo "$ git clone https://github.com/open-edge-platform/anomalib.git"
+# git clone https://github.com/open-edge-platform/anomalib.git
 
 echo "$ cd anomalib"
 # cd anomalib
@@ -70,7 +70,7 @@ echo -e "\n=== Example Installation Output ==="
 echo '
 ❯ python -m venv .venv
 ❯ source .venv/bin/activate
-(.venv) ❯ git clone https://github.com/openvinotoolkit/anomalib.git
+(.venv) ❯ git clone https://github.com/open-edge-platform/anomalib.git
 Cloning into '"'"'anomalib'"'"'...
 remote: Enumerating objects: 9794, done.
 remote: Counting objects: 100% (2052/2052), done.

@@ -45,6 +45,8 @@ from anomalib.data.utils.synthetic import SyntheticAnomalyDataset
 from anomalib.utils.attrs import get_nested_attr
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from pandas import DataFrame
 
 
@@ -125,6 +127,8 @@ class AnomalibDataModule(LightningDataModule, ABC):
         self._category: str = ""
 
         self._is_setup = False  # flag to track if setup has been called
+
+        self.external_collate_fn: Callable | None = None
 
     @property
     def name(self) -> str:
@@ -317,6 +321,9 @@ class AnomalibDataModule(LightningDataModule, ABC):
         This handles sampling from train/test sets and optionally creating
         synthetic anomalies.
         """
+        if self.val_split_mode == ValSplitMode.FROM_DIR:
+            # If the validation split mode is FROM_DIR, we don't need to create a validation set
+            return
         if self.val_split_mode == ValSplitMode.FROM_TRAIN:
             # randomly sample from train set
             self.train_data, self.val_data = random_split(
@@ -359,7 +366,7 @@ class AnomalibDataModule(LightningDataModule, ABC):
             shuffle=True,
             batch_size=self.train_batch_size,
             num_workers=self.num_workers,
-            collate_fn=self.train_data.collate_fn,
+            collate_fn=self.external_collate_fn or self.train_data.collate_fn,
         )
 
     def val_dataloader(self) -> EVAL_DATALOADERS:
@@ -373,7 +380,7 @@ class AnomalibDataModule(LightningDataModule, ABC):
             shuffle=False,
             batch_size=self.eval_batch_size,
             num_workers=self.num_workers,
-            collate_fn=self.val_data.collate_fn,
+            collate_fn=self.external_collate_fn or self.val_data.collate_fn,
         )
 
     def test_dataloader(self) -> EVAL_DATALOADERS:
@@ -387,7 +394,7 @@ class AnomalibDataModule(LightningDataModule, ABC):
             shuffle=False,
             batch_size=self.eval_batch_size,
             num_workers=self.num_workers,
-            collate_fn=self.test_data.collate_fn,
+            collate_fn=self.external_collate_fn or self.test_data.collate_fn,
         )
 
     def predict_dataloader(self) -> EVAL_DATALOADERS:

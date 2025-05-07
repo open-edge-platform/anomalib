@@ -1,11 +1,11 @@
 # Anomalib DataModules Tutorial
 
-| Notebook | GitHub                         | Colab                                                                                                                                                                                                         |
-| -------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| BTech    | [101_btech](101_btech.ipynb)   | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/openvinotoolkit/anomalib/blob/main/examples/notebooks/100_datamodules/101_btech.ipynb)  |
-| MVTec    | [102_mvtec](102_mvtec.ipynb)   | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/openvinotoolkit/anomalib/blob/main/examples/notebooks/100_datamodules/102_mvtec.ipynb)  |
-| Folder   | [103_folder](103_folder.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/openvinotoolkit/anomalib/blob/main/examples/notebooks/100_datamodules/103_folder.ipynb) |
-| Tiling   | [104_tiling](104_tiling.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/openvinotoolkit/anomalib/blob/main/examples/notebooks/100_datamodules/104_tiling.ipynb) |
+| Notebook | GitHub                         | Colab                                                                                                                                                                                                            |
+| -------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| BTech    | [101_btech](101_btech.ipynb)   | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/open-edge-platform/anomalib/blob/main/examples/notebooks/100_datamodules/101_btech.ipynb)  |
+| MVTec    | [102_mvtec](102_mvtec.ipynb)   | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/open-edge-platform/anomalib/blob/main/examples/notebooks/100_datamodules/102_mvtec.ipynb)  |
+| Folder   | [103_folder](103_folder.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/open-edge-platform/anomalib/blob/main/examples/notebooks/100_datamodules/103_folder.ipynb) |
+| Tiling   | [104_tiling](104_tiling.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/open-edge-platform/anomalib/blob/main/examples/notebooks/100_datamodules/104_tiling.ipynb) |
 
 ## Notebook Contents
 
@@ -39,4 +39,4 @@ Let's deep dive into each dataset supported in anomalib and check their function
 
 ## Installation Instructions
 
-If you have not installed all required dependencies, follow the [Installation Guide](https://openvinotoolkit.github.io/anomalib/getting_started/installation/index.html).
+If you have not installed all required dependencies, follow the [Installation Guide](https://open-edge-platform.github.io/anomalib/getting_started/installation/index.html).

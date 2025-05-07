@@ -39,7 +39,7 @@ from typing import Any
 
 import torch
 from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
-from torchvision.transforms.v2 import Compose, Resize, Transform
+from torchvision.transforms.v2 import Compose, Resize
 
 from anomalib import LearningType
 from anomalib.data import Batch
@@ -60,7 +60,7 @@ logger = logging.getLogger(__name__)
 
 WEIGHTS_DOWNLOAD_INFO = DownloadInfo(
     name="vq_model_pretrained_128_4096.pckl",
-    url="https://github.com/openvinotoolkit/anomalib/releases/download/"
+    url="https://github.com/open-edge-platform/anomalib/releases/download/"
     "dsr_pretrained_weights/dsr_vq_model_pretrained.zip",
     hashsum="52fe7504ec8e9df70b4382f287ab26269dcfe000cd7a7e146a52c6f146f34afb",
 )
@@ -319,28 +319,20 @@ class Dsr(AnomalibModule):
         """
         return LearningType.ONE_CLASS
 
-    @staticmethod
-    def configure_transforms(image_size: tuple[int, int] | None = None) -> Transform:
-        """Configure default transforms for DSR.
+    @classmethod
+    def configure_pre_processor(cls, image_size: tuple[int, int] | None = None) -> PreProcessor:
+        """Configure default pre-processor for DSR.
 
-        Normalization is not needed as the images are scaled to [0, 1] in Dataset.
+        Note:
+            Imagenet normalization is not used in this model.
 
         Args:
-            image_size (tuple[int, int] | None, optional): Input image size.
+            image_size (tuple[int, int] | None, optional): Target image size.
                 Defaults to ``(256, 256)``.
 
         Returns:
-            Transform: Composed transforms
-
-        Example:
-            >>> model = Dsr()
-            >>> transforms = model.configure_transforms((512, 512))
-            >>> isinstance(transforms, Transform)
-            True
+            PreProcessor: Configured pre-processor with resize transform.
         """
         image_size = image_size or (256, 256)
-        return Compose(
-            [
-                Resize(image_size, antialias=True),
-            ],
-        )
+        transform = Compose([Resize(image_size, antialias=True)])
+        return PreProcessor(transform=transform)

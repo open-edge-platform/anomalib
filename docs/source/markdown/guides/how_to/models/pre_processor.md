@@ -108,7 +108,7 @@ The exportable transform that is infused in the model graph uses slightly differ
 ```
 
 ```{note}
-The `get_exportable_transform` function supports conversion of several commonly used transforms. It may occur that your custom set of transforms contains a transform that is not compatible with ONNX but is also not supported by `get_exportable_transforms`. In this case, please feel free to submit a [Feature Request](https://github.com/openvinotoolkit/anomalib/discussions/new?category=feature-requests) in our Discussions section on Github.
+The `get_exportable_transform` function supports conversion of several commonly used transforms. It may occur that your custom set of transforms contains a transform that is not compatible with ONNX but is also not supported by `get_exportable_transforms`. In this case, please feel free to submit a [Feature Request](https://github.com/open-edge-platform/anomalib/discussions/new?category=feature-requests) in our Discussions section on Github.
 ```
 
 After training a model, we can export our model to ONNX format, and our custom set of transforms automatically gets applied when running the model in onnxruntime.

@@ -108,7 +108,7 @@ runs:
     - name: Get changed files
       if: inputs.scan-scope == 'changed'
       id: changed-files
-      uses: tj-actions/changed-files@v41
+      uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
 
     - name: Cache Trivy vulnerability database
       uses: actions/cache@v3
@@ -131,33 +131,46 @@ runs:
     - name: Run Trivy scan
       id: run-trivy
       shell: bash
+      env:
+        INPUTS_SCAN_TYPE: ${{ inputs.scan_type }}
+        INPUTS_SCAN_SCOPE: ${{ inputs.scan-scope }}
+        INPUTS_SCAN_TARGET: ${{ inputs.scan_target }}
+        INPUTS_SEVERITY: ${{ inputs.severity }}
+        INPUTS_IGNORE_UNFIXED: ${{ inputs.ignore_unfixed }}
+        INPUTS_SCANNERS: ${{ inputs.scanners }}
+        INPUTS_MISCONFIG_SCANNERS: ${{ inputs.misconfig_scanners }}
+        INPUTS_FORMAT: ${{ inputs.format }}
+        INPUTS_TIMEOUT: ${{ inputs.timeout }}
+        INPUTS_GENERATE_SBOM: ${{ inputs.generate_sbom }}
+        INPUTS_SBOM_FORMAT: ${{ inputs.sbom_format }}
+
       run: |
         # Create output directory
         mkdir -p reports
-        REPORT_FILE="reports/trivy-${{ inputs.scan_type }}-${{ inputs.scanners }}.sarif"
+        REPORT_FILE="reports/trivy-$INPUTS_SCAN_TYPE-$INPUTS_SCANNERS.sarif"
 
-        echo "Running Trivy with scan type: ${{ inputs.scan_type }}"
+        echo "Running Trivy with scan type: $INPUTS_SCAN_TYPE"
         echo "Output will be saved to: ${REPORT_FILE}"
 
         # Always scan the entire directory but use different paths based on scope
-        if [[ "${{ inputs.scan-scope }}" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
+        if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
           echo "Changed files detected, scanning repository"
           SCAN_TARGET="."
         else
-          echo "Scanning target: ${{ inputs.scan_target }}"
-          SCAN_TARGET="${{ inputs.scan_target }}"
+          echo "Scanning target: $INPUTS_SCAN_TARGET"
+          SCAN_TARGET="$INPUTS_SCAN_TARGET"
         fi
 
         # Build the base command
-        CMD="trivy --cache-dir ~/.cache/trivy ${{ inputs.scan_type }} --severity ${{ inputs.severity }} --format ${{ inputs.format }} --output ${REPORT_FILE} --timeout ${{ inputs.timeout }}"
+        CMD="trivy --cache-dir ~/.cache/trivy $INPUTS_SCAN_TYPE --severity $INPUTS_SEVERITY --format $INPUTS_FORMAT --output ${REPORT_FILE} --timeout $INPUTS_TIMEOUT"
 
         # Add scanner-specific flags based on scan type
-        if [[ "${{ inputs.scan_type }}" == "config" ]]; then
+        if [[ "$INPUTS_SCAN_TYPE" == "config" ]]; then
           # For config scans, use all default misconfig scanners or specified ones
-          CMD="$CMD --misconfig-scanners ${{ inputs.misconfig_scanners }}"
-        elif [[ "${{ inputs.scan_type }}" == "fs" ]]; then
+          CMD="$CMD --misconfig-scanners $INPUTS_MISCONFIG_SCANNERS"
+        elif [[ "$INPUTS_SCAN_TYPE" == "fs" ]]; then
           # For filesystem scans, use --scanners
-          CMD="$CMD --scanners ${{ inputs.scanners }} --ignore-unfixed=${{ inputs.ignore_unfixed }}"
+          CMD="$CMD --scanners $INPUTS_SCANNERS --ignore-unfixed=$INPUTS_IGNORE_UNFIXED"
         fi
 
         # Add the scan target and execute
@@ -174,10 +187,10 @@ runs:
         fi
 
         # Generate SBOM if requested
-        if [[ "${{ inputs.generate_sbom }}" == "true" ]]; then
-          echo "Generating SBOM in ${{ inputs.sbom_format }} format"
+        if [[ "$INPUTS_GENERATE_SBOM" == "true" ]]; then
+          echo "Generating SBOM in $INPUTS_SBOM_FORMAT format"
           trivy fs \
-            --format ${{ inputs.sbom_format }} \
-            --output "sbom.${{ inputs.sbom_format }}" \
+            --format "$INPUTS_SBOM_FORMAT" \
+            --output "sbom.$INPUTS_SBOM_FORMAT" \
             ${SCAN_TARGET}
         fi

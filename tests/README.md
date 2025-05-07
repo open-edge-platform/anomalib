@@ -33,7 +33,7 @@ conda activate anomalib_env
 # ...
 
 # Clone the repository and install in editable mode
-git clone https://github.com/openvinotoolkit/anomalib.git
+git clone https://github.com/open-edge-platform/anomalib.git
 cd anomalib
 pip install -e .[all]
 ```

@@ -190,14 +190,14 @@ class TestAPI:
         """
         # set extra model args
         # TODO(ashwinvaidya17): Fix these Edge cases
-        # https://github.com/openvinotoolkit/anomalib/issues/1478
+        # https://github.com/open-edge-platform/anomalib/issues/1478
 
         extra_args = {}
         if model_name == "dfkde":
             extra_args["n_pca_components"] = 2
 
-        if model_name == "ai_vad":
-            pytest.skip("Revisit AI-VAD test")
+        if model_name in {"ai_vad", "fuvas"}:
+            pytest.skip("Revisit video models tests")
         else:
             # EfficientAd requires that the batch size be lesser than the number of images in the dataset.
             # This is so that the LR step size is not 0.
@@ -220,7 +220,7 @@ class TestAPI:
             max_epochs=1,
             devices=1,
             # TODO(ashwinvaidya17): Fix these Edge cases
-            # https://github.com/openvinotoolkit/anomalib/issues/1478
+            # https://github.com/open-edge-platform/anomalib/issues/1478
             max_steps=70000 if model_name == "efficient_ad" else -1,
         )
         return model, dataset, engine
