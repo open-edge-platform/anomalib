@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import math
@@ -9,9 +9,8 @@ import torch.nn.functional as F
 from scipy import ndimage
 from torch import nn
 
-from anomalib.models.components import NetworkFeatureAggregator
-
-from .backbones import load
+from anomalib.models.components import TimmFeatureExtractor
+from anomalib.models.components.feature_extractors import dryrun_find_featuremap_dims
 
 
 def init_weight(m):
@@ -22,6 +21,22 @@ def init_weight(m):
         m.bias.data.fill_(0)
     elif isinstance(m, torch.nn.Conv2d):
         m.weight.data.normal_(0.0, 0.02)
+
+
+def _deduce_dims(
+    feature_extractor: TimmFeatureExtractor,
+    input_size: tuple[int, int],
+    layers: list[str],
+) -> list[int | tuple[int, int]]:
+    dimensions_mapping = dryrun_find_featuremap_dims(
+        feature_extractor, input_size, layers
+    )
+
+    n_features_original = [
+        dimensions_mapping[layer]["num_features"] for layer in layers
+    ]
+
+    return n_features_original
 
 
 class Preprocessing(torch.nn.Module):
@@ -104,7 +119,9 @@ class Discriminator(torch.nn.Module):
                     torch.nn.LeakyReLU(0.2),
                 ),
             )
-        self.tail = torch.nn.Sequential(torch.nn.Linear(_hidden, 1, bias=False), torch.nn.Sigmoid())
+        self.tail = torch.nn.Sequential(
+            torch.nn.Linear(_hidden, 1, bias=False), torch.nn.Sigmoid()
+        )
         self.apply(init_weight)
 
     def forward(self, x):
@@ -121,11 +138,15 @@ class PatchMaker:
 
     def patchify(self, features, return_spatial_info=False):
         padding = int((self.patchsize - 1) / 2)
-        unfolder = torch.nn.Unfold(kernel_size=self.patchsize, stride=self.stride, padding=padding, dilation=1)
+        unfolder = torch.nn.Unfold(
+            kernel_size=self.patchsize, stride=self.stride, padding=padding, dilation=1
+        )
         unfolded_features = unfolder(features)
         number_of_total_patches = []
         for s in features.shape[-2:]:
-            n_patches = (s + 2 * padding - 1 * (self.patchsize - 1) - 1) / self.stride + 1
+            n_patches = (
+                s + 2 * padding - 1 * (self.patchsize - 1) - 1
+            ) / self.stride + 1
             number_of_total_patches.append(int(n_patches))
         unfolded_features = unfolded_features.reshape(
             *features.shape[:2],
@@ -167,22 +188,19 @@ class RescaleSegmentor:
             )
             _scores = _scores.squeeze(1)
             patch_scores = _scores.cpu().numpy()
-        return [ndimage.gaussian_filter(patch_score, sigma=self.smoothing) for patch_score in patch_scores]
-
-
-def process_backbone(backbone):
-    if isinstance(backbone, str):
-        return load(backbone)
-    return backbone
+        return [
+            ndimage.gaussian_filter(patch_score, sigma=self.smoothing)
+            for patch_score in patch_scores
+        ]
 
 
 class GlassModel(nn.Module):
     def __init__(
         self,
-        input_shape: tuple[int, int, int],
+        input_shape: tuple[int, int],  # (H, W)
         pretrain_embed_dim: int = 1024,
         target_embed_dim: int = 1024,
-        backbone: str | nn.Module = "resnet18",
+        backbone: str = "resnet18",
         patchsize: int = 3,
         patchstride: int = 1,
         pre_trained: bool = True,
@@ -194,17 +212,18 @@ class GlassModel(nn.Module):
     ) -> None:
         super().__init__()
 
-        self.backbone = process_backbone(backbone)
+        self.backbone = backbone
         self.layers = layers
         self.input_shape = input_shape
+        self.pre_trained = pre_trained
 
         self.forward_modules = torch.nn.ModuleDict({})
-        feature_aggregator = NetworkFeatureAggregator(
-            self.backbone,
-            self.layers,
-            pre_trained,
+        feature_aggregator = TimmFeatureExtractor(
+            backbone=self.backbone,
+            layers=self.layers,
+            pre_trained=self.pre_trained,
         )
-        feature_dimensions = feature_aggregator.feature_dimensions(input_shape)
+        feature_dimensions = _deduce_dims(feature_aggregator, self.input_shape, layers)
         self.forward_modules["feature_aggregator"] = feature_aggregator
 
         preprocessing = Preprocessing(feature_dimensions, pretrain_embed_dim)
@@ -213,11 +232,11 @@ class GlassModel(nn.Module):
         preadapt_aggregator = Aggregator(target_dim=target_embed_dim)
         self.forward_modules["preadapt_aggregator"] = preadapt_aggregator
 
-        self.pre_trained = pre_trained
-
         self.pre_proj = pre_proj
         if self.pre_proj > 0:
-            self.pre_projection = Projection(self.target_embed_dimension, self.target_embed_dimension, pre_proj)
+            self.pre_projection = Projection(
+                self.target_embed_dimension, self.target_embed_dimension, pre_proj
+            )
 
         self.dsc_layers = dsc_layers
         self.dsc_hidden = dsc_hidden
@@ -236,7 +255,7 @@ class GlassModel(nn.Module):
         self.forward_modules.eval()
         with torch.no_grad():
             if self.pre_proj > 0:
-                outputs = self.pre_projection(self.generate_embeddings(images))
+                outputs = self.pre_projection(self.generate_embeddings(images)[0])
                 outputs = outputs[0] if len(outputs) == 2 else outputs
             else:
                 outputs = self._embed(images, evaluation=False)[0]
@@ -261,9 +280,13 @@ class GlassModel(nn.Module):
         for i, feat in enumerate(features):
             if len(feat.shape) == 3:
                 B, L, C = feat.shape
-                features[i] = feat.reshape(B, int(math.sqrt(L)), int(math.sqrt(L)), C).permute(0, 3, 1, 2)
+                features[i] = feat.reshape(
+                    B, int(math.sqrt(L)), int(math.sqrt(L)), C
+                ).permute(0, 3, 1, 2)
 
-        features = [self.patch_maker.patchify(x, return_spatial_info=True) for x in features]
+        features = [
+            self.patch_maker.patchify(x, return_spatial_info=True) for x in features
+        ]
         patch_shapes = [x[1] for x in features]
         patch_features = [x[0] for x in features]
         ref_num_patches = patch_shapes[0]
@@ -305,14 +328,18 @@ class GlassModel(nn.Module):
 
     def forward(self, img, aug, evaluation=False):
         if self.pre_proj > 0:
-            fake_feats = self.pre_projection(self.generate_embeddings(aug, evaluation=evaluation)[0])
+            fake_feats = self.pre_projection(
+                self.generate_embeddings(aug, eval=evaluation)[0]
+            )
             fake_feats = fake_feats[0] if len(fake_feats) == 2 else fake_feats
-            true_feats = self.pre_projection(self.generate_embeddings(img, evaluation=evaluation)[0])
+            true_feats = self.pre_projection(
+                self.generate_embeddings(img, eval=evaluation)[0]
+            )
             true_feats = true_feats[0] if len(true_feats) == 2 else true_feats
         else:
-            fake_feats = self.generate_embeddings(aug, evaluation=evaluation)[0]
+            fake_feats = self.generate_embeddings(aug, eval=evaluation)[0]
             fake_feats.requires_grad = True
-            true_feats = self.generate_embeddings(img, evaluation=evaluation)[0]
+            true_feats = self.generate_embeddings(img, eval=evaluation)[0]
             true_feats.requires_grad = True
 
         return true_feats, fake_feats

@@ -38,7 +38,7 @@ Example:
 
 from .base import AnomalibModule, BufferListMixin, DynamicBufferMixin, MemoryBankMixin
 from .dimensionality_reduction import PCA, SparseRandomProjection
-from .feature_extractors import TimmFeatureExtractor, NetworkFeatureAggregator
+from .feature_extractors import TimmFeatureExtractor
 from .filters import GaussianBlur2d
 from .sampling import KCenterGreedy
 from .stats import GaussianKDE, MultiVariateGaussian

@@ -85,7 +85,5 @@ __all__ = [
     "Supersimplenet",
     "Uflow",
     "VlmAd",
-    "WinClip",
-    "Padim",
-    "Glass",
+    "WinClip"
 ]

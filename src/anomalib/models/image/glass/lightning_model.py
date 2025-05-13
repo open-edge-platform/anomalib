@@ -1,4 +1,18 @@
-# Copyright (C) 2022-2025 Intel Corporation
+"""GLASS - Unsupervised anomaly detection via Gradient Ascent for Industrial Anomaly detection and localization.
+
+This module implements the GLASS model for unsupervised anomaly detection and localization. GLASS synthesizes both global and local anomalies using Gaussian noise guided by gradient ascent to enhance weak defect detection in industrial settings.
+
+The model consists of:
+    - A feature extractor and feature adaptor to obtain robust normal representations
+    - A Global Anomaly Synthesis (GAS) module that perturbs features using Gaussian noise and gradient ascent with truncated projection
+    - A Local Anomaly Synthesis (LAS) module that overlays augmented textures onto images using Perlin noise masks
+    - A shared discriminator trained with features from normal, global, and local synthetic samples
+
+Paper: `A Unified Anomaly Synthesis Strategy with Gradient Ascent for Industrial Anomaly Detection and Localization
+<https://arxiv.org/pdf/2407.09359>`
+"""
+
+# Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from typing import Any
@@ -22,11 +36,66 @@ from anomalib.data.utils.generators.perlin import PerlinAnomalyGenerator
 
 
 class Glass(AnomalibModule):
+    """PyTorch Lightning Implementation of the GLASS Model
+
+    The model uses a pre-trained feature extractor to extract features and a feature adaptor to mitigate latent domain bias.
+    Global anomaly features are synthesized from adapted normal features using gradient ascent.
+    Local anomaly images are synthesized using texture overlay datasets like dtd which are then processed by feature extractor and feature adaptor.
+    All three different features are passed to the discriminator trained using loss functions.
+
+    Args:
+        input_shape (tuple[int, int]): Input image dimensions as a tuple of (height, width). Required for shaping the input pipeline.
+        anomaly_source_path (str): Path to the dataset or source directory containing normal images and anomaly textures.
+        backbone (str, optional): Name of the CNN backbone used for feature extraction.
+            Defaults to `"resnet18"`.
+        pretrain_embed_dim (int, optional): Dimensionality of features extracted by the pre-trained backbone before adaptation.
+            Defaults to `1024`.
+        target_embed_dim (int, optional): Dimensionality of the target adapted features after projection.
+            Defaults to `1024`.
+        patchsize (int, optional): Size of the local patch used in feature aggregation (e.g., for neighborhood pooling).
+            Defaults to `3`.
+        patchstride (int, optional): Stride used when extracting patches for local feature aggregation.
+            Defaults to `1`.
+        pre_trained (bool, optional): Whether to use ImageNet pre-trained weights for the backbone network.
+            Defaults to `True`.
+        layers (list[str], optional): List of backbone layers to extract features from.
+            Defaults to `["layer1", "layer2", "layer3"]`.
+        pre_proj (int, optional): Number of projection layers used in the feature adaptor (e.g., MLP before discriminator).
+            Defaults to `1`.
+        dsc_layers (int, optional): Number of layers in the discriminator network.
+            Defaults to `2`.
+        dsc_hidden (int, optional): Number of hidden units in each discriminator layer.
+            Defaults to `1024`.
+        dsc_margin (float, optional): Margin used for contrastive or binary classification loss in discriminator training.
+            Defaults to `0.5`.
+        pre_processor (PreProcessor | bool, optional): reprocessing module or flag to enable default preprocessing.
+            Set to `True` to apply default normalization and resizing.
+            Defaults to `True`.
+        post_processor (PostProcessor | bool, optional): Postprocessing module or flag to enable default output smoothing or thresholding.
+            Defaults to `True`.
+        evaluator (Evaluator | bool, optional): Evaluation module for calculating metrics such as AUROC and PRO.
+            Defaults to `True`.
+        visualizer (Visualizer | bool, optional): Visualization module to generate heatmaps, segmentation overlays, and anomaly scores.
+            Defaults to `True`.
+        mining (int, optional): Number of iterations or difficulty level for Online Hard Example Mining (OHEM) during training.
+            Defaults to `1`.
+        noise (float, optional): Standard deviation of Gaussian noise used in feature-level anomaly synthesis.
+            Defaults to `0.015`.
+        radius (float, optional): Radius parameter used for truncated projection in the anomaly synthesis strategy.
+            Determines the range for valid synthetic anomalies in the hypersphere or manifold.
+            Defaults to `0.75`.
+        p (float, optional): Probability used in random selection logic, such as anomaly mask generation or augmentation choice.
+            Defaults to `0.5`.
+        lr (float, optional): Learning rate for training the feature adaptor and discriminator networks.
+            Defaults to `0.0001`.
+        step (int, optional): Number of gradient ascent steps or
+    """
+
     def __init__(
         self,
-        input_shape: tuple[int, int, int],
+        input_shape: tuple[int, int],
         anomaly_source_path: str,
-        backbone: str | nn.Module = "resnet18",
+        backbone: str = "resnet18",
         pretrain_embed_dim: int = 1024,
         target_embed_dim: int = 1024,
         patchsize: int = 3,
@@ -84,12 +153,17 @@ class Glass(AnomalibModule):
         self.focal_loss = FocalLoss()
 
         if pre_proj > 0:
-            self.proj_opt = optim.AdamW(self.model.pre_projection.parameters(), self.lr, weight_decay=1e-5)
+            self.proj_opt = optim.AdamW(
+                self.model.pre_projection.parameters(), self.lr, weight_decay=1e-5
+            )
         else:
             self.proj_opt = None
 
         if not pre_trained:
-            self.backbone_opt = optim.AdamW(self.model.foward_modules["feature_aggregator"].backbone.parameters(), self.lr)
+            self.backbone_opt = optim.AdamW(
+                self.model.foward_modules["feature_aggregator"].backbone.parameters(),
+                self.lr,
+            )
         else:
             self.backbone_opt = None
 
@@ -107,7 +181,7 @@ class Glass(AnomalibModule):
 
         self.model.forward_modules.eval()
         if self.model.pre_proj > 0:
-            self.pre_projection.train()
+            self.model.pre_projection.train()
         self.model.discriminator.train()
 
         dsc_opt.zero_grad()
@@ -127,7 +201,9 @@ class Glass(AnomalibModule):
 
         center = self.c.repeat(img.shape[0], 1, 1)
         center = center.reshape(-1, center.shape[-1])
-        true_points = torch.concat([fake_feats[mask_s_gt[:, 0] == 0], true_feats], dim=0)
+        true_points = torch.concat(
+            [fake_feats[mask_s_gt[:, 0] == 0], true_feats], dim=0
+        )
         c_t_points = torch.concat([center[mask_s_gt[:, 0] == 0], center], dim=0)
         dist_t = torch.norm(true_points - c_t_points, dim=1)
         r_t = torch.tensor([torch.quantile(dist_t, q=self.radius)]).to(self.device)

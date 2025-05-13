@@ -1,5 +1,12 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Original Code
+# Copyright (c) 2021 @Hsuxu
+# https://github.com/Hsuxu/Loss_ToolBox-PyTorch.
 # SPDX-License-Identifier: Apache-2.0
+#
+# Modified
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 
 import numpy as np
 import torch
@@ -7,20 +14,31 @@ from torch import nn
 
 
 class FocalLoss(nn.Module):
-    """copy from: https://github.com/Hsuxu/Loss_ToolBox-PyTorch/blob/master/FocalLoss/FocalLoss.py
-    This is a implementation of Focal Loss with smooth label cross entropy supported which is proposed in
-    'Focal Loss for Dense Object Detection. (https://arxiv.org/abs/1708.02002)'
-        Focal_Loss= -1*alpha*(1-pt)*log(pt)
-    :param num_class:
-    :param alpha: (tensor) 3D or 4D the scalar factor for this criterion
-    :param gamma: (float,double) gamma > 0 reduces the relative loss for well-classified examples (p>0.5) putting more
-                    focus on hard misclassified example
-    :param smooth: (float,double) smooth value when cross entropy
-    :param balance_index: (int) balance class index, should be specific when alpha is float
-    :param size_average: (bool, optional) By default, the losses are averaged over each loss element in the batch.
+    """Implementation of Focal Loss with support for smoothed label cross-entropy, as proposed in
+    'Focal Loss for Dense Object Detection' (https://arxiv.org/abs/1708.02002).
+
+    The focal loss formula is:
+        Focal_Loss = -1 * alpha * (1 - pt) ** gamma * log(pt)
+
+    Args:
+        num_class (int): Number of classes.
+        alpha (float or Tensor): Scalar or Tensor weight factor for class imbalance. If float, `balance_index` should be set.
+        gamma (float): Focusing parameter that reduces the relative loss for well-classified examples (gamma > 0).
+        smooth (float): Label smoothing factor for cross-entropy.
+        balance_index (int): Index of the class to balance when `alpha` is a float.
+        size_average (bool, optional): If True (default), the loss is averaged over the batch; otherwise, the loss is summed.
+
     """
 
-    def __init__(self, apply_nonlin=None, alpha=None, gamma=2, balance_index=0, smooth=1e-5, size_average=True):
+    def __init__(
+        self,
+        apply_nonlin: nn.Module | None = None,
+        alpha: float | torch.Tensor = None,
+        gamma: float = 2,
+        balance_index: int = 0,
+        smooth: float = 1e-5,
+        size_average: bool = True,
+    ):
         super(FocalLoss, self).__init__()
         self.apply_nonlin = apply_nonlin
         self.alpha = alpha
@@ -71,7 +89,11 @@ class FocalLoss(nn.Module):
             one_hot_key = one_hot_key.to(logit.device)
 
         if self.smooth:
-            one_hot_key = torch.clamp(one_hot_key, self.smooth / (num_class - 1), 1.0 - self.smooth)
+            one_hot_key = torch.clamp(
+                one_hot_key,
+                self.smooth / (num_class - 1),
+                1.0 - self.smooth,
+            )
         pt = (one_hot_key * logit).sum(1) + self.smooth
         logpt = pt.log()
 
