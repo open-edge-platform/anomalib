@@ -69,7 +69,7 @@ IMAGENETTE_DOWNLOAD_INFO = DownloadInfo(
 
 WEIGHTS_DOWNLOAD_INFO = DownloadInfo(
     name="efficientad_pretrained_weights.zip",
-    url="https://github.com/openvinotoolkit/anomalib/releases/download/efficientad_pretrained_weights/efficientad_pretrained_weights.zip",
+    url="https://github.com/open-edge-platform/anomalib/releases/download/efficientad_pretrained_weights/efficientad_pretrained_weights.zip",
     hashsum="c09aeaa2b33f244b3261a5efdaeae8f8284a949470a4c5a526c61275fe62684a",
 )
 

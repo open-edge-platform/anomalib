@@ -56,6 +56,7 @@ core = [
     #   torch.onnx.errors.UnsupportedOperatorError: Exporting the operator
     #   'aten::_native_multi_head_attention' to ONNX opset version 14 is not supported
     "open-clip-torch>=2.23.0,<2.26.1",
+    "fvcore",
 ]
 openvino = ["openvino>=2024.0", "nncf>=2.10.0", "onnx>=1.16.0"]
 vlm = ["ollama>=0.4.0", "openai", "python-dotenv","transformers"]
@@ -280,9 +281,11 @@ follow_imports_for_stubs = true
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # BANDIT CONFIGURATION                                                        #
+# TODO(AlexanderBarabanov): B614 temporary suppression, enable B614 checks
+# ITEP-36249
 [tool.bandit]
-skips = ["B101"]
-
+skips = ["B101", "B614"]
+exclude_dirs = ["tests"]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # PYTEST CONFIGURATION                                                        #
@@ -324,8 +327,8 @@ ruff = ["--ignore=E402"]
 # LINK CHECKER CONFIGURATION                                                  #
 [tool.md_dead_link_check]
 exclude_links = [
-    "https://github.com/openvinotoolkit/anomalib/settings/actions/runners/new",
-    "https://openvinotoolkit.github.io/anomalib/*", # Remove it after publish documentation
+    "https://github.com/open-edge-platform/anomalib/settings/actions/runners/new",
+    "https://open-edge-platform.github.io/anomalib/*", # Remove it after publish documentation
 ]
 exclude_files = ["docs/*"]
 force_get_requests_for_links = ["https://secure.ethicspoint.com/*"]

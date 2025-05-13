@@ -153,7 +153,7 @@ class BenchmarkJob(Job):
             "test_duration": job_end_time - test_start_time,
         }
         # TODO(ashwinvaidya17): Restore throughput
-        # https://github.com/openvinotoolkit/anomalib/issues/2054
+        # https://github.com/open-edge-platform/anomalib/issues/2054
         output = {
             "accelerator": self.accelerator,
             **durations,

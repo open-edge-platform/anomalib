@@ -1,5 +1,5 @@
 name: Pre-Merge Checks
-permissions: read-all
+permissions: {} # shall be sufficient in public repo
 
 on:
   merge_group:
@@ -83,6 +83,6 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: AlexanderDokuchaev/md-dead-link-check@v1.0
+      - uses: AlexanderDokuchaev/md-dead-link-check@d5a37e0b14e5918605d22b34562532762ccb2e47 # v1.2.0
         with:
           config: pyproject.toml
