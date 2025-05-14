@@ -159,6 +159,7 @@ class ExportMixin:
             dynamic_axes=dynamic_axes,
             input_names=["input"],
             output_names=output_names,
+            dynamo=True,
         )
 
         return onnx_path

@@ -56,7 +56,7 @@ from typing import Any
 import numpy as np
 import torch
 from lightning_utilities.core.imports import module_available
-from openvino.runtime.utils.data_helpers.wrappers import OVDict
+from openvino.utils.data_helpers.wrappers import OVDict
 from PIL.Image import Image as PILImage
 
 from anomalib.data import NumpyImageBatch
