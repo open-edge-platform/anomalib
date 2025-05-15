@@ -721,7 +721,7 @@ class Engine:
             self.trainer.validate(model, val_dataloaders, None, verbose=False, datamodule=datamodule)
         else:
             self.trainer.fit(model, train_dataloaders, val_dataloaders, datamodule, ckpt_path)
-        self.trainer.test(model, test_dataloaders, ckpt_path=ckpt_path, datamodule=datamodule)
+        return self.trainer.test(model, test_dataloaders, ckpt_path=ckpt_path, datamodule=datamodule)
 
     def export(
         self,
