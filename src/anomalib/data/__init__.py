@@ -61,6 +61,7 @@ from .datamodules.image import (
     MVTecAD2,
     MVTecLOCO,
     RealIAD,
+    Tabular,
     Visa,
 )
 from .datamodules.video import Avenue, ShanghaiTech, UCSDped, VideoDataFormat
@@ -75,6 +76,7 @@ from .datasets.image import (
     KolektorDataset,
     MVTecADDataset,
     MVTecLOCODataset,
+    TabularDataset,
     VADDataset,
     VisaDataset,
 )
@@ -177,6 +179,7 @@ __all__ = [
     "MVTecAD2",
     "MVTecLOCO",
     "RealIAD",
+    "Tabular",
     "VAD",
     "Visa",
     # Video Data Modules
@@ -192,6 +195,7 @@ __all__ = [
     "KolektorDataset",
     "MVTecADDataset",
     "MVTecLOCODataset",
+    "TabularDataset",
     "VADDataset",
     "VisaDataset",
     "AvenueDataset",
