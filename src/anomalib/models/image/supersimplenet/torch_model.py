@@ -33,7 +33,7 @@ class SupersimplenetModel(nn.Module):
 
     Args:
         perlin_threshold (float): threshold value for Perlin noise thresholding during anomaly generation.
-        backbone (str): backbone name
+        backbone (str): backbone name. IMPORTANT! use only backbones with torchvision V1 weights ending on ".tv".
         layers (list[str]): backbone layers utilised
         stop_grad (bool): whether to stop gradient from class. to seg. head.
     """
@@ -41,7 +41,7 @@ class SupersimplenetModel(nn.Module):
     def __init__(
         self,
         perlin_threshold: float = 0.2,
-        backbone: str = "wide_resnet50_2",
+        backbone: str = "wide_resnet50_2.tv_in1k",  # IMPORTANT: use .tv weights, not tv2
         layers: list[str] = ["layer2", "layer3"],  # noqa: B006
         stop_grad: bool = True,
     ) -> None:
