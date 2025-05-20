@@ -23,7 +23,6 @@ Example:
 # SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
-from typing import IO
 
 import pandas as pd
 from torchvision.transforms.v2 import Transform
@@ -51,7 +50,7 @@ class Tabular(AnomalibDataModule):
             Defaults to ``32``.
         num_workers (int): Number of workers for data loading.
             Defaults to ``8``.
-        train_augmentations (Transform | None): Augmentations to apply dto the training images
+        train_augmentations (Transform | None): Augmentations to apply to the training images
             Defaults to ``None``.
         val_augmentations (Transform | None): Augmentations to apply to the validation images.
             Defaults to ``None``.
@@ -168,8 +167,8 @@ class Tabular(AnomalibDataModule):
     def from_file(
         cls: type["Tabular"],
         name: str,
-        file_path: str | Path | IO[str] | IO[bytes],
-        file_format: str = "csv",
+        file_path: str | Path,
+        file_format: str | None = None,
         pd_kwargs: dict | None = None,
         **kwargs,
     ) -> "Tabular":
@@ -178,11 +177,11 @@ class Tabular(AnomalibDataModule):
         Args:
             name (str): Name of the dataset. This is used to name the datamodule,
                 especially when logging/saving.
-            file_path (str | Path | file-like): Path or file-like object to tabular
-                file containing the datset information.
+            file_path (str | Path): Path to tabular file containing the datset
+                information.
             file_format (str): File format supported by a pd.read_* method, such
                 as ``csv``, ``parquet`` or ``json``.
-                Defaults to ``csv``.
+                Defaults to ``None`` (inferred from file suffix).
             pd_kwargs (dict | None): Keyword argument dictionary for the pd.read_* method.
                 Defaults to ``None``.
             kwargs (dict): Additional keyword arguments for the Tabular Datamodule class.
@@ -190,6 +189,22 @@ class Tabular(AnomalibDataModule):
         Returns:
             Tabular: Tabular Datamodule
         """
+        # Check if file exists
+        if not Path(file_path).is_file():
+            msg = f"File not found: '{file_path}'"
+            raise FileNotFoundError(msg)
+
+        # Infer file_format and check if supported
+        file_format = file_format or Path(file_path).suffix[1:]
+        if not file_format:
+            msg = f"File format not specified and could not be inferred from file name: '{Path(file_path).name}'"
+            raise ValueError(msg)
+        read_func = getattr(pd, f"read_{file_format}", None)
+        if read_func is None:
+            msg = f"Unsupported file format: '{file_format}'"
+            raise ValueError(msg)
+
+        # Read the file and return Tabular dataset
         pd_kwargs = pd_kwargs or {}
-        samples = getattr(pd, f"read_{file_format}")(file_path, **pd_kwargs)
+        samples = read_func(file_path, **pd_kwargs)
         return cls(name, samples, **kwargs)

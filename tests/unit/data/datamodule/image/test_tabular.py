@@ -88,13 +88,13 @@ class TestTabularFromFile(TestTabular):
     def datamodule(dataset_path: Path) -> Tabular:
         """Create and return a Tabular datamodule."""
         _samples = TestTabular.get_samples_dataframe(dataset_path)
-        with tempfile.TemporaryFile() as samples_file:
+        with tempfile.NamedTemporaryFile(suffix=".csv") as samples_file:
             _samples.to_csv(samples_file)
             samples_file.seek(0)
 
             _datamodule = Tabular.from_file(
                 name="dummy",
-                file_path=samples_file,
+                file_path=samples_file.name,
                 train_batch_size=4,
                 eval_batch_size=4,
                 num_workers=0,
