@@ -28,6 +28,12 @@ This implementation supports both unsupervised and supervised setting, but Anoma
 
 `anomalib train --model SuperSimpleNet --data MVTecAD --data.category <category>`
 
+> IMPORTANT!
+>
+> The model is verified to work with WideResNet50 using torchvision V1 weights.
+> It should work with most ResNets and WideResNets, but make sure you use V1 weights if you use default noise std value.
+> Correct weight name ends with ".tv\_[...]", not "tv2" (e.g. "wide_resnet50_2.tv_in1k").
+>
 > It is recommended to train the model for 300 epochs with batch size of 32 to achieve stable training with random anomaly generation. Training with lower parameter values will still work, but might not yield the optimal results.
 >
 > For supervised learning, refer to the [official code](https://github.com/blaz-r/SuperSimpleNet).
