@@ -28,6 +28,13 @@ Dataset format compatible with Intel Geti™.
 Custom folder-based dataset organization.
 :::
 
+:::{grid-item-card} Tabular
+:link: anomalib.data.datamodules.image.Tabular
+:link-type: doc
+
+Custom tabular dataset.
+:::
+
 :::{grid-item-card} Kolektor
 :link: anomalib.data.datamodules.image.Kolektor
 :link-type: doc
