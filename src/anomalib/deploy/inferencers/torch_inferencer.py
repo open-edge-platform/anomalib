@@ -36,6 +36,8 @@ Example:
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import logging
+import os
 from pathlib import Path
 
 import numpy as np
@@ -46,6 +48,8 @@ from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from anomalib.data import ImageBatch
 from anomalib.data.utils import read_image
+
+logger = logging.getLogger(__name__)
 
 
 class TorchInferencer:
@@ -132,7 +136,37 @@ class TorchInferencer:
             msg = f"Unknown PyTorch checkpoint format {path.suffix}. Make sure you save the PyTorch model."
             raise ValueError(msg)
 
-        return torch.load(path, map_location=self.device, weights_only=False)
+        trust_remote_code_enabled = os.environ.get("TRUST_REMOTE_CODE", "0").lower() in {"1", "true"}
+
+        if trust_remote_code_enabled:
+            logger.warning(
+                "TRUST_REMOTE_CODE is set to True. Loading model using pickle module, "
+                "which is inherently insecure and can lead to arbitrary code execution. "
+                "Only set this to True if you TRUST the source of the checkpoint.",
+            )
+            # When flag is true, load with pickle enabled (original behavior for full models)
+            return torch.load(path, map_location=self.device)
+
+        # Flag is false. Attempt safe loading only.
+        try:
+            return torch.load(path, map_location=self.device, weights_only=True)
+        except RuntimeError as e:
+            # weights_only=True failed. This model requires pickle.
+            # Since flag is false, this is an error condition.
+            # Log the original error for context, but raise a new, specific ValueError.
+            logger.exception(
+                "Attempt to load model with 'weights_only=True' failed. "
+                "This model likely requires full unpickling. "
+                "To load this model, you must explicitly trust it by setting the "
+                "environment variable TRUST_REMOTE_CODE=1.",
+            )
+            msg = (
+                "Loading this model checkpoint requires executing arbitrary code via Python's pickle module, "
+                "which is disabled by default for security reasons. This can be exploited by malicious model files. "
+                "If you trust the source of this model and understand the risks, "
+                "set the environment variable `TRUST_REMOTE_CODE=True` to allow loading."
+            )
+            raise ValueError(msg) from e
 
     def load_model(self, path: str | Path) -> nn.Module:
         """Load the PyTorch model.
