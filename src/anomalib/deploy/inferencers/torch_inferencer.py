@@ -3,6 +3,24 @@
 This module provides the PyTorch inferencer implementation for running inference
 with trained PyTorch models.
 
+.. warning::
+    This is a legacy inferencer. It is recommended to use :class:`anomalib.engine.Engine.predict()`
+    instead, which provides a more modern and feature-rich interface for model inference.
+
+.. danger::
+    **Security Notice**: PyTorch model loading uses Python's pickle module, which can execute code from the checkpoint
+    file.This is a standard PyTorch behavior, not specific to this library. For security, load models only from trusted
+    sources and consider using safer formats like ONNX or TorchScript for production use. To proceed with loading, set:
+
+    - Load models only from trusted sources
+    - Consider using safer formats like ONNX or TorchScript for production use
+
+    To proceed with loading, set:
+
+    .. code-block:: bash
+
+        export TRUST_REMOTE_CODE=1
+
 Example:
     Assume we have a PyTorch model saved as a ``.pt`` file:
 
@@ -55,6 +73,24 @@ logger = logging.getLogger(__name__)
 class TorchInferencer:
     """PyTorch inferencer for anomaly detection models.
 
+    .. warning::
+        This is a legacy inferencer. It is recommended to use :class:`anomalib.engine.Engine.predict()`
+        instead, which provides a more modern and feature-rich interface for model inference.
+
+    .. danger::
+        **Security Notice**: PyTorch model loading uses Python's pickle module,
+        which can execute code from the checkpoint file. This is a standard PyTorch behavior,
+        not specific to this library. For security:
+
+        - Load models only from trusted sources
+        - Consider using safer formats like ONNX or TorchScript for production use
+
+        To proceed with loading, set:
+
+        .. code-block:: bash
+
+            export TRUST_REMOTE_CODE=1
+
     Args:
         path (str | Path): Path to the PyTorch model weights file.
         device (str, optional): Device to use for inference.
@@ -69,6 +105,7 @@ class TorchInferencer:
     Raises:
         ValueError: If an invalid device is specified.
         ValueError: If the model file has an unknown extension.
+        ValueError: If TRUST_REMOTE_CODE environment variable is not set.
         KeyError: If the checkpoint file does not contain a model.
     """
 
@@ -77,6 +114,10 @@ class TorchInferencer:
         path: str | Path,
         device: str = "auto",
     ) -> None:
+        logger.warning(
+            "TorchInferencer is a legacy inferencer. Consider using Engine.predict() instead, "
+            "which provides a more modern and feature-rich interface for model inference.",
+        )
         self.device = self._get_device(device)
 
         # Load the model weights and metadata
@@ -122,6 +163,7 @@ class TorchInferencer:
 
         Raises:
             ValueError: If the model file has an unknown extension.
+            ValueError: If TRUST_REMOTE_CODE environment variable is not set.
 
         Example:
             >>> model = TorchInferencer(path="path/to/model.pt")
@@ -138,35 +180,22 @@ class TorchInferencer:
 
         trust_remote_code_enabled = os.environ.get("TRUST_REMOTE_CODE", "0").lower() in {"1", "true"}
 
-        if trust_remote_code_enabled:
-            logger.warning(
-                "TRUST_REMOTE_CODE is set to True. Loading model using pickle module, "
-                "which is inherently insecure and can lead to arbitrary code execution. "
-                "Only set this to True if you TRUST the source of the checkpoint.",
-            )
-            # When flag is true, load with pickle enabled (original behavior for full models)
-            return torch.load(path, map_location=self.device)
-
-        # Flag is false. Attempt safe loading only.
-        try:
-            return torch.load(path, map_location=self.device, weights_only=True)
-        except RuntimeError as e:
-            # weights_only=True failed. This model requires pickle.
-            # Since flag is false, this is an error condition.
-            # Log the original error for context, but raise a new, specific ValueError.
-            logger.exception(
-                "Attempt to load model with 'weights_only=True' failed. "
-                "This model likely requires full unpickling. "
-                "To load this model, you must explicitly trust it by setting the "
-                "environment variable TRUST_REMOTE_CODE=1.",
-            )
+        if not trust_remote_code_enabled:
             msg = (
                 "Loading this model checkpoint requires executing arbitrary code via Python's pickle module, "
                 "which is disabled by default for security reasons. This can be exploited by malicious model files. "
                 "If you trust the source of this model and understand the risks, "
-                "set the environment variable `TRUST_REMOTE_CODE=True` to allow loading."
+                "set the environment variable `TRUST_REMOTE_CODE=1` to allow loading."
             )
-            raise ValueError(msg) from e
+            raise ValueError(msg)
+
+        logger.warning(
+            "TRUST_REMOTE_CODE is set to True. Loading model using pickle module, "
+            "which is inherently insecure and can lead to arbitrary code execution. "
+            "Only set this to True if you TRUST the source of the checkpoint.",
+        )
+        # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
+        return torch.load(path, map_location=self.device, weights_only=False)
 
     def load_model(self, path: str | Path) -> nn.Module:
         """Load the PyTorch model.
@@ -218,10 +247,7 @@ class TorchInferencer:
         image = self.pre_process(image)
         predictions = self.model(image)
 
-        return ImageBatch(
-            image=image,
-            **predictions._asdict(),
-        )
+        return ImageBatch(image=image, **predictions._asdict())
 
     def pre_process(self, image: torch.Tensor) -> torch.Tensor:
         """Pre-process the input image.
