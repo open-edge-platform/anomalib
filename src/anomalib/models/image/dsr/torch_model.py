@@ -128,7 +128,7 @@ class DsrModel(nn.Module):
             device (torch.device | str | None, optional): Device to load weights
                 to. Defaults to ``None``.
         """
-        self.discrete_latent_model.load_state_dict(torch.load(ckpt, map_location=device))
+        self.discrete_latent_model.load_state_dict(torch.load(ckpt, map_location=device, weights_only=True))
 
     def forward(
         self,
