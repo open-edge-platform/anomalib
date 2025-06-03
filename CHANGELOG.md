@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- 🔨 Refactor: Add a whitelist of modules get_datamodule() method in https://github.com/open-edge-platform/anomalib/pull/2732
+- 🔨 Refactor: Add a whitelist of modules get_datamodule() method in https://github.com/open-edge-platform/anomalib/pull/2734
 
 ### Deprecated
 
