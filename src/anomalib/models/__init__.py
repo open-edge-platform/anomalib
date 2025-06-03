@@ -52,7 +52,7 @@ from jsonargparse import Namespace
 from omegaconf import DictConfig, OmegaConf
 
 from anomalib.models.components import AnomalibModule
-from anomalib.utils.path import convert_to_snake_case, convert_snake_to_pascal_case
+from anomalib.utils.path import convert_snake_to_pascal_case, convert_to_snake_case
 
 from .image import (
     Cfa,
@@ -115,8 +115,6 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
-
-
 
 
 def get_available_models() -> set[str]:

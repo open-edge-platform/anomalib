@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+
 - 🔨 Refactor: Add a whitelist of modules get_datamodule() method in https://github.com/open-edge-platform/anomalib/pull/2732
 - 🚀 Add new SOTA video Anomaly detection module FUVAS
 - 🚀 Add VAD dataset by @abc-125 in https://github.com/open-edge-platform/anomalib/pull/2603
