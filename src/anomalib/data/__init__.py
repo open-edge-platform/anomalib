@@ -96,6 +96,7 @@ ALLOWED_DATAMODULES = {
     "anomalib.data.datamodules.video",
 }
 
+
 class UnknownDatamoduleError(ModuleNotFoundError):
     """Raised when a datamodule cannot be found."""
 
@@ -149,8 +150,9 @@ def get_datamodule(config: DictConfig | ListConfig | dict) -> AnomalibDataModule
         else:
             module = importlib.import_module("anomalib.data")
     except ModuleNotFoundError as exception:
-        logger.exception(f"Could not import module '{_config.class_path}'. "
-                            f"Available datamodules are {ALLOWED_DATAMODULES}")
+        logger.exception(
+            f"Could not import module '{_config.class_path}'. " f"Available datamodules are {ALLOWED_DATAMODULES}"
+        )
         raise UnknownDatamoduleError from exception
 
     # Datamodule is imported. Fetching the dataclass from the imported module.
@@ -160,7 +162,7 @@ def get_datamodule(config: DictConfig | ListConfig | dict) -> AnomalibDataModule
         logger.exception(
             f"Could not find the datamodule class '{_config.class_path}'. "
             f"Classes available in {module.__name__} are "
-            f"{[cls for cls in dir(module) if not cls.startswith('_')]}"
+            f"{[cls for cls in dir(module) if not cls.startswith('_')]}",
         )
 
         raise UnknownDatamoduleError from exception
