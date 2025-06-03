@@ -133,7 +133,7 @@ def get_datamodule(config: DictConfig | ListConfig | dict) -> AnomalibDataModule
     if not hasattr(module, data_class_name):
         logger.error(
             f"Dataclass '{data_class_name}' not found in module '{module.__name__}'. "
-            f"Available classes are {[cls for cls in dir(module) if not cls.startswith('_')]}",
+            f"Available classes are {AnomalibDataModule.__subclasses__()}",
         )
         error_str = f"Dataclass '{data_class_name}' not found in module '{module.__name__}'."
         raise UnknownDatamoduleError(error_str)
