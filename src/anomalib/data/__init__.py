@@ -151,7 +151,7 @@ def get_datamodule(config: DictConfig | ListConfig | dict) -> AnomalibDataModule
             module = importlib.import_module("anomalib.data")
     except ModuleNotFoundError as exception:
         logger.exception(
-            f"Could not import module '{_config.class_path}'. " f"Available datamodules are {ALLOWED_DATAMODULES}"
+            f"Could not import module '{_config.class_path}'. Available datamodules are {ALLOWED_DATAMODULES}",
         )
         raise UnknownDatamoduleError from exception
 
