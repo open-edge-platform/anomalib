@@ -38,8 +38,12 @@ class TestGradioInferenceEntrypoint:
     def test_torch_inference(
         get_functions: tuple[Callable, Callable],
         ckpt_path: Callable[[str], Path],
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test gradio_inference.py."""
+        # Set TRUST_REMOTE_CODE environment variable for the test
+        monkeypatch.setenv("TRUST_REMOTE_CODE", "1")
+
         _ckpt_path = ckpt_path("Padim")
         parser, inferencer = get_functions
         model = Padim.load_from_checkpoint(_ckpt_path)
