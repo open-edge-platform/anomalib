@@ -52,7 +52,7 @@ from jsonargparse import Namespace
 from omegaconf import DictConfig, OmegaConf
 
 from anomalib.models.components import AnomalibModule
-from anomalib.utils.path import convert_to_snake_case
+from anomalib.utils.path import convert_to_snake_case, convert_snake_to_pascal_case
 
 from .image import (
     Cfa,
@@ -117,27 +117,6 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-def convert_snake_to_pascal_case(snake_case: str) -> str:
-    """Convert snake_case string to PascalCase.
-
-    This function takes a string in snake_case format (words separated by underscores)
-    and converts it to PascalCase format (each word capitalized and concatenated).
-
-    Args:
-        snake_case (str): Input string in snake_case format (e.g. ``"efficient_ad"``)
-
-    Returns:
-        str: Output string in PascalCase format (e.g. ``"EfficientAd"``)
-
-    Examples:
-        >>> convert_snake_to_pascal_case("efficient_ad")
-        'EfficientAd'
-        >>> convert_snake_to_pascal_case("patchcore")
-        'Patchcore'
-        >>> convert_snake_to_pascal_case("reverse_distillation")
-        'ReverseDistillation'
-    """
-    return "".join(word.capitalize() for word in snake_case.split("_"))
 
 
 def get_available_models() -> set[str]:

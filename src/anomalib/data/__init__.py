@@ -89,6 +89,12 @@ DataFormat = Enum(  # type: ignore[misc]
     {i.name: i.value for i in chain(DepthDataFormat, ImageDataFormat, VideoDataFormat)},
 )
 
+ALLOWED_DATAMODULES = {
+    "anomalib.data.datamodules",
+    "anomalib.data.datamodules.depth",
+    "anomalib.data.datamodules.image",
+    "anomalib.data.datamodules.video",
+}
 
 class UnknownDatamoduleError(ModuleNotFoundError):
     """Raised when a datamodule cannot be found."""
@@ -119,25 +125,49 @@ def get_datamodule(config: DictConfig | ListConfig | dict) -> AnomalibDataModule
         ... })
         >>> datamodule = get_datamodule(config)
     """
-    logger.info("Loading the datamodule")
+    logger.info("Loading the datamodule and dataset class from the config.")
 
+    # Getting the datamodule class from the config.
     if isinstance(config, dict):
         config = DictConfig(config)
-
+    _config = config.data if "data" in config else config
     try:
-        _config = config.data if "data" in config else config
         if len(_config.class_path.split(".")) > 1:
-            module = importlib.import_module(".".join(_config.class_path.split(".")[:-1]))
+            # path
+            module_path = ".".join(_config.class_path.split(".")[:-1])
+            if module_path not in ALLOWED_DATAMODULES:
+                logger.error(
+                    f"Module import from '{module_path}' is not allowed. "
+                    f"Only imports from {ALLOWED_DATAMODULES} are permitted.",
+                )
+                msg = f"Module import from '{module_path}' is not allowed."
+                raise UnknownDatamoduleError(msg)
+            # Used a whitelist (ALLOWED_DATAMODULES) to prevent arbitrary code execution.
+            # Therefore, exempt from semgrep.
+            # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
+            module = importlib.import_module(module_path)
         else:
             module = importlib.import_module("anomalib.data")
     except ModuleNotFoundError as exception:
-        logger.exception(f"ModuleNotFoundError: {_config.class_path}")
+        logger.exception(f"Could not import module '{_config.class_path}'. "
+                            f"Available datamodules are {ALLOWED_DATAMODULES}")
         raise UnknownDatamoduleError from exception
-    dataclass = getattr(module, _config.class_path.split(".")[-1])
+
+    # Datamodule is imported. Fetching the dataclass from the imported module.
+    try:
+        dataclass = getattr(module, _config.class_path.split(".")[-1])
+    except AttributeError as exception:
+        logger.exception(
+            f"Could not find the datamodule class '{_config.class_path}'. "
+            f"Classes available in {module.__name__} are "
+            f"{[cls for cls in dir(module) if not cls.startswith('_')]}"
+        )
+
+        raise UnknownDatamoduleError from exception
+
     init_args = {**_config.get("init_args", {})}  # get dict
     if "image_size" in init_args:
         init_args["image_size"] = to_tuple(init_args["image_size"])
-
     return dataclass(**init_args)
 
 
