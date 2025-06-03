@@ -164,7 +164,7 @@ def load(
                 msg = f"File {model_path} is not a JIT archive. Loading as a state dict instead"
                 logger.warn(msg)
                 jit = False
-            state_dict = torch.load(opened_file, map_location="cpu", weights_only=True)
+            state_dict = torch.load(opened_file, map_location="cpu")
 
     if not jit:
         model = build_model(state_dict or model.state_dict()).to(device)
