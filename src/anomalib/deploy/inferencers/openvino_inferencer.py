@@ -51,16 +51,18 @@ Example:
 
 import logging
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import torch
 from lightning_utilities.core.imports import module_available
-from openvino.runtime.utils.data_helpers.wrappers import OVDict
 from PIL.Image import Image as PILImage
 
 from anomalib.data import NumpyImageBatch
 from anomalib.data.utils import read_image
+
+if TYPE_CHECKING:
+    from openvino.runtime.utils.data_helpers.wrappers import OVDict
 
 logger = logging.getLogger("anomalib")
 
@@ -177,7 +179,7 @@ class OpenVINOInferencer:
         return image
 
     @staticmethod
-    def post_process(predictions: OVDict) -> dict:
+    def post_process(predictions: "OVDict") -> dict:
         """Convert OpenVINO predictions to dictionary.
 
         Args:
