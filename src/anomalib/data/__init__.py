@@ -89,13 +89,6 @@ DataFormat = Enum(  # type: ignore[misc]
     {i.name: i.value for i in chain(DepthDataFormat, ImageDataFormat, VideoDataFormat)},
 )
 
-ALLOWED_DATAMODULES = {
-    "anomalib.data.datamodules",
-    "anomalib.data.datamodules.depth",
-    "anomalib.data.datamodules.image",
-    "anomalib.data.datamodules.video",
-}
-
 
 class UnknownDatamoduleError(ModuleNotFoundError):
     """Raised when a datamodule cannot be found."""
@@ -132,40 +125,19 @@ def get_datamodule(config: DictConfig | ListConfig | dict) -> AnomalibDataModule
     if isinstance(config, dict):
         config = DictConfig(config)
     _config = config.data if "data" in config else config
-    try:
-        if len(_config.class_path.split(".")) > 1:
-            # path
-            module_path = ".".join(_config.class_path.split(".")[:-1])
-            if module_path not in ALLOWED_DATAMODULES:
-                logger.error(
-                    f"Module import from '{module_path}' is not allowed. "
-                    f"Only imports from {ALLOWED_DATAMODULES} are permitted.",
-                )
-                msg = f"Module import from '{module_path}' is not allowed."
-                raise UnknownDatamoduleError(msg)
-            # Used a whitelist (ALLOWED_DATAMODULES) to prevent arbitrary code execution.
-            # Therefore, exempted from semgrep.
-            # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
-            module = importlib.import_module(module_path)
-        else:
-            module = importlib.import_module("anomalib.data")
-    except ModuleNotFoundError as exception:
-        logger.exception(
-            f"Could not import module '{_config.class_path}'. Available datamodules are {ALLOWED_DATAMODULES}",
-        )
-        raise UnknownDatamoduleError from exception
 
-    # Datamodule is imported. Fetching the dataclass from the imported module.
-    try:
-        dataclass = getattr(module, _config.class_path.split(".")[-1])
-    except AttributeError as exception:
-        logger.exception(
-            f"Could not find the datamodule class '{_config.class_path}'. "
-            f"Classes available in {module.__name__} are "
-            f"{[cls for cls in dir(module) if not cls.startswith('_')]}",
+    # All the sub data modules are imported to anomalib.data. So need to import the module dynamically using paths.
+    module = importlib.import_module("anomalib.data")
+    data_class_name = _config.class_path.split(".")[-1]
+    # check if the data_class exists in the module
+    if not hasattr(module, data_class_name):
+        logger.error(
+            f"Dataclass '{data_class_name}' not found in module '{module.__name__}'. "
+            f"Available classes are {[cls for cls in dir(module) if not cls.startswith('_')]}",
         )
-
-        raise UnknownDatamoduleError from exception
+        error_str = f"Dataclass '{data_class_name}' not found in module '{module.__name__}'."
+        raise UnknownDatamoduleError(error_str)
+    dataclass = getattr(module, data_class_name)
 
     init_args = {**_config.get("init_args", {})}  # get dict
     if "image_size" in init_args:
