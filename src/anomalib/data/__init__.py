@@ -143,7 +143,7 @@ def get_datamodule(config: DictConfig | ListConfig | dict) -> AnomalibDataModule
                 msg = f"Module import from '{module_path}' is not allowed."
                 raise UnknownDatamoduleError(msg)
             # Used a whitelist (ALLOWED_DATAMODULES) to prevent arbitrary code execution.
-            # Therefore, exempt from semgrep.
+            # Therefore, exempted from semgrep.
             # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
             module = importlib.import_module(module_path)
         else:
