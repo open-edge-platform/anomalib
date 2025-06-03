@@ -215,7 +215,7 @@ Advanced users may want to define their own pre-processing pipeline. This can be
 
 ```python
 from anomalib.pre_processing import PreProcessor
-from anomalib.utils.transform import get_exportable_transform
+from anomalib.pre_processing.utils.transform import get_exportable_transform
 from torchvision.transforms.v2 import Transform
 
 
