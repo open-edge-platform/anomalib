@@ -16,9 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-
-- 🔨 Refactor: Fix semgrep security issue `get_datamodule()` method in https://github.com/open-edge-platform/anomalib/pull/2734
-- 🔨 Update docs for importing the `get_exportable_transform()`in https://github.com/open-edge-platform/anomalib/pull/2731
+- 🔨 Refactor: Fix semgrep security issue for `get_datamodule()` method in https://github.com/open-edge-platform/anomalib/pull/2734
+- 🔨Update docs for importing the `get_exportable_transform()`in https://github.com/open-edge-platform/anomalib/pull/2731
 
 ### Deprecated
 
