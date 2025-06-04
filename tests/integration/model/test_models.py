@@ -17,12 +17,12 @@ import pytest
 from anomalib.data import AnomalibDataModule, MVTecAD
 from anomalib.deploy import ExportType
 from anomalib.engine import Engine
-from anomalib.models import AnomalibModule, get_available_models, get_model
+from anomalib.models import AnomalibModule, get_model, list_models
 
 
 def models() -> set[str]:
     """Return all available models."""
-    return get_available_models()
+    return list_models()
 
 
 def export_types() -> list[ExportType]:

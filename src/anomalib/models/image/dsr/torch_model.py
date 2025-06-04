@@ -128,7 +128,7 @@ class DsrModel(nn.Module):
             device (torch.device | str | None, optional): Device to load weights
                 to. Defaults to ``None``.
         """
-        self.discrete_latent_model.load_state_dict(torch.load(ckpt, map_location=device))
+        self.discrete_latent_model.load_state_dict(torch.load(ckpt, map_location=device, weights_only=True))
 
     def forward(
         self,
@@ -906,7 +906,7 @@ class VectorQuantizer(nn.Module):
 
         # necessary to correctly load the checkpoint file
         self.register_buffer("_ema_cluster_size", torch.zeros(num_embeddings))
-        self._ema_w = nn.Parameter(torch.Tensor(num_embeddings, self._embedding_dim))
+        self._ema_w = nn.Parameter(torch.zeros(num_embeddings, self._embedding_dim))
         self._ema_w.data.normal_()
 
     @property

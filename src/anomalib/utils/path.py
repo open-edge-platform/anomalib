@@ -168,6 +168,29 @@ def convert_to_snake_case(s: str) -> str:
     return re.sub(r"__+", "_", s)
 
 
+def convert_snake_to_pascal_case(snake_case: str) -> str:
+    """Convert snake_case string to PascalCase.
+
+    This function takes a string in snake_case format (words separated by underscores)
+    and converts it to PascalCase format (each word capitalized and concatenated).
+
+    Args:
+        snake_case (str): Input string in snake_case format (e.g. ``"efficient_ad"``)
+
+    Returns:
+        str: Output string in PascalCase format (e.g. ``"EfficientAd"``)
+
+    Examples:
+        >>> convert_snake_to_pascal_case("efficient_ad")
+        'EfficientAd'
+        >>> convert_snake_to_pascal_case("patchcore")
+        'Patchcore'
+        >>> convert_snake_to_pascal_case("reverse_distillation")
+        'ReverseDistillation'
+    """
+    return "".join(word.capitalize() for word in snake_case.split("_"))
+
+
 def convert_to_title_case(text: str) -> str:
     """Convert text to title case, handling various text formats.
 
