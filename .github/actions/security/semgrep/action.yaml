@@ -108,7 +108,7 @@ runs:
         INPUTS_TIMEOUT: ${{ inputs.timeout }}
         INPUTS_OUTPUT_FORMAT: ${{ inputs.output-format }}
         INPUTS_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
-      run: |
+      run: | # zizmor: ignore[template-injection]
         set +e
         # Map standard severity levels to Semgrep's levels
         # Semgrep does not support hierarchy, levels must be set explicitly

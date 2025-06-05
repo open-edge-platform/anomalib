@@ -95,7 +95,7 @@ runs:
       # providing individual non-workflow files (even yaml) to Zizmor causes errors ("invalid GitHub Actions workflow").
       # Based on the assumption that workflows are maintained in a valid state, this will not trigger alerts unrelated to the PR.
 
-      run: |
+      run: | # zizmor: ignore[template-injection]
         set +e
         REPORT_FILE="zizmor-report.$INPUTS_OUTPUT_FORMAT"
 
