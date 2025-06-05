@@ -106,6 +106,8 @@ jobs:
           nvidia-smi || echo "::error::No GPU found"
 
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Run tests
         uses: ./.github/actions/pytest
         with:
