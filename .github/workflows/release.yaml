@@ -63,9 +63,14 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+
 jobs:
   validation:
     uses: ./.github/workflows/_reusable-release-validation.yaml
+    permissions:
+      security-events: write # needed to upload results
     with:
       version: ${{ github.event_name == 'push' && github.ref_name || inputs.version }}
       python-version: "3.10"

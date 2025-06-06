@@ -110,7 +110,8 @@ on:
         description: "Name of the built artifact"
         value: ${{ jobs.build.outputs.artifact-name }}
 
-permissions: {} # Default permissions shall be enough
+permissions:
+  contents: read
 
 jobs:
   version-check:
@@ -165,6 +166,8 @@ jobs:
   security:
     needs: [version-check]
     uses: ./.github/workflows/_reusable-security-scan.yaml
+    permissions:
+      security-events: write # needed to upload results
     with:
       tools: "bandit,semgrep,trivy,clamav"
       scan-scope: "all"
