@@ -140,6 +140,7 @@ runs:
       env:
         INPUTS_DEVICE: ${{ inputs.device }}
         INPUTS_MAX_TEST_TIME: ${{ inputs.max-test-time }}
+      # zizmor ignore: path is hardcoded, no external input used
       run: | # zizmor: ignore[template-injection]
         source .venv/bin/activate
         start_time=$(date +%s)
@@ -201,6 +202,7 @@ runs:
       shell: bash
       env:
         INPUTS_MAX_TEST_TIME: ${{ inputs.max-test-time }}
+      # duration is calculated in step, no external input used
       run: | # zizmor: ignore[template-injection]
         duration="${{ steps.test-execution.outputs.duration }}"
         if [ -n "$duration" ]; then
