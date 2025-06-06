@@ -87,6 +87,7 @@ jobs:
     uses: ./.github/workflows/_reusable-security-scan.yaml
     permissions:
       security-events: write # needed to upload results
+      contents: read
     with:
       tools: "semgrep,bandit,zizmor" # Security tools to run
       scan-scope: "changed" # Only scan changed files
