@@ -70,7 +70,9 @@ on:
         description: "Whether any security issues were found"
         value: ${{ jobs.summarize.outputs.has_findings }}
 
-permissions: {} # Default permissions shall be enough
+permissions:
+  contents: read
+  security-events: write # needed by nested workflows to upload results
 
 jobs:
   bandit:
