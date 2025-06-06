@@ -92,7 +92,7 @@ on:
 
 permissions:
   contents: read
-  security-events: write
+  security-events: write # needed to upload results
 
 jobs:
   security:

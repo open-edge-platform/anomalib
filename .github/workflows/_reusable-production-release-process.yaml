@@ -106,7 +106,7 @@ jobs:
     needs: [prepare-release]
     uses: ./.github/workflows/_reusable-release-publisher.yaml
     permissions:
-      contents: write
+      contents: write # is required by action-gh-release (nested)
     with:
       version: ${{ inputs.version }}
       artifact-name: production-release-artifacts
