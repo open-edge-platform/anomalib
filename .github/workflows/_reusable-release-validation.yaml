@@ -118,17 +118,19 @@ jobs:
     steps:
       - name: Validate version
         id: validate-version
+        env:
+          INPUTS_VERSION: ${{ inputs.version }}
+          INPUTS_ALLOW_PRERELEASE: ${{ inputs.allow-prerelease }}
         run: |
-          VERSION="${{ inputs.version }}"
-          if [[ ! $VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
-            echo "::error::Invalid version format: $VERSION"
+          if [[ ! "$INPUTS_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
+            echo "::error::Invalid version format: $INPUTS_VERSION"
             exit 1
           fi
-          if [[ $VERSION =~ -rc[0-9]+$ ]] && [[ "${{ inputs.allow-prerelease }}" != "true" ]]; then
+          if [[ "$INPUTS_VERSION" =~ -rc[0-9]+$ ]] && [[ "$INPUTS_ALLOW_PRERELEASE" != "true" ]]; then
             echo "::error::Pre-release versions not allowed"
             exit 1
           fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version=$INPUTS_VERSION" >> $GITHUB_OUTPUT
 
   quality:
     needs: [version-check]

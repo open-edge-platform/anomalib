@@ -125,7 +125,8 @@ jobs:
 
       - name: Move Trivy results
         if: always() && steps.trivy.outputs.report_path
-        run: |
+        # zizmor ignore: report_path is sanitized in composite action
+        run: | # zizmor: ignore[template-injection]
           mkdir -p security-results/trivy
           mv ${{ steps.trivy.outputs.report_path }} security-results/trivy/
 
