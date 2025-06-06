@@ -128,11 +128,12 @@ jobs:
           ignore_unfixed: "true"
 
       - name: Move Trivy results
+        env:
+          STEPS_TRIVY_OUTPUTS_REPORT_PATH: ${{ steps.trivy.outputs.report_path }}
         if: always() && steps.trivy.outputs.report_path
-        # zizmor ignore: report_path is sanitized in composite action
-        run: | # zizmor: ignore[template-injection]
+        run: |
           mkdir -p security-results/trivy
-          mv ${{ steps.trivy.outputs.report_path }} security-results/trivy/
+          mv "$STEPS_TRIVY_OUTPUTS_REPORT_PATH" security-results/trivy/
 
       - uses: actions/upload-artifact@v4
         if: always()
