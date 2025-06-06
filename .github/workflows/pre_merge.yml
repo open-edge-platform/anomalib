@@ -1,5 +1,6 @@
 name: Pre-Merge Checks
-permissions: {} # shall be sufficient in public repo
+permissions:
+  contents: read
 
 on:
   merge_group:

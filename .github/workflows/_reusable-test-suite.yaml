@@ -94,6 +94,9 @@ on:
         description: "Path to test results artifact"
         value: ${{ jobs.test.outputs.artifact-path }}
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ${{ inputs.runner }}

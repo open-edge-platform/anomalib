@@ -69,7 +69,8 @@ on:
         description: "Name of the uploaded artifact"
         value: ${{ jobs.build.outputs.artifact-name }}
 
-permissions: {} # Default permissions shall be enough
+permissions:
+  contents: read
 
 jobs:
   build:

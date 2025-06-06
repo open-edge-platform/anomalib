@@ -61,7 +61,8 @@ on:
       pypi-token:
         required: true
 
-permissions: {} # Default permissions shall be enough
+permissions:
+  contents: read
 
 jobs:
   validate-release-readiness:

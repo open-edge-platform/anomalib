@@ -73,6 +73,9 @@ on:
         description: "Whether version is a pre-release"
         value: ${{ jobs.validate.outputs.is_prerelease }}
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest

@@ -54,7 +54,8 @@ on:
         type: string
         default: "3.10"
 
-permissions: {} # Default permissions shall be enough
+permissions:
+  contents: read
 
 jobs:
   pre-commit:
