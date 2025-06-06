@@ -140,8 +140,8 @@ runs:
       env:
         INPUTS_DEVICE: ${{ inputs.device }}
         INPUTS_MAX_TEST_TIME: ${{ inputs.max-test-time }}
-      # zizmor ignore: path is hardcoded, no external input used
-      run: | # zizmor: ignore[template-injection]
+        STEPS_TEST_SCOPE_OUTPUTS_PATH: ${{ steps.test-scope.outputs.path }}
+      run: |
         source .venv/bin/activate
         start_time=$(date +%s)
 
@@ -153,7 +153,7 @@ runs:
         fi
 
         # Run pytest
-        PYTHONPATH=src pytest ${{ steps.test-scope.outputs.path }} \
+        PYTHONPATH=src pytest "$STEPS_TEST_SCOPE_OUTPUTS_PATH" \
           --numprocesses=0 \
           --durations=10 \
           --durations-min=1.0 \
@@ -202,13 +202,12 @@ runs:
       shell: bash
       env:
         INPUTS_MAX_TEST_TIME: ${{ inputs.max-test-time }}
-      # duration is calculated in step, no external input used
-      run: | # zizmor: ignore[template-injection]
-        duration="${{ steps.test-execution.outputs.duration }}"
-        if [ -n "$duration" ]; then
-          echo "Test Duration: $duration seconds"
+        STEPS_TEST_EXECUTION_OUTPUTS_DURATION: ${{ steps.test-execution.outputs.duration }}
+      run: |
+        if [ -n "$STEPS_TEST_EXECUTION_OUTPUTS_DURATION" ]; then
+          echo "Test Duration: $STEPS_TEST_EXECUTION_OUTPUTS_DURATION seconds"
 
-          if [ "$duration" -gt "$INPUTS_MAX_TEST_TIME" ]; then
+          if [ "$STEPS_TEST_EXECUTION_OUTPUTS_DURATION" -gt "$INPUTS_MAX_TEST_TIME" ]; then
             echo "::warning::Test suite exceeded recommended duration of $INPUTS_MAX_TEST_TIME seconds"
           fi
         else

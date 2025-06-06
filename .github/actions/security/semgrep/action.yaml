@@ -108,7 +108,8 @@ runs:
         INPUTS_TIMEOUT: ${{ inputs.timeout }}
         INPUTS_OUTPUT_FORMAT: ${{ inputs.output-format }}
         INPUTS_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
-      run: | # zizmor: ignore[template-injection]
+        STEPS_CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+      run: |
         set +e
         # Map standard severity levels to Semgrep's levels
         # Semgrep does not support hierarchy, levels must be set explicitly
@@ -132,15 +133,14 @@ runs:
 
         REPORT_FILE="security-results/semgrep/semgrep-results.$INPUTS_OUTPUT_FORMAT"
 
-        if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
+        if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "$STEPS_CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES" ]]; then
           echo "Running Semgrep on changed files, output results into workflow log only"
-          FILES="${{ steps.changed-files.outputs.all_changed_files }}"
         semgrep \
           ${SEMGREP_SEVERITY} \
           --error \
           --timeout "$INPUTS_TIMEOUT" \
           --metrics=off \
-          ${FILES}
+          "$STEPS_CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES"
         exit_code="$?"
         echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
 

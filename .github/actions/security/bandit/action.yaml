@@ -121,7 +121,7 @@ runs:
         INPUTS_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
         STEPS_CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
 
-      run: | # zizmor: ignore[template-injection]
+      run: |
         set +e
         REPORT_FILE="bandit-report.$INPUTS_OUTPUT_FORMAT"
 
