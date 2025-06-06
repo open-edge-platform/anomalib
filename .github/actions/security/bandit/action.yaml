@@ -119,9 +119,8 @@ runs:
         INPUTS_CONFIDENCE_LEVEL: ${{ inputs.confidence-level }}
         INPUTS_OUTPUT_FORMAT: ${{ inputs.output-format }}
         INPUTS_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
-        STEPS_CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
-
-      run: |
+      # zizmor ignore: all_changed_files is tj-actions/changed-files output
+      run: | # zizmor: ignore[template-injection]
         set +e
         REPORT_FILE="bandit-report.$INPUTS_OUTPUT_FORMAT"
 
@@ -129,14 +128,15 @@ runs:
         SEVERITY=$(echo "$INPUTS_SEVERITY_LEVEL" | tr '[:upper:]' '[:lower:]')
         CONFIDENCE=$(echo "$INPUTS_CONFIDENCE_LEVEL" | tr '[:upper:]' '[:lower:]')
 
-        if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "$STEPS_CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES" ]]; then
+        if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
           echo "Running Bandit on changed files, output results into workflow log only"
+          FILES="${{ steps.changed-files.outputs.all_changed_files }}"
           bandit \
             -a file \
             -c "$INPUTS_CONFIG_FILE" \
             --severity-level ${SEVERITY} \
             --confidence-level ${CONFIDENCE} \
-            -r "$STEPS_CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES"
+            -r ${FILES}
           exit_code="$?"
           echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
 
