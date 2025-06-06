@@ -95,9 +95,12 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
       - name: Check pre-release
         id: check-prerelease
+        env:
+          INPUTS_ALLOW_PRERELEASE: ${{ inputs.allow-prerelease }}
+          STEPS_GET_VERSION_OUTPUTS_VERSION: ${{ steps.get-version.outputs.version }}
         run: |
-          if [[ "${{ steps.get-version.outputs.version }}" =~ -rc[0-9]+$ ]]; then
-            if [[ "${{ inputs.allow-prerelease }}" != "true" ]]; then
+          if [[ "$STEPS_GET_VERSION_OUTPUTS_VERSION" =~ -rc[0-9]+$ ]]; then
+            if [[ "$INPUTS_ALLOW_PRERELEASE" != "true" ]]; then
               echo "::error::Pre-release versions are not allowed"
               exit 1
             fi

@@ -141,12 +141,15 @@ jobs:
           VERSION: ${{ inputs.version }}
 
       - name: Generate technical review report
-        run: |
+        env:
+          VERSION: ${{ inputs.version }}
+        # zizmor ignore: status is hardcoded, no external input used
+        run: | # zizmor: ignore[template-injection]
           cat << EOF > technical-review-report.md
           # Technical Review Report
 
           ## Version Information
-          - Version: ${{ inputs.version }}
+          - Version: "$VERSION"
           - Package Name: $(ls dist/*.whl | head -n 1 | xargs basename)
 
           ## Test Results
@@ -195,7 +198,8 @@ jobs:
           path: qa-review
 
       - name: Generate QA dashboard
-        run: |
+        # zizmor ignore: status is hardcoded, no external input used
+        run: | # zizmor: ignore[template-injection]
           echo "QA Review Dashboard"
           echo "==================="
           echo
@@ -222,8 +226,10 @@ jobs:
           name: technical-review-report
 
       - name: Display release information
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
-          echo "Release Information for ${{ inputs.version }}"
+          echo "Release Information for $VERSION"
           echo "----------------------------------------"
           cat technical-review-report.md
 
@@ -236,8 +242,9 @@ jobs:
       - name: Record approval
         env:
           APPROVER: ${{ github.actor }}
+          VERSION: ${{ inputs.version }}
         run: |
           echo "RC Approval Record:"
-          echo "- Version: ${{ inputs.version }}"
+          echo "- Version: $VERSION"
           echo "- Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
           echo "- Approver: $APPROVER"
