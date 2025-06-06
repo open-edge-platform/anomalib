@@ -54,6 +54,8 @@ on:
         type: string
         default: "3.10"
 
+permissions: {} # Default permissions shall be enough
+
 jobs:
   pre-commit:
     runs-on: ubuntu-latest

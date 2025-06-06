@@ -70,6 +70,8 @@ on:
         description: "Whether any security issues were found"
         value: ${{ jobs.summarize.outputs.has_findings }}
 
+permissions: {} # Default permissions shall be enough
+
 jobs:
   bandit:
     if: contains(inputs.tools, 'bandit')

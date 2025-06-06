@@ -110,6 +110,8 @@ on:
         description: "Name of the built artifact"
         value: ${{ jobs.build.outputs.artifact-name }}
 
+permissions: {} # Default permissions shall be enough
+
 jobs:
   version-check:
     runs-on: ubuntu-latest

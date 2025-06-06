@@ -61,6 +61,8 @@ on:
         required: true
         type: string
 
+permissions: {} # Default permissions shall be enough
+
 jobs:
   check-status:
     runs-on: ubuntu-latest
