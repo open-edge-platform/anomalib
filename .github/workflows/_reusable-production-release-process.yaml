@@ -104,6 +104,8 @@ jobs:
   publish:
     needs: [prepare-release]
     uses: ./.github/workflows/_reusable-release-publisher.yaml
+    permissions:
+      contents: write
     with:
       version: ${{ inputs.version }}
       artifact-name: production-release-artifacts

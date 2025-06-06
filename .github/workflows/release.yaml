@@ -95,6 +95,8 @@ jobs:
     needs: [validation]
     if: ${{ !contains(needs.validation.outputs.version, '-rc') && !contains(needs.validation.outputs.version, 'b') }}
     uses: ./.github/workflows/_reusable-production-release-process.yaml
+    permissions:
+      contents: write
     with:
       version: ${{ needs.validation.outputs.version }}
       artifact-name: ${{ needs.validation.outputs.artifact-name }}
@@ -105,6 +107,8 @@ jobs:
     needs: [validation]
     if: contains(needs.validation.outputs.version, 'b')
     uses: ./.github/workflows/_reusable-production-release-process.yaml
+    permissions:
+      contents: write
     with:
       version: ${{ needs.validation.outputs.version }}
       artifact-name: ${{ needs.validation.outputs.artifact-name }}
