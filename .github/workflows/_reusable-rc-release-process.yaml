@@ -66,6 +66,9 @@ on:
       test-pypi-token:
         required: true
 
+permissions:
+  contents: read
+
 jobs:
   technical-review:
     environment:
