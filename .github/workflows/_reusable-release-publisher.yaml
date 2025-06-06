@@ -74,10 +74,14 @@ on:
         required: false
         description: "Test PyPI token for pre-releases"
 
+permissions: {} # default permissions only on workflow level
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     environment: ${{ inputs.is-prerelease && 'staging' || 'production' }}
+    permissions:
+      contents: write # is required by action-gh-release
     steps:
       - uses: actions/download-artifact@v4
         with:

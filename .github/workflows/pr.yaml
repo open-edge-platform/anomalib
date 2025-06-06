@@ -44,6 +44,8 @@ on:
   merge_group:
     branches: [main]
 
+permissions: {} # Default permissions shall be enough
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
