@@ -63,9 +63,15 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+
 jobs:
   validation:
     uses: ./.github/workflows/_reusable-release-validation.yaml
+    permissions:
+      security-events: write # needed to upload results
+      contents: read
     with:
       version: ${{ github.event_name == 'push' && github.ref_name || inputs.version }}
       python-version: "3.10"
@@ -89,6 +95,8 @@ jobs:
     needs: [validation]
     if: ${{ !contains(needs.validation.outputs.version, '-rc') && !contains(needs.validation.outputs.version, 'b') }}
     uses: ./.github/workflows/_reusable-production-release-process.yaml
+    permissions:
+      contents: write # is required by action-gh-release (nested)
     with:
       version: ${{ needs.validation.outputs.version }}
       artifact-name: ${{ needs.validation.outputs.artifact-name }}
@@ -99,6 +107,8 @@ jobs:
     needs: [validation]
     if: contains(needs.validation.outputs.version, 'b')
     uses: ./.github/workflows/_reusable-production-release-process.yaml
+    permissions:
+      contents: write # is required by action-gh-release (nested)
     with:
       version: ${{ needs.validation.outputs.version }}
       artifact-name: ${{ needs.validation.outputs.artifact-name }}

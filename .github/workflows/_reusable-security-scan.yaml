@@ -70,12 +70,18 @@ on:
         description: "Whether any security issues were found"
         value: ${{ jobs.summarize.outputs.has_findings }}
 
+permissions:
+  contents: read
+  security-events: write # needed by nested workflows to upload results
+
 jobs:
   bandit:
     if: contains(inputs.tools, 'bandit')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Run Bandit scan
         uses: ./.github/actions/security/bandit
         with:
@@ -88,9 +94,11 @@ jobs:
     if: contains(inputs.tools, 'semgrep')
     runs-on: ubuntu-latest
     container:
-      image: returntocorp/semgrep
+      image: returntocorp/semgrep@sha256:14e073f6417e5d2d0797aa13f26d569270b86fac9d52052d2358c985f1a4e9f0 # v1.124.0
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Run Semgrep scan
         uses: ./.github/actions/security/semgrep
         with:
@@ -105,6 +113,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Required for changed files detection
+          persist-credentials: false
 
       - name: Run Trivy scan
         id: trivy
@@ -119,10 +128,12 @@ jobs:
           ignore_unfixed: "true"
 
       - name: Move Trivy results
+        env:
+          STEPS_TRIVY_OUTPUTS_REPORT_PATH: ${{ steps.trivy.outputs.report_path }}
         if: always() && steps.trivy.outputs.report_path
         run: |
           mkdir -p security-results/trivy
-          mv ${{ steps.trivy.outputs.report_path }} security-results/trivy/
+          mv "$STEPS_TRIVY_OUTPUTS_REPORT_PATH" security-results/trivy/
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -136,6 +147,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Run ClamAV scan
         uses: ./.github/actions/security/clamav
         with:
@@ -147,6 +160,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Run Zizmor scan
         uses: ./.github/actions/security/zizmor
         with:

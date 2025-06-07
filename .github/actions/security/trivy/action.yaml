@@ -144,7 +144,8 @@ runs:
         INPUTS_GENERATE_SBOM: ${{ inputs.generate_sbom }}
         INPUTS_SBOM_FORMAT: ${{ inputs.sbom_format }}
 
-      run: |
+      # zizmor ignore: all_changed_files is tj-actions/changed-files output
+      run: | # zizmor: ignore[template-injection]
         # Create output directory
         mkdir -p reports
         REPORT_FILE="reports/trivy-$INPUTS_SCAN_TYPE-$INPUTS_SCANNERS.sarif"
