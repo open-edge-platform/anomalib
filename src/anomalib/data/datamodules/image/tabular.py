@@ -188,6 +188,34 @@ class Tabular(AnomalibDataModule):
 
         Returns:
             Tabular: Tabular Datamodule
+
+        Example:
+            Prepare a tabular file (such as ``samples.csv`` or ``samples.parquet``) with the
+            following columns: ``image_path`` (absolute or relative to ``root``), ``label_index``
+            (``0`` for normal, ``1`` for anomalous samples), and ``split`` (``train`` or ``test``).
+            For segmentation tasks, also include a ``mask_path`` column.
+
+            From this file, create and setup a tabular datamodule::
+
+                >>> from anomalib.data import Tabular
+                >>> datamodule = Tabular.from_file(
+                ...     name="custom",
+                ...     file_path="./samples.csv",
+                ...     root="./datasets/custom",
+                ... )
+                >>> datamodule.setup()
+
+            Get a batch from train dataloader::
+
+                >>> batch = next(iter(datamodule.train_dataloader()))
+                >>> batch.keys()
+                dict_keys(['image', 'label', 'mask', 'image_path', 'mask_path'])
+
+            Get a batch from test dataloader::
+
+                >>> batch = next(iter(datamodule.test_dataloader()))
+                >>> batch.keys()
+                dict_keys(['image', 'label', 'mask', 'image_path', 'mask_path'])
         """
         # Check if file exists
         if not Path(file_path).is_file():
