@@ -126,6 +126,7 @@ jobs:
           format: "sarif"
           timeout: "15m"
           ignore_unfixed: "true"
+          generate_sbom: "true"
 
   clamav:
     if: contains(inputs.tools, 'clamav')
