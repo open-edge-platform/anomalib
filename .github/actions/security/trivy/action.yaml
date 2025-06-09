@@ -149,7 +149,7 @@ runs:
         # Create output directory
 
         mkdir -p security-results/trivy
-        REPORT_FILE="security-results/trivy/trivy-results.$INPUTS_OUTPUT_FORMAT"
+        REPORT_FILE="security-results/trivy/trivy-results.$INPUTS_FORMAT"
 
         echo "Running Trivy with scan type: $INPUTS_SCAN_TYPE"
         echo "Output will be saved to: ${REPORT_FILE}"
@@ -193,7 +193,7 @@ runs:
           echo "Generating SBOM in $INPUTS_SBOM_FORMAT format"
           trivy fs \
             --format "$INPUTS_SBOM_FORMAT" \
-            --output "sbom.$INPUTS_SBOM_FORMAT" \
+            --output "security-results/trivy/trivy-sbom.$INPUTS_SBOM_FORMAT" \
             ${SCAN_TARGET}
         fi
 
