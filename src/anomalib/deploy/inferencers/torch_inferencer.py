@@ -194,8 +194,9 @@ class TorchInferencer:
             "which is inherently insecure and can lead to arbitrary code execution. "
             "Only set this to True if you TRUST the source of the checkpoint.",
         )
+        # See mitigation details in https://github.com/open-edge-platform/anomalib/pull/2729
         # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
-        return torch.load(path, map_location=self.device, weights_only=False)
+        return torch.load(path, map_location=self.device, weights_only=False)  # nosec B614
 
     def load_model(self, path: str | Path) -> nn.Module:
         """Load the PyTorch model.
