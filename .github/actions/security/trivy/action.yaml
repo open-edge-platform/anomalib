@@ -164,7 +164,11 @@ runs:
         fi
 
         # Build the base command
-        CMD="trivy --cache-dir ~/.cache/trivy $INPUTS_SCAN_TYPE --severity $INPUTS_SEVERITY --format $INPUTS_FORMAT --output ${REPORT_FILE} --timeout $INPUTS_TIMEOUT"
+        CMD="trivy --cache-dir ~/.cache/trivy $INPUTS_SCAN_TYPE \
+        --severity $INPUTS_SEVERITY \
+        --format $INPUTS_FORMAT \
+        --output ${REPORT_FILE} \
+        --timeout $INPUTS_TIMEOUT"
 
         # Add scanner-specific flags based on scan type
         if [[ "$INPUTS_SCAN_TYPE" == "config" ]]; then
