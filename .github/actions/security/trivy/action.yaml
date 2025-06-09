@@ -146,10 +146,6 @@ runs:
 
       # zizmor ignore: all_changed_files is tj-actions/changed-files output
       run: | # zizmor: ignore[template-injection]
-
-
-
-
         # Map provided severity levels to Trivy levels
         case "$INPUTS_SEVERITY" in
           "LOW")
