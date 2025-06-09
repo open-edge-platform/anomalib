@@ -115,7 +115,7 @@ jobs:
           fetch-depth: 0 # Required for changed files detection
           persist-credentials: false
 
-      # This steps are required to lock dependencies in requirements.txt that will by used by Trivy
+      # These steps are required to lock dependencies in requirements.txt that will by used by Trivy
       - name: Set up Python
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
@@ -131,7 +131,7 @@ jobs:
         with:
           scan_type: "fs"
           scan-scope: ${{ inputs.scan-scope }}
-          severity: ${{ inputs.severity-level }},HIGH,CRITICAL
+          severity: ${{ inputs.severity-level }}
           scanners: "vuln,secret"
           format: "sarif"
           timeout: "15m"

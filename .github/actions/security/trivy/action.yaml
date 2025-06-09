@@ -146,6 +146,24 @@ runs:
 
       # zizmor ignore: all_changed_files is tj-actions/changed-files output
       run: | # zizmor: ignore[template-injection]
+
+
+        # Map provided severity levels to Trivy levels
+        case "$INPUTS_SEVERITY" in
+          "LOW")
+            TRIVY_SEVERITY="LOW,MEDIUM,HIGH,CRITICAL"
+            ;;
+          "MEDIUM")
+            TRIVY_SEVERITY="MEDIUM,HIGH,CRITICAL"
+            ;;
+          "HIGH")
+            TRIVY_SEVERITY="HIGH,CRITICAL"
+            ;;
+          *)
+            TRIVY_SEVERITY="UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+            ;;
+        esac
+
         # Create output directory
 
         mkdir -p security-results/trivy
@@ -165,7 +183,7 @@ runs:
 
         # Build the base command
         CMD="trivy --cache-dir ~/.cache/trivy $INPUTS_SCAN_TYPE \
-        --severity $INPUTS_SEVERITY \
+        --severity $TRIVY_SEVERITY \
         --format $INPUTS_FORMAT \
         --output ${REPORT_FILE} \
         --timeout $INPUTS_TIMEOUT"
