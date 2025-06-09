@@ -127,21 +127,6 @@ jobs:
           timeout: "15m"
           ignore_unfixed: "true"
 
-      - name: Move Trivy results
-        env:
-          STEPS_TRIVY_OUTPUTS_REPORT_PATH: ${{ steps.trivy.outputs.report_path }}
-        if: always() && steps.trivy.outputs.report_path
-        run: |
-          mkdir -p security-results/trivy
-          mv "$STEPS_TRIVY_OUTPUTS_REPORT_PATH" security-results/trivy/
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: trivy-results
-          path: security-results/trivy
-          retention-days: 7
-
   clamav:
     if: contains(inputs.tools, 'clamav')
     runs-on: ubuntu-latest
