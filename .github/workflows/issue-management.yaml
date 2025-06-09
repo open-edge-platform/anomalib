@@ -1,0 +1,35 @@
+name: Issue Management
+
+on:
+  schedule:
+    # Run daily at 5:00 UTC
+    - cron: "0 5 * * *"
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/stale@v9
+        with:
+          # Number of days of inactivity before an issue is marked as stale
+          days-before-stale: 90
+          # Number of days of inactivity before a stale issue is closed
+          days-before-close: 14
+          # Label to apply to stale issues
+          stale-issue-label: "stale"
+          # Comment to post when marking an issue as stale.
+          stale-issue-message: >
+            This issue has been automatically marked as stale because it has not had
+            recent activity. It will be closed if no further activity occurs. Thank you
+            for your contributions.
+          # Comment to post when closing a stale issue.
+          close-issue-message: >
+            This issue was closed because it has been stalled for 14 days with no activity.
+          # Labels that prevent an issue from ever being marked as stale
+          exempt-issue-labels: "bug,enhancement,security,pinned,help-wanted"
+          # Don't mark pull requests as stale
+          days-before-pr-stale: -1
+          days-before-pr-close: -1
