@@ -68,7 +68,7 @@ inputs:
   ignore_unfixed:
     description: "Ignore unpatched/unfixed vulnerabilities"
     required: false
-    default: "true"
+    default: "false"
   scanners:
     description: "Scanners to enable (vuln,secret,config)"
     required: false
