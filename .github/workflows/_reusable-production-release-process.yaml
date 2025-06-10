@@ -61,13 +61,17 @@ on:
       pypi-token:
         required: true
 
+permissions:
+  contents: read
+
 jobs:
   validate-release-readiness:
     runs-on: ubuntu-latest
     steps:
       - name: Check for approved RC
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
-          VERSION="${{ inputs.version }}"
           ARTIFACTS_JSON=$(curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/artifacts")
 
@@ -101,6 +105,8 @@ jobs:
   publish:
     needs: [prepare-release]
     uses: ./.github/workflows/_reusable-release-publisher.yaml
+    permissions:
+      contents: write # is required by action-gh-release (nested)
     with:
       version: ${{ inputs.version }}
       artifact-name: production-release-artifacts

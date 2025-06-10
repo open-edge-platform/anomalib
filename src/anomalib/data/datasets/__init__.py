@@ -17,6 +17,7 @@ Image Datasets:
     - ``FolderDataset``: Custom dataset from folder structure
     - ``KolektorDataset``: Kolektor surface defect dataset
     - ``MVTecADDataset``: MVTec AD dataset with industrial objects
+    - ``TabularDataset``: Custom tabular dataset with image paths and labels
     - ``VAD``: Valeo Anomaly Detection Dataset
     - ``VisaDataset``: Visual Anomaly dataset
 
@@ -45,6 +46,7 @@ from .image import (
     FolderDataset,
     KolektorDataset,
     MVTecADDataset,
+    TabularDataset,
     VADDataset,
     VisaDataset,
 )
@@ -64,6 +66,7 @@ __all__ = [
     "FolderDataset",
     "KolektorDataset",
     "MVTecADDataset",
+    "TabularDataset",
     "VADDataset",
     "VisaDataset",
     # Video

@@ -61,6 +61,7 @@ from .datamodules.image import (
     MVTecAD2,
     MVTecLOCO,
     RealIAD,
+    Tabular,
     Visa,
 )
 from .datamodules.video import Avenue, ShanghaiTech, UCSDped, VideoDataFormat
@@ -75,6 +76,7 @@ from .datasets.image import (
     KolektorDataset,
     MVTecADDataset,
     MVTecLOCODataset,
+    TabularDataset,
     VADDataset,
     VisaDataset,
 )
@@ -119,25 +121,29 @@ def get_datamodule(config: DictConfig | ListConfig | dict) -> AnomalibDataModule
         ... })
         >>> datamodule = get_datamodule(config)
     """
-    logger.info("Loading the datamodule")
+    logger.info("Loading the datamodule and dataset class from the config.")
 
+    # Getting the datamodule class from the config.
     if isinstance(config, dict):
         config = DictConfig(config)
+    _config = config.data if "data" in config else config
 
-    try:
-        _config = config.data if "data" in config else config
-        if len(_config.class_path.split(".")) > 1:
-            module = importlib.import_module(".".join(_config.class_path.split(".")[:-1]))
-        else:
-            module = importlib.import_module("anomalib.data")
-    except ModuleNotFoundError as exception:
-        logger.exception(f"ModuleNotFoundError: {_config.class_path}")
-        raise UnknownDatamoduleError from exception
-    dataclass = getattr(module, _config.class_path.split(".")[-1])
+    # All the sub data modules are imported to anomalib.data. So need to import the module dynamically using paths.
+    module = importlib.import_module("anomalib.data")
+    data_class_name = _config.class_path.split(".")[-1]
+    # check if the data_class exists in the module
+    if not hasattr(module, data_class_name):
+        logger.error(
+            f"Dataclass '{data_class_name}' not found in module '{module.__name__}'. "
+            f"Available classes are {AnomalibDataModule.__subclasses__()}",
+        )
+        error_str = f"Dataclass '{data_class_name}' not found in module '{module.__name__}'."
+        raise UnknownDatamoduleError(error_str)
+    dataclass = getattr(module, data_class_name)
+
     init_args = {**_config.get("init_args", {})}  # get dict
     if "image_size" in init_args:
         init_args["image_size"] = to_tuple(init_args["image_size"])
-
     return dataclass(**init_args)
 
 
@@ -177,6 +183,7 @@ __all__ = [
     "MVTecAD2",
     "MVTecLOCO",
     "RealIAD",
+    "Tabular",
     "VAD",
     "Visa",
     # Video Data Modules
@@ -192,6 +199,7 @@ __all__ = [
     "KolektorDataset",
     "MVTecADDataset",
     "MVTecLOCODataset",
+    "TabularDataset",
     "VADDataset",
     "VisaDataset",
     "AvenueDataset",

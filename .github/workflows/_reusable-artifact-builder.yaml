@@ -69,6 +69,9 @@ on:
         description: "Name of the uploaded artifact"
         value: ${{ jobs.build.outputs.artifact-name }}
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -76,6 +79,8 @@ jobs:
       artifact-name: ${{ steps.set-artifact-name.outputs.name }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.python-version }}

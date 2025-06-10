@@ -102,6 +102,8 @@ class ExportMixin:
         """
         export_root = _create_export_root(export_root, ExportType.TORCH)
         pt_model_path = export_root / (model_file_name + ".pt")
+        # See mitigation details in https://github.com/open-edge-platform/anomalib/pull/2729
+        # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
         torch.save(
             obj={"model": self},
             f=pt_model_path,

@@ -35,8 +35,12 @@ class TestTorchInferenceEntrypoint:
         project_path: Path,
         ckpt_path: Callable[[str], Path],
         get_dummy_inference_image: str,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test torch_inference.py."""
+        # Set TRUST_REMOTE_CODE environment variable for the test
+        monkeypatch.setenv("TRUST_REMOTE_CODE", "1")
+
         _ckpt_path = ckpt_path("Padim")
         get_parser, infer = get_functions
         model = Padim.load_from_checkpoint(_ckpt_path)

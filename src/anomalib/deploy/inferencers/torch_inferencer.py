@@ -3,6 +3,24 @@
 This module provides the PyTorch inferencer implementation for running inference
 with trained PyTorch models.
 
+.. warning::
+    This is a legacy inferencer. It is recommended to use :class:`anomalib.engine.Engine.predict()`
+    instead, which provides a more modern and feature-rich interface for model inference.
+
+.. danger::
+    **Security Notice**: PyTorch model loading uses Python's pickle module, which can execute code from the checkpoint
+    file.This is a standard PyTorch behavior, not specific to this library. For security, load models only from trusted
+    sources and consider using safer formats like ONNX or TorchScript for production use. To proceed with loading, set:
+
+    - Load models only from trusted sources
+    - Consider using safer formats like ONNX or TorchScript for production use
+
+    To proceed with loading, set:
+
+    .. code-block:: bash
+
+        export TRUST_REMOTE_CODE=1
+
 Example:
     Assume we have a PyTorch model saved as a ``.pt`` file:
 
@@ -36,6 +54,8 @@ Example:
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import logging
+import os
 from pathlib import Path
 
 import numpy as np
@@ -47,9 +67,29 @@ from torchvision.transforms.v2.functional import to_dtype, to_image
 from anomalib.data import ImageBatch
 from anomalib.data.utils import read_image
 
+logger = logging.getLogger(__name__)
+
 
 class TorchInferencer:
     """PyTorch inferencer for anomaly detection models.
+
+    .. warning::
+        This is a legacy inferencer. It is recommended to use :class:`anomalib.engine.Engine.predict()`
+        instead, which provides a more modern and feature-rich interface for model inference.
+
+    .. danger::
+        **Security Notice**: PyTorch model loading uses Python's pickle module,
+        which can execute code from the checkpoint file. This is a standard PyTorch behavior,
+        not specific to this library. For security:
+
+        - Load models only from trusted sources
+        - Consider using safer formats like ONNX or TorchScript for production use
+
+        To proceed with loading, set:
+
+        .. code-block:: bash
+
+            export TRUST_REMOTE_CODE=1
 
     Args:
         path (str | Path): Path to the PyTorch model weights file.
@@ -65,6 +105,7 @@ class TorchInferencer:
     Raises:
         ValueError: If an invalid device is specified.
         ValueError: If the model file has an unknown extension.
+        ValueError: If TRUST_REMOTE_CODE environment variable is not set.
         KeyError: If the checkpoint file does not contain a model.
     """
 
@@ -73,6 +114,10 @@ class TorchInferencer:
         path: str | Path,
         device: str = "auto",
     ) -> None:
+        logger.warning(
+            "TorchInferencer is a legacy inferencer. Consider using Engine.predict() instead, "
+            "which provides a more modern and feature-rich interface for model inference.",
+        )
         self.device = self._get_device(device)
 
         # Load the model weights and metadata
@@ -118,6 +163,7 @@ class TorchInferencer:
 
         Raises:
             ValueError: If the model file has an unknown extension.
+            ValueError: If TRUST_REMOTE_CODE environment variable is not set.
 
         Example:
             >>> model = TorchInferencer(path="path/to/model.pt")
@@ -132,7 +178,25 @@ class TorchInferencer:
             msg = f"Unknown PyTorch checkpoint format {path.suffix}. Make sure you save the PyTorch model."
             raise ValueError(msg)
 
-        return torch.load(path, map_location=self.device, weights_only=False)
+        trust_remote_code_enabled = os.environ.get("TRUST_REMOTE_CODE", "0").lower() in {"1", "true"}
+
+        if not trust_remote_code_enabled:
+            msg = (
+                "Loading this model checkpoint requires executing arbitrary code via Python's pickle module, "
+                "which is disabled by default for security reasons. This can be exploited by malicious model files. "
+                "If you trust the source of this model and understand the risks, "
+                "set the environment variable `TRUST_REMOTE_CODE=1` to allow loading."
+            )
+            raise ValueError(msg)
+
+        logger.warning(
+            "TRUST_REMOTE_CODE is set to True. Loading model using pickle module, "
+            "which is inherently insecure and can lead to arbitrary code execution. "
+            "Only set this to True if you TRUST the source of the checkpoint.",
+        )
+        # See mitigation details in https://github.com/open-edge-platform/anomalib/pull/2729
+        # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
+        return torch.load(path, map_location=self.device, weights_only=False)  # nosec B614
 
     def load_model(self, path: str | Path) -> nn.Module:
         """Load the PyTorch model.
@@ -184,10 +248,7 @@ class TorchInferencer:
         image = self.pre_process(image)
         predictions = self.model(image)
 
-        return ImageBatch(
-            image=image,
-            **predictions._asdict(),
-        )
+        return ImageBatch(image=image, **predictions._asdict())
 
     def pre_process(self, image: torch.Tensor) -> torch.Tensor:
         """Pre-process the input image.

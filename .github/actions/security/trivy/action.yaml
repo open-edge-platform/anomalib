@@ -68,7 +68,7 @@ inputs:
   ignore_unfixed:
     description: "Ignore unpatched/unfixed vulnerabilities"
     required: false
-    default: "true"
+    default: "false"
   scanners:
     description: "Scanners to enable (vuln,secret,config)"
     required: false
@@ -92,7 +92,7 @@ inputs:
   sbom_format:
     description: "SBOM output format (cyclonedx, spdx, spdx-json)"
     required: false
-    default: "cyclonedx"
+    default: "spdx-json"
 
 outputs:
   scan_result:
@@ -121,7 +121,7 @@ runs:
     - name: Install Trivy
       shell: bash
       run: |
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.48.0
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.63.0
         # Download DB in advance with retry mechanism
         for i in {1..3}; do
           echo "Attempt $i to download vulnerability database..."
@@ -144,10 +144,28 @@ runs:
         INPUTS_GENERATE_SBOM: ${{ inputs.generate_sbom }}
         INPUTS_SBOM_FORMAT: ${{ inputs.sbom_format }}
 
-      run: |
+      # zizmor ignore: all_changed_files is tj-actions/changed-files output
+      run: | # zizmor: ignore[template-injection]
+        # Map provided severity levels to Trivy levels
+        case "$INPUTS_SEVERITY" in
+          "LOW")
+            TRIVY_SEVERITY="LOW,MEDIUM,HIGH,CRITICAL"
+            ;;
+          "MEDIUM")
+            TRIVY_SEVERITY="MEDIUM,HIGH,CRITICAL"
+            ;;
+          "HIGH")
+            TRIVY_SEVERITY="HIGH,CRITICAL"
+            ;;
+          *)
+            TRIVY_SEVERITY="UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+            ;;
+        esac
+
         # Create output directory
-        mkdir -p reports
-        REPORT_FILE="reports/trivy-$INPUTS_SCAN_TYPE-$INPUTS_SCANNERS.sarif"
+
+        mkdir -p security-results/trivy
+        REPORT_FILE="security-results/trivy/trivy-results.$INPUTS_FORMAT"
 
         echo "Running Trivy with scan type: $INPUTS_SCAN_TYPE"
         echo "Output will be saved to: ${REPORT_FILE}"
@@ -162,7 +180,11 @@ runs:
         fi
 
         # Build the base command
-        CMD="trivy --cache-dir ~/.cache/trivy $INPUTS_SCAN_TYPE --severity $INPUTS_SEVERITY --format $INPUTS_FORMAT --output ${REPORT_FILE} --timeout $INPUTS_TIMEOUT"
+        CMD="trivy --cache-dir ~/.cache/trivy $INPUTS_SCAN_TYPE \
+        --severity $TRIVY_SEVERITY \
+        --format $INPUTS_FORMAT \
+        --output ${REPORT_FILE} \
+        --timeout $INPUTS_TIMEOUT"
 
         # Add scanner-specific flags based on scan type
         if [[ "$INPUTS_SCAN_TYPE" == "config" ]]; then
@@ -191,6 +213,20 @@ runs:
           echo "Generating SBOM in $INPUTS_SBOM_FORMAT format"
           trivy fs \
             --format "$INPUTS_SBOM_FORMAT" \
-            --output "sbom.$INPUTS_SBOM_FORMAT" \
+            --output "security-results/trivy/trivy-sbom.$INPUTS_SBOM_FORMAT" \
             ${SCAN_TARGET}
         fi
+
+      # Upload results after full scope analysis
+    - name: Upload reports
+      if: hashFiles('security-results/trivy/*') != '' # if any report is available
+      uses: actions/upload-artifact@v4
+      with:
+        name: trivy-results
+        path: security-results/trivy
+        retention-days: 7
+    - name: Upload sarif
+      if: hashFiles('security-results/trivy/trivy-results.sarif') != '' # if SARIF is available, upload it
+      uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.8
+      with:
+        sarif_file: security-results/trivy/trivy-results.sarif

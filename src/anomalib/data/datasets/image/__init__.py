@@ -9,6 +9,7 @@ datasets:
 - ``KolektorDataset``: Kolektor surface defect dataset
 - ``MVTecADDataset``: MVTec AD dataset with industrial objects
 - ``MVTecLOCODataset``: MVTec LOCO dataset with logical and structural anomalies
+- ``TabularDataset``: Custom tabular dataset with image paths and labels
 - ``VAD``: Valeo Anomaly Detection Dataset
 - ``VisaDataset``: Visual Anomaly dataset
 
@@ -32,6 +33,7 @@ from .mvtec_loco import MVTecLOCODataset
 from .mvtecad import MVTecADDataset, MVTecDataset
 from .mvtecad2 import MVTecAD2Dataset
 from .realiad import RealIADDataset
+from .tabular import TabularDataset
 from .vad import VADDataset
 from .visa import VisaDataset
 
@@ -45,6 +47,7 @@ __all__ = [
     "MVTecAD2Dataset",
     "MVTecLOCODataset",
     "RealIADDataset",
+    "TabularDataset",
     "VADDataset",
     "VisaDataset",
 ]

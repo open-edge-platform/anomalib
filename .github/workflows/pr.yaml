@@ -44,6 +44,9 @@ on:
   merge_group:
     branches: [main]
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -82,6 +85,9 @@ jobs:
   security:
     needs: [] # No dependencies, can run in parallel
     uses: ./.github/workflows/_reusable-security-scan.yaml
+    permissions:
+      security-events: write # needed to upload results
+      contents: read
     with:
       tools: "semgrep,bandit,zizmor" # Security tools to run
       scan-scope: "changed" # Only scan changed files

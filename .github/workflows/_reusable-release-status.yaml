@@ -61,21 +61,29 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   check-status:
     runs-on: ubuntu-latest
     steps:
       - name: Verify workflow status
+        env:
+          INPUTS_VERSION: ${{ inputs.version }}
+          INPUTS_RC_STATUS: ${{ inputs.rc-status }}
+          INPUTS_PROD_STATUS: ${{ inputs.prod-status }}
+          INPUTS_BETA_STATUS: ${{ inputs.beta-status }}
         run: |
-          if [[ "${{ inputs.rc-status }}" == "failure" || "${{ inputs.prod-status }}" == "failure" || "${{ inputs.beta-status }}" == "failure" ]]; then
+          if [[ "$INPUTS_RC_STATUS" == "failure" || "$INPUTS_PROD_STATUS" == "failure" || "$INPUTS_BETA_STATUS" == "failure" ]]; then
             echo "::error::Release workflow failed"
             exit 1
           fi
 
-          if [[ "${{ inputs.version }}" =~ -rc ]]; then
-            echo "Release candidate ${{ inputs.version }} processed successfully"
-          elif [[ "${{ inputs.version }}" =~ b[0-9]+ ]]; then
-            echo "Beta release ${{ inputs.version }} processed successfully"
+          if [[ "$INPUTS_VERSION" =~ -rc ]]; then
+            echo "Release candidate $INPUTS_VERSION processed successfully"
+          elif [[ "$INPUTS_VERSION" =~ b[0-9]+ ]]; then
+            echo "Beta release $INPUTS_VERSION processed successfully"
           else
-            echo "Production release ${{ inputs.version }} completed successfully"
+            echo "Production release $INPUTS_VERSION completed successfully"
           fi

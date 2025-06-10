@@ -1,5 +1,6 @@
 name: Pre-Merge Checks
-permissions: {} # shall be sufficient in public repo
+permissions:
+  contents: read
 
 on:
   merge_group:
@@ -25,6 +26,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           lfs: true
+          persist-credentials: false
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -46,6 +48,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Install Python
         uses: actions/setup-python@v5
         with:
@@ -83,6 +87,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: AlexanderDokuchaev/md-dead-link-check@d5a37e0b14e5918605d22b34562532762ccb2e47 # v1.2.0
         with:
           config: pyproject.toml
