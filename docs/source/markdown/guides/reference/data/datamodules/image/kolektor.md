@@ -5,3 +5,7 @@
    :members:
    :show-inheritance:
 ```
+
+```{seealso}
+{doc}`../../datasets/image/kolektor` - Kolektor Dataset
+```
