@@ -400,7 +400,7 @@ def overlay_images(
     return base
 
 
-def np_to_pil_image(array: np.ndarray, normalize: bool = False) -> Image.Image:
+def np_to_pil_image(array: np.ndarray) -> Image.Image:
     """Convert a NumPy array to a PIL Image with proper normalization.
 
     This function handles various NumPy array types and normalizes them appropriately
@@ -415,8 +415,6 @@ def np_to_pil_image(array: np.ndarray, normalize: bool = False) -> Image.Image:
             - Arrays with shape (H, W) for grayscale images
             - Arrays with shape (H, W, 3) for RGB images
             - Arrays with singleton dimensions (e.g., (1, H, W), (H, W, 1)) are squeezed
-        normalize (bool, optional): Whether to normalize float arrays to [0, 255]
-            range. Only applies to float arrays. Defaults to ``False``.
 
     Returns:
         Image.Image: Converted PIL Image in grayscale ('L') or RGB mode.
@@ -427,13 +425,6 @@ def np_to_pil_image(array: np.ndarray, normalize: bool = False) -> Image.Image:
         >>> import numpy as np
         >>> bool_array = np.array([[True, False], [False, True]])
         >>> img = np_to_pil_image(bool_array)
-        >>> img.mode
-        'L'
-
-        Convert a float array with normalization:
-
-        >>> float_array = np.array([[0.0, 0.5], [0.5, 1.0]])
-        >>> img = np_to_pil_image(float_array, normalize=True)
         >>> img.mode
         'L'
 
@@ -465,7 +456,6 @@ def np_to_pil_image(array: np.ndarray, normalize: bool = False) -> Image.Image:
 
     Note:
         - Boolean arrays are converted to uint8 (0 and 255)
-        - Float arrays are normalized to [0, 255] range if normalize=True
         - Integer arrays are converted to uint8 if needed
         - Singleton dimensions are automatically squeezed
         - Arrays with shape (H, W, 3) after squeezing are treated as RGB images
@@ -476,54 +466,26 @@ def np_to_pil_image(array: np.ndarray, normalize: bool = False) -> Image.Image:
 
     # Handle arrays based on final dimensions after squeezing
     if array.ndim == 3 and array.shape[2] == 3:
-        # RGB image case: (H, W, 3)
-        # Handle normalization for RGB images
-        if array.dtype == np.bool_:
-            array = array.astype(np.uint8) * 255
-        elif array.dtype != np.uint8:
-            if normalize:
-                min_val = np.min(array)
-                max_val = np.max(array)
-                if max_val > min_val:
-                    array = ((array - min_val) * 255 / (max_val - min_val)).astype(np.uint8)
-                else:
-                    array = np.zeros_like(array, dtype=np.uint8)
-            # Assume float values in [0, 1] range if not normalizing
-            elif array.max() <= 1.0:
-                array = (array * 255).astype(np.uint8)
-            else:
-                array = array.astype(np.uint8)
-        return Image.fromarray(array, mode="RGB")
+        mode = "RGB"
+    elif array.ndim == 2:
+        mode = "L"
+    else:
+        msg = (
+            f"Expected 2D array (H, W) or 3D array (H, W, 3) after squeezing, "
+            f"got {array.ndim}D array with shape {array.shape}"
+        )
+        raise ValueError(msg)
 
-    # Handle grayscale images
-    if array.ndim == 2:
-        # Grayscale image case: (H, W)
-        if array.dtype == np.bool_:
-            array = array.astype(np.uint8) * 255
-        elif array.dtype != np.uint8:
-            if normalize:
-                min_val = np.min(array)
-                max_val = np.max(array)
-                if max_val > min_val:
-                    array = ((array - min_val) * 255 / (max_val - min_val)).astype(np.uint8)
-                else:
-                    array = np.zeros_like(array, dtype=np.uint8)
-            else:
-                array = (array * 255).astype(np.uint8)
-        return Image.fromarray(array)
+    # Convert array to uint8
+    if array.dtype == np.bool_:
+        array = array.astype(np.uint8) * 255
+    elif array.dtype != np.uint8:
+        array = (array * 255).astype(np.uint8) if array.max() <= 1.0 else array.astype(np.uint8)
 
-    msg = (
-        f"Expected 2D array (H, W) or 3D array (H, W, 3) after squeezing, "
-        f"got {array.ndim}D array with shape {array.shape}"
-    )
-    raise ValueError(msg)
+    return Image.fromarray(array, mode=mode)
 
 
-def visualize_image(
-    image: str | Image.Image | torch.Tensor | np.ndarray,
-    *,
-    normalize: bool = False,
-) -> Image.Image:
+def visualize_image(image: str | Image.Image | torch.Tensor | np.ndarray) -> Image.Image:
     """Visualize an image from various input types.
 
     This function handles different input types (file path, PIL Image, PyTorch tensor,
@@ -537,8 +499,6 @@ def visualize_image(
             - PIL Image: Will be converted to RGB mode if needed
             - PyTorch tensor: Will be converted to PIL Image
             - NumPy array: Will be converted to PIL Image
-        normalize (bool, optional): Whether to normalize float arrays to [0, 255]
-            range. Only applies to float arrays. Defaults to ``False``.
 
     Returns:
         Image.Image: Converted PIL Image in RGB mode.
@@ -566,20 +526,11 @@ def visualize_image(
         >>> isinstance(img, Image.Image)
         True
 
-        Convert NumPy array with normalization:
-
-        >>> import numpy as np
-        >>> array = np.random.rand(100, 100, 3)
-        >>> img = visualize_image(array, normalize=True)
-        >>> isinstance(img, Image.Image)
-        True
-
     Note:
         - File paths are loaded using PIL's Image.open
         - PIL Images are converted to RGB mode if needed
         - PyTorch tensors are converted using torchvision's to_pil_image
         - NumPy arrays are converted using np_to_pil_image
-        - Float arrays can be normalized to [0, 255] range
     """
     if isinstance(image, str):
         # Load image from file path
@@ -592,7 +543,7 @@ def visualize_image(
         return to_pil_image(image.squeeze())
     if isinstance(image, np.ndarray):
         # Convert NumPy array to PIL Image
-        return np_to_pil_image(image.squeeze(), normalize=normalize)
+        return np_to_pil_image(image.squeeze())
     msg = f"Expected str, PIL Image, PyTorch tensor, or NumPy array, got {type(image)}"
     raise TypeError(msg)
 
@@ -668,7 +619,7 @@ def visualize_anomaly_map(
     if isinstance(anomaly_map, torch.Tensor):
         image = to_pil_image(anomaly_map)
     elif isinstance(anomaly_map, np.ndarray):
-        image = np_to_pil_image(anomaly_map, normalize=normalize)
+        image = np_to_pil_image(anomaly_map)
     else:
         image = anomaly_map.copy()
 
