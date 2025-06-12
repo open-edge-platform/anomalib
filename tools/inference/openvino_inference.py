@@ -112,7 +112,7 @@ if __name__ == "__main__":
     if hasattr(args, "task"):
         warnings.warn(
             "The --task argument is deprecated and no longer used. It will be removed in a future release.",
-            DeprecationWarning,
+            FutureWarning,
             stacklevel=2,
         )
 
@@ -121,7 +121,7 @@ if __name__ == "__main__":
         warnings.warn(
             "The --visualization_mode argument is deprecated and no longer used. "
             "It will be removed in a future release.",
-            DeprecationWarning,
+            FutureWarning,
             stacklevel=2,
         )
 
