@@ -10,12 +10,13 @@ The model consists of:
     - Anomaly detection via feature comparison
 
 Example:
-    >>> from anomalib.models.image.efficient_ad.torch_model import EfficientAdModel
+    >>> import torch
     >>> model = EfficientAdModel()
+    >>> model.eval()
     >>> input_tensor = torch.randn(32, 3, 256, 256)
     >>> output = model(input_tensor)
-    >>> output["anomaly_map"].shape
-    torch.Size([32, 256, 256])
+    >>> output.anomaly_map.shape
+    torch.Size([32, 1, 256, 256])
 
 Paper:
     "EfficientAd: Accurate Visual Anomaly Detection at
@@ -27,7 +28,7 @@ See Also:
         Lightning implementation of the EfficientAd model.
 """
 
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
@@ -118,10 +119,10 @@ class EfficientAdModelSize(str, Enum):
         ... )
         >>> model_size = EfficientAdModelSize.S
         >>> model_size
-        'small'
+        <EfficientAdModelSize.S: 'small'>
         >>> model_size = EfficientAdModelSize.M
         >>> model_size
-        'medium'
+        <EfficientAdModelSize.M: 'medium'>
     """
 
     M = "medium"
@@ -149,7 +150,7 @@ class SmallPatchDescriptionNetwork(nn.Module):
         >>> input_tensor = torch.randn(32, 3, 64, 64)
         >>> output = model(input_tensor)
         >>> output.shape
-        torch.Size([32, 384, 13, 13])
+        torch.Size([32, 384, 8, 8])
 
     Note:
         The network applies ImageNet normalization to the input before processing.
@@ -206,7 +207,7 @@ class MediumPatchDescriptionNetwork(nn.Module):
         >>> input_tensor = torch.randn(32, 3, 64, 64)
         >>> output = model(input_tensor)
         >>> output.shape
-        torch.Size([32, 384, 13, 13])
+        torch.Size([32, 384, 8, 8])
 
     Note:
         The network applies ImageNet normalization to the input before
@@ -400,9 +401,9 @@ class AutoEncoder(nn.Module):
         >>> input_tensor = randn(32, 3, 256, 256)
         >>> output = autoencoder(input_tensor, image_size=(256, 256))
         >>> output.shape
-        torch.Size([32, 384, 256, 256])
+        torch.Size([32, 384, 64, 64])
 
-    Notes:
+    Note:
         The input images are normalized using ImageNet statistics before being passed
         through the encoder.
     """
@@ -439,6 +440,7 @@ class EfficientAdModel(nn.Module):
     Args:
         teacher_out_channels (int): Number of convolution output channels of the
             pre-trained teacher model.
+            Defaults to ``384``.
         model_size (EfficientAdModelSize): Size of student and teacher model.
             Defaults to ``EfficientAdModelSize.S``.
         padding (bool): Whether to use padding in convolutional layers.
@@ -450,12 +452,9 @@ class EfficientAdModel(nn.Module):
     Example:
         >>> from anomalib.models.image.efficient_ad.torch_model import (
         ...     EfficientAdModel,
-        ...     EfficientAdModelSize
         ... )
-        >>> model = EfficientAdModel(
-        ...     teacher_out_channels=384,
-        ...     model_size=EfficientAdModelSize.S
-        ... )
+        >>> model = EfficientAdModel()
+        >>> model.eval()
         >>> input_tensor = torch.randn(32, 3, 256, 256)
         >>> output = model(input_tensor)
         >>> output.anomaly_map.shape
@@ -471,7 +470,7 @@ class EfficientAdModel(nn.Module):
 
     def __init__(
         self,
-        teacher_out_channels: int,
+        teacher_out_channels: int = 384,
         model_size: EfficientAdModelSize = EfficientAdModelSize.S,
         padding: bool = False,
         pad_maps: bool = True,
