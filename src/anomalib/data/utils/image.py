@@ -231,6 +231,9 @@ def generate_output_image_filename(input_path: str | Path, output_path: str | Pa
 
         >>> generate_output_image_filename("dir/input.jpg", "outdir")
         PosixPath('outdir/dir/input.jpg')
+
+        >>> generate_output_image_filename("/full/path/to/input.jpg", "outdir")
+        PosixPath('outdir/input.jpg')  # Only filename for absolute paths
     """
     input_path = validate_path(input_path)
     output_path = validate_path(output_path, should_exist=False)
@@ -239,15 +242,21 @@ def generate_output_image_filename(input_path: str | Path, output_path: str | Pa
         msg = "input_path is expected to be a file"
         raise ValueError(msg)
 
-    if output_path.is_dir():
-        output_image_filename = output_path / input_path.parent.name / input_path.name
-    elif output_path.is_file() and output_path.exists():
+    if output_path.is_dir() or (not output_path.exists() and not output_path.suffix):
+        # If output_path is a directory or looks like a directory (no extension)
+
+        # For absolute paths, use only the filename to avoid deep directory structures
+        # For relative paths, preserve the directory structure
+        output_image_filename = output_path / input_path.name if input_path.is_absolute() else output_path / input_path
+    elif output_path.exists() and output_path.is_file():
         msg = f"{output_path} already exists. Renaming to avoid overwriting."
         logger.warning(msg)
         output_image_filename = duplicate_filename(output_path)
     else:
+        # output_path is a specific file path
         output_image_filename = output_path
 
+    # Ensure parent directory exists
     output_image_filename.parent.mkdir(parents=True, exist_ok=True)
 
     return output_image_filename

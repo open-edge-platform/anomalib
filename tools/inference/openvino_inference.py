@@ -8,13 +8,15 @@ file system, and show the visualization results.
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+import warnings
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
-from anomalib.data.utils import generate_output_image_filename, get_image_filenames, read_image
-from anomalib.data.utils.image import save_image, show_image
+from tqdm import tqdm
+
+from anomalib.data.utils import generate_output_image_filename, get_image_filenames
 from anomalib.deploy import OpenVINOInferencer
-from anomalib.utils.visualization import ImageResult, ImageVisualizer
+from anomalib.visualization import visualize_image_item
 
 logger = logging.getLogger(__name__)
 
@@ -73,30 +75,54 @@ def infer(args: Namespace) -> None:
     """
     # Get the inferencer.
     inferencer = OpenVINOInferencer(path=args.weights, device=args.device)
-    visualizer = ImageVisualizer(mode=args.visualization_mode, task=args.task)
 
     filenames = get_image_filenames(path=args.input)
-    for filename in filenames:
-        image = read_image(filename)
-        predictions = inferencer.predict(image=image)
+    for filename in tqdm(filenames, desc="Predicting images"):
+        predictions = inferencer.predict(filename)
 
-        # this is temporary until we update the visualizer to take the dataclass directly.
-        image_result = ImageResult.from_dataset_item(predictions.items[0])
-        output = visualizer.visualize_image(image_result)
+        # NOTE: This visualization approach is experimental and might change in the future.
+        output = visualize_image_item(
+            item=predictions.items[0],
+            fields=["image"],  # Can be used to visualize other fields such as anomaly_map, pred_mask, etc.
+            overlay_fields=[
+                # Can be used to overlay multiple other fields.
+                ("image", ["anomaly_map"]),
+                ("image", ["pred_mask"]),
+            ],
+        )
 
         if args.output is None and args.show is False:
             msg = "Neither output path is provided nor show flag is set. Inferencer will run but return nothing."
             logger.warning(msg)
 
-        if args.output:
-            file_path = generate_output_image_filename(input_path=filename, output_path=args.output)
-            save_image(filename=file_path, image=output)
+        if output is not None:
+            if args.output:
+                file_path = generate_output_image_filename(input_path=filename, output_path=args.output)
+                output.save(file_path)
 
-        # Show the image in case the flag is set by the user.
-        if args.show:
-            show_image(title="Output Image", image=output)
+            # Show the image in case the flag is set by the user.
+            if args.show:
+                output.show("Output Image")
 
 
 if __name__ == "__main__":
     args = get_parser().parse_args()
+
+    # Deprecation warning for --task argument
+    if hasattr(args, "task"):
+        warnings.warn(
+            "The --task argument is deprecated and no longer used. It will be removed in a future release.",
+            FutureWarning,
+            stacklevel=2,
+        )
+
+    # Deprecation warning for --visualization_mode argument
+    if hasattr(args, "visualization_mode"):
+        warnings.warn(
+            "The --visualization_mode argument is deprecated and no longer used. "
+            "It will be removed in a future release.",
+            FutureWarning,
+            stacklevel=2,
+        )
+
     infer(args)
