@@ -35,7 +35,6 @@ import logging
 import math
 from enum import Enum
 
-import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F  # noqa: N812
@@ -543,8 +542,9 @@ class EfficientAdModel(nn.Module):
             transforms.functional.adjust_saturation,
         ]
         # Sample an augmentation coefficient λ from the uniform distribution U(0.8, 1.2)
-        coefficient = np.random.default_rng().uniform(0.8, 1.2)
-        transform_function = np.random.default_rng().choice(transform_functions)
+        coefficient = torch.FloatTensor(1).uniform_(0.8, 1.2).item()
+        idx = int(torch.randint(0, len(transform_functions), (1,)).item())
+        transform_function = transform_functions[idx]
         return transform_function(image, coefficient)
 
     def forward(
