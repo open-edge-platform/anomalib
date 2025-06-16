@@ -47,11 +47,11 @@ ClassType = TypeVar("ClassType", bound=type[Any])
 
 
 @overload
-def deprecate(obj: FunctionType, /) -> FunctionType: ...
+def deprecate(obj: FunctionType) -> FunctionType: ...
 
 
 @overload
-def deprecate(obj: ClassType, /) -> ClassType: ...
+def deprecate(obj: ClassType) -> ClassType: ...
 
 
 @overload
@@ -64,13 +64,12 @@ def deprecate(
 
 
 def deprecate(
-    obj: FunctionType | ClassType | None = None,
-    /,
+    obj: Callable | type | None = None,
     *,
     since: str | None = None,
     remove: str | None = None,
     use: str | None = None,
-) -> FunctionType | ClassType | Callable[[FunctionType | ClassType], FunctionType | ClassType]:
+) -> Any:
     """Mark a function or class as deprecated.
 
     This decorator will cause a warning to be emitted when the function is called or class is instantiated.
@@ -153,5 +152,7 @@ def deprecate(
         return cast("FunctionType", wrapper)
 
     if obj is None:
+        # Called as @deprecate(...)
         return decorator
+    # Called as @deprecate
     return decorator(obj)
