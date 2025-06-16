@@ -42,12 +42,11 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any, TypeVar, overload
 
-_F = TypeVar("_F", bound=Callable[..., Any])
-_T = TypeVar("_T", bound=type)
+_T = TypeVar("_T")
 
 
 @overload
-def deprecate(func: _F) -> _F: ...
+def deprecate(__obj: _T) -> _T: ...
 
 
 @overload
@@ -56,11 +55,11 @@ def deprecate(
     since: str | None = None,
     remove: str | None = None,
     use: str | None = None,
-) -> Callable[[_F | _T], _F | _T]: ...
+) -> Callable[[_T], _T]: ...
 
 
 def deprecate(
-    func: Callable[..., Any] | type | None = None,
+    __obj: Any = None,
     *,
     since: str | None = None,
     remove: str | None = None,
@@ -71,22 +70,18 @@ def deprecate(
     This decorator will cause a warning to be emitted when the function is called or class is instantiated.
 
     Args:
-        func (Callable | type | None, optional): The function or class to be deprecated.
+        __obj: The function or class to be deprecated.
             If provided, the decorator is used without arguments.
             If None, the decorator is used with arguments.
-            Defaults to None.
-        since (str | None, optional): Version when the function/class was deprecated (e.g. "2.1.0").
+        since: Version when the function/class was deprecated (e.g. "2.1.0").
             If not provided, no deprecation version will be shown in the warning message.
-            Defaults to None.
-        remove (str | None, optional): Version when the function/class will be removed.
+        remove: Version when the function/class will be removed.
             If not provided, no removal version will be shown in the warning message.
-            Defaults to None.
-        use (str | None, optional): Name of the replacement function/class.
+        use: Name of the replacement function/class.
             If not provided, no replacement suggestion will be shown in the warning message.
-            Defaults to None.
 
     Returns:
-        Callable: Decorated function/class that emits a deprecation warning when used.
+        Decorated function/class that emits a deprecation warning when used.
 
     Example:
         >>> # Basic deprecation without any information
@@ -110,7 +105,7 @@ def deprecate(
         ...     pass
     """
 
-    def decorator(obj: Any) -> Any:  # noqa: ANN401
+    def _deprecate_impl(obj: Any) -> Any:  # noqa: ANN401
         if isinstance(obj, type):
             # Handle class deprecation
             original_init = inspect.getattr_static(obj, "__init__")
@@ -147,8 +142,6 @@ def deprecate(
 
         return wrapper
 
-    if func is None:
-        # Called as @deprecate(...)
-        return decorator
-    # Called as @deprecate
-    return decorator(func)
+    if __obj is None:
+        return _deprecate_impl
+    return _deprecate_impl(__obj)
