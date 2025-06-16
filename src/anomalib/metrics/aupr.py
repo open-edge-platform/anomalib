@@ -118,10 +118,10 @@ class _AUPR(BinaryPrecisionRecallCurve):
 
         xlim = (0.0, 1.0)
         ylim = (0.0, 1.0)
-        xlabel = "Precision"
-        ylabel = "Recall"
+        xlabel = "Recall"
+        ylabel = "Precision"
         loc = "best"
-        title = "AUPR"
+        title = "PR"
 
         fig, axis = plot_metric_curve(rec, prec, aupr, xlim, ylim, xlabel, ylabel, loc, title, metric_name="AUPR")
 
