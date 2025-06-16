@@ -44,7 +44,7 @@ from torchmetrics.utilities.compute import auc
 
 from anomalib.metrics.base import AnomalibMetric
 
-from .plotting_utils import plot_figure
+from .utils import plot_metric_curve
 
 
 class _AUROC(BinaryROC):
@@ -133,7 +133,7 @@ class _AUROC(BinaryROC):
         loc = "lower right"
         title = "ROC"
 
-        fig, axis = plot_figure(fpr, tpr, auroc, xlim, ylim, xlabel, ylabel, loc, title)
+        fig, axis = plot_metric_curve(fpr, tpr, auroc, xlim, ylim, xlabel, ylabel, loc, title, metric_name="AUROC")
 
         axis.plot(
             [0, 1],

@@ -65,7 +65,7 @@ from anomalib.metrics.pro import connected_components_cpu, connected_components_
 
 from .base import AnomalibMetric
 from .binning import thresholds_between_0_and_1, thresholds_between_min_and_max
-from .plotting_utils import plot_figure
+from .utils import plot_metric_curve
 
 
 class _AUPRO(Metric):
@@ -319,14 +319,14 @@ class _AUPRO(Metric):
         fpr, tpr = self._compute()
         aupro = self.compute()
 
-        xlim = (0.0, self.fpr_limit.detach_().cpu().numpy())
+        xlim = (0.0, float(self.fpr_limit.detach().cpu().numpy()))
         ylim = (0.0, 1.0)
         xlabel = "Global FPR"
         ylabel = "Averaged Per-Region TPR"
         loc = "lower right"
         title = "PRO"
 
-        fig, _axis = plot_figure(fpr, tpr, aupro, xlim, ylim, xlabel, ylabel, loc, title)
+        fig, _axis = plot_metric_curve(fpr, tpr, aupro, xlim, ylim, xlabel, ylabel, loc, title, metric_name="AUPRO")
 
         return fig, "PRO"
 
