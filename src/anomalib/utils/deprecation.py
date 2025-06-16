@@ -47,6 +47,14 @@ ClassType = TypeVar("ClassType", bound=type[Any])
 
 
 @overload
+def deprecate(obj: FunctionType, /) -> FunctionType: ...
+
+
+@overload
+def deprecate(obj: ClassType, /) -> ClassType: ...
+
+
+@overload
 def deprecate(
     *,
     since: str | None = None,
@@ -55,16 +63,9 @@ def deprecate(
 ) -> Callable[[FunctionType | ClassType], FunctionType | ClassType]: ...
 
 
-@overload
-def deprecate(obj: FunctionType) -> FunctionType: ...
-
-
-@overload
-def deprecate(obj: ClassType) -> ClassType: ...
-
-
 def deprecate(
     obj: FunctionType | ClassType | None = None,
+    /,
     *,
     since: str | None = None,
     remove: str | None = None,
@@ -114,14 +115,14 @@ def deprecate(
         ...     pass
     """
 
-    def decorator(obj: FunctionType | ClassType) -> FunctionType | ClassType:
-        if isinstance(obj, type):
+    def decorator(decorated_obj: FunctionType | ClassType) -> FunctionType | ClassType:
+        if isinstance(decorated_obj, type):
             # Handle class deprecation
-            original_init = inspect.getattr_static(obj, "__init__")
+            original_init = inspect.getattr_static(decorated_obj, "__init__")
 
             @wraps(original_init)
             def new_init(self: Any, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
-                msg = f"{obj.__name__} is deprecated"
+                msg = f"{decorated_obj.__name__} is deprecated"
                 if since:
                     msg += f" since v{since}"
                 if remove:
@@ -132,13 +133,13 @@ def deprecate(
                 warnings.warn(msg, DeprecationWarning, stacklevel=2)
                 original_init(self, *args, **kwargs)
 
-            setattr(obj, "__init__", new_init)  # noqa: B010
-            return cast("ClassType", obj)
+            setattr(decorated_obj, "__init__", new_init)  # noqa: B010
+            return cast("ClassType", decorated_obj)
 
         # Handle function deprecation
-        @wraps(obj)
+        @wraps(decorated_obj)
         def wrapper(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
-            msg = f"{obj.__name__} is deprecated"
+            msg = f"{decorated_obj.__name__} is deprecated"
             if since:
                 msg += f" since v{since}"
             if remove:
@@ -147,7 +148,7 @@ def deprecate(
                 msg += f". Use {use} instead"
             msg += "."
             warnings.warn(msg, DeprecationWarning, stacklevel=2)
-            return obj(*args, **kwargs)
+            return decorated_obj(*args, **kwargs)
 
         return cast("FunctionType", wrapper)
 
