@@ -27,10 +27,10 @@ Example:
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import warnings
-
 import torch
 from torchmetrics import Metric
+
+from anomalib.utils import deprecate
 
 
 class Threshold(Metric):
@@ -91,6 +91,7 @@ class Threshold(Metric):
         raise NotImplementedError(msg)
 
 
+@deprecate(since="0.4.0", remove="2.3.0", use="Threshold")
 class BaseThreshold(Threshold):
     """Deprecated alias for ``Threshold`` class.
 
@@ -104,9 +105,4 @@ class BaseThreshold(Threshold):
         Args:
             **kwargs: Keyword arguments passed to parent ``Threshold`` class.
         """
-        warnings.warn(
-            "BaseThreshold is deprecated and will be removed in a future version. Use Threshold instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
         super().__init__(**kwargs)

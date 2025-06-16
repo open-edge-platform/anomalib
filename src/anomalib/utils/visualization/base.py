@@ -33,6 +33,8 @@ from pathlib import Path
 
 import numpy as np
 
+from anomalib.utils import deprecate
+
 
 @dataclass
 class GeneratorResult:
@@ -53,20 +55,14 @@ class VisualizationStep(str, Enum):
     STAGE_END = "stage_end"
 
 
+@deprecate(since="2.0.0", remove="2.2.0", use="Visualizer")
 class BaseVisualizer(ABC):
     """Base visualization generator.
 
-    Deprecated: This class will be removed in v2.0.0 release.
+    Deprecated: This class will be removed in v2.2.0 release.
     """
 
     def __init__(self, visualize_on: VisualizationStep) -> None:
-        import warnings
-
-        warnings.warn(
-            "BaseVisualizer is deprecated and will be removed in v2.0.0 release.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
         self.visualize_on = visualize_on
 
     @abstractmethod
