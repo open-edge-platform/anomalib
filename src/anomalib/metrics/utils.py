@@ -9,11 +9,11 @@ visualization helpers used by metrics in Anomalib.
 
 import torch
 from matplotlib import pyplot as plt
-from matplotlib.axis import Axis
+from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 
-def plot_figure(
+def plot_metric_curve(
     x_vals: torch.Tensor,
     y_vals: torch.Tensor,
     auc: torch.Tensor,
@@ -23,9 +23,10 @@ def plot_figure(
     ylabel: str,
     loc: str,
     title: str,
+    metric_name: str = "AUC",
     sample_points: int = 1000,
-) -> tuple[Figure, Axis]:
-    """Generate a ROC-style plot with x values plotted against y values.
+) -> tuple[Figure, Axes]:
+    """Generate a metric curve plot (e.g. ROC, PR, PRO) with x values plotted against y values.
 
     The function creates a matplotlib figure with a single axis showing the curve
     defined by ``x_vals`` and ``y_vals``. If the number of points exceeds
@@ -34,7 +35,7 @@ def plot_figure(
     Args:
         x_vals (torch.Tensor): Values to plot on x-axis.
         y_vals (torch.Tensor): Values to plot on y-axis.
-        auc (torch.Tensor): Area under curve value to display in legend.
+        auc (torch.Tensor): Area under curve value to display in legend (e.g. AUROC, AUPR, AUPRO).
         xlim (tuple[float, float]): Display range for x-axis as ``(min, max)``.
         ylim (tuple[float, float]): Display range for y-axis as ``(min, max)``.
         xlabel (str): Label for x-axis.
@@ -42,18 +43,19 @@ def plot_figure(
         loc (str): Legend location. See matplotlib documentation for valid values:
             https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html
         title (str): Title of the plot.
+        metric_name (str, optional): Name of the metric to display in legend. Defaults to "AUC".
         sample_points (int, optional): Maximum number of points to plot. Data will
             be subsampled if it exceeds this value. Defaults to ``1000``.
 
     Returns:
-        tuple[Figure, Axis]: Tuple containing the figure and its main axis.
+        tuple[Figure, Axes]: Tuple containing the figure and its main axis.
 
     Example:
         >>> import torch
         >>> x = torch.linspace(0, 1, 100)
         >>> y = x ** 2
         >>> auc = torch.tensor(0.5)
-        >>> fig, ax = plot_figure(
+        >>> fig, ax = plot_metric_curve(
         ...     x_vals=x,
         ...     y_vals=y,
         ...     auc=auc,
@@ -63,6 +65,7 @@ def plot_figure(
         ...     ylabel="True Positive Rate",
         ...     loc="lower right",
         ...     title="ROC Curve",
+        ...     metric_name="AUROC",
         ... )
     """
     fig, axis = plt.subplots()
@@ -91,7 +94,7 @@ def plot_figure(
         color="darkorange",
         figure=fig,
         lw=2,
-        label=f"AUC: {auc.detach().cpu():0.2f}",
+        label=f"{metric_name}: {auc.detach().cpu():0.2f}",
     )
 
     axis.set_xlim(xlim)
