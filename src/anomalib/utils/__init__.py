@@ -5,6 +5,7 @@ This module provides various utility functions and helpers for:
     - Metric calculation and evaluation
     - Anomaly map computation and processing
     - Result visualization and plotting
+    - API deprecation management
 
 The utilities ensure consistent behavior across the library and provide common
 functionality used by multiple components.
@@ -21,11 +22,13 @@ The module is organized into submodules for different types of utilities:
     - ``metrics``: Implementations of evaluation metrics
     - ``map``: Tools for generating and processing anomaly maps
     - ``visualization``: Classes for visualizing detection results
+    - ``deprecation``: Utilities for managing API deprecation
 """
 
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from .attrs import get_nested_attr
+from .deprecation import deprecate
 
-__all__ = ["get_nested_attr"]
+__all__ = ["get_nested_attr", "deprecate"]
