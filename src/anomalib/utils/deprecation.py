@@ -55,6 +55,8 @@ def deprecate(
     since: str | None = None,
     remove: str | None = None,
     use: str | None = None,
+    reason: str | None = None,
+    warning_category: type[Warning] = FutureWarning,
 ) -> Callable[[_T], _T]: ...
 
 
@@ -64,6 +66,8 @@ def deprecate(
     since: str | None = None,
     remove: str | None = None,
     use: str | None = None,
+    reason: str | None = None,
+    warning_category: type[Warning] = FutureWarning,
 ) -> Any:
     """Mark a function or class as deprecated.
 
@@ -79,6 +83,10 @@ def deprecate(
             If not provided, no removal version will be shown in the warning message.
         use: Name of the replacement function/class.
             If not provided, no replacement suggestion will be shown in the warning message.
+        reason: Additional reason for the deprecation.
+            If not provided, no reason will be shown in the warning message.
+        warning_category: Type of warning to emit (default: FutureWarning).
+            Can be DeprecationWarning, FutureWarning, PendingDeprecationWarning, etc.
 
     Returns:
         Decorated function/class that emits a deprecation warning when used.
@@ -103,6 +111,11 @@ def deprecate(
         >>> @deprecate(since="2.1.0")
         ... def yet_another_function():
         ...     pass
+
+        >>> # Deprecation with reason and custom warning category
+        >>> @deprecate(since="2.1.0", reason="Performance improvements available", warning_category=FutureWarning)
+        ... def old_slow_function():
+        ...     pass
     """
 
     def _deprecate_impl(obj: Any) -> Any:  # noqa: ANN401
@@ -119,8 +132,10 @@ def deprecate(
                     msg += f" and will be removed in v{remove}"
                 if use:
                     msg += f". Use {use} instead"
+                if reason:
+                    msg += f". {reason}"
                 msg += "."
-                warnings.warn(msg, DeprecationWarning, stacklevel=2)
+                warnings.warn(msg, warning_category, stacklevel=2)
                 original_init(self, *args, **kwargs)
 
             setattr(obj, "__init__", new_init)  # noqa: B010
@@ -136,8 +151,10 @@ def deprecate(
                 msg += f" and will be removed in v{remove}"
             if use:
                 msg += f". Use {use} instead"
+            if reason:
+                msg += f". {reason}"
             msg += "."
-            warnings.warn(msg, DeprecationWarning, stacklevel=2)
+            warnings.warn(msg, warning_category, stacklevel=2)
             return obj(*args, **kwargs)
 
         return wrapper
