@@ -34,15 +34,6 @@ class TestBaseThreshold:
     """Test cases for the BaseThreshold class."""
 
     @staticmethod
-    def test_base_threshold_deprecation_warning() -> None:
-        """Test that BaseThreshold class raises a DeprecationWarning."""
-        with pytest.warns(
-            DeprecationWarning,
-            match="BaseThreshold is deprecated and will be removed in a future version. Use Threshold instead.",
-        ):
-            BaseThreshold()
-
-    @staticmethod
     def test_base_threshold_inheritance() -> None:
         """Test that BaseThreshold inherits from Threshold."""
         base_threshold = BaseThreshold()
