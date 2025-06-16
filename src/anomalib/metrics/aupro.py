@@ -328,7 +328,7 @@ class _AUPRO(Metric):
 
         fig, _axis = plot_metric_curve(fpr, tpr, aupro, xlim, ylim, xlabel, ylabel, loc, title, metric_name="AUPRO")
 
-        return fig, "PRO"
+        return fig, title
 
     @staticmethod
     def interp1d(old_x: torch.Tensor, old_y: torch.Tensor, new_x: torch.Tensor) -> torch.Tensor:
