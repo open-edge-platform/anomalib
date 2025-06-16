@@ -36,6 +36,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datasets.base import AnomalibDataset
 from anomalib.data.errors import MisMatchError
 from anomalib.data.utils import LabelName, Split, validate_path
+from anomalib.utils import deprecate
 
 IMG_EXTENSIONS = (".png", ".PNG")
 CATEGORIES = (
@@ -222,6 +223,7 @@ def make_mvtec_ad_dataset(
     return samples
 
 
+@deprecate(since="2.1.0", remove="2.3.0", use="MVTecADDataset")
 class MVTecDataset(MVTecADDataset):
     """MVTec dataset class (Deprecated).
 
@@ -230,11 +232,4 @@ class MVTecDataset(MVTecADDataset):
     """
 
     def __init__(self, *args, **kwargs) -> None:
-        import warnings
-
-        warnings.warn(
-            "MVTecADDataset is deprecated and will be removed in a future version. Please use MVTecADDataset instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
         super().__init__(*args, **kwargs)

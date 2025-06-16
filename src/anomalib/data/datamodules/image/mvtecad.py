@@ -53,6 +53,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.mvtecad import MVTecADDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
+from anomalib.utils import deprecate
 
 logger = logging.getLogger(__name__)
 
@@ -218,6 +219,7 @@ class MVTecAD(AnomalibDataModule):
             download_and_extract(self.root, DOWNLOAD_INFO)
 
 
+@deprecate(since="2.1.0", remove="2.3.0", use="MVTecAD")
 class MVTec(MVTecAD):
     """MVTec datamodule class (Deprecated).
 
@@ -226,11 +228,4 @@ class MVTec(MVTecAD):
     """
 
     def __init__(self, *args, **kwargs) -> None:
-        import warnings
-
-        warnings.warn(
-            "MVTec is deprecated and will be removed in a future version. Please use MVTecAD instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
         super().__init__(*args, **kwargs)
