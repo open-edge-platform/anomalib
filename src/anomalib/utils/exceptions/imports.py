@@ -17,15 +17,18 @@ The module ensures consistent handling of optional dependencies and provides
 helpful error messages when imports fail.
 """
 
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
 from importlib import import_module
 
+from anomalib.utils import deprecate
+
 logger = logging.getLogger(__name__)
 
 
+@deprecate(since="2.0.0", remove="2.2.0", use="module_available")
 def try_import(import_path: str) -> bool:
     """Try to import a module and return whether the import succeeded.
 
@@ -44,7 +47,7 @@ def try_import(import_path: str) -> bool:
 
     Warns:
         DeprecationWarning: This function is deprecated and will be removed in
-            v2.0.0. Use ``module_available`` from lightning-utilities instead.
+            v2.2.0. Use ``module_available`` from lightning-utilities instead.
 
     Example:
         >>> from anomalib.utils.exceptions import try_import
@@ -55,15 +58,6 @@ def try_import(import_path: str) -> bool:
         >>> # Try importing a submodule
         >>> has_torchvision = try_import("torchvision.transforms")
     """
-    import warnings
-
-    warnings.warn(
-        "The 'try_import' function is deprecated and will be removed in v2.0.0. "
-        "Use 'module_available' from lightning-utilities instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-
     try:
         import_module(import_path)
     except ImportError:
