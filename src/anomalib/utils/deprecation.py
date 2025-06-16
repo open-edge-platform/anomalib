@@ -40,18 +40,14 @@ import inspect
 import warnings
 from collections.abc import Callable
 from functools import wraps
-from typing import Any, TypeVar, cast, overload
+from typing import Any, TypeVar, overload
 
-FunctionType = TypeVar("FunctionType", bound=Callable[..., Any])
-ClassType = TypeVar("ClassType", bound=type[Any])
-
-
-@overload
-def deprecate(obj: FunctionType) -> FunctionType: ...
+_F = TypeVar("_F", bound=Callable[..., Any])
+_T = TypeVar("_T", bound=type)
 
 
 @overload
-def deprecate(obj: ClassType) -> ClassType: ...
+def deprecate(func: _F) -> _F: ...
 
 
 @overload
@@ -60,11 +56,11 @@ def deprecate(
     since: str | None = None,
     remove: str | None = None,
     use: str | None = None,
-) -> Callable[[FunctionType | ClassType], FunctionType | ClassType]: ...
+) -> Callable[[_F | _T], _F | _T]: ...
 
 
 def deprecate(
-    obj: Callable | type | None = None,
+    func: Callable[..., Any] | type | None = None,
     *,
     since: str | None = None,
     remove: str | None = None,
@@ -75,7 +71,7 @@ def deprecate(
     This decorator will cause a warning to be emitted when the function is called or class is instantiated.
 
     Args:
-        obj (Callable | type | None, optional): The function or class to be deprecated.
+        func (Callable | type | None, optional): The function or class to be deprecated.
             If provided, the decorator is used without arguments.
             If None, the decorator is used with arguments.
             Defaults to None.
@@ -114,14 +110,14 @@ def deprecate(
         ...     pass
     """
 
-    def decorator(decorated_obj: FunctionType | ClassType) -> FunctionType | ClassType:
-        if isinstance(decorated_obj, type):
+    def decorator(obj: Any) -> Any:  # noqa: ANN401
+        if isinstance(obj, type):
             # Handle class deprecation
-            original_init = inspect.getattr_static(decorated_obj, "__init__")
+            original_init = inspect.getattr_static(obj, "__init__")
 
             @wraps(original_init)
             def new_init(self: Any, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
-                msg = f"{decorated_obj.__name__} is deprecated"
+                msg = f"{obj.__name__} is deprecated"
                 if since:
                     msg += f" since v{since}"
                 if remove:
@@ -132,13 +128,13 @@ def deprecate(
                 warnings.warn(msg, DeprecationWarning, stacklevel=2)
                 original_init(self, *args, **kwargs)
 
-            setattr(decorated_obj, "__init__", new_init)  # noqa: B010
-            return cast("ClassType", decorated_obj)
+            setattr(obj, "__init__", new_init)  # noqa: B010
+            return obj
 
         # Handle function deprecation
-        @wraps(decorated_obj)
+        @wraps(obj)
         def wrapper(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
-            msg = f"{decorated_obj.__name__} is deprecated"
+            msg = f"{obj.__name__} is deprecated"
             if since:
                 msg += f" since v{since}"
             if remove:
@@ -147,12 +143,12 @@ def deprecate(
                 msg += f". Use {use} instead"
             msg += "."
             warnings.warn(msg, DeprecationWarning, stacklevel=2)
-            return decorated_obj(*args, **kwargs)
+            return obj(*args, **kwargs)
 
-        return cast("FunctionType", wrapper)
+        return wrapper
 
-    if obj is None:
+    if func is None:
         # Called as @deprecate(...)
         return decorator
     # Called as @deprecate
-    return decorator(obj)
+    return decorator(func)
