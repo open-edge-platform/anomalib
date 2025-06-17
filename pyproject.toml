@@ -89,6 +89,7 @@ test = [
     "pytest-json-report",
     "coverage[toml]",
     "tox",
+    "commitizen",
 ]
 full = ["anomalib[core,openvino,loggers,notebooks, vlm]"]
 dev = ["anomalib[full,docs,test]"]
@@ -330,3 +331,66 @@ exclude_links = [
 ]
 exclude_files = ["docs/*"]
 force_get_requests_for_links = ["https://secure.ethicspoint.com/*"]
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# COMMITIZEN CONFIGURATION                                                    #
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "v$version"
+version_scheme = "semver"
+version_provider = "pep621"
+update_changelog_on_bump = true
+changelog_file = "CHANGELOG.md"
+changelog_format = "## $version ($date)"
+major_version_zero = true
+types = [
+    "feat",
+    "fix",
+    "docs",
+    "style",
+    "refactor",
+    "perf",
+    "test",
+    "build",
+    "ci",
+    "chore",
+]
+scopes = [
+    "data",
+    "model",
+    "metric",
+    "utils",
+    "cli",
+    "docs",
+    "ci",
+    "engine",
+    "visualization",
+    "benchmarking",
+    "logger",
+    "openvino",
+    "notebooks"
+]
+
+# Conventional commit rules
+[tool.commitizen.rules]
+scope-enum = [2, "always", [
+    "data",
+    "model",
+    "metric",
+    "utils",
+    "cli",
+    "docs",
+    "ci",
+    "engine",
+    "visualization",
+    "benchmarking",
+    "logger",
+    "openvino",
+    "notebooks"
+]]
+scope-empty = [0]
+subject-case = [2, "never", ["sentence-case", "start-case", "pascal-case", "upper-case"]]
+subject-empty = [2, "never"]
+subject-full-stop = [2, "never", "."]
+type-case = [2, "always", "lower-case"]
+type-empty = [2, "never"]
