@@ -1,0 +1,54 @@
+# <type>(<scope>): <description>
+#
+# [optional body]
+#
+# [optional footer]
+#
+# Types:
+#   feat:     A new feature
+#   fix:      A bug fix
+#   docs:     Documentation changes
+#   style:    Code style changes
+#   refactor: Code refactoring
+#   perf:     Performance improvements
+#   test:     Adding or modifying tests
+#   build:    Build system changes
+#   ci:       CI configuration changes
+#   chore:    General maintenance
+#
+# Scopes:
+#   data:           Data loading, processing, or augmentation
+#   model:          Model architecture or implementation
+#   metric:         Evaluation metrics
+#   utils:          Utility functions
+#   cli:            Command-line interface
+#   docs:           Documentation
+#   ci:             CI/CD configuration
+#   engine:         Training/inference engine
+#   visualization:  Visualization tools
+#   benchmarking:   Benchmarking tools
+#   logger:         Logging functionality
+#   openvino:       OpenVINO integration
+#   notebooks:      Jupyter notebooks
+#
+# Rules:
+# - The type and scope are case-sensitive
+# - The type must be lowercase
+# - The description should be in present tense
+# - The description should not end with a period
+# - The description should not be in sentence-case, start-case, pascal-case, or upper-case
+#
+# Examples:
+# feat(model): add transformer architecture for anomaly detection
+#
+# - Implement self-attention mechanism
+# - Add positional encoding
+# - Add transformer encoder blocks
+#
+# Closes #123
+#
+# fix(data): handle corrupted image files
+#
+# - Add error handling for corrupted images
+# - Skip corrupted files during training
+# - Log skipped files for debugging
