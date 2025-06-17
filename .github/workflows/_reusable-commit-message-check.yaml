@@ -91,17 +91,22 @@ jobs:
         run: |
           echo "Validating commits against base branch: $BASE_REF"
 
-          # Get all commits in the PR
-          COMMITS=$(git log --pretty=format:"%H" origin/$BASE_REF..HEAD)
+          # Get all non-merge commits in the PR
+          COMMITS=$(git log --no-merges --pretty=format:"%H" origin/$BASE_REF..HEAD)
 
           if [ -z "$COMMITS" ]; then
-            echo "No commits found to validate"
+            echo "No commits found to validate (excluding merges)."
             exit 0
           fi
 
           echo "Found commits to validate:"
-          git log --oneline origin/$BASE_REF..HEAD
+          git log --oneline --no-merges origin/$BASE_REF..HEAD
           echo ""
+
+          # Create a temporary file to store the commit message for checking
+          TEMP_COMMIT_MSG_FILE=$(mktemp)
+          # Ensure the temp file is cleaned up on exit
+          trap 'rm -f "$TEMP_COMMIT_MSG_FILE"' EXIT
 
           # Check each commit message
           FAILED_COMMITS=()
@@ -111,7 +116,11 @@ jobs:
 
             echo "Checking: $COMMIT_SHORT"
 
-            if ! echo "$COMMIT_MSG" | cz check --commit-msg-file -; then
+            # Write the commit message to the temporary file
+            echo "$COMMIT_MSG" > "$TEMP_COMMIT_MSG_FILE"
+
+            # Check the commit message from the file
+            if ! cz check --commit-msg-file "$TEMP_COMMIT_MSG_FILE"; then
               echo "::error::Commit $commit does not follow conventional commit format"
               echo "::error::Message: $COMMIT_MSG"
               FAILED_COMMITS+=($commit)
