@@ -13,6 +13,14 @@ repos:
       - id: debug-statements
       - id: detect-private-key
 
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.20.0
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+      - id: commitizen-branch
+        stages: [pre-push]
+
   # Ruff version.
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: "v0.6.2"
