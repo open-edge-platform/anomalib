@@ -110,13 +110,139 @@ However, make sure to address any pre-commit issues before finalizing your pull 
 
 6. **Check Licensing:** Ensure you own the code or have rights to use it, adhering to appropriate licensing.
 
-7. **Sign Your Commits:** Use signed commits to certify that you have the right to submit the code under the project's license:
+7. **Follow Conventional Commits:** We use [Commitizen](https://commitizen-tools.github.io/commitizen/) to enforce conventional commit messages and branch names. This helps maintain a clean and consistent git history.
 
-   ```bash
-   git commit -S -m "Your detailed commit message"
+   <details>
+   <summary>Commit Message Format</summary>
+
+   Each commit message consists of a **header**, a **body**, and a **footer**:
+
+   ```text
+   <type>(<scope>): <description>
+
+   [optional body]
+
+   [optional footer]
    ```
 
-   For more on signing commits, see [GitHub's guide on signing commits](https://docs.github.com/en/github/authenticating-to-github/managing-commit-signature-verification/signing-commits).
+   **Types:**
+
+   - `feat`: A new feature
+   - `fix`: A bug fix
+   - `docs`: Documentation changes
+   - `style`: Code style changes
+   - `refactor`: Code refactoring
+   - `perf`: Performance improvements
+   - `test`: Adding or modifying tests
+   - `build`: Build system changes
+   - `ci`: CI configuration changes
+   - `chore`: General maintenance
+
+   **Scopes:**
+
+   - `data`: Data loading, processing, or augmentation
+   - `model`: Model architecture or implementation
+   - `metric`: Evaluation metrics
+   - `utils`: Utility functions
+   - `cli`: Command-line interface
+   - `docs`: Documentation
+   - `ci`: CI/CD configuration
+   - `engine`: Training/inference engine
+   - `visualization`: Visualization tools
+   - `benchmarking`: Benchmarking tools
+   - `logger`: Logging functionality
+   - `openvino`: OpenVINO integration
+   - `notebooks`: Jupyter notebooks
+
+   **Rules:**
+
+   - The type and scope are case-sensitive
+   - The type must be lowercase
+   - The description should be in present tense
+   - The description should not end with a period
+   - The description should not be in sentence-case, start-case, pascal-case, or upper-case
+
+   **Examples:**
+
+   ```text
+   feat(model): add transformer architecture for anomaly detection
+
+   - Implement self-attention mechanism
+   - Add positional encoding
+   - Add transformer encoder blocks
+
+   Closes #123
+   ```
+
+   ```text
+   fix(data): handle corrupted image files
+
+   - Add error handling for corrupted images
+   - Skip corrupted files during training
+   - Log skipped files for debugging
+   ```
+
+   </details>
+
+   <details>
+   <summary>Branch Naming</summary>
+
+   Branch names must follow the format:
+
+   ```text
+   <type>/<scope>/<description>
+   ```
+
+   **Examples:**
+
+   - `feat/model/add-transformer`
+   - `fix/data/load-image-bug`
+   - `docs/readme/update-installation`
+   - `refactor/utils/optimize-performance`
+
+   The type and scope should match the ones used in commit messages.
+   </details>
+
+   <details>
+   <summary>Using Commitizen</summary>
+
+   1. Stage your changes:
+
+   ```bash
+   git add <files>
+   # or
+   git add .  # to add all changes
+   ```
+
+   1. Create a commit using Commitizen:
+
+   ```bash
+   # Regular commit
+   cz commit
+   # or
+   cz c
+
+   # Signed commit (recommended)
+   cz commit -- -s
+   # or
+   cz c -- -s
+   ```
+
+   Commitizen will guide you through an interactive process to create a conventional commit message.
+
+   To check if your commits follow the conventional format:
+
+   ```bash
+   cz check
+   ```
+
+   To bump the version based on commit history:
+
+   ```bash
+   cz bump
+   ```
+
+   </details>
 
 <details>
 <summary>Suppressing False Positives</summary>
