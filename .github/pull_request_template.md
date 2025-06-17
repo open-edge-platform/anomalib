@@ -18,7 +18,6 @@ Select what type of change your PR is:
 
 Before you submit your pull request, please make sure you have completed the following steps:
 
-- [ ] 📋 I have summarized my changes in the [CHANGELOG](https://github.com/open-edge-platform/anomalib/blob/main/CHANGELOG.md) and followed the guidelines for my type of change (skip for minor changes, documentation updates, and test enhancements).
 - [ ] 📚 I have made the necessary updates to the documentation (if applicable).
 - [ ] 🧪 I have written tests that support my changes and prove that my fix is effective or my feature works (if applicable).
 
