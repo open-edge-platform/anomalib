@@ -132,8 +132,10 @@ jobs:
 
       - name: Check for version bump
         id: check-bump
+        env:
+          DRY_RUN: ${{ inputs.dry-run }}
         run: |
-          if ${{ inputs.dry-run }}; then
+          if [ "$DRY_RUN" = "true" ]; then
             echo "Dry run mode - checking what would be bumped"
             if cz bump --dry-run; then
               echo "version_needs_bump=true" >> $GITHUB_OUTPUT
