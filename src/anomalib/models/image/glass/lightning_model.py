@@ -15,14 +15,18 @@ Paper: `A Unified Anomaly Synthesis Strategy with Gradient Ascent for Industrial
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import math
 from typing import Any
 
 import torch
 from lightning.pytorch.utilities.types import STEP_OUTPUT
 from torch import nn, optim
+from torch.nn import functional as F
+from torchvision.transforms.v2 import CenterCrop, Compose, Normalize, Resize
 
 from anomalib import LearningType
 from anomalib.data import Batch
+from anomalib.data.utils.generators.perlin import PerlinAnomalyGenerator
 from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule
 from anomalib.post_processing import PostProcessor
@@ -32,11 +36,9 @@ from anomalib.visualization import Visualizer
 from .loss import FocalLoss
 from .torch_model import GlassModel
 
-from anomalib.data.utils.generators.perlin import PerlinAnomalyGenerator
-
 
 class Glass(AnomalibModule):
-    """PyTorch Lightning Implementation of the GLASS Model
+    """PyTorch Lightning Implementation of the GLASS Model.
 
     The model uses a pre-trained feature extractor to extract features and a feature adaptor to mitigate latent domain bias.
     Global anomaly features are synthesized from adapted normal features using gradient ascent.
@@ -88,7 +90,10 @@ class Glass(AnomalibModule):
             Defaults to `0.5`.
         lr (float, optional): Learning rate for training the feature adaptor and discriminator networks.
             Defaults to `0.0001`.
-        step (int, optional): Number of gradient ascent steps or
+        step (int, optional): Number of gradient ascent steps for anomaly synthesis.
+            Defaults to `20`.
+        svd (int, optional): Flag to enable SVD-based feature projection.
+            Defaults to `0`.
     """
 
     def __init__(
@@ -116,6 +121,7 @@ class Glass(AnomalibModule):
         p: float = 0.5,
         lr: float = 0.0001,
         step: int = 20,
+        svd: int = 0,
     ):
         super().__init__(
             pre_processor=pre_processor,
@@ -149,12 +155,15 @@ class Glass(AnomalibModule):
         self.distribution = 0
         self.lr = lr
         self.step = step
+        self.svd = svd
 
         self.focal_loss = FocalLoss()
 
         if pre_proj > 0:
             self.proj_opt = optim.AdamW(
-                self.model.pre_projection.parameters(), self.lr, weight_decay=1e-5
+                self.model.pre_projection.parameters(),
+                self.lr,
+                weight_decay=1e-5,
             )
         else:
             self.proj_opt = None
@@ -167,6 +176,31 @@ class Glass(AnomalibModule):
         else:
             self.backbone_opt = None
 
+    @classmethod
+    def configure_pre_processor(
+        cls,
+        image_size: tuple[int, int] | None = None,
+        center_crop_size: tuple[int, int] | None = None,
+    ) -> PreProcessor:
+        image_size = image_size or (256, 256)
+
+        if center_crop_size is not None:
+            if center_crop_size[0] > image_size[0] or center_crop_size[1] > image_size[1]:
+                msg = f"Center crop size {center_crop_size} cannot be larger than image size {image_size}."
+                raise ValueError(msg)
+            transform = Compose([
+                Resize(image_size, antialias=True),
+                CenterCrop(center_crop_size),
+                Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
+        else:
+            transform = Compose([
+                Resize(image_size, antialias=True),
+                Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
+
+        return PreProcessor(transform=transform)
+
     def configure_optimizers(self) -> list[optim.Optimizer]:
         dsc_opt = optim.AdamW(self.model.discriminator.parameters(), lr=self.lr * 2)
 
@@ -177,6 +211,15 @@ class Glass(AnomalibModule):
         batch: Batch,
         batch_idx: int,
     ) -> STEP_OUTPUT:
+        """Training step for GLASS model.
+
+        Args:
+            batch (Batch): Input batch containing images and metadata
+            batch_idx (int): Index of the current batch
+
+        Returns:
+            STEP_OUTPUT: Dictionary containing loss values and metrics
+        """
         dsc_opt = self.optimizers()
 
         self.model.forward_modules.eval()
@@ -192,17 +235,28 @@ class Glass(AnomalibModule):
 
         img = batch.image
         aug, mask_s = self.augmentor(img)
+        batch_size = img.shape[0]
 
         true_feats, fake_feats = self.model(img, aug)
 
-        mask_s_gt = mask_s.reshape(-1, 1)
+        h_ratio = mask_s.shape[2] // int(math.sqrt(fake_feats.shape[0] // batch_size))
+        w_ratio = mask_s.shape[3] // int(math.sqrt(fake_feats.shape[0] // batch_size))
+
+        mask_s_resized = F.interpolate(
+            mask_s.float(),
+            size=(mask_s.shape[2] // h_ratio, mask_s.shape[3] // w_ratio),
+            mode="nearest",
+        )
+        mask_s_gt = mask_s_resized.reshape(-1, 1)
+
         noise = torch.normal(0, self.noise, true_feats.shape)
         gaus_feats = true_feats + noise
 
         center = self.c.repeat(img.shape[0], 1, 1)
         center = center.reshape(-1, center.shape[-1])
         true_points = torch.concat(
-            [fake_feats[mask_s_gt[:, 0] == 0], true_feats], dim=0
+            [fake_feats[mask_s_gt[:, 0] == 0], true_feats],
+            dim=0,
         )
         c_t_points = torch.concat([center[mask_s_gt[:, 0] == 0], center], dim=0)
         dist_t = torch.norm(true_points - c_t_points, dim=1)
@@ -235,7 +289,6 @@ class Glass(AnomalibModule):
         true_points = true_feats[mask_s_gt[:, 0] == 1]
         c_f_points = center[mask_s_gt[:, 0] == 1]
         dist_f = torch.norm(fake_points - c_f_points, dim=1)
-        r_f = torch.tensor([torch.quantile(dist_f, q=self.radius)]).to(self.device)
         proj_feats = c_f_points if self.svd == 1 else true_points
         r = r_t if self.svd == 1 else 1
 
@@ -270,7 +323,18 @@ class Glass(AnomalibModule):
             self.backbone_opt.step()
         dsc_opt.step()
 
+        self.log("true_loss", true_loss, prog_bar=True)
+        self.log("gaus_loss", gaus_loss, prog_bar=True)
+        self.log("bce_loss", bce_loss, prog_bar=True)
+        self.log("focal_losss", focal_loss, prog_bar=True)
+        self.log("loss", loss, prog_bar=True)
+
     def on_train_start(self) -> None:
+        """Initialize model by computing mean feature representation across training dataset.
+
+        This method is called at the start of training and computes a mean feature vector
+        that serves as a reference point for the normal class distribution.
+        """
         dataloader = self.trainer.train_dataloader
 
         with torch.no_grad():
@@ -293,6 +357,9 @@ class Glass(AnomalibModule):
 
     @property
     def trainer_arguments(self) -> dict[str, Any]:
-        """Return GLASS trainer arguments."""
+        """Return GLASS trainer arguments.
+
+        Returns:
+            dict[str, Any]: Dictionary containing trainer configuration
+        """
         return {"gradient_clip_val": 0, "num_sanity_val_steps": 0}
-        # TODO

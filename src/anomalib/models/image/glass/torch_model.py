@@ -14,6 +14,10 @@ from anomalib.models.components.feature_extractors import dryrun_find_featuremap
 
 
 def init_weight(m):
+    """Initializes network weights using Xavier normal initialization for
+    linear layers and normal initialization for convolutional and batch
+    normalization layers.
+    """
     if isinstance(m, torch.nn.Linear):
         torch.nn.init.xavier_normal_(m.weight)
     if isinstance(m, torch.nn.BatchNorm2d):
@@ -28,18 +32,29 @@ def _deduce_dims(
     input_size: tuple[int, int],
     layers: list[str],
 ) -> list[int | tuple[int, int]]:
+    """Determines feature dimensions for each layer in the feature extractor.
+    Parameters:
+    feature_extractor: The backbone feature extractor
+    input_size: Input image dimensions
+    layers: List of layer names to extract features from
+    """
     dimensions_mapping = dryrun_find_featuremap_dims(
-        feature_extractor, input_size, layers
+        feature_extractor,
+        input_size,
+        layers,
     )
 
-    n_features_original = [
-        dimensions_mapping[layer]["num_features"] for layer in layers
-    ]
+    n_features_original = [dimensions_mapping[layer]["num_features"] for layer in layers]
 
     return n_features_original
 
 
 class Preprocessing(torch.nn.Module):
+    """Handles initial feature preprocessing across multiple input dimensions.
+    Input: List of features from different backbone layers
+    Output: Processed features with consistent dimensionality
+    """
+
     def __init__(self, input_dims, output_dim):
         super(Preprocessing, self).__init__()
         self.input_dims = input_dims
@@ -58,6 +73,11 @@ class Preprocessing(torch.nn.Module):
 
 
 class MeanMapper(torch.nn.Module):
+    """Maps input features to a fixed dimension using adaptive average pooling.
+    Input: Variable-sized feature tensors
+    Output: Fixed-size feature representations
+    """
+
     def __init__(self, preprocessing_dim):
         super(MeanMapper, self).__init__()
         self.preprocessing_dim = preprocessing_dim
@@ -68,6 +88,11 @@ class MeanMapper(torch.nn.Module):
 
 
 class Aggregator(torch.nn.Module):
+    """Aggregates and reshapes features to a target dimension.
+    Input: Multi-dimensional feature tensors
+    Output: Reshaped and pooled features of specified target dimension
+    """
+
     def __init__(self, target_dim):
         super(Aggregator, self).__init__()
         self.target_dim = target_dim
@@ -80,6 +105,14 @@ class Aggregator(torch.nn.Module):
 
 
 class Projection(torch.nn.Module):
+    """Multi-layer projection network for feature adaptation.
+    Parameters:
+    in_planes: Input feature dimension
+    out_planes: Output feature dimension
+    n_layers: Number of projection layers
+    layer_type: Type of intermediate layers
+    """
+
     def __init__(self, in_planes, out_planes=None, n_layers=1, layer_type=0):
         super(Projection, self).__init__()
 
@@ -103,6 +136,13 @@ class Projection(torch.nn.Module):
 
 
 class Discriminator(torch.nn.Module):
+    """Discriminator network for anomaly detection.
+    Parameters:
+    in_planes: Input feature dimension
+    n_layers: Number of layers
+    hidden: Hidden layer dimensions
+    """
+
     def __init__(self, in_planes, n_layers=2, hidden=None):
         super(Discriminator, self).__init__()
 
@@ -120,7 +160,8 @@ class Discriminator(torch.nn.Module):
                 ),
             )
         self.tail = torch.nn.Sequential(
-            torch.nn.Linear(_hidden, 1, bias=False), torch.nn.Sigmoid()
+            torch.nn.Linear(_hidden, 1, bias=False),
+            torch.nn.Sigmoid(),
         )
         self.apply(init_weight)
 
@@ -131,6 +172,14 @@ class Discriminator(torch.nn.Module):
 
 
 class PatchMaker:
+    """Handles patch-based processing of feature maps.
+
+    Methods:
+    patchify: Converts features into patches
+    unpatch_scores: Reshapes patch scores back to original dimensions
+    score: Computes final scores from patch-wise predictions
+    """
+
     def __init__(self, patchsize, top_k=0, stride=None):
         self.patchsize = patchsize
         self.stride = stride
@@ -139,14 +188,15 @@ class PatchMaker:
     def patchify(self, features, return_spatial_info=False):
         padding = int((self.patchsize - 1) / 2)
         unfolder = torch.nn.Unfold(
-            kernel_size=self.patchsize, stride=self.stride, padding=padding, dilation=1
+            kernel_size=self.patchsize,
+            stride=self.stride,
+            padding=padding,
+            dilation=1,
         )
         unfolded_features = unfolder(features)
         number_of_total_patches = []
         for s in features.shape[-2:]:
-            n_patches = (
-                s + 2 * padding - 1 * (self.patchsize - 1) - 1
-            ) / self.stride + 1
+            n_patches = (s + 2 * padding - 1 * (self.patchsize - 1) - 1) / self.stride + 1
             number_of_total_patches.append(int(n_patches))
         unfolded_features = unfolded_features.reshape(
             *features.shape[:2],
@@ -170,6 +220,12 @@ class PatchMaker:
 
 
 class RescaleSegmentor:
+    """Handles rescaling of patch-based anomaly scores to full-image dimensions.
+    Parameters:
+    target_size: Target image size for rescaling
+    smoothing: Gaussian smoothing parameter for score smoothing
+    """
+
     def __init__(self, target_size=288):
         self.target_size = target_size
         self.smoothing = 4
@@ -188,13 +244,12 @@ class RescaleSegmentor:
             )
             _scores = _scores.squeeze(1)
             patch_scores = _scores.cpu().numpy()
-        return [
-            ndimage.gaussian_filter(patch_score, sigma=self.smoothing)
-            for patch_score in patch_scores
-        ]
+        return [ndimage.gaussian_filter(patch_score, sigma=self.smoothing) for patch_score in patch_scores]
 
 
 class GlassModel(nn.Module):
+    """PyTorch Implementation of the GLASS Model."""
+
     def __init__(
         self,
         input_shape: tuple[int, int],  # (H, W)
@@ -235,7 +290,9 @@ class GlassModel(nn.Module):
         self.pre_proj = pre_proj
         if self.pre_proj > 0:
             self.pre_projection = Projection(
-                self.target_embed_dimension, self.target_embed_dimension, pre_proj
+                self.target_embed_dimension,
+                self.target_embed_dimension,
+                pre_proj,
             )
 
         self.dsc_layers = dsc_layers
@@ -281,12 +338,13 @@ class GlassModel(nn.Module):
             if len(feat.shape) == 3:
                 B, L, C = feat.shape
                 features[i] = feat.reshape(
-                    B, int(math.sqrt(L)), int(math.sqrt(L)), C
+                    B,
+                    int(math.sqrt(L)),
+                    int(math.sqrt(L)),
+                    C,
                 ).permute(0, 3, 1, 2)
 
-        features = [
-            self.patch_maker.patchify(x, return_spatial_info=True) for x in features
-        ]
+        features = [self.patch_maker.patchify(x, return_spatial_info=True) for x in features]
         patch_shapes = [x[1] for x in features]
         patch_features = [x[0] for x in features]
         ref_num_patches = patch_shapes[0]
@@ -329,11 +387,11 @@ class GlassModel(nn.Module):
     def forward(self, img, aug, evaluation=False):
         if self.pre_proj > 0:
             fake_feats = self.pre_projection(
-                self.generate_embeddings(aug, eval=evaluation)[0]
+                self.generate_embeddings(aug, eval=evaluation)[0],
             )
             fake_feats = fake_feats[0] if len(fake_feats) == 2 else fake_feats
             true_feats = self.pre_projection(
-                self.generate_embeddings(img, eval=evaluation)[0]
+                self.generate_embeddings(img, eval=evaluation)[0],
             )
             true_feats = true_feats[0] if len(true_feats) == 2 else true_feats
         else:
