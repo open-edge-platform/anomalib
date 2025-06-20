@@ -1,7 +1,7 @@
-"""Unit tests for WinCLIP's compositional prompt ensemble."""
-
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Unit tests for WinCLIP's compositional prompt ensemble."""
 
 from anomalib.models.image.winclip.prompting import create_prompt_ensemble
 

@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """DSR - A Dual Subspace Re-Projection Network for Surface Anomaly Detection.
 
 This module implements the DSR model for surface anomaly detection. DSR uses a dual
@@ -29,9 +32,6 @@ See Also:
     :class:`anomalib.models.image.dsr.torch_model.DsrModel`:
         PyTorch implementation of the DSR model architecture.
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from pathlib import Path

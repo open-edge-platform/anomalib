@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Multi Variate Gaussian Distribution.
 
 This module implements parametric density estimation using a multivariate Gaussian
@@ -15,9 +18,6 @@ Example:
     >>> print(mean.shape)      # [64, 1024]
     >>> print(inv_cov.shape)   # [1024, 64, 64]
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from typing import Any
 

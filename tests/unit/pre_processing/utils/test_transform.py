@@ -1,7 +1,7 @@
-"""Test the pre-processing transforms utils."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test the pre-processing transforms utils."""
 
 from torchvision.transforms.v2 import CenterCrop, Compose, Resize, ToTensor
 

@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Video utilities for processing video data in anomaly detection.
 
 This module provides utilities for:
@@ -19,9 +22,6 @@ Example:
     >>> video_item.image.shape  # (16, 3, H, W)
     torch.Size([16, 3, 256, 256])
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import warnings
 from abc import ABC, abstractmethod

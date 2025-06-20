@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Area Under the Receiver Operating Characteristic (AUROC) metric.
 
 This module provides the ``AUROC`` class which computes the area under the ROC
@@ -33,9 +36,6 @@ Note:
     The AUROC score ranges from 0 to 1, with 1 indicating perfect ranking of
     anomalies above normal samples.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from matplotlib.figure import Figure

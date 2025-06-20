@@ -1,7 +1,7 @@
-"""Test tiled prediction storage class."""
-
 # Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test tiled prediction storage class."""
 
 import copy
 from collections.abc import Callable

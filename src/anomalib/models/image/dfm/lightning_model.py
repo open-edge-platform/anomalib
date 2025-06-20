@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Deep Feature Modeling (DFM) for anomaly detection.
 
 This module provides a PyTorch Lightning implementation of the DFM model for
@@ -24,9 +27,6 @@ See Also:
     :class:`anomalib.models.image.dfm.torch_model.DFMModel`:
         PyTorch implementation of the DFM model.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from typing import Any

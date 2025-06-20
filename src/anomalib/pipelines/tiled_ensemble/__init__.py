@@ -1,3 +1,6 @@
+# Copyright (C) 2024-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Tiled Ensemble Pipeline for High-Resolution Anomaly Detection.
 
 This module implements a memory-efficient tiled ensemble approach for
@@ -31,9 +34,6 @@ Reference:
     Memory Efficient Tiled Ensemble." Proceedings of the IEEE/CVF Conference
     on Computer Vision and Pattern Recognition Workshops (VAND 2.0). 2024.
 """
-
-# Copyright (C) 2024-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .test_pipeline import EvalTiledEnsemble
 from .train_pipeline import TrainTiledEnsemble

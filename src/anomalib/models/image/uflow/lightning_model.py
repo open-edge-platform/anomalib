@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """U-Flow: A U-shaped Normalizing Flow for Anomaly Detection with Unsupervised Threshold.
 
 This module implements the U-Flow model for anomaly detection as described in
@@ -24,9 +27,6 @@ See Also:
     - :class:`UFlowLoss`: Loss function for training
     - :class:`AnomalyMapGenerator`: Anomaly map generation from features
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from typing import Any

@@ -1,3 +1,6 @@
+# Copyright (C) 2024-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Engine module for training and evaluating anomaly detection models.
 
 This module provides functionality for training and evaluating anomaly detection
@@ -22,9 +25,6 @@ Example:
     >>> config = Config(path="config.yaml")
     >>> engine = Engine(config=config)  # doctest: +SKIP
 """
-
-# Copyright (C) 2024-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .accelerator import XPUAccelerator
 from .engine import Engine

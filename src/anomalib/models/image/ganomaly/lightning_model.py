@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """GANomaly: Semi-Supervised Anomaly Detection via Adversarial Training.
 
 GANomaly is an anomaly detection model that uses a conditional GAN architecture to
@@ -29,9 +32,6 @@ See Also:
     :class:`anomalib.models.image.ganomaly.loss.DiscriminatorLoss`:
         Loss function for the discriminator network.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from typing import Any

@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Custom Folder Dataset for 3D anomaly detection.
 
 This module provides a custom dataset class that loads RGB-D data from a folder
@@ -25,9 +28,6 @@ Example:
     ...     mask_dir="ground_truth"
     ... )
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
 

@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Evaluator module for LightningModule.
 
 The Evaluator module computes and logs metrics during validation and test steps.
@@ -46,9 +49,6 @@ Note:
     ``compute_on_cpu=True`` and only one device is used. For multi-GPU training,
     ``compute_on_cpu`` is automatically set to ``False``.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from collections.abc import Sequence

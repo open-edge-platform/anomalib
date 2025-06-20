@@ -1,7 +1,7 @@
-"""Inference Entrypoint script."""
-
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Inference Entrypoint script."""
 
 from jsonargparse import ActionConfigFile, Namespace
 from lightning.pytorch.callbacks import Callback

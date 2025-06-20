@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base job class that defines the interface for pipeline jobs.
 
 This module provides the base :class:`Job` class that all pipeline jobs inherit from. Jobs
@@ -29,9 +32,6 @@ The base job interface defines three key methods that subclasses must implement:
 Jobs can be used as building blocks in pipelines for tasks like training,
 inference, or benchmarking.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC, abstractmethod
 from collections.abc import Generator

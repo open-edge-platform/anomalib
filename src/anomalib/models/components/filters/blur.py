@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Gaussian blurring implementation using PyTorch.
 
 This module provides a 2D Gaussian blur filter implementation that pre-computes
@@ -12,9 +15,6 @@ Example:
     >>> input_tensor = torch.randn(1, 3, 256, 256)
     >>> blurred = blur(input_tensor)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from kornia.filters import get_gaussian_kernel2d

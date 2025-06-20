@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Vision Language Model (VLM) based Anomaly Detection.
 
 This module implements anomaly detection using Vision Language Models (VLMs) like
@@ -25,9 +28,6 @@ See Also:
     - :mod:`.backends`: Different VLM backend implementations
     - :mod:`.utils`: Utility functions for prompting and responses
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .lightning_model import VlmAd
 

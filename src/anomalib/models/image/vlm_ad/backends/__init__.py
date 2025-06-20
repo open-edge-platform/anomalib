@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Vision Language Model (VLM) backends for anomaly detection.
 
 This module provides backend implementations for different Vision Language Models
@@ -18,9 +21,6 @@ See Also:
     - :class:`Huggingface`: Hugging Face backend implementation
     - :class:`Ollama`: Ollama backend implementation
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .base import Backend
 from .chat_gpt import ChatGPT

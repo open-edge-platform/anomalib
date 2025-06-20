@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Utilities for grid search parameter iteration.
 
 This module provides utilities for iterating over grid search parameter combinations
@@ -25,9 +28,6 @@ The module handles:
     - Reconstructing nested dictionary structure
     - Preserving non-grid parameters
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Generator
 from itertools import product

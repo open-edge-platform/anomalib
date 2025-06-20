@@ -1,3 +1,6 @@
+# Copyright (C) 2024-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Utility Functions for the Tiled Ensemble Pipeline.
 
 This module provides auxiliary functions and classes that support the core
@@ -16,9 +19,6 @@ Reference:
     Memory Efficient Tiled Ensemble." Proceedings of the IEEE/CVF Conference
     on Computer Vision and Pattern Recognition Workshops (VAND 2.0). 2024.
 """
-
-# Copyright (C) 2024-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
 

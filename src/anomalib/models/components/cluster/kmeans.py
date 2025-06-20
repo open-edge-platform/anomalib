@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch implementation of K-means clustering algorithm.
 
 This module provides a PyTorch-based implementation of the K-means clustering
@@ -18,9 +21,6 @@ Example:
     >>> new_points = torch.tensor([[1.1, 2.1], [4.0, 4.1]])
     >>> predictions = kmeans.predict(new_points)
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 

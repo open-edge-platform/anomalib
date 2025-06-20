@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Generic dataclasses that can be implemented for different data types.
 
 This module provides a set of generic dataclasses and mixins that can be used
@@ -29,9 +32,6 @@ Example:
     ...     mask_path=None
     ... )
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterator

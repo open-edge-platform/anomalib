@@ -1,7 +1,7 @@
-"""Fixtures for the entire test suite."""
-
 # Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Fixtures for the entire test suite."""
 
 import shutil
 from collections.abc import Callable, Generator

@@ -1,7 +1,8 @@
-"""Fixtures for the tools tests."""
-
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Fixtures for the tools tests."""
+
 from pathlib import Path
 
 import cv2

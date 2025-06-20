@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Filters used by anomaly detection models.
 
 This module provides filter implementations that can be used for image
@@ -15,9 +18,6 @@ Example:
     >>> input_tensor = torch.randn(1, 3, 256, 256)
     >>> blurred = blur(input_tensor)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .blur import GaussianBlur2d
 

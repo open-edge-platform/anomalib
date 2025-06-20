@@ -1,11 +1,11 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base Depth Dataset.
 
 This module implements the base depth dataset class for anomaly detection tasks that
 use RGB-D (RGB + Depth) data.
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC
 from collections.abc import Callable

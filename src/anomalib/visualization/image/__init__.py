@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Image visualization module for anomaly detection.
 
 This module provides utilities for visualizing images and anomaly detection results.
@@ -26,9 +29,6 @@ Note:
     All visualization functions preserve the input image format and dimensions
     unless explicitly specified otherwise.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .functional import add_text_to_image, apply_colormap, overlay_images, visualize_anomaly_map, visualize_mask
 from .item_visualizer import visualize_image_item

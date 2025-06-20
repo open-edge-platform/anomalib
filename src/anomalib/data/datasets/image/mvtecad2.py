@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """MVTec AD 2 Dataset.
 
 This module provides PyTorch Dataset implementation for the MVTec AD 2 dataset.
@@ -24,9 +27,6 @@ Reference:
     The MVTec AD 2 Dataset: Advanced Scenarios for Unsupervised Anomaly Detection.
     arXiv preprint, 2024 (to appear).
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
 from enum import Enum

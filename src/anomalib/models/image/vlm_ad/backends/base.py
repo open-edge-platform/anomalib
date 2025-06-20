@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base backend for Vision Language Models (VLMs).
 
 This module provides the abstract base class for VLM backends used in anomaly detection.
@@ -21,9 +24,6 @@ See Also:
     - :class:`Huggingface`: Hugging Face models backend implementation
     - :class:`Ollama`: Ollama models backend implementation
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC, abstractmethod
 from pathlib import Path

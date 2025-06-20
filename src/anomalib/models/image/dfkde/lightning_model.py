@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """DFKDE: Deep Feature Kernel Density Estimation.
 
 This module provides a PyTorch Lightning implementation of the DFKDE model for
@@ -22,9 +25,6 @@ See Also:
     :class:`anomalib.models.image.dfkde.torch_model.DfkdeModel`:
         PyTorch implementation of the DFKDE model.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from collections.abc import Sequence

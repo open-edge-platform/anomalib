@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Thresholding metrics for anomaly detection.
 
 This module provides various thresholding techniques to convert anomaly scores into
@@ -17,9 +20,6 @@ Example:
     >>> print(predictions)
     [0, 1, 0, 1]
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .base import BaseThreshold, Threshold
 from .f1_adaptive_threshold import F1AdaptiveThreshold

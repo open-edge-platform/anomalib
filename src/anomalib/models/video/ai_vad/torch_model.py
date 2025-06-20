@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch model for AI-VAD model implementation.
 
 This module implements the AI-VAD model as described in the paper
@@ -27,9 +30,6 @@ Reference:
     Interpretable Video Anomaly Detection." arXiv preprint arXiv:2212.00789 (2022).
     https://arxiv.org/pdf/2212.00789.pdf
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch import nn

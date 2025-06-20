@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Utility functions for WinCLIP model.
 
 This module provides utility functions used by the WinCLIP model for anomaly detection:
@@ -19,9 +22,6 @@ See Also:
     - :class:`WinClip`: Main model class using these utilities
     - :class:`WinClipModel`: PyTorch model implementation
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch import nn

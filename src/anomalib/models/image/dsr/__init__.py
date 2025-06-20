@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Deep Spatial Reconstruction (DSR) model.
 
 DSR is an anomaly detection model that uses a deep autoencoder architecture to
@@ -18,9 +21,6 @@ See Also:
     :class:`anomalib.models.image.dsr.lightning_model.Dsr`:
         Lightning implementation of the DSR model.
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .lightning_model import Dsr
 

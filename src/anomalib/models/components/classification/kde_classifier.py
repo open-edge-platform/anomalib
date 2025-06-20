@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Kernel Density Estimation Classifier.
 
 This module provides a classifier based on kernel density estimation (KDE) for
@@ -22,9 +25,6 @@ Example:
     >>> new_embeddings = torch.randn(10, 512)
     >>> probabilities = classifier.predict(new_embeddings)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 import random

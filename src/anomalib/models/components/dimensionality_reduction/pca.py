@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Principal Component Analysis (PCA) implementation using PyTorch.
 
 This module provides a PyTorch-based implementation of Principal Component Analysis
@@ -15,9 +18,6 @@ Example:
     >>> print(transformed_data.shape)
     torch.Size([100, 3])
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 

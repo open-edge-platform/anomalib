@@ -1,7 +1,7 @@
-"""Unit tests for BufferListMixin module."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Unit tests for BufferListMixin module."""
 
 import pytest
 import torch

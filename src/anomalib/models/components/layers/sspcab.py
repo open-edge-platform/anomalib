@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """SSPCAB: Self-Supervised Predictive Convolutional Attention Block.
 
 This module implements the SSPCAB architecture from the paper:
@@ -17,9 +20,6 @@ Example:
     >>> x = torch.randn(1, 64, 32, 32)
     >>> output = sspcab(x)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch import nn

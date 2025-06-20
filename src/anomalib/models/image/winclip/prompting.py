@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Compositional prompt ensemble for WinCLIP.
 
 This module provides prompt templates and utilities for generating prompt ensembles
@@ -19,9 +22,6 @@ See Also:
     - :class:`WinClip`: Main model class using these prompts
     - :class:`WinClipModel`: PyTorch model implementation
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 NORMAL_STATES = [
     "{}",

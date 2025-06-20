@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomaly generator for the DSR model implementation.
 
 This module implements an anomaly generator that creates synthetic anomalies
@@ -10,9 +13,6 @@ Example:
     >>> batch = torch.randn(8, 3, 256, 256)
     >>> masks = generator.augment_batch(batch)
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch import Tensor, nn

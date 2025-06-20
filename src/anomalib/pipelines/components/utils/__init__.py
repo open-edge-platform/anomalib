@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Utility functions for pipeline components.
 
 This module provides utility functions used by various pipeline components for tasks
@@ -17,9 +20,6 @@ Example:
     {"lr": 0.01, "batch_size": 32}
     {"lr": 0.01, "batch_size": 64}
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .grid_search import get_iterator_from_grid_dict
 

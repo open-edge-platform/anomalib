@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """ChatGPT backend for Vision Language Models (VLMs).
 
 This module implements a backend for using OpenAI's ChatGPT model for vision-language
@@ -24,9 +27,6 @@ See Also:
     - :class:`Huggingface`: Alternative backend using Hugging Face models
     - :class:`Ollama`: Alternative backend using Ollama models
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import base64
 import logging

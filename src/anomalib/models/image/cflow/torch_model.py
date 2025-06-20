@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch model for the CFLOW anomaly detection model.
 
 This module provides the PyTorch implementation of the CFLOW model for anomaly
@@ -27,9 +30,6 @@ Example:
     >>> x = torch.randn(32, 3, 256, 256)
     >>> predictions = model(x)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
 

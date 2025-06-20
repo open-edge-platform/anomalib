@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Fully Convolutional Cross-Scale-Flows for Image-based Defect Detection.
 
 Paper: https://arxiv.org/pdf/2110.02855.pdf
@@ -6,9 +9,6 @@ This module provides the CS-Flow model implementation for anomaly detection.
 CS-Flow uses normalizing flows across multiple scales to model the distribution
 of normal images and detect anomalies.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from typing import Any

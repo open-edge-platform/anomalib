@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Mixin for exporting anomaly detection models to disk.
 
 This mixin provides functionality to export models to various formats:
@@ -33,9 +36,6 @@ Example:
     ...     datamodule=datamodule
     ... )
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from collections.abc import Iterable

@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Tools for anomaly score normalization.
 
 This module provides utilities for normalizing anomaly scores in anomaly detection
@@ -19,9 +22,6 @@ Example:
 The module ensures consistent normalization of anomaly scores across different
 detection algorithms.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
 

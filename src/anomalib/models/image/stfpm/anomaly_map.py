@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomaly map computation for Student-Teacher Feature Pyramid Matching model.
 
 This module implements functionality to generate anomaly heatmaps by comparing
@@ -25,9 +28,6 @@ See Also:
     - :class:`AnomalyMapGenerator`: Main class for generating anomaly maps
     - :func:`compute_layer_map`: Function to compute per-layer anomaly scores
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch import nn

@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Validate IO path data.
 
 This module provides validators for file system paths. The validators ensure path
@@ -30,9 +33,6 @@ Note:
     The validators are used internally by the data modules to ensure path
     consistency before processing.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
 from pathlib import Path

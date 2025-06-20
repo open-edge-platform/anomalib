@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Loss function for the DRAEM model implementation.
 
 This module implements the loss function used to train the DRAEM model for anomaly
@@ -14,9 +17,6 @@ Example:
     >>> prediction = torch.randn(8, 2, 256, 256)
     >>> loss = criterion(input_image, reconstruction, anomaly_mask, prediction)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from kornia.losses import FocalLoss, SSIMLoss

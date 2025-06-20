@@ -1,3 +1,8 @@
+# Based on the code: https://github.com/jpcbertoldo/aupimo
+#
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Dataclasses for PIMO metrics.
 
 This module provides dataclasses for storing and manipulating PIMO (Per-Image
@@ -18,11 +23,6 @@ Example:
     >>> result.num_images
     5
 """
-
-# Based on the code: https://github.com/jpcbertoldo/aupimo
-#
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from dataclasses import dataclass, field
 

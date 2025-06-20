@@ -1,3 +1,6 @@
+# Copyright (C) 2024-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base classes for metrics in Anomalib.
 
 This module provides base classes for implementing metrics in Anomalib:
@@ -61,9 +64,6 @@ Example:
         >>> f1_score_nonstrict.update(batch)  # No error
         >>> f1_score_nonstrict.compute()  # None
 """
-
-# Copyright (C) 2024-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
 

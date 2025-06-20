@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Sampling methods for anomaly detection models.
 
 This module provides sampling techniques used in anomaly detection models to
@@ -16,9 +19,6 @@ Example:
     >>> features = torch.randn(100, 512)  # 100 samples with 512 dimensions
     >>> selected_idx = sampler.select_coreset(features, n=10)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .k_center_greedy import KCenterGreedy
 

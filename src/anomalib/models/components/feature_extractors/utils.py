@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Utility functions to manipulate feature extractors.
 
 This module provides utility functions for working with feature extractors,
@@ -25,9 +28,6 @@ Example:
     >>> print(dims["layer1"]["resolution"])  # Feature map height, width
     (64, 64)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch.fx.graph_module import GraphModule

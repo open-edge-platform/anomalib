@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Ollama backend for Vision Language Models (VLMs).
 
 This module implements a backend for using Ollama models for vision-language tasks in
@@ -30,9 +33,6 @@ See Also:
     - :class:`ChatGPT`: Alternative backend using OpenAI models
     - :class:`Huggingface`: Alternative backend using Hugging Face models
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from pathlib import Path

@@ -1,3 +1,10 @@
+# Original Code
+# https://github.com/jpcbertoldo/aupimo
+#
+# Modified
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Per-Image Overlap curve (PIMO) and its area under the curve (AUPIMO).
 
 This module provides metrics for evaluating anomaly detection performance using
@@ -46,13 +53,6 @@ See Also:
     - :class:`PIMOResult`: Container for PIMO curve data
     - :class:`AUPIMOResult`: Container for AUPIMO score data
 """
-
-# Original Code
-# https://github.com/jpcbertoldo/aupimo
-#
-# Modified
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 

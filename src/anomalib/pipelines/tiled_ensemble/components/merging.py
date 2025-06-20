@@ -1,7 +1,7 @@
-"""Tiled ensemble - prediction merging job."""
-
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tiled ensemble - prediction merging job."""
 
 import logging
 from collections.abc import Generator

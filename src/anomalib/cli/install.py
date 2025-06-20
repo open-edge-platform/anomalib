@@ -1,11 +1,11 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomalib installation subcommand.
 
 This module provides the `anomalib_install` function for installing Anomalib and its dependencies.
 It supports installing different dependency sets based on the user's needs.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 

@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Numpy-based dataclasses for Anomalib.
 
 This module provides numpy-based implementations of the generic dataclasses used in
@@ -49,9 +52,6 @@ Note:
     - The classes are designed to be compatible with Anomalib's data pipeline and
       model interfaces
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .base import NumpyBatch, NumpyItem
 from .image import NumpyImageBatch, NumpyImageItem

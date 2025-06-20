@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """MVTec 3D-AD Datamodule.
 
 This module provides PyTorch Dataset, Dataloader and PyTorch Lightning DataModule for
@@ -16,9 +19,6 @@ Reference:
     Computer Graphics Theory and Applications - Volume 5: VISAPP, 202-213, 2022
     DOI: 10.5220/0010865000003124
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
 from pathlib import Path

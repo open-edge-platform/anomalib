@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """CFLOW - Real-Time Unsupervised Anomaly Detection via Conditional Normalizing Flows.
 
 This module implements the CFLOW model for anomaly detection. CFLOW uses conditional
@@ -12,9 +15,6 @@ The model consists of:
 Paper: `Real-Time Unsupervised Anomaly Detection via Conditional Normalizing Flows
 <https://arxiv.org/pdf/2107.12571v1.pdf>`_
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 __all__ = ["Cflow"]
 

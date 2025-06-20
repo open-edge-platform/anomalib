@@ -1,10 +1,10 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomalib Gradio Script.
 
 This script provide a gradio web interface
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from argparse import ArgumentParser
 from importlib import import_module

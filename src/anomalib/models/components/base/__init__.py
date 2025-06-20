@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base classes for all anomaly components.
 
 This module provides the foundational classes used across anomalib's model
@@ -16,9 +19,6 @@ Example:
     ...     def forward(self, x):
     ...         return x
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .anomalib_module import AnomalibModule
 from .buffer_list import BufferListMixin

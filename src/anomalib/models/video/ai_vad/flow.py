@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Optical Flow extraction module for AI-VAD implementation.
 
 This module implements the optical flow extraction stage of the AI-VAD model. It uses
@@ -18,9 +21,6 @@ The module provides the following components:
     - :class:`FlowExtractor`: Main class that handles optical flow computation using
       RAFT model
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 import torchvision.transforms.functional as F  # noqa: N812

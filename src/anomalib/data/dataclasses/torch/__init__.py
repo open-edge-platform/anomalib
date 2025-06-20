@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Torch-based dataclasses for Anomalib.
 
 This module provides PyTorch-based implementations of the generic dataclasses
@@ -13,9 +16,6 @@ Note:
     When using these classes, ensure that the input data is in the correct
     format (PyTorch tensors with appropriate shapes) to avoid validation errors.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .base import Batch, DatasetItem, InferenceBatch, ToNumpyMixin
 from .depth import DepthBatch, DepthItem

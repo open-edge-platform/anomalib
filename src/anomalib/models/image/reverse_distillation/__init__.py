@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Reverse Distillation Model for anomaly detection.
 
 This module implements the Reverse Distillation model for anomaly detection as described in
@@ -32,9 +35,6 @@ See Also:
     - :class:`anomalib.models.image.reverse_distillation.torch_model.ReverseDistillationModel`:
         PyTorch implementation of the model architecture
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .lightning_model import ReverseDistillation
 

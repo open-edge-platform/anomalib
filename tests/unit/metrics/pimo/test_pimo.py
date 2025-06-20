@@ -1,11 +1,11 @@
-"""Test `anomalib.metrics.per_image.functional`."""
-
 # Original Code
 # https://github.com/jpcbertoldo/aupimo
 #
 # Modified
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test `anomalib.metrics.per_image.functional`."""
 
 import logging
 

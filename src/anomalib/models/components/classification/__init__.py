@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Classification modules for anomaly detection.
 
 This module provides classification components used in anomaly detection models.
@@ -16,9 +19,6 @@ Example:
     ...     scaling_method=FeatureScalingMethod.MIN_MAX
     ... )
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .kde_classifier import FeatureScalingMethod, KDEClassifier
 

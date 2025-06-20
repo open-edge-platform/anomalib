@@ -1,7 +1,7 @@
-"""Tests for image utils."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tests for image utils."""
 
 from pathlib import Path
 

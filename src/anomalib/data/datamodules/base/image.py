@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base Anomalib data module.
 
 This module provides the base data module class used across Anomalib. It handles
@@ -21,9 +24,6 @@ Example:
         ...     **override_kwargs
         ... )
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import copy
 import logging

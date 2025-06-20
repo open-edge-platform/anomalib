@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Custom Folder Datamodule for 3D data.
 
 This module provides a custom datamodule for handling 3D data organized in folders.
@@ -14,9 +17,6 @@ Example:
         ...     abnormal_dir="abnormal"
         ... )
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
 

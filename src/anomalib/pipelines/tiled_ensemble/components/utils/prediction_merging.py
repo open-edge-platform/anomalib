@@ -1,7 +1,7 @@
-"""Class used as mechanism to merge ensemble predictions from each tile into complete whole-image representation."""
-
 # Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Class used as mechanism to merge ensemble predictions from each tile into complete whole-image representation."""
 
 import torch
 from torch import Tensor

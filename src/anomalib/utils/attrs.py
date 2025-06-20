@@ -1,7 +1,7 @@
-"""Utility functions for working with attributes."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Utility functions for working with attributes."""
 
 from typing import Any
 

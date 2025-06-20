@@ -1,10 +1,10 @@
+# Copyright (C) 2023-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Test CLI entrypoints on Padim model.
 
 This just checks if one of the model works end-to-end. The rest of the models are checked using the API.
 """
-
-# Copyright (C) 2023-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
 

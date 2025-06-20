@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """OpenVINO Inferencer for optimized model inference.
 
 This module provides the OpenVINO inferencer implementation for running optimized
@@ -45,9 +48,6 @@ Example:
     >>> prediction.pred_score  # doctest: +SKIP
     0.86
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from pathlib import Path

@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """VAD Dataset.
 
 This module provides PyTorch Dataset implementation for the VAD dataset. The
@@ -18,9 +21,6 @@ Reference:
     The IEEE/CVF Conference on Computer Vision and Pattern Recognition, 2024,
     pp. 17754-17762, DOI: 10.1109/CVPR52733.2024.01681.
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
 from pathlib import Path

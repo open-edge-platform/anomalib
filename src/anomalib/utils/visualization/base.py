@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base visualization generator for anomaly detection.
 
 This module provides the base visualization interface and common functionality used
@@ -21,9 +24,6 @@ Example:
 The module ensures consistent visualization behavior and output formats across
 different visualization implementations.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterator

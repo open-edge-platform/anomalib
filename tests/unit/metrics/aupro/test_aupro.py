@@ -1,7 +1,7 @@
-"""Tests for the AUPRO metric."""
-
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tests for the AUPRO metric."""
 
 import numpy as np
 import pytest

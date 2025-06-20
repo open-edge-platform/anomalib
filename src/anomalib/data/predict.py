@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Dataset for performing inference on images.
 
 This module provides a dataset class for loading and preprocessing images for
@@ -11,9 +14,6 @@ Example:
     >>> item.image.shape  # doctest: +SKIP
     torch.Size([3, 256, 256])
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
 from pathlib import Path

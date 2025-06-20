@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base Anomaly Module for Training Task.
 
 This module provides the foundational class for all anomaly detection models in
@@ -36,9 +39,6 @@ Example:
     ...     visualizer=True
     ... )
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from abc import ABC, abstractmethod

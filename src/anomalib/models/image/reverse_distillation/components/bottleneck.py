@@ -1,3 +1,12 @@
+# Original Code
+# Copyright (c) 2022 hq-deng
+# https://github.com/hq-deng/RD4AD
+# SPDX-License-Identifier: MIT
+#
+# Modified
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch model defining the bottleneck layer for Reverse Distillation.
 
 This module implements the bottleneck layer used in the Reverse Distillation model
@@ -23,15 +32,6 @@ See Also:
     - :class:`anomalib.models.image.reverse_distillation.components.OCBE`:
         One-Class Bottleneck Embedding module
 """
-
-# Original Code
-# Copyright (c) 2022 hq-deng
-# https://github.com/hq-deng/RD4AD
-# SPDX-License-Identifier: MIT
-#
-# Modified
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
 

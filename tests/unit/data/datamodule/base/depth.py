@@ -1,7 +1,7 @@
-"""Unit Tests - Base Depth Datamodules."""
-
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Unit Tests - Base Depth Datamodules."""
 
 from dataclasses import fields
 

@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """EfficientAd: Accurate Visual Anomaly Detection at Millisecond-Level Latencies.
 
 EfficientAd is a fast and accurate anomaly detection model that achieves
@@ -13,9 +16,6 @@ Example:
     >>> from anomalib.models import EfficientAd
     >>> model = EfficientAd()
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .lightning_model import EfficientAd
 

@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Compute statistics of anomaly score distributions.
 
 This module provides the ``AnomalyScoreDistribution`` class which computes mean
@@ -23,9 +26,6 @@ Note:
     The input scores and maps are log-transformed before computing statistics.
     Both image-level scores and pixel-level maps are optional inputs.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torchmetrics import Metric

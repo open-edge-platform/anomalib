@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Graph logging callback for model visualization.
 
 This module provides the :class:`GraphLogger` callback for visualizing model architectures in various logging backends.
@@ -31,9 +34,6 @@ Note:
     to be populated. This means it may not work for models that don't require training
     (e.g., :class:`PaDiM`).
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from lightning.pytorch import Callback, LightningModule, Trainer

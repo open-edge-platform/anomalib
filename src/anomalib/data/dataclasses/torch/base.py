@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Torch-based dataclasses for Anomalib.
 
 This module provides PyTorch-based implementations of the generic dataclasses used
@@ -7,9 +10,6 @@ data handling and processing in anomaly detection tasks.
 These classes extend the generic dataclasses defined in the Anomalib framework,
 providing concrete implementations that use PyTorch tensors for tensor-like data.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
 from dataclasses import dataclass, fields

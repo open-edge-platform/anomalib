@@ -1,7 +1,8 @@
-"""Tiled ensemble - post-processing statistics calculation job."""
-
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tiled ensemble - post-processing statistics calculation job."""
+
 import json
 import logging
 from collections.abc import Generator

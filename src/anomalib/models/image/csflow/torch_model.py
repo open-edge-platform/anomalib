@@ -1,3 +1,12 @@
+# Original Code
+# Copyright (c) 2021 marco-rudolph
+# https://github.com/marco-rudolph/cs-flow
+# SPDX-License-Identifier: MIT
+#
+# Modified
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch model for CS-Flow implementation.
 
 This module contains the PyTorch implementation of CS-Flow model for anomaly detection.
@@ -9,15 +18,6 @@ The implementation is based on the paper:
     Marco Rudolph, Tom Wehrbein, Bodo Rosenhahn, Bastian Wandt
     https://arxiv.org/abs/2110.02855
 """
-
-# Original Code
-# Copyright (c) 2021 marco-rudolph
-# https://github.com/marco-rudolph/cs-flow
-# SPDX-License-Identifier: MIT
-#
-# Modified
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from math import exp
 
