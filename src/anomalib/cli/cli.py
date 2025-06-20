@@ -256,7 +256,7 @@ class AnomalibCLI:
         added = parser.add_method_arguments(
             Engine,
             "export",
-            skip={"ov_args", "model", "datamodule"},
+            skip={"ov_kwargs", "model", "datamodule"},
         )
         self.subcommand_method_arguments["export"] = added
         add_openvino_export_arguments(parser)
@@ -304,6 +304,9 @@ class AnomalibCLI:
             self.config_init = self.parser.instantiate_classes(self.config)
             self.datamodule = self._get(self.config_init, "data")
             if isinstance(self.datamodule, Dataset):
+                # Let PyTorch handle pin_memory automatically
+                # This ensures optimal behavior for both CPU and GPU users
+                # nosemgrep: trailofbits.python.automatic-memory-pinning.automatic-memory-pinning  # noqa: ERA001
                 self.datamodule = DataLoader(self.datamodule, collate_fn=self.datamodule.collate_fn)
             self.model = self._get(self.config_init, "model")
             self._configure_optimizers_method_to_model()

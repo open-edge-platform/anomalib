@@ -74,7 +74,7 @@ class TestGradioInferenceEntrypoint:
         # export OpenVINO model
         model.to_openvino(
             export_root=_ckpt_path.parent.parent.parent,
-            ov_args={},
+            ov_kwargs={},
             task=TaskType.SEGMENTATION,
         )
 

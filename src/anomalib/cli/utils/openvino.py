@@ -24,7 +24,7 @@ else:
 def add_openvino_export_arguments(parser: ArgumentParser) -> None:
     """Add OpenVINO Model Optimizer arguments to the parser.
 
-    This function adds OpenVINO-specific export arguments to the parser under the `ov_args` prefix.
+    This function adds OpenVINO-specific export arguments to the parser under the `ov_kwargs` prefix.
     If OpenVINO is not installed, it logs an informational message and skips adding the arguments.
 
     The function adds Model Optimizer arguments like data_type, mean_values, etc. as optional
@@ -43,8 +43,8 @@ def add_openvino_export_arguments(parser: ArgumentParser) -> None:
 
         The parser will now accept OpenVINO arguments like:
 
-        >>> # parser.parse_args(['--ov_args.data_type', 'FP16'])
-        >>> # parser.parse_args(['--ov_args.mean_values', '[123.675,116.28,103.53]'])
+        >>> # parser.parse_args(['--ov_kwargs.data_type', 'FP16'])
+        >>> # parser.parse_args(['--ov_kwargs.mean_values', '[123.675,116.28,103.53]'])
 
     Notes:
         - Requires OpenVINO to be installed to add the arguments
@@ -52,7 +52,7 @@ def add_openvino_export_arguments(parser: ArgumentParser) -> None:
             - help
             - input_model
             - output_dir
-        - Arguments are added under the 'ov_args' prefix for namespacing
+        - Arguments are added under the 'ov_kwargs' prefix for namespacing
         - All OpenVINO arguments are made optional
 
     See Also:
@@ -66,6 +66,6 @@ def add_openvino_export_arguments(parser: ArgumentParser) -> None:
         for arg in ov_parser._actions:  # noqa: SLF001
             if arg.dest in {"help", "input_model", "output_dir"}:
                 continue
-            group.add_argument(f"--ov_args.{arg.dest}", type=arg.type, default=arg.default, help=arg.help)
+            group.add_argument(f"--ov_kwargs.{arg.dest}", type=arg.type, default=arg.default, help=arg.help)
     else:
         logger.info("OpenVINO is possibly not installed in the environment. Skipping adding it to parser.")
