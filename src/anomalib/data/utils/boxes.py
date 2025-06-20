@@ -1,11 +1,11 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Helper functions for processing bounding box detections and annotations.
 
 This module provides utility functions for converting between different bounding box
 formats and handling bounding box operations.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 

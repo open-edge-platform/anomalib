@@ -1,11 +1,11 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomalib installation utilities.
 
 This module provides utilities for managing Anomalib package installation,
 including dependency resolution and hardware-specific package selection.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
 

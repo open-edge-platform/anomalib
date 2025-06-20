@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Density estimation module for AI-VAD model implementation.
 
 This module implements the density estimation stage of the AI-VAD model. It provides
@@ -24,9 +27,6 @@ Example:
 The density estimators are used to model the distribution of normal behavior and
 detect anomalies as samples with low likelihood under the learned distributions.
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC, abstractmethod
 

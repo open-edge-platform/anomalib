@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Implementation of PRO metric based on TorchMetrics.
 
 This module provides the Per-Region Overlap (PRO) metric for evaluating anomaly
@@ -18,9 +21,6 @@ Example:
     >>> # Compute PRO score
     >>> score = pro.compute()
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torchmetrics import Metric

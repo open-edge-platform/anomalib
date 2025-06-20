@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Image visualization functions using PIL and torchvision.
 
 This module provides functions for visualizing images and anomaly detection results using
@@ -25,9 +28,6 @@ Note:
     All visualization functions preserve the input image format and dimensions
     unless explicitly specified otherwise.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import inspect
 import logging

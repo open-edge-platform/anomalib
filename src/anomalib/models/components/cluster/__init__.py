@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Clustering algorithm implementations using PyTorch.
 
 This module provides clustering algorithms implemented in PyTorch for anomaly
@@ -17,9 +20,6 @@ Example:
     >>> kmeans = KMeans(n_clusters=5)
     >>> kmeans.fit(features)
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .gmm import GaussianMixture
 from .kmeans import KMeans

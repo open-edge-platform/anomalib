@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Regions extraction module of AI-VAD model implementation.
 
 This module implements the region extraction stage of the AI-VAD model. It extracts
@@ -15,9 +18,6 @@ The module provides the following components:
     - :class:`RegionExtractor`: Main class that handles region extraction using
       object detection and foreground detection
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch import nn

@@ -1,7 +1,7 @@
-"""Unit Tests - Tabular Datamodule."""
-
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Unit Tests - Tabular Datamodule."""
 
 import tempfile
 from pathlib import Path

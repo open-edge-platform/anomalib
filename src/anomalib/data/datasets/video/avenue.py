@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """CUHK Avenue Dataset.
 
 This module provides PyTorch Dataset implementation for the CUHK Avenue dataset
@@ -37,9 +40,6 @@ Reference:
     in Matlab." In Proceedings of the IEEE International Conference on Computer
     Vision, 2013.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
 from typing import TYPE_CHECKING

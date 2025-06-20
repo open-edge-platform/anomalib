@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """DRÆM.
 
 A discriminatively trained reconstruction embedding for surface anomaly
@@ -9,9 +12,6 @@ This module implements the DRÆM model for surface anomaly detection. DRÆM uses
 discriminatively trained reconstruction embedding approach to detect anomalies by
 comparing input images with their reconstructions.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
 from typing import Any

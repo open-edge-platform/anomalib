@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base classes for thresholding metrics.
 
 This module provides base classes for implementing threshold-based metrics for
@@ -23,9 +26,6 @@ Example:
     >>> threshold.compute()
     tensor(0.5)
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torchmetrics import Metric

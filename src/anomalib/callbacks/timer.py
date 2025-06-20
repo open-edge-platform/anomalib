@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Timer callback.
 
 This module provides the :class:`TimerCallback` for measuring training and testing time of
@@ -20,9 +23,6 @@ Note:
     - Throughput is calculated as total number of images / total testing time
     - Batch size is included in throughput logging for reference
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 import time

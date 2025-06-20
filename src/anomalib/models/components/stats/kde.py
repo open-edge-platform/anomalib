@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Gaussian Kernel Density Estimation.
 
 This module implements non-parametric density estimation using Gaussian kernels.
@@ -13,9 +16,6 @@ Example:
     >>> kde.fit(features)
     >>> density = kde.predict(features)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import math
 

@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomalib Image Data Modules.
 
 This module contains data modules for loading and processing image datasets for
@@ -23,9 +26,6 @@ Example:
         ...     category="bottle"
         ... )
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
 

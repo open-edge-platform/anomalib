@@ -1,3 +1,6 @@
+# Copyright (C) 2024-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation.
 
 This module implements the WinCLIP model for zero-shot and few-shot anomaly
@@ -24,9 +27,6 @@ See Also:
     - :class:`WinClip`: Main model class for WinCLIP-based anomaly detection
     - :class:`WinClipModel`: PyTorch implementation of the WinCLIP model
 """
-
-# Copyright (C) 2024-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from pathlib import Path

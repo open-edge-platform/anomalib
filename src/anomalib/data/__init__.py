@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomalib Datasets.
 
 This module provides datasets and data modules for anomaly detection tasks.
@@ -16,9 +19,6 @@ Example:
     ...     image_size=(256, 256)
     ... )
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import importlib
 import logging

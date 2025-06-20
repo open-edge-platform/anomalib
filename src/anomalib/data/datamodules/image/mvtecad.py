@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """MVTec AD Data Module.
 
 This module provides a PyTorch Lightning DataModule for the MVTec AD dataset. If
@@ -41,9 +44,6 @@ Reference:
     in: IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR),
     9584-9592, 2019, DOI: 10.1109/CVPR.2019.00982.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from pathlib import Path

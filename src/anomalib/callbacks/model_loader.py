@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Model loader callback.
 
 This module provides the :class:`LoadModelCallback` for loading pre-trained model weights from a state dict.
@@ -19,9 +22,6 @@ Note:
     The weights file should be a PyTorch state dict saved with either a ``.pt`` or ``.pth`` extension.
     The state dict should contain a ``"state_dict"`` key with the model weights.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 

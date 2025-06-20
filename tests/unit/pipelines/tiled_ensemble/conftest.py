@@ -1,7 +1,7 @@
-"""Fixtures that are used in tiled ensemble testing."""
-
 # Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Fixtures that are used in tiled ensemble testing."""
 
 import json
 from pathlib import Path

@@ -1,7 +1,7 @@
-"""Test ensemble helper functions."""
-
 # Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test ensemble helper functions."""
 
 from pathlib import Path
 

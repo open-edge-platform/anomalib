@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Serial execution of pipeline jobs.
 
 This module provides the :class:`SerialRunner` class for executing pipeline jobs
@@ -27,9 +30,6 @@ This is useful when:
 The runner implements the :class:`Runner` interface defined in
 ``anomalib.pipelines.components.base``.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 

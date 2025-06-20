@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """ImageItem visualization module.
 
 This module provides utilities for visualizing ``ImageItem`` and ``NumpyImageItem`` objects, which contain
@@ -26,9 +29,6 @@ Note:
     All visualization functions preserve the input image format and dimensions
     unless explicitly specified in the configuration.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from typing import Any

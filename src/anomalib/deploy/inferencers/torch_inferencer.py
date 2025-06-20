@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch inferencer for running inference with trained anomaly detection models.
 
 This module provides the PyTorch inferencer implementation for running inference
@@ -50,9 +53,6 @@ Example:
     >>> prediction.pred_score  # doctest: +SKIP
     tensor(0.86)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 import os

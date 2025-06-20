@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomaly Map Generator for the CFA model implementation.
 
 This module provides functionality to generate anomaly heatmaps from distance
@@ -13,9 +16,6 @@ Example:
     >>> scale = (32, 32)  # height x width
     >>> anomaly_map = generator(distance=distance, scale=scale)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from einops import rearrange

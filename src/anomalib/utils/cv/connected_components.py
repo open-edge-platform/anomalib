@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Connected component labeling for anomaly detection.
 
 This module provides functions for performing connected component labeling on both
@@ -15,9 +18,6 @@ Example:
     >>> labels = connected_components_gpu(mask)
     >>> print(labels.unique())  # Should show [0, 1] for background and one component
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import cv2
 import numpy as np

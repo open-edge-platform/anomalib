@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Utility classes and functions for Vision Language Model (VLM) based anomaly detection.
 
 This module provides utility classes for VLM-based anomaly detection:
@@ -17,9 +20,6 @@ See Also:
     - :class:`VlmAd`: Main model class using these utilities
     - :mod:`.backends`: VLM backend implementations using these utilities
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from dataclasses import dataclass
 from enum import Enum

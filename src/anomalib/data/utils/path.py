@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Path utilities for handling file paths in anomalib.
 
 This module provides utilities for:
@@ -18,9 +21,6 @@ Example:
     >>> print(DirType.NORMAL)
     normal
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import os
 import re

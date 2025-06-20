@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomalib Video Data Modules.
 
 This module contains data modules for loading and processing video datasets for
@@ -17,9 +20,6 @@ Example:
         ...     frames_between_clips=1
         ... )
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
 

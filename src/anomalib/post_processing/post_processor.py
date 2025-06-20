@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Post-processing module for anomaly detection results.
 
 This module provides post-processing functionality for one-class anomaly detection
@@ -14,9 +17,6 @@ Example:
     >>> post_processor = PostProcessor(image_sensitivity=0.5)
     >>> predictions = post_processor(anomaly_maps=anomaly_maps)
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from lightning import LightningModule, Trainer

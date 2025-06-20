@@ -1,7 +1,7 @@
-"""Tests for path utils."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tests for path utils."""
 
 from pathlib import Path
 from tempfile import TemporaryDirectory

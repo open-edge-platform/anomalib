@@ -1,7 +1,7 @@
-"""Implements custom Anomalib engine for tiled ensemble training."""
-
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Implements custom Anomalib engine for tiled ensemble training."""
 
 import logging
 from pathlib import Path

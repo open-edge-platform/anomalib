@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Torch Implementation of the CFA Model.
 
 CFA: Coupled-hypersphere-based Feature Adaptation for Target-Oriented Anomaly
@@ -31,9 +34,6 @@ Example:
     >>> x = torch.randn(32, 3, 256, 256)
     >>> predictions = model(x)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 import torchvision

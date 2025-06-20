@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch model implementation of Fuvas.
 
 This module provides a PyTorch implementation of the Fuvas model for anomaly
@@ -20,9 +23,6 @@ Notes:
     transformation followed by a low-rank factorization model during training. No gradient
     updates are performed on the backbone.
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch import nn

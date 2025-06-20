@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomaly Map Generator for the PatchCore model implementation.
 
 This module generates anomaly heatmaps for the PatchCore model by upsampling
@@ -23,9 +26,6 @@ See Also:
     - :class:`anomalib.models.components.GaussianBlur2d`:
         Gaussian blur module used for smoothing anomaly maps
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch import nn

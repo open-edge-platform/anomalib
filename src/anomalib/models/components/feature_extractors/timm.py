@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Feature extractor using timm models and any nn.Module torch model.
 
 This module provides a feature extractor implementation that leverages the timm
@@ -22,9 +25,6 @@ Example:
     >>> print(features["layer1"].shape)
     torch.Size([32, 64, 64, 64])
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from collections.abc import Sequence

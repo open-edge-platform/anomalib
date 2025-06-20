@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Implementation of the CS-Flow model for anomaly detection.
 
 The CS-Flow model, short for Cross-Scale-Flows, is a fully convolutional approach
@@ -20,9 +23,6 @@ Reference:
     Proceedings of the IEEE/CVF Winter Conference on Applications of Computer
     Vision. 2022.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .lightning_model import Csflow
 

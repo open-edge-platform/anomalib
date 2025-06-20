@@ -1,11 +1,11 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch implementation of Gaussian Mixture Model.
 
 This module provides a PyTorch-based implementation of Gaussian Mixture Model (GMM)
 for clustering data into multiple Gaussian distributions.
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 

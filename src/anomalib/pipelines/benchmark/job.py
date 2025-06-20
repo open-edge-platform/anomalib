@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Benchmarking job for evaluating model performance.
 
 This module provides functionality for running individual benchmarking jobs that
@@ -27,9 +30,6 @@ The job executes model training and evaluation, collecting metrics like accuracy
 F1-score, and inference time. Results are returned in a standardized format for
 comparison across different model-dataset combinations.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 import time

@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Dimensionality reduction and decomposition algorithms for feature processing.
 
 This module provides implementations of dimensionality reduction techniques used
@@ -20,9 +23,6 @@ Example:
     >>> projector = SparseRandomProjection(n_components=20)
     >>> projected_features = projector.fit_transform(features)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .pca import PCA
 from .random_projection import SparseRandomProjection

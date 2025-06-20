@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base logger for image logging consistency across all loggers used in anomalib.
 
 This module provides a base class that defines a common interface for logging images
@@ -16,9 +19,6 @@ Example:
     >>> logger = CustomImageLogger()
     >>> logger.add_image(image_array, name="test_image")  # doctest: +SKIP
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from abc import abstractmethod
 

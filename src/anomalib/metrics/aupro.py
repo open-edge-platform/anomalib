@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Area Under Per-Region Overlap (AUPRO) metric.
 
 This module provides the ``AUPRO`` class which computes the area under the
@@ -47,9 +50,6 @@ Note:
     The AUPRO score ranges from 0 to 1, with 1 indicating perfect overlap between
     predictions and ground truth regions.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
 from typing import Any

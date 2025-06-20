@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Utilities to generate synthetic data.
 
 This module provides utilities for generating synthetic data for anomaly detection.
@@ -19,9 +22,6 @@ Example:
     >>> # Generate anomaly mask
     >>> mask = generator.generate(256, 256)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .perlin import PerlinAnomalyGenerator, generate_perlin_noise
 

@@ -1,11 +1,3 @@
-"""PyTorch model for the DRAEM model implementation.
-
-The DRAEM model consists of two sub-networks:
-1. A reconstructive sub-network that learns to reconstruct input images
-2. A discriminative sub-network that detects anomalies by comparing original and
-   reconstructed images
-"""
-
 # Original Code
 # Copyright (c) 2021 VitjanZ
 # https://github.com/VitjanZ/DRAEM.
@@ -14,6 +6,14 @@ The DRAEM model consists of two sub-networks:
 # Modified
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""PyTorch model for the DRAEM model implementation.
+
+The DRAEM model consists of two sub-networks:
+1. A reconstructive sub-network that learns to reconstruct input images
+2. A discriminative sub-network that detects anomalies by comparing original and
+   reconstructed images
+"""
 
 import torch
 from torch import nn

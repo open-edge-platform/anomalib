@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Utilities for Neural Network Compression Framework (NNCF) optimization.
 
 This module provides utility functions and classes for working with Intel's Neural Network
@@ -10,9 +13,6 @@ The module contains:
 - Functions for wrapping PyTorch models with NNCF compression
 - Utilities for handling NNCF model states and configurations
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from copy import copy
