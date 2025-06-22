@@ -18,7 +18,7 @@ Reference:
     (ICUMT), 2021, pp. 66-71, DOI: 10.1109/ICUMT54235.2021.9631567.
 """
 
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
