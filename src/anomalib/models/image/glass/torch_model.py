@@ -1,22 +1,38 @@
+"""GLASS - Unsupervised anomaly detection via Gradient Ascent for Industrial Anomaly detection and localization.
+
+This module implements the GLASS model for unsupervised anomaly detection and localization. GLASS synthesizes both
+global and local anomalies using Gaussian noise guided by gradient ascent to enhance weak defect detection in
+industrial settings.
+
+The model consists of:
+    - A feature extractor and feature adaptor to obtain robust normal representations
+    - A Global Anomaly Synthesis (GAS) module that perturbs features using Gaussian noise and gradient ascent with
+      truncated projection
+    - A Local Anomaly Synthesis (LAS) module that overlays augmented textures onto images using Perlin noise masks
+    - A shared discriminator trained with features from normal, global, and local synthetic samples
+
+Paper: `A Unified Anomaly Synthesis Strategy with Gradient Ascent for Industrial Anomaly Detection and Localization
+<https://arxiv.org/pdf/2407.09359>`
+"""
+
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import math
 
-import numpy as np
 import torch
-import torch.nn.functional as F
-from scipy import ndimage
+import torch.nn.functional as f
 from torch import nn
 
 from anomalib.models.components import TimmFeatureExtractor
 from anomalib.models.components.feature_extractors import dryrun_find_featuremap_dims
 
 
-def init_weight(m):
-    """Initializes network weights using Xavier normal initialization for
-    linear layers and normal initialization for convolutional and batch
-    normalization layers.
+def init_weight(m: nn.Module) -> None:
+    """Initializes network weights using Xavier normal initialization.
+
+    Applies Xavier initialization for linear layers and normal initialization
+    for convolutional and batch normalization layers.
     """
     if isinstance(m, torch.nn.Linear):
         torch.nn.init.xavier_normal_(m.weight)
@@ -33,10 +49,11 @@ def _deduce_dims(
     layers: list[str],
 ) -> list[int | tuple[int, int]]:
     """Determines feature dimensions for each layer in the feature extractor.
-    Parameters:
-    feature_extractor: The backbone feature extractor
-    input_size: Input image dimensions
-    layers: List of layer names to extract features from
+
+    Args:
+        feature_extractor: The backbone feature extractor
+        input_size: Input image dimensions
+        layers: List of layer names to extract features from
     """
     dimensions_mapping = dryrun_find_featuremap_dims(
         feature_extractor,
@@ -44,19 +61,18 @@ def _deduce_dims(
         layers,
     )
 
-    n_features_original = [dimensions_mapping[layer]["num_features"] for layer in layers]
-
-    return n_features_original
+    return [dimensions_mapping[layer]["num_features"] for layer in layers]
 
 
 class Preprocessing(torch.nn.Module):
     """Handles initial feature preprocessing across multiple input dimensions.
+
     Input: List of features from different backbone layers
     Output: Processed features with consistent dimensionality
     """
 
-    def __init__(self, input_dims, output_dim):
-        super(Preprocessing, self).__init__()
+    def __init__(self, input_dims: list[int | tuple[int, int]], output_dim: int) -> None:
+        super().__init__()
         self.input_dims = input_dims
         self.output_dim = output_dim
 
@@ -65,127 +81,181 @@ class Preprocessing(torch.nn.Module):
             module = MeanMapper(output_dim)
             self.preprocessing_modules.append(module)
 
-    def forward(self, features):
-        _features = []
+    def forward(self, features: list[torch.Tensor]) -> torch.Tensor:
+        """Applies preprocessing modules to a list of input feature tensors.
+
+        Args:
+            features (list of torch.Tensor): List of feature maps from different
+                layers of the backbone network. Each tensor can have a different shape.
+
+        Returns:
+            torch.Tensor: A single tensor with shape (B, N, D), where B is the batch size,
+            N is the number of feature maps, and D is the output dimension (`output_dim`).
+        """
+        features_ = []
         for module, feature in zip(self.preprocessing_modules, features, strict=False):
-            _features.append(module(feature))
-        return torch.stack(_features, dim=1)
+            features_.append(module(feature))
+        return torch.stack(features_, dim=1)
 
 
 class MeanMapper(torch.nn.Module):
     """Maps input features to a fixed dimension using adaptive average pooling.
+
     Input: Variable-sized feature tensors
     Output: Fixed-size feature representations
     """
 
-    def __init__(self, preprocessing_dim):
-        super(MeanMapper, self).__init__()
+    def __init__(self, preprocessing_dim: int) -> None:
+        super().__init__()
         self.preprocessing_dim = preprocessing_dim
 
-    def forward(self, features):
+    def forward(self, features: torch.Tensor) -> torch.Tensor:
+        """Applies adaptive average pooling to reshape features to a fixed size.
+
+        Args:
+            features (torch.Tensor): Input tensor of shape (B, *) where * denotes
+            any number of remaining dimensions. It is flattened before pooling.
+
+        Returns:
+            torch.Tensor: Output tensor of shape (B, D), where D is `preprocessing_dim`.
+        """
         features = features.reshape(len(features), 1, -1)
-        return F.adaptive_avg_pool1d(features, self.preprocessing_dim).squeeze(1)
+        return f.adaptive_avg_pool1d(features, self.preprocessing_dim).squeeze(1)
 
 
 class Aggregator(torch.nn.Module):
     """Aggregates and reshapes features to a target dimension.
+
     Input: Multi-dimensional feature tensors
     Output: Reshaped and pooled features of specified target dimension
     """
 
-    def __init__(self, target_dim):
-        super(Aggregator, self).__init__()
+    def __init__(self, target_dim: int) -> None:
+        super().__init__()
         self.target_dim = target_dim
 
-    def forward(self, features):
+    def forward(self, features: torch.Tensor) -> torch.Tensor:
         """Returns reshaped and average pooled features."""
         features = features.reshape(len(features), 1, -1)
-        features = F.adaptive_avg_pool1d(features, self.target_dim)
+        features = f.adaptive_avg_pool1d(features, self.target_dim)
         return features.reshape(len(features), -1)
 
 
 class Projection(torch.nn.Module):
     """Multi-layer projection network for feature adaptation.
-    Parameters:
-    in_planes: Input feature dimension
-    out_planes: Output feature dimension
-    n_layers: Number of projection layers
-    layer_type: Type of intermediate layers
+
+    Args:
+        in_planes: Input feature dimension
+        out_planes: Output feature dimension
+        n_layers: Number of projection layers
+        layer_type: Type of intermediate layers
     """
 
-    def __init__(self, in_planes, out_planes=None, n_layers=1, layer_type=0):
-        super(Projection, self).__init__()
+    def __init__(self, in_planes: int, out_planes: int | None = None, n_layers: int = 1, layer_type: int = 0) -> None:
+        super().__init__()
 
         if out_planes is None:
             out_planes = in_planes
         self.layers = torch.nn.Sequential()
-        _in = None
-        _out = None
+        in_ = None
+        out = None
         for i in range(n_layers):
-            _in = in_planes if i == 0 else _out
-            _out = out_planes
-            self.layers.add_module(f"{i}fc", torch.nn.Linear(_in, _out))
-            if i < n_layers - 1:
-                if layer_type > 1:
-                    self.layers.add_module(f"{i}relu", torch.nn.LeakyReLU(0.2))
+            in_ = in_planes if i == 0 else out
+            out = out_planes
+            self.layers.add_module(f"{i}fc", torch.nn.Linear(in_, out))
+            if i < n_layers - 1 and layer_type > 1:
+                self.layers.add_module(f"{i}relu", torch.nn.LeakyReLU(0.2))
         self.apply(init_weight)
 
-    def forward(self, x):
-        x = self.layers(x)
-        return x
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Applies the projection network to the input features.
+
+        Args:
+            x (torch.Tensor): Input tensor of shape (B, in_planes), where B is the batch size.
+
+        Returns:
+            torch.Tensor: Transformed tensor of shape (B, out_planes).
+        """
+        return self.layers(x)
 
 
 class Discriminator(torch.nn.Module):
     """Discriminator network for anomaly detection.
-    Parameters:
-    in_planes: Input feature dimension
-    n_layers: Number of layers
-    hidden: Hidden layer dimensions
+
+    Args:
+        in_planes: Input feature dimension
+        n_layers: Number of layers
+        hidden: Hidden layer dimensions
     """
 
-    def __init__(self, in_planes, n_layers=2, hidden=None):
-        super(Discriminator, self).__init__()
+    def __init__(self, in_planes: int, n_layers: int = 2, hidden: int | None = None) -> None:
+        super().__init__()
 
-        _hidden = in_planes if hidden is None else hidden
+        hidden_ = in_planes if hidden is None else hidden
         self.body = torch.nn.Sequential()
         for i in range(n_layers - 1):
-            _in = in_planes if i == 0 else _hidden
-            _hidden = int(_hidden // 1.5) if hidden is None else hidden
+            in_ = in_planes if i == 0 else hidden_
+            hidden_ = int(hidden_ // 1.5) if hidden is None else hidden
             self.body.add_module(
-                "block%d" % (i + 1),
+                f"block{i + 1}",
                 torch.nn.Sequential(
-                    torch.nn.Linear(_in, _hidden),
-                    torch.nn.BatchNorm1d(_hidden),
+                    torch.nn.Linear(in_, hidden_),
+                    torch.nn.BatchNorm1d(hidden_),
                     torch.nn.LeakyReLU(0.2),
                 ),
             )
         self.tail = torch.nn.Sequential(
-            torch.nn.Linear(_hidden, 1, bias=False),
+            torch.nn.Linear(hidden_, 1, bias=False),
             torch.nn.Sigmoid(),
         )
         self.apply(init_weight)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Performs a forward pass through the discriminator network.
+
+        Args:
+            x (torch.Tensor): Input tensor of shape (B, in_planes), where B is the batch size.
+
+        Returns:
+            torch.Tensor: Output tensor of shape (B, 1) containing probability scores.
+        """
         x = self.body(x)
-        x = self.tail(x)
-        return x
+        return self.tail(x)
 
 
 class PatchMaker:
     """Handles patch-based processing of feature maps.
 
-    Methods:
-    patchify: Converts features into patches
-    unpatch_scores: Reshapes patch scores back to original dimensions
-    score: Computes final scores from patch-wise predictions
+    This class provides utilities for converting feature maps into patches,
+    reshaping patch scores back to original dimensions, and computing global
+    anomaly scores from patch-wise predictions.
+
+    Attributes:
+        patchsize (int): Size of each patch (patchsize x patchsize).
+        stride (int or None): Stride used for patch extraction. Defaults to patchsize if None.
+        top_k (int): Number of top patch scores to consider. Used for score reduction.
     """
 
-    def __init__(self, patchsize, top_k=0, stride=None):
+    def __init__(self, patchsize: int, top_k: int = 0, stride: int | None = None) -> None:
         self.patchsize = patchsize
-        self.stride = stride
+        self.stride = stride if stride is not None else patchsize
         self.top_k = top_k
 
-    def patchify(self, features, return_spatial_info=False):
+    def patchify(
+        self,
+        features: torch.Tensor,
+        return_spatial_info: bool = False,
+    ) -> tuple[torch.Tensor, list[int]] | torch.Tensor:
+        """Converts a batch of feature maps into patches.
+
+        Args:
+            features (torch.Tensor): Input feature maps of shape (B, C, H, W).
+            return_spatial_info (bool): If True, also returns spatial patch count. Default is False.
+
+        Returns:
+            torch.Tensor: Output tensor of shape (B, N, C, patchsize, patchsize), where N is number of patches.
+            list[int], optional: Number of patches in (height, width) dimensions, only if return_spatial_info is True.
+        """
         padding = int((self.patchsize - 1) / 2)
         unfolder = torch.nn.Unfold(
             kernel_size=self.patchsize,
@@ -210,41 +280,31 @@ class PatchMaker:
             return unfolded_features, number_of_total_patches
         return unfolded_features
 
-    def unpatch_scores(self, x, batchsize):
+    @staticmethod
+    def unpatch_scores(x: torch.Tensor, batchsize: int) -> torch.Tensor:
+        """Reshapes patch scores back into per-batch format.
+
+        Args:
+            x (torch.Tensor): Input tensor of shape (B * N, ...).
+            batchsize (int): Original batch size.
+
+        Returns:
+            torch.Tensor: Reshaped tensor of shape (B, N, ...).
+        """
         return x.reshape(batchsize, -1, *x.shape[1:])
 
-    def score(self, x):
-        x = x[:, :, 0]
-        x = torch.max(x, dim=1).values
-        return x
+    @staticmethod
+    def score(x: torch.Tensor) -> torch.Tensor:
+        """Computes final anomaly scores from patch-wise predictions.
 
+        Args:
+            x (torch.Tensor): Patch scores of shape (B, N, 1).
 
-class RescaleSegmentor:
-    """Handles rescaling of patch-based anomaly scores to full-image dimensions.
-    Parameters:
-    target_size: Target image size for rescaling
-    smoothing: Gaussian smoothing parameter for score smoothing
-    """
-
-    def __init__(self, target_size=288):
-        self.target_size = target_size
-        self.smoothing = 4
-
-    def convert_to_segmentation(self, patch_scores):
-        with torch.no_grad():
-            if isinstance(patch_scores, np.ndarray):
-                patch_scores = torch.from_numpy(patch_scores)
-            _scores = patch_scores
-            _scores = _scores.unsqueeze(1)
-            _scores = F.interpolate(
-                _scores,
-                size=self.target_size,
-                mode="bilinear",
-                align_corners=False,
-            )
-            _scores = _scores.squeeze(1)
-            patch_scores = _scores.cpu().numpy()
-        return [ndimage.gaussian_filter(patch_score, sigma=self.smoothing) for patch_score in patch_scores]
+        Returns:
+            torch.Tensor: Final anomaly score per image, shape (B,).
+        """
+        x = x[:, :, 0]  # remove last dimension if singleton
+        return torch.max(x, dim=1).to_numpy()
 
 
 class GlassModel(nn.Module):
@@ -259,13 +319,16 @@ class GlassModel(nn.Module):
         patchsize: int = 3,
         patchstride: int = 1,
         pre_trained: bool = True,
-        layers: list[str] = ["layer1", "layer2", "layer3"],
+        layers: list[str] | None = None,
         pre_proj: int = 1,
         dsc_layers: int = 2,
         dsc_hidden: int = 1024,
         dsc_margin: float = 0.5,
     ) -> None:
         super().__init__()
+
+        if layers is None:
+            layers = ["layer1", "layer2", "layer3"]
 
         self.backbone = backbone
         self.layers = layers
@@ -306,9 +369,24 @@ class GlassModel(nn.Module):
 
         self.patch_maker = PatchMaker(patchsize, stride=patchstride)
 
-        self.anomaly_segmentor = RescaleSegmentor()
+    def calculate_mean(self, images: torch.Tensor) -> torch.Tensor:
+        """Computes the mean feature embedding across a batch of images.
 
-    def calculate_mean(self, images):
+        This method performs a forward pass through the model to extract feature embeddings
+        for a batch of input images, optionally passing them through a pre-projection module.
+        It then reshapes the output and calculates the mean across the batch dimension.
+
+        Args:
+            images (torch.Tensor): Input image tensor of shape (B, C, H, W), where:
+                - B is the batch size,
+                - C is the number of channels,
+                - H and W are height and width.
+
+        Returns:
+            torch.Tensor: Mean embedding tensor of shape (N, D), where:
+                - N is the number of patches or tokens per image,
+                - D is the feature dimension.
+        """
         self.forward_modules.eval()
         with torch.no_grad():
             if self.pre_proj > 0:
@@ -320,14 +398,37 @@ class GlassModel(nn.Module):
             outputs = outputs[0] if len(outputs) == 2 else outputs
             outputs = outputs.reshape(images.shape[0], -1, outputs.shape[-1])
 
-            batch_mean = torch.mean(outputs, dim=0)
+            return torch.mean(outputs, dim=0)
 
-        return batch_mean
+    def generate_embeddings(
+        self,
+        images: torch.Tensor,
+        evaluation: bool = False,
+    ) -> tuple[list[torch.Tensor], list[tuple[int, int]]]:
+        """Generates patch-wise feature embeddings for a batch of input images.
 
-    def generate_embeddings(self, images, provide_patch_shapes=False, eval=False):
-        if not eval and not self.pre_trained:
+        This method performs a forward pass through the model's feature extraction pipeline,
+        processes selected intermediate layers, reshapes them into patches, aligns their spatial sizes,
+        and passes them through preprocessing and aggregation modules.
+
+        Args:
+            images (torch.Tensor): Input images of shape (B, C, H, W), where:
+                - B is the batch size,
+                - C is the number of channels,
+                - H and W are the image height and width.
+            evaluation (bool, optional): Whether to run in evaluation mode (disabling gradients).
+                Default is False.
+
+        Returns:
+            tuple[list[torch.Tensor], list[tuple[int, int]]]:
+                - A list of patch-level feature tensors, each of shape (N, D, P, P),
+                where N is the number of patches, D is the channel dimension, and P is patch size.
+                - A list of (height, width) tuples indicating the number of patches in each spatial dimension
+                for each corresponding feature level.
+        """
+        if not evaluation and not self.pre_trained:
             self.forward_modules["feature_aggregator"].train()
-            features = self.forward_modules["feature_aggregator"](images, eval=eval)
+            features = self.forward_modules["feature_aggregator"](images)
         else:
             self.forward_modules["feature_aggregator"].eval()
             with torch.no_grad():
@@ -336,7 +437,7 @@ class GlassModel(nn.Module):
         features = [features[layer] for layer in self.layers]
         for i, feat in enumerate(features):
             if len(feat.shape) == 3:
-                B, L, C = feat.shape
+                B, L, C = feat.shape  # noqa: N806
                 features[i] = feat.reshape(
                     B,
                     int(math.sqrt(L)),
@@ -350,33 +451,33 @@ class GlassModel(nn.Module):
         ref_num_patches = patch_shapes[0]
 
         for i in range(1, len(patch_features)):
-            _features = patch_features[i]
+            features_ = patch_features[i]
             patch_dims = patch_shapes[i]
 
-            _features = _features.reshape(
-                _features.shape[0],
+            features_ = features_.reshape(
+                features_.shape[0],
                 patch_dims[0],
                 patch_dims[1],
-                *_features.shape[2:],
+                *features_.shape[2:],
             )
-            _features = _features.permute(0, 3, 4, 5, 1, 2)
-            perm_base_shape = _features.shape
-            _features = _features.reshape(-1, *_features.shape[-2:])
-            _features = F.interpolate(
-                _features.unsqueeze(1),
+            features_ = features_.permute(0, 3, 4, 5, 1, 2)
+            perm_base_shape = features_.shape
+            features_ = features_.reshape(-1, *features_.shape[-2:])
+            features_ = f.interpolate(
+                features_.unsqueeze(1),
                 size=(ref_num_patches[0], ref_num_patches[1]),
                 mode="bilinear",
                 align_corners=False,
             )
-            _features = _features.squeeze(1)
-            _features = _features.reshape(
+            features_ = features_.squeeze(1)
+            features_ = features_.reshape(
                 *perm_base_shape[:-2],
                 ref_num_patches[0],
                 ref_num_patches[1],
             )
-            _features = _features.permute(0, 4, 5, 1, 2, 3)
-            _features = _features.reshape(len(_features), -1, *_features.shape[-3:])
-            patch_features[i] = _features
+            features_ = features_.permute(0, 4, 5, 1, 2, 3)
+            features_ = features_.reshape(len(features_), -1, *features_.shape[-3:])
+            patch_features[i] = features_
 
         patch_features = [x.reshape(-1, *x.shape[-3:]) for x in patch_features]
         patch_features = self.forward_modules["preprocessing"](patch_features)
@@ -384,20 +485,31 @@ class GlassModel(nn.Module):
 
         return patch_features, patch_shapes
 
-    def forward(self, img, aug, evaluation=False):
+    def forward(
+        self,
+        img: torch.Tensor,
+        aug: torch.Tensor,
+        evaluation: bool = False,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Forward pass to compute patch-wise feature embeddings for original and augmented images.
+
+        Depending on whether a pre-projection module is used, this method optionally applies it to the
+        embeddings generated for both `img` and `aug`. If not, the embeddings are directly obtained and
+        `requires_grad` is enabled for them, likely for gradient-based optimization or anomaly generation.
+        """
         if self.pre_proj > 0:
             fake_feats = self.pre_projection(
-                self.generate_embeddings(aug, eval=evaluation)[0],
+                self.generate_embeddings(aug, evaluation=evaluation)[0],
             )
             fake_feats = fake_feats[0] if len(fake_feats) == 2 else fake_feats
             true_feats = self.pre_projection(
-                self.generate_embeddings(img, eval=evaluation)[0],
+                self.generate_embeddings(img, evaluation=evaluation)[0],
             )
             true_feats = true_feats[0] if len(true_feats) == 2 else true_feats
         else:
-            fake_feats = self.generate_embeddings(aug, eval=evaluation)[0]
+            fake_feats = self.generate_embeddings(aug, evaluation=evaluation)[0]
             fake_feats.requires_grad = True
-            true_feats = self.generate_embeddings(img, eval=evaluation)[0]
+            true_feats = self.generate_embeddings(img, evaluation=evaluation)[0]
             true_feats.requires_grad = True
 
         return true_feats, fake_feats
