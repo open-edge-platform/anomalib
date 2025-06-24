@@ -312,12 +312,12 @@ class Engine:
 
     def _setup_anomalib_callbacks(self) -> None:
         """Set up callbacks for the trainer."""
-        _callbacks: list[Callback] = []
+        callbacks: list[Callback] = []
 
         # Add ModelCheckpoint if it is not in the callbacks list.
         has_checkpoint_callback = any(isinstance(c, ModelCheckpoint) for c in self._cache.args["callbacks"])
         if has_checkpoint_callback is False:
-            _callbacks.append(
+            callbacks.append(
                 ModelCheckpoint(
                     dirpath=self._cache.args["default_root_dir"] / "weights" / "lightning",
                     filename="model",
@@ -325,10 +325,10 @@ class Engine:
                 ),
             )
 
-        _callbacks.append(TimerCallback())
+        callbacks.append(TimerCallback())
 
         # Combine the callbacks, and update the trainer callbacks.
-        self._cache.args["callbacks"] = _callbacks + self._cache.args["callbacks"]
+        self._cache.args["callbacks"] = callbacks + self._cache.args["callbacks"]
 
     @staticmethod
     def _should_run_validation(

@@ -103,10 +103,10 @@ def to_nested_dict(config: dict) -> dict:
     out: dict[str, Any] = {}
     for key, value in config.items():
         keys = key.split(".")
-        _dict = out
+        dict_ = out
         for k in keys[:-1]:
-            _dict = _dict.setdefault(k, {})
-        _dict[keys[-1]] = value
+            dict_ = dict_.setdefault(k, {})
+        dict_[keys[-1]] = value
     return out
 
 
@@ -140,11 +140,11 @@ def to_yaml(config: Namespace | ListConfig | DictConfig) -> str:
         - Nested paths in the configuration are converted to strings
         - The original configuration object is not modified
     """
-    _config = config.clone() if isinstance(config, Namespace) else config.copy()
-    if isinstance(_config, Namespace):
-        _config = _config.as_dict()
-        _config = _convert_nested_path_to_str(_config)
-    return OmegaConf.to_yaml(_config)
+    config_ = config.clone() if isinstance(config, Namespace) else config.copy()
+    if isinstance(config_, Namespace):
+        config_ = config_.as_dict()
+        config_ = _convert_nested_path_to_str(config_)
+    return OmegaConf.to_yaml(config_)
 
 
 def to_tuple(input_size: int | ListConfig) -> tuple[int, int]:

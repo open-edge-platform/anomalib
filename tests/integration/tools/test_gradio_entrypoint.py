@@ -44,19 +44,19 @@ class TestGradioInferenceEntrypoint:
         # Set TRUST_REMOTE_CODE environment variable for the test
         monkeypatch.setenv("TRUST_REMOTE_CODE", "1")
 
-        _ckpt_path = ckpt_path("Padim")
+        checkpoint_path = ckpt_path("Padim")
         parser, inferencer = get_functions
-        model = Padim.load_from_checkpoint(_ckpt_path)
+        model = Padim.load_from_checkpoint(checkpoint_path)
 
         # export torch model
         model.to_torch(
-            export_root=_ckpt_path.parent.parent.parent,
+            export_root=checkpoint_path.parent.parent.parent,
         )
 
         arguments = parser().parse_args(
             [
                 "--weights",
-                str(_ckpt_path.parent.parent) + "/torch/model.pt",
+                str(checkpoint_path.parent.parent) + "/torch/model.pt",
             ],
         )
         assert isinstance(inferencer(arguments.weights), TorchInferencer)
@@ -67,13 +67,13 @@ class TestGradioInferenceEntrypoint:
         ckpt_path: Callable[[str], Path],
     ) -> None:
         """Test gradio_inference.py."""
-        _ckpt_path = ckpt_path("Padim")
+        checkpoint_path = ckpt_path("Padim")
         parser, inferencer = get_functions
-        model = Padim.load_from_checkpoint(_ckpt_path)
+        model = Padim.load_from_checkpoint(checkpoint_path)
 
         # export OpenVINO model
         model.to_openvino(
-            export_root=_ckpt_path.parent.parent.parent,
+            export_root=checkpoint_path.parent.parent.parent,
             ov_args={},
             task=TaskType.SEGMENTATION,
         )
@@ -81,7 +81,7 @@ class TestGradioInferenceEntrypoint:
         arguments = parser().parse_args(
             [
                 "--weights",
-                str(_ckpt_path.parent.parent) + "/openvino/model.bin",
+                str(checkpoint_path.parent.parent) + "/openvino/model.bin",
             ],
         )
         assert isinstance(inferencer(arguments.weights), OpenVINOInferencer)
