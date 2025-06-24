@@ -342,7 +342,7 @@ class AnomalibCLI:
                 trainer_config[key] = []
             elif not isinstance(trainer_config[key], list):
                 trainer_config[key] = [trainer_config[key]]
-            if not trainer_config.get("fast_dev_run", False):
+            if not trainer_config.get("fast_dev_run"):
                 config_callback = SaveConfigCallback(
                     self._parser(self.subcommand),
                     self.config.get(str(self.subcommand), self.config),

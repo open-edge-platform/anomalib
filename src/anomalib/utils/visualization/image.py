@@ -203,7 +203,7 @@ class ImageVisualizer(BaseVisualizer):
         Raises:
             ValueError: If outputs are not provided in kwargs.
         """
-        outputs = kwargs.get("outputs", None)
+        outputs = kwargs.get("outputs")
         if outputs is None:
             msg = "Outputs must be provided to generate images."
             raise ValueError(msg)

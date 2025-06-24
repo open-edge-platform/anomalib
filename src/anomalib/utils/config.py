@@ -185,13 +185,13 @@ def to_tuple(input_size: int | ListConfig) -> tuple[int, int]:
     """
     ret_val: tuple[int, int]
     if isinstance(input_size, int):
-        ret_val = cast(tuple[int, int], (input_size,) * 2)
+        ret_val = cast("tuple[int, int]", (input_size,) * 2)
     elif isinstance(input_size, ListConfig | Sequence):
         if len(input_size) != 2:
             msg = "Expected a single integer or tuple of length 2 for width and height."
             raise ValueError(msg)
 
-        ret_val = cast(tuple[int, int], tuple(input_size))
+        ret_val = cast("tuple[int, int]", tuple(input_size))
     else:
         msg = f"Expected either int or ListConfig, got {type(input_size)}"
         raise TypeError(msg)

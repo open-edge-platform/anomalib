@@ -126,7 +126,6 @@ However, make sure to address any pre-commit issues before finalizing your pull 
    ```
 
    **Types:**
-
    - `feat`: A new feature
    - `fix`: A bug fix
    - `docs`: Documentation changes
@@ -139,7 +138,6 @@ However, make sure to address any pre-commit issues before finalizing your pull 
    - `chore`: General maintenance
 
    **Scopes:**
-
    - `data`: Data loading, processing, or augmentation
    - `model`: Model architecture or implementation
    - `metric`: Evaluation metrics
@@ -155,7 +153,6 @@ However, make sure to address any pre-commit issues before finalizing your pull 
    - `notebooks`: Jupyter notebooks
 
    **Rules:**
-
    - The type and scope are case-sensitive
    - The type must be lowercase
    - The description should be in present tense
@@ -194,7 +191,6 @@ However, make sure to address any pre-commit issues before finalizing your pull 
    ```
 
    **Examples:**
-
    - `feat/model/add-transformer`
    - `fix/data/load-image-bug`
    - `docs/readme/update-installation`
@@ -205,7 +201,6 @@ However, make sure to address any pre-commit issues before finalizing your pull 
 
    <details>
    <summary>Using Commitizen</summary>
-
    1. Stage your changes:
 
    ```bash
@@ -213,7 +208,6 @@ However, make sure to address any pre-commit issues before finalizing your pull 
    # or
    git add .  # to add all changes
    ```
-
    1. Create a commit using Commitizen:
 
    ```bash

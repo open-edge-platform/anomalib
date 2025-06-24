@@ -205,19 +205,16 @@ class CustomDataModule(LightningDataModule):
 ## Best Practices
 
 1. **Data Organization**:
-
    - Keep dataset creation in `setup()`
    - Use appropriate batch sizes for train/eval
    - Handle multi-GPU scenarios
 
 2. **Memory Management**:
-
    - Use appropriate number of workers
    - Clear cache between epochs if needed
    - Handle GPU memory efficiently
 
 3. **Transforms**:
-
    - Apply consistent transforms across splits
    - Use torchvision.transforms.v2
    - Handle different input modalities

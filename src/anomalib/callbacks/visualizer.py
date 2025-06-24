@@ -269,7 +269,7 @@ class _VisualizationCallback(Callback):
         for log_to in available_loggers:
             # check if logger object is same as the requested object
             if isinstance(available_loggers[log_to], ImageLoggerBase):
-                logger: ImageLoggerBase = cast(ImageLoggerBase, available_loggers[log_to])  # placate mypy
+                logger: ImageLoggerBase = cast("ImageLoggerBase", available_loggers[log_to])  # placate mypy
                 _name = filename.parent.name + "_" + filename.name if isinstance(filename, Path) else filename
                 logger.add_image(
                     image=image,

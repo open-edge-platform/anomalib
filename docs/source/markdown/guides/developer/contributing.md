@@ -101,7 +101,6 @@ Set up your development environment to start contributing. This involves install
    ```
 
    **Types:**
-
    - `feat`: A new feature
    - `fix`: A bug fix
    - `docs`: Documentation changes
@@ -114,7 +113,6 @@ Set up your development environment to start contributing. This involves install
    - `chore`: General maintenance
 
    **Scopes:**
-
    - `data`: Data loading, processing, or augmentation
    - `model`: Model architecture or implementation
    - `metric`: Evaluation metrics
@@ -130,7 +128,6 @@ Set up your development environment to start contributing. This involves install
    - `notebooks`: Jupyter notebooks
 
    **Rules:**
-
    - The type and scope are case-sensitive
    - The type must be lowercase
    - The description should be in present tense
@@ -169,7 +166,6 @@ Set up your development environment to start contributing. This involves install
    ```
 
    **Examples:**
-
    - `feat/model/add-transformer`
    - `fix/data/load-image-bug`
    - `docs/readme/update-installation`
@@ -180,7 +176,6 @@ Set up your development environment to start contributing. This involves install
 
    :::{dropdown} Using Commitizen
    :icon: terminal
-
    1. Stage your changes:
 
    ```bash
@@ -188,7 +183,6 @@ Set up your development environment to start contributing. This involves install
    # or
    git add .  # to add all changes
    ```
-
    1. Create a commit using Commitizen:
 
    ```bash

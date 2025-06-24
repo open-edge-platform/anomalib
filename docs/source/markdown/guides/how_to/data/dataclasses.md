@@ -34,7 +34,6 @@ working with image data, the relevant classes are `ImageItem` and `ImageBatch`.
 All dataclasses are equipped with the following standard data fields:
 
 1. **Input Fields**: Base fields for anomaly detection data
-
    - `image`: Input image/video
    - `gt_label`: Ground truth label
    - `gt_mask`: Ground truth segmentation mask
