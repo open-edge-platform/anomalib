@@ -77,12 +77,15 @@ class VideoItem(
         'NumpyVideoItem'
     """
 
-    numpy_class: ClassVar[type[NumpyVideoItem]] = NumpyVideoItem
+    numpy_class: ClassVar = NumpyVideoItem
 
     def to_image(self) -> ImageItem:
         """Convert the video item to an image item."""
         image_keys = [field.name for field in fields(ImageItem)]
-        return ImageItem(**{key: getattr(self, key, None) for key in image_keys})
+        item_dict = {key: getattr(self, key) for key in image_keys if hasattr(self, key)}
+        if self.image is not None:
+            item_dict["image"] = self.image[0]
+        return ImageItem(**item_dict)
 
 
 @dataclass
@@ -128,5 +131,5 @@ class VideoBatch(
         'NumpyVideoBatch'
     """
 
-    item_class: ClassVar[type[VideoItem]] = VideoItem
-    numpy_class: ClassVar[type[NumpyVideoBatch]] = NumpyVideoBatch
+    item_class: ClassVar = VideoItem
+    numpy_class: ClassVar = NumpyVideoBatch

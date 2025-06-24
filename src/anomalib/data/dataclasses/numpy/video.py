@@ -80,4 +80,4 @@ class NumpyVideoBatch(
     Where ``B`` represents the batch dimension and ``T`` the temporal dimension.
     """
 
-    item_class: ClassVar[type[NumpyVideoItem]] = NumpyVideoItem
+    item_class: ClassVar = NumpyVideoItem
