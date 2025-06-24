@@ -358,18 +358,17 @@ class NumpyImageValidator:
         if pred_score is None:
             return np.amax(anomaly_map) if anomaly_map is not None else None
 
-        if not isinstance(pred_score, np.ndarray):
-            try:
-                pred_score = np.array(pred_score)
-            except Exception as e:
-                msg = "Failed to convert pred_score to a numpy.ndarray."
-                raise ValueError(msg) from e
-        pred_score = pred_score.squeeze()
-        if pred_score.ndim != 0:
-            msg = f"Predicted score must be a scalar, got shape {pred_score.shape}."
+        try:
+            array_score = np.array(pred_score) if not isinstance(pred_score, np.ndarray) else pred_score
+        except Exception as e:
+            msg = "Failed to convert pred_score to a numpy.ndarray."
+            raise ValueError(msg) from e
+        array_score = array_score.squeeze()
+        if array_score.ndim != 0:
+            msg = f"Predicted score must be a scalar, got shape {array_score.shape}."
             raise ValueError(msg)
 
-        return pred_score.astype(np.float32)
+        return array_score.astype(np.float32)
 
     @staticmethod
     def validate_pred_mask(pred_mask: np.ndarray | None) -> np.ndarray | None:
@@ -430,17 +429,17 @@ class NumpyImageValidator:
         """
         if pred_label is None:
             return None
-        if not isinstance(pred_label, np.ndarray):
-            try:
-                pred_label = np.array(pred_label)
-            except Exception as e:
-                msg = "Failed to convert pred_label to a numpy.ndarray."
-                raise ValueError(msg) from e
-        pred_label = pred_label.squeeze()
-        if pred_label.ndim != 0:
-            msg = f"Predicted label must be a scalar, got shape {pred_label.shape}."
+
+        try:
+            array_label = np.array(pred_label) if not isinstance(pred_label, np.ndarray) else pred_label
+        except Exception as e:
+            msg = "Failed to convert pred_label to a numpy.ndarray."
+            raise ValueError(msg) from e
+        array_label = array_label.squeeze()
+        if array_label.ndim != 0:
+            msg = f"Predicted label must be a scalar, got shape {array_label.shape}."
             raise ValueError(msg)
-        return pred_label.astype(bool)
+        return array_label.astype(bool)
 
     @staticmethod
     def validate_explanation(explanation: str | None) -> str | None:

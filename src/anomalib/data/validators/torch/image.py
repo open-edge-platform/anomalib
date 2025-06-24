@@ -333,14 +333,13 @@ class ImageValidator:
         if pred_score is None:
             return None
 
-        if not isinstance(pred_score, torch.Tensor):
-            try:
-                pred_score = torch.tensor(pred_score)
-            except Exception as e:
-                msg = "Failed to convert pred_score to a torch.Tensor."
-                raise ValueError(msg) from e
+        try:
+            tensor_score = torch.tensor(pred_score) if not isinstance(pred_score, torch.Tensor) else pred_score
+        except Exception as e:
+            msg = "Failed to convert pred_score to a torch.Tensor."
+            raise ValueError(msg) from e
 
-        return pred_score.to(torch.float32)
+        return tensor_score.to(torch.float32)
 
     @staticmethod
     def validate_pred_mask(pred_mask: torch.Tensor | None) -> Mask | None:
@@ -402,17 +401,18 @@ class ImageValidator:
         """
         if pred_label is None:
             return None
-        if not isinstance(pred_label, torch.Tensor):
-            try:
-                pred_label = torch.tensor(pred_label)
-            except Exception as e:
-                msg = "Failed to convert pred_score to a torch.Tensor."
-                raise ValueError(msg) from e
-        pred_label = pred_label.squeeze()
-        if pred_label.ndim != 0:
-            msg = f"Predicted label must be a scalar, got shape {pred_label.shape}."
+
+        try:
+            tensor_label = torch.tensor(pred_label) if not isinstance(pred_label, torch.Tensor) else pred_label
+        except Exception as e:
+            msg = "Failed to convert pred_label to a torch.Tensor."
+            raise ValueError(msg) from e
+
+        tensor_label = tensor_label.squeeze()
+        if tensor_label.ndim != 0:
+            msg = f"Predicted label must be a scalar, got shape {tensor_label.shape}."
             raise ValueError(msg)
-        return pred_label.to(torch.bool)
+        return tensor_label.to(torch.bool)
 
     @staticmethod
     def validate_explanation(explanation: str | None) -> str | None:
@@ -727,14 +727,14 @@ class ImageBatchValidator:
 
         if isinstance(pred_score, Sequence):
             pred_score = torch.tensor(pred_score)
-        if not isinstance(pred_score, torch.Tensor):
-            try:
-                pred_score = torch.tensor(pred_score)
-            except Exception as e:
-                msg = "Failed to convert pred_score to a torch.Tensor."
-                raise ValueError(msg) from e
 
-        return pred_score.to(torch.float32)
+        try:
+            tensor_score = torch.tensor(pred_score) if not isinstance(pred_score, torch.Tensor) else pred_score
+        except Exception as e:
+            msg = "Failed to convert pred_score to a torch.Tensor."
+            raise ValueError(msg) from e
+
+        return tensor_score.to(torch.float32)
 
     @staticmethod
     def validate_pred_mask(pred_mask: torch.Tensor | None) -> Mask | None:
