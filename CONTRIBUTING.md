@@ -26,7 +26,7 @@ We utilize GitHub issues to track the feature requests as well. If you are certa
 
 We actively welcome your pull requests:
 
-###  Getting Started
+### Getting Started
 
 #### 1. Fork and Clone the Repository
 
@@ -201,40 +201,26 @@ However, make sure to address any pre-commit issues before finalizing your pull 
 
    <details>
    <summary>Using Commitizen</summary>
-   1. Stage your changes:
+   1. Stage your changes and create a commit using Commitizen:
 
-   ```bash
-   git add <files>
-   # or
-   git add .  # to add all changes
-   ```
-   1. Create a commit using Commitizen:
+      First, stage your changes:
 
-   ```bash
-   # Regular commit
-   cz commit
-   # or
-   cz c
+      ```bash
+      git add <files>
+      # or
+      git add .  # to add all changes
+      ```
 
-   # Signed commit (recommended)
-   cz commit -- -s
-   # or
-   cz c -- -s
-   ```
+      Then, create a commit with Commitizen:
+
+      ```bash
+      # Regular commit
+      cz commit
+      # or
+      cz c -- -s
+      ```
 
    Commitizen will guide you through an interactive process to create a conventional commit message.
-
-   To check if your commits follow the conventional format:
-
-   ```bash
-   cz check
-   ```
-
-   To bump the version based on commit history:
-
-   ```bash
-   cz bump
-   ```
 
    </details>
 

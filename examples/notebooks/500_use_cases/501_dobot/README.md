@@ -56,7 +56,7 @@ d. Then, replace those coordinates in the notebook
 
 For data acquisition and inferencing we will use [501b notebook](501b_inference_with_a_robotic_arm.ipynb). There we need to identify the `acquisition` flag, **True** for _acquisition mode_ and **False** for _inferencing mode_. In acquisition mode be aware of the _normal_ or _abnormal_ folder we want to create, in this mode the notebook will save every image in the anomalib/datasets/cubes/{FOLDER} for further training. In inferencing mode the notebook won't save images, it will run the inference and show the results.
 
-_Note_: If you dont have the robot you could jump to the another notebook [501a](501a_training_a_model_with_cubes_from_a_robotic_arm.ipynb) and download the dataset from this [link](https://github.com/openvinotoolkit/anomalib/releases/tag/dobot)
+_Note_: If you dont have the robot you could jump to the another notebook [501a](501a_training_a_model_with_cubes_from_a_robotic_arm.ipynb) and download the dataset from this [dataset download URL](https://github.com/openvinotoolkit/anomalib/releases/tag/dobot)
 
 ### Training
 

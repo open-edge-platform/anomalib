@@ -176,14 +176,18 @@ Set up your development environment to start contributing. This involves install
 
    :::{dropdown} Using Commitizen
    :icon: terminal
-   1. Stage your changes:
+   <summary>Using Commitizen</summary>
+   1. Stage your changes and create a commit using Commitizen:
+
+   First, stage your changes:
 
    ```bash
    git add <files>
    # or
    git add .  # to add all changes
    ```
-   1. Create a commit using Commitizen:
+
+   Then, create a commit with Commitizen:
 
    ```bash
    # Regular commit
