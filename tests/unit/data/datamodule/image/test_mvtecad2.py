@@ -59,5 +59,5 @@ class TestMVTecAD2(_TestAnomalibImageDatamodule):
         assert batch.image.shape == (4, 3, 256, 256)
 
         # Test invalid test type
-        with pytest.raises(ValueError, match="'invalid' is not a valid TestType"):
+        with pytest.raises(ValueError, match=r"'invalid' is not a valid TestType"):
             datamodule.test_dataloader(test_type="invalid")

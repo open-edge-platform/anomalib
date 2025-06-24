@@ -163,5 +163,5 @@ class TestMakeMasks:
         kernel_size: int,
     ) -> None:
         """Test that an error is raised when the kernel size is larger than the grid size."""
-        with pytest.raises(ValueError, match="Each dimension of the grid size must be greater than"):
+        with pytest.raises(ValueError, match=r"Each dimension of the grid size must be greater than"):
             make_masks(grid_size, kernel_size)
