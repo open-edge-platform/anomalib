@@ -26,6 +26,7 @@ Example:
 # SPDX-License-Identifier: Apache-2.0
 
 from dataclasses import dataclass, fields
+from typing import ClassVar
 
 import torch
 from torchvision.tv_tensors import Mask, Video
@@ -76,7 +77,7 @@ class VideoItem(
         'NumpyVideoItem'
     """
 
-    numpy_class = NumpyVideoItem
+    numpy_class: ClassVar[type[NumpyVideoItem]] = NumpyVideoItem
 
     def to_image(self) -> ImageItem:
         """Convert the video item to an image item."""
@@ -127,5 +128,5 @@ class VideoBatch(
         'NumpyVideoBatch'
     """
 
-    item_class = VideoItem
-    numpy_class = NumpyVideoBatch
+    item_class: ClassVar[type[VideoItem]] = VideoItem
+    numpy_class: ClassVar[type[NumpyVideoBatch]] = NumpyVideoBatch

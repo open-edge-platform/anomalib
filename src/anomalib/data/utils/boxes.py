@@ -48,7 +48,7 @@ def masks_to_boxes(
     # reshape to (B, 1, H, W) and cast to float
     masks = masks.view((-1, 1, height, width)).float()
     if anomaly_maps is not None:
-        anomaly_maps = anomaly_maps.view((-1,) + masks.shape[-2:])
+        anomaly_maps = anomaly_maps.view((-1, *masks.shape[-2:]))
 
     if masks.is_cpu:
         batch_comps = connected_components_cpu(masks).squeeze(1)

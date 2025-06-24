@@ -232,7 +232,7 @@ def make_ucsd_dataset(path: Path, split: str | Split | None = None) -> DataFrame
     folders = [filename for filename in sorted(path.glob("*/*")) if filename.is_dir()]
     folders = [folder for folder in folders if list(folder.glob("*.tif"))]
 
-    samples_list = [(str(path),) + folder.parts[-2:] for folder in folders]
+    samples_list = [(str(path), *folder.parts[-2:]) for folder in folders]
     samples = DataFrame(samples_list, columns=["root", "folder", "image_path"])
 
     samples.loc[samples.folder == "Test", "mask_path"] = samples.image_path.str.split(".").str[0] + "_gt"

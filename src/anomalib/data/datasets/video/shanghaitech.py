@@ -259,7 +259,7 @@ def make_shanghaitech_dataset(root: Path, scene: int, split: Split | str | None 
     # get paths to training videos
     root = validate_path(root)
     train_root = root / "training/converted_videos"
-    train_list = [(str(train_root),) + filename.parts[-2:] for filename in train_root.glob(f"{scene_prefix}_*.avi")]
+    train_list = [(str(train_root), *filename.parts[-2:]) for filename in train_root.glob(f"{scene_prefix}_*.avi")]
     train_samples = DataFrame(train_list, columns=["root", "folder", "image_path"])
     train_samples["split"] = "train"
 
@@ -267,7 +267,7 @@ def make_shanghaitech_dataset(root: Path, scene: int, split: Split | str | None 
     test_root = Path(root) / "testing/frames"
     test_folders = [filename for filename in sorted(test_root.glob(f"{scene_prefix}_*")) if filename.is_dir()]
     test_folders = [folder for folder in test_folders if len(list(folder.glob("*.jpg"))) > 0]
-    test_list = [(str(test_root),) + folder.parts[-2:] for folder in test_folders]
+    test_list = [(str(test_root), *folder.parts[-2:]) for folder in test_folders]
     test_samples = DataFrame(test_list, columns=["root", "folder", "image_path"])
     test_samples["split"] = "test"
 

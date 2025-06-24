@@ -116,8 +116,8 @@ def make_kolektor_dataset(
     root = validate_path(root)
 
     # Get list of images and masks
-    samples_list = [(str(root),) + f.parts[-2:] for f in root.glob(r"**/*") if f.suffix == ".jpg"]
-    masks_list = [(str(root),) + f.parts[-2:] for f in root.glob(r"**/*") if f.suffix == ".bmp"]
+    samples_list = [(str(root), *f.parts[-2:]) for f in root.glob(r"**/*") if f.suffix == ".jpg"]
+    masks_list = [(str(root), *f.parts[-2:]) for f in root.glob(r"**/*") if f.suffix == ".bmp"]
 
     if not samples_list:
         msg = f"Found 0 images in {root}"
