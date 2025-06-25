@@ -81,16 +81,16 @@ Set up your development environment to start contributing. This involves install
    pytest tests/
    ```
 
-5. **Update the Changelog:** For significant changes, add a summary to the [CHANGELOG](https://github.com/open-edge-platform/anomalib/blob/main/CHANGELOG.md).
+5. **Check Licensing:** Ensure you own the code or have rights to use it, adhering to appropriate licensing.
 
-6. **Check Licensing:** Ensure you own the code or have rights to use it, adhering to appropriate licensing.
+6. **Follow Conventional Commits for PR Titles:** We use [Commitizen](https://commitizen-tools.github.io/commitizen/) to enforce conventional commit format for PR titles and branch names. Since we squash merge PRs, individual commit messages can be in any format during development, but your **PR title must follow conventional commit format**.
 
-7. **Follow Conventional Commits:** We use [Commitizen](https://commitizen-tools.github.io/commitizen/) to enforce conventional commit messages and branch names. This helps maintain a clean and consistent git history.
-
-   :::{dropdown} Commit Message Format
+   :::{dropdown} PR Title Format (Required)
    :icon: git-commit
 
-   Each commit message consists of a **header**, a **body**, and a **footer**:
+   Your **PR title** must follow conventional commit format. Individual commit messages during development can be any format (e.g., "wip", "fix typo"), but the PR title becomes the squash commit message.
+
+   Each PR title consists of a **header**, and optionally a **body** and **footer**:
 
    ```text
    <type>(<scope>): <description>
@@ -134,25 +134,49 @@ Set up your development environment to start contributing. This involves install
    - The description should not end with a period
    - The description should not be in sentence-case, start-case, pascal-case, or upper-case
 
-   **Examples:**
+   **PR Title Examples:**
 
    ```text
    feat(model): add transformer architecture for anomaly detection
-
-   - Implement self-attention mechanism
-   - Add positional encoding
-   - Add transformer encoder blocks
-
-   Closes #123
    ```
 
    ```text
-   fix(data): handle corrupted image files
-
-   - Add error handling for corrupted images
-   - Skip corrupted files during training
-   - Log skipped files for debugging
+   fix(data): handle corrupted image files during training
    ```
+
+   ```text
+   docs: update installation instructions for Windows
+   ```
+
+   ```text
+   chore(ci): migrate from commit message validation to PR title validation
+   ```
+
+   **Note:** The PR description can contain additional details, but the title must be concise and follow the format above.
+
+   **Optional Emojis:**
+   You can optionally add emojis at the beginning of your PR title for better visual distinction:
+
+   ```text
+   🚀 feat(model): add transformer architecture for anomaly detection
+   🐞 fix(data): handle corrupted image files during training
+   📚 docs: update installation instructions for Windows
+   🔧 chore(ci): migrate from commit message validation to PR title validation
+   ```
+
+   **Suggested Emoji Mapping (Optional):**
+   - 🚀 for `feat` (new features)
+   - 🐞 for `fix` (bug fixes)
+   - 📚 for `docs` (documentation)
+   - 🎨 for `style` (code style/formatting)
+   - ♻️ for `refactor` (code refactoring)
+   - ⚡️ for `perf` (performance improvements)
+   - 🧪 for `test` (adding/modifying tests)
+   - 📦 for `build` (build system changes)
+   - 🔧 for `chore` (general maintenance)
+   - 🏗️ for `ci` (CI/CD configuration)
+
+   **Note:** Emojis are completely optional. PR titles without emojis are equally valid.
 
    :::
 
@@ -174,42 +198,34 @@ Set up your development environment to start contributing. This involves install
    The type and scope should match the ones used in commit messages.
    :::
 
-   :::{dropdown} Using Commitizen
+   :::{dropdown} Development Workflow
    :icon: terminal
    <summary>Using Commitizen</summary>
    1. Stage your changes and create a commit using Commitizen:
 
-   First, stage your changes:
+   **During Development:**
+   Individual commits can use any format for convenience:
 
    ```bash
    git add <files>
-   # or
-   git add .  # to add all changes
+   git commit -m "wip: working on transformer model"
+   git commit -m "fix typo"
+   git commit -m "address review comments"
    ```
 
-   Then, create a commit with Commitizen:
+   **Creating the PR:**
+   Ensure your PR title follows conventional commit format. The PR title becomes the final commit message when merged.
+
+   **Optional - Using Commitizen for PR titles:**
+   You can use Commitizen to help format your PR titles:
 
    ```bash
-   # Regular commit
-   cz commit
-   # or
-   cz c
-
-   # Signed commit (recommended)
-   cz commit -- -s
-   # or
-   cz c -- -s
+   # Check if a message follows conventional format
+   echo "feat(model): add transformer architecture" | cz check --commit-msg-file -
    ```
 
-   Commitizen will guide you through an interactive process to create a conventional commit message.
-
-   To check if your commits follow the conventional format:
-
-   ```bash
-   cz check
-   ```
-
-   To bump the version based on commit history:
+   **Version Management:**
+   To bump the version based on PR history:
 
    ```bash
    cz bump
