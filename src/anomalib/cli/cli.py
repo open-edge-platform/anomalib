@@ -256,7 +256,7 @@ class AnomalibCLI:
         added = parser.add_method_arguments(
             Engine,
             "export",
-            skip={"ov_args", "model", "datamodule"},
+            skip={"ov_kwargs", "model", "datamodule"},
         )
         self.subcommand_method_arguments["export"] = added
         add_openvino_export_arguments(parser)

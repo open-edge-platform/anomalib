@@ -44,7 +44,7 @@ class TestOpenVINOInferenceEntrypoint:
         # export OpenVINO model
         model.to_openvino(
             export_root=checkpoint_path.parent.parent.parent,
-            ov_args={},
+            ov_kwargs={},
             task=TaskType.SEGMENTATION,
         )
 
