@@ -110,12 +110,14 @@ However, make sure to address any pre-commit issues before finalizing your pull 
 
 6. **Check Licensing:** Ensure you own the code or have rights to use it, adhering to appropriate licensing.
 
-7. **Follow Conventional Commits:** We use [Commitizen](https://commitizen-tools.github.io/commitizen/) to enforce conventional commit messages and branch names. This helps maintain a clean and consistent git history.
+7. **Follow Conventional Commits for PR Titles:** We use [Commitizen](https://commitizen-tools.github.io/commitizen/) to enforce conventional commit format for PR titles and branch names. Since we squash merge PRs, individual commit messages can be in any format during development, but your **PR title must follow conventional commit format**.
 
    <details>
-   <summary>Commit Message Format</summary>
+   <summary>PR Title Format (Required)</summary>
 
-   Each commit message consists of a **header**, a **body**, and a **footer**:
+   Your **PR title** must follow conventional commit format. Individual commit messages during development can be any format (e.g., "wip", "fix typo"), but the PR title becomes the squash commit message.
+
+   Each PR title consists of a **header**, and optionally a **body** and **footer**:
 
    ```text
    <type>(<scope>): <description>
@@ -126,7 +128,6 @@ However, make sure to address any pre-commit issues before finalizing your pull 
    ```
 
    **Types:**
-
    - `feat`: A new feature
    - `fix`: A bug fix
    - `docs`: Documentation changes
@@ -139,7 +140,6 @@ However, make sure to address any pre-commit issues before finalizing your pull 
    - `chore`: General maintenance
 
    **Scopes:**
-
    - `data`: Data loading, processing, or augmentation
    - `model`: Model architecture or implementation
    - `metric`: Evaluation metrics
@@ -155,32 +155,31 @@ However, make sure to address any pre-commit issues before finalizing your pull 
    - `notebooks`: Jupyter notebooks
 
    **Rules:**
-
    - The type and scope are case-sensitive
    - The type must be lowercase
    - The description should be in present tense
    - The description should not end with a period
    - The description should not be in sentence-case, start-case, pascal-case, or upper-case
 
-   **Examples:**
+   **PR Title Examples:**
 
    ```text
    feat(model): add transformer architecture for anomaly detection
-
-   - Implement self-attention mechanism
-   - Add positional encoding
-   - Add transformer encoder blocks
-
-   Closes #123
    ```
 
    ```text
-   fix(data): handle corrupted image files
-
-   - Add error handling for corrupted images
-   - Skip corrupted files during training
-   - Log skipped files for debugging
+   fix(data): handle corrupted image files during training
    ```
+
+   ```text
+   docs: update installation instructions for Windows
+   ```
+
+   ```text
+   chore(ci): migrate from commit message validation to PR title validation
+   ```
+
+   **Note:** The PR description can contain additional details, but the title must be concise and follow the format above.
 
    </details>
 
@@ -194,7 +193,6 @@ However, make sure to address any pre-commit issues before finalizing your pull 
    ```
 
    **Examples:**
-
    - `feat/model/add-transformer`
    - `fix/data/load-image-bug`
    - `docs/readme/update-installation`
@@ -204,31 +202,28 @@ However, make sure to address any pre-commit issues before finalizing your pull 
    </details>
 
    <details>
-   <summary>Using Commitizen</summary>
+   <summary>Development Workflow</summary>
 
-   1. Stage your changes:
+   **During Development:**
+   Individual commits can use any format for convenience:
 
    ```bash
    git add <files>
-   # or
-   git add .  # to add all changes
+   git commit -m "wip: working on transformer model"
+   git commit -m "fix typo"
+   git commit -m "address review comments"
    ```
 
-   1. Create a commit using Commitizen:
+   **Creating the PR:**
+   Ensure your PR title follows conventional commit format. The PR title becomes the final commit message when merged.
+
+   **Optional - Using Commitizen for PR titles:**
+   You can use Commitizen to help format your PR titles:
 
    ```bash
-   # Regular commit
-   cz commit
-   # or
-   cz c
-
-   # Signed commit (recommended)
-   cz commit -- -s
-   # or
-   cz c -- -s
+   # Check if a message follows conventional format
+   echo "feat(model): add transformer architecture" | cz check --commit-msg-file -
    ```
-
-   Commitizen will guide you through an interactive process to create a conventional commit message.
 
    To check if your commits follow the conventional format:
 
