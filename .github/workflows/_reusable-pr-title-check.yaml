@@ -56,7 +56,7 @@ permissions:
   pull-requests: read
 
 jobs:
-  pr-title-lint:
+  validate-pr-title:
     concurrency:
       group: pr-title-${{ github.event.pull_request.number }}
       cancel-in-progress: true
