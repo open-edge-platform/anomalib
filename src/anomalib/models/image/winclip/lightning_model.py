@@ -192,7 +192,7 @@ class WinClip(AnomalibModule):
         Returns:
             torch.Tensor: Tensor containing the collected reference images
         """
-        ref_images = torch.Tensor()
+        ref_images = torch.empty(0)
         for batch in dataloader:
             images = batch.image[: self.k_shot - ref_images.shape[0]]
             ref_images = torch.cat((ref_images, images))
