@@ -851,10 +851,6 @@ class VideoBatchValidator:
         except Exception as e:
             msg = "Failed to convert pred_score to a torch.Tensor."
             raise ValueError(msg) from e
-        tensor_score = tensor_score.squeeze()
-        if tensor_score.ndim != 0:
-            msg = f"Predicted scores must be a scalar, got shape {tensor_score.shape}."
-            raise ValueError(msg)
 
         return tensor_score.to(torch.float32)
 

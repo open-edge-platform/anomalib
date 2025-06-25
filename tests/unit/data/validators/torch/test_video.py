@@ -116,7 +116,7 @@ class TestVideoValidator:
 
     def test_validate_pred_score_invalid_shape(self) -> None:
         """Test validation of a prediction score with invalid shape."""
-        with pytest.raises(ValueError, match=r"Predicted scores must be a scalar, got shape torch\.Size\(\[2\]\)"):
+        with pytest.raises(ValueError, match=r"Predicted score must be a scalar, got shape.*\[2\]"):
             self.validator.validate_pred_score(torch.tensor([0.8, 0.9]))
 
 
