@@ -62,7 +62,7 @@ from anomalib.data import NumpyImageBatch
 from anomalib.data.utils import read_image
 
 if TYPE_CHECKING:
-    from openvino.runtime.utils.data_helpers.wrappers import OVDict
+    from openvino.utils.data_helpers.wrappers import OVDict
 
 logger = logging.getLogger("anomalib")
 
