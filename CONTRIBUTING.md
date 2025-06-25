@@ -26,7 +26,7 @@ We utilize GitHub issues to track the feature requests as well. If you are certa
 
 We actively welcome your pull requests:
 
-###  Getting Started
+### Getting Started
 
 #### 1. Fork and Clone the Repository
 
@@ -180,6 +180,30 @@ However, make sure to address any pre-commit issues before finalizing your pull 
    ```
 
    **Note:** The PR description can contain additional details, but the title must be concise and follow the format above.
+
+   **Optional Emojis:**
+   You can optionally add emojis at the beginning of your PR title for better visual distinction:
+
+   ```text
+   🚀 feat(model): add transformer architecture for anomaly detection
+   🐞 fix(data): handle corrupted image files during training
+   📚 docs: update installation instructions for Windows
+   🔧 chore(ci): migrate from commit message validation to PR title validation
+   ```
+
+   **Suggested Emoji Mapping (Optional):**
+   - 🚀 for `feat` (new features)
+   - 🐞 for `fix` (bug fixes)
+   - 📚 for `docs` (documentation)
+   - 🎨 for `style` (code style/formatting)
+   - ♻️ for `refactor` (code refactoring)
+   - ⚡️ for `perf` (performance improvements)
+   - 🧪 for `test` (adding/modifying tests)
+   - 📦 for `build` (build system changes)
+   - 🔧 for `chore` (general maintenance)
+   - 🏗️ for `ci` (CI/CD configuration)
+
+   **Note:** Emojis are completely optional. PR titles without emojis are equally valid.
 
    </details>
 

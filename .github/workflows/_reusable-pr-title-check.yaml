@@ -86,24 +86,38 @@ jobs:
             exit 1
           fi
 
-          # Create a temporary file to store the PR title for checking
+          # Remove emoji from the beginning if present and create clean title for validation
+          CLEAN_TITLE=$(echo "$PR_TITLE" | sed 's/^[[:space:]]*[^\w[:space:](]*[[:space:]]*//')
+
+          echo "Clean title for validation: '$CLEAN_TITLE'"
+
+          # Create a temporary file to store the clean PR title for checking
           TEMP_TITLE_FILE=$(mktemp)
           # Ensure the temp file is cleaned up on exit
           trap 'rm -f "$TEMP_TITLE_FILE"' EXIT
 
-          # Write the PR title to the temporary file
-          echo "$PR_TITLE" > "$TEMP_TITLE_FILE"
+          # Write the clean PR title to the temporary file
+          echo "$CLEAN_TITLE" > "$TEMP_TITLE_FILE"
 
-          # Check the PR title using commitizen
+          # Check the clean PR title using commitizen
           if ! cz check --commit-msg-file "$TEMP_TITLE_FILE"; then
             echo "::error::PR title does not follow conventional commit format"
             echo "::error::Title: $PR_TITLE"
+            echo "::error::Clean title: $CLEAN_TITLE"
             echo "::error::Please update your PR title to follow the conventional commit format"
+            echo "::error::"
+            echo "::error::Format: [optional emoji] <type>(<scope>): <description>"
+            echo "::error::"
             echo "::error::Examples:"
-            echo "::error::  feat(data): add support for custom dataset formats"
-            echo "::error::  fix(model): resolve memory leak in PatchCore training"
-            echo "::error::  docs: update installation instructions"
-            echo "::error::  chore(ci): update pre-commit hooks"
+            echo "::error::  🚀 feat(data): add support for custom dataset formats"
+            echo "::error::  🐛 fix(model): resolve memory leak in PatchCore training"
+            echo "::error::  📚 docs: update installation instructions"
+            echo "::error::  🔧 chore(ci): update pre-commit hooks"
+            echo "::error::  feat(data): add support for custom dataset formats (no emoji)"
+            echo "::error::"
+            echo "::error::Suggested emojis (optional):"
+            echo "::error::  🚀 for feat, 🐛 for fix, 📚 for docs, 🔧 for chore"
+            echo "::error::  ⚡ for perf, 🧪 for test, 🎨 for style, ♻️ for refactor"
             exit 1
           fi
 
