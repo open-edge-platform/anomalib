@@ -46,3 +46,7 @@ terms are listed below.
 8. AUPIMO metric implementation is based on the original code
    Copyright (c) 2023 @jpcbertoldo, https://github.com/jpcbertoldo/aupimo
    SPDX-License-Identifier: MIT
+
+9. UninetModel
+   Copyright (c) 2025 @pangdatangtt, https://github.com/pangdatangtt/UniNet/
+   SPDX-License-Identifier: MIT
