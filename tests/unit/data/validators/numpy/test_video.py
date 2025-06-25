@@ -122,7 +122,7 @@ class TestNumpyVideoBatchValidator:
 
     def test_validate_image_invalid_dimensions(self) -> None:
         """Test validation of an image batch with invalid dimensions."""
-        with pytest.raises(ValueError, match=r"Video batch must have 4 or 5 dimensions, got shape \\(224, 224, 3\\)"):
+        with pytest.raises(ValueError, match=r"Video batch must have 4 or 5 dimensions, got shape \(224, 224, 3\)"):
             self.validator.validate_image(np.zeros((224, 224, 3)))
 
     def test_validate_image_invalid_channels(self) -> None:
@@ -167,7 +167,7 @@ class TestNumpyVideoBatchValidator:
 
     def test_validate_gt_label_invalid_dimensions(self) -> None:
         """Test validation of ground truth labels with invalid dimensions."""
-        with pytest.raises(ValueError, match=r"Ground truth label batch must be 1-dimensional, got shape \\(2, 2\\)"):
+        with pytest.raises(ValueError, match=r"Ground truth label batch must be 1-dimensional, got shape \(2, 2\)"):
             self.validator.validate_gt_label(np.array([[0, 1], [1, 0]]))
 
     def test_validate_gt_label_invalid_dtype(self) -> None:
