@@ -87,8 +87,8 @@ jobs:
           fi
 
           # Remove emoji from the beginning if present and create clean title for validation
-          # Match emoji (non-ASCII characters) at start followed by optional space
-          CLEAN_TITLE=$(echo "$PR_TITLE" | sed 's/^[^[:ascii:]]*[[:space:]]*//')
+          # Use Python for reliable emoji removal (more compatible than sed with Unicode)
+          CLEAN_TITLE=$(python3 -c "import re; title='$PR_TITLE'; print(re.sub(r'^[\s]*[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F1E0-\U0001F1FF\U00002600-\U000027BF\U0001F900-\U0001F9FF]+[\s]*', '', title))")
 
           echo "Clean title for validation: '$CLEAN_TITLE'"
 
