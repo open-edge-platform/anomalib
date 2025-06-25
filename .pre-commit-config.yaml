@@ -16,8 +16,7 @@ repos:
   - repo: https://github.com/commitizen-tools/commitizen
     rev: v3.20.0
     hooks:
-      - id: commitizen
-        stages: [commit-msg]
+      # Only enforce branch naming, not commit messages (since we validate PR titles instead)
       - id: commitizen-branch
         stages: [pre-push]
 
