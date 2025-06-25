@@ -179,7 +179,7 @@ class ShanghaiTechTestClipsIndexer(ClipsIndexer):
         self.video_pts = []
         for video_path in self.video_paths:
             n_frames = len(list(Path(video_path).glob("*.jpg")))
-            self.video_pts.append(torch.Tensor(range(n_frames)))
+            self.video_pts.append(torch.arange(n_frames))
 
         # fps information cannot be inferred from folder structure
         self.video_fps = [None] * len(self.video_paths)

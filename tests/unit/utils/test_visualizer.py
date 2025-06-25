@@ -54,5 +54,5 @@ class TestVisualizer:
         engine.test(model=model, datamodule=datamodule, ckpt_path=str(checkpoint_path))
 
         dataset = PredictDataset(path=dataset_path / "mvtecad" / "dummy" / "test")
-        datamodule = DataLoader(dataset, collate_fn=ImageBatch.collate)
+        datamodule = DataLoader(dataset, collate_fn=ImageBatch.collate, pin_memory=False)
         engine.predict(model=model, dataloaders=datamodule, ckpt_path=str(checkpoint_path))

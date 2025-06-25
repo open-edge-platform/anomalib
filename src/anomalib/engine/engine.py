@@ -648,10 +648,10 @@ class Engine:
             msg = f"Unknown type for dataloaders {type(dataloaders)}"
             raise TypeError(msg)
         if dataset is not None:
-            dataloaders.append(DataLoader(dataset, collate_fn=dataset.collate_fn))
+            dataloaders.append(DataLoader(dataset, collate_fn=dataset.collate_fn, pin_memory=False))
         if data_path is not None:
             dataset = PredictDataset(data_path)
-            dataloaders.append(DataLoader(dataset, collate_fn=dataset.collate_fn))
+            dataloaders.append(DataLoader(dataset, collate_fn=dataset.collate_fn, pin_memory=False))
         dataloaders = dataloaders or None
 
         if self._should_run_validation(model or self.model, ckpt_path):

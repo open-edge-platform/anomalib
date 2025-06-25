@@ -64,7 +64,7 @@ def masks_to_boxes(
         for label in labels[labels != 0]:
             y_loc, x_loc = torch.where(im_comps == label)
             # add box
-            box = torch.Tensor([torch.min(x_loc), torch.min(y_loc), torch.max(x_loc), torch.max(y_loc)]).to(
+            box = torch.tensor([torch.min(x_loc), torch.min(y_loc), torch.max(x_loc), torch.max(y_loc)]).to(
                 masks.device,
             )
             im_boxes.append(box)
@@ -150,5 +150,5 @@ def scale_boxes(boxes: torch.Tensor, image_size: torch.Size, new_size: torch.Siz
         >>> scaled
         tensor([[20., 30., 40., 50.]])
     """
-    scale = torch.Tensor([*new_size]) / torch.Tensor([*image_size])
+    scale = torch.tensor([*new_size]) / torch.tensor([*image_size])
     return boxes * scale.repeat(2).to(boxes.device)
