@@ -230,5 +230,5 @@ class Inferencer(ABC):
         metadata: dict[str, float | np.ndarray | torch.Tensor] | DictConfig = {}
         if path is not None:
             config = OmegaConf.load(path)
-            metadata = cast(DictConfig, config)
+            metadata = cast("DictConfig", config)
         return metadata

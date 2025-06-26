@@ -81,7 +81,7 @@ def center_crop_image(image: torch.Tensor, output_size: list[int]) -> torch.Tens
     crop_height, crop_width = _center_crop_parse_output_size(output_size)
     shape = image.shape
     if image.numel() == 0:
-        return image.reshape(shape[:-2] + (crop_height, crop_width))
+        return image.reshape((*shape[:-2], crop_height, crop_width))
     image_height, image_width = shape[-2:]
 
     if crop_height > image_height or crop_width > image_width:

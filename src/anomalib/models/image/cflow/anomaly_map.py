@@ -147,8 +147,8 @@ class AnomalyMapGenerator(nn.Module):
             raise KeyError(msg)
 
         # placate mypy
-        distribution: list[torch.Tensor] = cast(list[torch.Tensor], kwargs["distribution"])
-        height: list[int] = cast(list[int], kwargs["height"])
-        width: list[int] = cast(list[int], kwargs["width"])
-        image_size: tuple[int, int] | torch.Size | None = kwargs.get("image_size", None)
+        distribution: list[torch.Tensor] = cast("list[torch.Tensor]", kwargs["distribution"])
+        height: list[int] = cast("list[int]", kwargs["height"])
+        width: list[int] = cast("list[int]", kwargs["width"])
+        image_size: tuple[int, int] | torch.Size | None = kwargs.get("image_size")
         return self.compute_anomaly_map(distribution, height, width, image_size)

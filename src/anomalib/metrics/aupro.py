@@ -231,8 +231,8 @@ class _AUPRO(Metric):
         # ratio (defined above).
         labels = cca.unique()[1:]  # 0 is background
         background = cca == 0
-        _fpr: torch.Tensor
-        _tpr: torch.Tensor
+        fpr_: torch.Tensor
+        tpr_: torch.Tensor
         for label in labels:
             interp: bool = False
             new_idx[-1] = output_size - 1
@@ -240,43 +240,43 @@ class _AUPRO(Metric):
             # Need to calculate label-wise roc on union of background & mask, as
             # otherwise we wrongly consider other label in labels as FPs.
             # We also don't need to return the thresholds
-            _fpr, _tpr = binary_roc(
+            fpr_, tpr_ = binary_roc(
                 preds=preds[background | mask],
                 target=mask[background | mask],
                 thresholds=thresholds,
             )[:-1]
 
             # catch edge-case where ROC only has fpr vals > self.fpr_limit
-            if _fpr[_fpr <= self.fpr_limit].max() == 0:
-                _fpr_limit = _fpr[_fpr > self.fpr_limit].min()
+            if fpr_[fpr_ <= self.fpr_limit].max() == 0:
+                fpr_limit_ = fpr_[fpr_ > self.fpr_limit].min()
             else:
-                _fpr_limit = self.fpr_limit
+                fpr_limit_ = self.fpr_limit
 
-            _fpr_idx = torch.where(_fpr <= _fpr_limit)[0]
+            fpr_idx_ = torch.where(fpr_ <= fpr_limit_)[0]
             # if computed roc curve is not specified sufficiently close to
             # self.fpr_limit, we include the closest higher tpr/fpr pair and
             # linearly interpolate the tpr/fpr point at self.fpr_limit
-            if not torch.allclose(_fpr[_fpr_idx].max(), self.fpr_limit):
-                _tmp_idx = torch.searchsorted(_fpr, self.fpr_limit)
-                _fpr_idx = torch.cat([_fpr_idx, _tmp_idx.unsqueeze_(0)])
-                _slope = 1 - ((_fpr[_tmp_idx] - self.fpr_limit) / (_fpr[_tmp_idx] - _fpr[_tmp_idx - 1]))
+            if not torch.allclose(fpr_[fpr_idx_].max(), self.fpr_limit):
+                tmp_idx_ = torch.searchsorted(fpr_, self.fpr_limit)
+                fpr_idx_ = torch.cat([fpr_idx_, tmp_idx_.unsqueeze_(0)])
+                slope_ = 1 - ((fpr_[tmp_idx_] - self.fpr_limit) / (fpr_[tmp_idx_] - fpr_[tmp_idx_ - 1]))
                 interp = True
 
-            _fpr = _fpr[_fpr_idx]
-            _tpr = _tpr[_fpr_idx]
+            fpr_ = fpr_[fpr_idx_]
+            tpr_ = tpr_[fpr_idx_]
 
-            _fpr_idx = _fpr_idx.float()
-            _fpr_idx /= _fpr_idx.max()
-            _fpr_idx *= new_idx.max()
+            fpr_idx_ = fpr_idx_.float()
+            fpr_idx_ /= fpr_idx_.max()
+            fpr_idx_ *= new_idx.max()
 
             if interp:
                 # last point will be sampled at self.fpr_limit
-                new_idx[-1] = _fpr_idx[-2] + ((_fpr_idx[-1] - _fpr_idx[-2]) * _slope)
+                new_idx[-1] = fpr_idx_[-2] + ((fpr_idx_[-1] - fpr_idx_[-2]) * slope_)
 
-            _tpr = self.interp1d(_fpr_idx, _tpr, new_idx)
-            _fpr = self.interp1d(_fpr_idx, _fpr, new_idx)
-            tpr += _tpr
-            fpr += _fpr
+            tpr_ = self.interp1d(fpr_idx_, tpr_, new_idx)
+            fpr_ = self.interp1d(fpr_idx_, fpr_, new_idx)
+            tpr += tpr_
+            fpr += fpr_
 
         # Actually perform the averaging
         tpr /= labels.size(0)

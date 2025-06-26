@@ -148,7 +148,7 @@ def make_avenue_dataset(
     """
     root = validate_path(root)
 
-    samples_list = [(str(root),) + filename.parts[-2:] for filename in root.glob("**/*.avi")]
+    samples_list = [(str(root), *filename.parts[-2:]) for filename in root.glob("**/*.avi")]
     samples = DataFrame(samples_list, columns=["root", "folder", "image_path"])
 
     samples.loc[samples.folder == "testing_videos", "mask_path"] = (

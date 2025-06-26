@@ -495,18 +495,20 @@ def get_decoder(name: str) -> ResNet:
     Returns:
         ResNet: Decoder ResNet architecture.
     """
-    if name in {
-        "resnet18",
-        "resnet34",
-        "resnet50",
-        "resnet101",
-        "resnet152",
-        "resnext50_32x4d",
-        "resnext101_32x8d",
-        "wide_resnet50_2",
-        "wide_resnet101_2",
-    }:
-        decoder = globals()[f"de_{name}"]
+    decoder_map = {
+        "resnet18": de_resnet18,
+        "resnet34": de_resnet34,
+        "resnet50": de_resnet50,
+        "resnet101": de_resnet101,
+        "resnet152": de_resnet152,
+        "resnext50_32x4d": de_resnext50_32x4d,
+        "resnext101_32x8d": de_resnext101_32x8d,
+        "wide_resnet50_2": de_wide_resnet50_2,
+        "wide_resnet101_2": de_wide_resnet101_2,
+    }
+
+    if name in decoder_map:
+        decoder = decoder_map[name]
     else:
         msg = f"Decoder with architecture {name} not supported"
         raise ValueError(msg)

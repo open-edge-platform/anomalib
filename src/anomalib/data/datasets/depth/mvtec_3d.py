@@ -133,7 +133,7 @@ def make_mvtec_3d_dataset(
         extensions = IMG_EXTENSIONS
 
     root = validate_path(root)
-    samples_list = [(str(root),) + f.parts[-4:] for f in root.glob(r"**/*") if f.suffix in extensions]
+    samples_list = [(str(root), *f.parts[-4:]) for f in root.glob(r"**/*") if f.suffix in extensions]
     if not samples_list:
         msg = f"Found 0 images in {root}"
         raise RuntimeError(msg)

@@ -143,10 +143,10 @@ class Huggingface(Backend):
             dict: Formatted message dictionary with role and content
         """
         message: dict[str, str | list[dict]] = {"role": "user"}
-        _content: list[dict[str, str]] = [{"type": "text", "text": content}]
+        content_: list[dict[str, str]] = [{"type": "text", "text": content}]
         if images is not None:
-            _content.extend([{"type": "image"} for _ in images])
-        message["content"] = _content
+            content_.extend([{"type": "image"} for _ in images])
+        message["content"] = content_
         return message
 
     def add_reference_images(self, image: str | Path) -> None:

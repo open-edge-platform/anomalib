@@ -256,7 +256,7 @@ class AnomalibCLI:
         added = parser.add_method_arguments(
             Engine,
             "export",
-            skip={"ov_args", "model", "datamodule"},
+            skip={"ov_kwargs", "model", "datamodule"},
         )
         self.subcommand_method_arguments["export"] = added
         add_openvino_export_arguments(parser)
@@ -304,7 +304,7 @@ class AnomalibCLI:
             self.config_init = self.parser.instantiate_classes(self.config)
             self.datamodule = self._get(self.config_init, "data")
             if isinstance(self.datamodule, Dataset):
-                self.datamodule = DataLoader(self.datamodule, collate_fn=self.datamodule.collate_fn)
+                self.datamodule = DataLoader(self.datamodule, collate_fn=self.datamodule.collate_fn, pin_memory=True)
             self.model = self._get(self.config_init, "model")
             self._configure_optimizers_method_to_model()
             self.instantiate_engine()
@@ -342,7 +342,7 @@ class AnomalibCLI:
                 trainer_config[key] = []
             elif not isinstance(trainer_config[key], list):
                 trainer_config[key] = [trainer_config[key]]
-            if not trainer_config.get("fast_dev_run", False):
+            if not trainer_config.get("fast_dev_run"):
                 config_callback = SaveConfigCallback(
                     self._parser(self.subcommand),
                     self.config.get(str(self.subcommand), self.config),

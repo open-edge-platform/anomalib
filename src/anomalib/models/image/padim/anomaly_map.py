@@ -188,6 +188,6 @@ class AnomalyMapGenerator(nn.Module):
         embedding: torch.Tensor = kwargs["embedding"]
         mean: torch.Tensor = kwargs["mean"]
         inv_covariance: torch.Tensor = kwargs["inv_covariance"]
-        image_size: tuple[int, int] | torch.Size = kwargs.get("image_size", None)
+        image_size: tuple[int, int] | torch.Size = kwargs.get("image_size")
 
         return self.compute_anomaly_map(embedding, mean, inv_covariance, image_size=image_size)

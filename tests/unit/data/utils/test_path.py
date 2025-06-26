@@ -81,7 +81,7 @@ class TestValidatePath:
     @staticmethod
     def test_file_wrongsuffix() -> None:
         """Test ``validate_path`` raises ValueError for a file with wrong suffix."""
-        with pytest.raises(ValueError, match="Path extension is not accepted."):
+        with pytest.raises(ValueError, match=r"Path extension is not accepted."):
             validate_path("file.png", should_exist=False, extensions=(".json", ".txt"))
 
 

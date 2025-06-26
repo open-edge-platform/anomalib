@@ -257,4 +257,5 @@ class MVTecAD2(AnomalibDataModule):
             batch_size=self.eval_batch_size,
             num_workers=self.num_workers,
             collate_fn=dataset.collate_fn,
+            pin_memory=True,
         )

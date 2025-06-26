@@ -17,10 +17,10 @@ class TestThreshold:
         """Test that Threshold class raises NotImplementedError for abstract methods."""
         threshold = Threshold()
 
-        with pytest.raises(NotImplementedError, match="Subclass of Threshold must implement the compute method"):
+        with pytest.raises(NotImplementedError, match=r"Subclass of Threshold must implement the compute method"):
             threshold.compute()
 
-        with pytest.raises(NotImplementedError, match="Subclass of Threshold must implement the update method"):
+        with pytest.raises(NotImplementedError, match=r"Subclass of Threshold must implement the update method"):
             threshold.update()
 
     @staticmethod
@@ -44,8 +44,8 @@ class TestBaseThreshold:
         """Test that BaseThreshold class raises NotImplementedError for abstract methods."""
         base_threshold = BaseThreshold()
 
-        with pytest.raises(NotImplementedError, match="Subclass of Threshold must implement the compute method"):
+        with pytest.raises(NotImplementedError, match=r"Subclass of Threshold must implement the compute method"):
             base_threshold.compute()
 
-        with pytest.raises(NotImplementedError, match="Subclass of Threshold must implement the update method"):
+        with pytest.raises(NotImplementedError, match=r"Subclass of Threshold must implement the update method"):
             base_threshold.update()

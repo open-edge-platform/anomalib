@@ -31,8 +31,7 @@ security scanning (on pre-commit, PR and periodically) with the following tools:
 
 ## 🚨 Reporting a Vulnerability
 
-Please report any security vulnerabilities in this project utilizing the
-guidelines [here](https://www.intel.com/content/www/us/en/security-center/vulnerability-handling-guidelines.html).
+Please report any security vulnerabilities in this project utilizing [Intel's vulnerability handling guidelines](https://www.intel.com/content/www/us/en/security-center/vulnerability-handling-guidelines.html).
 
 ## 📢 Security Updates and Announcements
 
