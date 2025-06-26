@@ -61,9 +61,39 @@ Anomalib is a deep learning library that aims to collect state-of-the-art anomal
 
 # 📦 Installation
 
-Anomalib provides multiple installation options to suit your needs. Choose the one that best fits your requirements:
+We recommend using [uv](https://docs.astral.sh/uv/) for fast and reliable package management, but you can use your preferred package manager.
 
-## 🚀 Install from PyPI
+## 🚀 Recommended: Install with uv
+
+```bash
+# Install uv if you haven't already
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Basic installation from PyPI
+uv add anomalib
+
+# Full installation with all dependencies
+uv add anomalib[full]
+```
+
+## 🔧 Install from Source with uv
+
+For contributing or customizing the library:
+
+```bash
+git clone https://github.com/open-edge-platform/anomalib.git
+cd anomalib
+
+# Install in development mode
+uv sync
+
+# Full development installation with all dependencies
+uv sync --extra dev
+```
+
+## 🐍 Alternative: Install with pip
+
+If you prefer using pip:
 
 ```bash
 # Basic installation from PyPI
@@ -71,19 +101,11 @@ pip install anomalib
 
 # Full installation with all dependencies
 pip install anomalib[full]
-```
 
-## 🔧 Install from Source
-
-For contributing or customizing the library:
-
-```bash
+# Development installation from source
 git clone https://github.com/open-edge-platform/anomalib.git
 cd anomalib
-pip install -e .
-
-# Full development installation with all dependencies
-pip install -e .[full]
+pip install -e .[dev]
 ```
 
 # 🧠 Training

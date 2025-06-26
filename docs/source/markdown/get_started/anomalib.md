@@ -4,61 +4,26 @@ This section will walk you through the steps to train a model and use it to dete
 
 ## {octicon}`package` Installation
 
-Installation is simple and can be done in two ways. The first is through PyPI, and the second is through a local installation. PyPI installation is recommended if you want to use the library without making any changes to the source code. If you want to make changes to the library, then a local installation is recommended.
+We recommend using [uv](https://docs.astral.sh/uv/) for fast and reliable package management, but you can use your preferred package manager.
 
-:::::{dropdown} Installing the Installer
+:::::{dropdown} Recommended: Install with uv
 :open:
 
-Anomalib comes with a CLI installer that can be used to install the full package.
-The installer can be installed using the following commands:
-
-::::{tab-set}
-
-:::{tab-item} API
-:sync: label-1
-
-```{literalinclude} ../../../../examples/cli/00_installation/pip_install.sh
+```{literalinclude} /examples/cli/00_installation/uv_install.sh
 :language: bash
-:lines: 15
+:lines: 6-22
 ```
 
-:::
-
-:::{tab-item} Source
-:sync: label-2
-
-```{literalinclude} ../../../../examples/cli/00_installation/source_install.sh
-:language: bash
-:lines: 10-34
-```
-
-:::
-::::
-The main reason why PyPI and source installer does not install the full package
-is to keep the installation wheel small. The CLI installer also automates the
-installation such as finding the torch version with the right CUDA/CUDNN version.
-
-The next section demonstrates how to install the full package using the CLI installer.
+uv provides fast dependency resolution and installation, making it ideal for both development and production environments.
 :::::
 
-:::::{dropdown} Installing the Full Package
-After installing anomalib, you can install the full package using the following commands:
+:::::{dropdown} Alternative: Install with pip
 
-```{literalinclude} ../../../../examples/cli/00_installation/anomalib_install.sh
+If you prefer using pip:
+
+```{literalinclude} /examples/cli/00_installation/pip_install.sh
 :language: bash
-:lines: 17-36
-```
-
-As can be seen above, the only available sub-command is `install` at the moment.
-The `install` sub-command has options to install either the full package or the
-specific components of the package.
-
-By default the `install` sub-command installs the full package. If you want to
-install only the specific components of the package, you can use the `--option` flag.
-
-```{literalinclude} ../../../../examples/cli/00_installation/anomalib_install.sh
-:language: bash
-:lines: 39-68
+:lines: 6-16
 ```
 
 After following these steps, your environment will be ready to use anomalib!
