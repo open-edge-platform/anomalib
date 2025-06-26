@@ -93,6 +93,8 @@ class Patchcore(MemoryBankMixin, AnomalibModule):
             subsample embeddings. Defaults to ``0.1``.
         num_neighbors (int, optional): Number of nearest neighbors to use.
             Defaults to ``9``.
+        compute_coreset_on_cpu (bool, optional): Whether to store embeddings
+            on CPU and then subsample on CPU to save GPU memory usage.
         pre_processor (PreProcessor | bool, optional): Pre-processor instance or
             bool flag. Defaults to ``True``.
         post_processor (PostProcessor | bool, optional): Post-processor instance or
@@ -140,6 +142,7 @@ class Patchcore(MemoryBankMixin, AnomalibModule):
         pre_trained: bool = True,
         coreset_sampling_ratio: float = 0.1,
         num_neighbors: int = 9,
+        compute_coreset_on_cpu: bool = False,
         pre_processor: nn.Module | bool = True,
         post_processor: nn.Module | bool = True,
         evaluator: Evaluator | bool = True,
@@ -160,6 +163,7 @@ class Patchcore(MemoryBankMixin, AnomalibModule):
         )
         self.coreset_sampling_ratio = coreset_sampling_ratio
         self.embeddings: list[torch.Tensor] = []
+        self.compute_coreset_on_cpu = compute_coreset_on_cpu
 
     @classmethod
     def configure_pre_processor(
@@ -237,6 +241,8 @@ class Patchcore(MemoryBankMixin, AnomalibModule):
         del args, kwargs  # These variables are not used.
 
         embedding = self.model(batch.image)
+        if self.compute_coreset_on_cpu:
+            embedding = embedding.to("cpu")
         self.embeddings.append(embedding)
         # Return a dummy loss tensor
         return torch.tensor(0.0, requires_grad=True, device=self.device)
@@ -249,10 +255,17 @@ class Patchcore(MemoryBankMixin, AnomalibModule):
         2. Applies coreset subsampling to reduce memory requirements
         """
         logger.info("Aggregating the embedding extracted from the training set.")
-        embeddings = torch.vstack(self.embeddings)
+        self.embeddings = torch.vstack(self.embeddings)
 
         logger.info("Applying core-set subsampling to get the embedding.")
-        self.model.subsample_embedding(embeddings, self.coreset_sampling_ratio)
+        self.model.subsample_embedding(self.embeddings, self.coreset_sampling_ratio)
+
+        # deleting ensures release of memory, .clear() may not
+        del self.embeddings
+        torch.cuda.empty_cache()
+        self.embeddings = []
+
+        self.model.memory_bank = self.model.memory_bank.to(device=self.device)
 
     def validation_step(self, batch: Batch, *args, **kwargs) -> STEP_OUTPUT:
         """Generate predictions for a batch of images.
