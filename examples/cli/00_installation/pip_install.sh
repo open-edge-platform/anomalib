@@ -3,15 +3,22 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-# Basic installation from PyPI
+# Quick install (uses default PyTorch from PyPI)
 pip install anomalib
 
-# Full installation with all dependencies
-pip install anomalib[full]
+# To ensure a specific hardware backend, you must specify an extra.
+# For example, for CPU:
+pip install "anomalib[cpu]"
 
-# Install from source for development
+# Or for CUDA 12.4:
+pip install "anomalib[cu124]"
+
+# For a full installation with all model dependencies on CPU:
+pip install "anomalib[full,cpu]"
+
+# To install from source for development on CPU:
 git clone https://github.com/open-edge-platform/anomalib.git
 cd anomalib || exit
 
-# Development installation
-pip install -e .[dev]
+# Development installation on CPU
+pip install -e ".[dev,cpu]"

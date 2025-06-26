@@ -61,124 +61,125 @@ Anomalib is a deep learning library that aims to collect state-of-the-art anomal
 
 # 📦 Installation
 
-We recommend using [uv](https://docs.astral.sh/uv/) for fast and reliable package management, but you can use your preferred package manager.
+Anomalib can be installed from PyPI. We recommend using a virtual environment and a modern package installer like `uv` or `pip`.
 
-## 🚀 Recommended: Install with uv
+## 🚀 Quick Install
 
-### Basic Installation
-
-```bash
-# Install uv if you haven't already
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Basic installation from PyPI (includes CPU PyTorch by default)
-uv add anomalib
-
-# Full installation with all model dependencies
-uv add anomalib[full]
-```
-
-### PyTorch Installation with Hardware Acceleration
-
-Anomalib supports multiple PyTorch configurations for different hardware:
+For a standard installation, you can use `uv` or `pip`. This will install the latest version of Anomalib with its core dependencies. PyTorch will be installed based on its default behavior, which usually works for CPU and standard CUDA setups.
 
 ```bash
-# Default: CPU PyTorch (works on all platforms)
-uv add anomalib
+# With uv
+uv pip install anomalib
 
-# CUDA 12.8 support (Linux/Windows with NVIDIA GPU)
-uv add anomalib --group torch-cuda128
-
-# CUDA 12.6 support (Linux/Windows with NVIDIA GPU)
-uv add anomalib --group torch-cuda126
-
-# CUDA 11.8 support (Linux/Windows with NVIDIA GPU)
-uv add anomalib --group torch-cuda118
-
-# Intel XPU support (Linux with Intel GPU)
-uv add anomalib --group torch-xpu
-
-# Combine with model dependencies
-uv add anomalib[flow,feature] --group torch-cuda128
+# Or with pip
+pip install anomalib
 ```
+
+For more control over the installation, such as specifying the PyTorch backend (e.g., XPU, CUDA and ROCm) or installing extra dependencies for specific models, see the advanced options below.
 
 <details>
-<summary><strong>📋 Model-Specific Dependencies</strong></summary>
+<summary><strong>💡 Advanced Installation: Specify Hardware Backend</strong></summary>
 
-Anomalib uses optional dependencies to keep installations lightweight. Install only what you need:
+To ensure compatibility with your hardware, you can specify a backend during installation. This is the recommended approach for production environments and for hardware other than CPU or standard CUDA.
+
+**Using `uv`:**
 
 ```bash
-# Flow-based models (cflow, csflow, fastflow, uflow)
-uv add anomalib[flow]
+# CPU support (default, works on all platforms)
+uv pip install "anomalib[cpu]"
 
-# Feature extraction models (dfm, dfkde, fastflow, uflow)
-uv add anomalib[feature]
+# CUDA 12.4 support (Linux/Windows with NVIDIA GPU)
+uv pip install "anomalib[cu124]"
 
-# Vision-language models (winclip)
-uv add anomalib[vlm_clip]
+# CUDA 12.1 support (Linux/Windows with NVIDIA GPU)
+uv pip install "anomalib[cu121]"
 
-# Statistical models (cfa, random projection)
-uv add anomalib[stats]
+# CUDA 11.8 support (Linux/Windows with NVIDIA GPU)
+uv pip install "anomalib[cu118]"
 
-# Image augmentation models (draem, dsr)
-uv add anomalib[augment]
+# ROCm support (Linux with AMD GPU)
+uv pip install "anomalib[rocm]"
 
-# Tensor manipulation utilities (cflow, cfa)
-uv add anomalib[tensor]
-
-# Utility libraries (opencv, pandas, matplotlib)
-uv add anomalib[utils]
-
-# All model dependencies
-uv add anomalib[full]
+# Intel XPU support (Linux with Intel GPU)
+uv pip install "anomalib[xpu]"
 ```
 
-If you encounter import errors when using specific models, install the corresponding dependency group:
+**Using `pip`:**
+The same extras can be used with `pip`:
 
 ```bash
-# Example: Using cflow model
-uv add anomalib[flow,tensor] --group torch-cuda128
+pip install "anomalib[cu124]"
 ```
 
 </details>
 
-## 🔧 Install from Source with uv
+<details>
+<summary><strong>🧩 Advanced Installation: Model-Specific Dependencies</strong></summary>
 
-For contributing or customizing the library:
+Anomalib uses optional dependencies to keep installations lightweight. If you plan to use certain models, you may need to install their dependencies. Remember to include your hardware-specific extra.
+
+```bash
+# Example: Install dependencies for flow-based models with CUDA 12.4
+uv pip install "anomalib[flow,cu124]"
+
+# Example: Install all model dependencies for a CPU-only setup
+uv pip install "anomalib[full,cpu]"
+```
+
+Here is a list of available dependency groups:
+
+| Extra        | Description                              | Models that need it                    |
+| :----------- | :--------------------------------------- | :------------------------------------- |
+| `[flow]`     | Flow-based models                        | `cflow`, `csflow`, `fastflow`, `uflow` |
+| `[feature]`  | Feature extraction models                | `dfm`, `dfkde`, `fastflow`, `uflow`    |
+| `[vlm_clip]` | Vision-language models                   | `winclip`                              |
+| `[stats]`    | Statistical models                       | `cfa`, `random_projection`             |
+| `[augment]`  | Image augmentation models                | `draem`, `dsr`                         |
+| `[tensor]`   | Tensor manipulation utilities            | `cflow`, `cfa`                         |
+| `[utils]`    | Utility libraries (opencv, pandas, etc.) | General use                            |
+| `[full]`     | All model dependencies                   | All models                             |
+
+</details>
+
+<details>
+<summary><strong>🔧 Advanced Installation: Install from Source</strong></summary>
+
+For contributing to `anomalib` or using a development version, you can install from source.
+
+**Using `uv`:**
+This is the recommended method for developers as it uses the project's lock file for reproducible environments.
 
 ```bash
 git clone https://github.com/open-edge-platform/anomalib.git
 cd anomalib
 
-# Basic development installation (CPU PyTorch)
-uv sync
+# Create the virtual environment
+uv venv
 
-# Development with CUDA support
-uv sync --group torch-cuda128
+# Sync with the lockfile for a specific backend (e.g., CPU)
+uv sync --extra cpu
 
-# Full development installation with all dependencies
-uv sync --group torch-cuda128 --extra dev
+# Or for a different backend like CUDA 12.4
+uv sync --extra cu124
 
-# All available dependency groups
-uv sync --all-groups  # Installs everything
+# To set up a full development environment
+uv sync --extra dev --extra cpu
 ```
 
-## 🐍 Alternative: Install with pip
-
-If you prefer using pip:
+**Using `pip`:**
 
 ```bash
-# Basic installation from PyPI
-pip install anomalib
-
-# Full installation with all dependencies
-pip install anomalib[full]
-
-# Development installation from source
 git clone https://github.com/open-edge-platform/anomalib.git
 cd anomalib
-pip install -e .[dev]
+
+# Install in editable mode with a specific backend
+pip install -e ".[cpu]"
+
+# Install with development dependencies
+pip install -e ".[dev,cpu]"
 ```
+
+</details>
 
 # 🧠 Training
 

@@ -4,29 +4,40 @@ This section will walk you through the steps to train a model and use it to dete
 
 ## {octicon}`package` Installation
 
-We recommend using [uv](https://docs.astral.sh/uv/) for fast and reliable package management, but you can use your preferred package manager.
+Anomalib can be installed from PyPI. We recommend using a virtual environment and a modern package installer like `uv` or `pip`.
 
-:::::{dropdown} Recommended: Install with uv
-:open:
+### Quick Install
+
+For a standard installation, you can use `uv` or `pip`. This will install the latest version of Anomalib with its core dependencies. PyTorch will be installed based on its default behavior, which usually works for CPU and standard CUDA setups.
+
+```bash
+# With uv
+uv pip install anomalib
+
+# Or with pip
+pip install anomalib
+```
+
+For more control over the installation, such as specifying the PyTorch backend or installing extra dependencies, see the advanced options below.
+
+:::::{dropdown} Advanced: Install with Hardware-Specific Extras
+
+To ensure compatibility with your hardware, you can specify a backend during installation. This is the recommended approach for production environments and for hardware other than CPU or standard CUDA.
+
+**Using `uv`:**
 
 ```{literalinclude} /examples/cli/00_installation/uv_install.sh
 :language: bash
-:lines: 6-22
+:lines: 12-32
 ```
 
-uv provides fast dependency resolution and installation, making it ideal for both development and production environments.
-:::::
-
-:::::{dropdown} Alternative: Install with pip
-
-If you prefer using pip:
+**Using `pip`:**
 
 ```{literalinclude} /examples/cli/00_installation/pip_install.sh
 :language: bash
-:lines: 6-16
+:lines: 9-17
 ```
 
-After following these steps, your environment will be ready to use anomalib!
 :::::
 
 ## {octicon}`mortar-board` Training
