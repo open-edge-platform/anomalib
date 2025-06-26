@@ -3,33 +3,54 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import copy
+
 import torch
-import torch.nn.functional as F
+import torchvision
 from lightning.pytorch.utilities.types import STEP_OUTPUT
+from torch import nn
+from torch.nn import functional
+from torchvision.models.feature_extraction import create_feature_extractor
 
 from anomalib.data import Batch, InferenceBatch
 from anomalib.models.components import AnomalibModule
+from anomalib.models.components.backbone import get_decoder
 
 from .anomaly_map import weighted_decision_mechanism
-from .dfs import DomainRelatedFeatureSelection, domain_related_feature_selection
+from .components import (
+    AttentionBottleneck,
+    BottleneckLayer,
+    DomainRelatedFeatureSelection,
+    domain_related_feature_selection,
+)
 from .loss import UniNetLoss
 from .torch_model import UniNetModel
-from torchvision.models.resnet 
 
 
 class UniNet(AnomalibModule):
     """UniNet model for anomaly detection.
 
     Args:
-        dfs (DomainRelatedFeatureSelection | None): Domain related feature selection module.
+        student_backbone (str): The backbone model to use for the student.
+        teacher_backbone (str): The backbone model to use for the teacher.
     """
 
-    def __init__(self, dfs: DomainRelatedFeatureSelection | None = None) -> None:
-        # TODO: maybe DFS shouldn't be passed as argument as not sure when it will be the case it needs to be passed
-        self.dfs = dfs
+    def __init__(
+        self,
+        student_backbone: str = "wide_resent50_2",
+        teacher_backbone: str = "wide_resent50_2",
+    ) -> None:
+        self.dfs = DomainRelatedFeatureSelection()
         self.loss = UniNetLoss(temperature=2.0)
         self.bce_loss = torch.nn.BCEWithLogitsLoss()
-        self.model = UniNetModel(student=, bottleneck=, source_teacher=, target_teacher=)
+        source_teacher = self._get_teacher(teacher_backbone)
+        target_teacher = copy.deepcopy(source_teacher)
+        self.model = UniNetModel(
+            student=get_decoder(student_backbone),
+            bottleneck=BottleneckLayer(block=AttentionBottleneck, layers=3),
+            source_teacher=source_teacher,
+            target_teacher=target_teacher,
+        )
 
     def training_step(self, batch: Batch, *args, **kwargs) -> STEP_OUTPUT:
         """Perform a training step of UniNet."""
@@ -43,12 +64,16 @@ class UniNet(AnomalibModule):
     def validation_step(self, batch: Batch, *args, **kwargs) -> STEP_OUTPUT:
         """Perform a validation step of UniNet."""
         del args, kwargs  # These variables are not used.
+        if batch.image is None or not isinstance(batch.image, torch.Tensor):
+            msg = "Expected batch.image to be a tensor, but got None or non-tensor type"
+            raise ValueError(msg)
+
         source_target_features, student_features, _ = self.model(batch.image)
-        output_list = [[] for _ in range(self.model.num_teachers * 3)]
+        output_list: list[list[torch.Tensor]] = [[] for _ in range(self.model.num_teachers * 3)]
         for idx, (target_feature, student_feature) in enumerate(
             zip(source_target_features, student_features, strict=False),
         ):
-            output = 1 - F.cosine_similarity(target_feature, student_feature)
+            output = 1 - functional.cosine_similarity(target_feature, student_feature)
             output_list[idx].append(output)
 
         anomaly_score, anomaly_map = weighted_decision_mechanism(
@@ -69,8 +94,8 @@ class UniNet(AnomalibModule):
         Returns:
             tuple[torch.optim.Optimizer, torch.optim.Optimizer]: Optimizers for student and target teacher.
         """
-        # TODO: refactor this
-        return [
+        # TODO(ashwinvaidya17): refactor this
+        return (
             torch.optim.AdamW(
                 self.model.student.parameters() + self.model.bottleneck.parameters() + self.dfs.parameters(),
                 lr=5e-3,
@@ -78,7 +103,23 @@ class UniNet(AnomalibModule):
                 weight_decay=1e-5,
             ),
             torch.optim.AdamW(self.target_teacher.parameters(), lr=1e-6, betas=(0.9, 0.999), weight_decay=1e-5),
-        ]
+        )
+
+    @staticmethod
+    def _get_teacher(backbone: str) -> nn.Module:
+        """Get the teacher model.
+
+        In the original code, the teacher resnet model is used to extract features from the input image.
+        We can just use the feature extractor from torchvision to extract the features.
+
+        Args:
+            backbone (str): The backbone model to use.
+
+        Returns:
+            nn.Module: The teacher model.
+        """
+        model = getattr(torchvision.models, backbone)(pretrained=True)
+        return create_feature_extractor(model, return_nodes=["layer1", "layer2", "layer3"])
 
     def _feature_selection(
         self,
@@ -105,7 +146,7 @@ class UniNet(AnomalibModule):
         student_features: list[torch.Tensor],
         teacher_features: list[torch.Tensor],
         predictions: torch.Tensor | None = None,
-        label: int | None = None,
+        label: float | None = None,
         mask: torch.Tensor | None = None,
         stop_gradient: bool = False,
     ) -> torch.Tensor:
@@ -115,11 +156,11 @@ class UniNet(AnomalibModule):
             student_features (list[torch.Tensor]): Student features.
             teacher_features (list[torch.Tensor]): Teacher features.
             predictions (torch.Tensor): Predictions.
-            label (int | None): Label for the prediction.
+            label (float | None): Label for the prediction.
             mask (torch.Tensor | None): Mask for the prediction.
             stop_gradient (bool): Whether to stop the gradient into teacher features.
         """
-        # TODO: figure out the dimension of predictions and update the docstring
+        # TODO(ashwinvaidya17): figure out the dimension of predictions and update the docstring
         if mask is not None:
             mask_ = mask
         else:
@@ -128,6 +169,6 @@ class UniNet(AnomalibModule):
 
         loss = self.loss(student_features, teacher_features, mask=mask_, stop_gradient=stop_gradient)
         if predictions is not None and label is not None:
-            loss += self.bce_loss(predictions[0], label.float()) + self.bce_loss(predictions[1], label.float())
+            loss += self.bce_loss(predictions[0], label) + self.bce_loss(predictions[1], label)
 
         return loss

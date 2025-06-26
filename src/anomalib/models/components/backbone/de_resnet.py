@@ -1,6 +1,6 @@
-"""PyTorch model defining the decoder network for Reverse Distillation.
+"""PyTorch model defining the decoder network for Reverse Distillation and UniNet.
 
-This module implements the decoder network used in the Reverse Distillation model
+This module implements the decoder network used in the Reverse Distillation and UniNet models
 architecture. The decoder reconstructs features from the bottleneck representation
 back to the original feature space.
 
@@ -10,7 +10,7 @@ The module contains:
 - Full decoder network architecture
 
 Example:
-    >>> from anomalib.models.image.reverse_distillation.components.de_resnet import (
+    >>> from anomalib.models.components.backbone.de_resnet import (
     ...     get_decoder
     ... )
     >>> decoder = get_decoder()
@@ -18,9 +18,7 @@ Example:
     >>> reconstructed = decoder(features)
 
 See Also:
-    - :class:`anomalib.models.image.reverse_distillation.torch_model.ReverseDistillationModel`:
-        Main model implementation using this decoder
-    - :class:`anomalib.models.image.reverse_distillation.components.DecoderBasicBlock`:
+    - :class:`anomalib.models.components.backbone.de_resnet.DecoderBasicBlock`:
         Basic building block for the decoder network
 """
 

@@ -10,8 +10,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import torch
-import torch.nn.functional as F
 from torch import nn
+from torch.nn import functional
 
 
 class DomainRelatedFeatureSelection(nn.Module):
@@ -65,7 +65,7 @@ class DomainRelatedFeatureSelection(nn.Module):
         Returns:
             list[torch.Tensor]: Domain related features.
         """
-        # TODO: maybe move learnable to constructor
+        # TODO(ashwinvaidya17): maybe move learnable to constructor
         features = []
         for idx, (source_feature, target_feature) in enumerate(zip(source_features, target_features, strict=True)):
             theta = 1
@@ -82,7 +82,7 @@ class DomainRelatedFeatureSelection(nn.Module):
                 if maximize:
                     prior_flat_ = prior_flat.max(dim=-1, keepdim=True)[0]
                     prior_flat = prior_flat - prior_flat_
-                weights = F.softmax(prior_flat, dim=-1)
+                weights = functional.softmax(prior_flat, dim=-1)
                 weights = weights.view(b, c, h, w)
 
                 global_inf = target_feature.mean(dim=(-2, -1), keepdim=True)
@@ -99,7 +99,9 @@ class DomainRelatedFeatureSelection(nn.Module):
 
 
 def domain_related_feature_selection(
-    source_features: list[torch.Tensor], target_features: list[torch.Tensor], maximize: bool = True
+    source_features: list[torch.Tensor],
+    target_features: list[torch.Tensor],
+    maximize: bool = True,
 ) -> list[torch.Tensor]:
     """Domain related feature selection.
 
@@ -117,7 +119,7 @@ def domain_related_feature_selection(
         if maximize:
             prior_flat_ = prior_flat.max(dim=-1, keepdim=True)[0]
             prior_flat = prior_flat - prior_flat_
-        weights = F.softmax(prior_flat, dim=-1)
+        weights = functional.softmax(prior_flat, dim=-1)
         weights = weights.view(b, c, h, w)
 
         global_inf = target_feature.mean(dim=(-2, -1), keepdim=True)
