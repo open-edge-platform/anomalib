@@ -26,6 +26,7 @@ Example:
 # SPDX-License-Identifier: Apache-2.0
 
 from dataclasses import dataclass
+from typing import ClassVar
 
 from anomalib.data.dataclasses.generic import BatchIterateMixin, _ImageInputFields
 from anomalib.data.dataclasses.numpy.base import NumpyBatch, NumpyItem
@@ -97,4 +98,4 @@ class NumpyImageBatch(
         (32, 224, 224, 3)
     """
 
-    item_class = NumpyImageItem
+    item_class: ClassVar[type[NumpyImageItem]] = NumpyImageItem

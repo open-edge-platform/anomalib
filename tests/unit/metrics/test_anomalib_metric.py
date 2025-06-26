@@ -52,7 +52,7 @@ class TestStrictMode:
 
         metric = metric_cls(fields=["non_existent_field"])
         batch = ImageBatch(image=torch.rand(4, 3, 10, 10))  # batch without field
-        with pytest.raises(ValueError, match="instance is missing required field"):
+        with pytest.raises(ValueError, match=r"instance is missing required field"):
             metric.update(batch)
         assert metric._update_count == 0  # noqa: SLF001
         assert metric.update_called is False
@@ -64,7 +64,7 @@ class TestStrictMode:
 
         metric = metric_cls(fields=["pred_score"])
         batch = ImageBatch(image=torch.rand(4, 3, 10, 10), pred_score=None)  # batch where field is None
-        with pytest.raises(ValueError, match="instance does not have a value for field with name"):
+        with pytest.raises(ValueError, match=r"instance does not have a value for field with name"):
             metric.update(batch)
         assert metric._update_count == 0  # noqa: SLF001
         assert metric.update_called is False

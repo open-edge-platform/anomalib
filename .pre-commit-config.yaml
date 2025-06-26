@@ -1,5 +1,5 @@
 default_language_version:
-  node: 20.19.3
+  node: 24.2.0
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -16,8 +16,7 @@ repos:
   - repo: https://github.com/commitizen-tools/commitizen
     rev: v4.8.3
     hooks:
-      - id: commitizen
-        stages: [commit-msg]
+      # Only enforce branch naming, not commit messages (since we validate PR titles instead)
       - id: commitizen-branch
         stages: [pre-push]
 

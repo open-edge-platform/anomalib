@@ -51,7 +51,7 @@ class TestDynamicBufferMixin:
     @staticmethod
     def test_get_tensor_attribute_non_tensor(module: DynamicBufferModule) -> None:
         """Test the get_tensor_attribute method with a non-tensor field."""
-        with pytest.raises(ValueError, match="Attribute with name 'non_tensor_attribute' is not a torch Tensor"):
+        with pytest.raises(ValueError, match=r"Attribute with name 'non_tensor_attribute' is not a torch Tensor"):
             module.get_tensor_attribute("non_tensor_attribute")
 
     @staticmethod

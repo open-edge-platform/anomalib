@@ -43,7 +43,7 @@ class TestVisualizer:
         dataset_path: Path,
     ) -> None:
         """Test combination of model/visualizer/mode on only 1 epoch as a sanity check before merge."""
-        _ckpt_path: Path = ckpt_path("Padim")
+        checkpoint_path: Path = ckpt_path("Padim")
         model = Padim(evaluator=False)
         engine = Engine(
             default_root_dir=project_path,
@@ -51,8 +51,8 @@ class TestVisualizer:
             devices=1,
         )
         datamodule = MVTecAD(root=dataset_path / "mvtecad", category="dummy")
-        engine.test(model=model, datamodule=datamodule, ckpt_path=str(_ckpt_path))
+        engine.test(model=model, datamodule=datamodule, ckpt_path=str(checkpoint_path))
 
         dataset = PredictDataset(path=dataset_path / "mvtecad" / "dummy" / "test")
-        datamodule = DataLoader(dataset, collate_fn=ImageBatch.collate)
-        engine.predict(model=model, dataloaders=datamodule, ckpt_path=str(_ckpt_path))
+        datamodule = DataLoader(dataset, collate_fn=ImageBatch.collate, pin_memory=True)
+        engine.predict(model=model, dataloaders=datamodule, ckpt_path=str(checkpoint_path))

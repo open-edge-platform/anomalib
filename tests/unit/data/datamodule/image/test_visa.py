@@ -19,7 +19,7 @@ class TestVisa(_TestAnomalibImageDatamodule):
     @staticmethod
     def datamodule(dataset_path: Path) -> Visa:
         """Create and return a Avenue datamodule."""
-        _datamodule = Visa(
+        datamodule_ = Visa(
             root=dataset_path,
             category="dummy",
             train_batch_size=4,
@@ -27,10 +27,10 @@ class TestVisa(_TestAnomalibImageDatamodule):
             num_workers=0,
             augmentations=Resize((256, 256)),
         )
-        _datamodule.prepare_data()
-        _datamodule.setup()
+        datamodule_.prepare_data()
+        datamodule_.setup()
 
-        return _datamodule
+        return datamodule_
 
     @pytest.fixture()
     @staticmethod
