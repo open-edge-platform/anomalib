@@ -1,8 +1,8 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # SETUP CONFIGURATION.                                                        #
 [build-system]
-requires = ["setuptools>=64.0.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "anomalib"
@@ -98,8 +98,15 @@ dev = ["anomalib[full,docs,test]"]
 [project.scripts]
 anomalib = "anomalib.cli.cli:main"
 
-[tool.setuptools.dynamic]
-version = { attr = "anomalib.__version__" }
+[tool.hatch.version]
+path = "src/anomalib/__init__.py"
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# UV CONFIGURATION                                                            #
+[tool.uv]
+# UV workspace configuration
+package = true
+managed = true
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # RUFF CONFIGURATION                                                          #
