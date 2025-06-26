@@ -89,7 +89,7 @@ uv add anomalib
 # CUDA 12.8 support (Linux/Windows with NVIDIA GPU)
 uv add anomalib --group torch-cuda128
 
-# CUDA 12.6 support (Linux/Windows with NVIDIA GPU) 
+# CUDA 12.6 support (Linux/Windows with NVIDIA GPU)
 uv add anomalib --group torch-cuda126
 
 # CUDA 11.8 support (Linux/Windows with NVIDIA GPU)
@@ -111,7 +111,7 @@ Anomalib uses optional dependencies to keep installations lightweight. Install o
 # Flow-based models (cflow, csflow, fastflow, uflow)
 uv add anomalib[flow]
 
-# Feature extraction models (dfm, dfkde, fastflow, uflow)  
+# Feature extraction models (dfm, dfkde, fastflow, uflow)
 uv add anomalib[feature]
 
 # Vision-language models (winclip)
