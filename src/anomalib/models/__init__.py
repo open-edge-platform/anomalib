@@ -267,10 +267,10 @@ def get_model(model: DictConfig | str | dict | Namespace, *args, **kwdargs) -> A
         ...     "init_args": {"input_size": (100, 100)}
         ... })
     """
-    _model: AnomalibModule
+    model_: AnomalibModule
     if isinstance(model, str):
-        _model_class = _get_model_class_by_name(model)
-        _model = _model_class(*args, **kwdargs)
+        model_class_ = _get_model_class_by_name(model)
+        model_ = model_class_(*args, **kwdargs)
     elif isinstance(model, DictConfig | Namespace | dict):
         if isinstance(model, dict):
             model = OmegaConf.create(model)
@@ -301,7 +301,7 @@ def get_model(model: DictConfig | str | dict | Namespace, *args, **kwdargs) -> A
             init_args = model.get("init_args", {})
             if len(kwdargs) > 0:
                 init_args.update(kwdargs)
-            _model = model_class(*args, **init_args)
+            model_ = model_class(*args, **init_args)
         except AttributeError as exception:
             logger.exception(
                 f"Could not find the model {model.class_path}. Available models are {list_models()}",
@@ -310,4 +310,4 @@ def get_model(model: DictConfig | str | dict | Namespace, *args, **kwdargs) -> A
     else:
         logger.error(f"Unsupported type {type(model)} for model configuration.")
         raise TypeError
-    return _model
+    return model_

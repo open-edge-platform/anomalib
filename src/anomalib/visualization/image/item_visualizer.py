@@ -369,8 +369,6 @@ def visualize_image_item(
                 if overlay_value is not None:
                     overlay_image = get_visualize_function(overlay)(overlay_value, **overlay_config)
                     base_image = overlay_images(base_image, overlay_image, alpha=overlay_config.get("alpha", 0.5))
-                else:
-                    logger.warning(f"Field '{overlay}' is None in item. Skipping visualization.")
 
             if valid_overlays and add_text:
                 title = f"{convert_to_title_case(base)} + {'+'.join(convert_to_title_case(o) for o in valid_overlays)}"

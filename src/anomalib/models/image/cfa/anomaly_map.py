@@ -68,7 +68,7 @@ class AnomalyMapGenerator(nn.Module):
                 ``(batch_size, 1, height, width)``.
         """
         distance = torch.sqrt(distance)
-        distance = distance.topk(self.num_nearest_neighbors, largest=False).values  # noqa: PD011
+        distance = distance.topk(self.num_nearest_neighbors, largest=False).values
         distance = (F.softmin(distance, dim=-1)[:, :, 0]) * distance[:, :, 0]
         distance = distance.unsqueeze(-1)
 
@@ -125,7 +125,7 @@ class AnomalyMapGenerator(nn.Module):
 
         distance: torch.Tensor = kwargs["distance"]
         scale: tuple[int, int] = kwargs["scale"]
-        image_size: tuple[int, int] | torch.Size | None = kwargs.get("image_size", None)
+        image_size: tuple[int, int] | torch.Size | None = kwargs.get("image_size")
 
         score = self.compute_score(distance=distance, scale=scale)
         return self.compute_anomaly_map(score, image_size=image_size)

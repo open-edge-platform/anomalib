@@ -162,10 +162,11 @@ def add_text_to_image(
         size = dynamic_font_size(image.size)
 
     try:
-        image_font = ImageFont.truetype(font, size) if font else ImageFont.load_default()
+        # Pillow >= 10.1.0 required for size parameter support
+        image_font = ImageFont.truetype(font, size) if font else ImageFont.load_default(size=size)
     except OSError:
         logger.warning(f"Failed to load font '{font}'. Using default font.")
-        image_font = ImageFont.load_default()
+        image_font = ImageFont.load_default(size=size)
 
     # Calculate text size and position
     text_bbox = draw.textbbox(position, text, font=image_font)

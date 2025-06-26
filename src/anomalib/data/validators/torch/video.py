@@ -334,18 +334,17 @@ class VideoValidator:
         if pred_score is None:
             return torch.amax(anomaly_map, dim=(-3, -2, -1)) if anomaly_map is not None else None
 
-        if not isinstance(pred_score, torch.Tensor):
-            try:
-                pred_score = torch.tensor(pred_score)
-            except Exception as e:
-                msg = "Failed to convert pred_score to a torch.Tensor."
-                raise ValueError(msg) from e
-        pred_score = pred_score.squeeze()
-        if pred_score.ndim != 0:
-            msg = f"Predicted score must be a scalar, got shape {pred_score.shape}."
+        try:
+            tensor_score = torch.tensor(pred_score) if not isinstance(pred_score, torch.Tensor) else pred_score
+        except Exception as e:
+            msg = "Failed to convert pred_score to a torch.Tensor."
+            raise ValueError(msg) from e
+        tensor_score = tensor_score.squeeze()
+        if tensor_score.ndim != 0:
+            msg = f"Predicted score must be a scalar, got shape {tensor_score.shape}."
             raise ValueError(msg)
 
-        return pred_score.to(torch.float32)
+        return tensor_score.to(torch.float32)
 
     @staticmethod
     def validate_pred_mask(pred_mask: torch.Tensor | None) -> Mask | None:
@@ -533,7 +532,7 @@ class VideoValidator:
         return frames
 
     @staticmethod
-    def validate_last_frame(last_frame: torch.Tensor | int | float | None) -> torch.Tensor | int | None:
+    def validate_last_frame(last_frame: torch.Tensor | int | float | None) -> int | None:
         """Validate last frame index.
 
         Args:
@@ -541,7 +540,7 @@ class VideoValidator:
                 ``None``.
 
         Returns:
-            torch.Tensor | int | None: Validated last frame index or ``None``.
+            int | None: Validated last frame index or ``None``.
 
         Raises:
             TypeError: If ``last_frame`` is not a tensor, int, or float.
@@ -564,27 +563,23 @@ class VideoValidator:
             >>> tensor_frame = torch.tensor(10.3)
             >>> validated = VideoValidator.validate_last_frame(tensor_frame)
             >>> print(validated)
-            tensor(10)
+            10
         """
         if last_frame is None:
             return None
-        if isinstance(last_frame, int | float):
-            last_frame = int(last_frame)
-            if last_frame < 0:
-                msg = f"Last frame index must be non-negative, got {last_frame}."
-                raise ValueError(msg)
-            return last_frame
+
         if isinstance(last_frame, torch.Tensor):
             if last_frame.numel() != 1:
                 msg = f"Last frame must be a scalar tensor, got shape {last_frame.shape}."
                 raise ValueError(msg)
-            last_frame = last_frame.int()
-            if last_frame.item() < 0:
-                msg = f"Last frame index must be non-negative, got {last_frame.item()}."
-                raise ValueError(msg)
-            return last_frame
-        msg = f"Last frame must be an int, float, or a torch.Tensor, got {type(last_frame)}."
-        raise TypeError(msg)
+            last_frame = last_frame.item()
+
+        last_frame_int = int(last_frame)
+        if last_frame_int < 0:
+            msg = f"Last frame index must be non-negative, got {last_frame_int}."
+            raise ValueError(msg)
+
+        return last_frame_int
 
     @staticmethod
     def validate_explanation(explanation: str | None) -> str | None:
@@ -851,17 +846,13 @@ class VideoBatchValidator:
         if pred_score is None:
             return torch.amax(anomaly_map, dim=(-3, -2, -1)) if anomaly_map is not None else None
 
-        if not isinstance(pred_score, torch.Tensor):
-            try:
-                pred_score = torch.tensor(pred_score)
-            except Exception as e:
-                msg = "Failed to convert pred_score to a torch.Tensor."
-                raise ValueError(msg) from e
-        if pred_score.ndim != 1:
-            msg = f"Predicted scores must be a 1D tensor, got shape {pred_score.shape}."
-            raise ValueError(msg)
+        try:
+            tensor_score = torch.tensor(pred_score) if not isinstance(pred_score, torch.Tensor) else pred_score
+        except Exception as e:
+            msg = "Failed to convert pred_score to a torch.Tensor."
+            raise ValueError(msg) from e
 
-        return pred_score.to(torch.float32)
+        return tensor_score.to(torch.float32)
 
     @staticmethod
     def validate_pred_mask(pred_mask: torch.Tensor | None) -> Mask | None:

@@ -19,7 +19,7 @@ class TestMVTec3D(_TestAnomalibDepthDatamodule):
     @staticmethod
     def datamodule(dataset_path: Path) -> MVTec3D:
         """Create and return a Folder 3D datamodule."""
-        _datamodule = MVTec3D(
+        datamodule_ = MVTec3D(
             root=dataset_path / "mvtec_3d",
             category="dummy",
             train_batch_size=4,
@@ -27,10 +27,10 @@ class TestMVTec3D(_TestAnomalibDepthDatamodule):
             num_workers=0,
             augmentations=Resize((256, 256)),
         )
-        _datamodule.prepare_data()
-        _datamodule.setup()
+        datamodule_.prepare_data()
+        datamodule_.setup()
 
-        return _datamodule
+        return datamodule_
 
     @pytest.fixture()
     @staticmethod

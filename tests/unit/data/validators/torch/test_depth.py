@@ -28,17 +28,17 @@ class TestDepthValidator:
 
     def test_validate_image_invalid_type(self) -> None:
         """Test validation of a depth image with invalid type."""
-        with pytest.raises(TypeError, match="Image must be a torch.Tensor"):
+        with pytest.raises(TypeError, match=r"Image must be a torch.Tensor"):
             self.validator.validate_image(np.random.default_rng().random((3, 224, 224)))
 
     def test_validate_image_invalid_dimensions(self) -> None:
         """Test validation of a depth image with invalid dimensions."""
-        with pytest.raises(ValueError, match="Image must have shape"):
+        with pytest.raises(ValueError, match=r"Image must have shape"):
             self.validator.validate_image(torch.rand(224, 224))
 
     def test_validate_image_invalid_channels(self) -> None:
         """Test validation of a depth image with invalid number of channels."""
-        with pytest.raises(ValueError, match="Image must have 3 channels"):
+        with pytest.raises(ValueError, match=r"Image must have 3 channels"):
             self.validator.validate_image(torch.rand(1, 224, 224))
 
     def test_validate_gt_label_valid(self) -> None:
@@ -55,7 +55,7 @@ class TestDepthValidator:
 
     def test_validate_gt_label_invalid_type(self) -> None:
         """Test validation of a ground truth label with invalid type."""
-        with pytest.raises(TypeError, match="Ground truth label must be an integer or a torch.Tensor"):
+        with pytest.raises(TypeError, match=r"Ground truth label must be an integer or a torch.Tensor"):
             self.validator.validate_gt_label("1")
 
     def test_validate_gt_mask_valid(self) -> None:
@@ -72,12 +72,12 @@ class TestDepthValidator:
 
     def test_validate_gt_mask_invalid_type(self) -> None:
         """Test validation of a ground truth mask with invalid type."""
-        with pytest.raises(TypeError, match="Mask must be a torch.Tensor"):
+        with pytest.raises(TypeError, match=r"Mask must be a torch.Tensor"):
             self.validator.validate_gt_mask(np.random.default_rng().integers(0, 2, (224, 224)))
 
     def test_validate_gt_mask_invalid_shape(self) -> None:
         """Test validation of a ground truth mask with invalid shape."""
-        with pytest.raises(ValueError, match="Mask must have 1 channel, got 2."):
+        with pytest.raises(ValueError, match=r"Mask must have 1 channel, got 2."):
             self.validator.validate_gt_mask(torch.randint(0, 2, (2, 224, 224)))
 
     def test_validate_anomaly_map_valid(self) -> None:
@@ -94,12 +94,12 @@ class TestDepthValidator:
 
     def test_validate_anomaly_map_invalid_type(self) -> None:
         """Test validation of an anomaly map with invalid type."""
-        with pytest.raises(TypeError, match="Anomaly map must be a torch.Tensor"):
+        with pytest.raises(TypeError, match=r"Anomaly map must be a torch.Tensor"):
             self.validator.validate_anomaly_map(np.random.default_rng().random((224, 224)))
 
     def test_validate_anomaly_map_invalid_shape(self) -> None:
         """Test validation of an anomaly map with invalid shape."""
-        with pytest.raises(ValueError, match="Anomaly map with 3 dimensions must have 1 channel, got 2."):
+        with pytest.raises(ValueError, match=r"Anomaly map with 3 dimensions must have 1 channel, got 2."):
             self.validator.validate_anomaly_map(torch.rand(2, 224, 224))
 
     def test_validate_pred_score_valid(self) -> None:
@@ -132,17 +132,17 @@ class TestDepthBatchValidator:  # noqa: PLR0904
 
     def test_validate_image_invalid_type(self) -> None:
         """Test validation of a depth image batch with invalid type."""
-        with pytest.raises(TypeError, match="Image must be a torch.Tensor"):
+        with pytest.raises(TypeError, match=r"Image must be a torch.Tensor"):
             self.validator.validate_image(np.random.default_rng().random((32, 3, 224, 224)))
 
     def test_validate_image_invalid_dimensions(self) -> None:
         """Test validation of a depth image batch with invalid dimensions."""
-        with pytest.raises(ValueError, match="Image must have shape"):
+        with pytest.raises(ValueError, match=r"Image must have shape"):
             self.validator.validate_image(torch.rand(32, 224, 224))
 
     def test_validate_image_invalid_channels(self) -> None:
         """Test validation of a depth image batch with invalid number of channels."""
-        with pytest.raises(ValueError, match="Image must have 3 channels"):
+        with pytest.raises(ValueError, match=r"Image must have 3 channels"):
             self.validator.validate_image(torch.rand(32, 1, 224, 224))
 
     def test_validate_gt_label_valid(self) -> None:
@@ -159,12 +159,12 @@ class TestDepthBatchValidator:  # noqa: PLR0904
 
     def test_validate_gt_label_invalid_type(self) -> None:
         """Test validation of ground truth labels with invalid type."""
-        with pytest.raises(ValueError, match="too many dimensions 'str'"):
+        with pytest.raises(ValueError, match=r"too many dimensions 'str'"):
             self.validator.validate_gt_label(["0", "1"])
 
     def test_validate_gt_label_invalid_dimensions(self) -> None:
         """Test validation of ground truth labels with invalid dimensions."""
-        with pytest.raises(ValueError, match="Ground truth label must be a 1-dimensional vector"):
+        with pytest.raises(ValueError, match=r"Ground truth label must be a 1-dimensional vector"):
             self.validator.validate_gt_label(torch.tensor([[0, 1], [1, 0]]))
 
     def test_validate_gt_mask_valid(self) -> None:
@@ -181,12 +181,12 @@ class TestDepthBatchValidator:  # noqa: PLR0904
 
     def test_validate_gt_mask_invalid_type(self) -> None:
         """Test validation of ground truth masks with invalid type."""
-        with pytest.raises(TypeError, match="Ground truth mask must be a torch.Tensor"):
+        with pytest.raises(TypeError, match=r"Ground truth mask must be a torch.Tensor"):
             self.validator.validate_gt_mask([torch.zeros(224, 224)])
 
     def test_validate_gt_mask_invalid_dimensions(self) -> None:
         """Test validation of ground truth masks with invalid dimensions."""
-        with pytest.raises(ValueError, match="Ground truth mask must have 1 channel, got 2."):
+        with pytest.raises(ValueError, match=r"Ground truth mask must have 1 channel, got 2."):
             self.validator.validate_gt_mask(torch.zeros(4, 2, 224, 224))
 
     def test_validate_anomaly_map_valid(self) -> None:
@@ -203,7 +203,7 @@ class TestDepthBatchValidator:  # noqa: PLR0904
 
     def test_validate_anomaly_map_invalid_shape(self) -> None:
         """Test validation of an anomaly map batch with invalid shape."""
-        with pytest.raises(ValueError, match="Anomaly map must have 1 channel, got 2."):
+        with pytest.raises(ValueError, match=r"Anomaly map must have 1 channel, got 2."):
             self.validator.validate_anomaly_map(torch.rand(4, 2, 224, 224))
 
     def test_validate_pred_score_valid(self) -> None:
@@ -229,10 +229,10 @@ class TestDepthBatchValidator:  # noqa: PLR0904
 
     def test_validate_pred_label_invalid_type(self) -> None:
         """Test validation of prediction labels with invalid type."""
-        with pytest.raises(TypeError, match="Predicted label must be a torch.Tensor"):
+        with pytest.raises(TypeError, match=r"Predicted label must be a torch.Tensor"):
             self.validator.validate_pred_label([1, 0, 1, 1])
 
     def test_validate_pred_label_invalid_shape(self) -> None:
         """Test validation of prediction labels with invalid shape."""
-        with pytest.raises(ValueError, match="Predicted label must be 1-dimensional or 2-dimensional"):
+        with pytest.raises(ValueError, match=r"Predicted label must be 1-dimensional or 2-dimensional"):
             self.validator.validate_pred_label(torch.tensor([[[1]], [[0]], [[1]], [[1]]]))

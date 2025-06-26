@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from dataclasses import dataclass
+from typing import ClassVar
 
 import torch
 from torchvision.tv_tensors import Image, Mask
@@ -23,7 +24,7 @@ class DummyDatasetItem:
 class DummyBatch(BatchIterateMixin[DummyDatasetItem]):
     """Dummy batch with image and mask."""
 
-    item_class = DummyDatasetItem
+    item_class: ClassVar[type[DummyDatasetItem]] = DummyDatasetItem
     image: Image
     mask: Mask
 

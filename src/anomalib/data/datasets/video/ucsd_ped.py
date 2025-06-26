@@ -161,7 +161,7 @@ class UCSDpedClipsIndexer(ClipsIndexer):
         self.video_pts = []
         for video_path in self.video_paths:
             n_frames = len(list(Path(video_path).glob("*.tif")))
-            self.video_pts.append(torch.Tensor(range(n_frames)))
+            self.video_pts.append(torch.arange(n_frames))
 
         self.video_fps = [None] * len(self.video_paths)  # fps information cannot be inferred from folder structure
 
@@ -232,7 +232,7 @@ def make_ucsd_dataset(path: Path, split: str | Split | None = None) -> DataFrame
     folders = [filename for filename in sorted(path.glob("*/*")) if filename.is_dir()]
     folders = [folder for folder in folders if list(folder.glob("*.tif"))]
 
-    samples_list = [(str(path),) + folder.parts[-2:] for folder in folders]
+    samples_list = [(str(path), *folder.parts[-2:]) for folder in folders]
     samples = DataFrame(samples_list, columns=["root", "folder", "image_path"])
 
     samples.loc[samples.folder == "Test", "mask_path"] = samples.image_path.str.split(".").str[0] + "_gt"

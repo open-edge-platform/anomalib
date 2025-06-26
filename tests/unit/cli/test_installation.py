@@ -66,7 +66,7 @@ def test_parse_requirements() -> None:
     requirements = [
         Requirement.parse("onnx>=1.8.1"),
     ]
-    with pytest.raises(ValueError, match="Could not find torch requirement."):
+    with pytest.raises(ValueError, match=r"Could not find torch requirement."):
         parse_requirements(requirements)
 
 
@@ -114,7 +114,7 @@ def test_get_hardware_suffix(mocker: MockerFixture) -> None:
     mocker.patch("anomalib.cli.utils.installation.get_cuda_version", return_value="12.1")
     assert get_hardware_suffix(with_available_torch_build=True, torch_version="2.0.1") == "cu118"
 
-    with pytest.raises(ValueError, match="``torch_version`` must be provided"):
+    with pytest.raises(ValueError, match=r"``torch_version`` must be provided"):
         get_hardware_suffix(with_available_torch_build=True)
 
     mocker.patch("anomalib.cli.utils.installation.get_cuda_version", return_value=None)
@@ -166,5 +166,5 @@ def test_get_torch_install_args(mocker: MockerFixture) -> None:
     assert install_args == ["torch==2.0.1"]
 
     mocker.patch("anomalib.cli.utils.installation.platform.system", return_value="Unknown")
-    with pytest.raises(RuntimeError, match="Unsupported OS: Unknown"):
+    with pytest.raises(RuntimeError, match=r"Unsupported OS: Unknown"):
         get_torch_install_args(requirement)

@@ -12,7 +12,7 @@ providing concrete implementations that use PyTorch tensors for tensor-like data
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass, fields
 from typing import ClassVar, Generic, NamedTuple, TypeVar
 
 import torch
@@ -90,13 +90,16 @@ class ToNumpyMixin(Generic[NumpyT]):
         Returns:
             NumpyT: The converted numpy batch object.
         """
-        batch_dict = asdict(self)
-        for key, value in batch_dict.items():
+        batch_dict = {}
+        for f in fields(self):
+            value = getattr(self, f.name)
             if isinstance(value, torch.Tensor):
-                batch_dict[key] = value.cpu().numpy()
-        return self.numpy_class(
-            **batch_dict,
-        )
+                batch_dict[f.name] = value.detach().cpu().numpy()
+            elif hasattr(value, "to_numpy"):
+                batch_dict[f.name] = value.to_numpy()
+            else:
+                batch_dict[f.name] = value
+        return self.numpy_class(**batch_dict)
 
 
 @dataclass

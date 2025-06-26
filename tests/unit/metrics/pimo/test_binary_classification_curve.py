@@ -7,8 +7,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-# ruff: noqa: SLF001, PT011
-
 import pytest
 import torch
 

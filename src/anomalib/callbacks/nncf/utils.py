@@ -357,9 +357,9 @@ def _merge_dicts_and_lists_b_into_a(
     """
 
     def _err_str(_a: dict | list, _b: dict | list, _key: int | str | None = None) -> str:
-        _key_str = "of whole structures" if _key is None else f"during merging for key=`{_key}`"
+        key_str = "of whole structures" if _key is None else f"during merging for key=`{_key}`"
         return (
-            f"Error in merging parts of config: different types {_key_str}, type(a) = {type(_a)}, type(b) = {type(_b)}"
+            f"Error in merging parts of config: different types {key_str}, type(a) = {type(_a)}, type(b) = {type(_b)}"
         )
 
     if not (isinstance(a, dict | list)):
