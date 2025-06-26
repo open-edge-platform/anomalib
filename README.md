@@ -65,16 +65,82 @@ We recommend using [uv](https://docs.astral.sh/uv/) for fast and reliable packag
 
 ## 🚀 Recommended: Install with uv
 
+### Basic Installation
+
 ```bash
 # Install uv if you haven't already
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Basic installation from PyPI
+# Basic installation from PyPI (includes CPU PyTorch by default)
 uv add anomalib
 
-# Full installation with all dependencies
+# Full installation with all model dependencies
 uv add anomalib[full]
 ```
+
+### PyTorch Installation with Hardware Acceleration
+
+Anomalib supports multiple PyTorch configurations for different hardware:
+
+```bash
+# Default: CPU PyTorch (works on all platforms)
+uv add anomalib
+
+# CUDA 12.8 support (Linux/Windows with NVIDIA GPU)
+uv add anomalib --group torch-cuda128
+
+# CUDA 12.6 support (Linux/Windows with NVIDIA GPU) 
+uv add anomalib --group torch-cuda126
+
+# CUDA 11.8 support (Linux/Windows with NVIDIA GPU)
+uv add anomalib --group torch-cuda118
+
+# Intel XPU support (Linux with Intel GPU)
+uv add anomalib --group torch-xpu
+
+# Combine with model dependencies
+uv add anomalib[flow,feature] --group torch-cuda128
+```
+
+<details>
+<summary><strong>📋 Model-Specific Dependencies</strong></summary>
+
+Anomalib uses optional dependencies to keep installations lightweight. Install only what you need:
+
+```bash
+# Flow-based models (cflow, csflow, fastflow, uflow)
+uv add anomalib[flow]
+
+# Feature extraction models (dfm, dfkde, fastflow, uflow)  
+uv add anomalib[feature]
+
+# Vision-language models (winclip)
+uv add anomalib[vlm_clip]
+
+# Statistical models (cfa, random projection)
+uv add anomalib[stats]
+
+# Image augmentation models (draem, dsr)
+uv add anomalib[augment]
+
+# Tensor manipulation utilities (cflow, cfa)
+uv add anomalib[tensor]
+
+# Utility libraries (opencv, pandas, matplotlib)
+uv add anomalib[utils]
+
+# All model dependencies
+uv add anomalib[full]
+```
+
+If you encounter import errors when using specific models, install the corresponding dependency group:
+
+```bash
+# Example: Using cflow model
+uv add anomalib[flow,tensor] --group torch-cuda128
+```
+
+</details>
 
 ## 🔧 Install from Source with uv
 
@@ -84,11 +150,17 @@ For contributing or customizing the library:
 git clone https://github.com/open-edge-platform/anomalib.git
 cd anomalib
 
-# Install in development mode
+# Basic development installation (CPU PyTorch)
 uv sync
 
+# Development with CUDA support
+uv sync --group torch-cuda128
+
 # Full development installation with all dependencies
-uv sync --extra dev
+uv sync --group torch-cuda128 --extra dev
+
+# All available dependency groups
+uv sync --all-groups  # Installs everything
 ```
 
 ## 🐍 Alternative: Install with pip

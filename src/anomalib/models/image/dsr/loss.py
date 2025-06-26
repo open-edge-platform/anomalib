@@ -21,8 +21,16 @@ Example:
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from kornia.losses import FocalLoss
+from typing import TYPE_CHECKING
+
+from lightning_utilities.core.imports import module_available
 from torch import Tensor, nn
+
+if TYPE_CHECKING or module_available("kornia"):
+    from kornia.losses import FocalLoss
+else:
+    msg = "kornia is required for augmentation models. Install it with: pip install anomalib[augment]"
+    raise ImportError(msg)
 
 
 class DsrSecondStageLoss(nn.Module):

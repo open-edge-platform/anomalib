@@ -78,13 +78,19 @@ Raises:
 
 import logging
 from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import torch
-from FrEIA.modules import InvertibleModule
+from lightning_utilities.core.imports import module_available
 from scipy.stats import special_ortho_group
 from torch import nn
 from torch.nn import functional as F  # noqa: N812
+
+if TYPE_CHECKING or module_available("FrEIA"):
+    from FrEIA.modules import InvertibleModule
+else:
+    msg = "FrEIA is required for flow-based models. Install it with: pip install anomalib[flow]"
+    raise ImportError(msg)
 
 logger = logging.getLogger(__name__)
 

@@ -17,12 +17,20 @@ Example:
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import TYPE_CHECKING
+
 import torch
-from einops import rearrange
+from lightning_utilities.core.imports import module_available
 from torch import nn
 from torch.nn import functional as F  # noqa: N812
 
 from anomalib.models.components import GaussianBlur2d
+
+if TYPE_CHECKING or module_available("einops"):
+    from einops import rearrange
+else:
+    msg = "einops is required for tensor manipulation in CFA models. Install it with: pip install anomalib[tensor]"
+    raise ImportError(msg)
 
 
 class AnomalyMapGenerator(nn.Module):

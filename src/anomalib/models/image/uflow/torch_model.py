@@ -18,13 +18,21 @@ The implementation includes classes for:
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import TYPE_CHECKING
+
 import torch
-from FrEIA import framework as ff
-from FrEIA import modules as fm
+from lightning_utilities.core.imports import module_available
 from torch import nn
 
 from anomalib.data import InferenceBatch
 from anomalib.models.components.flow import AllInOneBlock
+
+if TYPE_CHECKING or module_available("FrEIA"):
+    from FrEIA import framework as ff
+    from FrEIA import modules as fm
+else:
+    msg = "FrEIA is required for flow-based models. Install it with: pip install anomalib[flow]"
+    raise ImportError(msg)
 
 from .anomaly_map import AnomalyMapGenerator
 from .feature_extraction import get_feature_extractor

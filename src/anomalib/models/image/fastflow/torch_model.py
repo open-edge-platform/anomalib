@@ -10,16 +10,29 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
-import timm
 import torch
-from FrEIA.framework import SequenceINN
-from timm.models.cait import Cait
-from timm.models.vision_transformer import VisionTransformer
+from lightning_utilities.core.imports import module_available
 from torch import nn
 
 from anomalib.data import InferenceBatch
 from anomalib.models.components.flow import AllInOneBlock
+
+if TYPE_CHECKING or module_available("timm") and module_available("FrEIA"):
+    import timm
+    from FrEIA.framework import SequenceINN
+    from timm.models.cait import Cait
+    from timm.models.vision_transformer import VisionTransformer
+else:
+    missing = []
+    if not module_available("timm"):
+        missing.append("timm (install with: pip install anomalib[feature])")
+    if not module_available("FrEIA"):
+        missing.append("FrEIA (install with: pip install anomalib[flow])")
+
+    msg = f"FastFlow requires: {', '.join(missing)}"
+    raise ImportError(msg)
 
 from .anomaly_map import AnomalyMapGenerator
 

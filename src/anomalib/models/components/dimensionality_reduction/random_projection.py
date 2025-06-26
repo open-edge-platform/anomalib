@@ -18,9 +18,17 @@ Example:
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import torch
-from sklearn.utils.random import sample_without_replacement
+from lightning_utilities.core.imports import module_available
+
+if TYPE_CHECKING or module_available("sklearn"):
+    from sklearn.utils.random import sample_without_replacement
+else:
+    msg = "sklearn is required for statistical models. Install it with: pip install anomalib[stats]"
+    raise ImportError(msg)
 
 
 class NotFittedError(ValueError, AttributeError):

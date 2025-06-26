@@ -32,9 +32,10 @@ Example:
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
-import einops
 import torch
+from lightning_utilities.core.imports import module_available
 from torch import nn
 
 from anomalib.data import InferenceBatch
@@ -42,6 +43,12 @@ from anomalib.models.components import TimmFeatureExtractor
 
 from .anomaly_map import AnomalyMapGenerator
 from .utils import cflow_head, get_logp, positional_encoding_2d
+
+if TYPE_CHECKING or module_available("einops"):
+    import einops
+else:
+    msg = "einops is required for tensor manipulation in cflow models. Install it with: pip install anomalib[tensor]"
+    raise ImportError(msg)
 
 
 class CflowModel(nn.Module):

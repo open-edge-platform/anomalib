@@ -16,12 +16,20 @@ Example:
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import TYPE_CHECKING
+
 import torch
-from kornia.filters import get_gaussian_kernel2d
-from kornia.filters.filter import _compute_padding
-from kornia.filters.kernels import normalize_kernel2d
+from lightning_utilities.core.imports import module_available
 from torch import nn
 from torch.nn import functional as F  # noqa: N812
+
+if TYPE_CHECKING or module_available("kornia"):
+    from kornia.filters import get_gaussian_kernel2d
+    from kornia.filters.filter import _compute_padding
+    from kornia.filters.kernels import normalize_kernel2d
+else:
+    msg = "kornia is required for augmentation models. Install it with: pip install anomalib[augment]"
+    raise ImportError(msg)
 
 
 def compute_kernel_size(sigma_val: float) -> int:
