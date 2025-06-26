@@ -1,12 +1,12 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """UCSD Pedestrian Data Module.
 
 This module provides a PyTorch Lightning data module for the UCSD Pedestrian dataset.
 The dataset consists of surveillance videos of pedestrians, with anomalies defined as
 non-pedestrian entities like cars, bikes, etc.
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from pathlib import Path

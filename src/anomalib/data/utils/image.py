@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Image utilities for reading, writing and processing images.
 
 This module provides various utility functions for handling images in Anomalib:
@@ -20,9 +23,6 @@ Example:
     >>> print(type(image))
     <class 'torch.Tensor'>
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 import math

@@ -1,7 +1,7 @@
-"""Lightning strategy for single XPU device."""
-
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Lightning strategy for single XPU device."""
 
 import lightning.pytorch as pl
 import torch

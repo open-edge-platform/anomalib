@@ -1,7 +1,7 @@
-"""Test if our implementation produces same result as kornia."""
-
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test if our implementation produces same result as kornia."""
 
 import pytest
 import torch

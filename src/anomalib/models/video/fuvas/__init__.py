@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """FUVAS: Few-shot Unsupervised Video Anomaly Segmentation via Low-Rank Factorization of Spatio-Temporal Features.
 
 The FUVAS model extracts deep features from video clips using a pre-trained 3D CNN/transformer
@@ -20,9 +23,6 @@ See Also:
     :class:`anomalib.models.video.fuvas.lightning_model.Fuvas`:
         Lightning implementation of the FUVAS model.
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .lightning_model import Fuvas
 

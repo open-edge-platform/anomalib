@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """FUVAS: Few-shot Unsupervised Video Anomaly Segmentation via Low-Rank Factorization of Spatio-Temporal Features.
 
 This module provides a PyTorch Lightning implementation of the FUVAS model for
@@ -24,9 +27,6 @@ See Also:
     :class:`anomalib.models.video.fuvas.torch_model.FUVASModel`:
         PyTorch implementation of the FUVAS model.
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from typing import Any

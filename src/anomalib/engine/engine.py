@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Implements custom trainer for Anomalib.
 
 This module provides the core training engine for Anomalib models. The Engine class
@@ -24,9 +27,6 @@ Example:
     >>> config = Config(path="config.yaml")
     >>> engine = Engine(config=config)  # doctest: +SKIP
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from collections.abc import Iterable

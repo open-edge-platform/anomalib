@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Helper utilities for data.
 
 This module provides various utility functions for data handling in Anomalib.
@@ -18,9 +21,6 @@ Example:
     >>> # Generate Perlin noise
     >>> noise = generate_perlin_noise(256, 256)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .boxes import boxes_to_anomaly_maps, boxes_to_masks, masks_to_boxes
 from .download import DownloadInfo, download_and_extract

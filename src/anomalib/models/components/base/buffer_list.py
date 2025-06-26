@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Buffer List Mixin.
 
 This mixin allows registering a list of tensors as buffers in a PyTorch module.
@@ -40,9 +43,6 @@ Example:
         tensor([12., 12., 12.], device='cuda:0')
     ]
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch import nn

@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Configuration utilities.
 
 This module contains utility functions for handling configuration objects, including:
@@ -6,9 +9,6 @@ This module contains utility functions for handling configuration objects, inclu
 - Converting paths and values
 - Updating configurations
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from collections.abc import Iterable, Sequence, ValuesView

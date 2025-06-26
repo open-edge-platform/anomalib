@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Logging utility functions for anomaly detection.
 
 This module provides utilities for logging and output management. The key components include:
@@ -23,9 +26,6 @@ Note:
     The logging utilities are designed to work with both standard Python logging
     and custom logging implementations.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import functools
 import io

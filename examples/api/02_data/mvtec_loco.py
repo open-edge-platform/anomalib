@@ -1,11 +1,11 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Example showing how to use the MVTec LOCO dataset with Anomalib.
 
 MVTec LOCO is a dataset for detecting logical and structural anomalies in images.
 It contains 5 categories of industrial objects with various types of defects.
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from anomalib.data import MVTecLOCO
 

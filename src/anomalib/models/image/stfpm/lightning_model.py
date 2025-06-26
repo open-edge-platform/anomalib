@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Student-Teacher Feature Pyramid Matching for anomaly detection.
 
 This module implements the STFPM model for anomaly detection as described in
@@ -27,9 +30,6 @@ See Also:
     - :class:`STFPMModel`: PyTorch implementation of the model architecture
     - :class:`STFPMLoss`: Loss function for training
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
 from typing import Any

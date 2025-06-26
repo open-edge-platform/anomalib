@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Utility functions and helpers for anomaly detection.
 
 This module provides various utility functions and helpers for:
@@ -24,9 +27,6 @@ The module is organized into submodules for different types of utilities:
     - ``visualization``: Classes for visualizing detection results
     - ``deprecation``: Utilities for managing API deprecation
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .attrs import get_nested_attr
 from .deprecation import deprecate

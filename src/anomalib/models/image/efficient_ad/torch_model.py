@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch implementation of the EfficientAd model architecture.
 
 This module contains the PyTorch implementation of the student, teacher and
@@ -27,9 +30,6 @@ See Also:
     :class:`anomalib.models.image.efficient_ad.lightning_model.EfficientAd`:
         Lightning implementation of the EfficientAd model.
 """
-
-# Copyright (C) 2023-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 import math

@@ -1,7 +1,7 @@
-"""Tests for the _update_subset_augmentations method in AnomalibDataModule."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tests for the _update_subset_augmentations method in AnomalibDataModule."""
 
 import logging
 

@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomalib Model Checkpoint Callback.
 
 This module provides the :class:`ModelCheckpoint` callback that extends PyTorch Lightning's
@@ -22,9 +25,6 @@ Note:
     This callback is particularly important for zero-shot and few-shot models where
     traditional training-based checkpoint saving strategies may not be appropriate.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from lightning.pytorch import Trainer
 from lightning.pytorch.callbacks import ModelCheckpoint as LightningCheckpoint

@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Components used within the anomaly detection models.
 
 This module provides various components that are used across different anomaly
@@ -32,9 +35,6 @@ Example:
     >>> kde = GaussianKDE()
     >>> # Use components in anomaly detection models
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .base import AnomalibModule, BufferListMixin, DynamicBufferMixin, MemoryBankMixin
 from .dimensionality_reduction import PCA, SparseRandomProjection

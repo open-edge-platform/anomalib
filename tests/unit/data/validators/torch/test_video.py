@@ -1,7 +1,7 @@
-"""Test Torch Video Validators."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test Torch Video Validators."""
 
 import numpy as np
 import pytest

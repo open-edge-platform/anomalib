@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomalib dataset base class.
 
 This module provides the base dataset class for Anomalib datasets. The dataset is based on a
@@ -25,9 +28,6 @@ Example DataFrame:
     ...     'split': ['train']
     ... })
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import copy
 import logging

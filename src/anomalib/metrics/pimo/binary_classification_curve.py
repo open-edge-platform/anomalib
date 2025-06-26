@@ -1,3 +1,10 @@
+# Original Code
+# https://github.com/jpcbertoldo/aupimo
+#
+# Modified
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Binary classification curve (numpy-only implementation).
 
 This module provides functionality to compute binary classification matrices at
@@ -22,13 +29,6 @@ Example:
     >>> curves.shape
     torch.Size([10, 10, 2, 2])
 """
-
-# Original Code
-# https://github.com/jpcbertoldo/aupimo
-#
-# Modified
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import itertools
 import logging

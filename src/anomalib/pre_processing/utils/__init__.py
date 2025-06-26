@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Utility functions for pre-processing.
 
 This module provides utility functions used by the pre-processing module for
@@ -12,6 +15,3 @@ Example:
     >>> from anomalib.pre_processing.utils import get_exportable_transform
     >>> transform = get_exportable_transform(train_transform)
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0

@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """FastFlow Algorithm Implementation.
 
 FastFlow is a fast flow-based anomaly detection model that uses normalizing flows
@@ -25,9 +28,6 @@ See Also:
     :class:`anomalib.models.image.fastflow.torch_model.FastflowModel`:
         PyTorch implementation of the FastFlow model architecture.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .lightning_model import Fastflow
 from .loss import FastflowLoss

@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """UCSD Pedestrian Dataset.
 
 This module provides PyTorch Dataset implementation for the UCSD Pedestrian
@@ -57,9 +60,6 @@ Reference:
     detection in crowded scenes. In IEEE Conference on Computer Vision and
     Pattern Recognition (CVPR), 2010.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
 from typing import TYPE_CHECKING, Any

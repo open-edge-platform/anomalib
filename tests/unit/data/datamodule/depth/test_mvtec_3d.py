@@ -1,7 +1,7 @@
-"""Unit Tests - MVTec3D Datamodule."""
-
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Unit Tests - MVTec3D Datamodule."""
 
 from pathlib import Path
 

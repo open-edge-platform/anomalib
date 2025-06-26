@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Perlin noise-based synthetic anomaly generator.
 
 This module provides functionality to generate synthetic anomalies using Perlin noise
@@ -21,9 +24,6 @@ Example:
     >>> device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     >>> noise = generate_perlin_noise(128, 128, device=device)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
 

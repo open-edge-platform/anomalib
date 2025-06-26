@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Tools for min-max normalization.
 
 This module provides utilities for min-max normalization of anomaly scores. The
@@ -20,9 +23,6 @@ Example:
 The module supports both NumPy arrays and PyTorch tensors as inputs, with
 appropriate handling for each type.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
 import torch

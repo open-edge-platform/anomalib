@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PaDiM: a Patch Distribution Modeling Framework for Anomaly Detection and Localization.
 
 This model implements the PaDiM algorithm for anomaly detection and localization.
@@ -37,9 +40,6 @@ See Also:
     - :class:`anomalib.models.image.padim.anomaly_map.AnomalyMapGenerator`:
         Anomaly map generation for PaDiM using Mahalanobis distance
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 

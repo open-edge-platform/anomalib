@@ -1,7 +1,7 @@
-"""Unit tests - Datumaro Datamodule."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Unit tests - Datumaro Datamodule."""
 
 from pathlib import Path
 

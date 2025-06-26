@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """WinCLIP Model for anomaly detection.
 
 This module implements anomaly detection using the WinCLIP model, which leverages
@@ -23,9 +26,6 @@ See Also:
     - :class:`WinClip`: Main model class for WinCLIP-based anomaly detection
     - :class:`WinClipModel`: PyTorch implementation of the WinCLIP model
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .lightning_model import WinClip
 from .torch_model import WinClipModel

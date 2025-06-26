@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Loss function for Reverse Distillation model.
 
 This module implements the loss function used to train the Reverse Distillation model
@@ -24,9 +27,6 @@ See Also:
     - :class:`ReverseDistillationLoss`: Main loss class implementation
     - :class:`ReverseDistillation`: Lightning implementation of the full model
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch import nn

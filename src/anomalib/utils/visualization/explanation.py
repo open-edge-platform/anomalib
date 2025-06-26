@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Explanation visualization generator for model interpretability.
 
 This module provides utilities for visualizing model explanations and
@@ -27,9 +30,6 @@ Note:
 The module ensures consistent visualization of model explanations across
 different interpretability approaches.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Iterator
 from pathlib import Path

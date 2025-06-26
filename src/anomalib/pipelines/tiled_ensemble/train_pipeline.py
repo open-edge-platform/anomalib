@@ -1,7 +1,7 @@
-"""Tiled ensemble training pipeline."""
-
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tiled ensemble training pipeline."""
 
 from typing import TYPE_CHECKING
 

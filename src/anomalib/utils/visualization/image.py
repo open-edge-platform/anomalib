@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Image and video visualization generator.
 
 This module provides utilities for visualizing anomaly detection results on images
@@ -42,8 +45,6 @@ Note:
     and maintains proper frame ordering in the output.
 """
 
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 from collections.abc import Iterator
 from dataclasses import InitVar, asdict, dataclass, fields
 from enum import Enum

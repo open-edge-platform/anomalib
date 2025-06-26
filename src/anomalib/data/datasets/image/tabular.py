@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Custom Tabular Dataset.
 
 This module provides a custom PyTorch Dataset implementation for loading
@@ -22,9 +25,6 @@ Example:
     ...     root="./datasets/custom",
     ... )
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
 

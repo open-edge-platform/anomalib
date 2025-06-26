@@ -1,3 +1,6 @@
+# Copyright (C) 2024-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Pre-processing module for anomaly detection pipelines.
 
 This module provides functionality for pre-processing data before model training
@@ -18,9 +21,6 @@ The pre-processor is implemented as both a :class:`torch.nn.Module` and
 :class:`lightning.pytorch.Callback` to support both inference and training
 workflows.
 """
-
-# Copyright (C) 2024-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .pre_processor import PreProcessor
 

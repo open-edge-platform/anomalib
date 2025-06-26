@@ -1,7 +1,7 @@
-"""Tests for the collating DatasetItems into Batches."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tests for the collating DatasetItems into Batches."""
 
 from dataclasses import dataclass
 from typing import ClassVar

@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Numpy-based depth dataclasses for Anomalib.
 
 This module provides numpy-based implementations of depth-specific dataclasses used in
@@ -22,9 +25,6 @@ Example:
     >>> item.depth.shape
     (224, 224)
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from dataclasses import dataclass
 

@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Hugging Face backend for Vision Language Models (VLMs).
 
 This module implements a backend for using Hugging Face models for vision-language
@@ -23,9 +26,6 @@ See Also:
     - :class:`ChatGPT`: Alternative backend using OpenAI models
     - :class:`Ollama`: Alternative backend using Ollama models
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from pathlib import Path

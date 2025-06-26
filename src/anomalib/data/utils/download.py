@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Helper functions for downloading datasets with progress bars and hash verification.
 
 This module provides utilities for:
@@ -5,9 +8,6 @@ This module provides utilities for:
 - Verifying file hashes
 - Safely extracting compressed files
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import hashlib
 import io

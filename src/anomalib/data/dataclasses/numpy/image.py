@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Numpy-based image dataclasses for Anomalib.
 
 This module provides numpy-based implementations of image-specific dataclasses used in
@@ -21,9 +24,6 @@ Example:
         >>> item.data.shape
         (224, 224, 3)
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from dataclasses import dataclass
 from typing import ClassVar

@@ -1,3 +1,9 @@
+# Copyright (c) https://github.com/vislearn/FrEIA
+# SPDX-License-Identifier: MIT
+
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 r"""All In One Block Layer.
 
 This module provides an invertible block that combines multiple flow operations:
@@ -69,12 +75,6 @@ Args:
 Raises:
     ValueError: If ``subnet_constructor`` is None or dimensions are invalid.
 """
-
-# Copyright (c) https://github.com/vislearn/FrEIA
-# SPDX-License-Identifier: MIT
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from collections.abc import Callable

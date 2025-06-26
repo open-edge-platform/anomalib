@@ -1,12 +1,12 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Torch-based dataclasses for depth data in Anomalib.
 
 This module provides PyTorch-based implementations of the generic dataclasses
 used in Anomalib for depth data. These classes are designed to work with PyTorch
 tensors for efficient data handling and processing in anomaly detection tasks.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from dataclasses import dataclass
 from typing import ClassVar

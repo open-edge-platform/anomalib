@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """CUHK Avenue Data Module.
 
 This module provides a PyTorch Lightning DataModule for the CUHK Avenue dataset. If
@@ -50,9 +53,6 @@ Reference:
     in Matlab." In Proceedings of the IEEE International Conference on Computer
     Vision, 2013.
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 import math

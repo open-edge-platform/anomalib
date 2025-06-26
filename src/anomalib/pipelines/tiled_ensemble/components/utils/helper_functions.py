@@ -1,7 +1,7 @@
-"""Helper functions for the tiled ensemble training."""
-
 # Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Helper functions for the tiled ensemble training."""
 
 import json
 import logging

@@ -1,3 +1,10 @@
+# Original Code
+# https://github.com/jpcbertoldo/aupimo
+#
+# Modified
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Per-Image Metrics for anomaly detection.
 
 This module provides metrics for evaluating anomaly detection performance on a
@@ -17,13 +24,6 @@ Example:
     >>> pimo = PIMO()  # doctest: +SKIP
     >>> aupimo = AUPIMO()  # doctest: +SKIP
 """
-
-# Original Code
-# https://github.com/jpcbertoldo/aupimo
-#
-# Modified
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .binary_classification_curve import ThresholdMethod
 from .pimo import AUPIMO, PIMO, AUPIMOResult, PIMOResult

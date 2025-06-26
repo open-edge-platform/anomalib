@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """MVTec LOCO Data Module.
 
 This module provides a PyTorch Lightning DataModule for the MVTec LOCO dataset. The
@@ -39,9 +42,6 @@ Reference:
     In IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR),
     2022.
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from pathlib import Path

@@ -1,3 +1,12 @@
+# Original Code
+# Copyright (c) 2022 hq-deng
+# https://github.com/hq-deng/RD4AD
+# SPDX-License-Identifier: MIT
+#
+# Modified
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomaly map computation for Reverse Distillation model.
 
 This module implements functionality to generate anomaly heatmaps from the feature
@@ -21,15 +30,6 @@ See Also:
     - :class:`AnomalyMapGenerator`: Main class for generating anomaly maps
     - :class:`AnomalyMapGenerationMode`: Enum defining map generation modes
 """
-
-# Original Code
-# Copyright (c) 2022 hq-deng
-# https://github.com/hq-deng/RD4AD
-# SPDX-License-Identifier: MIT
-#
-# Modified
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
 

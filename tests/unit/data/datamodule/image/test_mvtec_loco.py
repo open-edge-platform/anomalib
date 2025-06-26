@@ -1,7 +1,7 @@
-"""Unit Tests - MVTecLoco Datamodule."""
-
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Unit Tests - MVTecLoco Datamodule."""
 
 from pathlib import Path
 

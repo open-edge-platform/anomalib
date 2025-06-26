@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch model implementation for Reverse Distillation.
 
 This module implements the core PyTorch model architecture for the Reverse Distillation
@@ -27,9 +30,6 @@ See Also:
     - :class:`ReverseDistillationLoss`: Loss function for training
     - :class:`AnomalyMapGenerator`: Anomaly map generation from features
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
 from typing import TYPE_CHECKING

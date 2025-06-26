@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Lightning Implementation of the CFA Model.
 
 CFA: Coupled-hypersphere-based Feature Adaptation for Target-Oriented Anomaly
@@ -29,9 +32,6 @@ Example:
     ...     center_crop_size=(224, 224)
     ... )
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from typing import Any

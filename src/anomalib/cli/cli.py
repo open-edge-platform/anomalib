@@ -1,11 +1,11 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomalib Command Line Interface.
 
 This module provides the `AnomalibCLI` class for configuring and running Anomalib from the command line.
 The CLI supports configuration via both command line arguments and configuration files (.yaml or .json).
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from collections.abc import Callable, Sequence

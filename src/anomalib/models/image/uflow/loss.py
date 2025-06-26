@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Loss function implementation for the U-Flow model.
 
 This module implements the loss function used to train the U-Flow model for anomaly
@@ -18,9 +21,6 @@ See Also:
     - :class:`UFlowLoss`: Main loss function implementation
     - :class:`UflowModel`: PyTorch model using this loss
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch import Tensor, nn

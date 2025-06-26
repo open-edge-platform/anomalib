@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch model implementation of WinCLIP for zero-/few-shot anomaly detection.
 
 This module provides the core PyTorch model implementation of WinCLIP, which uses
@@ -24,9 +27,6 @@ See Also:
     - :mod:`.prompting`: Prompt ensemble generation
     - :mod:`.utils`: Utility functions for scoring and aggregation
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
 from copy import copy

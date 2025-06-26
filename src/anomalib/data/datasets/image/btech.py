@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """BTech Dataset.
 
 This module provides PyTorch Dataset implementation for the BTech dataset. The
@@ -17,9 +20,6 @@ Reference:
     Vision Transformer Network for Image Anomaly Detection and Localization. In
     IEEE International Conference on Image Processing (ICIP), 2021.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
 

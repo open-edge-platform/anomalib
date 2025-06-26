@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Area Under the Precision-Recall Curve (AUPR) metric.
 
 This module provides the ``AUPR`` class which computes the area under the
@@ -29,9 +32,6 @@ Note:
     The AUPR score ranges from 0 to 1, with 1 indicating perfect ranking of
     anomalies above normal samples.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from matplotlib.figure import Figure

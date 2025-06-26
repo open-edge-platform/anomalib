@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Benchmarking pipeline for anomaly detection models.
 
 This module provides functionality for benchmarking anomaly detection models in
@@ -18,9 +21,6 @@ Example:
     >>> # Run benchmark
     >>> results = benchmark.run()
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .pipeline import Benchmark
 

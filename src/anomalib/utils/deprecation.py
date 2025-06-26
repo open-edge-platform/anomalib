@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Deprecation utilities for anomalib.
 
 This module provides utilities for marking functions and classes as deprecated.
@@ -32,9 +35,6 @@ Example:
     ... def yet_another_function():
     ...     pass
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import inspect
 import warnings

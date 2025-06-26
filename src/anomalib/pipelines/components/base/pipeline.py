@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base class for building pipelines in anomalib.
 
 This module provides the abstract base class for creating pipelines that can execute
@@ -22,9 +25,6 @@ The base pipeline interface defines key methods that subclasses must implement:
 Pipelines can be used to implement workflows like training, inference, or
 benchmarking by composing jobs and runners in a modular way.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from abc import ABC, abstractmethod

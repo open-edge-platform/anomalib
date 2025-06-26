@@ -1,7 +1,7 @@
-"""Test Numpy Video Validators."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test Numpy Video Validators."""
 
 import numpy as np
 import pytest

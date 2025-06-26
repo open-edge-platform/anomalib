@@ -1,11 +1,11 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomalib pipeline subcommands.
 
 This module provides functionality for managing and running Anomalib pipelines through
 the CLI. It includes support for benchmarking and other pipeline operations.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 

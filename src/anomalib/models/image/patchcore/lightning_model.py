@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PatchCore: Towards Total Recall in Industrial Anomaly Detection.
 
 This module implements the PatchCore model for anomaly detection using a memory bank
@@ -43,9 +46,6 @@ See Also:
     - :class:`anomalib.models.image.patchcore.anomaly_map.AnomalyMapGenerator`:
         Anomaly map generation for PatchCore using nearest neighbor search
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from collections.abc import Sequence

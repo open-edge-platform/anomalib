@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """DRAEM (Data-efficient Anomaly Detection and Localization) model.
 
 The DRAEM model uses a dual-branch architecture with a reconstruction branch and
@@ -18,9 +21,6 @@ See Also:
     :class:`anomalib.models.image.draem.lightning_model.Draem`:
         Lightning implementation of the DRAEM model.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .lightning_model import Draem
 

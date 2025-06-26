@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Benchmarking pipeline for evaluating anomaly detection models.
 
 This module provides functionality for running benchmarking experiments that evaluate
@@ -22,9 +25,6 @@ The pipeline handles setting up appropriate runners based on available hardware,
 using parallel execution when multiple GPUs are available and serial execution
 otherwise.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 

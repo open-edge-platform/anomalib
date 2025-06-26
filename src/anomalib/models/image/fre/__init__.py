@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Feature Reconstruction Error (FRE) Algorithm Implementation.
 
 FRE is an anomaly detection model that uses feature reconstruction error to detect
@@ -21,9 +24,6 @@ See Also:
     :class:`anomalib.models.image.fre.lightning_model.Fre`:
         PyTorch Lightning implementation of the FRE model.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .lightning_model import Fre
 

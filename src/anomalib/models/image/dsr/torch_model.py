@@ -1,3 +1,12 @@
+# Original Code
+# Copyright (c) 2022 VitjanZ
+# https://github.com/VitjanZ/DSR_anomaly_detection.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Modified
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch model for the DSR model implementation.
 
 This module implements the PyTorch model for Deep Spatial Reconstruction (DSR).
@@ -25,15 +34,6 @@ Notes:
 References:
     - Original paper: https://arxiv.org/abs/2012.12436
 """
-
-# Original Code
-# Copyright (c) 2022 VitjanZ
-# https://github.com/VitjanZ/DSR_anomaly_detection.
-# SPDX-License-Identifier: Apache-2.0
-#
-# Modified
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
 from pathlib import Path

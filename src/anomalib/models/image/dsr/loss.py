@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Loss functions for the DSR model implementation.
 
 This module contains the loss functions used in the second and third training
@@ -17,9 +20,6 @@ Example:
     ...     anomaly_mask=anomaly_mask
     ... )
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from kornia.losses import FocalLoss
 from torch import Tensor, nn

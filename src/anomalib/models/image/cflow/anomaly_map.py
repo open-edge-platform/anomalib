@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomaly Map Generator for CFlow model implementation.
 
 This module provides the anomaly map generation functionality for the CFlow model.
@@ -20,9 +23,6 @@ Example:
     ...     width=width
     ... )
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
 from typing import cast

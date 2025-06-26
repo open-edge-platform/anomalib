@@ -1,7 +1,8 @@
-"""Tests for Custom Help Formatter."""
-
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tests for Custom Help Formatter."""
+
 import sys
 from unittest.mock import patch
 

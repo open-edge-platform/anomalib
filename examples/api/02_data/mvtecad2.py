@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Example showing how to use the MVTec AD 2 dataset with Anomalib.
 
 This example demonstrates how to:
@@ -6,9 +9,6 @@ This example demonstrates how to:
 3. Access different test sets (public, private, mixed)
 4. Work with custom transforms and visualization
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import matplotlib.pyplot as plt
 import torch

@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Validate PyTorch tensor data.
 
 This module provides validators for data stored as PyTorch tensors. The validators
@@ -28,9 +31,6 @@ Note:
     The validators are used internally by the data modules to ensure data
     consistency before processing.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .depth import DepthBatchValidator, DepthValidator
 from .image import ImageBatchValidator, ImageValidator

@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """F1 Score and F1Max metrics for binary classification tasks.
 
 This module provides two metrics for evaluating binary classification performance:
@@ -26,9 +29,6 @@ Example:
     >>> f1_max.threshold
     tensor(0.6000)
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torchmetrics import Metric

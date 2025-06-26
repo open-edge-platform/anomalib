@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Custom implementation of Precision-Recall Curve metric.
 
 This module provides a custom implementation of the binary precision-recall curve
@@ -19,9 +22,6 @@ Example:
     >>> # Compute precision, recall and thresholds
     >>> precision, recall, thresholds = pr_curve.compute()
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from torch import Tensor
 from torchmetrics.classification import BinaryPrecisionRecallCurve as _BinaryPrecisionRecallCurve

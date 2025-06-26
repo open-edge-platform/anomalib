@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """NNCF optimization callback.
 
 This module provides the `NNCFCallback` for optimizing neural networks using Intel's Neural Network
@@ -8,9 +11,6 @@ Note:
     The callback assumes that the Lightning module contains a 'model' attribute which is the
     PyTorch module to be compressed.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import subprocess  # nosec B404
 from pathlib import Path

@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Visual Anomaly (VisA) Data Module.
 
 This module provides a PyTorch Lightning DataModule for the Visual Anomaly (VisA)
@@ -37,9 +40,6 @@ Reference:
     and Segmentation. In European Conference on Computer Vision (pp. 392-408).
     Springer, Cham.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 # Subset splitting code adapted from https://github.com/amazon-science/spot-diff
 # Original licence: Apache-2.0

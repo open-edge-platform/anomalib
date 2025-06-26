@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base Torch Video Dataset.
 
 This module implements the base video dataset class for anomaly detection tasks that
@@ -16,9 +19,6 @@ Example:
     >>> item.image.shape
     torch.Size([C, H, W])
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC
 from collections.abc import Callable

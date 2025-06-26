@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Comet logger with image logging capabilities.
 
 This module provides a Comet logger implementation that adds an interface for
@@ -19,9 +22,6 @@ Example:
     ...     global_step=0
     ... )  # doctest: +SKIP
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
 from matplotlib.figure import Figure

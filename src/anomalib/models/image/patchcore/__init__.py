@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PatchCore: Towards Total Recall in Industrial Anomaly Detection.
 
 PatchCore is an anomaly detection model that uses a memory bank of patch features
@@ -31,9 +34,6 @@ Example:
 
 Paper: https://arxiv.org/abs/2106.08265
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .lightning_model import Patchcore
 

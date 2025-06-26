@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """ShanghaiTech Campus Data Module.
 
 This module provides a PyTorch Lightning DataModule for the ShanghaiTech Campus
@@ -41,9 +44,6 @@ Reference:
     anomaly detection--a new baseline. In Proceedings of the IEEE conference on
     computer vision and pattern recognition (pp. 6536-6545).
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from pathlib import Path

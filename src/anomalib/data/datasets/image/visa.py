@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Visual Anomaly (VisA) Dataset.
 
 This module provides PyTorch Dataset implementation for the Visual Anomaly (VisA)
@@ -19,9 +22,6 @@ Reference:
     Segmentation. In European Conference on Computer Vision (pp. 392-408).
     Springer, Cham.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
 

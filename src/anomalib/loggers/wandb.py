@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Weights & Biases logger with image logging capabilities.
 
 This module provides a Weights & Biases logger implementation that adds an
@@ -18,9 +21,6 @@ Example:
     ...     name="test_image"
     ... )  # doctest: +SKIP
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from typing import TYPE_CHECKING, Literal
 
