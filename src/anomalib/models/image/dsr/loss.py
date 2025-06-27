@@ -29,7 +29,7 @@ from torch import Tensor, nn
 if TYPE_CHECKING or module_available("kornia"):
     from kornia.losses import FocalLoss
 else:
-    msg = "kornia is required for augmentation models. Install it with: pip install anomalib[augment]"
+    msg = "kornia is required for FocalLoss. Install it with either pip install anomalib or pip install kornia"
     raise ImportError(msg)
 
 

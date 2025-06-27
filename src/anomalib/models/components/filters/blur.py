@@ -28,7 +28,10 @@ if TYPE_CHECKING or module_available("kornia"):
     from kornia.filters.filter import _compute_padding
     from kornia.filters.kernels import normalize_kernel2d
 else:
-    msg = "kornia is required for augmentation models. Install it with: pip install anomalib[augment]"
+    msg = (
+        "kornia is required for a set of image processing and computer vision operations. "
+        "Install it with either pip install anomalib or pip install kornia."
+    )
     raise ImportError(msg)
 
 

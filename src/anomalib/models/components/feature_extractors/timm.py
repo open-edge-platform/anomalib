@@ -38,7 +38,10 @@ from torchvision.models.feature_extraction import create_feature_extractor
 if TYPE_CHECKING or module_available("timm"):
     import timm
 else:
-    msg = "timm is required for feature extraction models. Install it with: pip install anomalib[feature]"
+    msg = (
+        "timm is required for models using timm models as backbones. "
+        "Install it with either pip install anomalib or pip install timm"
+    )
     raise ImportError(msg)
 
 from .utils import dryrun_find_featuremap_dims

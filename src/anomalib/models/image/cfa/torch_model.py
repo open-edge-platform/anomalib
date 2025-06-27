@@ -52,17 +52,17 @@ from anomalib.data import InferenceBatch
 from anomalib.models.components import DynamicBufferMixin
 from anomalib.models.components.feature_extractors import dryrun_find_featuremap_dims
 
-if TYPE_CHECKING or module_available("einops") and module_available("sklearn"):
+if TYPE_CHECKING or module_available("einops"):
     from einops import rearrange
+else:
+    msg = "einops is required for tensor manipulation. Install with either pip install anomalib or pip install einops"
+    raise ImportError(msg)
+
+
+if TYPE_CHECKING or module_available("sklearn"):
     from sklearn.cluster import KMeans
 else:
-    missing = []
-    if not module_available("einops"):
-        missing.append("einops (install with: pip install anomalib[tensor])")
-    if not module_available("sklearn"):
-        missing.append("sklearn (install with: pip install anomalib[stats])")
-
-    msg = f"CFA requires: {', '.join(missing)}"
+    msg = "sklearn is required for clustering. Install with either pip install anomalib or pip install scikit-learn"
     raise ImportError(msg)
 
 from .anomaly_map import AnomalyMapGenerator
@@ -207,7 +207,7 @@ class CfaModel(DynamicBufferMixin):
         """
         feature_map_metadata = dryrun_find_featuremap_dims(
             feature_extractor=self.feature_extractor,
-            input_size=input_size,
+            input_size=(input_size[0], input_size[1]),
             layers=get_return_nodes(self.backbone),
         )
         # Scale is to get the largest feature map dimensions of different layers
@@ -221,7 +221,7 @@ class CfaModel(DynamicBufferMixin):
         else:
             msg = f"Unknown type {type(resolution)} for `resolution`. Expected types are either int or tuple[int, int]."
             raise TypeError(msg)
-        return scale
+        return torch.Size(scale)
 
     def initialize_centroid(self, data_loader: DataLoader) -> None:
         """Initialize the centroid of the memory bank.

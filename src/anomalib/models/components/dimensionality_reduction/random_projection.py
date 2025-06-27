@@ -27,7 +27,10 @@ from lightning_utilities.core.imports import module_available
 if TYPE_CHECKING or module_available("sklearn"):
     from sklearn.utils.random import sample_without_replacement
 else:
-    msg = "sklearn is required for statistical models. Install it with: pip install anomalib[stats]"
+    msg = (
+        "sklearn is required for statistical models. "
+        "Install it with either pip install anomalib or pip install scikit-learn"
+    )
     raise ImportError(msg)
 
 

@@ -89,7 +89,7 @@ from torch.nn import functional as F  # noqa: N812
 if TYPE_CHECKING or module_available("FrEIA"):
     from FrEIA.modules import InvertibleModule
 else:
-    msg = "FrEIA is required for flow-based models. Install it with: pip install anomalib[flow]"
+    msg = "FrEIA is required for flow-based models. Install it with either pip install anomalib or pip install FrEIA"
     raise ImportError(msg)
 
 logger = logging.getLogger(__name__)

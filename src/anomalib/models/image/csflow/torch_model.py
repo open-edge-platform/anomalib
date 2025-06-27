@@ -33,7 +33,7 @@ if TYPE_CHECKING or module_available("FrEIA"):
     from FrEIA.framework import GraphINN, InputNode, Node, OutputNode
     from FrEIA.modules import InvertibleModule
 else:
-    msg = "FrEIA is required for flow-based models. Install it with: pip install anomalib[flow]"
+    msg = "FrEIA is required for flow-based models. Install it with either pip install anomalib or pip install FrEIA"
     raise ImportError(msg)
 
 from anomalib.data import InferenceBatch

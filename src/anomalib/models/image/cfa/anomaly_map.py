@@ -29,7 +29,10 @@ from anomalib.models.components import GaussianBlur2d
 if TYPE_CHECKING or module_available("einops"):
     from einops import rearrange
 else:
-    msg = "einops is required for tensor manipulation in CFA models. Install it with: pip install anomalib[tensor]"
+    msg = (
+        "einops is required for tensor manipulation in CFA models. "
+        "Install it with either pip install anomalib or pip install einops"
+    )
     raise ImportError(msg)
 
 

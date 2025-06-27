@@ -19,19 +19,18 @@ from torch import nn
 from anomalib.data import InferenceBatch
 from anomalib.models.components.flow import AllInOneBlock
 
-if TYPE_CHECKING or module_available("timm") and module_available("FrEIA"):
+if TYPE_CHECKING or module_available("timm"):
     import timm
-    from FrEIA.framework import SequenceINN
     from timm.models.cait import Cait
     from timm.models.vision_transformer import VisionTransformer
 else:
-    missing = []
-    if not module_available("timm"):
-        missing.append("timm (install with: pip install anomalib[feature])")
-    if not module_available("FrEIA"):
-        missing.append("FrEIA (install with: pip install anomalib[flow])")
+    msg = "timm is required for feature extraction. Install with either `pip install anomalib` or `pip install timm`."
+    raise ImportError(msg)
 
-    msg = f"FastFlow requires: {', '.join(missing)}"
+if TYPE_CHECKING or module_available("FrEIA"):
+    from FrEIA.framework import SequenceINN
+else:
+    msg = "FrEIA is required for the flow model. Install with either `pip install anomalib` or `pip install FrEIA`."
     raise ImportError(msg)
 
 from .anomaly_map import AnomalyMapGenerator
@@ -57,7 +56,8 @@ def subnet_conv_func(kernel_size: int, hidden_ratio: float) -> Callable:
         # NOTE: setting padding="same" in nn.Conv2d breaks the onnx export so manual padding required.
         # TODO(ashwinvaidya17): Use padding="same" in nn.Conv2d once PyTorch v2.1 is released
         # CVS-122671
-        padding = 2 * (kernel_size // 2 - ((1 + kernel_size) % 2), kernel_size // 2)
+        padding_dims = (kernel_size // 2 - ((1 + kernel_size) % 2), kernel_size // 2)
+        padding = (*padding_dims, *padding_dims)
         return nn.Sequential(
             nn.ZeroPad2d(padding),
             nn.Conv2d(in_channels, hidden_channels, kernel_size),

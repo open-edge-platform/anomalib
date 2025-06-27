@@ -22,12 +22,21 @@ See Also:
 
 import math
 
-import scipy.stats as st
 import torch
 import torch.nn.functional as F  # noqa: N812
+from lightning_utilities import module_available
 from omegaconf import ListConfig
 from torch import Tensor, nn
 from torch.distributions import Normal
+
+if module_available("scipy"):
+    import scipy.stats as st
+else:
+    msg = (
+        "scipy is required for the anomaly map generator. "
+        "Install with either `pip install anomalib` or `pip install scikit-learn`."
+    )
+    raise ImportError(msg)
 
 
 class AnomalyMapGenerator(nn.Module):
