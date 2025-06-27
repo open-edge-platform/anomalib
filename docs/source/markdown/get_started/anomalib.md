@@ -4,64 +4,40 @@ This section will walk you through the steps to train a model and use it to dete
 
 ## {octicon}`package` Installation
 
-Installation is simple and can be done in two ways. The first is through PyPI, and the second is through a local installation. PyPI installation is recommended if you want to use the library without making any changes to the source code. If you want to make changes to the library, then a local installation is recommended.
+Anomalib can be installed from PyPI. We recommend using a virtual environment and a modern package installer like `uv` or `pip`.
 
-:::::{dropdown} Installing the Installer
-:open:
+### Quick Install
 
-Anomalib comes with a CLI installer that can be used to install the full package.
-The installer can be installed using the following commands:
+For a standard installation, you can use `uv` or `pip`. This will install the latest version of Anomalib with its core dependencies. PyTorch will be installed based on its default behavior, which usually works for CPU and standard CUDA setups.
 
-::::{tab-set}
+```bash
+# With uv
+uv pip install anomalib
 
-:::{tab-item} API
-:sync: label-1
-
-```{literalinclude} ../../../../examples/cli/00_installation/pip_install.sh
-:language: bash
-:lines: 15
+# Or with pip
+pip install anomalib
 ```
 
-:::
+For more control over the installation, such as specifying the PyTorch backend or installing extra dependencies, see the advanced options below.
 
-:::{tab-item} Source
-:sync: label-2
+:::::{dropdown} Advanced: Install with Hardware-Specific Extras
 
-```{literalinclude} ../../../../examples/cli/00_installation/source_install.sh
+To ensure compatibility with your hardware, you can specify a backend during installation. This is the recommended approach for production environments and for hardware other than CPU or standard CUDA.
+
+**Using `uv`:**
+
+```{literalinclude} /examples/cli/00_installation/uv_install.sh
 :language: bash
-:lines: 10-34
+:lines: 12-32
 ```
 
-:::
-::::
-The main reason why PyPI and source installer does not install the full package
-is to keep the installation wheel small. The CLI installer also automates the
-installation such as finding the torch version with the right CUDA/CUDNN version.
+**Using `pip`:**
 
-The next section demonstrates how to install the full package using the CLI installer.
-:::::
-
-:::::{dropdown} Installing the Full Package
-After installing anomalib, you can install the full package using the following commands:
-
-```{literalinclude} ../../../../examples/cli/00_installation/anomalib_install.sh
+```{literalinclude} /examples/cli/00_installation/pip_install.sh
 :language: bash
-:lines: 17-36
+:lines: 9-17
 ```
 
-As can be seen above, the only available sub-command is `install` at the moment.
-The `install` sub-command has options to install either the full package or the
-specific components of the package.
-
-By default the `install` sub-command installs the full package. If you want to
-install only the specific components of the package, you can use the `--option` flag.
-
-```{literalinclude} ../../../../examples/cli/00_installation/anomalib_install.sh
-:language: bash
-:lines: 39-68
-```
-
-After following these steps, your environment will be ready to use anomalib!
 :::::
 
 ## {octicon}`mortar-board` Training

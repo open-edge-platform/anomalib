@@ -54,9 +54,7 @@ from anomalib.data import AnomalibDataModule
 from anomalib.deploy.export import CompressionType, ExportType
 
 if TYPE_CHECKING:
-    from importlib.util import find_spec
-
-    if find_spec("openvino") is not None:
+    if module_available("openvino"):
         from openvino import CompiledModel
 
 logger = logging.getLogger(__name__)
