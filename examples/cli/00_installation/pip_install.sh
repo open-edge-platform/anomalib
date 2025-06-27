@@ -13,7 +13,7 @@ pip install "anomalib[cpu]"
 # Or for CUDA 12.4:
 pip install "anomalib[cu124]"
 
-# For a full installation with all model dependencies on CPU:
+# For a full installation with all optional dependencies on CPU:
 pip install "anomalib[full,cpu]"
 
 # To install from source for development on CPU:

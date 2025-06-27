@@ -25,10 +25,10 @@ uv pip install "anomalib[rocm]"
 # Intel XPU support (Linux/Windows with Intel GPU)
 uv pip install "anomalib[xpu]"
 
-# You can combine extras. For example, to install with CUDA 12.4 and flow model dependencies:
-uv pip install "anomalib[flow,cu124]"
+# You can combine extras. For example, to install with CUDA 12.4 and OpenVINO support:
+uv pip install "anomalib[openvino,cu124]"
 
-# For a full installation with all model dependencies on CPU:
+# For a full installation with all optional dependencies on CPU:
 uv pip install "anomalib[full,cpu]"
 
 # To install from source for development:

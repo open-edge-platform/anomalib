@@ -114,30 +114,28 @@ pip install "anomalib[cu124]"
 </details>
 
 <details>
-<summary><strong>🧩 Advanced Installation: Model-Specific Dependencies</strong></summary>
+<summary><strong>🧩 Advanced Installation: Additional Dependencies</strong></summary>
 
-Anomalib uses optional dependencies to keep installations lightweight. If you plan to use certain models, you may need to install their dependencies. Remember to include your hardware-specific extra.
+Anomalib includes most dependencies by default. For specialized features, you may need additional optional dependencies. Remember to include your hardware-specific extra.
 
 ```bash
-# Example: Install dependencies for flow-based models with CUDA 12.4
-uv pip install "anomalib[flow,cu124]"
+# Example: Install with OpenVINO support and CUDA 12.4
+uv pip install "anomalib[openvino,cu124]"
 
-# Example: Install all model dependencies for a CPU-only setup
+# Example: Install all optional dependencies for a CPU-only setup
 uv pip install "anomalib[full,cpu]"
 ```
 
-Here is a list of available dependency groups:
+Here is a list of available optional dependency groups:
 
-| Extra        | Description                              | Models that need it                    |
-| :----------- | :--------------------------------------- | :------------------------------------- |
-| `[flow]`     | Flow-based models                        | `cflow`, `csflow`, `fastflow`, `uflow` |
-| `[feature]`  | Feature extraction models                | `dfm`, `dfkde`, `fastflow`, `uflow`    |
-| `[vlm_clip]` | Vision-language models                   | `winclip`                              |
-| `[stats]`    | Statistical models                       | `cfa`, `random_projection`             |
-| `[augment]`  | Image augmentation models                | `draem`, `dsr`                         |
-| `[tensor]`   | Tensor manipulation utilities            | `cflow`, `cfa`                         |
-| `[utils]`    | Utility libraries (opencv, pandas, etc.) | General use                            |
-| `[full]`     | All model dependencies                   | All models                             |
+| Extra         | Description                              | Models that need it                         |
+| :------------ | :--------------------------------------- | :------------------------------------------ |
+| `[openvino]`  | Intel OpenVINO optimization              | For accelerated inference on Intel hardware |
+| `[clip]`      | Vision-language models                   | `winclip`                                   |
+| `[vlm]`       | Vision-language model backends           | Advanced VLM features                       |
+| `[loggers]`   | Experiment tracking (wandb, comet, etc.) | For experiment management                   |
+| `[notebooks]` | Jupyter notebook support                 | For running example notebooks               |
+| `[full]`      | All optional dependencies                | All optional features                       |
 
 </details>
 
