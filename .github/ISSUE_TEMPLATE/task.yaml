@@ -1,4 +1,4 @@
-name: 📋 Task
+name: "📋 Task"
 description: A specific piece of work to be completed
 title: "📋 [TASK] "
 labels: ["task"]
