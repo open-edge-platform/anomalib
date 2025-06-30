@@ -10,8 +10,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import torch
-import torch.nn.functional as F
 from torch import nn
+from torch.nn import functional
 
 
 class UniNetLoss(nn.Module):
@@ -41,7 +41,7 @@ class UniNetLoss(nn.Module):
             student_features (list[torch.Tensor]): Student features.
             teacher_features (list[torch.Tensor]): Teacher features.
             margin (int): Hyperparameter for controlling the boundary.
-            mask (torch.Tensor | None): Mask for the prediction.
+            mask (torch.Tensor | None): Mask for the prediction. Mask is of shape Bx1xHxW
             stop_gradient (bool): Whether to stop the gradient into teacher features.
         """
         loss = 0.0
@@ -55,10 +55,14 @@ class UniNetLoss(nn.Module):
             student_feature = student_feature.view(n, c, -1).transpose(1, 2)  # (N, H+W, C)
             teacher_feature = teacher_feature.view(n, c, -1).transpose(1, 2)  # (N, H+W, C)
 
-            student_feature_normalized = F.normalize(student_feature, p=2, dim=2)
-            teacher_feature_normalized = F.normalize(teacher_feature, p=2, dim=2)
+            student_feature_normalized = functional.normalize(student_feature, p=2, dim=2)
+            teacher_feature_normalized = functional.normalize(teacher_feature, p=2, dim=2)
 
-            cosine_loss = 1 - F.cosine_similarity(student_feature_normalized, teacher_feature_normalized, dim=2)
+            cosine_loss = 1 - functional.cosine_similarity(
+                student_feature_normalized,
+                teacher_feature_normalized,
+                dim=2,
+            )
             cosine_loss = cosine_loss.mean()
 
             similarity = (
@@ -72,18 +76,18 @@ class UniNetLoss(nn.Module):
             # unsupervised and only normal (or abnormal)
             if mask is None:
                 contrastive_loss = -torch.log(diag_sum + 1e-8).mean()
-                margin_loss_n = F.relu(margin - diag_sum).mean()
+                margin_loss_n = functional.relu(margin - diag_sum).mean()
 
             # supervised
             else:
                 # gt label
-                if len(mask.size()) < 3:
+                if len(mask.shape) < 3:
                     normal_mask = mask == 0
                     abnormal_mask = mask == 1
                 # gt mask
                 else:
-                    mask_ = F.interpolate(mask, size=(h, w), mode="nearest").squeeze(1)
-                    mask_flat = mask.view(mask_.size(0), -1)
+                    mask_ = functional.interpolate(mask, size=(h, w), mode="nearest").squeeze(1)
+                    mask_flat = mask_.view(mask_.size(0), -1)
 
                     normal_mask = mask_flat == 0
                     abnormal_mask = mask_flat == 1
@@ -91,11 +95,11 @@ class UniNetLoss(nn.Module):
                 if normal_mask.sum() > 0:
                     diag_sim_normal = diag_sum[normal_mask]
                     contrastive_loss = -torch.log(diag_sim_normal + 1e-8).mean()
-                    margin_loss_n = F.relu(margin - diag_sim_normal).mean()
+                    margin_loss_n = functional.relu(margin - diag_sim_normal).mean()
 
                 if abnormal_mask.sum() > 0:
                     diag_sim_abnormal = diag_sum[abnormal_mask]
-                    margin_loss_a = F.relu(diag_sim_abnormal - margin).mean()
+                    margin_loss_a = functional.relu(diag_sim_abnormal - margin).mean()
 
             margin_loss = margin_loss_n + margin_loss_a
 

@@ -32,11 +32,11 @@ class DomainRelatedFeatureSelection(nn.Module):
 
     def _get_theta(self, idx: int) -> torch.Tensor:
         match idx:
-            case 0:
-                return self.theta1
             case 1:
-                return self.theta2
+                return self.theta1
             case 2:
+                return self.theta2
+            case 3:
                 return self.theta3
             case _:
                 msg = f"Invalid index: {idx}"

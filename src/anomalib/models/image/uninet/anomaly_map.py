@@ -9,9 +9,10 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import einops
 import numpy as np
 import torch
-from scipy.ndimage import gaussian_filter
+from kornia.filters import gaussian_blur2d
 from torch.nn import functional
 
 
@@ -49,17 +50,16 @@ def weighted_decision_mechanism(
 
     anomaly_map_lists: list[list[torch.Tensor]] = [[] for _ in output_list]
     for idx, output in enumerate(output_list):
-        cat_output = torch.cat(output, dim=0)
-        anomaly_map = torch.unsqueeze(cat_output, dim=1)  # Bx1xhxw
+        anomaly_map_ = torch.unsqueeze(output, dim=1)  # Bx1xhxw
         # Bx256x256
-        anomaly_map_lists[idx] = functional.interpolate(anomaly_map, out_size, mode="bilinear", align_corners=True)[
+        anomaly_map_lists[idx] = functional.interpolate(anomaly_map_, out_size, mode="bilinear", align_corners=True)[
             :,
             0,
             :,
             :,
         ]
 
-    anomaly_map = sum(anomaly_map_lists)
+    anomaly_map: torch.Tensor = sum(anomaly_map_lists)
 
     anomaly_score = []
     for idx in range(batch_size):
@@ -67,11 +67,15 @@ def weighted_decision_mechanism(
         assert top_k >= 1 / (out_size * out_size), "weight can not be smaller than 1 / (H * W)!"
 
         single_anomaly_score_exp = anomaly_map[idx]
-        single_anomaly_score_exp = torch.tensor(gaussian_filter(single_anomaly_score_exp.cpu().numpy(), sigma=4))
-        assert (
-            single_anomaly_score_exp.reshape(1, -1).shape[-1] == out_size * out_size
-        ), "something wrong with the last dimension of reshaped map!"
+        single_anomaly_score_exp = gaussian_blur2d(
+            einops.rearrange(single_anomaly_score_exp, "h w -> 1 1 h w"),  # kornia expects 4D tensor
+            kernel_size=(5, 5),
+            sigma=(4, 4),
+        ).squeeze()
+        assert single_anomaly_score_exp.reshape(1, -1).shape[-1] == out_size * out_size, (
+            "something wrong with the last dimension of reshaped map!"
+        )
         single_map = single_anomaly_score_exp.reshape(1, -1)
-        single_anomaly_score = np.sort(single_map.topk(top_k, dim=-1)[0].detach().cpu().numpy(), axis=1)
-        anomaly_score.append(single_anomaly_score)
-    return anomaly_score, anomaly_map.detach().cpu().numpy()
+        single_anomaly_score = single_map.topk(top_k).values[0][0]
+        anomaly_score.append(single_anomaly_score.detach())
+    return torch.vstack(anomaly_score), anomaly_map.detach()
