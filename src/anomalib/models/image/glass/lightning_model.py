@@ -18,13 +18,11 @@ Paper: `A Unified Anomaly Synthesis Strategy with Gradient Ascent for Industrial
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import math
 from typing import Any
 
 import torch
 from lightning.pytorch.utilities.types import STEP_OUTPUT
-from torch import nn, optim
-from torch.nn import functional as f
+from torch import optim
 from torchvision.transforms.v2 import CenterCrop, Compose, Normalize, Resize
 
 from anomalib import LearningType
@@ -36,7 +34,6 @@ from anomalib.post_processing import PostProcessor
 from anomalib.pre_processing import PreProcessor
 from anomalib.visualization import Visualizer
 
-from .loss import FocalLoss
 from .torch_model import GlassModel
 
 
@@ -150,6 +147,7 @@ class Glass(AnomalibModule):
 
         self.model = GlassModel(
             input_shape=input_shape,
+            anomaly_source_path=anomaly_source_path,
             pretrain_embed_dim=pretrain_embed_dim,
             target_embed_dim=target_embed_dim,
             backbone=backbone,
@@ -161,21 +159,18 @@ class Glass(AnomalibModule):
             dsc_layers=dsc_layers,
             dsc_hidden=dsc_hidden,
             dsc_margin=dsc_margin,
+            step=step,
+            svd=svd,
+            mining=mining,
+            noise=noise,
+            radius=radius,
+            p=p,
         )
 
         self.c = torch.tensor([1])
-        self.p = p
-        self.radius = radius
-        self.mining = mining
-        self.noise = noise
-        self.distribution = 0
         self.lr = lr
-        self.step = step
-        self.svd = svd
 
         self.dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-        self.focal_loss = FocalLoss()
 
         if pre_proj > 0:
             self.proj_opt = optim.AdamW(
@@ -280,84 +275,7 @@ class Glass(AnomalibModule):
             self.backbone_opt.zero_grad()
 
         img = batch.image
-        aug, mask_s = self.augmentor(img)
-        if img is not None:
-            batch_size = img.shape[0]
-
-        true_feats, fake_feats = self.model(img, aug)
-
-        h_ratio = mask_s.shape[2] // int(math.sqrt(fake_feats.shape[0] // batch_size))
-        w_ratio = mask_s.shape[3] // int(math.sqrt(fake_feats.shape[0] // batch_size))
-
-        mask_s_resized = f.interpolate(
-            mask_s.float(),
-            size=(mask_s.shape[2] // h_ratio, mask_s.shape[3] // w_ratio),
-            mode="nearest",
-        )
-        mask_s_gt = mask_s_resized.reshape(-1, 1)
-
-        noise = torch.normal(0, self.noise, true_feats.shape).to(self.dev)
-        gaus_feats = true_feats + noise
-
-        center = self.c.repeat(img.shape[0], 1, 1)
-        center = center.reshape(-1, center.shape[-1])
-        true_points = torch.concat(
-            [fake_feats[mask_s_gt[:, 0] == 0], true_feats],
-            dim=0,
-        )
-        c_t_points = torch.concat([center[mask_s_gt[:, 0] == 0], center], dim=0)
-        dist_t = torch.norm(true_points - c_t_points, dim=1)
-        r_t = torch.tensor([torch.quantile(dist_t, q=self.radius)]).to(self.dev)
-
-        for step in range(self.step + 1):
-            scores = self.model.discriminator(torch.cat([true_feats, gaus_feats]))
-            true_scores = scores[: len(true_feats)]
-            gaus_scores = scores[len(true_feats) :]
-            true_loss = nn.BCELoss()(true_scores, torch.zeros_like(true_scores))
-            gaus_loss = nn.BCELoss()(gaus_scores, torch.ones_like(gaus_scores))
-            bce_loss = true_loss + gaus_loss
-
-            if step == self.step:
-                break
-
-            grad = torch.autograd.grad(gaus_loss, [gaus_feats])[0]
-            grad_norm = torch.norm(grad, dim=1)
-            grad_norm = grad_norm.view(-1, 1)
-            grad_normalized = grad / (grad_norm + 1e-10)
-
-            with torch.no_grad():
-                gaus_feats.add_(0.001 * grad_normalized)
-
-        fake_points = fake_feats[mask_s_gt[:, 0] == 1]
-        true_points = true_feats[mask_s_gt[:, 0] == 1]
-        c_f_points = center[mask_s_gt[:, 0] == 1]
-        dist_f = torch.norm(fake_points - c_f_points, dim=1)
-        proj_feats = c_f_points if self.svd == 1 else true_points
-        r = r_t if self.svd == 1 else 1
-
-        if self.svd == 1:
-            h = fake_points - proj_feats
-            h_norm = dist_f if self.svd == 1 else torch.norm(h, dim=1)
-            alpha = torch.clamp(h_norm, 2 * r, 4 * r)
-            proj = (alpha / (h_norm + 1e-10)).view(-1, 1)
-            h = proj * h
-            fake_points = proj_feats + h
-            fake_feats[mask_s_gt[:, 0] == 1] = fake_points
-
-        fake_scores = self.model.discriminator(fake_feats)
-
-        if self.p > 0:
-            fake_dist = (fake_scores - mask_s_gt) ** 2
-            d_hard = torch.quantile(fake_dist, q=self.p)
-            fake_scores_ = fake_scores[fake_dist >= d_hard].unsqueeze(1)
-            mask_ = mask_s_gt[fake_dist >= d_hard].unsqueeze(1)
-        else:
-            fake_scores_ = fake_scores
-            mask_ = mask_s_gt
-        output = torch.cat([1 - fake_scores_, fake_scores_], dim=1)
-        focal_loss = self.focal_loss(output, mask_)
-
-        loss = bce_loss + focal_loss
+        true_loss, gaus_loss, bce_loss, focal_loss, loss = self.model(img, self.c)
         loss.backward()
 
         if self.proj_opt is not None:
