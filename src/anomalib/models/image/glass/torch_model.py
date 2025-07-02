@@ -548,7 +548,6 @@ class GlassModel(nn.Module):
         self,
         img: torch.Tensor,
         c: torch.Tensor | None = None,
-        device: torch.device | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Forward pass to compute patch-wise feature embeddings for original and augmented images.
 
@@ -556,6 +555,7 @@ class GlassModel(nn.Module):
         embeddings generated for both `img` and `aug`. If not, the embeddings are directly obtained and
         `requires_grad` is enabled for them, likely for gradient-based optimization or anomaly generation.
         """
+        device = img.device
         aug, mask_s = self.augmentor(img)
         if img is not None:
             batch_size = img.shape[0]

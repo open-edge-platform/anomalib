@@ -273,7 +273,7 @@ class Glass(AnomalibModule):
             self.backbone_opt.zero_grad()
 
         img = batch.image
-        true_loss, gaus_loss, bce_loss, focal_loss, loss = self.model(img, self.c, self.device)
+        true_loss, gaus_loss, bce_loss, focal_loss, loss = self.model(img, self.c)
         loss.backward()
 
         if self.proj_opt is not None:
@@ -287,6 +287,34 @@ class Glass(AnomalibModule):
         self.log("bce_loss", bce_loss, prog_bar=True)
         self.log("focal_loss", focal_loss, prog_bar=True)
         self.log("loss", loss, prog_bar=True)
+
+    def validation_step(self, batch: Batch, *args, **kwargs) -> STEP_OUTPUT:
+        """Validation step for GLASS model.
+
+        This method is called during validation to compute the loss and metrics.
+
+        Args:
+            batch (Batch): Input batch containing images and metadata
+            *args: Additional positional arguments
+            **kwargs: Additional keyword arguments
+
+        Returns:
+            STEP_OUTPUT: Dictionary containing loss values and metrics
+        """
+        del args, kwargs
+        self.model.forward_modules.eval()
+        if self.model.pre_proj > 0:
+            self.model.pre_projection.eval()
+        self.model.discriminator.eval()
+
+        img = batch.image
+        true_loss, gaus_loss, bce_loss, focal_loss, loss = self.model(img, self.c, self.device)
+
+        self.log("val/true_loss", true_loss, prog_bar=True)
+        self.log("val/gaus_loss", gaus_loss, prog_bar=True)
+        self.log("val/bce_loss", bce_loss, prog_bar=True)
+        self.log("val/focal_loss", focal_loss, prog_bar=True)
+        self.log("val/loss", loss, prog_bar=True)
 
     def on_train_start(self) -> None:
         """Initialize model by computing mean feature representation across training dataset.
