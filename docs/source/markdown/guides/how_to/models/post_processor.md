@@ -144,7 +144,7 @@ One key advantage of Anomalib's post-processor design is that it becomes part of
 ```python
 from anomalib.models import Patchcore
 from anomalib.post_processing import PostProcessor
-from openvino.runtime import Core
+from openvino import Core
 import numpy as np
 
 # Training: Post-processor is part of the model
