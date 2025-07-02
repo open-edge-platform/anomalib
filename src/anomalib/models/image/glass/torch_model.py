@@ -348,8 +348,6 @@ class GlassModel(nn.Module):
 
         self.augmentor = PerlinAnomalyGenerator(anomaly_source_path)
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
         self.focal_loss = FocalLoss()
 
         self.forward_modules = torch.nn.ModuleDict({})
@@ -550,6 +548,7 @@ class GlassModel(nn.Module):
         self,
         img: torch.Tensor,
         c: torch.Tensor | None = None,
+        device: torch.device | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Forward pass to compute patch-wise feature embeddings for original and augmented images.
 
@@ -573,7 +572,7 @@ class GlassModel(nn.Module):
         )
         mask_s_gt = mask_s_resized.reshape(-1, 1)
 
-        noise = torch.normal(0, self.noise, true_feats.shape).to(self.device)
+        noise = torch.normal(0, self.noise, true_feats.shape).to(device)
         gaus_feats = true_feats + noise
 
         center = c.repeat(img.shape[0], 1, 1)
@@ -584,7 +583,7 @@ class GlassModel(nn.Module):
         )
         c_t_points = torch.concat([center[mask_s_gt[:, 0] == 0], center], dim=0)
         dist_t = torch.norm(true_points - c_t_points, dim=1)
-        r_t = torch.tensor([torch.quantile(dist_t, q=self.radius)]).to(self.device)
+        r_t = torch.tensor([torch.quantile(dist_t, q=self.radius)]).to(device)
 
         for step in range(self.step + 1):
             scores = self.discriminator(torch.cat([true_feats, gaus_feats]))

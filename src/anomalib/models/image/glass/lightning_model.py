@@ -170,8 +170,6 @@ class Glass(AnomalibModule):
         self.c = torch.tensor([1])
         self.lr = lr
 
-        self.dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
         if pre_proj > 0:
             self.proj_opt = optim.AdamW(
                 self.model.pre_projection.parameters(),
@@ -275,7 +273,7 @@ class Glass(AnomalibModule):
             self.backbone_opt.zero_grad()
 
         img = batch.image
-        true_loss, gaus_loss, bce_loss, focal_loss, loss = self.model(img, self.c)
+        true_loss, gaus_loss, bce_loss, focal_loss, loss = self.model(img, self.c, self.device)
         loss.backward()
 
         if self.proj_opt is not None:
@@ -301,9 +299,9 @@ class Glass(AnomalibModule):
         with torch.no_grad():
             for i, batch in enumerate(dataloader):
                 if i == 0:
-                    self.c = self.model.calculate_mean(batch.image.to(self.dev))
+                    self.c = self.model.calculate_mean(batch.image.to(self.device))
                 else:
-                    self.c += self.model.calculate_mean(batch.image.to(self.dev))
+                    self.c += self.model.calculate_mean(batch.image.to(self.device))
 
             self.c /= len(dataloader)
 
