@@ -73,7 +73,7 @@ class MemoryBankMixin(nn.Module):
         """
         if not self._is_fitted:
             self.fit()
-            self._is_fitted = torch.tensor([True], device=self.device)
+            self._is_fitted.data.fill_(value=True)
 
     def on_train_epoch_end(self) -> None:
         """Ensure memory bank is fitted after training.
@@ -82,4 +82,4 @@ class MemoryBankMixin(nn.Module):
         """
         if not self._is_fitted:
             self.fit()
-            self._is_fitted = torch.tensor([True], device=self.device)
+            self._is_fitted.data.fill_(value=True)
