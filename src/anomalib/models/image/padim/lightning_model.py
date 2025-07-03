@@ -131,9 +131,6 @@ class Padim(MemoryBankMixin, AnomalibModule):
             n_features=n_features,
         )
 
-        self.stats: list[torch.Tensor] = []
-        self.embeddings: list[torch.Tensor] = []
-
     @staticmethod
     def configure_optimizers() -> None:
         """PADIM doesn't require optimization, therefore returns no optimizers."""
@@ -154,19 +151,15 @@ class Padim(MemoryBankMixin, AnomalibModule):
         """
         del args, kwargs  # These variables are not used.
 
-        embedding = self.model(batch.image)
-        self.embeddings.append(embedding)
+        _ = self.model(batch.image)
 
         # Return a dummy loss tensor
         return torch.tensor(0.0, requires_grad=True, device=self.device)
 
     def fit(self) -> None:
         """Fit a Gaussian to the embedding collected from the training set."""
-        logger.info("Aggregating the embedding extracted from the training set.")
-        embeddings = torch.vstack(self.embeddings)
-
         logger.info("Fitting a Gaussian to the embedding collected from the training set.")
-        self.stats = self.model.gaussian.fit(embeddings)
+        self.model.fit_gaussian()
 
     def validation_step(self, batch: Batch, *args, **kwargs) -> STEP_OUTPUT:
         """Perform a validation step of PADIM.

@@ -147,6 +147,7 @@ class PadimModel(nn.Module):
         self.anomaly_map_generator = AnomalyMapGenerator()
 
         self.gaussian = MultiVariateGaussian()
+        self.memory_bank = torch.empty(0, self.feature_extractor.out_dims[1])
 
     def forward(self, input_tensor: torch.Tensor) -> torch.Tensor | InferenceBatch:
         """Forward-pass image-batch (N, C, H, W) into model to extract features.
@@ -182,6 +183,12 @@ class PadimModel(nn.Module):
             embeddings = self.tiler.untile(embeddings)
 
         if self.training:
+            # Grow memory bank
+            if self.memory_bank.numel() > 0:
+                new_bank = torch.cat((self.memory_bank, embeddings), dim=0)
+                self.memory_bank.data = new_bank
+            else:
+                self.memory_bank.data = embeddings
             return embeddings
 
         anomaly_map = self.anomaly_map_generator(
@@ -217,3 +224,25 @@ class PadimModel(nn.Module):
         # subsample embeddings
         idx = self.idx.to(embeddings.device)
         return torch.index_select(embeddings, 1, idx)
+
+    def fit_gaussian(self) -> None:
+        """Fits a Gaussian model to the current contents of the memory bank.
+
+        This method is typically called after the memory bank has been filled during training.
+        It uses the stored features to fit a Gaussian distribution, which may be used for
+        downstream tasks such as anomaly detection, coreset selection, or probabilistic modeling.
+
+        After fitting, the memory bank is cleared to free GPU memory before validation or testing.
+
+        Raises:
+            ValueError: If the memory bank is empty.
+        """
+        if self.memory_bank.size(0) == 0:
+            msg = "Memory bank is empty. Cannot perform coreset selection."
+            raise ValueError(msg)
+
+        # fit gaussian
+        self.gaussian.fit(self.memory_bank)
+
+        # clear memory bank, redcues gpu size
+        self.memory_bank = torch.empty(0, self.feature_extractor.out_dims[1])
