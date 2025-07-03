@@ -10,16 +10,28 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
-import timm
 import torch
-from FrEIA.framework import SequenceINN
-from timm.models.cait import Cait
-from timm.models.vision_transformer import VisionTransformer
+from lightning_utilities.core.imports import module_available
 from torch import nn
 
 from anomalib.data import InferenceBatch
 from anomalib.models.components.flow import AllInOneBlock
+
+if TYPE_CHECKING or module_available("timm"):
+    import timm
+    from timm.models.cait import Cait
+    from timm.models.vision_transformer import VisionTransformer
+else:
+    msg = "timm is required for feature extraction. Install with either `pip install anomalib` or `pip install timm`."
+    raise ImportError(msg)
+
+if TYPE_CHECKING or module_available("FrEIA"):
+    from FrEIA.framework import SequenceINN
+else:
+    msg = "FrEIA is required for the flow model. Install with either `pip install anomalib` or `pip install FrEIA`."
+    raise ImportError(msg)
 
 from .anomaly_map import AnomalyMapGenerator
 
@@ -44,7 +56,8 @@ def subnet_conv_func(kernel_size: int, hidden_ratio: float) -> Callable:
         # NOTE: setting padding="same" in nn.Conv2d breaks the onnx export so manual padding required.
         # TODO(ashwinvaidya17): Use padding="same" in nn.Conv2d once PyTorch v2.1 is released
         # CVS-122671
-        padding = 2 * (kernel_size // 2 - ((1 + kernel_size) % 2), kernel_size // 2)
+        padding_dims = (kernel_size // 2 - ((1 + kernel_size) % 2), kernel_size // 2)
+        padding = (*padding_dims, *padding_dims)
         return nn.Sequential(
             nn.ZeroPad2d(padding),
             nn.Conv2d(in_channels, hidden_channels, kernel_size),

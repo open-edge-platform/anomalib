@@ -18,9 +18,20 @@ Example:
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import TYPE_CHECKING
+
 import torch
-from kornia.losses import FocalLoss, SSIMLoss
+from lightning_utilities.core.imports import module_available
 from torch import nn
+
+if TYPE_CHECKING or module_available("kornia"):
+    from kornia.losses import FocalLoss, SSIMLoss
+else:
+    msg = (
+        "kornia is required for FocalLoss and SSIMLoss. "
+        "Install it with either pip install anomalib or pip install kornia"
+    )
+    raise ImportError(msg)
 
 
 class DraemLoss(nn.Module):
