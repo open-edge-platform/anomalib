@@ -124,7 +124,9 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         ).eval()
         self.feature_pooler = torch.nn.AvgPool2d(3, 1, 1)
         self.anomaly_map_generator = AnomalyMapGenerator()
-        self.register_buffer("memory_bank", torch.empty(0, self.feature_extractor.out_dims[1]))
+        embedding_dim = sum(self.feature_extractor.out_dims)
+        self.memory_bank: torch.Tensor
+        self.register_buffer("memory_bank", torch.empty(0, embedding_dim))
 
     def forward(self, input_tensor: torch.Tensor) -> torch.Tensor | InferenceBatch:
         """Process input tensor through the model.
@@ -168,12 +170,12 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         embedding = self.reshape_embedding(embedding)
 
         if self.training:
-            # Grow memory bank while preserving buffer registration
-            if self.memory_bank.numel() > 0:
-                new_bank = torch.cat((self.memory_bank, embedding), dim=0)
-                self.memory_bank.data = new_bank
-            else:
-                self.memory_bank.data = embedding
+            with torch.no_grad():
+                if self.memory_bank.numel() > 0:
+                    new_bank = torch.cat((self.memory_bank, embedding), dim=0)
+                    self.memory_bank.resize_(new_bank.size()).copy_(new_bank)
+                else:
+                    self.memory_bank.resize_(embedding.size()).copy_(embedding)
             return embedding
 
         # Ensure memory bank is not empty
@@ -281,7 +283,7 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         # Coreset Subsampling
         sampler = KCenterGreedy(embedding=self.memory_bank, sampling_ratio=sampling_ratio)
         coreset = sampler.sample_coreset()
-        self.memory_bank.data = coreset.clone()
+        self.memory_bank = coreset
 
     @staticmethod
     def euclidean_dist(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:

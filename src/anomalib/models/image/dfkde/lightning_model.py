@@ -113,8 +113,6 @@ class Dfkde(MemoryBankMixin, AnomalibModule):
             max_training_points=max_training_points,
         )
 
-        self.embeddings: list[torch.Tensor] = []
-
     @staticmethod
     def configure_optimizers() -> None:  # pylint: disable=arguments-differ
         """DFKDE doesn't require optimization, therefore returns no optimizers."""
@@ -133,18 +131,15 @@ class Dfkde(MemoryBankMixin, AnomalibModule):
         """
         del args, kwargs  # These variables are not used.
 
-        embedding = self.model(batch.image)
-        self.embeddings.append(embedding)
+        _ = self.model(batch.image)
 
         # Return a dummy loss tensor
         return torch.tensor(0.0, requires_grad=True, device=self.device)
 
     def fit(self) -> None:
         """Fit KDE model to collected embeddings from the training set."""
-        embeddings = torch.vstack(self.embeddings)
-
         logger.info("Fitting a KDE model to the embedding collected from the training set.")
-        self.model.classifier.fit(embeddings)
+        self.model.fit_classifier()
 
     def validation_step(self, batch: Batch, *args, **kwargs) -> STEP_OUTPUT:
         """Perform validation by computing anomaly scores.
