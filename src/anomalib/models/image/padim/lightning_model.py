@@ -183,16 +183,16 @@ class Padim(MemoryBankMixin, AnomalibModule):
 
     @property
     def trainer_arguments(self) -> dict[str, int | float]:
-        """Return PADIM trainer arguments.
-
-        Since the model does not require training, we limit the max_epochs to 1.
-        Since we need to run training epoch before validation, we also set the
-        sanity steps to 0.
+        """Get default trainer arguments for Padim.
 
         Returns:
-            dict[str, int | float]: Dictionary of trainer arguments
+            dict[str, Any]: Trainer arguments
+                - ``max_epochs``: ``1`` (single pass through training data)
+                - ``val_check_interval``: ``1.0`` (check validation every 1 step)
+                - ``num_sanity_val_steps``: ``0`` (skip validation sanity checks)
+                - ``devices``: ``1`` (only single gpu supported)
         """
-        return {"max_epochs": 1, "val_check_interval": 1.0, "num_sanity_val_steps": 0}
+        return {"max_epochs": 1, "val_check_interval": 1.0, "num_sanity_val_steps": 0, "devices": 0}
 
     @property
     def learning_type(self) -> LearningType:

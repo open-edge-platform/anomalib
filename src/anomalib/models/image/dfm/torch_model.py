@@ -26,6 +26,7 @@ Notes:
 # SPDX-License-Identifier: Apache-2.0
 
 import math
+import warnings
 
 import torch
 from torch import nn
@@ -153,17 +154,36 @@ class DFMModel(nn.Module):
             layers=[layer],
         ).eval()
 
-    def fit(self, dataset: torch.Tensor) -> None:
+        self.embedding_dim = sum(self.feature_extractor.out_dims)
+        self.memory_bank = torch.empty(0, self.embedding_dim)
+
+    def fit(self, dataset: torch.Tensor = None) -> None:
         """Fit PCA and Gaussian model to dataset.
 
         Args:
-            dataset (torch.Tensor): Input dataset with shape
-                ``(n_samples, n_features)``.
+            dataset (torch.Tensor, optional): **[DEPRECATED]**
+                Input dataset with shape ``(n_samples, n_features)``.
+                This argument is deprecated and will be ignored. Instead,
+                the method now uses `self.memory_bank` as the input dataset.
         """
-        self.pca_model.fit(dataset)
+        if dataset is not None:
+            warnings.warn(
+                "The 'dataset' argument is deprecated and will be removed in a future release. "
+                "The method now uses 'self.memory_bank' as the input dataset.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+        # Use self.memory_bank as the dataset
+        dataset_to_use = self.memory_bank
+
+        self.pca_model.fit(dataset_to_use)
         if self.score_type == "nll":
-            features_reduced = self.pca_model.transform(dataset)
+            features_reduced = self.pca_model.transform(dataset_to_use)
             self.gaussian_model.fit(features_reduced.T)
+
+        # clear memory bank, reduces GPU size
+        self.memory_bank = torch.empty(0, self.embedding_dim)
 
     def score(self, features: torch.Tensor, feature_shapes: tuple) -> torch.Tensor:
         """Compute anomaly scores.
@@ -202,17 +222,16 @@ class DFMModel(nn.Module):
                 ``(batch_size, channels, height, width)``.
 
         Returns:
-            Union[torch.Tensor, Tuple[torch.Tensor, torch.Size]]: Features during
-                training, or tuple of (features, feature_shapes) during inference.
+            tuple of (features, feature_shapes).
         """
-        self.feature_extractor.eval()
-        features = self.feature_extractor(batch)[self.layer]
-        batch_size = len(features)
-        if self.pooling_kernel_size > 1:
-            features = F.avg_pool2d(input=features, kernel_size=self.pooling_kernel_size)
-        feature_shapes = features.shape
-        features = features.view(batch_size, -1).detach()
-        return features if self.training else (features, feature_shapes)
+        with torch.no_grad():
+            features = self.feature_extractor(batch)[self.layer]
+            batch_size = len(features)
+            if self.pooling_kernel_size > 1:
+                features = F.avg_pool2d(input=features, kernel_size=self.pooling_kernel_size)
+            feature_shapes = features.shape
+            features = features.view(batch_size, -1)
+        return features, feature_shapes
 
     def forward(self, batch: torch.Tensor) -> torch.Tensor | InferenceBatch:
         """Compute anomaly predictions from input images.
@@ -227,6 +246,16 @@ class DFMModel(nn.Module):
                 ``InferenceBatch`` with prediction scores and anomaly maps.
         """
         feature_vector, feature_shapes = self.get_features(batch)
+
+        if self.training:
+            # Grow memory bank
+            with torch.no_grad():
+                if self.memory_bank.numel() > 0:
+                    self.memory_bank = torch.cat((self.memory_bank, feature_vector), dim=0)
+                else:
+                    self.memory_bank = feature_vector
+            return feature_vector
+
         pred_score, anomaly_map = self.score(feature_vector.view(feature_vector.shape[:2]), feature_shapes)
         if anomaly_map is not None:
             anomaly_map = F.interpolate(anomaly_map, size=batch.shape[-2:], mode="bilinear", align_corners=False)

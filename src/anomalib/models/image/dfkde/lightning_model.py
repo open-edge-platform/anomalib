@@ -162,9 +162,13 @@ class Dfkde(MemoryBankMixin, AnomalibModule):
         """Get DFKDE-specific trainer arguments.
 
         Returns:
-            dict[str, Any]: Dictionary of trainer arguments.
+           dict[str, Any]: Trainer arguments
+               - ``gradient_clip_val``: ``0`` (no gradient clipping needed)
+               - ``max_epochs``: ``1`` (single pass through training data)
+               - ``num_sanity_val_steps``: ``0`` (skip validation sanity checks)
+               - ``devices``: ``1`` (only single gpu supported)
         """
-        return {"gradient_clip_val": 0, "max_epochs": 1, "num_sanity_val_steps": 0}
+        return {"gradient_clip_val": 0, "max_epochs": 1, "num_sanity_val_steps": 0, "devices": 1}
 
     @property
     def learning_type(self) -> LearningType:

@@ -279,8 +279,9 @@ class Patchcore(MemoryBankMixin, AnomalibModule):
                 - ``gradient_clip_val``: ``0`` (no gradient clipping needed)
                 - ``max_epochs``: ``1`` (single pass through training data)
                 - ``num_sanity_val_steps``: ``0`` (skip validation sanity checks)
+                - ``devices``: ``1`` (only single gpu supported)
         """
-        return {"gradient_clip_val": 0, "max_epochs": 1, "num_sanity_val_steps": 0}
+        return {"gradient_clip_val": 0, "max_epochs": 1, "num_sanity_val_steps": 0, "devices": 1}
 
     @property
     def learning_type(self) -> LearningType:
