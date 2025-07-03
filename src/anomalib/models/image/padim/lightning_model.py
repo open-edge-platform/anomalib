@@ -192,7 +192,7 @@ class Padim(MemoryBankMixin, AnomalibModule):
                 - ``num_sanity_val_steps``: ``0`` (skip validation sanity checks)
                 - ``devices``: ``1`` (only single gpu supported)
         """
-        return {"max_epochs": 1, "val_check_interval": 1.0, "num_sanity_val_steps": 0, "devices": 0}
+        return {"max_epochs": 1, "val_check_interval": 1.0, "num_sanity_val_steps": 0, "devices": 1}
 
     @property
     def learning_type(self) -> LearningType:
