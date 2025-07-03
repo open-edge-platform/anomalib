@@ -33,6 +33,7 @@ See Also:
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import warnings
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
@@ -249,7 +250,7 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         embedding_size = embedding.size(1)
         return embedding.permute(0, 2, 3, 1).reshape(-1, embedding_size)
 
-    def subsample_embedding(self, sampling_ratio: float) -> None:
+    def subsample_embedding(self, sampling_ratio: float, embeddings: torch.Tensor = None) -> None:
         """Subsample the memory_banks embeddings using coreset selection.
 
         Uses k-center-greedy coreset subsampling to select a representative
@@ -257,6 +258,9 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
 
         Args:
             sampling_ratio (float): Fraction of embeddings to keep, in range (0,1].
+            embeddings (torch.Tensor): **[DEPRECATED]**
+            This argument is deprecated and will be removed in a future release.
+            Use the default behavior (i.e., rely on `self.memory_bank`) instead.
 
         Example:
             >>> model.memory_bank = torch.randn(1000, 512)
@@ -264,6 +268,13 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
             >>> model.memory_bank.shape
             torch.Size([100, 512])
         """
+        if embeddings is not None:
+            warnings.warn(
+                "The 'embeddings' argument is deprecated and will be removed in a future release."
+                "Please use the default memory bank instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         if self.memory_bank.size(0) == 0:
             msg = "Memory bank is empty. Cannot perform coreset selection."
             raise ValueError(msg)
