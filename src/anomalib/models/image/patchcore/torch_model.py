@@ -283,7 +283,7 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         # Coreset Subsampling
         sampler = KCenterGreedy(embedding=self.memory_bank, sampling_ratio=sampling_ratio)
         coreset = sampler.sample_coreset()
-        self.memory_bank = coreset
+        self.memory_bank.resize_(coreset.size()).copy_(coreset)
 
     @staticmethod
     def euclidean_dist(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
