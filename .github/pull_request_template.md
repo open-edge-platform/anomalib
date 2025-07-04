@@ -9,13 +9,13 @@ Select what type of change your PR is:
 
 - [ ] 🚀 New feature (non-breaking change which adds functionality)
 - [ ] 🐞 Bug fix (non-breaking change which fixes an issue)
-- [ ] ♻️ Refactor (non-breaking change which refactors the code base)
-- [ ] ⚡️ Performance improvements
+- [ ] 🔄 Refactor (non-breaking change which refactors the code base)
+- [ ] ⚡ Performance improvements
 - [ ] 🎨 Style changes (code style/formatting)
 - [ ] 🧪 Tests (adding/modifying tests)
 - [ ] 📚 Documentation update
 - [ ] 📦 Build system changes
-- [ ] 🏗️ CI/CD configuration
+- [ ] 🚧 CI/CD configuration
 - [ ] 🔧 Chore (general maintenance)
 - [ ] 🔒 Security update
 - [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
