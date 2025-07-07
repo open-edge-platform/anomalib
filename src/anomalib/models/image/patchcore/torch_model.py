@@ -280,7 +280,7 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
             raise ValueError(msg)
         # Coreset Subsampling
         sampler = KCenterGreedy(embedding=self.memory_bank, sampling_ratio=sampling_ratio)
-        coreset = sampler.sample_coreset().type_as(self.memory_bank)
+        coreset = sampler.sample_coreset().to(self.memory_bank)
         self.memory_bank = coreset
 
     @staticmethod
