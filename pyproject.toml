@@ -65,6 +65,7 @@ clip = [
     "open-clip-torch>=2.23.0,<2.26.1",
 ]
 vlm = ["ollama>=0.4.0", "openai", "python-dotenv", "transformers"]
+video = ["av>=10.0.0"]
 loggers = [
     "comet-ml>=3.31.7",
     "gradio>=4",
@@ -123,7 +124,7 @@ xpu = [
     "torchvision>=0.19.0",
     "pytorch-triton-xpu ; sys_platform == 'linux' or sys_platform == 'win32'",
 ]
-full = ["anomalib[clip,openvino,loggers,notebooks,vlm]"]
+full = ["anomalib[clip,openvino,loggers,notebooks,vlm,video]"]
 dev = ["anomalib[full,docs,test]"]
 
 [project.scripts]
