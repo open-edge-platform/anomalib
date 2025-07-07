@@ -147,8 +147,7 @@ class PadimModel(nn.Module):
         self.anomaly_map_generator = AnomalyMapGenerator()
 
         self.gaussian = MultiVariateGaussian()
-        self.embedding_dim = sum(self.feature_extractor.out_dims)
-        self.memory_bank = torch.empty(0, self.embedding_dim)
+        self.memory_bank = torch.Tensor()
 
     def forward(self, input_tensor: torch.Tensor) -> torch.Tensor | InferenceBatch:
         """Forward-pass image-batch (N, C, H, W) into model to extract features.
@@ -184,12 +183,11 @@ class PadimModel(nn.Module):
             embeddings = self.tiler.untile(embeddings)
 
         if self.training:
-            # Grow memory bank
-            with torch.no_grad():
-                if self.memory_bank.numel() > 0:
-                    self.memory_bank = torch.cat((self.memory_bank, embeddings), dim=0)
-                else:
-                    self.memory_bank = embeddings
+            if self.memory_bank.size(0) == 0:
+                self.memory_bank = embeddings
+            else:
+                new_bank = torch.cat((self.memory_bank, embeddings), dim=0).to(self.memory_bank)
+                self.memory_bank = new_bank
             return embeddings
 
         anomaly_map = self.anomaly_map_generator(
@@ -243,5 +241,5 @@ class PadimModel(nn.Module):
         # fit gaussian
         self.gaussian.fit(self.memory_bank)
 
-        # clear memory bank, redcues gpu size
-        self.memory_bank = torch.empty(0, self.embedding_dim)
+        # clear memory bank, redcues gpu usage
+        self.memory_bank = torch.Tensor().to(self.memory_bank)

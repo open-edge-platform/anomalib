@@ -89,8 +89,7 @@ class DfkdeModel(nn.Module):
             feature_scaling_method=feature_scaling_method,
             max_training_points=max_training_points,
         )
-        self.embedding_dim = sum(self.feature_extractor.out_dims)
-        self.memory_bank = torch.empty(0, self.embedding_dim)
+        self.memory_bank = torch.Tensor()
 
     def get_features(self, batch: torch.Tensor) -> torch.Tensor:
         """Extract features from the pre-trained backbone network.
@@ -143,11 +142,11 @@ class DfkdeModel(nn.Module):
         # 1. apply feature extraction
         features = self.get_features(batch)
         if self.training:
-            with torch.no_grad():
-                if self.memory_bank.numel() > 0:
-                    self.memory_bank = torch.cat((self.memory_bank, features), dim=0)
-                else:
-                    self.memory_bank = features
+            if self.memory_bank.size(0) == 0:
+                self.memory_bank = features
+            else:
+                new_bank = torch.cat((self.memory_bank, features), dim=0).to(self.memory_bank)
+                self.memory_bank = new_bank
             return features
 
         # 2. apply density estimation
@@ -173,4 +172,4 @@ class DfkdeModel(nn.Module):
         self.classifier.fit(self.memory_bank)
 
         # clear memory bank, redcues gpu size
-        self.memory_bank = torch.empty(0, self.embedding_dim)
+        self.memory_bank = torch.Tensor().to(self.memory_bank)
