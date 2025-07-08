@@ -12,9 +12,12 @@
 # - Automated feedback
 #
 # Process Stages:
+# All stages run in parallel for faster feedback:
+#
 # 1. PR Title Validation:
 #    - Conventional commit format verification
 #    - Ensures proper changelog generation
+#    - Can be fixed later while other checks run
 #
 # 2. Quality Checks:
 #    - Code style verification
@@ -43,7 +46,8 @@
 # Note:
 # - PR title validation only runs on actual pull requests
 # - Individual commit messages are not validated (since PRs are squash merged)
-# - Other checks only run if PR title is valid OR PR is in draft mode
+# - Other checks run in parallel with PR title validation for faster feedback
+# - PR title can be fixed later while tests are already running
 # - Configured to cancel outdated runs when new commits are pushed
 
 name: PR Checks
@@ -72,16 +76,14 @@ jobs:
 
   # Code quality job using reusable workflow
   quality:
-    if: needs.pr-title-check.result == 'success' || github.event.pull_request.draft == true
-    needs: [pr-title-check] # Run after PR title validation (or if skipped)
+    if: github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-code-quality.yaml
     with:
       python-version: "3.10"
 
   # Test suite job using reusable workflow
   unit-tests:
-    if: needs.pr-title-check.result == 'success' || github.event.pull_request.draft == true
-    needs: [pr-title-check] # Run after PR title validation (or if skipped)
+    if: github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-test-suite.yaml
     with:
       test-type: "unit"
@@ -92,8 +94,7 @@ jobs:
       codecov-token: ${{ secrets.CODECOV_TOKEN }}
 
   integration-tests:
-    if: needs.pr-title-check.result == 'success' || github.event.pull_request.draft == true
-    needs: [pr-title-check] # Run after PR title validation (or if skipped)
+    if: github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-test-suite.yaml
     with:
       test-type: "integration"
@@ -107,8 +108,7 @@ jobs:
 
   # Security scanning job using reusable workflow
   security:
-    if: needs.pr-title-check.result == 'success' || github.event.pull_request.draft == true
-    needs: [pr-title-check] # Run after PR title validation (or if skipped)
+    if: github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-security-scan.yaml
     permissions:
       security-events: write # needed to upload results
