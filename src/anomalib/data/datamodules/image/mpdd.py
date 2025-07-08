@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """MPDD Data Module.
 
 This module provides a PyTorch Lightning DataModule for the MPDD dataset.
@@ -32,9 +35,6 @@ Reference:
     on Ultra Modern Telecommunications and Control Systems and Workshops
     (ICUMT), 2021, pp. 66-71, DOI: 10.1109/ICUMT54235.2021.9631567.
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from pathlib import Path
