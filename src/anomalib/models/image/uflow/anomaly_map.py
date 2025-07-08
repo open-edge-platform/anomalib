@@ -15,22 +15,19 @@ Example:
 
 See Also:
     - :class:`AnomalyMapGenerator`: Main class for generating anomaly maps
-    - :func:`compute_anomaly_map`: Function to generate anomaly maps from latents
 """
 
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import numpy as np
+import math
+
 import scipy.stats as st
 import torch
 import torch.nn.functional as F  # noqa: N812
-from mpmath import binomial, mp
 from omegaconf import ListConfig
-from scipy import integrate
 from torch import Tensor, nn
-
-mp.dps = 15  # Set precision for NFA computation (in case of high_precision=True)
+from torch.distributions import Normal
 
 
 class AnomalyMapGenerator(nn.Module):
@@ -61,7 +58,6 @@ class AnomalyMapGenerator(nn.Module):
         torch.Size([1, 1, 256, 256])
 
     See Also:
-        - :func:`compute_anomaly_map`: Main method for likelihood-based maps
         - :func:`compute_anomaly_mask`: Optional method for NFA-based segmentation
     """
 
@@ -190,39 +186,33 @@ class AnomalyMapGenerator(nn.Module):
             torch.Tensor: Log probability tensor of shape ``(batch_size, 1,
                 height, width)``
         """
-        tau = st.chi2.ppf(probability_thr, 1)
-        half_win = np.max([int(window_size // 2), 1])
+        # Calculate tau using pure PyTorch
+        normal_dist = Normal(0, 1)
+        p_adjusted = (probability_thr + 1) / 2
+        tau = normal_dist.icdf(torch.tensor(p_adjusted)) ** 2
+        half_win = max(int(window_size // 2), 1)
 
         n_chann = z.shape[1]
 
+        # Use float64 for high precision mode
+        dtype = torch.float64 if high_precision else torch.float32
+        z = z.to(dtype)
+        tau = tau.to(dtype)
+
         # Candidates
-        z2 = F.pad(z**2, tuple(4 * [half_win]), "reflect").detach().cpu()
+        z2 = F.pad(z**2, tuple(4 * [half_win]), "reflect")
         z2_unfold_h = z2.unfold(-2, 2 * half_win + 1, 1)
-        z2_unfold_hw = z2_unfold_h.unfold(-2, 2 * half_win + 1, 1).numpy()
-        observed_candidates_k = np.sum(z2_unfold_hw >= tau, axis=(-2, -1))
+        z2_unfold_hw = z2_unfold_h.unfold(-2, 2 * half_win + 1, 1)
+        observed_candidates_k = torch.sum(z2_unfold_hw >= tau, dim=(-2, -1))
 
         # All volume together
-        observed_candidates = np.sum(observed_candidates_k, axis=1, keepdims=True)
+        observed_candidates = torch.sum(observed_candidates_k, dim=1, keepdim=True)
         x = observed_candidates / n_chann
         n = int((2 * half_win + 1) ** 2)
 
-        # Low precision
-        if not high_precision:
-            log_prob = torch.tensor(st.binom.logsf(x, n, 1 - probability_thr) / np.log(10))
-        # High precision - good and slow
-        else:
-            to_mp = np.frompyfunc(mp.mpf, 1, 1)
-            mpn = mp.mpf(n)
-            mpp = probability_thr
+        # Use scipy for the binomial test as PyTorch does not have a stable/direct equivalent.
+        # nosemgrep: trailofbits.python.numpy-in-pytorch-modules.numpy-in-pytorch-modules
+        x_np = x.detach().cpu().numpy()
+        log_prob_np = st.binom.logsf(x_np, n, 1 - probability_thr) / math.log(10)
 
-            def binomial_density(tensor: torch.tensor) -> torch.Tensor:
-                return binomial(mpn, to_mp(tensor)) * (1 - mpp) ** tensor * mpp ** (mpn - tensor)
-
-            def integral(tensor: torch.Tensor) -> torch.Tensor:
-                return integrate.quad(binomial_density, tensor, n)[0]
-
-            integral_array = np.vectorize(integral)
-            prob = integral_array(x)
-            log_prob = torch.tensor(np.log10(prob))
-
-        return log_prob
+        return torch.from_numpy(log_prob_np).to(z.device)

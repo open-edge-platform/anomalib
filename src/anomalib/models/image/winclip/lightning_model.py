@@ -149,7 +149,7 @@ class WinClip(AnomalibModule):
                     self.few_shot_source,
                     transform=self.pre_processor.test_transform if self.pre_processor else None,
                 )
-                dataloader = DataLoader(reference_dataset, batch_size=1, shuffle=False)
+                dataloader = DataLoader(reference_dataset, batch_size=1, shuffle=False, pin_memory=True)
             else:
                 logger.info("Collecting reference images from training dataset")
                 dataloader = self.trainer.datamodule.train_dataloader()
@@ -192,7 +192,7 @@ class WinClip(AnomalibModule):
         Returns:
             torch.Tensor: Tensor containing the collected reference images
         """
-        ref_images = torch.Tensor()
+        ref_images = torch.empty(0)
         for batch in dataloader:
             images = batch.image[: self.k_shot - ref_images.shape[0]]
             ref_images = torch.cat((ref_images, images))

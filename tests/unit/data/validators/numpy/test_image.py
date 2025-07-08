@@ -27,7 +27,7 @@ class TestNumpyImageValidator:
 
     def test_validate_image_invalid_type(self) -> None:
         """Test validation of an image with invalid type."""
-        with pytest.raises(TypeError, match="Image must be a numpy.ndarray, got <class 'list'>"):
+        with pytest.raises(TypeError, match=r"Image must be a numpy.ndarray, got <class 'list'>"):
             self.validator.validate_image([1, 2, 3])
 
     def test_validate_image_adds_channel_dimension(self) -> None:
@@ -48,7 +48,7 @@ class TestNumpyImageValidator:
 
     def test_validate_image_invalid_channels(self) -> None:
         """Test validation of an image with invalid number of channels."""
-        with pytest.raises(ValueError, match="Image must have 1 or 3 channels"):
+        with pytest.raises(ValueError, match=r"Image must have 1 or 3 channels"):
             self.validator.validate_image(np.zeros((224, 224, 2)))
 
     def test_validate_image_valid_single_channel(self) -> None:
@@ -73,12 +73,12 @@ class TestNumpyImageValidator:
 
     def test_validate_gt_label_invalid_type(self) -> None:
         """Test validation of a ground truth label with invalid type."""
-        with pytest.raises(TypeError, match="Ground truth label must be an integer or a numpy.ndarray"):
+        with pytest.raises(TypeError, match=r"Ground truth label must be an integer or a numpy.ndarray"):
             self.validator.validate_gt_label("1")
 
     def test_validate_gt_label_invalid_shape(self) -> None:
         """Test validation of a ground truth label with invalid shape."""
-        with pytest.raises(ValueError, match="Ground truth label must be a scalar"):
+        with pytest.raises(ValueError, match=r"Ground truth label must be a scalar"):
             self.validator.validate_gt_label(np.array([0, 1]))
 
     def test_validate_gt_mask_valid(self) -> None:
@@ -95,12 +95,12 @@ class TestNumpyImageValidator:
 
     def test_validate_gt_mask_invalid_type(self) -> None:
         """Test validation of a ground truth mask with invalid type."""
-        with pytest.raises(TypeError, match="Mask must be a numpy.ndarray"):
+        with pytest.raises(TypeError, match=r"Mask must be a numpy.ndarray"):
             self.validator.validate_gt_mask([1, 2, 3])
 
     def test_validate_gt_mask_invalid_shape(self) -> None:
         """Test validation of a ground truth mask with invalid shape."""
-        with pytest.raises(ValueError, match="Mask must have 1 channel, got 2."):
+        with pytest.raises(ValueError, match=r"Mask must have 1 channel, got 2."):
             self.validator.validate_gt_mask(np.zeros((224, 224, 2)))
 
 
@@ -137,7 +137,7 @@ class TestNumpyImageBatchValidator:
 
     def test_validate_image_invalid_type(self) -> None:
         """Test validation of an image batch with invalid type."""
-        with pytest.raises(TypeError, match="Image batch must be a numpy.ndarray, got <class 'list'>"):
+        with pytest.raises(TypeError, match=r"Image batch must be a numpy.ndarray, got <class 'list'>"):
             self.validator.validate_image([1, 2, 3])
 
     def test_validate_image_adds_batch_dimension(self) -> None:
@@ -157,7 +157,7 @@ class TestNumpyImageBatchValidator:
 
     def test_validate_image_invalid_channels(self) -> None:
         """Test validation of an image batch with invalid number of channels."""
-        with pytest.raises(ValueError, match="Image batch must have 1 or 3 channels"):
+        with pytest.raises(ValueError, match=r"Image batch must have 1 or 3 channels"):
             self.validator.validate_image(np.zeros((32, 224, 224, 2)))
 
     def test_validate_image_valid_single_channel(self) -> None:
@@ -190,7 +190,7 @@ class TestNumpyImageBatchValidator:
 
     def test_validate_gt_label_invalid_dimensions(self) -> None:
         """Test validation of ground truth labels with invalid dimensions."""
-        with pytest.raises(ValueError, match="Ground truth label batch must be 1-dimensional"):
+        with pytest.raises(ValueError, match=r"Ground truth label batch must be 1-dimensional"):
             self.validator.validate_gt_label(np.array([[0, 1], [1, 0]]))
 
     def test_validate_gt_mask_valid(self) -> None:
@@ -207,10 +207,10 @@ class TestNumpyImageBatchValidator:
 
     def test_validate_gt_mask_invalid_type(self) -> None:
         """Test validation of ground truth masks with invalid type."""
-        with pytest.raises(TypeError, match="Ground truth mask batch must be a numpy.ndarray"):
+        with pytest.raises(TypeError, match=r"Ground truth mask batch must be a numpy.ndarray"):
             self.validator.validate_gt_mask([np.zeros((224, 224))])
 
     def test_validate_gt_mask_invalid_dimensions(self) -> None:
         """Test validation of ground truth masks with invalid dimensions."""
-        with pytest.raises(ValueError, match="Ground truth mask batch must have 1 channel, got 224"):
+        with pytest.raises(ValueError, match=r"Ground truth mask batch must have 1 channel, got 224"):
             self.validator.validate_gt_mask(np.zeros((4, 224, 224, 224)))

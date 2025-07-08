@@ -27,7 +27,7 @@ class TestNumpyVideoValidator:
 
     def test_validate_image_invalid_type(self) -> None:
         """Test validation of an image with invalid type."""
-        with pytest.raises(TypeError, match="Video must be a numpy.ndarray, got <class 'list'>"):
+        with pytest.raises(TypeError, match=r"Video must be a numpy.ndarray, got <class 'list'>"):
             self.validator.validate_image([1, 2, 3])
 
     def test_validate_image_adds_time_dimension(self) -> None:
@@ -46,7 +46,7 @@ class TestNumpyVideoValidator:
 
     def test_validate_image_invalid_channels(self) -> None:
         """Test validation of an image with invalid number of channels."""
-        with pytest.raises(ValueError, match="Video must have 1 or 3 channels"):
+        with pytest.raises(ValueError, match=r"Video must have 1 or 3 channels"):
             self.validator.validate_image(np.zeros((10, 224, 224, 2)))
 
     def test_validate_image_valid_single_channel(self) -> None:
@@ -68,12 +68,12 @@ class TestNumpyVideoValidator:
 
     def test_validate_target_frame_invalid_type(self) -> None:
         """Test validation of a target frame with invalid type."""
-        with pytest.raises(TypeError, match="Target frame must be an integer"):
+        with pytest.raises(TypeError, match=r"Target frame must be an integer"):
             self.validator.validate_target_frame("5")
 
     def test_validate_target_frame_negative(self) -> None:
         """Test validation of a negative target frame."""
-        with pytest.raises(ValueError, match="Target frame index must be non-negative"):
+        with pytest.raises(ValueError, match=r"Target frame index must be non-negative"):
             self.validator.validate_target_frame(-1)
 
     def test_validate_gt_label_valid(self) -> None:
@@ -117,17 +117,17 @@ class TestNumpyVideoBatchValidator:
 
     def test_validate_image_invalid_type(self) -> None:
         """Test validation of an image batch with invalid type."""
-        with pytest.raises(TypeError, match="Video batch must be a numpy.ndarray, got <class 'list'>"):
+        with pytest.raises(TypeError, match=r"Video batch must be a numpy.ndarray, got <class 'list'>"):
             self.validator.validate_image([1, 2, 3])
 
     def test_validate_image_invalid_dimensions(self) -> None:
         """Test validation of an image batch with invalid dimensions."""
-        with pytest.raises(ValueError, match="Video batch must have 4 or 5 dimensions, got shape \\(224, 224, 3\\)"):
+        with pytest.raises(ValueError, match=r"Video batch must have 4 or 5 dimensions, got shape \(224, 224, 3\)"):
             self.validator.validate_image(np.zeros((224, 224, 3)))
 
     def test_validate_image_invalid_channels(self) -> None:
         """Test validation of an image batch with invalid number of channels."""
-        with pytest.raises(ValueError, match="Video batch must have 1 or 3 channels, got 2"):
+        with pytest.raises(ValueError, match=r"Video batch must have 1 or 3 channels, got 2"):
             self.validator.validate_image(np.zeros((2, 10, 224, 224, 2)))
 
     def test_validate_image_valid_single_channel(self) -> None:
@@ -162,12 +162,12 @@ class TestNumpyVideoBatchValidator:
     def test_validate_gt_label_invalid_type(self) -> None:
         """Test validation of ground truth labels with invalid type."""
         # Test with a non-sequence, non-array type
-        with pytest.raises(TypeError, match="Ground truth label batch must be a numpy.ndarray"):
+        with pytest.raises(TypeError, match=r"Ground truth label batch must be a numpy.ndarray"):
             self.validator.validate_gt_label(3.14)
 
     def test_validate_gt_label_invalid_dimensions(self) -> None:
         """Test validation of ground truth labels with invalid dimensions."""
-        with pytest.raises(ValueError, match="Ground truth label batch must be 1-dimensional, got shape \\(2, 2\\)"):
+        with pytest.raises(ValueError, match=r"Ground truth label batch must be 1-dimensional, got shape \(2, 2\)"):
             self.validator.validate_gt_label(np.array([[0, 1], [1, 0]]))
 
     def test_validate_gt_label_invalid_dtype(self) -> None:

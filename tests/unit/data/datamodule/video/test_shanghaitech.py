@@ -25,7 +25,7 @@ class TestShanghaiTech(_TestAnomalibVideoDatamodule):
     @staticmethod
     def datamodule(dataset_path: Path, clip_length_in_frames: int) -> ShanghaiTech:
         """Create and return a Shanghai datamodule."""
-        _datamodule = ShanghaiTech(
+        datamodule_ = ShanghaiTech(
             root=dataset_path / "shanghaitech",
             scene=1,
             clip_length_in_frames=clip_length_in_frames,
@@ -35,10 +35,10 @@ class TestShanghaiTech(_TestAnomalibVideoDatamodule):
             augmentations=Resize((256, 256)),
         )
 
-        _datamodule.prepare_data()
-        _datamodule.setup()
+        datamodule_.prepare_data()
+        datamodule_.setup()
 
-        return _datamodule
+        return datamodule_
 
     @pytest.fixture()
     @staticmethod

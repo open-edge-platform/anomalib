@@ -38,24 +38,24 @@ class TestOpenVINOInferenceEntrypoint:
     ) -> None:
         """Test openvino_inference.py."""
         get_parser, infer = get_functions
-        _ckpt_path = ckpt_path("Padim")
-        model = Padim.load_from_checkpoint(_ckpt_path)
+        checkpoint_path = ckpt_path("Padim")
+        model = Padim.load_from_checkpoint(checkpoint_path)
 
         # export OpenVINO model
         model.to_openvino(
-            export_root=_ckpt_path.parent.parent.parent,
-            ov_args={},
+            export_root=checkpoint_path.parent.parent.parent,
+            ov_kwargs={},
             task=TaskType.SEGMENTATION,
         )
 
         arguments = get_parser().parse_args(
             [
                 "--weights",
-                str(_ckpt_path.parent.parent) + "/openvino/model.bin",
+                str(checkpoint_path.parent.parent) + "/openvino/model.bin",
                 "--input",
                 get_dummy_inference_image,
                 "--output",
-                str(_ckpt_path.parent.parent) + "/output.png",
+                str(checkpoint_path.parent.parent) + "/output.png",
             ],
         )
         infer(arguments)

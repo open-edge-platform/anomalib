@@ -112,10 +112,10 @@ class TestNumpyToPILImage:
         """Test handling of arrays with invalid dimensions."""
         # Test with 1D array
         array = rng.random(100)
-        with pytest.raises(ValueError, match="Expected 2D array"):
+        with pytest.raises(ValueError, match=r"Expected 2D array"):
             np_to_pil_image(array)
 
         # Test with 3D array that's not RGB
         array = rng.random((100, 100, 4))
-        with pytest.raises(ValueError, match="Expected 2D array"):
+        with pytest.raises(ValueError, match=r"Expected 2D array"):
             np_to_pil_image(array)

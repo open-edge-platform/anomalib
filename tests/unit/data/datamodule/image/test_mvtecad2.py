@@ -20,16 +20,16 @@ class TestMVTecAD2(_TestAnomalibImageDatamodule):
     @staticmethod
     def datamodule(dataset_path: Path) -> MVTecAD2:
         """Create and return a MVTec AD 2 datamodule."""
-        _datamodule = MVTecAD2(
+        datamodule_ = MVTecAD2(
             root=dataset_path / "mvtecad2",
             category="dummy",
             train_batch_size=4,
             eval_batch_size=4,
             augmentations=Resize((256, 256)),
         )
-        _datamodule.setup()
+        datamodule_.setup()
 
-        return _datamodule
+        return datamodule_
 
     @pytest.fixture()
     @staticmethod
@@ -59,5 +59,5 @@ class TestMVTecAD2(_TestAnomalibImageDatamodule):
         assert batch.image.shape == (4, 3, 256, 256)
 
         # Test invalid test type
-        with pytest.raises(ValueError, match="'invalid' is not a valid TestType"):
+        with pytest.raises(ValueError, match=r"'invalid' is not a valid TestType"):
             datamodule.test_dataloader(test_type="invalid")

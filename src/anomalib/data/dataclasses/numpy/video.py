@@ -27,6 +27,7 @@ Example:
 # SPDX-License-Identifier: Apache-2.0
 
 from dataclasses import dataclass
+from typing import ClassVar
 
 import numpy as np
 
@@ -79,4 +80,4 @@ class NumpyVideoBatch(
     Where ``B`` represents the batch dimension and ``T`` the temporal dimension.
     """
 
-    item_class = NumpyVideoItem
+    item_class: ClassVar = NumpyVideoItem

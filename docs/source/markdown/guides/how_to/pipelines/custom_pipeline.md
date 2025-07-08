@@ -171,7 +171,7 @@ When creating a custom pipeline, there is only one important method that we need
 :language: python
 ```
 
-In this example we use `SerialRunner` for running each job. It is a simple runner that runs the jobs in a serial manner. For more information on `SerialRunner` look [here](../../reference/pipelines/runners/serial.md).
+In this example we use `SerialRunner` for running each job. It is a simple runner that runs the jobs in a serial manner. For more information on `SerialRunner` refer to the [serial runner documentation](../../reference/pipelines/runners/serial.md).
 
 Okay, so we have the pipeline. How do we run it? To do this let's create a simple entrypoint in `tools` folder of Anomalib.
 

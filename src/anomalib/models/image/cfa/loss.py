@@ -76,7 +76,7 @@ class CfaLoss(nn.Module):
                 components.
         """
         num_neighbors = self.num_nearest_neighbors + self.num_hard_negative_features
-        distance = distance.topk(num_neighbors, largest=False).values  # noqa: PD011
+        distance = distance.topk(num_neighbors, largest=False).values
 
         score = distance[:, :, : self.num_nearest_neighbors] - (self.radius**2).to(distance.device)
         l_att = torch.mean(torch.max(torch.zeros_like(score), score))

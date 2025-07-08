@@ -169,12 +169,12 @@ Set up your development environment to start contributing. This involves install
    - 🐞 for `fix` (bug fixes)
    - 📚 for `docs` (documentation)
    - 🎨 for `style` (code style/formatting)
-   - ♻️ for `refactor` (code refactoring)
-   - ⚡️ for `perf` (performance improvements)
+   - 🔄 for `refactor` (code refactoring)
+   - ⚡ for `perf` (performance improvements)
    - 🧪 for `test` (adding/modifying tests)
    - 📦 for `build` (build system changes)
    - 🔧 for `chore` (general maintenance)
-   - 🏗️ for `ci` (CI/CD configuration)
+   - 🚧 for `ci` (CI/CD configuration)
 
    **Note:** Emojis are completely optional. PR titles without emojis are equally valid.
 
@@ -200,6 +200,8 @@ Set up your development environment to start contributing. This involves install
 
    :::{dropdown} Development Workflow
    :icon: terminal
+   <summary>Using Commitizen</summary>
+   1. Stage your changes and create a commit using Commitizen:
 
    **During Development:**
    Individual commits can use any format for convenience:

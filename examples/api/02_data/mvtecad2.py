@@ -93,8 +93,20 @@ test_dataset = MVTecAD2Dataset(
 )
 
 # Create dataloaders
-train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True, collate_fn=train_dataset.collate_fn)
-test_loader = DataLoader(test_dataset, batch_size=4, shuffle=False, collate_fn=test_dataset.collate_fn)
+train_loader = DataLoader(
+    train_dataset,
+    batch_size=4,
+    shuffle=True,
+    collate_fn=train_dataset.collate_fn,
+    pin_memory=True,
+)
+test_loader = DataLoader(
+    test_dataset,
+    batch_size=4,
+    shuffle=False,
+    collate_fn=test_dataset.collate_fn,
+    pin_memory=True,
+)
 
 # Get some sample images
 train_samples = next(iter(train_loader))
