@@ -19,17 +19,17 @@ class TestMPDD(_TestAnomalibImageDatamodule):
     @staticmethod
     def datamodule(dataset_path: Path) -> MPDD:
         """Create and return a MPDD datamodule."""
-        _datamodule = MPDD(
+        datamodule_ = MPDD(
             root=dataset_path / "mpdd",
             category="dummy",
             train_batch_size=4,
             eval_batch_size=4,
             augmentations=Resize((256, 256)),
         )
-        _datamodule.prepare_data()
-        _datamodule.setup()
+        datamodule_.prepare_data()
+        datamodule_.setup()
 
-        return _datamodule
+        return datamodule_
 
     @pytest.fixture()
     @staticmethod
