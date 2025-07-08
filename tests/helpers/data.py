@@ -500,6 +500,11 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
                 mask_filename = self.dataset_root / category / f"Part{i}_label.bmp"
                 self.image_generator.generate_image(label, image_filename, mask_filename)
 
+    def _generate_dummy_mpdd_dataset(self) -> None:
+        """Generate dummy MPDD dataset in directory using the same convention as MVTec AD."""
+        # MPDD dataset follows the same convention as MVTec AD.
+        self._generate_dummy_mvtecad_dataset(normal_dir="good", abnormal_dir="bad", image_extension=".png")
+
     def _generate_dummy_realiad_dataset(self) -> None:
         """Generate dummy RealIAD dataset in directory using the same convention as RealIAD."""
         import json
