@@ -128,7 +128,7 @@ uv pip install "anomalib[full,cpu]"
 
 Here is a list of available optional dependency groups:
 
-| Extra         | Description                              | Models that need it                         |
+| Extra         | Description                              | Purpose                                     |
 | :------------ | :--------------------------------------- | :------------------------------------------ |
 | `[openvino]`  | Intel OpenVINO optimization              | For accelerated inference on Intel hardware |
 | `[clip]`      | Vision-language models                   | `winclip`                                   |
