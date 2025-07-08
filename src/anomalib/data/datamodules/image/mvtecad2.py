@@ -81,7 +81,7 @@ class MVTecAD2(AnomalibDataModule):
             - ``"private"``: Official test set without ground truth for leaderboard submission
             - ``"private_mixed"``: Official test set with mixed lighting conditions (seen and
               unseen, randomly mixed) for leaderboard submission
-            Defaults to ``TestType.PUBLIC.value``.
+            Defaults to ``TestType.PUBLIC``.
         seed (int | None, optional): Random seed for reproducibility.
             Defaults to ``None``.
 
@@ -120,7 +120,7 @@ class MVTecAD2(AnomalibDataModule):
         val_augmentations: Transform | None = None,
         test_augmentations: Transform | None = None,
         augmentations: Transform | None = None,
-        test_type: str | TestType = TestType.PUBLIC.value,
+        test_type: TestType | str = TestType.PUBLIC,
         seed: int | None = None,
     ) -> None:
         """Initialize MVTec AD 2 datamodule."""
