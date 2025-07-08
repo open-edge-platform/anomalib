@@ -28,21 +28,11 @@ Example:
 
 import logging
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
 
+import timm
 import torch
-from lightning_utilities.core.imports import module_available
 from torch import nn
 from torchvision.models.feature_extraction import create_feature_extractor
-
-if TYPE_CHECKING or module_available("timm"):
-    import timm
-else:
-    msg = (
-        "timm is required for models using timm models as backbones. "
-        "Install it with either pip install anomalib or pip install timm"
-    )
-    raise ImportError(msg)
 
 from .utils import dryrun_find_featuremap_dims
 

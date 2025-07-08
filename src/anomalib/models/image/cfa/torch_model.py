@@ -35,11 +35,10 @@ Example:
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import TYPE_CHECKING
-
 import torch
 import torchvision
-from lightning_utilities.core.imports import module_available
+from einops import rearrange
+from sklearn.cluster import KMeans
 from torch import nn
 from torch.fx.graph_module import GraphModule
 from torch.nn import functional as F  # noqa: N812
@@ -51,19 +50,6 @@ from tqdm import tqdm
 from anomalib.data import InferenceBatch
 from anomalib.models.components import DynamicBufferMixin
 from anomalib.models.components.feature_extractors import dryrun_find_featuremap_dims
-
-if TYPE_CHECKING or module_available("einops"):
-    from einops import rearrange
-else:
-    msg = "einops is required for tensor manipulation. Install with either pip install anomalib or pip install einops"
-    raise ImportError(msg)
-
-
-if TYPE_CHECKING or module_available("sklearn"):
-    from sklearn.cluster import KMeans
-else:
-    msg = "sklearn is required for clustering. Install with either pip install anomalib or pip install scikit-learn"
-    raise ImportError(msg)
 
 from .anomaly_map import AnomalyMapGenerator
 

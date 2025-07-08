@@ -22,18 +22,11 @@ See Also:
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING
 
+import timm
 import torch
 import torch.nn.functional as F  # noqa: N812
-from lightning_utilities.core.imports import module_available
 from torch import nn
-
-if TYPE_CHECKING or module_available("timm"):
-    import timm
-else:
-    msg = "timm is required for feature extraction models. Install it with: pip install anomalib[feature]"
-    raise ImportError(msg)
 
 from anomalib.models.components.feature_extractors import TimmFeatureExtractor
 

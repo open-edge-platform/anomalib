@@ -10,28 +10,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING
 
+import timm
 import torch
-from lightning_utilities.core.imports import module_available
+from FrEIA.framework import SequenceINN
+from timm.models.cait import Cait
+from timm.models.vision_transformer import VisionTransformer
 from torch import nn
 
 from anomalib.data import InferenceBatch
 from anomalib.models.components.flow import AllInOneBlock
-
-if TYPE_CHECKING or module_available("timm"):
-    import timm
-    from timm.models.cait import Cait
-    from timm.models.vision_transformer import VisionTransformer
-else:
-    msg = "timm is required for feature extraction. Install with either `pip install anomalib` or `pip install timm`."
-    raise ImportError(msg)
-
-if TYPE_CHECKING or module_available("FrEIA"):
-    from FrEIA.framework import SequenceINN
-else:
-    msg = "FrEIA is required for the flow model. Install with either `pip install anomalib` or `pip install FrEIA`."
-    raise ImportError(msg)
 
 from .anomaly_map import AnomalyMapGenerator
 

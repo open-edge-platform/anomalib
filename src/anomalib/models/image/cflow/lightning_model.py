@@ -19,20 +19,14 @@ Paper: `Real-Time Unsupervised Anomaly Detection via Conditional Normalizing Flo
 __all__ = ["Cflow"]
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+import einops
 import torch
 from lightning.pytorch.utilities.types import STEP_OUTPUT
-from lightning_utilities.core.imports import module_available
 from torch import optim
 from torch.nn import functional as F  # noqa: N812
 from torch.optim import Optimizer
-
-if TYPE_CHECKING or module_available("einops"):
-    import einops
-else:
-    msg = "einops is required for tensor manipulation in cflow models. Install it with: pip install anomalib[tensor]"
-    raise ImportError(msg)
 
 from anomalib import LearningType
 from anomalib.data import Batch

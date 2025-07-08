@@ -20,21 +20,14 @@ The implementation is based on the paper:
 # SPDX-License-Identifier: Apache-2.0
 
 from math import exp
-from typing import TYPE_CHECKING
 
 import numpy as np
 import torch
-from lightning_utilities.core.imports import module_available
+from FrEIA.framework import GraphINN, InputNode, Node, OutputNode
+from FrEIA.modules import InvertibleModule
 from torch import nn
 from torch.nn import functional as F  # noqa: N812
 from torchvision.models import EfficientNet_B5_Weights, efficientnet_b5
-
-if TYPE_CHECKING or module_available("FrEIA"):
-    from FrEIA.framework import GraphINN, InputNode, Node, OutputNode
-    from FrEIA.modules import InvertibleModule
-else:
-    msg = "FrEIA is required for flow-based models. Install it with either pip install anomalib or pip install FrEIA"
-    raise ImportError(msg)
 
 from anomalib.data import InferenceBatch
 from anomalib.models.components.feature_extractors import TimmFeatureExtractor
