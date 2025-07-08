@@ -213,7 +213,7 @@ Evaluate and compare model performance across different datasets:
 
 ```bash
 # Run benchmarking with default configuration
-anomalib benchmark --config tools/benchmarking/benchmark_params.yaml
+anomalib benchmark --config tools/experimental/benchmarking/sample.yaml
 ```
 
 > 💡 **Tip:** Check individual model performance in their respective README files:
