@@ -4,10 +4,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from .attention_bottleneck import AttentionBottleneck, BottleneckLayer
-from .dfs import DomainRelatedFeatureSelection, domain_related_feature_selection
+from .dfs import DomainRelatedFeatureSelection
 
 __all__ = [
-    "domain_related_feature_selection",
     "DomainRelatedFeatureSelection",
     "AttentionBottleneck",
     "BottleneckLayer",

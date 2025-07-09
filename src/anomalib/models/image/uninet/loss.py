@@ -99,7 +99,7 @@ class UniNetLoss(nn.Module):
 
                 if abnormal_mask.sum() > 0:
                     diag_sim_abnormal = diag_sum[abnormal_mask]
-                    margin_loss_a = functional.relu(diag_sim_abnormal - margin).mean()
+                    margin_loss_a = functional.relu(diag_sim_abnormal - margin / 2).mean()
 
             margin_loss = margin_loss_n + margin_loss_a
 
