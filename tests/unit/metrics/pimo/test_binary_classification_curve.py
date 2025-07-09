@@ -1,9 +1,10 @@
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 # Original Code
 # https://github.com/jpcbertoldo/aupimo
+
+"""Test binary classification curve."""
 
 import pytest
 import torch

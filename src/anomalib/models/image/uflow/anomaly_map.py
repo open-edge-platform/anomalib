@@ -20,6 +20,8 @@ See Also:
     - :class:`AnomalyMapGenerator`: Main class for generating anomaly maps
 """
 
+import math
+
 import scipy.stats as st
 import torch
 import torch.nn.functional as F  # noqa: N812
