@@ -253,7 +253,7 @@ class CaitFeatureExtractor(nn.Module):
             x1 = self.extractor1.blocks[i](x1)
 
         # Scale 2 --> Extractor 2
-        img_sub = F.interpolate(torch.Tensor(img), size=(224, 224), mode="bicubic", align_corners=True)
+        img_sub = F.interpolate(img, size=(224, 224), mode="bicubic", align_corners=True)
         x2 = self.extractor2.patch_embed(img_sub)
         x2 = x2 + self.extractor2.pos_embed
         x2 = self.extractor2.pos_drop(x2)

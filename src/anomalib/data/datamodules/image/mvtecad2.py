@@ -120,7 +120,7 @@ class MVTecAD2(AnomalibDataModule):
         val_augmentations: Transform | None = None,
         test_augmentations: Transform | None = None,
         augmentations: Transform | None = None,
-        test_type: str | TestType = TestType.PUBLIC,
+        test_type: TestType | str = TestType.PUBLIC,
         seed: int | None = None,
     ) -> None:
         """Initialize MVTec AD 2 datamodule."""

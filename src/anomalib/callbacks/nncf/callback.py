@@ -18,8 +18,7 @@ from typing import TYPE_CHECKING, Any
 
 import lightning.pytorch as pl
 from lightning.pytorch import Callback
-from nncf import NNCFConfig
-from nncf.torch import register_default_init_args
+from lightning_utilities.core.imports import module_available
 
 from anomalib.callbacks.nncf.utils import InitLoader, wrap_nncf_model
 
@@ -70,6 +69,12 @@ class NNCFCallback(Callback):
     """
 
     def __init__(self, config: dict, export_dir: str | None = None) -> None:
+        if not module_available("nncf"):
+            msg = "NNCF is not installed. Please install it using: pip install anomalib[openvino]"
+            raise ImportError(msg)
+
+        from nncf import NNCFConfig
+
         self.export_dir = export_dir
         self.config = NNCFConfig(config)
         self.nncf_ctrl: CompressionAlgorithmController | None = None
@@ -89,6 +94,8 @@ class NNCFCallback(Callback):
 
         if self.nncf_ctrl is not None:
             return
+
+        from nncf.torch import register_default_init_args
 
         # Get validate subset to initialize quantization,
         # because train subset does not contain anomalous images.
