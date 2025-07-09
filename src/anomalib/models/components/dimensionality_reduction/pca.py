@@ -59,9 +59,9 @@ class PCA(DynamicBufferMixin):
         super().__init__()
         self.n_components = n_components
 
-        self.register_buffer("singular_vectors", torch.Tensor())
-        self.register_buffer("mean", torch.Tensor())
-        self.register_buffer("num_components", torch.Tensor())
+        self.register_buffer("singular_vectors", torch.empty(0))
+        self.register_buffer("mean", torch.empty(0))
+        self.register_buffer("num_components", torch.empty(0))
 
         self.singular_vectors: torch.Tensor
         self.singular_values: torch.Tensor
@@ -92,7 +92,7 @@ class PCA(DynamicBufferMixin):
         num_components: int
         if self.n_components <= 1:
             variance_ratios = torch.cumsum(sig * sig, dim=0) / torch.sum(sig * sig)
-            num_components = torch.nonzero(variance_ratios >= self.n_components)[0]
+            num_components = int(torch.nonzero(variance_ratios >= self.n_components)[0].item())
         else:
             num_components = int(self.n_components)
 

@@ -171,7 +171,7 @@ class RegionExtractor(nn.Module):
         # remove regions already detected by region extractor
         boxes_list = [im_regions["boxes"] for im_regions in regions]
         boxes_list = [
-            clip_boxes_to_image(boxes + torch.Tensor([-2, -2, 2, 2]).to(boxes.device), foreground_map.shape[-2:])
+            clip_boxes_to_image(boxes + torch.tensor([-2, -2, 2, 2]).to(boxes.device), foreground_map.shape[-2:])
             for boxes in boxes_list
         ]  # extend boxes by 2 in all directions to ensure full object is included
         boxes_mask = boxes_to_masks(boxes_list, foreground_map.shape[-2:]).int()

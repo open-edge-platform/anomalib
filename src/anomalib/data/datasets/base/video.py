@@ -213,7 +213,7 @@ class AnomalibVideoDataset(AnomalibDataset, ABC):
         if item.gt_mask is not None:
             if self.augmentations:
                 item.image, item.gt_mask = self.augmentations(item.image, Mask(item.gt_mask))
-            item.gt_label = torch.Tensor([1 in frame for frame in item.gt_mask]).int().squeeze(0)
+            item.gt_label = torch.tensor([1 in frame for frame in item.gt_mask]).int().squeeze(0)
         elif self.augmentations:
             item.image = self.augmentations(item.image)
 

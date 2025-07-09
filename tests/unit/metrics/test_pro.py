@@ -12,9 +12,12 @@ from anomalib.metrics.pro import _PRO as PRO
 from anomalib.metrics.pro import connected_components_cpu, connected_components_gpu
 
 
-def test_pro() -> None:
-    """Checks if PRO metric computes the (macro) average of the per-region overlap."""
-    labels = torch.Tensor(
+@pytest.fixture()
+def pro_metrics() -> tuple[torch.Tensor, torch.Tensor]:
+    """Create test fixture for pro score."""
+    preds = torch.zeros(34, 34)
+    preds[10:20, 10:20] = 1
+    labels = torch.tensor(
         [
             [
                 [0, 0, 0, 0, 0],
@@ -29,7 +32,14 @@ def test_pro() -> None:
                 [1, 1, 1, 1, 1],
             ],
         ],
+        dtype=torch.uint8,
     )
+    return preds, labels
+
+
+def test_pro_score(pro_metrics: tuple[torch.Tensor, torch.Tensor]) -> None:
+    """Checks if PRO metric computes the (macro) average of the per-region overlap."""
+    preds, labels = pro_metrics
     # ground truth mask is int type
     labels = labels.type(torch.int32)
 

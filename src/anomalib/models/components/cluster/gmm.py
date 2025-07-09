@@ -65,9 +65,9 @@ class GaussianMixture(DynamicBufferMixin):
         self.tol = tol
         self.n_iter = n_iter
 
-        self.register_buffer("means", torch.Tensor())
-        self.register_buffer("covariances", torch.Tensor())
-        self.register_buffer("weights", torch.Tensor())
+        self.register_buffer("means", torch.empty(0))
+        self.register_buffer("covariances", torch.empty(0))
+        self.register_buffer("weights", torch.empty(0))
 
         self.means: torch.Tensor
         self.covariances: torch.Tensor
