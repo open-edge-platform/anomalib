@@ -124,7 +124,7 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         self.feature_pooler = torch.nn.AvgPool2d(3, 1, 1)
         self.anomaly_map_generator = AnomalyMapGenerator()
 
-        self.register_buffer("memory_bank", torch.Tensor())
+        self.register_buffer("memory_bank", torch.empty(0))
         self.memory_bank: torch.Tensor
 
     def forward(self, input_tensor: torch.Tensor) -> torch.Tensor | InferenceBatch:

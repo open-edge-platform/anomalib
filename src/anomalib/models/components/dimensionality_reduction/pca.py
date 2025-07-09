@@ -59,9 +59,9 @@ class PCA(DynamicBufferMixin):
         super().__init__()
         self.n_components = n_components
 
-        self.register_buffer("singular_vectors", torch.Tensor())
-        self.register_buffer("mean", torch.Tensor())
-        self.register_buffer("num_components", torch.Tensor())
+        self.register_buffer("singular_vectors", torch.empty(0))
+        self.register_buffer("mean", torch.empty(0))
+        self.register_buffer("num_components", torch.empty(0))
 
         self.singular_vectors: torch.Tensor
         self.singular_values: torch.Tensor

@@ -51,9 +51,9 @@ class SingleClassGaussian(DynamicBufferMixin):
     def __init__(self) -> None:
         """Initialize Gaussian model with empty buffers."""
         super().__init__()
-        self.register_buffer("mean_vec", torch.Tensor())
-        self.register_buffer("u_mat", torch.Tensor())
-        self.register_buffer("sigma_mat", torch.Tensor())
+        self.register_buffer("mean_vec", torch.empty(0))
+        self.register_buffer("u_mat", torch.empty(0))
+        self.register_buffer("sigma_mat", torch.empty(0))
 
         self.mean_vec: torch.Tensor
         self.u_mat: torch.Tensor

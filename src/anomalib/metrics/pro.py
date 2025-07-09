@@ -145,7 +145,7 @@ def pro_score(
     preds = preds.reshape(predictions.shape)
     preds[~predictions] = 0
     if n_comps == 1:  # only background
-        return torch.Tensor([1.0])
+        return torch.tensor([1.0])
 
     # Even though ignore_index is set to 0, the final average computed with
     # "macro" takes the entire length of the tensor into account. That's why we

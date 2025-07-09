@@ -12,8 +12,8 @@ from anomalib.metrics.threshold.f1_adaptive_threshold import _F1AdaptiveThreshol
 @pytest.mark.parametrize(
     ("labels", "preds", "target_threshold"),
     [
-        (torch.Tensor([0, 0, 0, 1, 1]), torch.Tensor([2.3, 1.6, 2.6, 7.9, 3.3]), 3.3),  # standard case
-        (torch.Tensor([1, 0, 0, 0]), torch.Tensor([4, 3, 2, 1]), 4),  # 100% recall for all thresholds
+        (torch.tensor([0, 0, 0, 1, 1]), torch.tensor([2.3, 1.6, 2.6, 7.9, 3.3]), 3.3),  # standard case
+        (torch.tensor([1, 0, 0, 0]), torch.tensor([4, 3, 2, 1]), 4),  # 100% recall for all thresholds
     ],
 )
 def test_adaptive_threshold(labels: torch.Tensor, preds: torch.Tensor, target_threshold: int | float) -> None:
