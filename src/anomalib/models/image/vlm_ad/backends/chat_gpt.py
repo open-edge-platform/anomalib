@@ -162,9 +162,9 @@ class ChatGPT(Backend):
         """
         message: dict[str, list[dict] | str] = {"role": "user"}
         if images is not None:
-            _content: list[dict[str, str | dict]] = [{"type": "text", "text": content}]
-            _content.extend([{"type": "image_url", "image_url": {"url": image}} for image in images])
-            message["content"] = _content
+            content_: list[dict[str, str | dict]] = [{"type": "text", "text": content}]
+            content_.extend([{"type": "image_url", "image_url": {"url": image}} for image in images])
+            message["content"] = content_
         else:
             message["content"] = content
         return message

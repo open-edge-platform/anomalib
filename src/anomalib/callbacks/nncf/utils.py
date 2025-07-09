@@ -19,11 +19,7 @@ from copy import copy
 from typing import TYPE_CHECKING, Any
 
 import torch
-from nncf import NNCFConfig
-from nncf.api.compression import CompressionAlgorithmController
-from nncf.torch import create_compressed_model, load_state, register_default_init_args
-from nncf.torch.initialization import PTInitializingDataLoader
-from nncf.torch.nncf_network import NNCFNetwork
+from lightning_utilities.core.imports import module_available
 from torch import nn
 from torch.utils.data.dataloader import DataLoader
 
@@ -34,7 +30,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(name="NNCF compression")
 
 
-class InitLoader(PTInitializingDataLoader):
+class InitLoader:
     """Initializing data loader for NNCF to be used with unsupervised training algorithms.
 
     This class extends NNCF's ``PTInitializingDataLoader`` to handle unsupervised training data.
@@ -64,7 +60,15 @@ class InitLoader(PTInitializingDataLoader):
     """
 
     def __init__(self, data_loader: DataLoader) -> None:
-        super().__init__(data_loader)
+        if not module_available("nncf"):
+            msg = "NNCF is not installed. Please install it using: pip install anomalib[openvino]"
+            raise ImportError(msg)
+
+        from nncf.torch.initialization import PTInitializingDataLoader
+
+        # Store the parent class for later initialization
+        PTInitializingDataLoader.__init__(self, data_loader)
+        self._data_loader = data_loader
         self._data_loader_iter: Iterator
 
     def __iter__(self) -> "InitLoader":
@@ -142,7 +146,7 @@ def wrap_nncf_model(
     config: dict,
     dataloader: DataLoader,
     init_state_dict: dict,
-) -> tuple[CompressionAlgorithmController, NNCFNetwork]:
+) -> tuple[Any, Any]:
     """Wrap PyTorch model with NNCF compression.
 
     Args:
@@ -170,6 +174,13 @@ def wrap_nncf_model(
         >>> isinstance(compressed, NNCFNetwork)
         True
     """
+    if not module_available("nncf"):
+        msg = "NNCF is not installed. Please install it using: pip install anomalib[openvino]"
+        raise ImportError(msg)
+
+    from nncf import NNCFConfig
+    from nncf.torch import create_compressed_model, load_state, register_default_init_args
+
     nncf_config = NNCFConfig.from_dict(config)
 
     if not dataloader and not init_state_dict:
@@ -357,9 +368,9 @@ def _merge_dicts_and_lists_b_into_a(
     """
 
     def _err_str(_a: dict | list, _b: dict | list, _key: int | str | None = None) -> str:
-        _key_str = "of whole structures" if _key is None else f"during merging for key=`{_key}`"
+        key_str = "of whole structures" if _key is None else f"during merging for key=`{_key}`"
         return (
-            f"Error in merging parts of config: different types {_key_str}, type(a) = {type(_a)}, type(b) = {type(_b)}"
+            f"Error in merging parts of config: different types {key_str}, type(a) = {type(_a)}, type(b) = {type(_b)}"
         )
 
     if not (isinstance(a, dict | list)):

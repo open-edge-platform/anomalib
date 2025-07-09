@@ -19,15 +19,15 @@ class TestDatumaro(_TestAnomalibImageDatamodule):
     @staticmethod
     def datamodule(dataset_path: Path) -> Datumaro:
         """Create and return a Datumaro datamodule."""
-        _datamodule = Datumaro(
+        datamodule_ = Datumaro(
             root=dataset_path / "datumaro",
             train_batch_size=4,
             eval_batch_size=4,
             augmentations=Resize((256, 256)),
         )
-        _datamodule.setup()
+        datamodule_.setup()
 
-        return _datamodule
+        return datamodule_
 
     @pytest.fixture()
     @staticmethod

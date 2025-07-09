@@ -193,7 +193,7 @@ class CfaModel(DynamicBufferMixin):
         """
         feature_map_metadata = dryrun_find_featuremap_dims(
             feature_extractor=self.feature_extractor,
-            input_size=input_size,
+            input_size=(input_size[0], input_size[1]),
             layers=get_return_nodes(self.backbone),
         )
         # Scale is to get the largest feature map dimensions of different layers
@@ -207,7 +207,7 @@ class CfaModel(DynamicBufferMixin):
         else:
             msg = f"Unknown type {type(resolution)} for `resolution`. Expected types are either int or tuple[int, int]."
             raise TypeError(msg)
-        return scale
+        return torch.Size(scale)
 
     def initialize_centroid(self, data_loader: DataLoader) -> None:
         """Initialize the centroid of the memory bank.

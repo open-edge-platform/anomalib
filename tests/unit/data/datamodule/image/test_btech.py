@@ -19,7 +19,7 @@ class TestBTech(_TestAnomalibImageDatamodule):
     @staticmethod
     def datamodule(dataset_path: Path) -> BTech:
         """Create and return a BTech datamodule."""
-        _datamodule = BTech(
+        datamodule_ = BTech(
             root=dataset_path / "btech",
             category="dummy",
             train_batch_size=4,
@@ -27,10 +27,10 @@ class TestBTech(_TestAnomalibImageDatamodule):
             augmentations=Resize((256, 256)),
         )
 
-        _datamodule.prepare_data()
-        _datamodule.setup()
+        datamodule_.prepare_data()
+        datamodule_.setup()
 
-        return _datamodule
+        return datamodule_
 
     @pytest.fixture()
     @staticmethod

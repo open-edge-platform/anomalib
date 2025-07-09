@@ -136,18 +136,22 @@ class PostProcessor(nn.Module, Callback):
         if self.enable_thresholding:
             # compute threshold values
             if self._image_threshold_metric.update_called:
-                self._image_threshold = self._image_threshold_metric.compute()
+                self._image_threshold.copy_(self._image_threshold_metric.compute())
                 self._image_threshold_metric.reset()
             if self._pixel_threshold_metric.update_called:
-                self._pixel_threshold = self._pixel_threshold_metric.compute()
+                self._pixel_threshold.copy_(self._pixel_threshold_metric.compute())
                 self._pixel_threshold_metric.reset()
         if self.enable_normalization:
             # compute normalization values
             if self._image_min_max_metric.update_called:
-                self.image_min, self.image_max = self._image_min_max_metric.compute()
+                image_min, image_max = self._image_min_max_metric.compute()
+                self.image_min.copy_(image_min)
+                self.image_max.copy_(image_max)
                 self._image_min_max_metric.reset()
             if self._pixel_min_max_metric.update_called:
-                self.pixel_min, self.pixel_max = self._pixel_min_max_metric.compute()
+                pixel_min, pixel_max = self._pixel_min_max_metric.compute()
+                self.pixel_min.copy_(pixel_min)
+                self.pixel_max.copy_(pixel_max)
                 self._pixel_min_max_metric.reset()
 
     def on_test_batch_end(
@@ -316,7 +320,7 @@ class PostProcessor(nn.Module, Callback):
         return preds.clamp(min=0, max=1)
 
     @property
-    def image_threshold(self) -> torch.tensor:
+    def image_threshold(self) -> torch.Tensor:
         """Get the image-level threshold.
 
         Returns:
@@ -327,7 +331,7 @@ class PostProcessor(nn.Module, Callback):
         return self._pixel_threshold if self.enable_threshold_matching else torch.tensor(float("nan"))
 
     @property
-    def pixel_threshold(self) -> torch.tensor:
+    def pixel_threshold(self) -> torch.Tensor:
         """Get the pixel-level threshold.
 
         If the pixel-level threshold is not set, the image-level threshold is used.
@@ -340,7 +344,7 @@ class PostProcessor(nn.Module, Callback):
         return self._image_threshold if self.enable_threshold_matching else torch.tensor(float("nan"))
 
     @property
-    def normalized_image_threshold(self) -> torch.tensor:
+    def normalized_image_threshold(self) -> torch.Tensor:
         """Get the normalized image-level threshold.
 
         Returns:
@@ -349,7 +353,7 @@ class PostProcessor(nn.Module, Callback):
         return torch.tensor(1.0) - self.image_sensitivity
 
     @property
-    def normalized_pixel_threshold(self) -> torch.tensor:
+    def normalized_pixel_threshold(self) -> torch.Tensor:
         """Get the normalized pixel-level threshold.
 
         Returns:

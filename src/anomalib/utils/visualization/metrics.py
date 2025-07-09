@@ -68,7 +68,7 @@ class MetricsVisualizer(BaseVisualizer):
             ...     # Process the visualization result
             ...     print(result.file_name)
         """
-        pl_module: AnomalibModule = kwargs.get("pl_module", None)
+        pl_module: AnomalibModule | None = kwargs.get("pl_module")
         if pl_module is None:
             msg = "`pl_module` must be provided"
             raise ValueError(msg)

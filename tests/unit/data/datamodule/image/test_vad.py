@@ -19,17 +19,17 @@ class TestVAD(_TestAnomalibImageDatamodule):
     @staticmethod
     def datamodule(dataset_path: Path) -> VAD:
         """Create and return a VAD datamodule."""
-        _datamodule = VAD(
+        datamodule_ = VAD(
             root=dataset_path / "vad",
             category="vad",
             train_batch_size=4,
             eval_batch_size=4,
             augmentations=Resize((256, 256)),
         )
-        _datamodule.prepare_data()
-        _datamodule.setup()
+        datamodule_.prepare_data()
+        datamodule_.setup()
 
-        return _datamodule
+        return datamodule_
 
     @pytest.fixture()
     @staticmethod

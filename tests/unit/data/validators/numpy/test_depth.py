@@ -26,12 +26,12 @@ class TestNumpyDepthValidator:
 
     def test_validate_depth_map_invalid_type(self) -> None:
         """Test validation of a depth map with invalid type."""
-        with pytest.raises(TypeError, match="Depth map must be a numpy array"):
+        with pytest.raises(TypeError, match=r"Depth map must be a numpy array"):
             self.validator.validate_depth_map([1, 2, 3])
 
     def test_validate_depth_map_invalid_dimensions(self) -> None:
         """Test validation of a depth map with invalid dimensions."""
-        with pytest.raises(ValueError, match="Depth map with 3 dimensions must have 1 channel, got 2."):
+        with pytest.raises(ValueError, match=r"Depth map with 3 dimensions must have 1 channel, got 2."):
             self.validator.validate_depth_map(np.zeros((224, 224, 2)))
 
     def test_validate_depth_map_3d_valid(self) -> None:
@@ -44,7 +44,7 @@ class TestNumpyDepthValidator:
 
     def test_validate_depth_map_3d_invalid(self) -> None:
         """Test validation of an invalid 3D depth map."""
-        with pytest.raises(ValueError, match="Depth map with 3 dimensions must have 1 channel"):
+        with pytest.raises(ValueError, match=r"Depth map with 3 dimensions must have 1 channel"):
             self.validator.validate_depth_map(np.zeros((224, 224, 3)))
 
     def test_validate_depth_path_valid(self) -> None:
@@ -75,12 +75,12 @@ class TestNumpyDepthBatchValidator:
 
     def test_validate_depth_map_invalid_type(self) -> None:
         """Test validation of a depth map batch with invalid type."""
-        with pytest.raises(TypeError, match="Depth map batch must be a numpy array"):
+        with pytest.raises(TypeError, match=r"Depth map batch must be a numpy array"):
             self.validator.validate_depth_map([1, 2, 3])
 
     def test_validate_depth_map_invalid_dimensions(self) -> None:
         """Test validation of a depth map batch with invalid dimensions."""
-        with pytest.raises(ValueError, match="Depth map batch must have shape"):
+        with pytest.raises(ValueError, match=r"Depth map batch must have shape"):
             self.validator.validate_depth_map(np.zeros((32, 224)))
 
     def test_validate_depth_map_4d_valid(self) -> None:
@@ -93,7 +93,7 @@ class TestNumpyDepthBatchValidator:
 
     def test_validate_depth_map_4d_invalid(self) -> None:
         """Test validation of an invalid 4D depth map batch."""
-        with pytest.raises(ValueError, match="Depth map batch with 4 dimensions must have 1 channel"):
+        with pytest.raises(ValueError, match=r"Depth map batch with 4 dimensions must have 1 channel"):
             self.validator.validate_depth_map(np.zeros((32, 224, 224, 3)))
 
     def test_validate_depth_path_valid(self) -> None:
@@ -108,5 +108,5 @@ class TestNumpyDepthBatchValidator:
 
     def test_validate_depth_path_invalid_type(self) -> None:
         """Test validation of depth paths with invalid type."""
-        with pytest.raises(TypeError, match="Depth path must be a list of strings"):
+        with pytest.raises(TypeError, match=r"Depth path must be a list of strings"):
             self.validator.validate_depth_path("not_a_list")

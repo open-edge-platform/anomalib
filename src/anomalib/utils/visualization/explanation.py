@@ -50,7 +50,7 @@ class ExplanationVisualizer(BaseVisualizer):
 
     def generate(self, **kwargs) -> Iterator[GeneratorResult]:
         """Generate images and return them as an iterator."""
-        outputs = kwargs.get("outputs", None)
+        outputs = kwargs.get("outputs")
         if outputs is None:
             msg = "Outputs must be provided to generate images."
             raise ValueError(msg)

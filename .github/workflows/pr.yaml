@@ -4,6 +4,7 @@
 # pull requests using reusable workflows.
 #
 # Key Features:
+# - PR title validation (conventional commits)
 # - Code quality validation
 # - Test suite execution
 # - Security scanning
@@ -11,17 +12,24 @@
 # - Automated feedback
 #
 # Process Stages:
-# 1. Quality Checks:
+# All stages run in parallel for faster feedback:
+#
+# 1. PR Title Validation:
+#    - Conventional commit format verification
+#    - Ensures proper changelog generation
+#    - Can be fixed later while other checks run
+#
+# 2. Quality Checks:
 #    - Code style verification
 #    - Type checking
 #    - Pre-commit hook validation
 #
-# 2. Testing:
+# 3. Testing:
 #    - Unit test execution
 #    - Integration testing
 #    - Coverage reporting
 #
-# 3. Security:
+# 4. Security:
 #    - Changed files scanning
 #    - Vulnerability detection
 #    - Security report generation
@@ -33,8 +41,14 @@
 # Automatically triggered on:
 # 1. Pull requests to main branch
 # 2. Pull requests to feature/* branches
+# 3. Merge group events
 #
-# Note: Configured to cancel outdated runs when new commits are pushed
+# Note:
+# - PR title validation only runs on actual pull requests
+# - Individual commit messages are not validated (since PRs are squash merged)
+# - Other checks run in parallel with PR title validation for faster feedback
+# - PR title can be fixed later while tests are already running
+# - Configured to cancel outdated runs when new commits are pushed
 
 name: PR Checks
 
@@ -52,22 +66,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Commit message validation - runs first as it's quick and fundamental
-  commit-message-check:
-    uses: ./.github/workflows/_reusable-commit-message-check.yaml
+  # PR title validation - runs first as it's quick and fundamental
+  # Only runs on actual pull requests, not merge groups
+  pr-title-check:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/_reusable-pr-title-check.yaml
     with:
       python-version: "3.10"
 
   # Code quality job using reusable workflow
   quality:
-    needs: [commit-message-check] # Run after commit validation
+    if: github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-code-quality.yaml
     with:
       python-version: "3.10"
 
   # Test suite job using reusable workflow
   unit-tests:
-    needs: [commit-message-check] # Run after commit validation
+    if: github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-test-suite.yaml
     with:
       test-type: "unit"
@@ -78,7 +94,7 @@ jobs:
       codecov-token: ${{ secrets.CODECOV_TOKEN }}
 
   integration-tests:
-    needs: [commit-message-check] # Run after commit validation
+    if: github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-test-suite.yaml
     with:
       test-type: "integration"
@@ -92,7 +108,7 @@ jobs:
 
   # Security scanning job using reusable workflow
   security:
-    needs: [commit-message-check] # Run after commit validation
+    if: github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-security-scan.yaml
     permissions:
       security-events: write # needed to upload results

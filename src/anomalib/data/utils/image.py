@@ -340,7 +340,7 @@ def read_mask(path: str | Path, as_tensor: bool = False) -> torch.Tensor | np.nd
         <class 'torch.Tensor'>
     """
     image = Image.open(path).convert("L")
-    return Mask(to_image(image).squeeze() / 255, dtype=torch.uint8) if as_tensor else np.array(image)
+    return Mask(to_image(image).squeeze() > 0, dtype=torch.uint8) if as_tensor else np.array(image)
 
 
 def read_depth_image(path: str | Path) -> np.ndarray:
@@ -456,4 +456,4 @@ def figure_to_array(fig: Figure) -> np.ndarray:
     fig.canvas.draw()
     # convert figure to np.ndarray for saving via visualizer
     img = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-    return img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+    return img.reshape((*fig.canvas.get_width_height()[::-1], 3))

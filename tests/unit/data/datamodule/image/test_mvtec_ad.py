@@ -19,17 +19,17 @@ class TestMVTecAD(_TestAnomalibImageDatamodule):
     @staticmethod
     def datamodule(dataset_path: Path) -> MVTecAD:
         """Create and return a MVTec datamodule."""
-        _datamodule = MVTecAD(
+        datamodule_ = MVTecAD(
             root=dataset_path / "mvtecad",
             category="dummy",
             train_batch_size=4,
             eval_batch_size=4,
             augmentations=Resize((256, 256)),
         )
-        _datamodule.prepare_data()
-        _datamodule.setup()
+        datamodule_.prepare_data()
+        datamodule_.setup()
 
-        return _datamodule
+        return datamodule_
 
     @pytest.fixture()
     @staticmethod

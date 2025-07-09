@@ -146,7 +146,7 @@ class CflowModel(nn.Module):
         with torch.no_grad():
             activation = self.encoder(images)
 
-        distribution = [torch.Tensor(0).to(images.device) for _ in self.pool_layers]
+        distribution = [torch.empty(0, device=images.device) for _ in self.pool_layers]
 
         height: list[int] = []
         width: list[int] = []

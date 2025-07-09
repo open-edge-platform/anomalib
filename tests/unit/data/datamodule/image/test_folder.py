@@ -26,7 +26,7 @@ class TestFolder(_TestAnomalibImageDatamodule):
         mask_dir = "ground_truth/bad"
 
         # Create and prepare the dataset
-        _datamodule = Folder(
+        datamodule_ = Folder(
             name="dummy",
             root=dataset_path / "mvtecad" / "dummy",
             normal_dir="train/good",
@@ -38,9 +38,9 @@ class TestFolder(_TestAnomalibImageDatamodule):
             num_workers=0,
             augmentations=Resize((256, 256)),
         )
-        _datamodule.setup()
+        datamodule_.setup()
 
-        return _datamodule
+        return datamodule_
 
     @pytest.fixture()
     @staticmethod

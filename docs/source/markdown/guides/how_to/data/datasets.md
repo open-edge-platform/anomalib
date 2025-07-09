@@ -15,7 +15,6 @@ Anomalib's dataset system is built on top of PyTorch's `Dataset` class and uses 
 The dataset consists of three main components:
 
 1. **Samples DataFrame**: The heart of each dataset is a DataFrame containing:
-
    - `image_path`: Path to the image file
    - `split`: Dataset split (train/test/val)
    - `label_index`: Label index (0 for normal, 1 for anomalous)
@@ -248,19 +247,16 @@ datasets/
 ## Best Practices
 
 1. **Data Organization**:
-
    - Keep consistent directory structure
    - Use clear naming conventions
    - Separate train/test splits
 
 2. **Validation**:
-
    - Validate image paths exist
    - Ensure mask-image correspondence
    - Check label consistency
 
 3. **Performance**:
-
    - Use appropriate data types
    - Implement efficient data loading
    - Cache frequently accessed data
@@ -273,19 +269,16 @@ datasets/
 ## Common Pitfalls
 
 1. **Path Issues**:
-
    - Incorrect root directory
    - Missing mask files
    - Inconsistent file extensions
 
 2. **Data Consistency**:
-
    - Mismatched image-mask pairs
    - Inconsistent image sizes
    - Wrong label assignments
 
 3. **Memory Management**:
-
    - Loading too many images at once
    - Not releasing unused resources
    - Inefficient data structures

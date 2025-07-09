@@ -1,0 +1,125 @@
+# PR Title Check Workflow
+#
+# This reusable workflow validates PR titles to ensure they follow
+# conventional commit format using Commitizen.
+#
+# Key Features:
+# - Conventional commit validation for PR titles
+# - Commitizen integration
+# - Detailed error reporting
+# - Configurable validation rules
+#
+# Process Stages:
+# 1. Environment Setup:
+#    - Python installation
+#    - Commitizen installation
+#
+# 2. Title Analysis:
+#    - PR title extraction
+#    - Format compliance check
+#
+# 3. Validation Results:
+#    - Error reporting
+#    - Success confirmation
+#    - Detailed feedback
+#
+# Required Inputs:
+# - python-version: Python version for validation (default: "3.10")
+#
+# Example Usage:
+# 1. Basic Validation:
+#    jobs:
+#      pr-title-check:
+#        uses: ./.github/workflows/_reusable-pr-title-check.yaml
+#
+# 2. Custom Configuration:
+#    jobs:
+#      pr-title-check:
+#        uses: ./.github/workflows/_reusable-pr-title-check.yaml
+#        with:
+#          python-version: "3.11"
+#
+# Note: Requires Commitizen configuration in pyproject.toml
+
+name: Reusable PR Title Check
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: "Python version for validation"
+        type: string
+        default: "3.10"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-pr-title:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install commitizen
+
+      - name: Validate PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "Validating PR title: '$PR_TITLE'"
+
+          if [ -z "$PR_TITLE" ]; then
+            echo "::error::PR title is empty"
+            exit 1
+          fi
+
+          # Remove emoji from the beginning if present and create clean title for validation
+          # Use Python for reliable emoji removal (more compatible than sed with Unicode)
+          CLEAN_TITLE=$(python3 -c "import re; title='$PR_TITLE'; print(re.sub(r'^[\s]*[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F1E0-\U0001F1FF\U00002600-\U000027BF\U0001F900-\U0001F9FF]+[\s]*', '', title))")
+
+          echo "Clean title for validation: '$CLEAN_TITLE'"
+
+          # Create a temporary file to store the clean PR title for checking
+          TEMP_TITLE_FILE=$(mktemp)
+          # Ensure the temp file is cleaned up on exit
+          trap 'rm -f "$TEMP_TITLE_FILE"' EXIT
+
+          # Write the clean PR title to the temporary file
+          echo "$CLEAN_TITLE" > "$TEMP_TITLE_FILE"
+
+          # Check the clean PR title using commitizen
+          if ! cz check --commit-msg-file "$TEMP_TITLE_FILE"; then
+            echo "::error::PR title does not follow conventional commit format"
+            echo "::error::Title: $PR_TITLE"
+            echo "::error::Clean title: $CLEAN_TITLE"
+            echo "::error::Please update your PR title to follow the conventional commit format"
+            echo "::error::"
+            echo "::error::Format: [optional emoji] <type>(<scope>): <description>"
+            echo "::error::"
+            echo "::error::Examples:"
+            echo "::error::  🚀 feat(data): add support for custom dataset formats"
+            echo "::error::  🐛 fix(model): resolve memory leak in PatchCore training"
+            echo "::error::  📚 docs: update installation instructions"
+            echo "::error::  🔧 chore(ci): update pre-commit hooks"
+            echo "::error::  feat(data): add support for custom dataset formats (no emoji)"
+            echo "::error::"
+            echo "::error::Suggested emojis (optional):"
+            echo "::error::  🚀 for feat, 🐛 for fix, 📚 for docs, 🔧 for chore"
+            echo "::error::  ⚡ for perf, 🧪 for test, 🎨 for style, ♻️ for refactor"
+            exit 1
+          fi
+
+          echo "✅ PR title follows conventional commit format"
