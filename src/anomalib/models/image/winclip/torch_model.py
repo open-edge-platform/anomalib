@@ -30,16 +30,23 @@ See Also:
 
 from collections.abc import Callable
 from copy import copy
+from typing import TYPE_CHECKING
 
-import open_clip
 import torch
-from open_clip.tokenizer import tokenize
+from lightning_utilities.core.imports import module_available
 from torch import nn
 from torch.nn.modules.linear import Identity
 from torchvision.transforms import Compose, ToPILImage
 
 from anomalib.data import InferenceBatch
 from anomalib.models.components import BufferListMixin, DynamicBufferMixin
+
+if TYPE_CHECKING or module_available("open_clip"):
+    import open_clip
+    from open_clip.tokenizer import tokenize
+else:
+    msg = "open_clip is required for VLM models. Install it with: pip install anomalib[vlm_clip]"
+    raise ImportError(msg)
 
 from .prompting import create_prompt_ensemble
 from .utils import class_scores, harmonic_aggregation, make_masks, visual_association_score

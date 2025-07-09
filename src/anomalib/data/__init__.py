@@ -50,6 +50,7 @@ from .dataclasses import (
 from .datamodules.base import AnomalibDataModule
 from .datamodules.depth import DepthDataFormat, Folder3D, MVTec3D
 from .datamodules.image import (
+    MPDD,
     VAD,
     BTech,
     Datumaro,
@@ -74,6 +75,7 @@ from .datasets.image import (
     DatumaroDataset,
     FolderDataset,
     KolektorDataset,
+    MPDDDataset,
     MVTecADDataset,
     MVTecLOCODataset,
     TabularDataset,
@@ -178,6 +180,7 @@ __all__ = [
     "Datumaro",
     "Folder",
     "Kolektor",
+    "MPDD",
     "MVTec",  # Include MVTec for backward compatibility
     "MVTecAD",
     "MVTecAD2",
@@ -197,6 +200,7 @@ __all__ = [
     "DatumaroDataset",
     "FolderDataset",
     "KolektorDataset",
+    "MPDDDataset",
     "MVTecADDataset",
     "MVTecLOCODataset",
     "TabularDataset",

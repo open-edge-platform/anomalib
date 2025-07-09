@@ -26,12 +26,29 @@ Example:
 import warnings
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import cv2
 import torch
-from torchvision.datasets.video_utils import VideoClips
+from lightning_utilities.core.imports import module_available
 
 from anomalib.data import VideoItem
+
+if TYPE_CHECKING or module_available("av"):
+    from torchvision.datasets.video_utils import VideoClips
+else:
+
+    class VideoClips:
+        """Dummy class for VideoClips."""
+
+        def __init__(self, *args, **kwargs) -> None:
+            """Raise ImportError."""
+            del args, kwargs
+            msg = (
+                "PyAV is not installed, but is required for video processing. "
+                "Please install it with: pip install anomalib[video]"
+            )
+            raise ImportError(msg)
 
 
 class ClipsIndexer(VideoClips, ABC):
