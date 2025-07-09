@@ -1,6 +1,7 @@
 """UniNet Model for anomaly detection.
 
-This module implements anomaly detection using the UniNet model. It is a model designed for diverse domains and is suited for both supervised and unsupervised anomaly detection. It also focuses on multi-class anomaly detection.
+This module implements anomaly detection using the UniNet model. It is a model designed for diverse domains and is
+suited for both supervised and unsupervised anomaly detection. It also focuses on multi-class anomaly detection.
 
 Example:
     >>> from anomalib.models import UniNet
