@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Principal Component Analysis (PCA) implementation using PyTorch.
 
 This module provides a PyTorch-based implementation of Principal Component Analysis
@@ -15,9 +18,6 @@ Example:
     >>> print(transformed_data.shape)
     torch.Size([100, 3])
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 
@@ -59,9 +59,9 @@ class PCA(DynamicBufferMixin):
         super().__init__()
         self.n_components = n_components
 
-        self.register_buffer("singular_vectors", torch.Tensor())
-        self.register_buffer("mean", torch.Tensor())
-        self.register_buffer("num_components", torch.Tensor())
+        self.register_buffer("singular_vectors", torch.empty(0))
+        self.register_buffer("mean", torch.empty(0))
+        self.register_buffer("num_components", torch.empty(0))
 
         self.singular_vectors: torch.Tensor
         self.singular_values: torch.Tensor

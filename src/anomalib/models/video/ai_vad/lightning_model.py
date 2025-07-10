@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """AI-VAD.
 
 Attribute-based Representations for Accurate and Interpretable Video Anomaly
@@ -34,9 +37,6 @@ Reference:
     and Interpretable Video Anomaly Detection." arXiv preprint arXiv:2212.00789
     (2022). https://arxiv.org/pdf/2212.00789.pdf
 """
-
-# Copyright (C) 2023-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from typing import Any

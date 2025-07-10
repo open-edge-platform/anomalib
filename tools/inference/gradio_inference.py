@@ -1,20 +1,26 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomalib Gradio Script.
 
 This script provide a gradio web interface
 """
 
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 from argparse import ArgumentParser
 from importlib import import_module
 from pathlib import Path
 
-import gradio
+from lightning_utilities.core.imports import module_available
 from PIL.Image import Image
 
 from anomalib.deploy import OpenVINOInferencer, TorchInferencer
 from anomalib.visualization.image.functional import overlay_image, visualize_anomaly_map, visualize_mask
+
+if not module_available("gradio"):
+    msg = "Gradio is not installed. Please install it using: pip install gradio"
+    raise ImportError(msg)
+
+import gradio
 
 
 def get_parser() -> ArgumentParser:

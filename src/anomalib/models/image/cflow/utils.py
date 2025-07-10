@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Helper functions for CFlow implementation.
 
 This module provides utility functions used by the CFlow model implementation,
@@ -7,9 +10,6 @@ including:
 - 2D positional encoding generation
 - Subnet and decoder network creation
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 import math

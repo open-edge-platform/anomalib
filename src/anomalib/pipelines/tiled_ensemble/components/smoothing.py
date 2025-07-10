@@ -1,7 +1,7 @@
-"""Tiled ensemble - seam smoothing job."""
-
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tiled ensemble - seam smoothing job."""
 
 import logging
 from collections.abc import Generator

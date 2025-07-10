@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomaly map computation for U-Flow model.
 
 This module implements functionality to generate anomaly heatmaps from the latent
@@ -16,9 +19,6 @@ Example:
 See Also:
     - :class:`AnomalyMapGenerator`: Main class for generating anomaly maps
 """
-
-# Copyright (C) 2023-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import math
 

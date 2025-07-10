@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """ShanghaiTech Campus Dataset.
 
 This module provides PyTorch Dataset implementation for the ShanghaiTech Campus
@@ -58,9 +61,6 @@ Reference:
     anomaly detection--a new baseline. In Proceedings of the IEEE conference on
     computer vision and pattern recognition (pp. 6536-6545).
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
 from typing import Any

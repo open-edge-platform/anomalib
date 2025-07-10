@@ -1,7 +1,7 @@
-"""Tests for synthetic anomalous dataset."""
-
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tests for synthetic anomalous dataset."""
 
 from copy import copy
 from pathlib import Path

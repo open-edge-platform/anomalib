@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Gaussian Kernel Density Estimation.
 
 This module implements non-parametric density estimation using Gaussian kernels.
@@ -13,9 +16,6 @@ Example:
     >>> kde.fit(features)
     >>> density = kde.predict(features)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import math
 
@@ -54,13 +54,13 @@ class GaussianKDE(DynamicBufferMixin):
         if dataset is not None:
             self.fit(dataset)
 
-        self.register_buffer("bw_transform", torch.Tensor())
-        self.register_buffer("dataset", torch.Tensor())
-        self.register_buffer("norm", torch.Tensor())
+        self.register_buffer("bw_transform", torch.empty(0))
+        self.register_buffer("dataset", torch.empty(0))
+        self.register_buffer("norm", torch.empty(0))
 
-        self.bw_transform = torch.Tensor()
-        self.dataset = torch.Tensor()
-        self.norm = torch.Tensor()
+        self.bw_transform = torch.empty(0)
+        self.dataset = torch.empty(0)
+        self.norm = torch.empty(0)
 
     def forward(self, features: torch.Tensor) -> torch.Tensor:
         """Compute KDE estimates for the input features.

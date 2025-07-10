@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Implementation of the CFA (Coupled-hypersphere-based Feature Adaptation) model.
 
 This module provides the CFA model for target-oriented anomaly localization. CFA
@@ -26,9 +29,6 @@ Example:
     >>> # Get predictions
     >>> predictions = engine.predict(model=model, datamodule=datamodule)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .lightning_model import Cfa
 

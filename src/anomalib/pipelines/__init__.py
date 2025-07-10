@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Pipelines for end-to-end anomaly detection use cases.
 
 This module provides high-level pipeline implementations for common anomaly detection
@@ -22,9 +25,6 @@ The pipelines leverage components from :mod:`anomalib.pipelines.components` for:
     - Parameter grid search
     - Result gathering
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .benchmark import Benchmark
 

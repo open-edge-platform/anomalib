@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Logging configuration and PyTorch Lightning logger integrations.
 
 This module provides logging utilities and integrations with various logging frameworks
@@ -21,9 +24,6 @@ Example:
     >>> from anomalib.loggers import AnomalibTensorBoardLogger
     >>> logger = AnomalibTensorBoardLogger(log_dir="logs")
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 

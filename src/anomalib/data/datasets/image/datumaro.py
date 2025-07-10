@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Dataloader for Datumaro format.
 
 This module provides PyTorch Dataset implementation for loading images and
@@ -26,9 +29,6 @@ Example:
     ...     split="train"
     ... )
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import json
 from pathlib import Path

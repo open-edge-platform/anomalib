@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch model for the Feature Reconstruction Error (FRE) algorithm implementation.
 
 The FRE model extracts features from a pre-trained CNN backbone and learns to
@@ -30,9 +33,6 @@ See Also:
     :class:`anomalib.models.image.fre.lightning_model.Fre`:
         PyTorch Lightning implementation of the FRE model.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch import nn

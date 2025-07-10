@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """GANomaly Algorithm Implementation.
 
 GANomaly is an anomaly detection model that uses a conditional GAN architecture to
@@ -25,9 +28,6 @@ See Also:
     :class:`anomalib.models.image.ganomaly.lightning_model.Ganomaly`:
         PyTorch Lightning implementation of the GANomaly model.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .lightning_model import Ganomaly
 

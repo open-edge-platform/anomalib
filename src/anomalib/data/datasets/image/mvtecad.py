@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """MVTec AD Dataset.
 
 This module provides PyTorch Dataset implementation for the MVTec AD dataset. The
@@ -23,9 +26,6 @@ Reference:
     IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR),
     9584-9592.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
 from pathlib import Path

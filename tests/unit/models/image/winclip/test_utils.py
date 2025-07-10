@@ -1,7 +1,7 @@
-"""Unit tests for WinCLIP utils."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Unit tests for WinCLIP utils."""
 
 import pytest
 import torch

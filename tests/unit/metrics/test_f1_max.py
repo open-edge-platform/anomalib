@@ -1,7 +1,7 @@
-"""Test F1Max metric."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test F1Max metric."""
 
 import torch
 

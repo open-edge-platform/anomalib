@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base Classes for Torch Datasets.
 
 This module contains the base dataset classes used in anomalib for different data
@@ -10,9 +13,6 @@ modalities:
 These classes extend PyTorch's Dataset class with additional functionality specific
 to anomaly detection tasks.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .depth import AnomalibDepthDataset
 from .image import AnomalibDataset

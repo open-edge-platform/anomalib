@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """MVTec LOCO AD Dataset (CC BY-NC-SA 4.0).
 
 Description:
@@ -15,9 +18,6 @@ References:
       Beyond Dents and Scratches: Logical Constraints in Unsupervised Anomaly Detection and Localization;
       in: International Journal of Computer Vision (IJCV) 130, 947-969, 2022, DOI: 10.1007/s11263-022-01578-9
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from collections.abc import Sequence

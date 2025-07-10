@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Numpy-based video dataclasses for Anomalib.
 
 This module provides numpy-based implementations of video-specific dataclasses used in
@@ -22,9 +25,6 @@ Example:
     >>> item.frames.shape
     (16, 224, 224, 3)
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from dataclasses import dataclass
 from typing import ClassVar

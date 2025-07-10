@@ -1,11 +1,11 @@
-"""Tests for per-image binary classification curves using numpy version."""
-
 # Original Code
 # https://github.com/jpcbertoldo/aupimo
 #
 # Modified
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tests for per-image binary classification curves using numpy version."""
 
 import pytest
 import torch

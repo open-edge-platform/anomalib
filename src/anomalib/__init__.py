@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomalib library for research and benchmarking.
 
 This library provides tools and utilities for anomaly detection research and
@@ -28,9 +31,6 @@ Note:
     The library is designed for both research and production use cases,
     with a focus on reproducibility and ease of use.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
 

@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Runners for executing pipeline jobs.
 
 This module provides runner implementations for executing pipeline jobs in different
@@ -17,9 +20,6 @@ The runners handle the mechanics of job execution while working with job generat
 to create and execute pipeline jobs. They implement the :class:`Runner` interface
 defined in ``anomalib.pipelines.components.base``.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .parallel import ParallelRunner
 from .serial import SerialRunner

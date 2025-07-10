@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """MLFlow logger with image logging capabilities.
 
 This module provides an MLFlow logger implementation that adds an interface for
@@ -18,9 +21,6 @@ Example:
     ...     name="test_image"
     ... )  # doctest: +SKIP
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import os
 from typing import Literal

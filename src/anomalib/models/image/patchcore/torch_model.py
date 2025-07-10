@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch model for the PatchCore model implementation.
 
 This module implements the PatchCore model architecture using PyTorch. PatchCore

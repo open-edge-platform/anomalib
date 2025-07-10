@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Functions for model inference and deployment.
 
 This module provides functionality for deploying trained anomaly detection models
@@ -21,9 +24,6 @@ Example:
     >>> predictions.pred_score  # doctest: +SKIP
     tensor(0.86)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .export import CompressionType, ExportType
 from .inferencers import Inferencer, OpenVINOInferencer, TorchInferencer

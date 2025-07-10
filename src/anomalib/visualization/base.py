@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base visualization module for anomaly detection.
 
 This module provides the base ``Visualizer`` class that defines the interface for
@@ -25,9 +28,6 @@ Note:
     All visualizer implementations should inherit from the base ``Visualizer``
     class and implement the required visualization methods.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from lightning.pytorch import Callback
 

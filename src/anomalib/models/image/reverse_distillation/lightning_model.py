@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomaly Detection via Reverse Distillation from One-Class Embedding.
 
 This module implements the Reverse Distillation model for anomaly detection as described in
@@ -33,9 +36,6 @@ See Also:
     - :class:`ReverseDistillationModel`: PyTorch implementation of the model
     - :class:`ReverseDistillationLoss`: Loss function for training
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
 from typing import Any

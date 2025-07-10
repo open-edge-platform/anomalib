@@ -1,7 +1,7 @@
-"""Tiled ensemble - normalization job."""
-
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tiled ensemble - normalization job."""
 
 import json
 import logging

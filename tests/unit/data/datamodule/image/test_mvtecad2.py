@@ -1,7 +1,7 @@
-"""Unit tests - MVTec AD 2 Datamodule."""
-
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Unit tests - MVTec AD 2 Datamodule."""
 
 from pathlib import Path
 

@@ -1,7 +1,7 @@
-"""Loss function for the SuperSimpleNet model implementation."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Loss function for the SuperSimpleNet model implementation."""
 
 from functools import partial
 

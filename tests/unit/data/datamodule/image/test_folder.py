@@ -1,7 +1,7 @@
-"""Unit Tests - Folder Datamodule."""
-
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Unit Tests - Folder Datamodule."""
 
 from pathlib import Path
 

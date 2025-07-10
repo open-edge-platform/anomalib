@@ -1,7 +1,7 @@
-"""Unit Tests - BTech Datamodule."""
-
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Unit Tests - BTech Datamodule."""
 
 from pathlib import Path
 

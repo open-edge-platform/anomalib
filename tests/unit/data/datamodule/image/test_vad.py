@@ -1,7 +1,7 @@
-"""Unit Tests - VAD Datamodule."""
-
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Unit Tests - VAD Datamodule."""
 
 from pathlib import Path
 

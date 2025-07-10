@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Feature extraction module for AI-VAD model implementation.
 
 This module implements the feature extraction stage of the AI-VAD model. It extracts
@@ -20,9 +23,6 @@ The module provides the following components:
     - :class:`FeatureType`: Enum of available feature types
     - :class:`VideoRegionFeatureExtractor`: Main class that handles feature extraction
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
 

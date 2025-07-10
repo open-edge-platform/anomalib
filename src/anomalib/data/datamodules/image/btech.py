@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """BTech Data Module.
 
 This module provides a PyTorch Lightning DataModule for the BTech dataset. If the
@@ -34,9 +37,6 @@ Reference:
     Real-World Industrial Anomaly Detection." Pattern Recognition 136 (2024):
     109542.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 import shutil

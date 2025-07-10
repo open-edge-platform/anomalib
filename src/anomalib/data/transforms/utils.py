@@ -1,7 +1,7 @@
-"""Utility functions for working with Torchvision Transforms."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Utility functions for working with Torchvision Transforms."""
 
 from torchvision.transforms.v2 import Compose, Transform
 

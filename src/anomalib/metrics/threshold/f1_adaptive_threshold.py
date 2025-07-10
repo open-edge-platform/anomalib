@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """F1 adaptive threshold metric for anomaly detection.
 
 This module provides the ``F1AdaptiveThreshold`` class which automatically finds
@@ -25,9 +28,6 @@ Note:
     reliable threshold computation. A warning is logged if no anomalous samples
     are found.
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 
