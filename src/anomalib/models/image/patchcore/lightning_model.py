@@ -159,7 +159,6 @@ class Patchcore(MemoryBankMixin, AnomalibModule):
             num_neighbors=num_neighbors,
         )
         self.coreset_sampling_ratio = coreset_sampling_ratio
-        self.embeddings: list[torch.Tensor] = []
 
     @classmethod
     def configure_pre_processor(
@@ -235,9 +234,7 @@ class Patchcore(MemoryBankMixin, AnomalibModule):
             ``fit()``.
         """
         del args, kwargs  # These variables are not used.
-
-        embedding = self.model(batch.image)
-        self.embeddings.append(embedding)
+        _ = self.model(batch.image)
         # Return a dummy loss tensor
         return torch.tensor(0.0, requires_grad=True, device=self.device)
 
@@ -245,14 +242,10 @@ class Patchcore(MemoryBankMixin, AnomalibModule):
         """Apply subsampling to the embedding collected from the training set.
 
         This method:
-        1. Aggregates embeddings from all training batches
-        2. Applies coreset subsampling to reduce memory requirements
+        1. Applies coreset subsampling to reduce memory requirements
         """
-        logger.info("Aggregating the embedding extracted from the training set.")
-        embeddings = torch.vstack(self.embeddings)
-
         logger.info("Applying core-set subsampling to get the embedding.")
-        self.model.subsample_embedding(embeddings, self.coreset_sampling_ratio)
+        self.model.subsample_embedding(self.coreset_sampling_ratio)
 
     def validation_step(self, batch: Batch, *args, **kwargs) -> STEP_OUTPUT:
         """Generate predictions for a batch of images.
@@ -286,8 +279,9 @@ class Patchcore(MemoryBankMixin, AnomalibModule):
                 - ``gradient_clip_val``: ``0`` (no gradient clipping needed)
                 - ``max_epochs``: ``1`` (single pass through training data)
                 - ``num_sanity_val_steps``: ``0`` (skip validation sanity checks)
+                - ``devices``: ``1`` (only single gpu supported)
         """
-        return {"gradient_clip_val": 0, "max_epochs": 1, "num_sanity_val_steps": 0}
+        return {"gradient_clip_val": 0, "max_epochs": 1, "num_sanity_val_steps": 0, "devices": 1}
 
     @property
     def learning_type(self) -> LearningType:
