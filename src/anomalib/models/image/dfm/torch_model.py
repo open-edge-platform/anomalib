@@ -210,7 +210,7 @@ class DFMModel(nn.Module):
 
         return (score, None) if self.score_type == "nll" else (score, score_map)
 
-    def get_features(self, batch: torch.Tensor) -> torch.Tensor:
+    def get_features(self, batch: torch.Tensor) -> tuple[torch.Tensor, torch.Size]:
         """Extract features from the pretrained network.
 
         Args:
