@@ -288,6 +288,30 @@ class Glass(AnomalibModule):
         self.log("focal_loss", focal_loss, prog_bar=True)
         self.log("loss", loss, prog_bar=True)
 
+    def validation_step(
+        self,
+        batch: Batch,
+        batch_idx: int,
+    ) -> STEP_OUTPUT:
+        """Performs a single validation step during model evaluation.
+
+        Args:
+            batch (Batch): A batch of input data, typically containing images and ground truth labels.
+            batch_idx (int): Index of the batch (unused in this function).
+
+        Returns:
+            STEP_OUTPUT: Output of the validation step, usually containing predictions and any associated metrics.
+        """
+        del batch_idx
+        self.model.forward_modules.eval()
+
+        if self.model.pre_proj > 0:
+            self.model.pre_projection.eval()
+        self.model.discriminator.eval()
+
+        predictions = self.model(batch.image, self.c)
+        return batch.update(**predictions._asdict())
+
     def on_train_start(self) -> None:
         """Initialize model by computing mean feature representation across training dataset.
 

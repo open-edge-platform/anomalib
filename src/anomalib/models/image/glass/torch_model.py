@@ -20,10 +20,13 @@ Paper: `A Unified Anomaly Synthesis Strategy with Gradient Ascent for Industrial
 
 import math
 
+import kornia.filters as kf
+import numpy as np
 import torch
 import torch.nn.functional as f
 from torch import nn
 
+from anomalib.data import InferenceBatch
 from anomalib.data.utils.generators.perlin import PerlinAnomalyGenerator
 from anomalib.models.components import TimmFeatureExtractor
 from anomalib.models.components.feature_extractors import dryrun_find_featuremap_dims
@@ -307,7 +310,60 @@ class PatchMaker:
             torch.Tensor: Final anomaly score per image, shape (B,).
         """
         x = x[:, :, 0]  # remove last dimension if singleton
-        return torch.max(x, dim=1).to_numpy()
+        return torch.max(x, dim=1).values
+
+
+class RescaleSegmentor:
+    """A utility class for rescaling and smoothing patch-level anomaly scores to generate segmentation masks.
+
+    Attributes:
+        target_size (int): The spatial size (height and width) to which patch scores will be rescaled.
+        smoothing (int): The standard deviation used for Gaussian smoothing.
+    """
+
+    def __init__(self, target_size: int = 288) -> None:
+        """Initializes the RescaleSegmentor.
+
+        Args:
+            target_size (int, optional): The desired output size (height/width) of segmentation maps. Defaults to 288.
+        """
+        self.target_size = target_size
+        self.smoothing = 4
+
+    def convert_to_segmentation(
+        self,
+        patch_scores: np.ndarray | torch.Tensor,
+        device: torch.device,
+    ) -> list[torch.Tensor]:
+        """Converts patch-level scores to smoothed segmentation masks.
+
+        Args:
+            patch_scores (np.ndarray | torch.Tensor): Patch-wise scores of shape [N, H, W].
+            device (torch.device): Device on which to perform computation.
+
+        Returns:
+            List[torch.Tensor]: A list of segmentation masks, each of shape [H, W],
+                                rescaled to `target_size` and smoothed.
+        """
+        with torch.no_grad():
+            if isinstance(patch_scores, np.ndarray):
+                patch_scores = torch.from_numpy(patch_scores)
+
+            scores = patch_scores.to(device)
+            scores = scores.unsqueeze(1)  # [N, 1, H, W]
+            scores = f.interpolate(
+                scores, size=self.target_size, mode="bilinear", align_corners=False,
+            )
+            patch_scores = scores.squeeze(1)  # [N, H, W]
+
+        patch_stack = patch_scores.unsqueeze(1)  # [N, 1, H, W]
+        smoothed_stack = kf.gaussian_blur2d(
+            patch_stack,
+            kernel_size=(5, 5),
+            sigma=(self.smoothing, self.smoothing),
+        )
+
+        return [s.squeeze(0) for s in smoothed_stack]  # List of [H, W] tensors
 
 
 class GlassModel(nn.Module):
@@ -392,6 +448,8 @@ class GlassModel(nn.Module):
         self.svd = svd
 
         self.patch_maker = PatchMaker(patchsize, stride=patchstride)
+
+        self.anomaly_segmentor = RescaleSegmentor(target_size=input_shape[:])
 
     def calculate_mean(self, images: torch.Tensor) -> torch.Tensor:
         """Computes the mean feature embedding across a batch of images.
@@ -544,6 +602,34 @@ class GlassModel(nn.Module):
 
         return patch_features, patch_shapes
 
+    def calculate_anomaly_scores(self, images: torch.Tensor) -> torch.Tensor:
+        """Calculates anomaly scores and segmentation masks for a batch of input images.
+
+        Args:
+            images (torch.Tensor): Batch of input images of shape [B, C, H, W].
+
+        Returns:
+            tuple[torch.Tensor, list[torch.Tensor]]:
+                - image_scores: Tensor of anomaly scores per image, shape [B].
+                - masks: List of segmentation masks for each image, each of shape [H, W].
+        """
+        with torch.no_grad():
+            patch_features, patch_shapes = self.generate_embeddings(images, evaluation=True)
+            if self.pre_proj > 0:
+                patch_features = self.pre_projection(patch_features)
+                patch_features = patch_features[0] if len(patch_features) == 2 else patch_features
+
+            patch_scores = image_scores = self.discriminator(patch_features)
+            patch_scores = self.patch_maker.unpatch_scores(patch_scores, images.shape[0])
+            scales = patch_shapes[0]
+            patch_scores = patch_scores.reshape(images.shape[0], scales[0], scales[1])
+            masks = self.anomaly_segmentor.convert_to_segmentation(patch_scores, device=images.device)
+
+            image_scores = self.patch_maker.unpatch_scores(image_scores, batchsize=images.shape[0])
+            image_scores = self.patch_maker.score(image_scores)
+
+            return image_scores, masks
+
     def forward(
         self,
         img: torch.Tensor,
@@ -596,13 +682,26 @@ class GlassModel(nn.Module):
             if step == self.step:
                 break
 
-            grad = torch.autograd.grad(gaus_loss, [gaus_feats])[0]
-            grad_norm = torch.norm(grad, dim=1)
-            grad_norm = grad_norm.view(-1, 1)
-            grad_normalized = grad / (grad_norm + 1e-10)
+            if self.training:
+                grad = torch.autograd.grad(gaus_loss, [gaus_feats])[0]
+                grad_norm = torch.norm(grad, dim=1)
+                grad_norm = grad_norm.view(-1, 1)
+                grad_normalized = grad / (grad_norm + 1e-10)
 
-            with torch.no_grad():
-                gaus_feats.add_(0.001 * grad_normalized)
+                with torch.no_grad():
+                    gaus_feats.add_(0.001 * grad_normalized)
+
+                if (step + 1) % 5 == 0:
+                    dist_g = torch.norm(gaus_feats - center, dim=1)
+                    proj_feats = center if self.svd == 1 else true_feats
+                    r = r_t if self.svd == 1 else 0.5
+
+                    h = gaus_feats - proj_feats
+                    h_norm = dist_g if self.svd == 1 else torch.norm(h, dim=1)
+                    alpha = torch.clamp(h_norm, r, 2 * r)
+                    proj = (alpha / (h_norm + 1e-10)).view(-1, 1)
+                    h = proj * h
+                    gaus_feats = proj_feats + h
 
         fake_points = fake_feats[mask_s_gt[:, 0] == 1]
         true_points = true_feats[mask_s_gt[:, 0] == 1]
@@ -633,5 +732,10 @@ class GlassModel(nn.Module):
         output = torch.cat([1 - fake_scores_, fake_scores_], dim=1)
         focal_loss = self.focal_loss(output, mask_)
 
-        loss = bce_loss + focal_loss
-        return true_loss, gaus_loss, bce_loss, focal_loss, loss
+        if self.training:
+            loss = bce_loss + focal_loss
+            return true_loss, gaus_loss, bce_loss, focal_loss, loss
+
+        anomaly_scores, masks = self.calculate_anomaly_scores(img)
+        masks = torch.stack(masks)
+        return InferenceBatch(pred_score=anomaly_scores, anomaly_map=masks)
