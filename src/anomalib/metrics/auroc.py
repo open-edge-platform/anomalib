@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Area Under the Receiver Operating Characteristic (AUROC) metric.
 
 This module provides the ``AUROC`` class which computes the area under the ROC
@@ -34,9 +37,6 @@ Note:
     anomalies above normal samples.
 """
 
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 import torch
 from matplotlib.figure import Figure
 from torchmetrics.classification.roc import BinaryROC
@@ -44,7 +44,7 @@ from torchmetrics.utilities.compute import auc
 
 from anomalib.metrics.base import AnomalibMetric
 
-from .plotting_utils import plot_figure
+from .utils import plot_metric_curve
 
 
 class _AUROC(BinaryROC):
@@ -133,7 +133,7 @@ class _AUROC(BinaryROC):
         loc = "lower right"
         title = "ROC"
 
-        fig, axis = plot_figure(fpr, tpr, auroc, xlim, ylim, xlabel, ylabel, loc, title)
+        fig, axis = plot_metric_curve(fpr, tpr, auroc, xlim, ylim, xlabel, ylabel, loc, title, metric_name="AUROC")
 
         axis.plot(
             [0, 1],

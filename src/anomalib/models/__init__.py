@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomaly detection models.
 
 This module contains all the anomaly detection models available in anomalib.
@@ -42,9 +45,6 @@ Video Models:
     - AI-VAD (:class:`anomalib.models.video.AiVad`)
 """
 
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 import logging
 from importlib import import_module
 
@@ -52,7 +52,7 @@ from jsonargparse import Namespace
 from omegaconf import DictConfig, OmegaConf
 
 from anomalib.models.components import AnomalibModule
-from anomalib.utils.path import convert_to_snake_case
+from anomalib.utils.path import convert_snake_to_pascal_case, convert_to_snake_case, convert_to_title_case
 
 from .image import (
     Cfa,
@@ -119,58 +119,63 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-def convert_snake_to_pascal_case(snake_case: str) -> str:
-    """Convert snake_case string to PascalCase.
+def list_models(case: str = "snake") -> set[str]:
+    """List available anomaly detection models.
 
-    This function takes a string in snake_case format (words separated by underscores)
-    and converts it to PascalCase format (each word capitalized and concatenated).
-
-    Args:
-        snake_case (str): Input string in snake_case format (e.g. ``"efficient_ad"``)
-
-    Returns:
-        str: Output string in PascalCase format (e.g. ``"EfficientAd"``)
-
-    Examples:
-        >>> convert_snake_to_pascal_case("efficient_ad")
-        'EfficientAd'
-        >>> convert_snake_to_pascal_case("patchcore")
-        'Patchcore'
-        >>> convert_snake_to_pascal_case("reverse_distillation")
-        'ReverseDistillation'
-    """
-    return "".join(word.capitalize() for word in snake_case.split("_"))
-
-
-def get_available_models() -> set[str]:
-    """Get set of available anomaly detection models.
-
-    Returns a set of model names in snake_case format that are available in the
+    Returns a set of model names in the specified format that are available in the
     anomalib library. This includes both image and video anomaly detection models.
 
+    Args:
+        case (str): The format to return model names in. Options are:
+            - "snake_case": Returns names in snake_case format (e.g. "efficient_ad")
+            - "original": Returns the original PascalCase class names (e.g. "EfficientAd")
+            Defaults to "snake_case".
+
     Returns:
-        set[str]: Set of available model names in snake_case format (e.g.
-            ``'efficient_ad'``, ``'padim'``, etc.)
+        set[str]: Set of available model names in the specified format.
 
     Example:
-        Get all available models:
+        Get all available models in different formats:
 
-        >>> from anomalib.models import get_available_models
-        >>> models = get_available_models()
+        >>> from anomalib.models import list_models
+        >>> # Get models in snake_case format
+        >>> models = list_models(case="snake")
         >>> print(sorted(list(models)))  # doctest: +NORMALIZE_WHITESPACE
         ['ai_vad', 'cfa', 'cflow', 'csflow', 'dfkde', 'dfm', 'draem',
          'efficient_ad', 'fastflow', 'fre', 'ganomaly', 'padim', 'patchcore',
          'reverse_distillation', 'stfpm', 'uflow', 'vlm_ad', 'winclip']
 
+        >>> # Get models in original PascalCase format
+        >>> models = list_models(case="pascal")
+        >>> print(sorted(list(models)))  # doctest: +NORMALIZE_WHITESPACE
+        ['AiVad', 'Cfa', 'Cflow', 'Csflow', 'Dfkde', 'Dfm', 'Draem',
+         'EfficientAd', 'Fastflow', 'Fre', 'Ganomaly', 'Padim', 'Patchcore',
+         'ReverseDistillation', 'Stfpm', 'Uflow', 'VlmAd', 'WinClip']
+
+        >>> # Get models in title case format
+        >>> models = list_models(case="title")
+        >>> print(sorted(list(models)))  # doctest: +NORMALIZE_WHITESPACE
+        ['Ai Vad', 'Cfa', 'Cflow', 'Csflow', 'Dfkde', 'Dfm', 'Draem',
+         'Efficient Ad', 'Fastflow', 'Fre', 'Ganomaly', 'Padim', 'Patchcore',
+         'Reverse Distillation', 'Stfpm', 'Uflow', 'Vlm Ad', 'Win Clip']
+
     Note:
         The returned model names can be used with :func:`get_model` to instantiate
         the corresponding model class.
     """
-    return {
-        convert_to_snake_case(cls.__name__)
-        for cls in AnomalibModule.__subclasses__()
-        if cls.__name__ != "AnomalyModule"
-    }
+    if case not in {"snake", "pascal", "title"}:
+        msg = f"Unsupported format: {case}. Must be one of: snake, pascal, title"
+        raise ValueError(msg)
+
+    models = {cls.__name__ for cls in AnomalibModule.__subclasses__() if cls.__name__ != "AnomalyModule"}
+
+    if case == "snake":
+        return {convert_to_snake_case(name) for name in models}
+
+    if case == "title":
+        return {convert_to_title_case(name) for name in models}
+
+    return models
 
 
 def _get_model_class_by_name(name: str) -> type[AnomalibModule]:
@@ -209,7 +214,7 @@ def _get_model_class_by_name(name: str) -> type[AnomalibModule]:
         if name == model.__name__.lower():
             model_class = model
     if model_class is None:
-        logger.exception(f"Could not find the model {name}. Available models are {get_available_models()}")
+        logger.exception(f"Could not find the model {name}. Available models are {list_models()}")
         raise UnknownModelError
 
     return model_class
@@ -264,10 +269,10 @@ def get_model(model: DictConfig | str | dict | Namespace, *args, **kwdargs) -> A
         ...     "init_args": {"input_size": (100, 100)}
         ... })
     """
-    _model: AnomalibModule
+    model_: AnomalibModule
     if isinstance(model, str):
-        _model_class = _get_model_class_by_name(model)
-        _model = _model_class(*args, **kwdargs)
+        model_class_ = _get_model_class_by_name(model)
+        model_ = model_class_(*args, **kwdargs)
     elif isinstance(model, DictConfig | Namespace | dict):
         if isinstance(model, dict):
             model = OmegaConf.create(model)
@@ -290,7 +295,7 @@ def get_model(model: DictConfig | str | dict | Namespace, *args, **kwdargs) -> A
                 module = import_module("anomalib.models")
         except ModuleNotFoundError as exception:
             logger.exception(
-                f"Could not find the module {model.class_path}. Available models are {get_available_models()}",
+                f"Could not find the module {model.class_path}. Available models are {list_models()}",
             )
             raise UnknownModelError from exception
         try:
@@ -298,13 +303,13 @@ def get_model(model: DictConfig | str | dict | Namespace, *args, **kwdargs) -> A
             init_args = model.get("init_args", {})
             if len(kwdargs) > 0:
                 init_args.update(kwdargs)
-            _model = model_class(*args, **init_args)
+            model_ = model_class(*args, **init_args)
         except AttributeError as exception:
             logger.exception(
-                f"Could not find the model {model.class_path}. Available models are {get_available_models()}",
+                f"Could not find the model {model.class_path}. Available models are {list_models()}",
             )
             raise UnknownModelError from exception
     else:
         logger.error(f"Unsupported type {type(model)} for model configuration.")
         raise TypeError
-    return _model
+    return model_

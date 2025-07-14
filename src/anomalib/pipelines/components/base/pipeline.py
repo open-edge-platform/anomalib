@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base class for building pipelines in anomalib.
 
 This module provides the abstract base class for creating pipelines that can execute
@@ -23,9 +26,6 @@ Pipelines can be used to implement workflows like training, inference, or
 benchmarking by composing jobs and runners in a modular way.
 """
 
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -50,11 +50,11 @@ logger = logging.getLogger(__name__)
 class Pipeline(ABC):
     """Base class for pipeline."""
 
-    def _get_args(self, args: Namespace) -> dict:
+    def _get_args(self, args: Namespace | None) -> dict:
         """Get pipeline arguments by parsing the config file.
 
         Args:
-            args (Namespace): Arguments to run the pipeline. These are the args returned by ArgumentParser.
+            args (Namespace | None): Arguments to run the pipeline.
 
         Returns:
             dict: Pipeline arguments.
@@ -77,15 +77,15 @@ class Pipeline(ABC):
         Args:
             args (Namespace): Arguments to run the pipeline. These are the args returned by ArgumentParser.
         """
-        args = self._get_args(args)
-        runners = self._setup_runners(args)
+        pipeline_args = self._get_args(args)
+        runners = self._setup_runners(pipeline_args)
         redirect_logs(log_file)
         previous_results: PREV_STAGE_RESULT = None
 
         for runner in runners:
             try:
-                _args = args.get(runner.generator.job_class.name, None)
-                previous_results = runner.run(_args, previous_results)
+                job_args = pipeline_args.get(runner.generator.job_class.name)
+                previous_results = runner.run(job_args or {}, previous_results)
             except Exception:  # noqa: PERF203 catch all exception and allow try-catch in loop
                 logger.exception("An error occurred when running the runner.")
                 print(

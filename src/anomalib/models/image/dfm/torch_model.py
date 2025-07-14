@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch model for Deep Feature Modeling (DFM).
 
 This module provides a PyTorch implementation of the DFM model for anomaly
@@ -21,9 +24,6 @@ Notes:
     transformation followed by a Gaussian model during training. No gradient
     updates are performed on the backbone.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import math
 
@@ -51,9 +51,9 @@ class SingleClassGaussian(DynamicBufferMixin):
     def __init__(self) -> None:
         """Initialize Gaussian model with empty buffers."""
         super().__init__()
-        self.register_buffer("mean_vec", torch.Tensor())
-        self.register_buffer("u_mat", torch.Tensor())
-        self.register_buffer("sigma_mat", torch.Tensor())
+        self.register_buffer("mean_vec", torch.empty(0))
+        self.register_buffer("u_mat", torch.empty(0))
+        self.register_buffer("sigma_mat", torch.empty(0))
 
         self.mean_vec: torch.Tensor
         self.u_mat: torch.Tensor

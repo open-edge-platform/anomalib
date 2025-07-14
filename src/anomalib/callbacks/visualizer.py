@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Visualizer callback.
 
 This module provides the :class:`_VisualizationCallback` for generating and managing visualizations
@@ -24,9 +27,6 @@ Note:
     This callback is used internally by the Anomalib Engine and should not be
     instantiated directly by users.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from pathlib import Path
@@ -269,10 +269,10 @@ class _VisualizationCallback(Callback):
         for log_to in available_loggers:
             # check if logger object is same as the requested object
             if isinstance(available_loggers[log_to], ImageLoggerBase):
-                logger: ImageLoggerBase = cast(ImageLoggerBase, available_loggers[log_to])  # placate mypy
-                _name = filename.parent.name + "_" + filename.name if isinstance(filename, Path) else filename
+                logger: ImageLoggerBase = cast("ImageLoggerBase", available_loggers[log_to])  # placate mypy
+                name = filename.parent.name + "_" + filename.name if isinstance(filename, Path) else filename
                 logger.add_image(
                     image=image,
-                    name=_name,
+                    name=name,
                     global_step=module.global_step,
                 )

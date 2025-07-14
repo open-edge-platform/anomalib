@@ -42,6 +42,41 @@ Surface defect detection in electrical commutators.
 Industrial anomaly detection benchmark.
 :::
 
+:::{grid-item-card} MVTecAD2
+:link: anomalib.data.datamodules.image.MVTecAD2
+:link-type: doc
+
+MVTec AD 2 dataset for anomaly detection with natural images.
+:::
+
+:::{grid-item-card} MVTecLOCO
+:link: anomalib.data.datamodules.image.MVTecLOCO
+:link-type: doc
+
+MVTec LOCO dataset for logical and structural anomaly detection.
+:::
+
+:::{grid-item-card} RealIAD
+:link: anomalib.data.datamodules.image.RealIAD
+:link-type: doc
+
+Real-IAD dataset for industrial anomaly detection scenarios.
+:::
+
+:::{grid-item-card} Tabular
+:link: anomalib.data.datamodules.image.Tabular
+:link-type: doc
+
+Custom tabular dataset.
+:::
+
+:::{grid-item-card} VAD
+:link: anomalib.data.datamodules.image.VAD
+:link-type: doc
+
+Valeo Anomaly Detection dataset for automotive applications.
+:::
+
 :::{grid-item-card} Visa
 :link: anomalib.data.datamodules.image.Visa
 :link-type: doc
@@ -54,7 +89,7 @@ Visual Anomaly dataset.
 
 ```{eval-rst}
 .. automodule:: anomalib.data
-   :members: BTech, Datumaro, Folder, Kolektor, MVTecAD, Visa
+   :members: BTech, Datumaro, Folder, Kolektor, MVTecAD, MVTecAD2, MVTecLOCO, RealIAD, Tabular, VAD, Visa
    :undoc-members:
    :show-inheritance:
 ```

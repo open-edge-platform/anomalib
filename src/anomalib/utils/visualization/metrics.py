@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Metrics visualization generator for anomaly detection results.
 
 This module provides utilities for visualizing metric plots from anomaly detection
@@ -24,9 +27,6 @@ Note:
     Metrics must implement a ``generate_figure`` method to be visualized.
     The method should return a tuple of (figure, log_name).
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Iterator
 from typing import TYPE_CHECKING
@@ -68,7 +68,7 @@ class MetricsVisualizer(BaseVisualizer):
             ...     # Process the visualization result
             ...     print(result.file_name)
         """
-        pl_module: AnomalibModule = kwargs.get("pl_module", None)
+        pl_module: AnomalibModule | None = kwargs.get("pl_module")
         if pl_module is None:
             msg = "`pl_module` must be provided"
             raise ValueError(msg)

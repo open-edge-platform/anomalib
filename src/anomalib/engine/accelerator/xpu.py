@@ -1,7 +1,7 @@
-"""XPU Accelerator."""
-
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""XPU Accelerator."""
 
 from typing import Any
 

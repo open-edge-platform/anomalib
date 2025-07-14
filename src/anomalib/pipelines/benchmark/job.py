@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Benchmarking job for evaluating model performance.
 
 This module provides functionality for running individual benchmarking jobs that
@@ -27,9 +30,6 @@ The job executes model training and evaluation, collecting metrics like accuracy
 F1-score, and inference time. Results are returned in a standardized format for
 comparison across different model-dataset combinations.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 import time
@@ -210,9 +210,9 @@ class BenchmarkJob(Job):
         if gathered_result is not None:
             console = Console()
             table = Table(title=f"{BenchmarkJob.name} Results", show_header=True, header_style="bold magenta")
-            _results = gathered_result.to_dict("list")
-            for column in _results:
+            results = gathered_result.to_dict("list")
+            for column in results:
                 table.add_column(column)
-            for row in zip(*_results.values(), strict=False):
+            for row in zip(*results.values(), strict=False):
                 table.add_row(*[str(value) for value in row])
             console.print(table)

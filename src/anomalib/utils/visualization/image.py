@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Image and video visualization generator.
 
 This module provides utilities for visualizing anomaly detection results on images
@@ -42,8 +45,6 @@ Note:
     and maintains proper frame ordering in the output.
 """
 
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 from collections.abc import Iterator
 from dataclasses import InitVar, asdict, dataclass, fields
 from enum import Enum
@@ -203,7 +204,7 @@ class ImageVisualizer(BaseVisualizer):
         Raises:
             ValueError: If outputs are not provided in kwargs.
         """
-        outputs = kwargs.get("outputs", None)
+        outputs = kwargs.get("outputs")
         if outputs is None:
             msg = "Outputs must be provided to generate images."
             raise ValueError(msg)

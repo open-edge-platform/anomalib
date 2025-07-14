@@ -1,6 +1,7 @@
-name: Bug Report
+name: "🐞 Bug Report"
 description: Create a report to help us improve
-title: "[Bug]: "
+title: "🐞 <title>"
+labels: ["bug", "triage"]
 body:
   - type: textarea
     id: description
@@ -103,6 +104,8 @@ body:
     id: version-branch
     attributes:
       label: What version/branch did you use?
+    validations:
+      required: true
   - type: textarea
     id: config
     attributes:

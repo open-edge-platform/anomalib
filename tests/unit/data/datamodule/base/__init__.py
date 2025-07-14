@@ -1,7 +1,7 @@
-"""Unit Tests - Base Datamodules."""
-
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Unit Tests - Base Datamodules."""
 
 from .depth import _TestAnomalibDepthDatamodule
 from .image import _TestAnomalibImageDatamodule

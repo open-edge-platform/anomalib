@@ -94,6 +94,9 @@ on:
         description: "Path to test results artifact"
         value: ${{ jobs.test.outputs.artifact-path }}
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ${{ inputs.runner }}
@@ -106,6 +109,8 @@ jobs:
           nvidia-smi || echo "::error::No GPU found"
 
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Run tests
         uses: ./.github/actions/pytest
         with:

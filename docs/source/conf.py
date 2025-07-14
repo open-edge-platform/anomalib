@@ -74,6 +74,7 @@ exclude_patterns: list[str] = [
     "**/*.egg-info",
     "**/build",
     "**/dist",
+    "examples/notebooks/**",
 ]
 
 # Automatic exclusion of prompts from the copies

@@ -1,11 +1,11 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch implementation of Gaussian Mixture Model.
 
 This module provides a PyTorch-based implementation of Gaussian Mixture Model (GMM)
 for clustering data into multiple Gaussian distributions.
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 
@@ -65,9 +65,9 @@ class GaussianMixture(DynamicBufferMixin):
         self.tol = tol
         self.n_iter = n_iter
 
-        self.register_buffer("means", torch.Tensor())
-        self.register_buffer("covariances", torch.Tensor())
-        self.register_buffer("weights", torch.Tensor())
+        self.register_buffer("means", torch.empty(0))
+        self.register_buffer("covariances", torch.empty(0))
+        self.register_buffer("weights", torch.empty(0))
 
         self.means: torch.Tensor
         self.covariances: torch.Tensor

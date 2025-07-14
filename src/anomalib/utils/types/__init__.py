@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Type aliases for anomaly detection.
 
 This module provides type aliases used throughout the anomalib library. The aliases
@@ -18,9 +21,6 @@ Example:
 The module ensures consistent typing across the codebase and provides helpful type
 hints for configuration objects.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from typing import TypeAlias
 

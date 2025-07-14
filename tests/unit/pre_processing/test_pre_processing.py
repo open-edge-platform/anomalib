@@ -1,7 +1,7 @@
-"""Test the PreProcessor class."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test the PreProcessor class."""
 
 import pytest
 import torch

@@ -1,6 +1,6 @@
 # Contribution Guidelines
 
-##  {octicon}`light-bulb` Getting Started
+## {octicon}`light-bulb` Getting Started
 
 To get started with Anomalib development, follow these steps:
 
@@ -81,17 +81,157 @@ Set up your development environment to start contributing. This involves install
    pytest tests/
    ```
 
-5. **Update the Changelog:** For significant changes, add a summary to the [CHANGELOG](https://github.com/open-edge-platform/anomalib/blob/main/CHANGELOG.md).
+5. **Check Licensing:** Ensure you own the code or have rights to use it, adhering to appropriate licensing.
 
-6. **Check Licensing:** Ensure you own the code or have rights to use it, adhering to appropriate licensing.
+6. **Follow Conventional Commits for PR Titles:** We use [Commitizen](https://commitizen-tools.github.io/commitizen/) to enforce conventional commit format for PR titles and branch names. Since we squash merge PRs, individual commit messages can be in any format during development, but your **PR title must follow conventional commit format**.
 
-7. **Sign Your Commits:** Use signed commits to certify that you have the right to submit the code under the project's license:
+   :::{dropdown} PR Title Format (Required)
+   :icon: git-commit
 
-   ```bash
-   git commit -S -m "Your detailed commit message"
+   Your **PR title** must follow conventional commit format. Individual commit messages during development can be any format (e.g., "wip", "fix typo"), but the PR title becomes the squash commit message.
+
+   Each PR title consists of a **header**, and optionally a **body** and **footer**:
+
+   ```text
+   <type>(<scope>): <description>
+
+   [optional body]
+
+   [optional footer]
    ```
 
-   For more on signing commits, see [GitHub's guide on signing commits](https://docs.github.com/en/github/authenticating-to-github/managing-commit-signature-verification/signing-commits).
+   **Types:**
+   - `feat`: A new feature
+   - `fix`: A bug fix
+   - `docs`: Documentation changes
+   - `style`: Code style changes
+   - `refactor`: Code refactoring
+   - `perf`: Performance improvements
+   - `test`: Adding or modifying tests
+   - `build`: Build system changes
+   - `ci`: CI configuration changes
+   - `chore`: General maintenance
+
+   **Scopes:**
+   - `data`: Data loading, processing, or augmentation
+   - `model`: Model architecture or implementation
+   - `metric`: Evaluation metrics
+   - `utils`: Utility functions
+   - `cli`: Command-line interface
+   - `docs`: Documentation
+   - `ci`: CI/CD configuration
+   - `engine`: Training/inference engine
+   - `visualization`: Visualization tools
+   - `benchmarking`: Benchmarking tools
+   - `logger`: Logging functionality
+   - `openvino`: OpenVINO integration
+   - `notebooks`: Jupyter notebooks
+
+   **Rules:**
+   - The type and scope are case-sensitive
+   - The type must be lowercase
+   - The description should be in present tense
+   - The description should not end with a period
+   - The description should not be in sentence-case, start-case, pascal-case, or upper-case
+
+   **PR Title Examples:**
+
+   ```text
+   feat(model): add transformer architecture for anomaly detection
+   ```
+
+   ```text
+   fix(data): handle corrupted image files during training
+   ```
+
+   ```text
+   docs: update installation instructions for Windows
+   ```
+
+   ```text
+   chore(ci): migrate from commit message validation to PR title validation
+   ```
+
+   **Note:** The PR description can contain additional details, but the title must be concise and follow the format above.
+
+   **Optional Emojis:**
+   You can optionally add emojis at the beginning of your PR title for better visual distinction:
+
+   ```text
+   🚀 feat(model): add transformer architecture for anomaly detection
+   🐞 fix(data): handle corrupted image files during training
+   📚 docs: update installation instructions for Windows
+   🔧 chore(ci): migrate from commit message validation to PR title validation
+   ```
+
+   **Suggested Emoji Mapping (Optional):**
+   - 🚀 for `feat` (new features)
+   - 🐞 for `fix` (bug fixes)
+   - 📚 for `docs` (documentation)
+   - 🎨 for `style` (code style/formatting)
+   - 🔄 for `refactor` (code refactoring)
+   - ⚡ for `perf` (performance improvements)
+   - 🧪 for `test` (adding/modifying tests)
+   - 📦 for `build` (build system changes)
+   - 🔧 for `chore` (general maintenance)
+   - 🚧 for `ci` (CI/CD configuration)
+
+   **Note:** Emojis are completely optional. PR titles without emojis are equally valid.
+
+   :::
+
+   :::{dropdown} Branch Naming
+   :icon: git-branch
+
+   Branch names must follow the format:
+
+   ```text
+   <type>/<scope>/<description>
+   ```
+
+   **Examples:**
+   - `feat/model/add-transformer`
+   - `fix/data/load-image-bug`
+   - `docs/readme/update-installation`
+   - `refactor/utils/optimize-performance`
+
+   The type and scope should match the ones used in commit messages.
+   :::
+
+   :::{dropdown} Development Workflow
+   :icon: terminal
+   <summary>Using Commitizen</summary>
+   1. Stage your changes and create a commit using Commitizen:
+
+   **During Development:**
+   Individual commits can use any format for convenience:
+
+   ```bash
+   git add <files>
+   git commit -m "wip: working on transformer model"
+   git commit -m "fix typo"
+   git commit -m "address review comments"
+   ```
+
+   **Creating the PR:**
+   Ensure your PR title follows conventional commit format. The PR title becomes the final commit message when merged.
+
+   **Optional - Using Commitizen for PR titles:**
+   You can use Commitizen to help format your PR titles:
+
+   ```bash
+   # Check if a message follows conventional format
+   echo "feat(model): add transformer architecture" | cz check --commit-msg-file -
+   ```
+
+   **Version Management:**
+   To bump the version based on PR history:
+
+   ```bash
+   cz bump
+   ```
+
+   :::
 
 ## {octicon}`git-pull-request` Submitting Pull Requests
 

@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Callbacks for Anomalib models.
 
 This module provides various callbacks used in Anomalib for model training, logging, and optimization.
@@ -33,9 +36,6 @@ See Also:
     - :mod:`anomalib.callbacks.tiler_configuration`: Tiler configuration callback
     - :mod:`anomalib.callbacks.timer`: Timer callback
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from importlib import import_module

@@ -117,8 +117,10 @@ runs:
     - name: Determine test scope
       id: test-scope
       shell: bash
+      env:
+        INPUTS_TEST_TYPE: ${{ inputs.test-type }}
       run: |
-        case "${{ inputs.test-type }}" in
+        case "$INPUTS_TEST_TYPE" in
           "unit")
             echo "path=tests/unit" >> $GITHUB_OUTPUT
             ;;
@@ -135,23 +137,27 @@ runs:
       id: test-execution
       shell: bash
       continue-on-error: true
+      env:
+        INPUTS_DEVICE: ${{ inputs.device }}
+        INPUTS_MAX_TEST_TIME: ${{ inputs.max-test-time }}
+        STEPS_TEST_SCOPE_OUTPUTS_PATH: ${{ steps.test-scope.outputs.path }}
       run: |
         source .venv/bin/activate
         start_time=$(date +%s)
 
         # Set device-specific pytest arguments
-        if [ "${{ inputs.device }}" = "cpu" ]; then
+        if [ "$INPUTS_DEVICE" = "cpu" ]; then
           marker="-m cpu"  # Only run CPU tests
         else
           marker=""  # Run all tests (both CPU and GPU marked tests)
         fi
 
         # Run pytest
-        PYTHONPATH=src pytest ${{ steps.test-scope.outputs.path }} \
+        PYTHONPATH=src pytest "$STEPS_TEST_SCOPE_OUTPUTS_PATH" \
           --numprocesses=0 \
           --durations=10 \
           --durations-min=1.0 \
-          --timeout=${{ inputs.max-test-time }} \
+          --timeout="$INPUTS_MAX_TEST_TIME" \
           --verbosity=1 \
           --cov=src \
           --cov-report=xml \
@@ -194,13 +200,15 @@ runs:
     - name: Check test duration
       if: always()
       shell: bash
+      env:
+        INPUTS_MAX_TEST_TIME: ${{ inputs.max-test-time }}
+        STEPS_TEST_EXECUTION_OUTPUTS_DURATION: ${{ steps.test-execution.outputs.duration }}
       run: |
-        duration="${{ steps.test-execution.outputs.duration }}"
-        if [ -n "$duration" ]; then
-          echo "Test Duration: $duration seconds"
+        if [ -n "$STEPS_TEST_EXECUTION_OUTPUTS_DURATION" ]; then
+          echo "Test Duration: $STEPS_TEST_EXECUTION_OUTPUTS_DURATION seconds"
 
-          if [ "$duration" -gt "${{ inputs.max-test-time }}" ]; then
-            echo "::warning::Test suite exceeded recommended duration of ${{ inputs.max-test-time }} seconds"
+          if [ "$STEPS_TEST_EXECUTION_OUTPUTS_DURATION" -gt "$INPUTS_MAX_TEST_TIME" ]; then
+            echo "::warning::Test suite exceeded recommended duration of $INPUTS_MAX_TEST_TIME seconds"
           fi
         else
           echo "Test Duration: Not available"
@@ -209,9 +217,14 @@ runs:
     - name: Upload coverage to Codecov
       if: success()
       shell: bash
+      env:
+        INPUTS_CODECOV_TOKEN: ${{ inputs.codecov-token }}
+        INPUTS_TEST_TYPE: ${{ inputs.test-type }}
+        INPUTS_PYTHON_VERSION: ${{ inputs.python-version }}
+
       run: |
         source .venv/bin/activate
-        codecov --token "${{ inputs.codecov-token }}" \
+        codecov --token "$INPUTS_CODECOV_TOKEN" \
                 --file coverage.xml \
-                --flags "${{ inputs.test-type }}_py${{ inputs.python-version }}" \
-                --name "${{ inputs.test-type }} tests (Python ${{ inputs.python-version }})"
+                --flags "$INPUTS_TEST_TYPE_py$INPUTS_PYTHON_VERSION" \
+                --name "$INPUTS_TEST_TYPE tests (Python $INPUTS_PYTHON_VERSION)"

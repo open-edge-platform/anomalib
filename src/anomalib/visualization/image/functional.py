@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Image visualization functions using PIL and torchvision.
 
 This module provides functions for visualizing images and anomaly detection results using
@@ -26,15 +29,13 @@ Note:
     unless explicitly specified otherwise.
 """
 
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 import inspect
 import logging
 import sys
 from collections.abc import Callable
 from typing import Any, Literal
 
+import numpy as np
 import torch
 import torch.nn.functional as F  # noqa: N812
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
@@ -161,10 +162,11 @@ def add_text_to_image(
         size = dynamic_font_size(image.size)
 
     try:
-        image_font = ImageFont.truetype(font, size) if font else ImageFont.load_default()
+        # Pillow >= 10.1.0 required for size parameter support
+        image_font = ImageFont.truetype(font, size) if font else ImageFont.load_default(size=size)
     except OSError:
         logger.warning(f"Failed to load font '{font}'. Using default font.")
-        image_font = ImageFont.load_default()
+        image_font = ImageFont.load_default(size=size)
 
     # Calculate text size and position
     text_bbox = draw.textbbox(position, text, font=image_font)
@@ -399,21 +401,171 @@ def overlay_images(
     return base
 
 
+def np_to_pil_image(array: np.ndarray) -> Image.Image:
+    """Convert a NumPy array to a PIL Image with proper normalization.
+
+    This function handles various NumPy array types and normalizes them appropriately
+    before converting to a PIL Image. It supports boolean, float, and integer arrays.
+    Arrays with singleton dimensions are automatically squeezed.
+
+    Args:
+        array (np.ndarray): Input NumPy array to convert. Can be:
+            - Boolean array: Will be converted to uint8 (0 and 255)
+            - Float array: Will be normalized to [0, 255] range
+            - Integer array: Will be converted to uint8 if needed
+            - Arrays with shape (H, W) for grayscale images
+            - Arrays with shape (H, W, 3) for RGB images
+            - Arrays with singleton dimensions (e.g., (1, H, W), (H, W, 1)) are squeezed
+
+    Returns:
+        Image.Image: Converted PIL Image in grayscale ('L') or RGB mode.
+
+    Examples:
+        Convert a boolean array:
+
+        >>> import numpy as np
+        >>> bool_array = np.array([[True, False], [False, True]])
+        >>> img = np_to_pil_image(bool_array)
+        >>> img.mode
+        'L'
+
+        Convert an integer array:
+
+        >>> int_array = np.array([[0, 128], [128, 255]], dtype=np.uint8)
+        >>> img = np_to_pil_image(int_array)
+        >>> img.mode
+        'L'
+
+        Handle RGB image:
+
+        >>> rgb_array = np.random.rand(256, 256, 3)
+        >>> img = np_to_pil_image(rgb_array)
+        >>> img.mode
+        'RGB'
+
+        Handle array with singleton dimensions:
+
+        >>> batch_array = np.random.rand(1, 256, 256)
+        >>> img = np_to_pil_image(batch_array)
+        >>> img.mode
+        'L'
+
+        >>> single_channel = np.random.rand(256, 256, 1)
+        >>> img = np_to_pil_image(single_channel)
+        >>> img.mode
+        'L'
+
+    Note:
+        - Boolean arrays are converted to uint8 (0 and 255)
+        - Integer arrays are converted to uint8 if needed
+        - Singleton dimensions are automatically squeezed
+        - Arrays with shape (H, W, 3) after squeezing are treated as RGB images
+        - The output is grayscale ('L') for 2D arrays or RGB for 3D arrays with 3 channels
+    """
+    # Squeeze singleton dimensions first
+    array = array.squeeze()
+
+    # Handle arrays based on final dimensions after squeezing
+    if array.ndim == 3 and array.shape[2] == 3:
+        mode = "RGB"
+    elif array.ndim == 2:
+        mode = "L"
+    else:
+        msg = (
+            f"Expected 2D array (H, W) or 3D array (H, W, 3) after squeezing, "
+            f"got {array.ndim}D array with shape {array.shape}"
+        )
+        raise ValueError(msg)
+
+    # Convert array to uint8
+    if array.dtype == np.bool_:
+        array = array.astype(np.uint8) * 255
+    elif array.dtype != np.uint8:
+        array = (array * 255).astype(np.uint8) if array.max() <= 1.0 else array.astype(np.uint8)
+
+    return Image.fromarray(array, mode=mode)
+
+
+def visualize_image(image: str | Image.Image | torch.Tensor | np.ndarray) -> Image.Image:
+    """Visualize an image from various input types.
+
+    This function handles different input types (file path, PIL Image, PyTorch tensor,
+    or NumPy array) and converts them to a PIL Image for visualization. It supports
+    normalization for float arrays.
+
+    Args:
+        image (str | Image.Image | torch.Tensor | np.ndarray): Input image to visualize.
+            Can be:
+            - str: Path to an image file
+            - PIL Image: Will be converted to RGB mode if needed
+            - PyTorch tensor: Will be converted to PIL Image
+            - NumPy array: Will be converted to PIL Image
+
+    Returns:
+        Image.Image: Converted PIL Image in RGB mode.
+
+    Examples:
+        Load from file path:
+
+        >>> from PIL import Image
+        >>> img = visualize_image("path/to/image.jpg")
+        >>> isinstance(img, Image.Image)
+        True
+
+        Convert PIL Image:
+
+        >>> pil_img = Image.new('RGB', (100, 100))
+        >>> img = visualize_image(pil_img)
+        >>> img.mode
+        'RGB'
+
+        Convert PyTorch tensor:
+
+        >>> import torch
+        >>> tensor = torch.rand(3, 100, 100)
+        >>> img = visualize_image(tensor)
+        >>> isinstance(img, Image.Image)
+        True
+
+    Note:
+        - File paths are loaded using PIL's Image.open
+        - PIL Images are converted to RGB mode if needed
+        - PyTorch tensors are converted using torchvision's to_pil_image
+        - NumPy arrays are converted using np_to_pil_image
+    """
+    if isinstance(image, str):
+        # Load image from file path
+        return Image.open(image).convert("RGB")
+    if isinstance(image, Image.Image):
+        # Convert PIL Image to RGB mode if needed
+        return image.convert("RGB")
+    if isinstance(image, torch.Tensor):
+        # Convert PyTorch tensor to PIL Image
+        return to_pil_image(image.squeeze())
+    if isinstance(image, np.ndarray):
+        # Convert NumPy array to PIL Image
+        return np_to_pil_image(image.squeeze())
+    msg = f"Expected str, PIL Image, PyTorch tensor, or NumPy array, got {type(image)}"
+    raise TypeError(msg)
+
+
 def visualize_anomaly_map(
-    anomaly_map: Image.Image | torch.Tensor,
+    anomaly_map: Image.Image | torch.Tensor | np.ndarray,
     colormap: bool = True,
     normalize: bool = False,
 ) -> Image.Image:
     """Visualize an anomaly map by applying normalization and/or colormap.
 
     This function takes an anomaly map and converts it to a visualization by optionally
-    normalizing the values and applying a colormap. The input can be either a PIL Image
-    or PyTorch tensor.
+    normalizing the values and applying a colormap. The input can be a PIL Image,
+    PyTorch tensor, or NumPy array.
 
     Args:
-        anomaly_map (:class:`PIL.Image.Image` | :class:`torch.Tensor`): Input anomaly
-            map to visualize. If a tensor is provided, it will be converted to a PIL
-            Image.
+        anomaly_map (Image.Image | torch.Tensor | np.ndarray): Input anomaly
+            map to visualize. Can be:
+            - PIL Image: Will be converted to grayscale if not already
+            - PyTorch tensor: Will be converted to PIL Image
+            - NumPy array: Will be converted to PIL Image
         colormap (bool, optional): Whether to apply a colormap to the anomaly map.
             When ``True``, converts the image to a colored heatmap visualization.
             When ``False``, converts to RGB grayscale. Defaults to ``True``.
@@ -422,7 +574,7 @@ def visualize_anomaly_map(
             values using min-max normalization. Defaults to ``False``.
 
     Returns:
-        :class:`PIL.Image.Image`: Visualized anomaly map as a PIL Image in RGB mode.
+        Image.Image: Visualized anomaly map as a PIL Image in RGB mode.
             If ``colormap=True``, returns a heatmap visualization. Otherwise returns
             a grayscale RGB image.
 
@@ -449,13 +601,28 @@ def visualize_anomaly_map(
         >>> isinstance(vis, Image.Image)
         True
 
+        Visualize a NumPy array anomaly map:
+
+        >>> # Create random numpy array
+        >>> array_map = np.random.rand(100, 100)
+        >>> # Visualize with normalization
+        >>> vis = visualize_anomaly_map(array_map, normalize=True, colormap=True)
+        >>> isinstance(vis, Image.Image)
+        True
+
     Note:
-        - Input tensors are automatically converted to PIL Images
+        - Input tensors and arrays are automatically converted to PIL Images
         - The function always returns an RGB mode image
         - When ``normalize=True``, uses min-max normalization to [0, 255] range
         - The colormap used is the default from :func:`apply_colormap`
     """
-    image = to_pil_image(anomaly_map) if isinstance(anomaly_map, torch.Tensor) else anomaly_map.copy()
+    # Convert input to PIL Image if necessary
+    if isinstance(anomaly_map, torch.Tensor):
+        image = to_pil_image(anomaly_map)
+    elif isinstance(anomaly_map, np.ndarray):
+        image = np_to_pil_image(anomaly_map)
+    else:
+        image = anomaly_map.copy()
 
     if normalize:
         # Get the min and max pixel values
@@ -463,13 +630,16 @@ def visualize_anomaly_map(
         max_value = image.getextrema()[1]
 
         # Create a normalized image
-        image = image.point(lambda x: (x - min_value) * 255 / (max_value - min_value))
+        if max_value > min_value:
+            image = image.point(lambda x: int((x - min_value) * 255 / (max_value - min_value)))
+        else:
+            image = Image.new("L", image.size, 0)
 
     return apply_colormap(image) if colormap else image.convert("RGB")
 
 
 def visualize_mask(
-    mask: Image.Image | torch.Tensor,
+    mask: Image.Image | torch.Tensor | np.ndarray,
     *,
     mode: Literal["contour", "fill", "binary", "L", "1"] = "binary",
     alpha: float = 0.5,
@@ -482,9 +652,9 @@ def visualize_mask(
     specified mode.
 
     Args:
-        mask (:class:`PIL.Image.Image` | :class:`torch.Tensor`): Input mask to visualize.
-            Can be a PIL Image or PyTorch tensor. If tensor, should be 2D with values in
-            [0, 1] or [0, 255].
+        mask (Image.Image | torch.Tensor | np.ndarray): Input mask to visualize.
+            Can be a PIL Image, PyTorch tensor, or NumPy array. If tensor or array,
+            should be 2D with values in [0, 1] or [0, 255].
         mode (Literal["contour", "fill", "binary", "L", "1"]): Visualization mode:
 
             - ``"contour"``: Draw contours around masked regions
@@ -508,7 +678,7 @@ def visualize_mask(
         - ``"binary"``, ``"L"``, ``"1"``: Returns grayscale image
 
     Raises:
-        TypeError: If ``mask`` is not a PIL Image or PyTorch tensor.
+        TypeError: If ``mask`` is not a PIL Image, PyTorch tensor, or NumPy array.
         ValueError: If ``mode`` is not one of the allowed values.
 
     Examples:
@@ -546,22 +716,31 @@ def visualize_mask(
         >>> binary_vis.mode
         'L'
 
+        Use NumPy array input:
+
+        >>> mask_array = np.random.randint(0, 2, size=(100, 100), dtype=np.uint8) * 255
+        >>> vis = visualize_mask(mask_array, mode="contour")
+        >>> isinstance(vis, Image.Image)
+        True
+
     Note:
-        - Input tensors are automatically converted to PIL Images
+        - Input tensors and arrays are automatically converted to PIL Images
         - Binary masks are expected to have values of 0 and 255 (or 0 and 1 for tensors)
         - The function preserves the original mask when using ``"binary"``, ``"L"`` or
           ``"1"`` modes
         - ``"contour"`` mode uses edge detection to find mask boundaries
         - ``"fill"`` mode creates a semi-transparent overlay using the specified color
     """
-    # Convert torch.Tensor to PIL Image if necessary
+    # Convert torch.Tensor or np.ndarray to PIL Image if necessary
     if isinstance(mask, torch.Tensor):
         if mask.dtype == torch.bool:
             mask = mask.to(torch.uint8) * 255
         mask = to_pil_image(mask)
+    elif isinstance(mask, np.ndarray):
+        mask = np_to_pil_image(mask)
 
     if not isinstance(mask, Image.Image):
-        msg = "Mask must be a PIL Image or PyTorch tensor"
+        msg = "Mask must be a PIL Image, PyTorch tensor, or NumPy array"
         raise TypeError(msg)
 
     # Ensure mask is in binary mode
@@ -597,7 +776,7 @@ def visualize_mask(
 
 
 def visualize_gt_mask(
-    mask: Image.Image | torch.Tensor,
+    mask: Image.Image | torch.Tensor | np.ndarray,
     *,
     mode: Literal["contour", "fill", "binary", "L", "1"] = "binary",
     alpha: float = 0.5,
@@ -611,8 +790,8 @@ def visualize_gt_mask(
     suitable for ground truth visualization.
 
     Args:
-        mask (Image.Image | torch.Tensor): Input mask to visualize. Can be either a
-            PIL Image or PyTorch tensor.
+        mask (Image.Image | torch.Tensor | np.ndarray): Input mask to visualize.
+            Can be a PIL Image, PyTorch tensor, or NumPy array.
         mode (Literal["contour", "fill", "binary", "L", "1"]): Visualization mode.
             Defaults to ``"binary"``.
             - ``"contour"``: Draw mask boundaries
@@ -630,6 +809,7 @@ def visualize_gt_mask(
 
     Examples:
         >>> import torch
+        >>> import numpy as np
         >>> from PIL import Image
         >>> # Create a sample binary mask
         >>> mask = torch.zeros((100, 100))
@@ -642,6 +822,12 @@ def visualize_gt_mask(
         >>> vis = visualize_gt_mask(mask, mode="contour", color=(0, 0, 255))
         >>> isinstance(vis, Image.Image)
         True
+        >>> # Use NumPy array input
+        >>> mask_array = np.zeros((100, 100))
+        >>> mask_array[25:75, 25:75] = 1
+        >>> vis = visualize_gt_mask(mask_array, mode="fill")
+        >>> isinstance(vis, Image.Image)
+        True
 
     Note:
         See :func:`visualize_mask` for more details on the visualization modes and
@@ -651,7 +837,7 @@ def visualize_gt_mask(
 
 
 def visualize_pred_mask(
-    mask: Image.Image | torch.Tensor,
+    mask: Image.Image | torch.Tensor | np.ndarray,
     *,
     mode: Literal["contour", "fill", "binary", "L", "1"] = "binary",
     color: tuple[int, int, int] = (255, 0, 0),
@@ -665,8 +851,8 @@ def visualize_pred_mask(
     suitable for prediction visualization.
 
     Args:
-        mask (Image.Image | torch.Tensor): Input mask to visualize. Can be either a
-            PIL Image or PyTorch tensor.
+        mask (Image.Image | torch.Tensor | np.ndarray): Input mask to visualize.
+            Can be a PIL Image, PyTorch tensor, or NumPy array.
         mode (Literal["contour", "fill", "binary", "L", "1"]): Visualization mode.
             Defaults to ``"binary"``.
             - ``"contour"``: Draw mask boundaries
@@ -684,6 +870,7 @@ def visualize_pred_mask(
 
     Examples:
         >>> import torch
+        >>> import numpy as np
         >>> from PIL import Image
         >>> # Create a sample binary mask
         >>> mask = torch.zeros((100, 100))
@@ -694,6 +881,12 @@ def visualize_pred_mask(
         True
         >>> # Visualize with contours in blue
         >>> vis = visualize_pred_mask(mask, mode="contour", color=(0, 0, 255))
+        >>> isinstance(vis, Image.Image)
+        True
+        >>> # Use NumPy array input
+        >>> mask_array = np.zeros((100, 100))
+        >>> mask_array[25:75, 25:75] = 1
+        >>> vis = visualize_pred_mask(mask_array, mode="fill")
         >>> isinstance(vis, Image.Image)
         True
 

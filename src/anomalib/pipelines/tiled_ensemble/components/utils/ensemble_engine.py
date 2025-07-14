@@ -1,7 +1,7 @@
-"""Implements custom Anomalib engine for tiled ensemble training."""
-
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Implements custom Anomalib engine for tiled ensemble training."""
 
 import logging
 from pathlib import Path
@@ -58,20 +58,20 @@ class TiledEnsembleEngine(Engine):
 
     def _setup_anomalib_callbacks(self) -> None:
         """Modified method to enable individual model training. It's called when Trainer is being set up."""
-        _callbacks: list[Callback] = []
+        callbacks: list[Callback] = []
 
         # Add ModelCheckpoint if it is not in the callbacks list.
         has_checkpoint_callback = any(isinstance(c, ModelCheckpoint) for c in self._cache.args["callbacks"])
         if not has_checkpoint_callback:
             tile_i, tile_j = self.tile_index
-            _callbacks.append(
+            callbacks.append(
                 ModelCheckpoint(
                     dirpath=self._cache.args["default_root_dir"] / "weights" / "lightning",
                     filename=f"model{tile_i}_{tile_j}",
                     auto_insert_metric_name=False,
                 ),
             )
-        _callbacks.append(TimerCallback())
+        callbacks.append(TimerCallback())
 
         # Combine the callbacks, and update the trainer callbacks.
-        self._cache.args["callbacks"] = _callbacks + self._cache.args["callbacks"]
+        self._cache.args["callbacks"] = callbacks + self._cache.args["callbacks"]

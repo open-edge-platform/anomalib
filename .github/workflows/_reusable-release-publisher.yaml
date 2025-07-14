@@ -74,10 +74,14 @@ on:
         required: false
         description: "Test PyPI token for pre-releases"
 
+permissions: {} # default permissions only on workflow level
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     environment: ${{ inputs.is-prerelease && 'staging' || 'production' }}
+    permissions:
+      contents: write # is required by action-gh-release
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -91,7 +95,7 @@ jobs:
         run: |
           pip install --upgrade pip twine
           twine upload dist/*
-      - uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
+      - uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
         with:
           tag_name: ${{ inputs.version }}
           name: Release ${{ inputs.version }}

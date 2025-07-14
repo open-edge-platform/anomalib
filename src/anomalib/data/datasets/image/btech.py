@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """BTech Dataset.
 
 This module provides PyTorch Dataset implementation for the BTech dataset. The
@@ -17,9 +20,6 @@ Reference:
     Vision Transformer Network for Image Anomaly Detection and Localization. In
     IEEE International Conference on Image Processing (ICIP), 2021.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
 
@@ -122,7 +122,7 @@ def make_btech_dataset(path: Path, split: str | Split | None = None) -> DataFram
     path = validate_path(path)
 
     samples_list = [
-        (str(path),) + filename.parts[-3:] for filename in path.glob("**/*") if filename.suffix in {".bmp", ".png"}
+        (str(path), *filename.parts[-3:]) for filename in path.glob("**/*") if filename.suffix in {".bmp", ".png"}
     ]
     if not samples_list:
         msg = f"Found 0 images in {path}"

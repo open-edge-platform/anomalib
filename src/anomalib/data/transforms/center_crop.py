@@ -1,3 +1,12 @@
+# Original Code
+# Copyright (c) Soumith Chintala 2016
+# https://github.com/pytorch/vision/blob/v0.16.1/torchvision/transforms/v2/functional/_geometry.py
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# Modified
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Custom Torchvision transforms for Anomalib.
 
 This module provides custom center crop transforms that are compatible with ONNX
@@ -12,15 +21,6 @@ Example:
     >>> output.shape
     torch.Size([3, 224, 224])
 """
-
-# Original Code
-# Copyright (c) Soumith Chintala 2016
-# https://github.com/pytorch/vision/blob/v0.16.1/torchvision/transforms/v2/functional/_geometry.py
-# SPDX-License-Identifier: BSD-3-Clause
-#
-# Modified
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from typing import Any
 
@@ -81,7 +81,7 @@ def center_crop_image(image: torch.Tensor, output_size: list[int]) -> torch.Tens
     crop_height, crop_width = _center_crop_parse_output_size(output_size)
     shape = image.shape
     if image.numel() == 0:
-        return image.reshape(shape[:-2] + (crop_height, crop_width))
+        return image.reshape((*shape[:-2], crop_height, crop_width))
     image_height, image_width = shape[-2:]
 
     if crop_height > image_height or crop_width > image_width:

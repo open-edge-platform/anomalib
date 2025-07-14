@@ -73,6 +73,9 @@ on:
         description: "Whether version is a pre-release"
         value: ${{ jobs.validate.outputs.is_prerelease }}
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -81,6 +84,8 @@ jobs:
       is_prerelease: ${{ steps.check-prerelease.outputs.is_prerelease }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Validate version
         id: get-version
         env:
@@ -93,9 +98,12 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
       - name: Check pre-release
         id: check-prerelease
+        env:
+          INPUTS_ALLOW_PRERELEASE: ${{ inputs.allow-prerelease }}
+          STEPS_GET_VERSION_OUTPUTS_VERSION: ${{ steps.get-version.outputs.version }}
         run: |
-          if [[ "${{ steps.get-version.outputs.version }}" =~ -rc[0-9]+$ ]]; then
-            if [[ "${{ inputs.allow-prerelease }}" != "true" ]]; then
+          if [[ "$STEPS_GET_VERSION_OUTPUTS_VERSION" =~ -rc[0-9]+$ ]]; then
+            if [[ "$INPUTS_ALLOW_PRERELEASE" != "true" ]]; then
               echo "::error::Pre-release versions are not allowed"
               exit 1
             fi

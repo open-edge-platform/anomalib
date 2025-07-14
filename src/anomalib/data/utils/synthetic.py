@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Dataset that generates synthetic anomalies.
 
 This module provides functionality to generate synthetic anomalies when real
@@ -18,9 +21,6 @@ Example:
     >>> len(synthetic_dataset)  # 50/50 normal/anomalous split
     200
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 import math

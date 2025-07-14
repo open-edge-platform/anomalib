@@ -1,7 +1,7 @@
-"""Test PRO metric."""
-
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test PRO metric."""
 
 import pytest
 import torch
@@ -14,7 +14,7 @@ from anomalib.metrics.pro import connected_components_cpu, connected_components_
 
 def test_pro() -> None:
     """Checks if PRO metric computes the (macro) average of the per-region overlap."""
-    labels = torch.Tensor(
+    labels = torch.tensor(
         [
             [
                 [0, 0, 0, 0, 0],

@@ -28,6 +28,12 @@ This implementation supports both unsupervised and supervised setting, but Anoma
 
 `anomalib train --model SuperSimpleNet --data MVTecAD --data.category <category>`
 
+> IMPORTANT!
+>
+> The model is verified to work with WideResNet50 using torchvision V1 weights.
+> It should work with most ResNets and WideResNets, but make sure you use V1 weights if you use default noise std value.
+> Correct weight name ends with ".tv\_[...]", not "tv2" (e.g. "wide_resnet50_2.tv_in1k").
+>
 > It is recommended to train the model for 300 epochs with batch size of 32 to achieve stable training with random anomaly generation. Training with lower parameter values will still work, but might not yield the optimal results.
 >
 > For supervised learning, refer to the [official code](https://github.com/blaz-r/SuperSimpleNet).
@@ -35,23 +41,24 @@ This implementation supports both unsupervised and supervised setting, but Anoma
 ## MVTecAD AD results
 
 The following results were obtained using this Anomalib implementation trained for 300 epochs with seed 0, default params, and batch size 32.
-| | **Image AUROC** | **Pixel AUPRO** |
+
+|            | **Image AUROC** | **Pixel AUPRO** |
 | ---------- | :-------------: | :-------------: |
-| Bottle | 1.000 | 0.903 |
-| Cable | 0.981 | 0.901 |
-| Capsule | 0.989 | 0.931 |
-| Carpet | 0.985 | 0.929 |
-| Grid | 0.994 | 0.930 |
-| Hazelnut | 0.994 | 0.943 |
-| Leather | 1.000 | 0.970 |
-| Metal_nut | 0.995 | 0.920 |
-| Pill | 0.962 | 0.936 |
-| Screw | 0.912 | 0.947 |
-| Tile | 0.994 | 0.854 |
-| Toothbrush | 0.908 | 0.860 |
-| Transistor | 1.000 | 0.907 |
-| Wood | 0.987 | 0.858 |
-| Zipper | 0.995 | 0.928 |
-| Average | 0.980 | 0.914 |
+| Bottle     |      1.000      |      0.903      |
+| Cable      |      0.981      |      0.901      |
+| Capsule    |      0.989      |      0.931      |
+| Carpet     |      0.985      |      0.929      |
+| Grid       |      0.994      |      0.930      |
+| Hazelnut   |      0.994      |      0.943      |
+| Leather    |      1.000      |      0.970      |
+| Metal_nut  |      0.995      |      0.920      |
+| Pill       |      0.962      |      0.936      |
+| Screw      |      0.912      |      0.947      |
+| Tile       |      0.994      |      0.854      |
+| Toothbrush |      0.908      |      0.860      |
+| Transistor |      1.000      |      0.907      |
+| Wood       |      0.987      |      0.858      |
+| Zipper     |      0.995      |      0.928      |
+| Average    |      0.980      |      0.914      |
 
 For other results on VisA, SensumSODF, and KSDD2, refer to the [paper](https://arxiv.org/pdf/2408.03143).

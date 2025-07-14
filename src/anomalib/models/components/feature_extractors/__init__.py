@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Feature extractors for deep learning models.
 
 This module provides feature extraction utilities and classes for extracting
@@ -22,9 +25,6 @@ Example:
     >>> # Extract features
     >>> features = feature_extractor(images)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .timm import TimmFeatureExtractor
 from .utils import dryrun_find_featuremap_dims

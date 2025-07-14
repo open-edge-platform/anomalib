@@ -1,12 +1,13 @@
-"""Tests for Torch and OpenVINO inferencers."""
-
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tests for Torch and OpenVINO inferencers."""
 
 from collections.abc import Callable, Iterable
 from pathlib import Path
 
 import numpy as np
+import pytest
 import torch
 
 from anomalib.deploy import ExportType, OpenVINOInferencer, TorchInferencer
@@ -46,16 +47,18 @@ class _MockImageLoader:
             yield self.image
 
 
-def test_torch_inference(ckpt_path: Callable[[str], Path]) -> None:
+def test_torch_inference(ckpt_path: Callable[[str], Path], monkeypatch: pytest.MonkeyPatch) -> None:
     """Tests Torch inference.
 
     Model is not trained as this checks that the inferencers are working.
 
     Args:
-        task (TaskType): Task type
         ckpt_path: Callable[[str], Path]: Path to trained PADIM model checkpoint.
-        dataset_path (Path): Path to dummy dataset.
+        monkeypatch: pytest fixture for patching environment variables.
     """
+    # Set TRUST_REMOTE_CODE environment variable for the test
+    monkeypatch.setenv("TRUST_REMOTE_CODE", "1")
+
     model = Padim()
     engine = Engine()
     export_root = ckpt_path("Padim").parent.parent

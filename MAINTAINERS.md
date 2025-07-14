@@ -8,12 +8,10 @@ the maintainers listed below.
 ## 👥 Core Maintainers
 
 - **Samet Akcay**
-
   - GitHub: [@samet-akcay](https://github.com/samet-akcay)
   - Email: samet.akcay@intel.com
 
 - **Dick Ameln**
-
   - GitHub: [@djdameln](https://github.com/djdameln)
   - Email: dick.ameln@intel.com
 

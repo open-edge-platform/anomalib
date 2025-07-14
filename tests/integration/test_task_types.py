@@ -1,7 +1,7 @@
-"""Tests to check behaviour of the auxiliary components across different task types (classification, segmentation) ."""
-
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tests to check behaviour of the auxiliary components across different task types (classification, segmentation) ."""
 
 import copy
 from pathlib import Path

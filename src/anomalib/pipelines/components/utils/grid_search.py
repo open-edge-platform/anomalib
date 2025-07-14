@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Utilities for grid search parameter iteration.
 
 This module provides utilities for iterating over grid search parameter combinations
@@ -25,9 +28,6 @@ The module handles:
     - Reconstructing nested dictionary structure
     - Preserving non-grid parameters
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Generator
 from itertools import product
@@ -67,11 +67,11 @@ def get_iterator_from_grid_dict(container: dict) -> Generator[dict, Any, None]:
     Yields:
         Generator[dict, Any, None]: Iterator based on the grid search arguments.
     """
-    _container = flatten_dict(container)
-    grid_dict = {key: value for key, value in _container.items() if "grid" in key}
-    _container = {key: value for key, value in _container.items() if key not in grid_dict}
+    container_ = flatten_dict(container)
+    grid_dict = {key: value for key, value in container_.items() if "grid" in key}
+    container_ = {key: value for key, value in container_.items() if key not in grid_dict}
     combinations = list(product(*convert_valuesview_to_tuple(grid_dict.values())))
     for combination in combinations:
         for key, value in zip(grid_dict.keys(), combination, strict=True):
-            _container[key.removesuffix(".grid")] = value
-        yield to_nested_dict(_container)
+            container_[key.removesuffix(".grid")] = value
+        yield to_nested_dict(container_)

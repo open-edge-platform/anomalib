@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomaly Map Generator for CS-Flow model.
 
 This module provides functionality to generate anomaly maps from the CS-Flow model's
@@ -17,9 +20,6 @@ Example:
     >>> anomaly_map.shape
     torch.Size([2, 1, 256, 256])
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
 

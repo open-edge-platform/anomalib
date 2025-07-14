@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Custom Folder Dataset.
 
 This module provides a custom PyTorch Dataset implementation for loading images
@@ -18,9 +21,6 @@ Example:
     ...     mask_dir="ground_truth"
     ... )
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
 from pathlib import Path

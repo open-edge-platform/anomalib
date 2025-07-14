@@ -1,3 +1,10 @@
+# Original Code
+# https://github.com/jpcbertoldo/aupimo
+#
+# Modified
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Utilities for validating arguments and results.
 
 This module provides validation functions for various inputs and outputs used in
@@ -22,13 +29,6 @@ Example:
     >>> is_rate(-0.1, zero_ok=True, one_ok=True)  # Raises ValueError
     ValueError: Expected rate to be in [0, 1], but got -0.1.
 """
-
-# Original Code
-# https://github.com/jpcbertoldo/aupimo
-#
-# Modified
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 

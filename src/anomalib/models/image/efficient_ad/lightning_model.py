@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """EfficientAd: Accurate Visual Anomaly Detection at Millisecond-Level Latencies.
 
 This module implements the EfficientAd model for fast and accurate anomaly
@@ -32,9 +35,6 @@ See Also:
     :class:`anomalib.models.image.efficient_ad.torch_model.EfficientAdModel`:
         PyTorch implementation of the EfficientAd model architecture.
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from pathlib import Path
@@ -167,7 +167,9 @@ class EfficientAd(AnomalibModule):
             pretrained_models_dir / "efficientad_pretrained_weights" / f"pretrained_teacher_{model_size_str}.pth"
         )
         logger.info(f"Load pretrained teacher model from {teacher_path}")
-        self.model.teacher.load_state_dict(torch.load(teacher_path, map_location=torch.device(self.device)))
+        self.model.teacher.load_state_dict(
+            torch.load(teacher_path, map_location=torch.device(self.device), weights_only=True),
+        )
 
     def prepare_imagenette_data(self, image_size: tuple[int, int] | torch.Size) -> None:
         """Prepare ImageNette dataset transformations.

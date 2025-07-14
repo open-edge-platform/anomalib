@@ -1,3 +1,6 @@
+# Copyright (C) 2024-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Core Components for the Tiled Ensemble Pipeline.
 
 This module aggregates the essential components utilized in the Tiled Ensemble.
@@ -20,9 +23,6 @@ Reference:
     Memory Efficient Tiled Ensemble." Proceedings of the IEEE/CVF Conference
     on Computer Vision and Pattern Recognition Workshops (VAND 2.0). 2024.
 """
-
-# Copyright (C) 2024-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .merging import MergeJobGenerator
 from .metrics_calculation import MetricsCalculationJobGenerator

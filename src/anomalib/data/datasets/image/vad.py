@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """VAD Dataset.
 
 This module provides PyTorch Dataset implementation for the VAD dataset. The
@@ -18,9 +21,6 @@ Reference:
     The IEEE/CVF Conference on Computer Vision and Pattern Recognition, 2024,
     pp. 17754-17762, DOI: 10.1109/CVPR52733.2024.01681.
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
 from pathlib import Path
@@ -134,7 +134,7 @@ def make_vad_dataset(
         extensions = IMG_EXTENSIONS
 
     root = validate_path(root)
-    samples_list = [(str(root),) + f.parts[-3:] for f in root.glob(r"**/*") if f.suffix in extensions]
+    samples_list = [(str(root), *f.parts[-3:]) for f in root.glob(r"**/*") if f.suffix in extensions]
     if not samples_list:
         msg = f"Found 0 images in {root}"
         raise RuntimeError(msg)

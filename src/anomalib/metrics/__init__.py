@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Custom metrics for evaluating anomaly detection models.
 
 This module provides various metrics for evaluating anomaly detection performance:
@@ -36,9 +39,6 @@ Example:
     >>> f1(scores, labels, threshold=0.5)
     tensor(1.)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .anomaly_score_distribution import AnomalyScoreDistribution
 from .aupr import AUPR

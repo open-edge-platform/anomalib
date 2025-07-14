@@ -54,6 +54,9 @@ on:
         type: string
         default: "3.10"
 
+permissions:
+  contents: read
+
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
@@ -63,6 +66,7 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
+          persist-credentials: false
       - uses: ./.github/actions/code-quality/pre-commit
         with:
           python-version: ${{ inputs.python-version }}

@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """MVTec 3D-AD Datamodule.
 
 This module provides PyTorch Dataset, Dataloader and PyTorch Lightning DataModule for
@@ -16,9 +19,6 @@ Reference:
     Computer Graphics Theory and Applications - Volume 5: VISAPP, 202-213, 2022
     DOI: 10.5220/0010865000003124
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
 from pathlib import Path
@@ -133,7 +133,7 @@ def make_mvtec_3d_dataset(
         extensions = IMG_EXTENSIONS
 
     root = validate_path(root)
-    samples_list = [(str(root),) + f.parts[-4:] for f in root.glob(r"**/*") if f.suffix in extensions]
+    samples_list = [(str(root), *f.parts[-4:]) for f in root.glob(r"**/*") if f.suffix in extensions]
     if not samples_list:
         msg = f"Found 0 images in {root}"
         raise RuntimeError(msg)
