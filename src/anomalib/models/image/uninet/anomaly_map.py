@@ -46,25 +46,20 @@ def weighted_decision_mechanism(
 
     assert len(total_weights_list) == batch_size, "The number of weights do not match the number of samples"
 
-    anomaly_map_lists: list[list[torch.Tensor]] = [[] for _ in output_list]
+    anomaly_maps: list[list[torch.Tensor]] = [[] for _ in output_list]
     for idx, output in enumerate(output_list):
         anomaly_map_ = torch.unsqueeze(output, dim=1)  # Bx1xhxw
         # Bx256x256
-        anomaly_map_lists[idx] = F.interpolate(anomaly_map_, output_size, mode="bilinear", align_corners=True)[
-            :,
-            0,
-            :,
-            :,
-        ]
+        anomaly_maps[idx] = F.interpolate(anomaly_map_, output_size, mode="bilinear", align_corners=True)[:, 0, :, :]
 
-    anomaly_map: torch.Tensor = sum(anomaly_map_lists)
+    processed_anomaly_maps: torch.Tensor = sum(anomaly_maps)
 
     anomaly_score = []
     for idx in range(batch_size):
         top_k = int(output_size[0] * output_size[1] * total_weights_list[idx])
         assert top_k >= 1 / (output_size[0] * output_size[1]), "weight can not be smaller than 1 / (H * W)!"
 
-        single_anomaly_score_exp = anomaly_map[idx]
+        single_anomaly_score_exp = processed_anomaly_maps[idx]
         single_anomaly_score_exp = gaussian_blur2d(
             einops.rearrange(single_anomaly_score_exp, "h w -> 1 1 h w"),  # kornia expects 4D tensor
             kernel_size=(5, 5),
@@ -76,4 +71,4 @@ def weighted_decision_mechanism(
         single_map = single_anomaly_score_exp.reshape(1, -1)
         single_anomaly_score = single_map.topk(top_k).values[0][0]
         anomaly_score.append(single_anomaly_score.detach())
-    return torch.vstack(anomaly_score), anomaly_map.detach()
+    return torch.vstack(anomaly_score), processed_anomaly_maps.detach()
