@@ -26,7 +26,6 @@ Notes:
 """
 
 import math
-import warnings
 
 import torch
 from torch import nn
@@ -34,6 +33,7 @@ from torch.nn import functional as F  # noqa: N812
 
 from anomalib.data import InferenceBatch
 from anomalib.models.components import PCA, DynamicBufferMixin, TimmFeatureExtractor
+from anomalib.utils.deprecation import deprecate
 
 
 class SingleClassGaussian(DynamicBufferMixin):
@@ -154,8 +154,9 @@ class DFMModel(nn.Module):
             layers=[layer],
         ).eval()
 
-        self.memory_bank = torch.Tensor()
+        self.memory_bank = torch.empty(0)
 
+    @deprecate(args={"dataset": None}, since="2.1.0")
     def fit(self, dataset: torch.Tensor = None) -> None:
         """Fit PCA and Gaussian model to dataset.
 
@@ -166,12 +167,7 @@ class DFMModel(nn.Module):
                 the method now uses `self.memory_bank` as the input dataset.
         """
         if dataset is not None:
-            warnings.warn(
-                "The 'dataset' argument is deprecated and will be removed in a future release. "
-                "The method now uses 'self.memory_bank' as the input dataset.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
+            del dataset
 
         self.pca_model.fit(self.memory_bank)
         if self.score_type == "nll":
@@ -179,7 +175,7 @@ class DFMModel(nn.Module):
             self.gaussian_model.fit(features_reduced.T)
 
         # clear memory bank, reduces GPU size
-        self.memory_bank = torch.Tensor().to(self.memory_bank)
+        self.memory_bank = torch.empty(0).to(self.memory_bank)
 
     def score(self, features: torch.Tensor, feature_shapes: tuple) -> torch.Tensor:
         """Compute anomaly scores.

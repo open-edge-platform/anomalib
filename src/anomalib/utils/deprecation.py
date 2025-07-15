@@ -109,7 +109,7 @@ def _build_deprecation_msg(
 
 
 def _warn_deprecated_arguments(
-    args_map: dict[str, str],
+    args_map: dict[str, str | None],
     bound_args: inspect.BoundArguments,
     since: str | None,
     remove: str | None,
@@ -143,7 +143,7 @@ def _wrap_deprecated_init(
     remove: str | None,
     use: str | None,
     reason: str | None,
-    args_map: dict[str, str] | None,
+    args_map: dict[str, str | None] | None,
     warning_category: type[Warning],
 ) -> type:
     """Wrap a class constructor to emit a deprecation warning when instantiated.
@@ -186,7 +186,7 @@ def _wrap_deprecated_function(
     remove: str | None,
     use: str | None,
     reason: str | None,
-    args_map: dict[str, str] | None,
+    args_map: dict[str, str | None] | None,
     warning_category: type[Warning],
 ) -> Callable:
     """Wrap a function to emit a deprecation warning when called.
@@ -237,7 +237,7 @@ def deprecate(
     remove: str | None = None,
     use: str | None = None,
     reason: str | None = None,
-    args: dict[str, str] | None = None,
+    args: dict[str, str | None] | None = None,
     warning_category: type[Warning] = FutureWarning,
 ) -> Callable[[_T], _T]: ...
 
@@ -249,7 +249,7 @@ def deprecate(
     remove: str | None = None,
     use: str | None = None,
     reason: str | None = None,
-    args: dict[str, str] | None = None,
+    args: dict[str, str | None] | None = None,
     warning_category: type[Warning] = DeprecationWarning,
 ) -> Any:
     """Mark a function, class, or keyword argument as deprecated.

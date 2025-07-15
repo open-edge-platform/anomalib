@@ -32,6 +32,17 @@ def test_deprecated_class_warns_on_init() -> None:
     assert instance.val == 42
 
 
+def test_deprecated_function_arg_warns_with_none_replacement() -> None:
+    """Test deprecated argument triggers warning when replacement is None."""
+
+    @deprecate(args={"old_param": None}, since="1.0", remove="2.0")
+    def func(new_param: int | None = None, old_param: int | None = None) -> int:
+        return new_param if new_param is not None else old_param
+
+    with pytest.warns(DeprecationWarning, match=r"(?=.*old_param)(?=.*1\.0)(?=.*2\.0)"):
+        assert func(old_param=10) == 10
+
+
 def test_deprecated_function_arg_warns() -> None:
     """Test deprecated argument triggers warning with correct match."""
 

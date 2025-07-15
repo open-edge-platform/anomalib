@@ -89,7 +89,7 @@ class DfkdeModel(nn.Module):
             feature_scaling_method=feature_scaling_method,
             max_training_points=max_training_points,
         )
-        self.memory_bank = torch.Tensor()
+        self.memory_bank = torch.empty(0)
 
     def get_features(self, batch: torch.Tensor) -> torch.Tensor:
         """Extract features from the pre-trained backbone network.
@@ -153,7 +153,7 @@ class DfkdeModel(nn.Module):
         scores = self.classifier(features)
         return InferenceBatch(pred_score=scores)
 
-    def fit_classifier(self) -> None:
+    def fit(self) -> None:
         """Fits the classifier using the current contents of the memory bank.
 
         This method is typically called after the memory bank has been populated
@@ -172,4 +172,4 @@ class DfkdeModel(nn.Module):
         self.classifier.fit(self.memory_bank)
 
         # clear memory bank, redcues gpu size
-        self.memory_bank = torch.Tensor().to(self.memory_bank)
+        self.memory_bank = torch.empty(0).to(self.memory_bank)

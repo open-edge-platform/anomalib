@@ -147,7 +147,7 @@ class PadimModel(nn.Module):
         self.anomaly_map_generator = AnomalyMapGenerator()
 
         self.gaussian = MultiVariateGaussian()
-        self.memory_bank = torch.Tensor()
+        self.memory_bank = torch.empty(0)
 
     def forward(self, input_tensor: torch.Tensor) -> torch.Tensor | InferenceBatch:
         """Forward-pass image-batch (N, C, H, W) into model to extract features.
@@ -224,7 +224,7 @@ class PadimModel(nn.Module):
         idx = self.idx.to(embeddings.device)
         return torch.index_select(embeddings, 1, idx)
 
-    def fit_gaussian(self) -> None:
+    def fit(self) -> None:
         """Fits a Gaussian model to the current contents of the memory bank.
 
         This method is typically called after the memory bank has been filled during training.
@@ -242,4 +242,4 @@ class PadimModel(nn.Module):
         self.gaussian.fit(self.memory_bank)
 
         # clear memory bank, redcues gpu usage
-        self.memory_bank = torch.Tensor().to(self.memory_bank)
+        self.memory_bank = torch.empty(0).to(self.memory_bank)

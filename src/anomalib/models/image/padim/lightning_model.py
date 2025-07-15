@@ -159,7 +159,7 @@ class Padim(MemoryBankMixin, AnomalibModule):
     def fit(self) -> None:
         """Fit a Gaussian to the embedding collected from the training set."""
         logger.info("Fitting a Gaussian to the embedding collected from the training set.")
-        self.model.fit_gaussian()
+        self.model.fit()
 
     def validation_step(self, batch: Batch, *args, **kwargs) -> STEP_OUTPUT:
         """Perform a validation step of PADIM.

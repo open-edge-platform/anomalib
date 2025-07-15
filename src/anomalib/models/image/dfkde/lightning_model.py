@@ -139,7 +139,7 @@ class Dfkde(MemoryBankMixin, AnomalibModule):
     def fit(self) -> None:
         """Fit KDE model to collected embeddings from the training set."""
         logger.info("Fitting a KDE model to the embedding collected from the training set.")
-        self.model.fit_classifier()
+        self.model.fit()
 
     def validation_step(self, batch: Batch, *args, **kwargs) -> STEP_OUTPUT:
         """Perform validation by computing anomaly scores.

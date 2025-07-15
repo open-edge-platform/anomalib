@@ -33,7 +33,6 @@ See Also:
         Coreset subsampling using k-center-greedy approach
 """
 
-import warnings
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
@@ -43,6 +42,7 @@ from torch.nn import functional as F  # noqa: N812
 
 from anomalib.data import InferenceBatch
 from anomalib.models.components import DynamicBufferMixin, KCenterGreedy, TimmFeatureExtractor
+from anomalib.utils import deprecate
 
 from .anomaly_map import AnomalyMapGenerator
 
@@ -125,7 +125,7 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         self.feature_pooler = torch.nn.AvgPool2d(3, 1, 1)
         self.anomaly_map_generator = AnomalyMapGenerator()
         self.memory_bank: torch.Tensor
-        self.register_buffer("memory_bank", torch.Tensor())
+        self.register_buffer("memory_bank", torch.empty(0))
 
     def forward(self, input_tensor: torch.Tensor) -> torch.Tensor | InferenceBatch:
         """Process input tensor through the model.
@@ -250,6 +250,7 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         embedding_size = embedding.size(1)
         return embedding.permute(0, 2, 3, 1).reshape(-1, embedding_size)
 
+    @deprecate(args={"embeddings": None}, since="2.1.0", reason="Use the default memory bank instead.")
     def subsample_embedding(self, sampling_ratio: float, embeddings: torch.Tensor = None) -> None:
         """Subsample the memory_banks embeddings using coreset selection.
 
@@ -269,12 +270,8 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
             torch.Size([100, 512])
         """
         if embeddings is not None:
-            warnings.warn(
-                "The 'embeddings' argument is deprecated and will be removed in a future release."
-                "Please use the default memory bank instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
+            del embeddings
+
         if self.memory_bank.size(0) == 0:
             msg = "Memory bank is empty. Cannot perform coreset selection."
             raise ValueError(msg)
