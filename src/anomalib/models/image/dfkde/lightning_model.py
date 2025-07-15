@@ -104,7 +104,7 @@ class Dfkde(MemoryBankMixin, AnomalibModule):
             visualizer=visualizer,
         )
 
-        self.model = DfkdeModel(
+        self.model: DfkdeModel = DfkdeModel(
             layers=layers,
             backbone=backbone,
             pre_trained=pre_trained,
