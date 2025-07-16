@@ -115,8 +115,5 @@ class UniNet(AnomalibModule):
 
     @property
     def learning_type(self) -> LearningType:
-        """The model uses one-class learning.
-
-        Though technicaly it suppports multi-class and few_shot as well.
-        """
+        """The model uses one-class learning."""
         return LearningType.ONE_CLASS
