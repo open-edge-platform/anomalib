@@ -68,11 +68,7 @@ class UniNet(AnomalibModule):
         """Perform a training step of UniNet."""
         del args, kwargs  # These variables are not used.
 
-        loss = self.model(
-            images=batch.image,
-            masks=batch.gt_mask,
-            labels=batch.gt_label,
-        )
+        loss = self.model(images=batch.image, masks=batch.gt_mask, labels=batch.gt_label)
 
         self.log("train_loss", loss.item(), on_epoch=True, prog_bar=True, logger=True)
         return {"loss": loss}
