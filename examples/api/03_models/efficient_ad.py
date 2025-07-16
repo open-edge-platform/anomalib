@@ -7,11 +7,12 @@ EfficientAd is a fast and accurate model for anomaly detection,
 particularly well-suited for industrial inspection tasks.
 """
 
+from torchvision.transforms.v2 import Compose, Resize
+
 from anomalib.data import MVTecAD
 from anomalib.engine import Engine
 from anomalib.models import EfficientAd
 from anomalib.pre_processing import PreProcessor
-from torchvision.transforms.v2 import Compose, Resize
 
 # 1. Basic Usage
 # Initialize with default settings
@@ -29,7 +30,7 @@ model = EfficientAd(
     teacher_out_channels=384,  # Number of teacher output channels
     model_size="medium",
     lr=1e-4,
-    pre_processor=pre_processor
+    pre_processor=pre_processor,
 )
 
 # 4. Training Pipeline
