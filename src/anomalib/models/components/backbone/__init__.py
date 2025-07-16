@@ -12,6 +12,6 @@ See Also:
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from .de_resnet import get_decoder
+from .resnet_decoder import get_decoder
 
 __all__ = ["get_decoder"]
