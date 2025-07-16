@@ -21,8 +21,8 @@ from anomalib.visualization import Visualizer
 from .components import (
     AttentionBottleneck,
     BottleneckLayer,
+    UniNetLoss,
 )
-from .loss import UniNetLoss
 from .torch_model import UniNetModel
 
 

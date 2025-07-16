@@ -23,8 +23,7 @@ from torchvision.models.feature_extraction import create_feature_extractor
 
 from anomalib.data import InferenceBatch
 
-from .anomaly_map import weighted_decision_mechanism
-from .components import DomainRelatedFeatureSelection
+from .components import DomainRelatedFeatureSelection, weighted_decision_mechanism
 
 
 class UniNetModel(nn.Module):
