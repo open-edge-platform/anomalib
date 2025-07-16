@@ -1,7 +1,7 @@
-"""Tests for the Visualizer class."""
-
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tests for the Visualizer class."""
 
 from collections.abc import Callable
 from pathlib import Path

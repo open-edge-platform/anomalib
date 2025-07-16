@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomalib dataclasses.
 
 This module provides a collection of dataclasses used throughout the Anomalib
@@ -72,9 +75,6 @@ Example:
 >>> item.image.shape
 torch.Size([3, 224, 224])
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .numpy import NumpyImageBatch, NumpyImageItem, NumpyVideoBatch, NumpyVideoItem
 from .torch import (

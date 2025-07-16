@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """U-Flow PyTorch Implementation.
 
 This module provides the PyTorch implementation of the U-Flow model for anomaly detection.
@@ -14,9 +17,6 @@ The implementation includes classes for:
     - Main U-Flow model architecture
     - Anomaly map generation
 """
-
-# Copyright (C) 2023-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from FrEIA import framework as ff

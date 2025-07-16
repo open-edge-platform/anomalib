@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Validate numpy depth data.
 
 This module provides validators for depth data stored as numpy arrays. The validators
@@ -27,9 +30,6 @@ Note:
     The validators are used internally by the data modules to ensure data
     consistency before processing depth map data.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
 

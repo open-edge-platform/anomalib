@@ -1,7 +1,7 @@
-"""Test working of tiled ensemble pipeline components."""
-
 # Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test working of tiled ensemble pipeline components."""
 
 import copy
 from pathlib import Path

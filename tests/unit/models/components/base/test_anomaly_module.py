@@ -1,7 +1,7 @@
-"""Test AnomalibModule module."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test AnomalibModule module."""
 
 from pathlib import Path
 

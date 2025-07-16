@@ -1,7 +1,7 @@
-"""Test benchmarking pipeline."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test benchmarking pipeline."""
 
 from unittest.mock import MagicMock, patch
 

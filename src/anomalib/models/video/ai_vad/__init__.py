@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Implementation of the AI-VAD model.
 
 This module provides the implementation of the AI-VAD
@@ -27,9 +30,6 @@ Reference:
     Accurate and Interpretable Video Anomaly Detection", arXiv:2212.00789, 2022
     https://arxiv.org/pdf/2212.00789.pdf
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .lightning_model import AiVad
 

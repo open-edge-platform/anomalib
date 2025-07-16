@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Parallel execution of pipeline jobs using process pools.
 
 This module provides the :class:`ParallelRunner` class for executing pipeline jobs in
@@ -21,9 +24,6 @@ The parallel runner handles:
 The number of parallel jobs can be configured based on available compute resources
 like CPU cores or GPUs.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 import multiprocessing

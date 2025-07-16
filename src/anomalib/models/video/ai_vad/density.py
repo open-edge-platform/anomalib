@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Density estimation module for AI-VAD model implementation.
 
 This module implements the density estimation stage of the AI-VAD model. It provides
@@ -24,9 +27,6 @@ Example:
 The density estimators are used to model the distribution of normal behavior and
 detect anomalies as samples with low likelihood under the learned distributions.
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC, abstractmethod
 
@@ -303,7 +303,7 @@ class GroupedKNNEstimator(DynamicBufferMixin, BaseDensityEstimator):
         self.feature_collection: dict[str, list[torch.Tensor]] = {}
         self.group_index: dict[str, int] = {}
 
-        self.register_buffer("memory_bank", Tensor())
+        self.register_buffer("memory_bank", torch.empty(0))
         self.register_buffer("min", torch.tensor(torch.inf))
         self.register_buffer("max", torch.tensor(-torch.inf))
 
@@ -349,7 +349,7 @@ class GroupedKNNEstimator(DynamicBufferMixin, BaseDensityEstimator):
         # assign memory bank, group index and group names
         self.memory_bank = torch.vstack(list(feature_collection.values()))
         self.group_index = torch.repeat_interleave(
-            Tensor([features.shape[0] for features in feature_collection.values()]).int(),
+            torch.tensor([features.shape[0] for features in feature_collection.values()]).int(),
         )
         self.group_names = list(feature_collection.keys())
         self._compute_normalization_statistics(feature_collection)

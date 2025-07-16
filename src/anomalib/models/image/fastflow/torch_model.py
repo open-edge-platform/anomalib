@@ -1,5 +1,3 @@
-"""FastFlow Torch Model Implementation."""
-
 # Original Code
 # Copyright (c) 2022 @gathierry
 # https://github.com/gathierry/FastFlow/.
@@ -8,6 +6,8 @@
 # Modified
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""FastFlow Torch Model Implementation."""
 
 from collections.abc import Callable
 

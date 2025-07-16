@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Memory Bank Module.
 
 This module provides a mixin class for implementing memory bank-based anomaly
@@ -20,9 +23,6 @@ Example:
     ...         # Implement memory bank population logic
     ...         self.memory = [1, 2, 3]
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from abc import abstractmethod
 

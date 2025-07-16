@@ -1,11 +1,11 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """OpenVINO CLI utilities.
 
 This module provides utilities for adding OpenVINO-specific arguments to the Anomalib CLI.
 It handles the integration of OpenVINO Model Optimizer parameters into the command line interface.
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 

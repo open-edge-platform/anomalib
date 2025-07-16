@@ -1,7 +1,7 @@
-"""Test Threshold metric."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test Threshold metric."""
 
 import pytest
 from torchmetrics import Metric

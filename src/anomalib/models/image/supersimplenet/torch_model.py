@@ -1,10 +1,3 @@
-"""PyTorch model for the SuperSimpleNet model implementation.
-
-See Also:
-    :class:`anomalib.models.image.supersimplenet.lightning_model.Supersimplenet`:
-        SuperSimpleNet Lightning model.
-"""
-
 # Original Code
 # Copyright (c) 2024 Blaž Rolih
 # https://github.com/blaz-r/SuperSimpleNet.
@@ -13,6 +6,13 @@ See Also:
 # Modified
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""PyTorch model for the SuperSimpleNet model implementation.
+
+See Also:
+    :class:`anomalib.models.image.supersimplenet.lightning_model.Supersimplenet`:
+        SuperSimpleNet Lightning model.
+"""
 
 import math
 

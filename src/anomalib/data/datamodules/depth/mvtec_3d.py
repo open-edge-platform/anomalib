@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """MVTec 3D-AD Datamodule.
 
 This module provides a PyTorch Lightning DataModule for the MVTec 3D-AD dataset.
@@ -26,9 +29,6 @@ Reference:
     - Volume 5: VISAPP, 202-213, 2022.
     DOI: 10.5220/0010865000003124
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from pathlib import Path

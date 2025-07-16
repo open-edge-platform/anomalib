@@ -1,3 +1,6 @@
+# Copyright (C) 2024-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Path utilities for anomaly detection.
 
 This module provides utilities for managing paths and directories in anomaly
@@ -28,9 +31,6 @@ Note:
     All paths are resolved to absolute paths to ensure consistent behavior
     across different working directories.
 """
-
-# Copyright (C) 2024-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import re
 from pathlib import Path

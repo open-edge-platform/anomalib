@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """FastFlow Lightning Model Implementation.
 
 This module provides a PyTorch Lightning implementation of the FastFlow model for anomaly
@@ -31,9 +34,6 @@ See Also:
     :class:`anomalib.models.image.fastflow.loss.FastflowLoss`:
         Loss function used to train the FastFlow model.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from typing import Any
 

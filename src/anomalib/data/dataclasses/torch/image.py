@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Torch-based dataclasses for image data in Anomalib.
 
 This module provides PyTorch-based implementations of the generic dataclasses
@@ -21,9 +24,6 @@ Example:
         >>> item.image.shape
         torch.Size([3, 224, 224])
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from dataclasses import dataclass
 from typing import ClassVar

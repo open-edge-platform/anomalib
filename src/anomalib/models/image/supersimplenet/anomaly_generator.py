@@ -1,7 +1,7 @@
-"""Anomaly generator for the SuperSimplenet model implementation."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Anomaly generator for the SuperSimplenet model implementation."""
 
 import torch
 import torch.nn.functional as F  # noqa: N812

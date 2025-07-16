@@ -1,7 +1,7 @@
-"""Anomalib Data Modules."""
-
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Anomalib Data Modules."""
 
 from .depth import Folder3D, MVTec3D
 from .image import MPDD, VAD, BTech, Datumaro, Folder, Kolektor, MVTec, MVTecAD, Tabular, Visa

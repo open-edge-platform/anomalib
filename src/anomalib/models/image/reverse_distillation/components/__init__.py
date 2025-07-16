@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch modules for the Reverse Distillation model implementation.
 
 This module contains the core components used in the Reverse Distillation model
@@ -20,9 +23,6 @@ See Also:
     - :func:`anomalib.models.image.reverse_distillation.components.bottleneck`:
         Bottleneck layer implementation
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .bottleneck import get_bottleneck_layer
 

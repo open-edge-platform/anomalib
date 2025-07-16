@@ -1,3 +1,12 @@
+# Original Code
+# Copyright (c) 2022 hq-deng
+# https://github.com/hq-deng/RD4AD
+# SPDX-License-Identifier: MIT
+#
+# Modified
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch model defining the decoder network for Reverse Distillation and UniNet.
 
 This module implements the decoder network used in the Reverse Distillation and UniNet models
@@ -21,15 +30,6 @@ See Also:
     - :class:`anomalib.models.components.backbone.de_resnet.DecoderBasicBlock`:
         Basic building block for the decoder network
 """
-
-# Original Code
-# Copyright (c) 2022 hq-deng
-# https://github.com/hq-deng/RD4AD
-# SPDX-License-Identifier: MIT
-#
-# Modified
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
 

@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Loss function for the CFA (Coupled-hypersphere-based Feature Adaptation) model.
 
 This module implements the loss function used to train the CFA model for anomaly
@@ -18,9 +21,6 @@ Example:
     >>> distance = torch.randn(2, 1024, 1)  # batch x pixels x 1
     >>> loss = loss_fn(distance)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch import nn

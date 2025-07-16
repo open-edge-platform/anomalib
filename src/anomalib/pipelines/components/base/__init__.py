@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base classes for pipeline components in anomalib.
 
 This module provides the core base classes used to build pipelines in anomalib:
@@ -23,9 +26,6 @@ Example:
 The base classes provide the foundation for building modular and extensible
 pipelines for tasks like training, inference and benchmarking.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .job import Job, JobGenerator
 from .pipeline import Pipeline

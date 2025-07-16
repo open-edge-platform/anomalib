@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Custom Tabular Data Module.
 
 This script creates a custom Lightning DataModule from a table or tabular file
@@ -18,9 +21,6 @@ Example:
         ...     root="./datasets/custom",
         ... )
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
 

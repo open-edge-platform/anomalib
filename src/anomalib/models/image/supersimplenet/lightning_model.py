@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """SuperSimpleNet: Unifying Unsupervised and Supervised Learning for Fast and Reliable Surface Defect Detection.
 
 This module implements the SuperSimpleNet model for surface defect / anomaly detection.
@@ -33,9 +36,6 @@ See Also:
     :class:`anomalib.models.image.supersimplenet.torch_model.SupersimplenetModel`:
         PyTorch implementation of the SuperSimpleNet model.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from typing import Any
 

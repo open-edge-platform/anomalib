@@ -1,7 +1,7 @@
-"""Test Numpy Depth Validators."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test Numpy Depth Validators."""
 
 import numpy as np
 import pytest

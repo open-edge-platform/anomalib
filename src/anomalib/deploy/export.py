@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Utilities for optimization and OpenVINO conversion.
 
 This module provides functionality for exporting and optimizing anomaly detection
@@ -18,9 +21,6 @@ Example:
     >>> compression
     'int8_ptq'
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from enum import Enum

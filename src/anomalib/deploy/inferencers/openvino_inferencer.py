@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """OpenVINO Inferencer for optimized model inference.
 
 This module provides the OpenVINO inferencer implementation for running optimized
@@ -46,9 +49,6 @@ Example:
     0.86
 """
 
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -62,7 +62,7 @@ from anomalib.data import NumpyImageBatch
 from anomalib.data.utils import read_image
 
 if TYPE_CHECKING:
-    from openvino.runtime.utils.data_helpers.wrappers import OVDict
+    from openvino.utils.data_helpers.wrappers import OVDict
 
 logger = logging.getLogger("anomalib")
 

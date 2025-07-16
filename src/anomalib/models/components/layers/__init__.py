@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Neural network layers used in anomaly detection models.
 
 This module provides custom neural network layer implementations that can be used
@@ -16,9 +19,6 @@ Example:
     >>> input_tensor = torch.randn(1, 64, 32, 32)
     >>> output = attention(input_tensor)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .sspcab import SSPCAB
 

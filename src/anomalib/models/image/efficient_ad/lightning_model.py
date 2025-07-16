@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """EfficientAd: Accurate Visual Anomaly Detection at Millisecond-Level Latencies.
 
 This module implements the EfficientAd model for fast and accurate anomaly
@@ -32,9 +35,6 @@ See Also:
     :class:`anomalib.models.image.efficient_ad.torch_model.EfficientAdModel`:
         PyTorch implementation of the EfficientAd model architecture.
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from pathlib import Path

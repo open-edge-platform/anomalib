@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Inferencers for performing inference with anomaly detection models.
 
 This module provides inferencer classes for running inference with trained models
@@ -12,9 +15,6 @@ Example:
     >>> model = TorchInferencer(path="path/to/model.pt")
     >>> predictions = model.predict(image="path/to/image.jpg")
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .base_inferencer import Inferencer
 from .openvino_inferencer import OpenVINOInferencer

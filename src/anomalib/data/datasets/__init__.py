@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch Dataset implementations for anomaly detection.
 
 This module provides dataset implementations for various anomaly detection tasks:
@@ -35,9 +38,6 @@ Example:
     ...     split="train"
     ... )
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .base import AnomalibDataset, AnomalibDepthDataset, AnomalibVideoDataset
 from .depth import Folder3DDataset, MVTec3DDataset

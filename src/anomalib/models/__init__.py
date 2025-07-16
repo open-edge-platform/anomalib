@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomaly detection models.
 
 This module contains all the anomaly detection models available in anomalib.
@@ -41,9 +44,6 @@ Image Models:
 Video Models:
     - AI-VAD (:class:`anomalib.models.video.AiVad`)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from importlib import import_module

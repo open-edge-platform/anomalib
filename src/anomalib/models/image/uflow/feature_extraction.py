@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Feature extraction module for U-Flow model.
 
 This module implements feature extraction functionality for the U-Flow model for
@@ -17,9 +20,6 @@ See Also:
     - :class:`LayerNormFeatureExtractor`: Main feature extractor implementation
     - :class:`CaitFeatureExtractor`: Alternative feature extractor
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Iterable
 

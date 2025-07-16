@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Custom Folder Data Module.
 
 This script creates a custom Lightning DataModule from a folder containing normal
@@ -28,9 +31,6 @@ Notes:
             ├── mask3.png
             └── mask4.png
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
 from pathlib import Path

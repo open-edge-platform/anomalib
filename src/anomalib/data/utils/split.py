@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Dataset splitting utilities.
 
 This module provides functions for splitting datasets in anomaly detection tasks:
@@ -25,9 +28,6 @@ Example:
     >>> len(splits)
     3
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 import math
