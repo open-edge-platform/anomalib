@@ -104,7 +104,7 @@ class Dfkde(MemoryBankMixin, AnomalibModule):
             visualizer=visualizer,
         )
 
-        self.model = DfkdeModel(
+        self.model: DfkdeModel = DfkdeModel(
             layers=layers,
             backbone=backbone,
             pre_trained=pre_trained,
@@ -112,8 +112,6 @@ class Dfkde(MemoryBankMixin, AnomalibModule):
             feature_scaling_method=feature_scaling_method,
             max_training_points=max_training_points,
         )
-
-        self.embeddings: list[torch.Tensor] = []
 
     @staticmethod
     def configure_optimizers() -> None:  # pylint: disable=arguments-differ
@@ -133,18 +131,15 @@ class Dfkde(MemoryBankMixin, AnomalibModule):
         """
         del args, kwargs  # These variables are not used.
 
-        embedding = self.model(batch.image)
-        self.embeddings.append(embedding)
+        _ = self.model(batch.image)
 
         # Return a dummy loss tensor
         return torch.tensor(0.0, requires_grad=True, device=self.device)
 
     def fit(self) -> None:
         """Fit KDE model to collected embeddings from the training set."""
-        embeddings = torch.vstack(self.embeddings)
-
         logger.info("Fitting a KDE model to the embedding collected from the training set.")
-        self.model.classifier.fit(embeddings)
+        self.model.fit()
 
     def validation_step(self, batch: Batch, *args, **kwargs) -> STEP_OUTPUT:
         """Perform validation by computing anomaly scores.
@@ -167,9 +162,13 @@ class Dfkde(MemoryBankMixin, AnomalibModule):
         """Get DFKDE-specific trainer arguments.
 
         Returns:
-            dict[str, Any]: Dictionary of trainer arguments.
+           dict[str, Any]: Trainer arguments
+               - ``gradient_clip_val``: ``0`` (no gradient clipping needed)
+               - ``max_epochs``: ``1`` (single pass through training data)
+               - ``num_sanity_val_steps``: ``0`` (skip validation sanity checks)
+               - ``devices``: ``1`` (only single gpu supported)
         """
-        return {"gradient_clip_val": 0, "max_epochs": 1, "num_sanity_val_steps": 0}
+        return {"gradient_clip_val": 0, "max_epochs": 1, "num_sanity_val_steps": 0, "devices": 1}
 
     @property
     def learning_type(self) -> LearningType:

@@ -112,7 +112,6 @@ class Dfm(MemoryBankMixin, AnomalibModule):
             n_comps=pca_level,
             score_type=score_type,
         )
-        self.embeddings: list[torch.Tensor] = []
         self.score_type = score_type
 
     @staticmethod
@@ -137,8 +136,7 @@ class Dfm(MemoryBankMixin, AnomalibModule):
         """
         del args, kwargs  # These variables are not used.
 
-        embedding = self.model.get_features(batch.image).squeeze()
-        self.embeddings.append(embedding)
+        _ = self.model(batch.image)
 
         # Return a dummy loss tensor
         return torch.tensor(0.0, requires_grad=True, device=self.device)
@@ -149,11 +147,8 @@ class Dfm(MemoryBankMixin, AnomalibModule):
         The method aggregates embeddings collected during training and fits
         both the PCA transformation and Gaussian model used for scoring.
         """
-        logger.info("Aggregating the embedding extracted from the training set.")
-        embeddings = torch.vstack(self.embeddings)
-
         logger.info("Fitting a PCA and a Gaussian model to dataset.")
-        self.model.fit(embeddings)
+        self.model.fit()
 
     def validation_step(self, batch: Batch, *args, **kwargs) -> STEP_OUTPUT:
         """Compute predictions for the input batch during validation.
@@ -176,12 +171,13 @@ class Dfm(MemoryBankMixin, AnomalibModule):
         """Get DFM-specific trainer arguments.
 
         Returns:
-            dict[str, Any]: Dictionary of trainer arguments:
-                - ``gradient_clip_val`` (int): Disable gradient clipping
-                - ``max_epochs`` (int): Train for one epoch only
-                - ``num_sanity_val_steps`` (int): Skip validation sanity checks
+            dict[str, Any]: Trainer arguments
+                - ``gradient_clip_val``: ``0`` (no gradient clipping needed)
+                - ``max_epochs``: ``1`` (single pass through training data)
+                - ``num_sanity_val_steps``: ``0`` (skip validation sanity checks)
+                - ``devices``: ``1`` (only single gpu supported)
         """
-        return {"gradient_clip_val": 0, "max_epochs": 1, "num_sanity_val_steps": 0}
+        return {"gradient_clip_val": 0, "max_epochs": 1, "num_sanity_val_steps": 0, "devices": 1}
 
     @property
     def learning_type(self) -> LearningType:
