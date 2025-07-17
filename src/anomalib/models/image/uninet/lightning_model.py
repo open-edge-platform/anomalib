@@ -103,7 +103,7 @@ class UniNet(AnomalibModule):
             amsgrad=True,
         )
         milestones = [
-            int(self.trainer.max_steps * 0.8) if self.trainer.max_steps != -1 else self.trainer.max_epochs * 0.8,
+            int(self.trainer.max_steps * 0.8) if self.trainer.max_steps != -1 else (self.trainer.max_epochs * 0.8),
         ]
         scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.2)
         return [optimizer], [scheduler]

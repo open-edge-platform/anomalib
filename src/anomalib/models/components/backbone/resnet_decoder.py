@@ -491,7 +491,7 @@ def get_decoder(name: str) -> ResNetDecoder:
         name (str): Name of the backbone.
 
     Returns:
-        ResNet: Decoder ResNet architecture.
+        ResNetDecoder: Decoder ResNet architecture.
     """
     decoder_map = {
         "resnet18": de_resnet18,
