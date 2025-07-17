@@ -39,9 +39,10 @@ from torch import nn
 
 from anomalib.data import InferenceBatch
 from anomalib.models.components import TimmFeatureExtractor
+from anomalib.models.components.backbone import get_decoder
 
 from .anomaly_map import AnomalyMapGenerationMode, AnomalyMapGenerator
-from .components import get_bottleneck_layer, get_decoder
+from .components import get_bottleneck_layer
 
 if TYPE_CHECKING:
     from anomalib.data.utils.tiler import Tiler

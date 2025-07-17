@@ -61,6 +61,7 @@ from .reverse_distillation import ReverseDistillation
 from .stfpm import Stfpm
 from .supersimplenet import Supersimplenet
 from .uflow import Uflow
+from .uninet import UniNet
 from .vlm_ad import VlmAd
 from .winclip import WinClip
 
@@ -82,6 +83,7 @@ __all__ = [
     "Stfpm",
     "Supersimplenet",
     "Uflow",
+    "UniNet",
     "VlmAd",
     "WinClip",
 ]
