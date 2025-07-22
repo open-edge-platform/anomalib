@@ -49,6 +49,7 @@ from .cflow import Cflow
 from .csflow import Csflow
 from .dfkde import Dfkde
 from .dfm import Dfm
+from .dinomaly import Dinomaly
 from .draem import Draem
 from .dsr import Dsr
 from .efficient_ad import EfficientAd
@@ -84,4 +85,5 @@ __all__ = [
     "Uflow",
     "VlmAd",
     "WinClip",
+    "Dinomaly",
 ]
