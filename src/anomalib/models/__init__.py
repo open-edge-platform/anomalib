@@ -72,6 +72,7 @@ from .image import (
     Stfpm,
     Supersimplenet,
     Uflow,
+    UniNet,
     VlmAd,
     WinClip,
 )
@@ -108,6 +109,7 @@ __all__ = [
     "Stfpm",
     "Supersimplenet",
     "Uflow",
+    "UniNet",
     "VlmAd",
     "WinClip",
     "AiVad",
