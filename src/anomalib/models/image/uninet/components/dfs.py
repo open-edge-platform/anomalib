@@ -89,8 +89,5 @@ class DomainRelatedFeatureSelection(nn.Module):
 
                 x_ = source_feature * inter_weights
                 features.append(x_)
-            else:
-                #  generated in a convolutional way
-                pass
 
         return features
