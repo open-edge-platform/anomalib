@@ -156,19 +156,8 @@ class DFMModel(nn.Module):
 
         self.memory_bank = torch.empty(0)
 
-    @deprecate(args={"dataset": None}, since="2.1.0")
-    def fit(self, dataset: torch.Tensor = None) -> None:
-        """Fit PCA and Gaussian model to dataset.
-
-        Args:
-            dataset (torch.Tensor, optional): **[DEPRECATED]**
-                Input dataset with shape ``(n_samples, n_features)``.
-                This argument is deprecated and will be ignored. Instead,
-                the method now uses `self.memory_bank` as the input dataset.
-        """
-        if dataset is not None:
-            del dataset
-
+    def fit(self) -> None:
+        """Fit PCA and Gaussian model to dataset."""
         self.pca_model.fit(self.memory_bank)
         if self.score_type == "nll":
             features_reduced = self.pca_model.transform(self.memory_bank)
