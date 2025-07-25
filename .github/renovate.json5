@@ -31,7 +31,7 @@
   // `matchBaseBranches` in specific rule
   baseBranches: ["main"],
 
-  enabledManagers: ["github-actions", "pep621"],
+  enabledManagers: ["github-actions", "pep621", "custom.regex"],
 
   // Set limit to 10
   ignorePresets: [":prHourlyLimit2"],
@@ -82,16 +82,14 @@
   ],
 
   // is used to upgrade Zizmor version
-  regexManagers: [
+  customManagers: [
     {
-      fileMatch: [
-        "^\\.github/actions/security/zizmor/[^/]+\\.ya?ml$"
-        ],
+      fileMatch: ["^\\.github/actions/security/zizmor/[^/]+\\.ya?ml$"],
       //   https://docs.renovatebot.com/modules/manager/regex/#advanced-capture
       matchStrings: [
-        "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\s+.+default: (?<currentValue>.*)"
-        ]
-    }
+        "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\s+.+default: (?<currentValue>.*)",
+      ],
+    },
   ],
 
   // Enable security upgrades
