@@ -92,7 +92,7 @@
         "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\s+.+default: (?<currentValue>.*)"
         ]
     }
-  ]
+  ],
 
   // Enable security upgrades
   vulnerabilityAlerts: {
