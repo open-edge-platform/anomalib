@@ -71,6 +71,14 @@
       matchPackagePatterns: ["*"],
       schedule: ["* * 1 * *"], // every month
     },
+
+    // Python version used in GitHub Actions is updated manually
+    {
+      enabled: false,
+      matchDatasources: ["github-releases"],
+      matchDepNames: ["python"],
+      matchDepTypes: ["uses-with"],
+    },
   ],
 
   // Enable security upgrades
