@@ -81,6 +81,19 @@
     },
   ],
 
+  // is used to upgrade Zizmor version
+  regexManagers: [
+    {
+      "fileMatch": [
+        "^\\.github/actions/security/zizmor/[^/]+\\.ya?ml$",
+      ],
+      //   https://docs.renovatebot.com/modules/manager/regex/#advanced-capture
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\s+.+default: (?<currentValue>.*)",
+      ]
+    },
+  ]
+
   // Enable security upgrades
   vulnerabilityAlerts: {
     enabled: true,
