@@ -38,11 +38,10 @@
   prHourlyLimit: 10,
 
   packageRules: [
-    // weekly project dependencies upgrades
+    // weekly dependencies upgrades
     {
       enabled: true,
       matchManagers: ["pep621"],
-      matchDepTypes: ["project.dependencies"],
       schedule: ["* * * * 0"], // weekly
     },
 
