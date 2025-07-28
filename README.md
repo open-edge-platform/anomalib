@@ -20,6 +20,7 @@
 [![codecov](https://codecov.io/gh/open-edge-platform/anomalib/branch/main/graph/badge.svg?token=Z6A07N1BZK)](https://codecov.io/gh/open-edge-platform/anomalib)
 [![Downloads](https://static.pepy.tech/personalized-badge/anomalib?period=total&units=international_system&left_color=grey&right_color=green&left_text=PyPI%20Downloads)](https://pepy.tech/project/anomalib)
 [![snyk](https://snyk.io/advisor/python/anomalib/badge.svg)](https://snyk.io/advisor/python/anomalib)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8330/badge)](https://www.bestpractices.dev/projects/8330)
 
 [![ReadTheDocs](https://readthedocs.org/projects/anomalib/badge/?version=latest)](https://anomalib.readthedocs.io/en/latest/?badge=latest)
 [![Anomalib - Gurubase docs](https://img.shields.io/badge/Gurubase-Ask%20Anomalib%20Guru-006BFF)](https://gurubase.io/g/anomalib)
