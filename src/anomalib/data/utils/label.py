@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Label name enumeration class.
 
 This module defines an enumeration class for labeling data in anomaly detection tasks.
@@ -19,9 +22,6 @@ Example:
     >>> label.value
     -1
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
 

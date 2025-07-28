@@ -119,7 +119,8 @@ runs:
         INPUTS_CONFIDENCE_LEVEL: ${{ inputs.confidence-level }}
         INPUTS_OUTPUT_FORMAT: ${{ inputs.output-format }}
         INPUTS_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
-      run: |
+      # zizmor ignore: all_changed_files is tj-actions/changed-files output
+      run: | # zizmor: ignore[template-injection]
         set +e
         REPORT_FILE="bandit-report.$INPUTS_OUTPUT_FORMAT"
 

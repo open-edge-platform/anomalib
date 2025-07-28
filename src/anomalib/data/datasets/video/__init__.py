@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch Dataset implementations for anomaly detection in videos.
 
 This module provides dataset implementations for various video anomaly detection
@@ -14,9 +17,6 @@ Example:
     ...     split="train"
     ... )
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .avenue import AvenueDataset
 from .shanghaitech import ShanghaiTechDataset

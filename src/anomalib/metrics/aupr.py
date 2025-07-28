@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Area Under the Precision-Recall Curve (AUPR) metric.
 
 This module provides the ``AUPR`` class which computes the area under the
@@ -30,9 +33,6 @@ Note:
     anomalies above normal samples.
 """
 
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 import torch
 from matplotlib.figure import Figure
 from torchmetrics.classification import BinaryPrecisionRecallCurve
@@ -40,7 +40,7 @@ from torchmetrics.utilities.compute import auc
 from torchmetrics.utilities.data import dim_zero_cat
 
 from .base import AnomalibMetric
-from .plotting_utils import plot_figure
+from .utils import plot_metric_curve
 
 
 class _AUPR(BinaryPrecisionRecallCurve):
@@ -118,12 +118,12 @@ class _AUPR(BinaryPrecisionRecallCurve):
 
         xlim = (0.0, 1.0)
         ylim = (0.0, 1.0)
-        xlabel = "Precision"
-        ylabel = "Recall"
+        xlabel = "Recall"
+        ylabel = "Precision"
         loc = "best"
-        title = "AUPR"
+        title = "PR"
 
-        fig, axis = plot_figure(rec, prec, aupr, xlim, ylim, xlabel, ylabel, loc, title)
+        fig, axis = plot_metric_curve(rec, prec, aupr, xlim, ylim, xlabel, ylabel, loc, title, metric_name="AUPR")
 
         # Baseline in PR-curve is the prevalence of the positive class
         rate = (dim_zero_cat(self.target) == 1).sum() / (dim_zero_cat(self.target).size(0))

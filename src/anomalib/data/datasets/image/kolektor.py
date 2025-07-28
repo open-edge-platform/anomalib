@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Kolektor Surface-Defect Dataset.
 
 Description:
@@ -16,9 +19,6 @@ Reference:
     "Segmentation-based deep-learning approach for surface-defect detection."
     Journal of Intelligent Manufacturing 31, no. 3 (2020): 759-776.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
 
@@ -116,8 +116,8 @@ def make_kolektor_dataset(
     root = validate_path(root)
 
     # Get list of images and masks
-    samples_list = [(str(root),) + f.parts[-2:] for f in root.glob(r"**/*") if f.suffix == ".jpg"]
-    masks_list = [(str(root),) + f.parts[-2:] for f in root.glob(r"**/*") if f.suffix == ".bmp"]
+    samples_list = [(str(root), *f.parts[-2:]) for f in root.glob(r"**/*") if f.suffix == ".jpg"]
+    masks_list = [(str(root), *f.parts[-2:]) for f in root.glob(r"**/*") if f.suffix == ".bmp"]
 
     if not samples_list:
         msg = f"Found 0 images in {root}"

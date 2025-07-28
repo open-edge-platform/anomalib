@@ -1,7 +1,7 @@
-"""Test Helpers - Dataset."""
-
 # Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test Helpers - Dataset."""
 
 from __future__ import annotations
 
@@ -411,6 +411,10 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
             mask_filename = mask_dir / image_filename.name
             self.image_generator.generate_image(label, image_filename, mask_filename)
 
+    def _generate_dummy_tabular_dataset(self) -> None:
+        """Generate dummy folder structure for tabular dataset in a temporary directory."""
+        self._generate_dummy_folder_dataset()
+
     def _generate_dummy_btech_dataset(self) -> None:
         """Generate dummy BeanTech dataset in directory using the same convention as BeanTech AD."""
         # BeanTech AD follows the same convention as MVTec AD.
@@ -495,6 +499,11 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
                 image_filename = self.dataset_root / category / f"Part{i}.jpg"
                 mask_filename = self.dataset_root / category / f"Part{i}_label.bmp"
                 self.image_generator.generate_image(label, image_filename, mask_filename)
+
+    def _generate_dummy_mpdd_dataset(self) -> None:
+        """Generate dummy MPDD dataset in directory using the same convention as MVTec AD."""
+        # MPDD dataset follows the same convention as MVTec AD.
+        self._generate_dummy_mvtecad_dataset(normal_dir="good", abnormal_dir="bad", image_extension=".png")
 
     def _generate_dummy_realiad_dataset(self) -> None:
         """Generate dummy RealIAD dataset in directory using the same convention as RealIAD."""

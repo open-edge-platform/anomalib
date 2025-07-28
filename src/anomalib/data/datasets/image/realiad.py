@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Real-IAD Dataset.
 
 This module provides PyTorch Dataset implementation for the Real-IAD dataset.
@@ -28,9 +31,6 @@ License:
     Real-IAD is released under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License
     (CC BY-NC-SA 4.0) https://creativecommons.org/licenses/by-nc-sa/4.0/
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import json
 from collections.abc import Sequence

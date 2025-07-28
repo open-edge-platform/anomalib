@@ -1,19 +1,26 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomalib Gradio Script.
 
 This script provide a gradio web interface
 """
 
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 from argparse import ArgumentParser
 from importlib import import_module
 from pathlib import Path
 
-import gradio
-import numpy as np
+from lightning_utilities.core.imports import module_available
+from PIL.Image import Image
 
-from anomalib.deploy import Inferencer
+from anomalib.deploy import OpenVINOInferencer, TorchInferencer
+from anomalib.visualization.image.functional import overlay_image, visualize_anomaly_map, visualize_mask
+
+if not module_available("gradio"):
+    msg = "Gradio is not installed. Please install it using: pip install gradio"
+    raise ImportError(msg)
+
+import gradio
 
 
 def get_parser() -> ArgumentParser:
@@ -34,7 +41,7 @@ def get_parser() -> ArgumentParser:
     return parser
 
 
-def get_inferencer(weight_path: Path) -> Inferencer:
+def get_inferencer(weight_path: Path) -> OpenVINOInferencer | TorchInferencer:
     """Parse args and open inferencer.
 
     Args:
@@ -50,7 +57,7 @@ def get_inferencer(weight_path: Path) -> Inferencer:
     # Get the inferencer. We use .ckpt extension for Torch models and (onnx, bin)
     # for the openvino models.
     extension = weight_path.suffix
-    inferencer: Inferencer
+    inferencer: OpenVINOInferencer | TorchInferencer
     module = import_module("anomalib.deploy")
     if extension in {".pt", ".pth", ".ckpt"}:
         torch_inferencer = module.TorchInferencer
@@ -73,20 +80,31 @@ def get_inferencer(weight_path: Path) -> Inferencer:
     return inferencer
 
 
-def infer(image: np.ndarray, inferencer: Inferencer) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def infer(
+    image: Image,
+    inferencer: OpenVINOInferencer | TorchInferencer,
+) -> tuple[Image, Image]:
     """Inference function, return anomaly map, score, heat map, prediction mask ans visualisation.
 
     Args:
-        image (np.ndarray): image to compute
-        inferencer (Inferencer): model inferencer
+        image (Image): image to compute
+        inferencer (OpenVINOInferencer | TorchInferencer): model inferencer
 
     Returns:
-        tuple[np.ndarray, float, np.ndarray, np.ndarray, np.ndarray]:
-        heat_map, pred_mask, segmentation result.
+        tuple[Image, Image]: heat_map, segmentation result.
     """
     # Perform inference for the given image.
     predictions = inferencer.predict(image=image)
-    return (predictions.heat_map, predictions.pred_mask, predictions.segmentations)
+
+    # Create visualization of the anomaly map on the input image.
+    anomaly_map = visualize_anomaly_map(predictions.anomaly_map)
+    heat_map = overlay_image(base=image, overlay=anomaly_map)
+
+    # Create visualization of the predicted mask on the input image.
+    pred_mask = visualize_mask(predictions.pred_mask, mode="contour")
+    segmentation = overlay_image(base=image, overlay=pred_mask)
+
+    return (heat_map, segmentation)
 
 
 if __name__ == "__main__":
@@ -98,13 +116,12 @@ if __name__ == "__main__":
         inputs=gradio.Image(
             image_mode="RGB",
             sources=["upload", "webcam"],
-            type="numpy",
+            type="pil",
             label="Image",
         ),
         outputs=[
-            gradio.Image(type="numpy", label="Predicted Heat Map"),
-            gradio.Image(type="numpy", label="Predicted Mask"),
-            gradio.Image(type="numpy", label="Segmentation Result"),
+            gradio.Image(type="pil", label="Predicted Heat Map"),
+            gradio.Image(type="pil", label="Segmentation Result"),
         ],
         title="Anomalib",
         description="Anomalib Gradio",

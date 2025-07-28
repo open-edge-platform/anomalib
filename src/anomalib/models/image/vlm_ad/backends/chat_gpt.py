@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """ChatGPT backend for Vision Language Models (VLMs).
 
 This module implements a backend for using OpenAI's ChatGPT model for vision-language
@@ -24,9 +27,6 @@ See Also:
     - :class:`Huggingface`: Alternative backend using Hugging Face models
     - :class:`Ollama`: Alternative backend using Ollama models
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import base64
 import logging
@@ -162,9 +162,9 @@ class ChatGPT(Backend):
         """
         message: dict[str, list[dict] | str] = {"role": "user"}
         if images is not None:
-            _content: list[dict[str, str | dict]] = [{"type": "text", "text": content}]
-            _content.extend([{"type": "image_url", "image_url": {"url": image}} for image in images])
-            message["content"] = _content
+            content_: list[dict[str, str | dict]] = [{"type": "text", "text": content}]
+            content_.extend([{"type": "image_url", "image_url": {"url": image}} for image in images])
+            message["content"] = content_
         else:
             message["content"] = content
         return message

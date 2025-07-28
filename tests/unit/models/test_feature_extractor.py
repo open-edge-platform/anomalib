@@ -1,7 +1,7 @@
-"""Test feature extractors."""
-
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test feature extractors."""
 
 import pytest
 import torch
@@ -38,8 +38,6 @@ class TestFeatureExtractor:
             assert features["layer3"].shape == torch.Size((32, 1024, 16, 16))
             assert model.out_dims == [256, 512, 1024]
             assert model.idx == [1, 2, 3]
-        else:
-            pass
 
     @staticmethod
     def test_timm_feature_extraction_custom_backbone() -> None:

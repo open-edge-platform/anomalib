@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Benchmark job generator for running model benchmarking experiments.
 
 This module provides functionality for generating benchmark jobs that evaluate model
@@ -17,9 +20,6 @@ Example:
 The generator creates :class:`BenchmarkJob` instances that can be executed to run
 benchmarking experiments with specified models and datasets.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Generator
 

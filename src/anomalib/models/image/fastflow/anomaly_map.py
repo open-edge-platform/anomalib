@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """FastFlow Anomaly Map Generator Implementation.
 
 This module implements the anomaly map generation for the FastFlow model. The
@@ -10,9 +13,6 @@ Example:
     >>> hidden_vars = [torch.randn(1, 64, 32, 32)]  # from NF blocks
     >>> anomaly_map = generator(hidden_vars)  # returns anomaly heatmap
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from omegaconf import ListConfig

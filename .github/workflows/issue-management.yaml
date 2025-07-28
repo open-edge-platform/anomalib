@@ -1,0 +1,92 @@
+# Issue Management Workflow
+#
+# This workflow automates the triaging and maintenance of GitHub issues to
+# ensure the project's issue tracker remains organized and up-to-date.
+#
+# Key Features:
+# - Automated triage for new issues
+# - Stale issue detection and closure
+# - Differentiated handling for different issue types
+# - Scheduled execution for routine cleanup
+# - Welcome message for new contributors
+#
+# Process Stages:
+# 1. New Issue Triage:
+#    - Triggered when a new issue is created.
+#    - Posts a comment acknowledging the submission and adding it to the triage queue.
+#
+# 2. Stale Issue Management:
+#    - Runs on a daily schedule.
+#    - Identifies issues that have been inactive for a specified period (90 days).
+#    - Applies a 'stale' label and posts a notification comment.
+#    - Closes stale issues if no further activity occurs after another 14 days.
+#
+# Required Secrets:
+# - None
+#
+# Example Usage:
+# Automatically triggered on:
+# 1. New issue creation
+# 2. Daily schedule (for stale check)
+#
+# Note:
+# - Core work items (bugs, features, epics, etc.) are exempt from being marked stale.
+# - Pull requests are not affected by this workflow.
+
+name: Issue Management
+
+on:
+  issues:
+    types: [opened]
+  schedule:
+    # Run daily at 5:00 UTC to check for stale issues
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+
+jobs:
+  triage:
+    if: github.event_name == 'issues'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Add triage comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: 'Thanks for submitting this issue! It has been added to our triage queue. A maintainer will review it shortly.'
+            });
+
+  stale:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/stale@v9
+        with:
+          # Number of days of inactivity before an issue is marked as stale
+          days-before-stale: 90
+          # Number of days of inactivity before a stale issue is closed
+          days-before-close: 14
+          # Label to apply to stale issues
+          stale-issue-label: "stale"
+          # Comment to post when marking an issue as stale.
+          stale-issue-message: >
+            This issue has been automatically marked as stale because it has not had
+            recent activity. It will be closed if no further activity occurs. Thank you
+            for your contributions.
+          # Comment to post when closing a stale issue.
+          close-issue-message: >
+            This issue was closed because it has been stalled for 14 days with no activity.
+          # Labels that prevent an issue from ever being marked as stale.
+          # We exempt all work items that are part of the project's backlog.
+          exempt-issue-labels: "bug,enhancement,documentation,security,pinned,help-wanted,epic,user-story,task"
+          # Don't mark pull requests as stale
+          days-before-pr-stale: -1
+          days-before-pr-close: -1

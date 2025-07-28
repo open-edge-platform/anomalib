@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base visualization generator for anomaly detection.
 
 This module provides the base visualization interface and common functionality used
@@ -22,9 +25,6 @@ The module ensures consistent visualization behavior and output formats across
 different visualization implementations.
 """
 
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -32,6 +32,8 @@ from enum import Enum
 from pathlib import Path
 
 import numpy as np
+
+from anomalib.utils import deprecate
 
 
 @dataclass
@@ -53,20 +55,14 @@ class VisualizationStep(str, Enum):
     STAGE_END = "stage_end"
 
 
+@deprecate(since="2.0.0", remove="2.2.0", use="Visualizer")
 class BaseVisualizer(ABC):
     """Base visualization generator.
 
-    Deprecated: This class will be removed in v2.0.0 release.
+    Deprecated: This class will be removed in v2.2.0 release.
     """
 
     def __init__(self, visualize_on: VisualizationStep) -> None:
-        import warnings
-
-        warnings.warn(
-            "BaseVisualizer is deprecated and will be removed in v2.0.0 release.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
         self.visualize_on = visualize_on
 
     @abstractmethod

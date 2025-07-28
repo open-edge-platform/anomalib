@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Loss function for Student-Teacher Feature Pyramid Matching model.
 
 This module implements the loss function used to train the STFPM model for anomaly
@@ -32,9 +35,6 @@ See Also:
     - :class:`STFPMLoss`: Main loss class implementation
     - :class:`Stfpm`: Lightning implementation of the full model
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch import nn

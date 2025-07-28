@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """MVTec AD Dataset.
 
 This module provides PyTorch Dataset implementation for the MVTec AD dataset. The
@@ -24,9 +27,6 @@ Reference:
     9584-9592.
 """
 
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -36,6 +36,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datasets.base import AnomalibDataset
 from anomalib.data.errors import MisMatchError
 from anomalib.data.utils import LabelName, Split, validate_path
+from anomalib.utils import deprecate
 
 IMG_EXTENSIONS = (".png", ".PNG")
 CATEGORIES = (
@@ -164,7 +165,7 @@ def make_mvtec_ad_dataset(
         extensions = IMG_EXTENSIONS
 
     root = validate_path(root)
-    samples_list = [(str(root),) + f.parts[-3:] for f in root.glob(r"**/*") if f.suffix in extensions]
+    samples_list = [(str(root), *f.parts[-3:]) for f in root.glob(r"**/*") if f.suffix in extensions]
     if not samples_list:
         msg = f"Found 0 images in {root}"
         raise RuntimeError(msg)
@@ -222,6 +223,7 @@ def make_mvtec_ad_dataset(
     return samples
 
 
+@deprecate(since="2.1.0", remove="2.3.0", use="MVTecADDataset")
 class MVTecDataset(MVTecADDataset):
     """MVTec dataset class (Deprecated).
 
@@ -230,11 +232,4 @@ class MVTecDataset(MVTecADDataset):
     """
 
     def __init__(self, *args, **kwargs) -> None:
-        import warnings
-
-        warnings.warn(
-            "MVTecADDataset is deprecated and will be removed in a future version. Please use MVTecADDataset instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
         super().__init__(*args, **kwargs)

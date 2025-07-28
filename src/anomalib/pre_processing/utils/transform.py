@@ -1,11 +1,11 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Utility functions for transforms.
 
 This module provides utility functions for managing transforms in the pre-processing
 pipeline.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import copy
 

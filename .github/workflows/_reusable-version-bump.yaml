@@ -1,0 +1,211 @@
+# Version Bump Workflow
+#
+# This reusable workflow automatically bumps version numbers based on
+# conventional commit history using Commitizen.
+#
+# Key Features:
+# - Semantic version bumping
+# - Changelog generation
+# - Automated PR creation
+# - Conventional commit analysis
+# - Configurable environments
+#
+# Process Stages:
+# 1. Environment Setup:
+#    - Python installation
+#    - Commitizen installation
+#    - Repository checkout
+#
+# 2. Version Analysis:
+#    - Commit history analysis
+#    - Version increment calculation
+#    - Change detection
+#
+# 3. Version Update:
+#    - Version bumping
+#    - Changelog update
+#    - PR creation
+#
+# Required Inputs:
+# - python-version: Python version for bumping (default: "3.10")
+# - create-pr: Whether to create a PR (default: true)
+# - target-branch: Target branch for PR (default: "main")
+#
+# Required Secrets:
+# - github-token: Token for PR creation
+#
+# Outputs:
+# - new-version: The new version number
+# - version-changed: Whether version was changed
+#
+# Example Usage:
+# 1. Basic Version Bump:
+#    jobs:
+#      version-bump:
+#        uses: ./.github/workflows/_reusable-version-bump.yaml
+#        secrets:
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
+#
+# 2. Custom Configuration:
+#    jobs:
+#      version-bump:
+#        uses: ./.github/workflows/_reusable-version-bump.yaml
+#        with:
+#          python-version: "3.11"
+#          create-pr: false
+#        secrets:
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
+#
+# Note: Requires Commitizen configuration in pyproject.toml
+
+name: Reusable Version Bump
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: "Python version for version bumping"
+        type: string
+        default: "3.10"
+      create-pr:
+        description: "Whether to create a pull request"
+        type: boolean
+        default: true
+      target-branch:
+        description: "Target branch for the PR"
+        type: string
+        default: "main"
+      dry-run:
+        description: "Perform a dry run without making changes"
+        type: boolean
+        default: false
+    secrets:
+      github-token:
+        required: true
+        description: "GitHub token for PR creation"
+    outputs:
+      new-version:
+        description: "The new version number"
+        value: ${{ jobs.bump-version.outputs.new-version }}
+      version-changed:
+        description: "Whether the version was changed"
+        value: ${{ jobs.bump-version.outputs.version-changed }}
+
+permissions:
+  contents: read
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      new-version: ${{ steps.bump.outputs.new_version }}
+      version-changed: ${{ steps.bump.outputs.version_changed }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.github-token }}
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install commitizen
+
+      - name: Get current version
+        id: current-version
+        run: |
+          CURRENT_VERSION=$(cz version --project)
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Check for version bump
+        id: check-bump
+        env:
+          DRY_RUN: ${{ inputs.dry-run }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run mode - checking what would be bumped"
+            if cz bump --dry-run; then
+              echo "version_needs_bump=true" >> $GITHUB_OUTPUT
+            else
+              echo "version_needs_bump=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            # Check if there are commits that would trigger a version bump
+            if git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:"%s" | grep -E "^(feat|fix|BREAKING CHANGE)" > /dev/null; then
+              echo "version_needs_bump=true" >> $GITHUB_OUTPUT
+            else
+              echo "version_needs_bump=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Bump version
+        id: bump
+        if: steps.check-bump.outputs.version_needs_bump == 'true'
+        env:
+          DRY_RUN: ${{ inputs.dry-run }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run - would bump version"
+            NEW_VERSION=$(cz bump --dry-run | grep "bump version" | sed 's/.*to //')
+            echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+            echo "version_changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "Bumping version..."
+            cz bump --yes
+            NEW_VERSION=$(cz version --project)
+            echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+            echo "version_changed=true" >> $GITHUB_OUTPUT
+            echo "New version: $NEW_VERSION"
+          fi
+
+      - name: Create Pull Request
+        if: steps.check-bump.outputs.version_needs_bump == 'true' && inputs.create-pr && !inputs.dry-run
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        with:
+          token: ${{ secrets.github-token }}
+          commit-message: "chore(release): bump version to ${{ steps.bump.outputs.new_version }}"
+          title: "chore(release): bump version to ${{ steps.bump.outputs.new_version }}"
+          body: |
+            ## 🚀 Automated Version Bump
+
+            This PR was created automatically by the version bump workflow.
+
+            ### Changes
+            - **Previous version:** ${{ steps.current-version.outputs.current_version }}
+            - **New version:** ${{ steps.bump.outputs.new_version }}
+
+            ### What's included
+            - Version bump in `pyproject.toml`
+            - Updated `CHANGELOG.md` with recent changes
+            - All changes are based on conventional commit history
+
+            ### Next steps
+            1. Review the changes in this PR
+            2. Ensure the changelog looks correct
+            3. Merge this PR to complete the version bump
+            4. The release workflow will handle creating the actual release
+
+            ---
+            *This PR was generated automatically based on conventional commit history.*
+          branch: "chore/release-bump-${{ steps.bump.outputs.new_version }}"
+          base: ${{ inputs.target-branch }}
+          delete-branch: true
+
+      - name: No version bump needed
+        if: steps.check-bump.outputs.version_needs_bump == 'false'
+        run: |
+          echo "No version bump needed - no feat/fix commits found since last release"
+          echo "Current version remains: ${{ steps.current-version.outputs.current_version }}"

@@ -36,10 +36,45 @@ Kolektor Surface-Defect dataset datamodule.
 :::
 
 :::{grid-item-card} MVTecAD
-:link: image/mvtec
+:link: image/mvtecad
 :link-type: doc
 
 MVTec AD dataset datamodule for unsupervised anomaly detection.
+:::
+
+:::{grid-item-card} MVTecAD2
+:link: image/mvtecad2
+:link-type: doc
+
+MVTec AD 2 dataset datamodule for anomaly detection with natural images.
+:::
+
+:::{grid-item-card} MVTecLOCO
+:link: image/mvtecloco
+:link-type: doc
+
+MVTec LOCO dataset datamodule for logical and structural anomaly detection.
+:::
+
+:::{grid-item-card} RealIAD
+:link: image/realiad
+:link-type: doc
+
+Real-IAD dataset datamodule for industrial anomaly detection with real-world scenarios.
+:::
+
+:::{grid-item-card} Tabular
+:link: image/tabular
+:link-type: doc
+
+Custom tabular datamodule for datasets with image paths and labels in tabular format.
+:::
+
+:::{grid-item-card} VAD
+:link: image/vad
+:link-type: doc
+
+Valeo Anomaly Detection dataset datamodule for automotive anomaly detection.
 :::
 
 :::{grid-item-card} Visa

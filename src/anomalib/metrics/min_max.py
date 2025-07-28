@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Module that tracks the min and max values of the observations in each batch.
 
 This module provides the ``MinMax`` metric class which tracks the minimum and
@@ -23,9 +26,6 @@ Example:
     >>> min_val, max_val
     (tensor(0.0559), tensor(0.9999))
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torchmetrics import Metric

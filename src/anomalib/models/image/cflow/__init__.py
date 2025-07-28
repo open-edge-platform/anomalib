@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Real-Time Unsupervised Anomaly Detection via Conditional Normalizing Flows.
 
 This module provides the implementation of CFLOW model for anomaly detection.
@@ -21,9 +24,6 @@ Example:
 
 Paper: https://arxiv.org/abs/2107.12571
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .lightning_model import Cflow
 

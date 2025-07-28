@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Manual threshold metric for anomaly detection.
 
 This module provides the ``ManualThreshold`` class which allows setting a fixed
@@ -23,9 +26,6 @@ Note:
     based on the data. The threshold remains fixed at the manually specified
     value.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 

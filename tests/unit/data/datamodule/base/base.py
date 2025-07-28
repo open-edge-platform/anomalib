@@ -1,7 +1,7 @@
-"""Unit Tests - Base Image Datamodules."""
-
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Unit Tests - Base Image Datamodules."""
 
 import pytest
 from torch.utils.data import DataLoader

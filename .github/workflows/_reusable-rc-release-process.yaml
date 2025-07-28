@@ -66,6 +66,9 @@ on:
       test-pypi-token:
         required: true
 
+permissions:
+  contents: read
+
 jobs:
   technical-review:
     environment:
@@ -139,14 +142,17 @@ jobs:
           fi
         env:
           VERSION: ${{ inputs.version }}
+          STEPS_VALIDATE_DEPLOYMENT_OUTPUTS_STATUS: ${{ steps.validate-deployment.outputs.status }}
 
       - name: Generate technical review report
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
           cat << EOF > technical-review-report.md
           # Technical Review Report
 
           ## Version Information
-          - Version: ${{ inputs.version }}
+          - Version: "$VERSION"
           - Package Name: $(ls dist/*.whl | head -n 1 | xargs basename)
 
           ## Test Results
@@ -165,7 +171,7 @@ jobs:
           \`\`\`
 
           ## Test PyPI Deployment
-          - Status: ${{ steps.validate-deployment.outputs.status }}
+          - Status: "$STEPS_VALIDATE_DEPLOYMENT_OUTPUTS_STATUS"
           - URL: https://test.pypi.org/project/${PACKAGE_NAME}/${VERSION#v}/
 
           EOF
@@ -195,11 +201,13 @@ jobs:
           path: qa-review
 
       - name: Generate QA dashboard
+        env:
+          NEEDS_TECHNICAL_REVIEW_OUTPUTS_DEPLOYMENT_STATUS: ${{ needs.technical-review.outputs.deployment-status }}
         run: |
           echo "QA Review Dashboard"
           echo "==================="
           echo
-          echo "Technical Review Status: ${{ needs.technical-review.outputs.deployment-status }}"
+          echo "Technical Review Status: $NEEDS_TECHNICAL_REVIEW_OUTPUTS_DEPLOYMENT_STATUS"
           echo
           echo "Review the full technical report at: qa-review/technical-review-report.md"
           echo
@@ -222,8 +230,10 @@ jobs:
           name: technical-review-report
 
       - name: Display release information
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
-          echo "Release Information for ${{ inputs.version }}"
+          echo "Release Information for $VERSION"
           echo "----------------------------------------"
           cat technical-review-report.md
 
@@ -236,8 +246,9 @@ jobs:
       - name: Record approval
         env:
           APPROVER: ${{ github.actor }}
+          VERSION: ${{ inputs.version }}
         run: |
           echo "RC Approval Record:"
-          echo "- Version: ${{ inputs.version }}"
+          echo "- Version: $VERSION"
           echo "- Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
           echo "- Approver: $APPROVER"

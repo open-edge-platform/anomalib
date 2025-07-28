@@ -1,3 +1,6 @@
+# Copyright (C) 2020-2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Torch models defining encoder, decoder, generator and discriminator networks.
 
 The GANomaly model consists of several key components:
@@ -40,9 +43,6 @@ See Also:
     - :class:`anomalib.models.image.ganomaly.loss.DiscriminatorLoss`:
         Loss function for the discriminator network
 """
-
-# Copyright (C) 2020-2022 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import math
 

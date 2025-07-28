@@ -1,38 +1,24 @@
-#!/usr/bin/env bash
-# shellcheck shell=bash
+#!/bin/bash
 
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-# This script demonstrates how to install anomalib using pip
-# with different dependency options.
+# Quick install (uses default PyTorch from PyPI)
+pip install anomalib
 
-echo "=== Installing Anomalib using pip ==="
+# To ensure a specific hardware backend, you must specify an extra.
+# For example, for CPU:
+pip install "anomalib[cpu]"
 
-echo -e "\n1. Base Installation"
-echo "# Install the base package with minimal dependencies"
-echo "$ pip install anomalib"
-# pip install anomalib
+# Or for CUDA 12.4:
+pip install "anomalib[cu124]"
 
-echo -e "\n2. Install with OpenVINO dependencies"
-echo "$ pip install anomalib[openvino]"
-# pip install anomalib[openvino]
+# For a full installation with all optional dependencies on CPU:
+pip install "anomalib[full,cpu]"
 
-echo -e "\n3. Install with full dependencies"
-echo "$ pip install anomalib[full]"
-# pip install anomalib[full]
+# To install from source for development on CPU:
+git clone https://github.com/open-edge-platform/anomalib.git
+cd anomalib || exit
 
-echo -e "\n4. Install with development dependencies"
-echo "$ pip install anomalib[dev]"
-# pip install anomalib[dev]
-
-echo -e "\n5. Install with multiple dependency groups"
-echo "$ pip install anomalib[openvino,dev]"
-# pip install anomalib[openvino,dev]
-
-echo -e "\n=== Verifying Installation ==="
-echo "$ python -c 'import anomalib; print(f\"Anomalib version: {anomalib.__version__}\")'"
-# python -c 'import anomalib; print(f"Anomalib version: {anomalib.__version__}")'
-
-echo -e "\nNote: The actual installation commands are commented out above."
-echo "To install anomalib, uncomment the desired installation command by removing the '#' at the start of the line."
+# Development installation on CPU
+pip install -e ".[dev,cpu]"

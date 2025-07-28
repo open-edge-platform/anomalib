@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PaDiM: a Patch Distribution Modeling Framework for Anomaly Detection and Localization.
 
 The PaDiM model is an anomaly detection approach that leverages patch-based
@@ -12,9 +15,6 @@ their corresponding reference distributions to detect anomalies.
 
 Paper: https://arxiv.org/abs/2011.08785
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .lightning_model import Padim
 

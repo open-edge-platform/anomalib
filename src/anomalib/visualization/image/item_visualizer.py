@@ -1,6 +1,9 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """ImageItem visualization module.
 
-This module provides utilities for visualizing ``ImageItem`` objects, which contain
+This module provides utilities for visualizing ``ImageItem`` and ``NumpyImageItem`` objects, which contain
 images and their associated anomaly detection results. The key components include:
 
     - Functions for visualizing individual fields (image, masks, anomaly maps)
@@ -9,9 +12,9 @@ images and their associated anomaly detection results. The key components includ
     - Text annotation capabilities
 
 Example:
-    >>> from anomalib.data import ImageItem
+    >>> from anomalib.data import ImageItem, NumpyImageItem
     >>> from anomalib.visualization.image.item_visualizer import visualize_image_item
-    >>> # Create an ImageItem
+    >>> # Create an ImageItem or NumpyImageItem
     >>> item = ImageItem(image=img, pred_mask=mask)
     >>> # Generate visualization
     >>> vis_result = visualize_image_item(item)
@@ -27,15 +30,12 @@ Note:
     unless explicitly specified in the configuration.
 """
 
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 import logging
 from typing import Any
 
 from PIL import Image
 
-from anomalib.data import ImageItem
+from anomalib.data import ImageItem, NumpyImageItem
 from anomalib.utils.path import convert_to_title_case
 from anomalib.visualization.image.functional import (
     add_text_to_image,
@@ -68,7 +68,7 @@ DEFAULT_TEXT_CONFIG = {
 
 
 def visualize_image_item(
-    item: ImageItem,
+    item: ImageItem | NumpyImageItem,
     fields: list[str] | None = None,
     overlay_fields: list[tuple[str, list[str]]] | None = None,
     field_size: tuple[int, int] = (256, 256),
@@ -76,14 +76,14 @@ def visualize_image_item(
     overlay_fields_config: dict[str, dict[str, Any]] = DEFAULT_OVERLAY_FIELDS_CONFIG,
     text_config: dict[str, Any] = DEFAULT_TEXT_CONFIG,
 ) -> Image.Image | None:
-    """Visualize specified fields of an ``ImageItem`` with configurable options.
+    """Visualize specified fields of an ``ImageItem`` or ``NumpyImageItem`` with configurable options.
 
     This function creates visualizations for individual fields and overlays of an
-    ``ImageItem``. It supports customization of field visualization, overlay
+    ``ImageItem`` or ``NumpyImageItem``. It supports customization of field visualization, overlay
     composition, and text annotations.
 
     Args:
-        item: An ``ImageItem`` instance containing the data to visualize.
+        item: An ``ImageItem`` or ``NumpyImageItem`` instance containing the data to visualize.
         fields: A list of field names to visualize individually. If ``None``, no
             individual fields are visualized.
         overlay_fields: A list of tuples, each containing a base field and a list
@@ -100,17 +100,31 @@ def visualize_image_item(
         ``None`` if no valid fields to visualize.
 
     Raises:
-        AttributeError: If a specified field doesn't exist in the ``ImageItem``.
+        AttributeError: If a specified field doesn't exist in the item.
         ValueError: If an invalid configuration is provided.
 
     Examples:
-        Basic usage with default settings:
+        Basic usage with ImageItem:
 
         >>> item = ImageItem(
         ...     image_path="image.jpg",
         ...     gt_mask=mask,
         ...     pred_mask=pred,
         ...     anomaly_map=amap
+        ... )
+        >>> result = visualize_image_item(
+        ...     item,
+        ...     fields=["image", "gt_mask", "pred_mask", "anomaly_map"]
+        ... )
+
+        Basic usage with NumpyImageItem:
+
+        >>> import numpy as np
+        >>> item = NumpyImageItem(
+        ...     image=np.random.rand(256, 256, 3),
+        ...     gt_mask=mask_array,
+        ...     pred_mask=pred_array,
+        ...     anomaly_map=amap_array
         ... )
         >>> result = visualize_image_item(
         ...     item,
@@ -292,10 +306,12 @@ def visualize_image_item(
 
     Note:
         - The function preserves the order of fields as specified in the input.
-        - If a field is not available in the ``ImageItem``, it will be skipped
+        - If a field is not available in the item, it will be skipped
           without raising an error.
         - The function uses default configurations if not provided, which can be
           overridden by passing custom configurations.
+        - For ``ImageItem``, the image is loaded from ``image_path``.
+        - For ``NumpyImageItem``, the image is converted from the numpy array.
         - For mask visualization, the ``mode`` parameter in ``fields_config`` or
           ``overlay_fields_config`` determines how the mask is displayed:
 
@@ -318,14 +334,21 @@ def visualize_image_item(
     for field in all_fields:
         image: Image.Image | None = None
         if field == "image":
-            # NOTE: use get_visualize_function(field) when input transforms are introduced in models.
-            image = Image.open(item.image_path).convert("RGB")
+            # Prefer loading from image_path if available, else use image attribute
+            image_path = getattr(item, "image_path", None)
+            if image_path is not None:
+                image = Image.open(image_path).convert("RGB")
+            else:
+                field_value = getattr(item, field, None)
+                if field_value is not None:
+                    image = get_visualize_function(field)(field_value, **fields_config.get(field, {}))
         else:
+            # General case: use get_visualize_function for all other fields
             field_value = getattr(item, field, None)
             if field_value is not None:
                 image = get_visualize_function(field)(field_value, **fields_config.get(field, {}))
             else:
-                logger.warning(f"Field '{field}' is None in ImageItem. Skipping visualization.")
+                logger.warning(f"Field '{field}' is None in item. Skipping visualization.")
         if image:
             field_images[field] = image.resize(field_size)
 
@@ -346,8 +369,6 @@ def visualize_image_item(
                 if overlay_value is not None:
                     overlay_image = get_visualize_function(overlay)(overlay_value, **overlay_config)
                     base_image = overlay_images(base_image, overlay_image, alpha=overlay_config.get("alpha", 0.5))
-                else:
-                    logger.warning(f"Field '{overlay}' is None in ImageItem. Skipping visualization.")
 
             if valid_overlays and add_text:
                 title = f"{convert_to_title_case(base)} + {'+'.join(convert_to_title_case(o) for o in valid_overlays)}"

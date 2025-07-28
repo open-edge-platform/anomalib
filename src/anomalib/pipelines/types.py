@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Types used in pipeline components.
 
 This module defines type aliases used throughout the pipeline components for type
@@ -15,9 +18,6 @@ Example:
     >>> def gather_results(results: list[RUN_RESULTS]) -> GATHERED_RESULTS:
     ...     return {"mean_metric": sum(r["metric"] for r in results) / len(results)}
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from typing import Any
 

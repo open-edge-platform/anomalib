@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """U-Flow: A U-shaped Normalizing Flow for Anomaly Detection with Unsupervised Threshold.
 
 This module implements the U-Flow model for anomaly detection as described in
@@ -27,9 +30,6 @@ See Also:
     - :class:`anomalib.models.image.uflow.torch_model.UflowModel`:
         PyTorch implementation of the model architecture
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .lightning_model import Uflow
 

@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base Torch Video Dataset.
 
 This module implements the base video dataset class for anomaly detection tasks that
@@ -16,9 +19,6 @@ Example:
     >>> item.image.shape
     torch.Size([C, H, W])
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC
 from collections.abc import Callable
@@ -213,7 +213,7 @@ class AnomalibVideoDataset(AnomalibDataset, ABC):
         if item.gt_mask is not None:
             if self.augmentations:
                 item.image, item.gt_mask = self.augmentations(item.image, Mask(item.gt_mask))
-            item.gt_label = torch.Tensor([1 in frame for frame in item.gt_mask]).int().squeeze(0)
+            item.gt_label = torch.tensor([1 in frame for frame in item.gt_mask]).int().squeeze(0)
         elif self.augmentations:
             item.image = self.augmentations(item.image)
 

@@ -1,10 +1,10 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Test API.
 
 Tests the models using API. The weight paths from the trained models are used for the rest of the tests.
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import contextlib
 import sys
@@ -17,12 +17,12 @@ import pytest
 from anomalib.data import AnomalibDataModule, MVTecAD
 from anomalib.deploy import ExportType
 from anomalib.engine import Engine
-from anomalib.models import AnomalibModule, get_available_models, get_model
+from anomalib.models import AnomalibModule, get_model, list_models
 
 
 def models() -> set[str]:
     """Return all available models."""
-    return get_available_models()
+    return list_models()
 
 
 def export_types() -> list[ExportType]:

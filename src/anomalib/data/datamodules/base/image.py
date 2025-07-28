@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base Anomalib data module.
 
 This module provides the base data module class used across Anomalib. It handles
@@ -21,9 +24,6 @@ Example:
         ...     **override_kwargs
         ... )
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import copy
 import logging
@@ -197,7 +197,7 @@ class AnomalibDataModule(LightningDataModule, ABC):
                         applies a Resize transform with a different output size. The final effective input size as \
                         seen by the model will be determined by the model transforms, not the augmentations. To change \
                         the effective input size, please change the model transforms in the PreProcessor module. \
-                        Augmentations: {aug_resize.size}, Model transforms: {model_transform.size}"
+                        Augmentations: {aug_resize.size}, Model transforms: {model_resize.size}"
                     logger.warning(msg)
                 if model_resize.interpolation != aug_resize.interpolation:
                     msg = f"Conflicting interpolation method found between augmentations and model transforms. You are \

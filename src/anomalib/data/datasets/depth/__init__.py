@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Torch Dataset Implementations of Anomalib Depth Datasets.
 
 This module provides dataset implementations for working with RGB-D (depth) data in
@@ -21,9 +24,6 @@ Example:
     ...     category="bagel"
     ... )
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .folder_3d import Folder3DDataset
 from .mvtec_3d import MVTec3DDataset

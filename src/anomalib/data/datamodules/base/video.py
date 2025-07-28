@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base Video Data Module.
 
 This module provides the base data module class for video datasets in Anomalib.
@@ -13,9 +16,6 @@ Example:
         >>> data_config = "examples/configs/data/ucsd_ped.yaml"
         >>> datamodule = AnomalibVideoDataModule.from_config(config_path=data_config)
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from anomalib.data.utils import ValSplitMode
 

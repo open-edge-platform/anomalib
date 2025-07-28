@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Statistical functions for anomaly detection models.
 
 This module provides statistical methods used in anomaly detection models for
@@ -19,9 +22,6 @@ Example:
     >>> kde.fit(features)
     >>> density = kde.predict(features)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .kde import GaussianKDE
 from .multi_variate_gaussian import MultiVariateGaussian

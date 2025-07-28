@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """TensorBoard logger with image logging capabilities.
 
 This module provides a TensorBoard logger implementation that adds an interface for
@@ -20,21 +23,20 @@ Example:
     ... )  # doctest: +SKIP
 """
 
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 from pathlib import Path
 
 import numpy as np
+from lightning.pytorch.utilities import rank_zero_only
+from lightning_utilities.core.imports import module_available
 from matplotlib.figure import Figure
 
-try:
-    from lightning.pytorch.loggers.tensorboard import TensorBoardLogger
-except ModuleNotFoundError:
-    print("To use tensorboard logger install it using `pip install tensorboard`")
-from lightning.pytorch.utilities import rank_zero_only
-
 from .base import ImageLoggerBase
+
+if not module_available("tensorboard"):
+    msg = "TensorBoard is not installed. Please install it using: pip install tensorboard"
+    raise ImportError(msg)
+
+from lightning.pytorch.loggers.tensorboard import TensorBoardLogger
 
 
 class AnomalibTensorBoardLogger(ImageLoggerBase, TensorBoardLogger):

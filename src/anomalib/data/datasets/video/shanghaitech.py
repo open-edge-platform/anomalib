@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """ShanghaiTech Campus Dataset.
 
 This module provides PyTorch Dataset implementation for the ShanghaiTech Campus
@@ -58,9 +61,6 @@ Reference:
     anomaly detection--a new baseline. In Proceedings of the IEEE conference on
     computer vision and pattern recognition (pp. 6536-6545).
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
 from typing import Any
@@ -179,7 +179,7 @@ class ShanghaiTechTestClipsIndexer(ClipsIndexer):
         self.video_pts = []
         for video_path in self.video_paths:
             n_frames = len(list(Path(video_path).glob("*.jpg")))
-            self.video_pts.append(torch.Tensor(range(n_frames)))
+            self.video_pts.append(torch.arange(n_frames))
 
         # fps information cannot be inferred from folder structure
         self.video_fps = [None] * len(self.video_paths)
@@ -259,7 +259,7 @@ def make_shanghaitech_dataset(root: Path, scene: int, split: Split | str | None 
     # get paths to training videos
     root = validate_path(root)
     train_root = root / "training/converted_videos"
-    train_list = [(str(train_root),) + filename.parts[-2:] for filename in train_root.glob(f"{scene_prefix}_*.avi")]
+    train_list = [(str(train_root), *filename.parts[-2:]) for filename in train_root.glob(f"{scene_prefix}_*.avi")]
     train_samples = DataFrame(train_list, columns=["root", "folder", "image_path"])
     train_samples["split"] = "train"
 
@@ -267,7 +267,7 @@ def make_shanghaitech_dataset(root: Path, scene: int, split: Split | str | None 
     test_root = Path(root) / "testing/frames"
     test_folders = [filename for filename in sorted(test_root.glob(f"{scene_prefix}_*")) if filename.is_dir()]
     test_folders = [folder for folder in test_folders if len(list(folder.glob("*.jpg"))) > 0]
-    test_list = [(str(test_root),) + folder.parts[-2:] for folder in test_folders]
+    test_list = [(str(test_root), *folder.parts[-2:]) for folder in test_folders]
     test_samples = DataFrame(test_list, columns=["root", "folder", "image_path"])
     test_samples["split"] = "test"
 

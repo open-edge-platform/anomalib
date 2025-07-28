@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Loss function for the CS-Flow Model Implementation.
 
 This module implements the loss function used in the CS-Flow model for anomaly
@@ -13,9 +16,6 @@ Example:
     >>> jacobians = torch.randn(2)
     >>> loss = criterion(z_dist, jacobians)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch import nn

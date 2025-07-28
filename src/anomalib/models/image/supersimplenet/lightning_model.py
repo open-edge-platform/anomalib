@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """SuperSimpleNet: Unifying Unsupervised and Supervised Learning for Fast and Reliable Surface Defect Detection.
 
 This module implements the SuperSimpleNet model for surface defect / anomaly detection.
@@ -34,9 +37,6 @@ See Also:
         PyTorch implementation of the SuperSimpleNet model.
 """
 
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 from typing import Any
 
 from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
@@ -61,7 +61,7 @@ class Supersimplenet(AnomalibModule):
 
     Args:
         perlin_threshold (float): threshold value for Perlin noise thresholding during anomaly generation.
-        backbone (str): backbone name
+        backbone (str): backbone name. IMPORTANT! use only backbones with torchvision V1 weights ending on ".tv".
         layers (list[str]): backbone layers utilised
         supervised (bool): whether the model will be trained in supervised mode. False by default (unsupervised).
         pre_processor (PreProcessor | bool, optional): Pre-processor instance or
@@ -77,7 +77,7 @@ class Supersimplenet(AnomalibModule):
     def __init__(
         self,
         perlin_threshold: float = 0.2,
-        backbone: str = "wide_resnet50_2",
+        backbone: str = "wide_resnet50_2.tv_in1k",  # IMPORTANT: use .tv weights, not tv2
         layers: list[str] = ["layer2", "layer3"],  # noqa: B006
         supervised: bool = False,
         pre_processor: PreProcessor | bool = True,

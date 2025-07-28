@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch model for the PaDiM model implementation.
 
 This module implements the PaDiM model architecture using PyTorch. PaDiM models the
@@ -30,9 +33,6 @@ See Also:
     - :class:`anomalib.models.components.MultiVariateGaussian`:
         Multivariate Gaussian distribution modeling
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from random import sample
 from typing import TYPE_CHECKING

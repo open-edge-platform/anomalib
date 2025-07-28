@@ -1,3 +1,12 @@
+# Original Code
+# Copyright (c) 2022 VitjanZ
+# https://github.com/VitjanZ/DSR_anomaly_detection.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Modified
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch model for the DSR model implementation.
 
 This module implements the PyTorch model for Deep Spatial Reconstruction (DSR).
@@ -25,15 +34,6 @@ Notes:
 References:
     - Original paper: https://arxiv.org/abs/2012.12436
 """
-
-# Original Code
-# Copyright (c) 2022 VitjanZ
-# https://github.com/VitjanZ/DSR_anomaly_detection.
-# SPDX-License-Identifier: Apache-2.0
-#
-# Modified
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
 from pathlib import Path
@@ -128,7 +128,7 @@ class DsrModel(nn.Module):
             device (torch.device | str | None, optional): Device to load weights
                 to. Defaults to ``None``.
         """
-        self.discrete_latent_model.load_state_dict(torch.load(ckpt, map_location=device))
+        self.discrete_latent_model.load_state_dict(torch.load(ckpt, map_location=device, weights_only=True))
 
     def forward(
         self,
@@ -906,7 +906,7 @@ class VectorQuantizer(nn.Module):
 
         # necessary to correctly load the checkpoint file
         self.register_buffer("_ema_cluster_size", torch.zeros(num_embeddings))
-        self._ema_w = nn.Parameter(torch.Tensor(num_embeddings, self._embedding_dim))
+        self._ema_w = nn.Parameter(torch.zeros(num_embeddings, self._embedding_dim))
         self._ema_w.data.normal_()
 
     @property

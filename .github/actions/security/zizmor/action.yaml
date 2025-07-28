@@ -51,7 +51,7 @@ inputs:
   zizmor-version:
     description: "Zizmor version"
     required: false
-    default: "1.6.0"
+    default: "1.9.0"
 
 outputs:
   scan_result:
@@ -90,6 +90,7 @@ runs:
         INPUTS_OUTPUT_FORMAT: ${{ inputs.output-format }}
         INPUTS_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
         ZIZMOR_VERSION: ${{ inputs.zizmor-version }}
+        STEPS_CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
 
       # For changed scope: if changes in .github/** are detected, we rescan all files because
       # providing individual non-workflow files (even yaml) to Zizmor causes errors ("invalid GitHub Actions workflow").
@@ -103,7 +104,7 @@ runs:
         SEVERITY=$(echo "$INPUTS_SEVERITY_LEVEL" | tr '[:upper:]' '[:lower:]')
         CONFIDENCE=$(echo "$INPUTS_CONFIDENCE_LEVEL" | tr '[:upper:]' '[:lower:]')
 
-        if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
+        if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "$STEPS_CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES" ]]; then
           echo "There are some changes detected in .github/, checking with Zizmor"
           uvx zizmor=="$ZIZMOR_VERSION" \
               --min-confidence ${CONFIDENCE} \

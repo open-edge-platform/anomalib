@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Generic dataclasses that can be implemented for different data types.
 
 This module provides a set of generic dataclasses and mixins that can be used
@@ -29,9 +32,6 @@ Example:
     ...     mask_path=None
     ... )
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterator
@@ -210,7 +210,7 @@ class _InputFields(Generic[T, ImageT, MaskT, PathT], ABC):
 
     @staticmethod
     @abstractmethod
-    def validate_gt_mask(gt_mask: MaskT) -> MaskT | None:
+    def validate_gt_mask(gt_mask: MaskT | None) -> MaskT | None:
         """Validate the ground truth mask.
 
         Args:
@@ -226,7 +226,7 @@ class _InputFields(Generic[T, ImageT, MaskT, PathT], ABC):
 
     @staticmethod
     @abstractmethod
-    def validate_mask_path(mask_path: PathT) -> PathT | None:
+    def validate_mask_path(mask_path: PathT | None) -> PathT | None:
         """Validate the mask path.
 
         Args:

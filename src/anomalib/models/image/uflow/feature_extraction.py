@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Feature extraction module for U-Flow model.
 
 This module implements feature extraction functionality for the U-Flow model for
@@ -17,9 +20,6 @@ See Also:
     - :class:`LayerNormFeatureExtractor`: Main feature extractor implementation
     - :class:`CaitFeatureExtractor`: Alternative feature extractor
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Iterable
 
@@ -253,7 +253,7 @@ class CaitFeatureExtractor(nn.Module):
             x1 = self.extractor1.blocks[i](x1)
 
         # Scale 2 --> Extractor 2
-        img_sub = F.interpolate(torch.Tensor(img), size=(224, 224), mode="bicubic", align_corners=True)
+        img_sub = F.interpolate(img, size=(224, 224), mode="bicubic", align_corners=True)
         x2 = self.extractor2.patch_embed(img_sub)
         x2 = x2 + self.extractor2.pos_embed
         x2 = self.extractor2.pos_drop(x2)

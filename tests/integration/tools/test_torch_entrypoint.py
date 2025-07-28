@@ -1,7 +1,7 @@
-"""Test torch inference entrypoint script."""
-
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test torch inference entrypoint script."""
 
 import sys
 from collections.abc import Callable
@@ -35,18 +35,22 @@ class TestTorchInferenceEntrypoint:
         project_path: Path,
         ckpt_path: Callable[[str], Path],
         get_dummy_inference_image: str,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test torch_inference.py."""
-        _ckpt_path = ckpt_path("Padim")
+        # Set TRUST_REMOTE_CODE environment variable for the test
+        monkeypatch.setenv("TRUST_REMOTE_CODE", "1")
+
+        checkpoint_path = ckpt_path("Padim")
         get_parser, infer = get_functions
-        model = Padim.load_from_checkpoint(_ckpt_path)
+        model = Padim.load_from_checkpoint(checkpoint_path)
         model.to_torch(
-            export_root=_ckpt_path.parent.parent.parent,
+            export_root=checkpoint_path.parent.parent.parent,
         )
         arguments = get_parser().parse_args(
             [
                 "--weights",
-                str(_ckpt_path.parent.parent) + "/torch/model.pt",
+                str(checkpoint_path.parent.parent) + "/torch/model.pt",
                 "--input",
                 get_dummy_inference_image,
                 "--output",

@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Example showing how to use the MVTec AD 2 dataset with Anomalib.
 
 This example demonstrates how to:
@@ -6,9 +9,6 @@ This example demonstrates how to:
 3. Access different test sets (public, private, mixed)
 4. Work with custom transforms and visualization
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import matplotlib.pyplot as plt
 import torch
@@ -93,8 +93,20 @@ test_dataset = MVTecAD2Dataset(
 )
 
 # Create dataloaders
-train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True, collate_fn=train_dataset.collate_fn)
-test_loader = DataLoader(test_dataset, batch_size=4, shuffle=False, collate_fn=test_dataset.collate_fn)
+train_loader = DataLoader(
+    train_dataset,
+    batch_size=4,
+    shuffle=True,
+    collate_fn=train_dataset.collate_fn,
+    pin_memory=True,
+)
+test_loader = DataLoader(
+    test_dataset,
+    batch_size=4,
+    shuffle=False,
+    collate_fn=test_dataset.collate_fn,
+    pin_memory=True,
+)
 
 # Get some sample images
 train_samples = next(iter(train_loader))

@@ -11,10 +11,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 🚀 Add new SOTA video Anomaly detection module FUVAS
 - 🚀 Add VAD dataset by @abc-125 in https://github.com/open-edge-platform/anomalib/pull/2603
 - 🚀 Add Tiled Ensemble for V2 by @blaz-r in https://github.com/open-edge-platform/anomalib/pull/2660
+- 🚀 Add Tabular datamodule by @manuelkonrad in https://github.com/openvinotoolkit/anomalib/pull/2713
 
 ### Removed
 
 ### Changed
+
+- 🔨Fix semgrep security issue for `get_datamodule()` method in https://github.com/open-edge-platform/anomalib/pull/2736
+- 🔨Update doc for `get_exportable_transform()` method in https://github.com/open-edge-platform/anomalib/pull/2731
 
 ### Deprecated
 
