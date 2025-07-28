@@ -1,3 +1,12 @@
+# Original Code
+# Copyright (c) 2021 @Hsuxu
+# https://github.com/Hsuxu/Loss_ToolBox-PyTorch.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Modified
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Focal Loss for multi-class classification with optional label smoothing and class weighting.
 
 This loss function is designed to address class imbalance by down-weighting easy examples and focusing training
@@ -16,7 +25,7 @@ Supports optional label smoothing and flexible alpha input (scalar or per-class 
 applying a specified non-linearity (e.g., softmax or sigmoid).
 
 Args:
-    apply_nonlin (nn.Module or None): Optional non-linearity to apply to the logits before loss computation.
+    apply_nonlinearity (nn.Module or None): Optional non-linearity to apply to the logits before loss computation.
         For example, use `nn.Softmax(dim=1)` or `nn.Sigmoid()` if logits are not normalized.
     alpha (float or torch.Tensor, optional): Class balancing factor. Can be:
         - None: Equal weighting for all classes.
@@ -39,15 +48,6 @@ Inputs:
 Returns:
     torch.Tensor: Scalar loss value (averaged or summed based on `size_average`).
 """
-
-# Original Code
-# Copyright (c) 2021 @Hsuxu
-# https://github.com/Hsuxu/Loss_ToolBox-PyTorch.
-# SPDX-License-Identifier: Apache-2.0
-#
-# Modified
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
 import torch
@@ -74,7 +74,7 @@ class FocalLoss(nn.Module):
 
     def __init__(
         self,
-        apply_nonlin: nn.Module | None = None,
+        apply_nonlinearity: nn.Module | None = None,
         alpha: float | torch.Tensor = None,
         gamma: float = 2,
         balance_index: int = 0,
@@ -84,7 +84,7 @@ class FocalLoss(nn.Module):
         """Initializes the FocalLoss instance.
 
         Args:
-            apply_nonlin (nn.Module or None): Optional non-linearity to apply to logits (e.g., softmax or sigmoid).
+            apply_nonlinearity (nn.Module or None): Optional non-linearity to apply to logits (e.g., softmax or sigmoid)
             alpha (float or torch.Tensor, optional): Weighting factor for class imbalance. Can be:
                 - None: Equal weighting.
                 - float: Class at `balance_index` is weighted by `alpha`, others by 1 - `alpha`.
@@ -95,7 +95,7 @@ class FocalLoss(nn.Module):
             size_average (bool): If True, average the loss over the batch. If False, sum the loss.
         """
         super().__init__()
-        self.apply_nonlin = apply_nonlin
+        self.apply_nonlinearity = apply_nonlinearity
         self.alpha = alpha
         self.gamma = gamma
         self.balance_index = balance_index
@@ -106,59 +106,59 @@ class FocalLoss(nn.Module):
             msg = "smooth value should be in [0,1]"
             raise ValueError(msg)
 
-    def forward(self, logit: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+    def forward(self, logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Computes the focal loss between `logit` predictions and ground-truth `target`.
 
         Args:
-            logit (torch.Tensor): The predicted logits of shape (B, C, ...) where B is batch size and C is the number of
-              classes.
+            logits (torch.Tensor): The predicted logits of shape (B, C, ...) where B is batch size and C is the
+              number of classes.
             target (torch.Tensor): The ground-truth class indices of shape (B, 1, ...) or broadcastable to logit.
 
         Returns:
             torch.Tensor: Computed focal loss value (averaged or summed depending on `size_average`).
         """
-        if self.apply_nonlin is not None:
-            logit = self.apply_nonlin(logit)
-        num_class = logit.shape[1]
+        if self.apply_nonlinearity is not None:
+            logits = self.apply_nonlinearity(logits)
+        num_classes = logits.shape[1]
 
-        if logit.dim() > 2:
-            logit = logit.view(logit.size(0), logit.size(1), -1)
-            logit = logit.permute(0, 2, 1).contiguous()
-            logit = logit.view(-1, logit.size(-1))
+        if logits.dim() > 2:
+            logits = logits.view(logits.size(0), logits.size(1), -1)
+            logits = logits.permute(0, 2, 1).contiguous()
+            logits = logits.view(-1, logits.size(-1))
         target = torch.squeeze(target, 1)
         target = target.view(-1, 1)
 
         alpha = self.alpha
         if alpha is None:
-            alpha = torch.ones(num_class, 1)
+            alpha = torch.ones(num_classes, 1)
         elif isinstance(alpha, (list | np.ndarray)):
-            assert len(alpha) == num_class
-            alpha = torch.FloatTensor(alpha).view(num_class, 1)
+            assert len(alpha) == num_classes
+            alpha = torch.FloatTensor(alpha).view(num_classes, 1)
             alpha = alpha / alpha.sum()
         elif isinstance(alpha, float):
-            alpha = torch.ones(num_class, 1)
+            alpha = torch.ones(num_classes, 1)
             alpha = alpha * (1 - self.alpha)
             alpha[self.balance_index] = self.alpha
         else:
             msg = "Not support alpha type"
             raise TypeError(msg)
 
-        if alpha.device != logit.device:
-            alpha = alpha.to(logit.device)
+        if alpha.device != logits.device:
+            alpha = alpha.to(logits.device)
 
         idx = target.cpu().long()
-        one_hot_key = torch.FloatTensor(target.size(0), num_class).zero_()
+        one_hot_key = torch.FloatTensor(target.size(0), num_classes).zero_()
         one_hot_key = one_hot_key.scatter_(1, idx, 1)
-        if one_hot_key.device != logit.device:
-            one_hot_key = one_hot_key.to(logit.device)
+        if one_hot_key.device != logits.device:
+            one_hot_key = one_hot_key.to(logits.device)
 
         if self.smooth:
             one_hot_key = torch.clamp(
                 one_hot_key,
-                self.smooth / (num_class - 1),
+                self.smooth / (num_classes - 1),
                 1.0 - self.smooth,
             )
-        pt = (one_hot_key * logit).sum(1) + self.smooth
+        pt = (one_hot_key * logits).sum(1) + self.smooth
         logpt = pt.log()
 
         gamma = self.gamma

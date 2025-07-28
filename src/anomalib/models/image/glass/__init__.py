@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """GLASS - Unsupervised anomaly detection via Gradient Ascent for Industrial Anomaly detection and localization.
 
 This module implements the GLASS model for unsupervised anomaly detection and localization. GLASS synthesizes both
@@ -14,9 +17,6 @@ The model consists of:
 Paper: `A Unified Anomaly Synthesis Strategy with Gradient Ascent for Industrial Anomaly Detection and Localization
 <https://arxiv.org/pdf/2407.09359>`
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .lightning_model import Glass
 

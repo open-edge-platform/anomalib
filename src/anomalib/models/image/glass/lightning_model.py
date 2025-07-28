@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """GLASS - Unsupervised anomaly detection via Gradient Ascent for Industrial Anomaly detection and localization.
 
 This module implements the GLASS model for unsupervised anomaly detection and localization. GLASS synthesizes both
@@ -15,19 +18,14 @@ Paper: `A Unified Anomaly Synthesis Strategy with Gradient Ascent for Industrial
 <https://arxiv.org/pdf/2407.09359>`
 """
 
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 from typing import Any
 
-import torch
 from lightning.pytorch.utilities.types import STEP_OUTPUT
 from torch import optim
 from torchvision.transforms.v2 import CenterCrop, Compose, Normalize, Resize
 
 from anomalib import LearningType
 from anomalib.data import Batch
-from anomalib.data.utils.generators.perlin import PerlinAnomalyGenerator
 from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule
 from anomalib.post_processing import PostProcessor
@@ -66,15 +64,15 @@ class Glass(AnomalibModule):
             Defaults to `True`.
         layers (list[str], optional): List of backbone layers to extract features from.
             Defaults to `["layer1", "layer2", "layer3"]`.
-        pre_proj (int, optional): Number of projection layers used in the feature adaptor (e.g., MLP before
+        pre_projection (int, optional): Number of projection layers used in the feature adaptor (e.g., MLP before
           discriminator).
             Defaults to `1`.
-        dsc_layers (int, optional): Number of layers in the discriminator network.
+        discriminator_layers (int, optional): Number of layers in the discriminator network.
             Defaults to `2`.
-        dsc_hidden (int, optional): Number of hidden units in each discriminator layer.
+        discriminator_hidden (int, optional): Number of hidden units in each discriminator layer.
             Defaults to `1024`.
-        dsc_margin (float, optional): Margin used for contrastive or binary classification loss in discriminator
-          training.
+        discriminator_margin (float, optional): Margin used for contrastive or binary classification loss in
+          discriminator training.
             Defaults to `0.5`.
         pre_processor (PreProcessor | bool, optional): reprocessing module or flag to enable default preprocessing.
             Set to `True` to apply default normalization and resizing.
@@ -95,10 +93,10 @@ class Glass(AnomalibModule):
         radius (float, optional): Radius parameter used for truncated projection in the anomaly synthesis strategy.
             Determines the range for valid synthetic anomalies in the hypersphere or manifold.
             Defaults to `0.75`.
-        p (float, optional): Probability used in random selection logic, such as anomaly mask generation or augmentation
-          choice.
+        random_selection_prob (float, optional): Probability used in random selection logic, such as anomaly mask
+          generation or augmentation choice.
             Defaults to `0.5`.
-        lr (float, optional): Learning rate for training the feature adaptor and discriminator networks.
+        learning_rate (float, optional): Learning rate for training the feature adaptor and discriminator networks.
             Defaults to `0.0001`.
         step (int, optional): Number of gradient ascent steps for anomaly synthesis.
             Defaults to `20`.
@@ -108,8 +106,8 @@ class Glass(AnomalibModule):
 
     def __init__(
         self,
-        input_shape: tuple[int, int],
-        anomaly_source_path: str,
+        input_shape: tuple[int, int] = (256, 256),
+        anomaly_source_path: str | None = None,
         backbone: str = "resnet18",
         pretrain_embed_dim: int = 1024,
         target_embed_dim: int = 1024,
@@ -117,10 +115,10 @@ class Glass(AnomalibModule):
         patchstride: int = 1,
         pre_trained: bool = True,
         layers: list[str] | None = None,
-        pre_proj: int = 1,
-        dsc_layers: int = 2,
-        dsc_hidden: int = 1024,
-        dsc_margin: float = 0.5,
+        pre_projection: int = 1,
+        discriminator_layers: int = 2,
+        discriminator_hidden: int = 1024,
+        discriminator_margin: float = 0.5,
         pre_processor: PreProcessor | bool = True,
         post_processor: PostProcessor | bool = True,
         evaluator: Evaluator | bool = True,
@@ -128,8 +126,8 @@ class Glass(AnomalibModule):
         mining: int = 1,
         noise: float = 0.015,
         radius: float = 0.75,
-        p: float = 0.5,
-        lr: float = 0.0001,
+        random_selection_prob: float = 0.5,
+        learning_rate: float = 0.0001,
         step: int = 20,
         svd: int = 0,
     ) -> None:
@@ -143,8 +141,6 @@ class Glass(AnomalibModule):
         if layers is None:
             layers = ["layer1", "layer2", "layer3"]
 
-        self.augmentor = PerlinAnomalyGenerator(anomaly_source_path)
-
         self.model = GlassModel(
             input_shape=input_shape,
             anomaly_source_path=anomaly_source_path,
@@ -155,34 +151,33 @@ class Glass(AnomalibModule):
             patchsize=patchsize,
             patchstride=patchstride,
             layers=layers,
-            pre_proj=pre_proj,
-            dsc_layers=dsc_layers,
-            dsc_hidden=dsc_hidden,
-            dsc_margin=dsc_margin,
+            pre_projection=pre_projection,
+            discriminator_layers=discriminator_layers,
+            discriminator_hidden=discriminator_hidden,
+            discriminator_margin=discriminator_margin,
             step=step,
             svd=svd,
             mining=mining,
             noise=noise,
             radius=radius,
-            p=p,
+            random_selection_prob=random_selection_prob,
         )
 
-        self.c = torch.tensor([1])
-        self.lr = lr
+        self.learning_rate = learning_rate
 
-        if pre_proj > 0:
-            self.proj_opt = optim.AdamW(
-                self.model.pre_projection.parameters(),
-                self.lr,
+        if pre_projection > 0:
+            self.projection_opt = optim.AdamW(
+                self.model.projection.parameters(),
+                self.learning_rate,
                 weight_decay=1e-5,
             )
         else:
-            self.proj_opt = None
+            self.projection_opt = None
 
         if not pre_trained:
             self.backbone_opt = optim.AdamW(
-                self.mosdel.forward_modules["feature_aggregator"].backbone.parameters(),
-                self.lr,
+                self.model.forward_modules["feature_aggregator"].backbone.parameters(),
+                self.learning_rate,
             )
         else:
             self.backbone_opt = None
@@ -242,13 +237,9 @@ class Glass(AnomalibModule):
         Returns:
             Optimizer: AdamW Optimizer for the discriminator.
         """
-        return optim.AdamW(self.model.discriminator.parameters(), lr=self.lr * 2)
+        return optim.AdamW(self.model.discriminator.parameters(), lr=self.learning_rate * 2)
 
-    def training_step(
-        self,
-        batch: Batch,
-        batch_idx: int,
-    ) -> STEP_OUTPUT:
+    def training_step(self, batch: Batch, batch_idx: int) -> STEP_OUTPUT:
         """Training step for GLASS model.
 
         Args:
@@ -259,28 +250,27 @@ class Glass(AnomalibModule):
             STEP_OUTPUT: Dictionary containing loss values and metrics
         """
         del batch_idx
-        dsc_opt = self.optimizers()
+        discriminator_opt = self.optimizers()
 
         self.model.forward_modules.eval()
-        if self.model.pre_proj > 0:
-            self.model.pre_projection.train()
+        if self.model.pre_projection > 0:
+            self.model.projection.train()
         self.model.discriminator.train()
 
-        dsc_opt.zero_grad()
-        if self.proj_opt is not None:
-            self.proj_opt.zero_grad()
+        discriminator_opt.zero_grad()
+        if self.projection_opt is not None:
+            self.projection_opt.zero_grad()
         if self.backbone_opt is not None:
             self.backbone_opt.zero_grad()
 
-        img = batch.image
-        true_loss, gaus_loss, bce_loss, focal_loss, loss = self.model(img, self.c)
+        true_loss, gaus_loss, bce_loss, focal_loss, loss = self.model(batch.image)
         loss.backward()
 
-        if self.proj_opt is not None:
-            self.proj_opt.step()
+        if self.projection_opt is not None:
+            self.projection_opt.step()
         if self.backbone_opt is not None:
             self.backbone_opt.step()
-        dsc_opt.step()
+        discriminator_opt.step()
 
         self.log("true_loss", true_loss, prog_bar=True)
         self.log("gaus_loss", gaus_loss, prog_bar=True)
@@ -288,11 +278,7 @@ class Glass(AnomalibModule):
         self.log("focal_loss", focal_loss, prog_bar=True)
         self.log("loss", loss, prog_bar=True)
 
-    def validation_step(
-        self,
-        batch: Batch,
-        batch_idx: int,
-    ) -> STEP_OUTPUT:
+    def validation_step(self, batch: Batch, batch_idx: int) -> STEP_OUTPUT:
         """Performs a single validation step during model evaluation.
 
         Args:
@@ -305,11 +291,11 @@ class Glass(AnomalibModule):
         del batch_idx
         self.model.forward_modules.eval()
 
-        if self.model.pre_proj > 0:
-            self.model.pre_projection.eval()
+        if self.model.pre_projection > 0:
+            self.model.projection.eval()
         self.model.discriminator.eval()
 
-        predictions = self.model(batch.image, self.c)
+        predictions = self.model(batch.image)
         return batch.update(**predictions._asdict())
 
     def on_train_start(self) -> None:
@@ -319,15 +305,7 @@ class Glass(AnomalibModule):
         that serves as a reference point for the normal class distribution.
         """
         dataloader = self.trainer.train_dataloader
-
-        with torch.no_grad():
-            for i, batch in enumerate(dataloader):
-                if i == 0:
-                    self.c = self.model.calculate_mean(batch.image.to(self.device))
-                else:
-                    self.c += self.model.calculate_mean(batch.image.to(self.device))
-
-            self.c /= len(dataloader)
+        self.model.calculate_center(dataloader, self.device)
 
     @property
     def learning_type(self) -> LearningType:
