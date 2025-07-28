@@ -36,7 +36,6 @@
 #
 # Note: Renovate maintains and updates Dependency dashboard that is available in GitHub issues.
 
-
 name: Renovate
 on:
   schedule:
