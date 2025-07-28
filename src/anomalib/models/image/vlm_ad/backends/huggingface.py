@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Hugging Face backend for Vision Language Models (VLMs).
 
 This module implements a backend for using Hugging Face models for vision-language
@@ -23,9 +26,6 @@ See Also:
     - :class:`ChatGPT`: Alternative backend using OpenAI models
     - :class:`Ollama`: Alternative backend using Ollama models
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from pathlib import Path
@@ -143,10 +143,10 @@ class Huggingface(Backend):
             dict: Formatted message dictionary with role and content
         """
         message: dict[str, str | list[dict]] = {"role": "user"}
-        _content: list[dict[str, str]] = [{"type": "text", "text": content}]
+        content_: list[dict[str, str]] = [{"type": "text", "text": content}]
         if images is not None:
-            _content.extend([{"type": "image"} for _ in images])
-        message["content"] = _content
+            content_.extend([{"type": "image"} for _ in images])
+        message["content"] = content_
         return message
 
     def add_reference_images(self, image: str | Path) -> None:

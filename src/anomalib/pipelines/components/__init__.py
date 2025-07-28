@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Components for building and executing pipelines.
 
 This module provides core components for constructing and running data processing
@@ -20,9 +23,6 @@ The components handle:
     - Job execution and result gathering
     - Error handling and logging
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .base import Job, JobGenerator, Pipeline, Runner
 

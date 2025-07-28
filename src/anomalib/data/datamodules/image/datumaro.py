@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """DataModule for Datumaro format.
 
 This module provides a PyTorch Lightning DataModule for datasets in Datumaro
@@ -34,9 +37,6 @@ Notes:
                 ├── image3.jpg
                 └── image4.jpg
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
 

@@ -1,7 +1,7 @@
-"""Unit Tests - Tabular Datamodule."""
-
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Unit Tests - Tabular Datamodule."""
 
 import tempfile
 from pathlib import Path
@@ -20,7 +20,7 @@ class TestTabular(_TestAnomalibImageDatamodule):
     @staticmethod
     def get_samples_dataframe(dataset_path: Path) -> pd.DataFrame:
         """Create samples DataFrame using the Folder datamodule."""
-        _folder_datamodule = Folder(
+        datamodule_ = Folder(
             name="dummy",
             root=dataset_path / "mvtecad" / "dummy",
             normal_dir="train/good",
@@ -31,11 +31,11 @@ class TestTabular(_TestAnomalibImageDatamodule):
             eval_batch_size=4,
             num_workers=0,
         )
-        _folder_datamodule.setup()
+        datamodule_.setup()
         return pd.concat([
-            _folder_datamodule.train_data.samples,
-            _folder_datamodule.test_data.samples,
-            _folder_datamodule.val_data.samples,
+            datamodule_.train_data.samples,
+            datamodule_.test_data.samples,
+            datamodule_.val_data.samples,
         ])
 
     @pytest.fixture(
@@ -56,19 +56,19 @@ class TestTabular(_TestAnomalibImageDatamodule):
     @staticmethod
     def datamodule(dataset_path: Path, columns_to_drop: list | None) -> Tabular:
         """Create and return a Tabular datamodule."""
-        _samples = TestTabular.get_samples_dataframe(dataset_path)
+        samples = TestTabular.get_samples_dataframe(dataset_path)
         if columns_to_drop:
-            _samples = _samples.drop(columns_to_drop, axis="columns")
-        _datamodule = Tabular(
+            samples = samples.drop(columns_to_drop, axis="columns")
+        datamodule_ = Tabular(
             name="dummy",
-            samples=_samples,
+            samples=samples,
             train_batch_size=4,
             eval_batch_size=4,
             num_workers=0,
             augmentations=Resize((256, 256)),
         )
-        _datamodule.setup()
-        return _datamodule
+        datamodule_.setup()
+        return datamodule_
 
     @pytest.fixture()
     @staticmethod
@@ -87,12 +87,12 @@ class TestTabularFromFile(TestTabular):
     @staticmethod
     def datamodule(dataset_path: Path) -> Tabular:
         """Create and return a Tabular datamodule."""
-        _samples = TestTabular.get_samples_dataframe(dataset_path)
+        samples = TestTabular.get_samples_dataframe(dataset_path)
         with tempfile.NamedTemporaryFile(suffix=".csv") as samples_file:
-            _samples.to_csv(samples_file)
+            samples.to_csv(samples_file)
             samples_file.seek(0)
 
-            _datamodule = Tabular.from_file(
+            datamodule_ = Tabular.from_file(
                 name="dummy",
                 file_path=samples_file.name,
                 train_batch_size=4,
@@ -100,6 +100,6 @@ class TestTabularFromFile(TestTabular):
                 num_workers=0,
                 augmentations=Resize((256, 256)),
             )
-            _datamodule.setup()
+            datamodule_.setup()
 
-        return _datamodule
+        return datamodule_

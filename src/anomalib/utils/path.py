@@ -1,3 +1,6 @@
+# Copyright (C) 2024-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Path utilities for anomaly detection.
 
 This module provides utilities for managing paths and directories in anomaly
@@ -6,8 +9,11 @@ detection projects. The key components include:
     - Version directory creation and management
     - Symbolic link handling
     - Path resolution and validation
+    - Output filename generation
 
-Example:
+Examples:
+    Test create_versioned_dir:
+
     >>> from anomalib.utils.path import create_versioned_dir
     >>> from pathlib import Path
     >>> # Create versioned directory
@@ -25,9 +31,6 @@ Note:
     All paths are resolved to absolute paths to ensure consistent behavior
     across different working directories.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import re
 from pathlib import Path
@@ -274,94 +277,119 @@ def convert_to_title_case(text: str) -> str:
 def generate_output_filename(
     input_path: str | Path,
     output_path: str | Path,
-    dataset_name: str,
+    dataset_name: str | None = None,
     category: str | None = None,
     mkdir: bool = True,
 ) -> Path:
     """Generate an output filename based on the input path.
 
     This function generates an output path that preserves the directory structure after the
-    dataset name (and category if provided) while placing the file in the specified output
-    directory.
+    dataset root, using an improved algorithm that works with any folder structure.
 
     Args:
         input_path (str | Path): Path to the input file.
         output_path (str | Path): Base output directory path.
-        dataset_name (str): Name of the dataset to find in the input path.
+        dataset_name (str | None, optional): Name of the dataset to find in the input path.
+            If provided, the path structure after this dataset directory is preserved.
+            If not provided or not found, uses intelligent heuristics.
+            Defaults to ``None``.
         category (str | None, optional): Category name to find in the input path after
-            dataset name. Defaults to ``None``.
+            dataset name. If provided, preserves structure after this category.
+            Defaults to ``None``.
         mkdir (bool, optional): Whether to create the output directory structure.
             Defaults to ``True``.
 
     Returns:
         Path: Generated output file path preserving relevant directory structure.
 
-    Raises:
-        ValueError: If ``dataset_name`` is not found in ``input_path``.
-        ValueError: If ``category`` is provided but not found in ``input_path`` after
-            ``dataset_name``.
-
     Examples:
-        Basic usage with category:
+        Basic usage with MVTec-style dataset:
 
         >>> input_path = "/data/MVTecAD/bottle/test/broken_large/000.png"
-        >>> output_base = "/results"
-        >>> dataset = "MVTecAD"
-        >>> generate_output_filename(input_path, output_base, dataset, "bottle")
-        PosixPath('/results/test/broken_large/000.png')
+        >>> generate_output_filename(input_path, "./results", "MVTecAD", "bottle")
+        PosixPath('results/test/broken_large/000.png')
 
         Without category preserves more structure:
 
-        >>> generate_output_filename(input_path, output_base, dataset)
-        PosixPath('/results/bottle/test/broken_large/000.png')
+        >>> generate_output_filename(input_path, "./results", "MVTecAD")
+        PosixPath('results/bottle/test/broken_large/000.png')
 
-        Different dataset structure:
+        Works with folder datasets:
 
-        >>> path = "/datasets/MyDataset/train/class_A/image_001.jpg"
-        >>> generate_output_filename(path, "/output", "MyDataset", "class_A")
-        PosixPath('/output/image_001.jpg')
+        >>> path = "/datasets/MyDataset/normal/image001.png"
+        >>> generate_output_filename(path, "./output", "MyDataset")
+        PosixPath('output/normal/image001.png')
 
-        Dataset not found returns the output path:
+        Handles custom structures gracefully:
 
-        >>> generate_output_filename("/wrong/path/image.png", "/out", "Missing")
-        PosixPath('/out/wrong/path/image.png')
+        >>> path = "/custom/path/MyData/category/split/image.png"
+        >>> generate_output_filename(path, "./out", "MyData")
+        PosixPath('out/category/split/image.png')
+
+        Auto-detection when dataset_name not provided:
+
+        >>> path = "/any/folder/structure/normal/image.png"
+        >>> generate_output_filename(path, "./out")
+        PosixPath('out/normal/image.png')
+
+        Case-insensitive matching:
+
+        >>> path = "/data/mvtecad/BOTTLE/test/000.png"
+        >>> generate_output_filename(path, "./results", "MVTecAD", "bottle")
+        PosixPath('results/test/000.png')
+
+        Relative paths:
+
+        >>> path = "data/MVTecAD/bottle/test/000.png"
+        >>> generate_output_filename(path, "./results", "MVTecAD")
+        PosixPath('results/bottle/test/000.png')
 
     Note:
-        - Directory structure after ``dataset_name`` (or ``category`` if provided) is
-          preserved in output path
+        - Uses intelligent path analysis to work with any folder structure
+        - Preserves directory structure after the dataset root
         - If ``mkdir=True``, creates output directory structure if it doesn't exist
-        - Dataset and category name matching is case-insensitive
-        - Original filename is preserved in output path
+        - Original filename is always preserved in output path
     """
     input_path = Path(input_path)
     output_path = Path(output_path)
 
-    # Check if the dataset name is in the input path. If not, just use the output path
-    if dataset_name.lower() not in [x.lower() for x in input_path.parts]:
-        dataset_index = len(input_path.parts)
-    else:
-        # Find the position of the dataset name in the path
-        dataset_index = next(i for i, part in enumerate(input_path.parts) if part.lower() == dataset_name.lower())
+    # Find the base path to exclude
+    exclude_base = None
 
-    # Determine the start index for preserving subdirectories
-    start_index = dataset_index + 1
-    if category:
+    # Try to find dataset_name in path
+    if dataset_name:
+        for i, part in enumerate(input_path.parts):
+            if part.lower() == dataset_name.lower():
+                exclude_base = Path(*input_path.parts[: i + 1])
+                break
+
+    # Try to find category after dataset
+    if exclude_base and category:
         try:
-            category_index = input_path.parts.index(category, dataset_index)
-            start_index = category_index + 1
+            remaining = input_path.relative_to(exclude_base)
+            for j, part in enumerate(remaining.parts):
+                if part.lower() == category.lower():
+                    exclude_base = exclude_base / Path(*remaining.parts[: j + 1])
+                    break
         except ValueError:
-            msg = f"Category '{category}' not found in the input path after the dataset name {dataset_name}."
-            raise ValueError(msg) from None
+            pass  # relative_to failed, keep original exclude_base
 
-    # Preserve all subdirectories after the category (or dataset if no category)
-    subdirs = input_path.parts[start_index:-1]  # Exclude the filename
+    # Use relative_to to get the remaining path structure
+    if exclude_base:
+        try:
+            relative_path = input_path.relative_to(exclude_base)
+            preserved_dirs = relative_path.parts[:-1]  # All dirs except filename
+        except ValueError:
+            # Fallback: keep last directory
+            preserved_dirs = (input_path.parent.name,)
+    else:
+        # No dataset found, keep last directory
+        preserved_dirs = (input_path.parent.name,)
 
-    # Construct the output path
-    output_path = output_path / Path(*subdirs)
+    # Build final path
+    final_output_path = output_path / Path(*preserved_dirs) if preserved_dirs else output_path
 
-    # Create the output directory if it doesn't exist
     if mkdir:
-        output_path.mkdir(parents=True, exist_ok=True)
+        final_output_path.mkdir(parents=True, exist_ok=True)
 
-    # Create and return the output filename
-    return output_path / input_path.name
+    return final_output_path / input_path.name

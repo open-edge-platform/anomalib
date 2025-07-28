@@ -1,5 +1,3 @@
-"""FastFlow Torch Model Implementation."""
-
 # Original Code
 # Copyright (c) 2022 @gathierry
 # https://github.com/gathierry/FastFlow/.
@@ -8,6 +6,8 @@
 # Modified
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""FastFlow Torch Model Implementation."""
 
 from collections.abc import Callable
 
@@ -44,7 +44,8 @@ def subnet_conv_func(kernel_size: int, hidden_ratio: float) -> Callable:
         # NOTE: setting padding="same" in nn.Conv2d breaks the onnx export so manual padding required.
         # TODO(ashwinvaidya17): Use padding="same" in nn.Conv2d once PyTorch v2.1 is released
         # CVS-122671
-        padding = 2 * (kernel_size // 2 - ((1 + kernel_size) % 2), kernel_size // 2)
+        padding_dims = (kernel_size // 2 - ((1 + kernel_size) % 2), kernel_size // 2)
+        padding = (*padding_dims, *padding_dims)
         return nn.Sequential(
             nn.ZeroPad2d(padding),
             nn.Conv2d(in_channels, hidden_channels, kernel_size),

@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Tiler configuration callback.
 
 This module provides the :class:`TilerConfigurationCallback` for configuring image tiling operations
@@ -25,9 +28,6 @@ Note:
     The model must support tiling operations for this callback to work.
     It will raise a :exc:`ValueError` if used with a model that doesn't support tiling.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
 

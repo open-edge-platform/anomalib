@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base runner class for executing pipeline jobs.
 
 This module provides the abstract base class for runners that execute pipeline jobs.
@@ -26,9 +29,6 @@ Runners can implement different execution strategies like:
 - Parallel execution across multiple processes
 - Distributed execution across machines
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC, abstractmethod
 

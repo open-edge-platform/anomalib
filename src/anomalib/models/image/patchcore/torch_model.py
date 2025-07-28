@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch model for the PatchCore model implementation.
 
 This module implements the PatchCore model architecture using PyTorch. PatchCore
@@ -29,9 +32,6 @@ See Also:
     - :class:`anomalib.models.components.KCenterGreedy`:
         Coreset subsampling using k-center-greedy approach
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
@@ -124,7 +124,7 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         self.feature_pooler = torch.nn.AvgPool2d(3, 1, 1)
         self.anomaly_map_generator = AnomalyMapGenerator()
 
-        self.register_buffer("memory_bank", torch.Tensor())
+        self.register_buffer("memory_bank", torch.empty(0))
         self.memory_bank: torch.Tensor
 
     def forward(self, input_tensor: torch.Tensor) -> torch.Tensor | InferenceBatch:

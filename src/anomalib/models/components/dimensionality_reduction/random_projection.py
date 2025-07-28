@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Random Sparse Projector.
 
 This module provides a PyTorch implementation of Sparse Random Projection for
@@ -14,9 +17,6 @@ Example:
     >>> projected_data = projector.fit_transform(data)
     >>> print(projected_data.shape)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
 import torch

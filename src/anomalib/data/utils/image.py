@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Image utilities for reading, writing and processing images.
 
 This module provides various utility functions for handling images in Anomalib:
@@ -20,9 +23,6 @@ Example:
     >>> print(type(image))
     <class 'torch.Tensor'>
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 import math
@@ -231,6 +231,9 @@ def generate_output_image_filename(input_path: str | Path, output_path: str | Pa
 
         >>> generate_output_image_filename("dir/input.jpg", "outdir")
         PosixPath('outdir/dir/input.jpg')
+
+        >>> generate_output_image_filename("/full/path/to/input.jpg", "outdir")
+        PosixPath('outdir/input.jpg')  # Only filename for absolute paths
     """
     input_path = validate_path(input_path)
     output_path = validate_path(output_path, should_exist=False)
@@ -239,15 +242,21 @@ def generate_output_image_filename(input_path: str | Path, output_path: str | Pa
         msg = "input_path is expected to be a file"
         raise ValueError(msg)
 
-    if output_path.is_dir():
-        output_image_filename = output_path / input_path.parent.name / input_path.name
-    elif output_path.is_file() and output_path.exists():
+    if output_path.is_dir() or (not output_path.exists() and not output_path.suffix):
+        # If output_path is a directory or looks like a directory (no extension)
+
+        # For absolute paths, use only the filename to avoid deep directory structures
+        # For relative paths, preserve the directory structure
+        output_image_filename = output_path / input_path.name if input_path.is_absolute() else output_path / input_path
+    elif output_path.exists() and output_path.is_file():
         msg = f"{output_path} already exists. Renaming to avoid overwriting."
         logger.warning(msg)
         output_image_filename = duplicate_filename(output_path)
     else:
+        # output_path is a specific file path
         output_image_filename = output_path
 
+    # Ensure parent directory exists
     output_image_filename.parent.mkdir(parents=True, exist_ok=True)
 
     return output_image_filename
@@ -331,7 +340,7 @@ def read_mask(path: str | Path, as_tensor: bool = False) -> torch.Tensor | np.nd
         <class 'torch.Tensor'>
     """
     image = Image.open(path).convert("L")
-    return Mask(to_image(image).squeeze() / 255, dtype=torch.uint8) if as_tensor else np.array(image)
+    return Mask(to_image(image).squeeze() > 0, dtype=torch.uint8) if as_tensor else np.array(image)
 
 
 def read_depth_image(path: str | Path) -> np.ndarray:
@@ -447,4 +456,4 @@ def figure_to_array(fig: Figure) -> np.ndarray:
     fig.canvas.draw()
     # convert figure to np.ndarray for saving via visualizer
     img = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-    return img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+    return img.reshape((*fig.canvas.get_width_height()[::-1], 3))

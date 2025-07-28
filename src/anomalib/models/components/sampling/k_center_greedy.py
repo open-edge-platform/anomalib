@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """k-Center Greedy Method.
 
 Returns points that minimizes the maximum distance of any point to a center.
@@ -5,9 +8,6 @@ Returns points that minimizes the maximum distance of any point to a center.
 Reference:
     - https://arxiv.org/abs/1708.00489
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch.nn import functional as F  # noqa: N812

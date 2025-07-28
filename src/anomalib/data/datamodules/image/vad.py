@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """VAD Data Module.
 
 This module provides a PyTorch Lightning DataModule for the VAD dataset. If
@@ -33,9 +36,6 @@ Reference:
     The IEEE/CVF Conference on Computer Vision and Pattern Recognition, 2024,
     pp. 17754-17762, DOI: 10.1109/CVPR52733.2024.01681.
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from pathlib import Path

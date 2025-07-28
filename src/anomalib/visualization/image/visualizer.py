@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Image visualization module for anomaly detection.
 
 This module provides the ``ImageVisualizer`` class for visualizing images and their
@@ -25,9 +28,6 @@ Note:
     All visualization functions preserve the input image format and dimensions
     unless explicitly specified in the configuration.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
 from typing import TYPE_CHECKING, Any

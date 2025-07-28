@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomalib Datasets.
 
 This module provides datasets and data modules for anomaly detection tasks.
@@ -16,9 +19,6 @@ Example:
     ...     image_size=(256, 256)
     ... )
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import importlib
 import logging
@@ -50,6 +50,7 @@ from .dataclasses import (
 from .datamodules.base import AnomalibDataModule
 from .datamodules.depth import DepthDataFormat, Folder3D, MVTec3D
 from .datamodules.image import (
+    MPDD,
     VAD,
     BTech,
     Datumaro,
@@ -74,6 +75,7 @@ from .datasets.image import (
     DatumaroDataset,
     FolderDataset,
     KolektorDataset,
+    MPDDDataset,
     MVTecADDataset,
     MVTecLOCODataset,
     TabularDataset,
@@ -126,11 +128,11 @@ def get_datamodule(config: DictConfig | ListConfig | dict) -> AnomalibDataModule
     # Getting the datamodule class from the config.
     if isinstance(config, dict):
         config = DictConfig(config)
-    _config = config.data if "data" in config else config
+    config_ = config.data if "data" in config else config
 
     # All the sub data modules are imported to anomalib.data. So need to import the module dynamically using paths.
     module = importlib.import_module("anomalib.data")
-    data_class_name = _config.class_path.split(".")[-1]
+    data_class_name = config_.class_path.split(".")[-1]
     # check if the data_class exists in the module
     if not hasattr(module, data_class_name):
         logger.error(
@@ -141,7 +143,7 @@ def get_datamodule(config: DictConfig | ListConfig | dict) -> AnomalibDataModule
         raise UnknownDatamoduleError(error_str)
     dataclass = getattr(module, data_class_name)
 
-    init_args = {**_config.get("init_args", {})}  # get dict
+    init_args = {**config_.get("init_args", {})}  # get dict
     if "image_size" in init_args:
         init_args["image_size"] = to_tuple(init_args["image_size"])
     return dataclass(**init_args)
@@ -178,6 +180,7 @@ __all__ = [
     "Datumaro",
     "Folder",
     "Kolektor",
+    "MPDD",
     "MVTec",  # Include MVTec for backward compatibility
     "MVTecAD",
     "MVTecAD2",
@@ -197,6 +200,7 @@ __all__ = [
     "DatumaroDataset",
     "FolderDataset",
     "KolektorDataset",
+    "MPDDDataset",
     "MVTecADDataset",
     "MVTecLOCODataset",
     "TabularDataset",

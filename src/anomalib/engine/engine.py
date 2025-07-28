@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Implements custom trainer for Anomalib.
 
 This module provides the core training engine for Anomalib models. The Engine class
@@ -24,9 +27,6 @@ Example:
     >>> config = Config(path="config.yaml")
     >>> engine = Engine(config=config)  # doctest: +SKIP
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from collections.abc import Iterable
@@ -312,12 +312,12 @@ class Engine:
 
     def _setup_anomalib_callbacks(self) -> None:
         """Set up callbacks for the trainer."""
-        _callbacks: list[Callback] = []
+        callbacks: list[Callback] = []
 
         # Add ModelCheckpoint if it is not in the callbacks list.
         has_checkpoint_callback = any(isinstance(c, ModelCheckpoint) for c in self._cache.args["callbacks"])
         if has_checkpoint_callback is False:
-            _callbacks.append(
+            callbacks.append(
                 ModelCheckpoint(
                     dirpath=self._cache.args["default_root_dir"] / "weights" / "lightning",
                     filename="model",
@@ -325,10 +325,10 @@ class Engine:
                 ),
             )
 
-        _callbacks.append(TimerCallback())
+        callbacks.append(TimerCallback())
 
         # Combine the callbacks, and update the trainer callbacks.
-        self._cache.args["callbacks"] = _callbacks + self._cache.args["callbacks"]
+        self._cache.args["callbacks"] = callbacks + self._cache.args["callbacks"]
 
     @staticmethod
     def _should_run_validation(
@@ -648,10 +648,10 @@ class Engine:
             msg = f"Unknown type for dataloaders {type(dataloaders)}"
             raise TypeError(msg)
         if dataset is not None:
-            dataloaders.append(DataLoader(dataset, collate_fn=dataset.collate_fn))
+            dataloaders.append(DataLoader(dataset, collate_fn=dataset.collate_fn, pin_memory=True))
         if data_path is not None:
             dataset = PredictDataset(data_path)
-            dataloaders.append(DataLoader(dataset, collate_fn=dataset.collate_fn))
+            dataloaders.append(DataLoader(dataset, collate_fn=dataset.collate_fn, pin_memory=True))
         dataloaders = dataloaders or None
 
         if self._should_run_validation(model or self.model, ckpt_path):
@@ -733,7 +733,9 @@ class Engine:
         compression_type: CompressionType | None = None,
         datamodule: AnomalibDataModule | None = None,
         metric: Metric | str | None = None,
-        ov_args: dict[str, Any] | None = None,
+        ov_args: dict[str, Any] | None = None,  # deprecated
+        ov_kwargs: dict[str, Any] | None = None,
+        onnx_kwargs: dict[str, Any] | None = None,
         ckpt_path: str | Path | None = None,
     ) -> Path | None:
         r"""Export the model in PyTorch, ONNX or OpenVINO format.
@@ -746,7 +748,8 @@ class Engine:
             model_file_name (str = "model"): Name of the exported model file. If it is not set, the model is
                 is called "model". Defaults to "model".
             input_size (tuple[int, int] | None, optional): A statis input shape for the model, which is exported to ONNX
-                and OpenVINO format. Defaults to None.
+                and OpenVINO format.
+                Defaults to ``None.
             compression_type (CompressionType | None, optional): Compression type for OpenVINO exporting only.
                 Defaults to ``None``.
             datamodule (AnomalibDataModule | None, optional): Lightning datamodule.
@@ -757,8 +760,15 @@ class Engine:
                 Must be provided if ``CompressionType.INT8_ACQ`` is selected and must return higher value for better
                 performance of the model (OpenVINO export only).
                 Defaults to ``None``.
-            ov_args (dict[str, Any] | None, optional): This is optional and used only for OpenVINO's model optimizer.
+            ov_args (dict[str, Any] | None, optional): Deprecated. Use ov_kwargs instead.
+                This is optional and used only for OpenVINO's model optimizer.
                 Defaults to None.
+            ov_kwargs (dict[str, Any] | None, optional): This is optional and used only for OpenVINO's model optimizer.
+                Defaults to None.
+            onnx_kwargs (dict[str, Any] | None, optional): This is optional and used only for ONNX export options.
+                Passed to model.to_onnx or model.to_openvino.
+                See https://pytorch.org/docs/stable/onnx.html#torch.onnx.export for details.
+                Defaults to ``None``.
             ckpt_path (str | Path | None): Checkpoint path. If provided, the model will be loaded from this path.
 
         Returns:
@@ -788,6 +798,24 @@ class Engine:
                 --input_size "[256,256]" --compression_type INT8_PTQ --data MVTec
                 ```
         """
+        import warnings
+
+        if ov_args is not None:
+            warnings.warn(
+                "The 'ov_args' parameter is deprecated and will be removed in a future version. "
+                "Please use 'ov_kwargs' instead.",
+                FutureWarning,
+                stacklevel=2,
+            )
+            if ov_kwargs is not None:
+                warnings.warn(
+                    "Both 'ov_args' and 'ov_kwargs' were provided. 'ov_kwargs' will be used.",
+                    UserWarning,
+                    stacklevel=2,
+                )
+            else:
+                ov_kwargs = ov_args
+
         export_type = ExportType(export_type)
         self._setup_trainer(model)
         if ckpt_path:
@@ -808,6 +836,7 @@ class Engine:
                 export_root=export_root,
                 model_file_name=model_file_name,
                 input_size=input_size,
+                **(onnx_kwargs or {}),
             )
         elif export_type == ExportType.OPENVINO:
             exported_model_path = model.to_openvino(
@@ -817,7 +846,8 @@ class Engine:
                 compression_type=compression_type,
                 datamodule=datamodule,
                 metric=metric,
-                ov_args=ov_args,
+                ov_kwargs=ov_kwargs,
+                onnx_kwargs=onnx_kwargs,
             )
         else:
             logging.error(f"Export type {export_type} is not supported yet.")

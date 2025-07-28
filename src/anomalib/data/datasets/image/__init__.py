@@ -1,3 +1,6 @@
+# Copyright (C) 2024-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch Dataset implementations for anomaly detection in images.
 
 This module provides dataset implementations for various image anomaly detection
@@ -22,13 +25,11 @@ Example:
     ... )
 """
 
-# Copyright (C) 2024-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 from .btech import BTechDataset
 from .datumaro import DatumaroDataset
 from .folder import FolderDataset
 from .kolektor import KolektorDataset
+from .mpdd import MPDDDataset
 from .mvtec_loco import MVTecLOCODataset
 from .mvtecad import MVTecADDataset, MVTecDataset
 from .mvtecad2 import MVTecAD2Dataset
@@ -42,6 +43,7 @@ __all__ = [
     "DatumaroDataset",
     "FolderDataset",
     "KolektorDataset",
+    "MPDDDataset",
     "MVTecDataset",
     "MVTecADDataset",
     "MVTecAD2Dataset",

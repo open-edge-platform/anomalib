@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Loss function for the CFA (Coupled-hypersphere-based Feature Adaptation) model.
 
 This module implements the loss function used to train the CFA model for anomaly
@@ -18,9 +21,6 @@ Example:
     >>> distance = torch.randn(2, 1024, 1)  # batch x pixels x 1
     >>> loss = loss_fn(distance)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch import nn
@@ -76,7 +76,7 @@ class CfaLoss(nn.Module):
                 components.
         """
         num_neighbors = self.num_nearest_neighbors + self.num_hard_negative_features
-        distance = distance.topk(num_neighbors, largest=False).values  # noqa: PD011
+        distance = distance.topk(num_neighbors, largest=False).values
 
         score = distance[:, :, : self.num_nearest_neighbors] - (self.radius**2).to(distance.device)
         l_att = torch.mean(torch.max(torch.zeros_like(score), score))

@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """PyTorch Dataset implementations for anomaly detection.
 
 This module provides dataset implementations for various anomaly detection tasks:
@@ -16,6 +19,7 @@ Image Datasets:
     - ``DatumaroDataset``: Dataset in Datumaro format (Intel Geti™ export)
     - ``FolderDataset``: Custom dataset from folder structure
     - ``KolektorDataset``: Kolektor surface defect dataset
+    - ``MPDDDataset``: Metal Parts Defect Detection dataset
     - ``MVTecADDataset``: MVTec AD dataset with industrial objects
     - ``TabularDataset``: Custom tabular dataset with image paths and labels
     - ``VAD``: Valeo Anomaly Detection Dataset
@@ -35,9 +39,6 @@ Example:
     ... )
 """
 
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 from .base import AnomalibDataset, AnomalibDepthDataset, AnomalibVideoDataset
 from .depth import Folder3DDataset, MVTec3DDataset
 from .image import (
@@ -45,6 +46,7 @@ from .image import (
     DatumaroDataset,
     FolderDataset,
     KolektorDataset,
+    MPDDDataset,
     MVTecADDataset,
     TabularDataset,
     VADDataset,
@@ -65,6 +67,7 @@ __all__ = [
     "DatumaroDataset",
     "FolderDataset",
     "KolektorDataset",
+    "MPDDDataset",
     "MVTecADDataset",
     "TabularDataset",
     "VADDataset",

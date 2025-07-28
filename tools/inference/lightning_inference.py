@@ -1,7 +1,7 @@
-"""Inference Entrypoint script."""
-
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Inference Entrypoint script."""
 
 from jsonargparse import ActionConfigFile, Namespace
 from lightning.pytorch.callbacks import Callback
@@ -53,7 +53,7 @@ def infer(args: Namespace) -> None:
 
     # create the dataset
     dataset = PredictDataset(**args.data)
-    dataloader = DataLoader(dataset, collate_fn=dataset.collate_fn)
+    dataloader = DataLoader(dataset, collate_fn=dataset.collate_fn, pin_memory=True)
 
     engine.predict(model=model, dataloaders=[dataloader], ckpt_path=args.ckpt_path)
 

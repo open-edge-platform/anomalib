@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base classes for thresholding metrics.
 
 This module provides base classes for implementing threshold-based metrics for
@@ -24,13 +27,10 @@ Example:
     tensor(0.5)
 """
 
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
-import warnings
-
 import torch
 from torchmetrics import Metric
+
+from anomalib.utils import deprecate
 
 
 class Threshold(Metric):
@@ -65,7 +65,7 @@ class Threshold(Metric):
         """
         super().__init__(**kwargs)
 
-    def compute(self) -> torch.Tensor:  # noqa: PLR6301
+    def compute(self) -> torch.Tensor:
         """Compute the threshold value.
 
         Returns:
@@ -77,7 +77,7 @@ class Threshold(Metric):
         msg = "Subclass of Threshold must implement the compute method"
         raise NotImplementedError(msg)
 
-    def update(self, *args, **kwargs) -> None:  # noqa: ARG002, PLR6301
+    def update(self, *args, **kwargs) -> None:
         """Update the metric state with new data.
 
         Args:
@@ -91,6 +91,7 @@ class Threshold(Metric):
         raise NotImplementedError(msg)
 
 
+@deprecate(since="0.4.0", remove="2.3.0", use="Threshold")
 class BaseThreshold(Threshold):
     """Deprecated alias for ``Threshold`` class.
 
@@ -104,9 +105,4 @@ class BaseThreshold(Threshold):
         Args:
             **kwargs: Keyword arguments passed to parent ``Threshold`` class.
         """
-        warnings.warn(
-            "BaseThreshold is deprecated and will be removed in a future version. Use Threshold instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
         super().__init__(**kwargs)

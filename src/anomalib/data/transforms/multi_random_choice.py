@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Multi random choice transform.
 
 This transform randomly applies multiple transforms from a list of transforms.
@@ -19,9 +22,6 @@ Example:
     ...     fixed_num_transforms=True
     ... )
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable, Sequence
 

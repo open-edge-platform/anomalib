@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Loss function for the FastFlow Model Implementation.
 
 This module implements the loss function used to train the FastFlow model. The loss is
@@ -17,9 +20,6 @@ See Also:
     :class:`anomalib.models.image.fastflow.torch_model.FastflowModel`:
         PyTorch implementation of the FastFlow model architecture.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch import nn

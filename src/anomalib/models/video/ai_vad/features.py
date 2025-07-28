@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Feature extraction module for AI-VAD model implementation.
 
 This module implements the feature extraction stage of the AI-VAD model. It extracts
@@ -20,9 +23,6 @@ The module provides the following components:
     - :class:`FeatureType`: Enum of available feature types
     - :class:`VideoRegionFeatureExtractor`: Main class that handles feature extraction
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
 
@@ -153,7 +153,7 @@ class VideoRegionFeatureExtractor(nn.Module):
         boxes_list = [batch_item["boxes"] for batch_item in regions]
         indices = torch.repeat_interleave(
             torch.arange(len(regions)),
-            torch.Tensor([boxes.shape[0] for boxes in boxes_list]).int(),
+            torch.tensor([boxes.shape[0] for boxes in boxes_list]).int(),
         )
         boxes = torch.cat([indices.unsqueeze(1).to(rgb_batch.device), torch.cat(boxes_list)], dim=1)
 
@@ -221,7 +221,7 @@ class DeepExtractor(nn.Module):
         batched_regions = [batch for batch in batched_regions if batch.numel() != 0]
         with torch.no_grad():
             features = [self.encoder.encode_image(self.transform(batch)) for batch in batched_regions]
-            return torch.vstack(features).float() if len(features) else torch.empty(0, self.output_dim).to(batch.device)
+            return torch.vstack(features).float() if features else torch.empty(0, self.output_dim).to(batch.device)
 
 
 class VelocityExtractor(nn.Module):
@@ -380,7 +380,7 @@ class PoseExtractor(nn.Module):
 
         image_sizes = [b.shape[-2:] for b in batch]
         scales = [
-            torch.Tensor(new) / torch.Tensor([orig[0], orig[1]])
+            torch.tensor(new) / torch.tensor([orig[0], orig[1]])
             for orig, new in zip(image_sizes, images.image_sizes, strict=True)
         ]
 

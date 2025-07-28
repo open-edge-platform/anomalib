@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Helper functions for downloading datasets with progress bars and hash verification.
 
 This module provides utilities for:
@@ -5,9 +8,6 @@ This module provides utilities for:
 - Verifying file hashes
 - Safely extracting compressed files
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import hashlib
 import io
@@ -309,6 +309,7 @@ def download_and_extract(root: Path, info: DownloadInfo) -> None:
         # audit url. allowing only http:// or https://
         if info.url.startswith("http://") or info.url.startswith("https://"):
             with DownloadProgressBar(unit="B", unit_scale=True, miniters=1, desc=info.name) as progress_bar:
+                # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected # noqa: ERA001, E501
                 urlretrieve(  # noqa: S310  # nosec B310
                     url=f"{info.url}",
                     filename=downloaded_file_path,

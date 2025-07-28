@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """CUHK Avenue Dataset.
 
 This module provides PyTorch Dataset implementation for the CUHK Avenue dataset
@@ -37,9 +40,6 @@ Reference:
     in Matlab." In Proceedings of the IEEE International Conference on Computer
     Vision, 2013.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -148,7 +148,7 @@ def make_avenue_dataset(
     """
     root = validate_path(root)
 
-    samples_list = [(str(root),) + filename.parts[-2:] for filename in root.glob("**/*.avi")]
+    samples_list = [(str(root), *filename.parts[-2:]) for filename in root.glob("**/*.avi")]
     samples = DataFrame(samples_list, columns=["root", "folder", "image_path"])
 
     samples.loc[samples.folder == "testing_videos", "mask_path"] = (

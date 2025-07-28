@@ -1,11 +1,11 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomalib installation utilities.
 
 This module provides utilities for managing Anomalib package installation,
 including dependency resolution and hardware-specific package selection.
 """
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
 
@@ -65,12 +65,12 @@ def get_requirements(module: str = "anomalib") -> dict[str, list[Requirement]]:
         requirement_extra: list[str] = requirement.replace(" ", "").split(";")
         if isinstance(requirement_extra, list) and len(requirement_extra) > 1:
             extra = requirement_extra[-1].split("==")[-1].strip("'\"")
-        _requirement_name = requirement_extra[0]
-        _requirement = Requirement.parse(_requirement_name)
+        requirement_name_ = requirement_extra[0]
+        requirement_ = Requirement.parse(requirement_name_)
         if extra in extra_requirement:
-            extra_requirement[extra].append(_requirement)
+            extra_requirement[extra].append(requirement_)
         else:
-            extra_requirement[extra] = [_requirement]
+            extra_requirement[extra] = [requirement_]
     return extra_requirement
 
 

@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Explanation visualization generator for model interpretability.
 
 This module provides utilities for visualizing model explanations and
@@ -28,9 +31,6 @@ The module ensures consistent visualization of model explanations across
 different interpretability approaches.
 """
 
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -50,7 +50,7 @@ class ExplanationVisualizer(BaseVisualizer):
 
     def generate(self, **kwargs) -> Iterator[GeneratorResult]:
         """Generate images and return them as an iterator."""
-        outputs = kwargs.get("outputs", None)
+        outputs = kwargs.get("outputs")
         if outputs is None:
             msg = "Outputs must be provided to generate images."
             raise ValueError(msg)

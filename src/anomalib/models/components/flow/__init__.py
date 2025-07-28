@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Flow components used in anomaly detection models.
 
 This module provides flow-based components that can be used in anomaly detection
@@ -16,9 +19,6 @@ Example:
     >>> x = torch.randn(1, 64, 32, 32)
     >>> y, logdet = flow(x)
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .all_in_one_block import AllInOneBlock
 

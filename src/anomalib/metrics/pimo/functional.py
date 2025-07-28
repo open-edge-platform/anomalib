@@ -1,3 +1,10 @@
+# Original Code
+# https://github.com/jpcbertoldo/aupimo
+#
+# Modified
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Per-Image Overlap curve (PIMO, pronounced pee-mo) and its area under the curve (AUPIMO).
 
 This module provides functions for computing PIMO curves and AUPIMO scores for
@@ -29,13 +36,6 @@ Example:
     ...     fpr_bounds=(1e-5, 1e-4)
     ... )
 """
-
-# Original Code
-# https://github.com/jpcbertoldo/aupimo
-#
-# Modified
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 

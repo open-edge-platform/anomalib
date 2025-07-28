@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Mixin for exporting anomaly detection models to disk.
 
 This mixin provides functionality to export models to various formats:
@@ -34,9 +37,6 @@ Example:
     ... )
 """
 
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 import logging
 from collections.abc import Iterable
 from pathlib import Path
@@ -54,9 +54,7 @@ from anomalib.data import AnomalibDataModule
 from anomalib.deploy.export import CompressionType, ExportType
 
 if TYPE_CHECKING:
-    from importlib.util import find_spec
-
-    if find_spec("openvino") is not None:
+    if module_available("openvino"):
         from openvino import CompiledModel
 
 logger = logging.getLogger(__name__)
@@ -115,6 +113,7 @@ class ExportMixin:
         export_root: Path | str,
         model_file_name: str = "model",
         input_size: tuple[int, int] | None = None,
+        **kwargs,
     ) -> Path:
         """Export model to ONNX format.
 
@@ -123,6 +122,18 @@ class ExportMixin:
             model_file_name (str): Name of the exported model.
             input_size (tuple[int, int] | None): Input image dimensions (height, width).
                 If ``None``, uses dynamic input shape. Defaults to ``None``
+            **kwargs: Additional arguments to pass to torch.onnx.export.
+                See https://pytorch.org/docs/stable/onnx.html#torch.onnx.export for details.
+                Common options include:
+                - opset_version (int): ONNX opset version to use
+                - do_constant_folding (bool): Whether to optimize constant folding
+                - input_names (list[str]): Names of input tensors
+                - output_names (list[str]): Names of output tensors
+                - dynamic_axes (dict): Dynamic axes configuration
+                - custom_opsets (dict): Custom opset versions
+                - export_modules_as_functions (bool): Export modules as functions
+                - verify (bool): Verify the exported model
+                - optimize (bool): Optimize the exported model
 
         Returns:
             Path: Path to the exported ONNX model (.onnx file)
@@ -136,9 +147,15 @@ class ExportMixin:
             >>> model.to_onnx("./exports", input_size=(224, 224))
             PosixPath('./exports/weights/onnx/model.onnx')
 
-            Export model with dynamic input size:
+            Export model with custom options:
 
-            >>> model.to_onnx("./exports")
+            >>> model.to_onnx(
+            ...     "./exports",
+            ...     opset_version=12,
+            ...     do_constant_folding=True,
+            ...     verify=True,
+            ...     optimize=True
+            ... )
             PosixPath('./exports/weights/onnx/model.onnx')
         """
         export_root = _create_export_root(export_root, ExportType.ONNX)
@@ -153,14 +170,16 @@ class ExportMixin:
         # apply pass through the model to get the output names
         assert isinstance(self, LightningModule)  # mypy
         output_names = [name for name, value in self.eval()(input_shape)._asdict().items() if value is not None]
+
         torch.onnx.export(
-            self,
-            (input_shape.to(self.device),),
-            str(onnx_path),
-            opset_version=14,
-            dynamic_axes=dynamic_axes,
-            input_names=["input"],
-            output_names=output_names,
+            model=self,
+            args=(input_shape.to(self.device),),
+            f=str(onnx_path),
+            opset_version=kwargs.pop("opset_version", 14),
+            dynamic_axes=kwargs.pop("dynamic_axes", dynamic_axes),
+            input_names=kwargs.pop("input_names", ["input"]),
+            output_names=kwargs.pop("output_names", output_names),
+            **kwargs,
         )
 
         return onnx_path
@@ -173,8 +192,9 @@ class ExportMixin:
         compression_type: CompressionType | None = None,
         datamodule: AnomalibDataModule | None = None,
         metric: Metric | None = None,
-        ov_args: dict[str, Any] | None = None,
         task: TaskType | None = None,
+        ov_kwargs: dict[str, Any] | None = None,
+        onnx_kwargs: dict[str, Any] | None = None,
     ) -> Path:
         """Export model to OpenVINO IR format.
 
@@ -190,10 +210,13 @@ class ExportMixin:
                 Required for ``INT8_PTQ`` and ``INT8_ACQ``. Defaults to ``None``
             metric (Metric | None): Metric for accuracy-aware quantization.
                 Required for ``INT8_ACQ``. Defaults to ``None``
-            ov_args (dict[str, Any] | None): OpenVINO model optimizer arguments.
-                Defaults to ``None``
             task (TaskType | None): Task type (classification/segmentation).
                 Defaults to ``None``
+            ov_kwargs (dict[str, Any] | None): OpenVINO model optimizer arguments.
+                Defaults to ``None``
+            onnx_kwargs (dict[str, Any] | None): Additional arguments to pass to torch.onnx.export
+                during the initial ONNX conversion. See https://pytorch.org/docs/stable/onnx.html#torch.onnx.export
+                for details. Defaults to ``None``
 
         Returns:
             Path: Path to the exported OpenVINO model (.xml file)
@@ -211,12 +234,14 @@ class ExportMixin:
             ...     compression_type=CompressionType.FP16
             ... )
 
-            Export with INT8 post-training quantization:
+            Export with INT8 post-training quantization and custom options:
 
             >>> model.to_openvino(
             ...     "./exports",
             ...     compression_type=CompressionType.INT8_PTQ,
-            ...     datamodule=datamodule
+            ...     datamodule=datamodule,
+            ...     ov_kwargs={"input_shape": [1, 3, 224, 224]},
+            ...     onnx_kwargs={"opset_version": 12, "do_constant_folding": True}
             ... )
         """
         if not module_available("openvino"):
@@ -226,12 +251,11 @@ class ExportMixin:
         import openvino as ov
 
         with TemporaryDirectory() as onnx_directory:
-            model_path = self.to_onnx(onnx_directory, model_file_name, input_size)
+            model_path = self.to_onnx(onnx_directory, model_file_name, input_size, **(onnx_kwargs or {}))
             export_root = _create_export_root(export_root, ExportType.OPENVINO)
             ov_model_path = export_root / (model_file_name + ".xml")
-            ov_args = {} if ov_args is None else ov_args
 
-            model = ov.convert_model(model_path, **ov_args)
+            model = ov.convert_model(model_path, **(ov_kwargs or {}))
             if compression_type and compression_type != CompressionType.FP16:
                 model = self._compress_ov_model(model, compression_type, datamodule, metric, task)
 

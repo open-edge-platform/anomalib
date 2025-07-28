@@ -1,3 +1,6 @@
+# Copyright (C) 2023-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Binning functions for metrics.
 
 This module provides utility functions for generating threshold values used in
@@ -17,9 +20,6 @@ Example:
     >>> thresholds
     tensor([0.0000, 0.5000, 1.0000])
 """
-
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torch import linspace

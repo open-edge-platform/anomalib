@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Post-processing utilities for anomaly detection predictions.
 
 This module provides utilities for post-processing anomaly detection predictions.
@@ -29,9 +32,6 @@ Note:
     All functions preserve the input data types and handle proper normalization
     of values where needed.
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import math
 

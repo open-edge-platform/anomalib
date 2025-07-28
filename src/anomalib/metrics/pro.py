@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Implementation of PRO metric based on TorchMetrics.
 
 This module provides the Per-Region Overlap (PRO) metric for evaluating anomaly
@@ -18,9 +21,6 @@ Example:
     >>> # Compute PRO score
     >>> score = pro.compute()
 """
-
-# Copyright (C) 2022-2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import torch
 from torchmetrics import Metric
@@ -145,7 +145,7 @@ def pro_score(
     preds = preds.reshape(predictions.shape)
     preds[~predictions] = 0
     if n_comps == 1:  # only background
-        return torch.Tensor([1.0])
+        return torch.tensor([1.0])
 
     # Even though ignore_index is set to 0, the final average computed with
     # "macro" takes the entire length of the tensor into account. That's why we
