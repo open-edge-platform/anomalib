@@ -1,0 +1,61 @@
+# OpenSSF Scorecard Checks Workflow
+#
+# This workflow uses ossf/scorecard-action action to check repo based on
+# OpenSSF Scorecard requirements / best practices
+#
+# Key Features:
+# - Check the repo based on OpenSSF Scorecard requirements
+# - Upload results into Security tab and OpenSSF
+# - Scheduled daily scans
+#
+# Process Stages:
+# 1. Scheduled Execution (Daily at 2 AM UTC)
+# 2. Manual Execution
+#
+# Required Permissions:
+# - id-token: write
+# - security-events: write
+#
+# Note: Results are available in the Security tab and
+# https://scorecard.dev/viewer/?uri=github.com/open-edge-platform/anomalib
+
+name: Scorecards supply-chain security
+on:
+  # For Branch-Protection check. Only the default branch is supported. See
+  # https://github.com/ossf/scorecard/blob/main/docs/checks.md#branch-protection
+  branch_protection_rule:
+  schedule:
+    # Run security checks every day at 2 AM UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  analysis:
+    name: Scorecards analysis
+    runs-on: ubuntu-latest
+    permissions:
+      # Needed to upload the results to code-scanning dashboard
+      security-events: write
+      # Needed to publish results and get a badge
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Run analysis
+        uses: ossf/scorecard-action@05b42c624433fc40578a4040d5cf5e36ddca8cde # v2.4.2
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+
+      # Upload the results to GitHub's code scanning dashboard
+      - name: Upload to code-scanning
+        uses: github/codeql-action/upload-sarif@181d5eefc20863364f96762470ba6f862bdef56b # v3.29.2
+        with:
+          sarif_file: results.sarif
