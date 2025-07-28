@@ -33,7 +33,6 @@ from torch.nn import functional as F  # noqa: N812
 
 from anomalib.data import InferenceBatch
 from anomalib.models.components import PCA, DynamicBufferMixin, TimmFeatureExtractor
-from anomalib.utils.deprecation import deprecate
 
 
 class SingleClassGaussian(DynamicBufferMixin):
