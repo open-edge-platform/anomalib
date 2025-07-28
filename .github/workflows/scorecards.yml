@@ -1,3 +1,24 @@
+# OpenSSF Scorecard Checks Workflow
+#
+# This workflow uses ossf/scorecard-action action to check repo based on
+# OpenSSF Scorecard requirements / best practices
+#
+# Key Features:
+# - Check the repo based on OpenSSF Scorecard requirements
+# - Upload results into Security tab and OpenSSF
+# - Scheduled daily scans
+#
+# Process Stages:
+# 1. Scheduled Execution (Daily at 2 AM UTC)
+# 2. Manual Execution
+#
+# Required Permissions:
+# - id-token: write
+# - security-events: write
+#
+# Note: Results are available in the Security tab and
+# https://scorecard.dev/viewer/?uri=github.com/open-edge-platform/anomalib
+
 name: Scorecards supply-chain security
 on:
   # For Branch-Protection check. Only the default branch is supported. See

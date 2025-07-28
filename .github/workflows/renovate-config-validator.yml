@@ -1,3 +1,24 @@
+# Renovate configuration validator
+#
+# This workflow validates changes proposed into Renovate configuration file,
+# located .github/renovate.json5.
+#
+# Key Features:
+# - Validate changes and prevent non-valid configuration to be used by Renovate.
+#
+# Process Stages:
+# Configuration validation:
+#    - Runs on PR into .github/renovate.json5 and validate changes.
+#
+# Required Secrets:
+# - None
+#
+# Example Usage:
+# Automatically triggered on:
+# - Pull requests to .github/renovate.json5.
+#
+# Note: None.
+
 name: Validate Renovate configuration
 
 on:
