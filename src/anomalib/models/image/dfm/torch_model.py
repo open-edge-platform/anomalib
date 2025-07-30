@@ -153,17 +153,17 @@ class DFMModel(nn.Module):
             layers=[layer],
         ).eval()
 
-    def fit(self, dataset: torch.Tensor) -> None:
-        """Fit PCA and Gaussian model to dataset.
+        self.memory_bank = torch.empty(0)
 
-        Args:
-            dataset (torch.Tensor): Input dataset with shape
-                ``(n_samples, n_features)``.
-        """
-        self.pca_model.fit(dataset)
+    def fit(self) -> None:
+        """Fit PCA and Gaussian model to dataset."""
+        self.pca_model.fit(self.memory_bank)
         if self.score_type == "nll":
-            features_reduced = self.pca_model.transform(dataset)
+            features_reduced = self.pca_model.transform(self.memory_bank)
             self.gaussian_model.fit(features_reduced.T)
+
+        # clear memory bank, reduces GPU size
+        self.memory_bank = torch.empty(0).to(self.memory_bank)
 
     def score(self, features: torch.Tensor, feature_shapes: tuple) -> torch.Tensor:
         """Compute anomaly scores.
@@ -194,7 +194,7 @@ class DFMModel(nn.Module):
 
         return (score, None) if self.score_type == "nll" else (score, score_map)
 
-    def get_features(self, batch: torch.Tensor) -> torch.Tensor:
+    def get_features(self, batch: torch.Tensor) -> tuple[torch.Tensor, torch.Size]:
         """Extract features from the pretrained network.
 
         Args:
@@ -202,17 +202,16 @@ class DFMModel(nn.Module):
                 ``(batch_size, channels, height, width)``.
 
         Returns:
-            Union[torch.Tensor, Tuple[torch.Tensor, torch.Size]]: Features during
-                training, or tuple of (features, feature_shapes) during inference.
+            tuple of (features, feature_shapes).
         """
-        self.feature_extractor.eval()
-        features = self.feature_extractor(batch)[self.layer]
-        batch_size = len(features)
-        if self.pooling_kernel_size > 1:
-            features = F.avg_pool2d(input=features, kernel_size=self.pooling_kernel_size)
-        feature_shapes = features.shape
-        features = features.view(batch_size, -1).detach()
-        return features if self.training else (features, feature_shapes)
+        with torch.no_grad():
+            features = self.feature_extractor(batch)[self.layer]
+            batch_size = len(features)
+            if self.pooling_kernel_size > 1:
+                features = F.avg_pool2d(input=features, kernel_size=self.pooling_kernel_size)
+            feature_shapes = features.shape
+            features = features.view(batch_size, -1)
+        return features, feature_shapes
 
     def forward(self, batch: torch.Tensor) -> torch.Tensor | InferenceBatch:
         """Compute anomaly predictions from input images.
@@ -227,6 +226,15 @@ class DFMModel(nn.Module):
                 ``InferenceBatch`` with prediction scores and anomaly maps.
         """
         feature_vector, feature_shapes = self.get_features(batch)
+
+        if self.training:
+            if self.memory_bank.size(0) == 0:
+                self.memory_bank = feature_vector
+            else:
+                new_bank = torch.cat((self.memory_bank, feature_vector), dim=0).to(self.memory_bank)
+                self.memory_bank = new_bank
+            return feature_vector
+
         pred_score, anomaly_map = self.score(feature_vector.view(feature_vector.shape[:2]), feature_shapes)
         if anomaly_map is not None:
             anomaly_map = F.interpolate(anomaly_map, size=batch.shape[-2:], mode="bilinear", align_corners=False)
