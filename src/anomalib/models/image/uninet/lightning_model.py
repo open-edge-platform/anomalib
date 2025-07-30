@@ -13,16 +13,11 @@ from anomalib import LearningType
 from anomalib.data import Batch
 from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule
-from anomalib.models.components.backbone import get_decoder
 from anomalib.post_processing import PostProcessor
 from anomalib.pre_processing import PreProcessor
 from anomalib.visualization import Visualizer
 
-from .components import (
-    AttentionBottleneck,
-    BottleneckLayer,
-    UniNetLoss,
-)
+from .components import UniNetLoss
 from .torch_model import UniNetModel
 
 
@@ -57,12 +52,7 @@ class UniNet(AnomalibModule):
             visualizer=visualizer,
         )
         self.loss = UniNetLoss(temperature=temperature)  # base class expects self.loss in lightning module
-        self.model = UniNetModel(
-            student=get_decoder(student_backbone),
-            bottleneck=BottleneckLayer(block=AttentionBottleneck, layers=3),
-            teacher_backbone=teacher_backbone,
-            loss=self.loss,
-        )
+        self.model = UniNetModel(student_backbone=student_backbone, teacher_backbone=teacher_backbone, loss=self.loss)
 
     def training_step(self, batch: Batch, *args, **kwargs) -> STEP_OUTPUT:
         """Perform a training step of UniNet."""

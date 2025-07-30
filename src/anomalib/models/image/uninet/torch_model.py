@@ -22,8 +22,9 @@ from torch.nn import functional as F  # noqa: N812
 from torchvision.models.feature_extraction import create_feature_extractor
 
 from anomalib.data import InferenceBatch
+from anomalib.models.components.backbone import get_decoder
 
-from .components import DomainRelatedFeatureSelection, weighted_decision_mechanism
+from .components import AttentionBottleneck, BottleneckLayer, DomainRelatedFeatureSelection, weighted_decision_mechanism
 
 
 class UniNetModel(nn.Module):
@@ -32,23 +33,21 @@ class UniNetModel(nn.Module):
     It consists of teachers, student, and bottleneck modules.
 
     Args:
-        student (nn.Module): Student model.
-        bottleneck (nn.Module): Bottleneck model.
-        source_teacher (nn.Module): Source teacher model.
-        target_teacher (nn.Module | None): Target teacher model.
+        student_backbone (str): Student backbone model.
+        teacher_backbone (str): Teacher backbone model.
+        loss (nn.Module): Loss function.
     """
 
     def __init__(
         self,
-        student: nn.Module,
-        bottleneck: nn.Module,
+        student_backbone: str,
         teacher_backbone: str,
         loss: nn.Module,
     ) -> None:
         super().__init__()
         self.teachers = Teachers(teacher_backbone)
-        self.student = student
-        self.bottleneck = bottleneck
+        self.student = get_decoder(student_backbone)
+        self.bottleneck = BottleneckLayer(block=AttentionBottleneck, layers=3)
         self.dfs = DomainRelatedFeatureSelection()
 
         self.loss = loss

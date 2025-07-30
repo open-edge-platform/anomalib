@@ -73,9 +73,78 @@ def fuse_bn(conv: nn.Module, bn: nn.Module) -> tuple[torch.Tensor, torch.Tensor]
 
 
 class AttentionBottleneck(nn.Module):
-    """Attention Bottleneck for UniNet."""
+    """Attention Bottleneck block for UniNet with dual-branch processing.
 
-    expansion: int = 4
+    This module implements a specialized bottleneck block that can operate in two modes:
+    - Standard bottleneck (when halve=1)
+    - Dual-branch attention mechanism (when halve=2)
+
+    The dual-branch mode splits input channels and processes them through different
+    kernel sizes (3x3 and 7x7) to capture features at different receptive field scales,
+    then fuses them before the final expansion layer.
+
+    Architecture:
+        - Input: ``inplanes`` channels
+        - Intermediate: ``width`` channels (compressed for efficiency)
+        - Output: ``planes * expansion`` channels (expanded representation)
+
+    Args:
+        inplanes (int): Number of input channels.
+        planes (int): Base number of channels for intermediate processing.
+            Final output will have ``planes * expansion`` channels.
+        stride (int, optional): Stride for convolution layers. Defaults to ``1``.
+        downsample (nn.Module | None, optional): Module for downsampling the residual
+            connection when dimensions don't match. Defaults to ``None``.
+        groups (int, optional): Number of blocked connections from input to output
+            channels. Defaults to ``1``.
+        base_width (int, optional): Base width for calculating intermediate channel
+            width. Defaults to ``64``.
+        norm_layer (Callable[..., nn.Module] | None, optional): Normalization layer
+            to use. If ``None``, uses ``BatchNorm2d``. Defaults to ``None``.
+        attention (bool, optional): Whether to use attention mechanism. Defaults to ``True``.
+        halve (int, optional): Controls processing mode:
+            - ``1``: Standard bottleneck processing
+            - ``2``: Dual-branch processing with 3x3 and 7x7 kernels
+            Defaults to ``1``.
+
+    Attributes:
+        channel_expansion (int): Channel expansion factor. Final output channels will be
+            ``planes * channel_expansion``. Set to ``4`` following ResNet conventions.
+
+    Example:
+        >>> import torch
+        >>> from anomalib.models.image.uninet.components.attention_bottleneck import (
+        ...     AttentionBottleneck
+        ... )
+        >>> # Standard bottleneck
+        >>> block = AttentionBottleneck(256, 64, halve=1)
+        >>> x = torch.randn(32, 256, 28, 28)
+        >>> output = block(x)
+        >>> output.shape  # Output: 32, 256, 28, 28 (64 * 4 = 256)
+        torch.Size([32, 256, 28, 28])
+
+        >>> # Dual-branch attention bottleneck
+        >>> block = AttentionBottleneck(512, 128, halve=2)
+        >>> x = torch.randn(32, 512, 14, 14)
+        >>> output = block(x)
+        >>> output.shape  # Output: 32, 512, 14, 14 (128 * 4 = 512)
+        torch.Size([32, 512, 14, 14])
+
+    Notes:
+        - When ``halve=2``, input is split into two branches processed by 3x3 and 7x7
+          convolutions respectively to capture multi-scale features
+        - The ``merge_kernel`` method can fuse batch norm parameters into convolution
+          weights for inference optimization
+        - Residual connections are used following ResNet design principles
+        - The ``width`` calculation: ``int(planes * (base_width / 64.0)) * groups``
+        - The ``channel_expansion`` is set to ``4`` following ResNet conventions.
+
+    See Also:
+        - :class:`BottleneckLayer`: Container for multiple AttentionBottleneck blocks
+        - :func:`fuse_bn`: Function for fusing batch normalization into convolution layers
+    """
+
+    channel_expansion: int = 4
 
     def __init__(
         self,
@@ -100,8 +169,8 @@ class AttentionBottleneck(nn.Module):
         p = 3
 
         self.bn2 = norm_layer(width // halve)
-        self.conv3 = conv1x1(width, planes * self.expansion)
-        self.bn3 = norm_layer(planes * self.expansion)
+        self.conv3 = conv1x1(width, planes * self.channel_expansion)
+        self.bn3 = norm_layer(planes * self.channel_expansion)
         self.relu = nn.ReLU(inplace=True)
 
         self.downsample = downsample
@@ -246,19 +315,19 @@ class BottleneckLayer(nn.Module):
         self._norm_layer = norm_layer
         self.groups = groups
         self.base_width = width_per_group
-        self.inplanes = 256 * block.expansion
+        self.inplanes = 256 * block.channel_expansion
         self.halve = halve
         self.bn_layer = nn.Sequential(self._make_layer(block, 512, layers, stride=2))
-        self.conv1 = conv3x3(64 * block.expansion, 128 * block.expansion, 2)
-        self.bn1 = norm_layer(128 * block.expansion)
+        self.conv1 = conv3x3(64 * block.channel_expansion, 128 * block.channel_expansion, 2)
+        self.bn1 = norm_layer(128 * block.channel_expansion)
         self.relu = nn.ReLU(inplace=True)
-        self.conv2 = conv3x3(128 * block.expansion, 256 * block.expansion, 2)
-        self.bn2 = norm_layer(256 * block.expansion)
-        self.conv3 = conv3x3(128 * block.expansion, 256 * block.expansion, 2)
-        self.bn3 = norm_layer(256 * block.expansion)
+        self.conv2 = conv3x3(128 * block.channel_expansion, 256 * block.channel_expansion, 2)
+        self.bn2 = norm_layer(256 * block.channel_expansion)
+        self.conv3 = conv3x3(128 * block.channel_expansion, 256 * block.channel_expansion, 2)
+        self.bn3 = norm_layer(256 * block.channel_expansion)
 
-        self.conv4 = conv1x1(1024 * block.expansion, 512 * block.expansion, 1)
-        self.bn4 = norm_layer(512 * block.expansion)
+        self.conv4 = conv1x1(1024 * block.channel_expansion, 512 * block.channel_expansion, 1)
+        self.bn4 = norm_layer(512 * block.channel_expansion)
 
         for module in self.modules():
             if isinstance(module, nn.Conv2d):
@@ -293,10 +362,10 @@ class BottleneckLayer(nn.Module):
         downsample = None
         if dilate:
             stride = 1
-        if stride != 1 or self.inplanes != planes * block.expansion:
+        if stride != 1 or self.inplanes != planes * block.channel_expansion:
             downsample = nn.Sequential(
-                conv1x1(self.inplanes * 3, planes * block.expansion, stride),
-                norm_layer(planes * block.expansion),
+                conv1x1(self.inplanes * 3, planes * block.channel_expansion, stride),
+                norm_layer(planes * block.channel_expansion),
             )
 
         layers = []
@@ -312,7 +381,7 @@ class BottleneckLayer(nn.Module):
                 halve=self.halve,
             ),
         )
-        self.inplanes = planes * block.expansion
+        self.inplanes = planes * block.channel_expansion
         layers.extend(
             block(
                 self.inplanes,
