@@ -509,7 +509,13 @@ def _show_warnings(config: DictConfig | ListConfig | Namespace) -> None:
         specifically checking the ``clip_length_in_frames`` parameter in the data
         configuration section.
     """
-    if "clip_length_in_frames" in config.data and config.data.init_args.clip_length_in_frames > 1:
+    if (
+        "data" in config
+        and config.data is not None
+        and "clip_length_in_frames" in config.data
+        and "init_args" in config.data
+        and config.data.init_args.clip_length_in_frames > 1
+    ):
         logger.warning(
             "Anomalib's models and visualizer are currently not compatible with video datasets with a clip length > 1. "
             "Custom changes to these modules will be needed to prevent errors and/or unpredictable behaviour.",
