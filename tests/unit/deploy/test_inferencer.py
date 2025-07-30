@@ -170,7 +170,12 @@ def test_inference_similarity(
     engine = Engine(logger=False, default_root_dir=project_path, devices=1)
 
     predict_dataset = PredictDataset(test_image_path)
-    predict_dataloader = DataLoader(predict_dataset, batch_size=1, collate_fn=predict_dataset.collate_fn)
+    predict_dataloader = DataLoader(
+        predict_dataset,
+        batch_size=1,
+        collate_fn=predict_dataset.collate_fn,
+        pin_memory=True,
+    )
     engine_pred: list[ImageBatch] = engine.predict(model, dataloaders=predict_dataloader, ckpt_path=ckpt_path("Padim"))
     engine_pred = engine_pred[0]
 
