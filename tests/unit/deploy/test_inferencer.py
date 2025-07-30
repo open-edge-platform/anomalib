@@ -174,11 +174,11 @@ def test_inference_similarity(
     engine_pred: list[ImageBatch] = engine.predict(model, dataloaders=predict_dataloader, ckpt_path=ckpt_path("Padim"))
     engine_pred = engine_pred[0]
 
-    torch_path = model.to_torch(export_root=project_path, model_file_name="torch")
+    torch_path = engine.export(model, export_type=ExportType.TORCH, export_root=project_path)
     torch_inferencer = TorchInferencer(torch_path, device="cpu")
     torch_pred = torch_inferencer.predict(test_image_path)
 
-    openvino_path = model.to_openvino(export_root=project_path, model_file_name="openvino")
+    openvino_path = engine.export(model, export_type=ExportType.OPENVINO, export_root=project_path)
     openvino_inferencer = OpenVINOInferencer(openvino_path, device="CPU")
     openvino_pred = openvino_inferencer.predict(test_image_path)
 
