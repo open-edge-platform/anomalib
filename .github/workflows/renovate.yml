@@ -1,0 +1,85 @@
+# Dependencies Management Workflow
+#
+# This workflow automates the dependence management based on self-hosed Renovate
+# ensure the project's dependencies remains up-to-date and
+# security fixes are delivered regularly.
+#
+# Key Features:
+# - Automated PR creation into pyproject.toml and uv.lock regeneration
+# - Dry-run for debug purposes
+# - Dependency dashboard (is available in GitHub issues) maintenance
+#
+# Process Stages:
+#
+# 1. Dependencies Management:
+#    - Runs on a daily schedule.
+#    - Identifies dependencies that may be updated based on .github/renovate.json5 configuration.
+#    - Opens corresponding PRs with respect to schedule defined in Renovate config file.
+#    - Updates Renovate Dependency dashboard that is available in GitHub issues.
+#
+# Required Secrets:
+# - RENOVATE_APP_ID: application ID
+# - RENOVATE_APP_PEM: application private key
+#
+# Example Usage:
+# 1. Scheduled Run:
+#    Automatically runs, daily
+#
+# 2. Manual Trigger:
+#    workflow_dispatch:
+#    inputs:
+#      dry-run:
+#        description: "Run Renovate in dry-run mode (no PR)"
+#        required: false
+#        default: false
+#        type: boolean
+#
+# Note: Renovate maintains and updates Dependency dashboard that is available in GitHub issues.
+
+name: Renovate
+on:
+  schedule:
+    # daily
+    - cron: "0 2 * * *"
+
+  # allow to manually trigger this workflow
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "Run Renovate in dry-run mode (no PR)"
+        required: false
+        default: false
+        type: boolean
+
+permissions: {}
+
+jobs:
+  renovate:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Get token
+        id: get-github-app-token
+        uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+        with:
+          app-id: ${{ secrets.RENOVATE_APP_ID }}
+          private-key: ${{ secrets.RENOVATE_APP_PEM }}
+
+      - name: Self-hosted Renovate
+        uses: renovatebot/github-action@13f127373fd3dc43b41b0979e37ba570d6c2b8f4 # v43.0.0
+        with:
+          configurationFile: .github/renovate.json5
+          token: "${{ steps.get-github-app-token.outputs.token }}"
+        env:
+          LOG_LEVEL: ${{ github.event_name == 'workflow_dispatch' && 'debug' || 'info' }}
+          # Dry run if the event is workflow_dispatch AND the dry-run input is true
+          RENOVATE_DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.dry-run == 'true') && 'full' || null }}
+          RENOVATE_PLATFORM: github
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
