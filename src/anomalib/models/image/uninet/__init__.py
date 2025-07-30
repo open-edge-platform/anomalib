@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """UniNet Model for anomaly detection.
 
 This module implements anomaly detection using the UniNet model. It is a model designed for diverse domains and is
@@ -23,9 +26,6 @@ See Also:
     - :class:`UniNet`: Main model class for UniNet-based anomaly detection
     - :class:`UniNetModel`: PyTorch implementation of the UniNet model
 """
-
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from .lightning_model import UniNet
 from .torch_model import UniNetModel

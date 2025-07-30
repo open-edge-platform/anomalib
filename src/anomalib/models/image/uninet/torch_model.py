@@ -1,10 +1,3 @@
-"""PyTorch model for UniNet.
-
-See Also:
-    :class:`anomalib.models.image.uninet.lightning_model.UniNet`:
-        UniNet Lightning model.
-"""
-
 # Original Code
 # Copyright (c) 2025 Shun Wei
 # https://github.com/pangdatangtt/UniNet
@@ -13,6 +6,13 @@ See Also:
 # Modified
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""PyTorch model for UniNet.
+
+See Also:
+    :class:`anomalib.models.image.uninet.lightning_model.UniNet`:
+        UniNet Lightning model.
+"""
 
 import torch
 import torchvision
