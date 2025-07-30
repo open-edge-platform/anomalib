@@ -111,7 +111,7 @@ runs:
       uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
 
     - name: Cache Trivy vulnerability database
-      uses: actions/cache@v3
+      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
       with:
         path: ~/.cache/trivy
         key: trivy-db-${{ runner.os }}-${{ hashFiles('**/trivy-db/**') }}
@@ -220,13 +220,13 @@ runs:
       # Upload results after full scope analysis
     - name: Upload reports
       if: hashFiles('security-results/trivy/*') != '' # if any report is available
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
       with:
         name: trivy-results
         path: security-results/trivy
         retention-days: 7
     - name: Upload sarif
       if: hashFiles('security-results/trivy/trivy-results.sarif') != '' # if SARIF is available, upload it
-      uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.8
+      uses: github/codeql-action/upload-sarif@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3.29.5
       with:
         sarif_file: security-results/trivy/trivy-results.sarif

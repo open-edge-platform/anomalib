@@ -79,7 +79,7 @@ jobs:
     if: contains(inputs.tools, 'bandit')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           persist-credentials: false
       - name: Run Bandit scan
@@ -94,9 +94,9 @@ jobs:
     if: contains(inputs.tools, 'semgrep')
     runs-on: ubuntu-latest
     container:
-      image: returntocorp/semgrep@sha256:14e073f6417e5d2d0797aa13f26d569270b86fac9d52052d2358c985f1a4e9f0 # v1.124.0
+      image: returntocorp/semgrep@sha256:fca58525689355641019c05ab49dcc5bc3a1eb7e044f35014ee39594b5aa4fc1 # v1.124.0
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           persist-credentials: false
       - name: Run Semgrep scan
@@ -110,7 +110,7 @@ jobs:
     if: contains(inputs.tools, 'trivy')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           fetch-depth: 0 # Required for changed files detection
           persist-credentials: false
@@ -132,7 +132,7 @@ jobs:
     if: contains(inputs.tools, 'clamav')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           persist-credentials: false
       - name: Run ClamAV scan
@@ -145,7 +145,7 @@ jobs:
     if: contains(inputs.tools, 'zizmor')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           persist-credentials: false
       - name: Run Zizmor scan
@@ -177,7 +177,7 @@ jobs:
 
       # Download artifacts with error handling
       - name: Download all results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         continue-on-error: true # Don't fail if some tools didn't generate results
         with:
           pattern: "*-results"
@@ -187,7 +187,7 @@ jobs:
       # Only upload if there are files
       - name: Upload combined results
         if: hashFiles('all-results/**/*') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: security-scan-results
           path: all-results
