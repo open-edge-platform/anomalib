@@ -75,7 +75,7 @@ class FocalLoss(nn.Module):
     def __init__(
         self,
         apply_nonlinearity: nn.Module | None = None,
-        alpha: float | torch.Tensor = None,
+        alpha: float | list | np.ndarray | None = None,
         gamma: float = 2,
         balance_index: int = 0,
         smooth: float = 1e-5,

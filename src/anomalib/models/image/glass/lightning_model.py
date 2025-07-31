@@ -182,6 +182,8 @@ class Glass(AnomalibModule):
         else:
             self.backbone_opt = None
 
+        self.automatic_optimization = False
+
     @classmethod
     def configure_pre_processor(
         cls,
@@ -264,7 +266,7 @@ class Glass(AnomalibModule):
             self.backbone_opt.zero_grad()
 
         true_loss, gaus_loss, bce_loss, focal_loss, loss = self.model(batch.image)
-        loss.backward()
+        self.manual_backward(loss)
 
         if self.projection_opt is not None:
             self.projection_opt.step()
