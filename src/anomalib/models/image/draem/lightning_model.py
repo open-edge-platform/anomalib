@@ -14,6 +14,7 @@ comparing input images with their reconstructions.
 """
 
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 import torch
@@ -24,6 +25,7 @@ from torchvision.transforms.v2 import Compose, Normalize, Resize
 from anomalib import LearningType
 from anomalib.data import Batch
 from anomalib.data.transforms.utils import extract_transforms_by_type
+from anomalib.data.utils import DownloadInfo, download_and_extract
 from anomalib.data.utils.generators.perlin import PerlinAnomalyGenerator
 from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule
@@ -35,6 +37,12 @@ from .loss import DraemLoss
 from .torch_model import DraemModel
 
 __all__ = ["Draem"]
+
+DTD_DOWNLOAD_INFO = DownloadInfo(
+    name="dtd-r1.0.1.tar.gz",
+    url="https://www.robots.ox.ac.uk/~vgg/data/dtd/download/dtd-r1.0.1.tar.gz",
+    hashsum="e42855a52a4950a3b59612834602aa253914755c95b0cff9ead6d07395f8e205",
+)
 
 
 class Draem(AnomalibModule):
@@ -48,6 +56,8 @@ class Draem(AnomalibModule):
     2. A discriminative network that learns to identify anomalous regions
 
     Args:
+        dtd_dir (Path | str): Directory path for the DTD dataset for anomaly deneration.
+            Defaults to ``./datasets/dtd``.
         enable_sspcab (bool, optional): Enable SSPCAB training.
             Defaults to ``False``.
         sspcab_lambda (float, optional): Weight factor for SSPCAB loss.
@@ -74,9 +84,9 @@ class Draem(AnomalibModule):
 
     def __init__(
         self,
+        dtd_dir: Path | str = "./datasets/dtd",
         enable_sspcab: bool = False,
         sspcab_lambda: float = 0.1,
-        anomaly_source_path: str | None = None,
         beta: float | tuple[float, float] = (0.1, 1.0),
         pre_processor: PreProcessor | bool = True,
         post_processor: PostProcessor | bool = True,
@@ -89,8 +99,10 @@ class Draem(AnomalibModule):
             evaluator=evaluator,
             visualizer=visualizer,
         )
-
-        self.augmenter = PerlinAnomalyGenerator(anomaly_source_path=anomaly_source_path, blend_factor=beta)
+        dtd_dir = Path(dtd_dir)
+        if not dtd_dir.is_dir():
+            download_and_extract(dtd_dir, DTD_DOWNLOAD_INFO)
+        self.augmenter = PerlinAnomalyGenerator(anomaly_source_path=dtd_dir, blend_factor=beta)
         self.model = DraemModel(sspcab=enable_sspcab)
         self.loss = DraemLoss()
         self.sspcab = enable_sspcab
