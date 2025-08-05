@@ -200,7 +200,7 @@ class PerlinAnomalyGenerator(v2.Transform):
 
     def __init__(
         self,
-        anomaly_source_path: str | None = None,
+        anomaly_source_path: Path | str | None = None,
         probability: float = 0.5,
         blend_factor: float | tuple[float, float] = (0.2, 1.0),
         rotation_range: tuple[float, float] = (-90, 90),

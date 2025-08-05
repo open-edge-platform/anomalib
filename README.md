@@ -20,6 +20,7 @@
 [![codecov](https://codecov.io/gh/open-edge-platform/anomalib/branch/main/graph/badge.svg?token=Z6A07N1BZK)](https://codecov.io/gh/open-edge-platform/anomalib)
 [![Downloads](https://static.pepy.tech/personalized-badge/anomalib?period=total&units=international_system&left_color=grey&right_color=green&left_text=PyPI%20Downloads)](https://pepy.tech/project/anomalib)
 [![snyk](https://snyk.io/advisor/python/anomalib/badge.svg)](https://snyk.io/advisor/python/anomalib)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8330/badge)](https://www.bestpractices.dev/projects/8330)
 
 [![ReadTheDocs](https://readthedocs.org/projects/anomalib/badge/?version=latest)](https://anomalib.readthedocs.io/en/latest/?badge=latest)
 [![Anomalib - Gurubase docs](https://img.shields.io/badge/Gurubase-Ask%20Anomalib%20Guru-006BFF)](https://gurubase.io/g/anomalib)
@@ -30,16 +31,23 @@
 
 ---
 
-> 🌟 **Announcing v2.0.0 Release!** 🌟
+> 🌟 **Announcing v2.1.0 Release!** 🌟
 >
-> We're excited to announce the release of Anomalib v2.0.0! This version introduces significant improvements and customization options to enhance your anomaly detection workflows. Please be aware that there are several API changes between `v1.2.0` and `v2.0.0`, so please be careful when updating your existing pipelines. Key features include:
+> We're excited to announce the release of Anomalib v2.1.0!
+> This version brings several state-of-the-art models and anomaly detection datasets. Key features include:
 >
-> - Multi-GPU support
-> - New [dataclasses](https://anomalib.readthedocs.io/en/latest/markdown/guides/how_to/data/dataclasses.html) for model in- and outputs.
-> - Flexible configuration of [model transforms and data augmentations](https://anomalib.readthedocs.io/en/latest/markdown/guides/how_to/data/transforms.html).
-> - Configurable modules for pre- and post-processing operations via [`Preprocessor`](https://anomalib.readthedocs.io/en/latest/markdown/guides/how_to/models/pre_processor.html) and [`Postprocessor`](https://anomalib.readthedocs.io/en/latest/markdown/guides/how_to/models/post_processor.html)
-> - Customizable model evaluation workflow with new [Metrics API](https://anomalib.readthedocs.io/en/latest/markdown/guides/how_to/evaluation/metrics.html) and [`Evaluator`](https://anomalib.readthedocs.io/en/latest/markdown/guides/how_to/evaluation/evaluator.html) module.
-> - Configurable module for visualization via `Visualizer` (docs guide: coming soon)
+> New models :
+>
+> - **🖼️ UniNet (CVPR 2025)**: A contrastive learning-guided unified framework with feature selection for anomaly detection.
+> - **🖼️ Dinomaly (CVPR 2025)**: A 'less is more philosophy' encoder-decoder architecture model leveraging pre-trained foundational models.
+> - **🎥 Fuvas (ICASSP 2025)**: Few-shot unsupervised video anomaly segmentation via low-rank factorization of spatio-temporal features.
+>
+> New datasets:
+>
+> - **MVTec AD 2** : A new version of the MVTec AD dataset with 8 categories of industrial anomaly detection.
+> - **MVTec LOCO AD** : MVTec logical constraints anomaly detection dataset that includes both structural and logical anomalies.
+> - **Real-IAD** : A real-world multi-view dataset for benchmarking versatile industrial anomaly detection.
+> - **VAD dataset** : Valeo Anomaly Dataset (VAD) showcasing a diverse range of defects, from highly obvious to extremely subtle.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 

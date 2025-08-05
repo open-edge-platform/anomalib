@@ -8,23 +8,107 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- 🚀 Add new SOTA video Anomaly detection module FUVAS
-- 🚀 Add VAD dataset by @abc-125 in https://github.com/open-edge-platform/anomalib/pull/2603
-- 🚀 Add Tiled Ensemble for V2 by @blaz-r in https://github.com/open-edge-platform/anomalib/pull/2660
-- 🚀 Add Tabular datamodule by @manuelkonrad in https://github.com/openvinotoolkit/anomalib/pull/2713
-
 ### Removed
 
 ### Changed
-
-- 🔨Fix semgrep security issue for `get_datamodule()` method in https://github.com/open-edge-platform/anomalib/pull/2736
-- 🔨Update doc for `get_exportable_transform()` method in https://github.com/open-edge-platform/anomalib/pull/2731
 
 ### Deprecated
 
 ### Fixed
 
+## [v2.1.0]
+
+### Added
+
+- 🚀 Add MVTec LOCO dataset by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2607
+- 🚀 Add VAD dataset by @abc-125 in https://github.com/open-edge-platform/anomalib/pull/2603
+- 🚀 Add Real-IAD dataset by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2545
+- 🚀 Add `MVTecAD2` dataset by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2562
+- 🚀 Add new SOTA video Anomaly detection module FUVAS by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2654
+- 📚 Add feature request template by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2659
+- 🚀 Add Tiled Ensemble for V2 by @blaz-r in https://github.com/open-edge-platform/anomalib/pull/2660
+- 📚 Add log for Tiled Ensemble PR by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/2683
+- 📚 Adding Zizmor and minor refactor by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/2685
+- 📚 Add `issue-management` workflow by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2746
+- 🚀 Add Tabular datamodule by @manuelkonrad in https://github.com/openvinotoolkit/anomalib/pull/2713
+- 🚀 Implement type-safe deprecation decorator with version support by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2771
+- 🚀 Add conventional commit enforcement and automation by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2773
+- 🚀 Enable Visualization for NumPy Input/Output by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2764
+- 🚀 Add MPDD dataset by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2816
+- 📚 Update benchmarking docs by @alfieroddan in https://github.com/open-edge-platform/anomalib/pull/2814
+- 🚀 Migrate to UV dependency management by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2796
+- 🚀 Add Dinomaly Model by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/2835
+
+### Removed
+
+### Changed
+
+- 🔧 Intermediate environment variable usage in workflows by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/2617
+- 🐞 Replace the mandatory PatchCore center crop with an optional one, add the same to CFA by @abc-125 in https://github.com/open-edge-platform/anomalib/pull/2623
+- 🔧 Update MVTecLOCO by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/2651
+- 🔧 Semgrep and Bandit config refactor by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/2646
+- 📚 docs: update installation guide with correct repository URL by @gggg8657 in https://github.com/open-edge-platform/anomalib/pull/2662
+- 🔧 update references to old github org by @djdameln in https://github.com/open-edge-platform/anomalib/pull/2682
+- 🔧 Return metrics from train by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/2702
+- 🔧 Make OpenVINO fully optional in Anomalib by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2719
+- 🔨 Fix semgrep security issue for `get_datamodule()` method in https://github.com/open-edge-platform/anomalib/pull/2736
+- 🔨 Update doc for `get_exportable_transform()` method in https://github.com/open-edge-platform/anomalib/pull/2731
+- 🔧 Addressing Zizmor and CodeQL findings by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/2742
+- 🔧 Security composite actions minor changes by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/2748
+- 📚 Update Data Docs by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2755
+- 🔧 Update `generate_output_filename` function by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2760
+- 🔧 Bump softprops/action-gh-release from 2.2.2 to 2.3.2 by @dependabot[bot] in https://github.com/open-edge-platform/anomalib/pull/2770
+- 📚 Refactor EfficientAdModel example and update output shapes by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2766
+- 🔧 Remove unnecessary warning log in `visualize_image_item` by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2778
+- 🔧 Migrate from individual commit message validation to PR title validation by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2791
+- 🔧 Enhance model export with flexible `kwargs` support for `ONNX` and `OpenVINO` by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2780
+- 🔧 `pre-commit autoupdate` by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2790
+- 🔧 Fix the security issues highlighted by semgrep scans by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2792
+- 🔧 Overhaul issue management process with new templates and enhanced workflow by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2799
+- 🔄 Refactor restructure directory layout by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2804
+- 🔧 Reorder license, docstring, imports, then code by @eugene123tw in https://github.com/open-edge-platform/anomalib/pull/2822
+- 🔧 Enable Renovate and OpenSSF Scorecard reports by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/2845
+- 🔄 Memory usage optimisation by @alfieroddan in https://github.com/open-edge-platform/anomalib/pull/2813
+- ♻️ Show import error in CLI by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/2856
+- 🚀 Add UniNet by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/2797
+- 🔧 Update dependency zizmorcore/zizmor to v1.11.0 by @oep-renovate[bot] in https://github.com/open-edge-platform/anomalib/pull/2850
+- 🔧 Pin dependencies by @oep-renovate[bot] in https://github.com/open-edge-platform/anomalib/pull/2855
+
+### Deprecated
+
+### Fixed
+
+- 🐞 Fix model-specific transforms for DRÆM and DSR by @abc-125 in https://github.com/open-edge-platform/anomalib/pull/2624
+- 🐞 fix: remove custom state dict handling in WinClip to fix inference tensor issues by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2630
+- 🐞 Fix MVTecLOCO args by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2650
+- 🐞 Fix SuperSimpleNet pretrained weights. by @blaz-r in https://github.com/open-edge-platform/anomalib/pull/2712
+- 🔒 Security Fix: Mitigate Remote Code Execution Risk in `torch.load` by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2729
+- 🔨 Fix Arbitrary imports in get_datamodule() by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/2736
+- 🐞 Fix the wrong variable to be printed on the warning message by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2754
+- 🐞 Fix AUPR curve axis labels to follow standard convention by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2772
+- 🔨 Fix enhance `ToNumpyMixin` for improved tensor conversion by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2775
+- 🔨 Fix visualization image font loading logic by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2783
+- 🐞 Fix MVTecLOCO GT Masks were not loaded correctly by @AveraGE0 in https://github.com/open-edge-platform/anomalib/pull/2805
+- 🐞 Fix replace problematic emojis and improve CI workflow by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2809
+- 🔨 Fix remove in-place ops in CombinedDensityEstimator.predict f… by @grannycola in https://github.com/open-edge-platform/anomalib/pull/2808
+- 🐞 Fix MVTecAD2 CLI bug fix enum serialisation by @alfieroddan in https://github.com/open-edge-platform/anomalib/pull/2817
+- 🔒 Fix semgrep security issues by replacing inefficient `torch.Tensor()` constructors by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2824
+- 🔨 Fix update OpenVINO import paths in inferencer and post-pro… by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2829
+- 🐞 Fix EfficientAD `NotImplementedError: ('{} cannot be pickled', '_SingleProcessDataLoaderIter')` by @alexriedel1 in https://github.com/open-edge-platform/anomalib/pull/2837
+- 🐞 Fix `update_augmentations` when no model is attached by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2720
+- 🔨 Fix discrepancy between lightning and standalone inferencers by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/2843
+- 🔨 Fix revert correct symlink by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/2854
+
 ### New Contributors
+
+- @AlexanderBarabanov made their first contribution in https://github.com/open-edge-platform/anomalib/pull/2617
+- @gggg8657 made their first contribution in https://github.com/open-edge-platform/anomalib/pull/2662
+- @rajeshgangireddy made their first contribution in https://github.com/open-edge-platform/anomalib/pull/2683
+- @lucianchauvin made their first contribution in https://github.com/open-edge-platform/anomalib/pull/2731
+- @manuelkonrad made their first contribution in https://github.com/open-edge-platform/anomalib/pull/2713
+- @AveraGE0 made their first contribution in https://github.com/open-edge-platform/anomalib/pull/2805
+- @grannycola made their first contribution in https://github.com/open-edge-platform/anomalib/pull/2808
+- @alfieroddan made their first contribution in https://github.com/open-edge-platform/anomalib/pull/2814
 
 ## v2.0.0
 

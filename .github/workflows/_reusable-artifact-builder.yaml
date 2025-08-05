@@ -78,10 +78,10 @@ jobs:
     outputs:
       artifact-name: ${{ steps.set-artifact-name.outputs.name }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: ${{ inputs.python-version }}
       - name: Build package
@@ -96,13 +96,13 @@ jobs:
       - name: Set artifact name
         id: set-artifact-name
         run: echo "name=dist-$(date +%s)" >> $GITHUB_OUTPUT
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ${{ steps.set-artifact-name.outputs.name }}
           path: dist/
           retention-days: 5
       - name: Cache pip dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         with:
           path: |
             ~/.cache/pip
@@ -111,7 +111,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
       - name: Cache build artifacts
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         with:
           path: |
             dist/

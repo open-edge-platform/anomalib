@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Anomalib Command Line Interface.
@@ -37,8 +37,9 @@ try:
     from anomalib.models import AnomalibModule
     from anomalib.utils.config import update_config
 
-except ImportError:
+except ImportError as error:
     _LIGHTNING_AVAILABLE = False
+    logger.warning(f"Import failed: {error}. Please install the required dependencies.")
 
 
 class AnomalibCLI:

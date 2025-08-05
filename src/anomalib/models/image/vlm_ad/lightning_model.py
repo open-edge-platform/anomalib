@@ -168,6 +168,14 @@ class VlmAd(AnomalibModule):
         batch.pred_label = torch.tensor([1.0 if r.startswith("Y") else 0.0 for r in responses], device=self.device)
         return batch
 
+    def test_step(self, batch: ImageBatch, *args, **kwargs) -> ImageBatch:  # type: ignore[override]
+        """Redirect to validation step."""
+        return self.validation_step(batch, *args, **kwargs)
+
+    def predict_step(self, batch: ImageBatch, *args, **kwargs) -> ImageBatch:  # type: ignore[override]
+        """Redirect to validation step."""
+        return self.validation_step(batch, *args, **kwargs)
+
     @property
     def learning_type(self) -> LearningType:
         """Get the learning type of the model.
