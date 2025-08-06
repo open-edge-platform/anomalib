@@ -135,7 +135,7 @@ class PostProcessor(nn.Module, Callback):
         del trainer, pl_module
         if self.enable_thresholding:
             # compute threshold values
-            if self._image_threshold_metric.update_called:
+            if getattr(self._image_threshold_metric, "_update_called", False):
                 self._image_threshold.copy_(self._image_threshold_metric.compute())
                 self._image_threshold_metric.reset()
             if self._pixel_threshold_metric.update_called:
