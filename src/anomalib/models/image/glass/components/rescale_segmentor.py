@@ -55,7 +55,7 @@ class RescaleSegmentor:
         patch_stack = patch_scores.unsqueeze(1)  # [N, 1, H, W]
         smoothed_stack = kf.gaussian_blur2d(
             patch_stack,
-            kernel_size=(5, 5),
+            kernel_size=(33, 33),
             sigma=(self.smoothing, self.smoothing),
         )
 

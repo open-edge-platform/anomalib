@@ -60,7 +60,7 @@ class GlassModel(nn.Module):
 
     def __init__(
         self,
-        input_shape: tuple[int, int] = (256, 256),  # (H, W)
+        input_shape: tuple[int, int] = (288, 288),  # (H, W)
         anomaly_source_path: str | None = None,
         pretrain_embed_dim: int = 1024,
         target_embed_dim: int = 1024,

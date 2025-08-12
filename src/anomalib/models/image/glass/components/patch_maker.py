@@ -16,13 +16,11 @@ class PatchMaker:
     Attributes:
         patchsize (int): Size of each patch (patchsize x patchsize).
         stride (int or None): Stride used for patch extraction. Defaults to patchsize if None.
-        top_k (int): Number of top patch scores to consider. Used for score reduction.
     """
 
-    def __init__(self, patchsize: int, top_k: int = 0, stride: int | None = None) -> None:
+    def __init__(self, patchsize: int, stride: int | None = None) -> None:
         self.patchsize = patchsize
         self.stride = stride if stride is not None else patchsize
-        self.top_k = top_k
 
     def patchify(
         self,

@@ -18,6 +18,7 @@ Paper: `A Unified Anomaly Synthesis Strategy with Gradient Ascent for Industrial
 <https://arxiv.org/pdf/2407.09359>`
 """
 
+from pathlib import Path
 from typing import Any
 
 from lightning.pytorch.utilities.types import STEP_OUTPUT
@@ -26,6 +27,7 @@ from torchvision.transforms.v2 import CenterCrop, Compose, Normalize, Resize
 
 from anomalib import LearningType
 from anomalib.data import Batch
+from anomalib.data.utils import DownloadInfo, download_and_extract
 from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule
 from anomalib.post_processing import PostProcessor
@@ -33,6 +35,12 @@ from anomalib.pre_processing import PreProcessor
 from anomalib.visualization import Visualizer
 
 from .torch_model import GlassModel
+
+DTD_DOWNLOAD_INFO = DownloadInfo(
+    name="dtd-r1.0.1.tar.gz",
+    url="https://www.robots.ox.ac.uk/~vgg/data/dtd/download/dtd-r1.0.1.tar.gz",
+    hashsum="e42855a52a4950a3b59612834602aa253914755c95b0cff9ead6d07395f8e205",
+)
 
 
 class Glass(AnomalibModule):
@@ -119,10 +127,6 @@ class Glass(AnomalibModule):
         discriminator_layers: int = 2,
         discriminator_hidden: int = 1024,
         discriminator_margin: float = 0.5,
-        pre_processor: PreProcessor | bool = True,
-        post_processor: PostProcessor | bool = True,
-        evaluator: Evaluator | bool = True,
-        visualizer: Visualizer | bool = True,
         mining: int = 1,
         noise: float = 0.015,
         radius: float = 0.75,
@@ -130,6 +134,10 @@ class Glass(AnomalibModule):
         learning_rate: float = 0.0001,
         step: int = 20,
         svd: int = 0,
+        pre_processor: PreProcessor | bool = True,
+        post_processor: PostProcessor | bool = True,
+        evaluator: Evaluator | bool = True,
+        visualizer: Visualizer | bool = True,
     ) -> None:
         super().__init__(
             pre_processor=pre_processor,
@@ -183,6 +191,11 @@ class Glass(AnomalibModule):
             self.backbone_opt = None
 
         self.automatic_optimization = False
+
+        if anomaly_source_path is not None:
+            dtd_dir = Path(anomaly_source_path)
+            if not dtd_dir.is_dir():
+                download_and_extract(dtd_dir, DTD_DOWNLOAD_INFO)
 
     @classmethod
     def configure_pre_processor(
