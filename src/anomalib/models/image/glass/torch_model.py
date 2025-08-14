@@ -62,9 +62,9 @@ class GlassModel(nn.Module):
         self,
         input_shape: tuple[int, int] = (288, 288),  # (H, W)
         anomaly_source_path: str | None = None,
-        pretrain_embed_dim: int = 1024,
-        target_embed_dim: int = 1024,
-        backbone: str = "resnet18",
+        pretrain_embed_dim: int = 1536,
+        target_embed_dim: int = 1536,
+        backbone: str = "wideresnet50",
         patchsize: int = 3,
         patchstride: int = 1,
         pre_trained: bool = True,
@@ -79,7 +79,7 @@ class GlassModel(nn.Module):
         super().__init__()
 
         if layers is None:
-            layers = ["layer1", "layer2", "layer3"]
+            layers = ["layer2", "layer3"]
 
         self.backbone = backbone
         self.layers = layers

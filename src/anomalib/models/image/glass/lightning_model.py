@@ -56,14 +56,15 @@ class Glass(AnomalibModule):
     Args:
         input_shape (tuple[int, int]): Input image dimensions as a tuple of (height, width). Required for shaping the
           input pipeline.
+          Defaults to `(288, 288)`.
         anomaly_source_path (str): Path to the dataset or source directory containing normal images and anomaly textures
         backbone (str, optional): Name of the CNN backbone used for feature extraction.
-            Defaults to `"resnet18"`.
+            Defaults to `"wideresnet50"`.
         pretrain_embed_dim (int, optional): Dimensionality of features extracted by the pre-trained backbone before
           adaptation.
-            Defaults to `1024`.
+            Defaults to `1536`.
         target_embed_dim (int, optional): Dimensionality of the target adapted features after projection.
-            Defaults to `1024`.
+            Defaults to `1536`.
         patchsize (int, optional): Size of the local patch used in feature aggregation (e.g., for neighborhood pooling).
             Defaults to `3`.
         patchstride (int, optional): Stride used when extracting patches for local feature aggregation.
@@ -82,6 +83,12 @@ class Glass(AnomalibModule):
         discriminator_margin (float, optional): Margin used for contrastive or binary classification loss in
           discriminator training.
             Defaults to `0.5`.
+        learning_rate (float, optional): Learning rate for training the feature adaptor and discriminator networks.
+            Defaults to `0.0001`.
+        step (int, optional): Number of gradient ascent steps for anomaly synthesis.
+            Defaults to `20`.
+        svd (int, optional): Flag to enable SVD-based feature projection.
+            Defaults to `0`.
         pre_processor (PreProcessor | bool, optional): reprocessing module or flag to enable default preprocessing.
             Set to `True` to apply default normalization and resizing.
             Defaults to `True`.
@@ -93,21 +100,15 @@ class Glass(AnomalibModule):
         visualizer (Visualizer | bool, optional): Visualization module to generate heatmaps, segmentation overlays, and
           anomaly scores.
             Defaults to `True`.
-        learning_rate (float, optional): Learning rate for training the feature adaptor and discriminator networks.
-            Defaults to `0.0001`.
-        step (int, optional): Number of gradient ascent steps for anomaly synthesis.
-            Defaults to `20`.
-        svd (int, optional): Flag to enable SVD-based feature projection.
-            Defaults to `0`.
     """
 
     def __init__(
         self,
-        input_shape: tuple[int, int] = (256, 256),
+        input_shape: tuple[int, int] = (288, 288),
         anomaly_source_path: str | None = None,
-        backbone: str = "resnet18",
-        pretrain_embed_dim: int = 1024,
-        target_embed_dim: int = 1024,
+        backbone: str = "wideresnet50",
+        pretrain_embed_dim: int = 1536,
+        target_embed_dim: int = 1536,
         patchsize: int = 3,
         patchstride: int = 1,
         pre_trained: bool = True,
@@ -132,7 +133,7 @@ class Glass(AnomalibModule):
         )
 
         if layers is None:
-            layers = ["layer1", "layer2", "layer3"]
+            layers = ["layer2", "layer3"]
 
         self.model = GlassModel(
             input_shape=input_shape,
@@ -155,7 +156,7 @@ class Glass(AnomalibModule):
         self.learning_rate = learning_rate
 
         if pre_projection > 0:
-            self.projection_opt = optim.AdamW(
+            self.projection_opt = optim.Adam(
                 self.model.projection.parameters(),
                 self.learning_rate,
                 weight_decay=1e-5,
