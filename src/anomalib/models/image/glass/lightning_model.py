@@ -209,7 +209,7 @@ class Glass(AnomalibModule):
             ... )
             >>> transformed_image = pre_processor(image)
         """
-        image_size = image_size or (256, 256)
+        image_size = image_size or (288, 288)
 
         if center_crop_size is not None:
             if center_crop_size[0] > image_size[0] or center_crop_size[1] > image_size[1]:
