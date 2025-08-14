@@ -73,10 +73,6 @@ class GlassModel(nn.Module):
         discriminator_layers: int = 2,
         discriminator_hidden: int = 1024,
         discriminator_margin: float = 0.5,
-        mining: int = 1,
-        noise: float = 0.015,
-        radius: float = 0.75,
-        random_selection_prob: float = 0.5,
         step: int = 20,
         svd: int = 0,
     ) -> None:
@@ -126,10 +122,6 @@ class GlassModel(nn.Module):
             hidden=self.discriminator_hidden,
         )
 
-        self.random_selection_prob = random_selection_prob
-        self.radius = radius
-        self.mining = mining
-        self.noise = noise
         self.distribution = 0
         self.step = step
         self.svd = svd
@@ -347,7 +339,7 @@ class GlassModel(nn.Module):
         )
         mask_s_gt = mask_s_resized.reshape(-1, 1)
 
-        noise = torch.normal(0, self.noise, true_feats.shape).to(device)
+        noise = torch.normal(0, 0.015, true_feats.shape).to(device)
         gaus_feats = true_feats + noise
 
         center = self.center.repeat(img.shape[0], 1, 1)
@@ -358,7 +350,7 @@ class GlassModel(nn.Module):
         )
         c_t_points = torch.concat([center[mask_s_gt[:, 0] == 0], center], dim=0)
         dist_t = torch.norm(true_points - c_t_points, dim=1)
-        r_t = torch.tensor([torch.quantile(dist_t, q=self.radius)]).to(device)
+        r_t = torch.tensor([torch.quantile(dist_t, q=0.75)]).to(device)
 
         for step in range(self.step + 1):
             scores = self.discriminator(torch.cat([true_feats, gaus_feats]))
@@ -410,14 +402,11 @@ class GlassModel(nn.Module):
 
         fake_scores = self.discriminator(fake_feats)
 
-        if self.random_selection_prob > 0:
-            fake_dist = (fake_scores - mask_s_gt) ** 2
-            d_hard = torch.quantile(fake_dist, q=self.random_selection_prob)
-            fake_scores_ = fake_scores[fake_dist >= d_hard].unsqueeze(1)
-            mask_ = mask_s_gt[fake_dist >= d_hard].unsqueeze(1)
-        else:
-            fake_scores_ = fake_scores
-            mask_ = mask_s_gt
+        fake_dist = (fake_scores - mask_s_gt) ** 2
+        d_hard = torch.quantile(fake_dist, q=0.5)
+        fake_scores_ = fake_scores[fake_dist >= d_hard].unsqueeze(1)
+        mask_ = mask_s_gt[fake_dist >= d_hard].unsqueeze(1)
+
         output = torch.cat([1 - fake_scores_, fake_scores_], dim=1)
         focal_loss = self.focal_loss(output, mask_)
 

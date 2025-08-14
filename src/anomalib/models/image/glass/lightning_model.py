@@ -93,17 +93,6 @@ class Glass(AnomalibModule):
         visualizer (Visualizer | bool, optional): Visualization module to generate heatmaps, segmentation overlays, and
           anomaly scores.
             Defaults to `True`.
-        mining (int, optional): Number of iterations or difficulty level for Online Hard Example Mining (OHEM) during
-          training.
-            Defaults to `1`.
-        noise (float, optional): Standard deviation of Gaussian noise used in feature-level anomaly synthesis.
-            Defaults to `0.015`.
-        radius (float, optional): Radius parameter used for truncated projection in the anomaly synthesis strategy.
-            Determines the range for valid synthetic anomalies in the hypersphere or manifold.
-            Defaults to `0.75`.
-        random_selection_prob (float, optional): Probability used in random selection logic, such as anomaly mask
-          generation or augmentation choice.
-            Defaults to `0.5`.
         learning_rate (float, optional): Learning rate for training the feature adaptor and discriminator networks.
             Defaults to `0.0001`.
         step (int, optional): Number of gradient ascent steps for anomaly synthesis.
@@ -127,10 +116,6 @@ class Glass(AnomalibModule):
         discriminator_layers: int = 2,
         discriminator_hidden: int = 1024,
         discriminator_margin: float = 0.5,
-        mining: int = 1,
-        noise: float = 0.015,
-        radius: float = 0.75,
-        random_selection_prob: float = 0.5,
         learning_rate: float = 0.0001,
         step: int = 20,
         svd: int = 0,
@@ -165,10 +150,6 @@ class Glass(AnomalibModule):
             discriminator_margin=discriminator_margin,
             step=step,
             svd=svd,
-            mining=mining,
-            noise=noise,
-            radius=radius,
-            random_selection_prob=random_selection_prob,
         )
 
         self.learning_rate = learning_rate
