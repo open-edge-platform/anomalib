@@ -59,7 +59,7 @@ class Glass(AnomalibModule):
           Defaults to `(288, 288)`.
         anomaly_source_path (str): Path to the dataset or source directory containing normal images and anomaly textures
         backbone (str, optional): Name of the CNN backbone used for feature extraction.
-            Defaults to `"wideresnet50"`.
+            Defaults to `"wide_resnet50_2"`.
         pretrain_embed_dim (int, optional): Dimensionality of features extracted by the pre-trained backbone before
           adaptation.
             Defaults to `1536`.
@@ -106,7 +106,7 @@ class Glass(AnomalibModule):
         self,
         input_shape: tuple[int, int] = (288, 288),
         anomaly_source_path: str | None = None,
-        backbone: str = "wideresnet50",
+        backbone: str = "wide_resnet50_2",
         pretrain_embed_dim: int = 1536,
         target_embed_dim: int = 1536,
         patchsize: int = 3,

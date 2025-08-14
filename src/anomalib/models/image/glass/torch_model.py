@@ -64,7 +64,7 @@ class GlassModel(nn.Module):
         anomaly_source_path: str | None = None,
         pretrain_embed_dim: int = 1536,
         target_embed_dim: int = 1536,
-        backbone: str = "wideresnet50",
+        backbone: str = "wide_resnet50_2",
         patchsize: int = 3,
         patchstride: int = 1,
         pre_trained: bool = True,
