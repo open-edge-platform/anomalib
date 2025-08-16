@@ -29,7 +29,7 @@ Example:
     >>> print(pg.name)
     PG20
     >>> # Compute PGn score
-    >>> pg.update(batch, target)
+    >>> pg.update(batch)
     >>> pg.compute()
     tensor(1.0)
     >>> pb = PBn(fpr=0.2)
@@ -37,7 +37,7 @@ Example:
     >>> print(pb.name)
     PB20
     >>> # Compute PBn score
-    >>> pb.update(batch, target)
+    >>> pb.update(batch)
     >>> pb.compute()
     tensor(1.0)
 
@@ -146,11 +146,11 @@ class _PBn(Metric):
         **kwargs: Additional arguments passed to the parent ``Metric`` class.
 
     Example:
-        >>> from anomalib.metrics import PBn
+        >>> from anomalib.metrics import _PBn
         >>> import torch
         >>> preds = torch.tensor([0.1, 0.4, 0.35, 0.8])
         >>> target = torch.tensor([0, 0, 1, 1])
-        >>> pb = PBn(fpr=0.2)
+        >>> pb = _PBn(fpr=0.2)
         >>> pb.update(preds, target)
         >>> pb.compute()
         tensor(1.0)

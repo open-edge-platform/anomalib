@@ -69,7 +69,7 @@ __all__ = [
     "ManualThreshold",
     "MinMax",
     "PGn",
-    "n",
+    "PBn",
     "PRO",
     "PIMO",
     "AUPIMO",
