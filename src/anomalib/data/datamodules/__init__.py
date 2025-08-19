@@ -4,7 +4,7 @@
 """Anomalib Data Modules."""
 
 from .depth import Folder3D, MVTec3D
-from .image import MPDD, VAD, BTech, Datumaro, Folder, Kolektor, MVTec, MVTecAD, Tabular, Visa
+from .image import BMAD, MPDD, VAD, BTech, Datumaro, Folder, Kolektor, MVTec, MVTecAD, Tabular, Visa
 from .video import Avenue, ShanghaiTech, UCSDped
 
 __all__ = [
@@ -23,4 +23,5 @@ __all__ = [
     "Avenue",
     "ShanghaiTech",
     "UCSDped",
+    "BMAD",
 ]
