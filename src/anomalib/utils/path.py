@@ -34,7 +34,50 @@ Note:
 
 import re
 from pathlib import Path
+from contextlib import suppress
+import os, sys, shutil, subprocess
+import stat
 
+def _is_windows_junction(p: Path) -> bool:
+    """Return True if path is a directory junction (reparse point mount point)."""
+    try:
+        st = p.lstat()
+        return getattr(st, "st_reparse_tag", 0) == stat.IO_REPARSE_TAG_MOUNT_POINT
+    except (OSError, AttributeError):
+        return False
+
+def _safe_remove_path(p: Path) -> None:
+    """Remove file/dir/symlink/junction at p without following links."""
+    if not os.path.lexists(str(p)):
+        return
+    with suppress(FileNotFoundError):
+        if p.is_symlink():
+            p.unlink()
+        elif _is_windows_junction(p):
+            os.rmdir(p)
+        elif p.is_dir():
+            shutil.rmtree(p)
+        else:
+            p.unlink()
+
+def _make_latest_windows(latest: Path, target: Path) -> None:
+    # Clean previous latest (symlink/junction/dir/file)
+    _safe_remove_path(latest)
+
+    tmp = latest.with_name(latest.name + "_tmp")
+    _safe_remove_path(tmp)
+
+    # Try junction first (no admin needed), fallback to copy
+    try:
+        subprocess.run(
+            ["cmd", "/c", "mklink", "/J", str(tmp), str(target.resolve())],
+            check=True,
+            capture_output=True,
+        )
+    except Exception:
+        shutil.copytree(target, tmp)
+
+    os.replace(tmp, latest)
 
 def create_versioned_dir(root_dir: str | Path) -> Path:
     """Create a new version directory and update the ``latest`` symbolic link.
@@ -100,10 +143,12 @@ def create_versioned_dir(root_dir: str | Path) -> Path:
 
     # Update the 'latest' symbolic link to point to the new version directory
     latest_link_path = root_dir / "latest"
-    if latest_link_path.is_symlink() or latest_link_path.exists():
-        latest_link_path.unlink()
-    latest_link_path.symlink_to(new_version_dir, target_is_directory=True)
-
+    if sys.platform.startswith("win"):
+        _make_latest_windows(latest_link_path, new_version_dir)
+    else:
+        if latest_link_path.is_symlink() or latest_link_path.exists():
+            latest_link_path.unlink()
+        latest_link_path.symlink_to(new_version_dir, target_is_directory=True)
     return latest_link_path
 
 
