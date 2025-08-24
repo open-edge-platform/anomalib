@@ -9,19 +9,28 @@ predictions or monitoring value ranges during training.
 
 Example:
     >>> from anomalib.metrics import MinMax
+    >>> from anomalib.data import ImageBatch
     >>> import torch
-    >>> # Create sample predictions
-    >>> predictions = torch.tensor([0.0807, 0.6329, 0.0559, 0.9860, 0.3595])
+    >>> # Create sample batch
+    >>> batch = ImageBatch(
+    ...     image=torch.rand(5, 3, 32, 32),
+    ...     pred_score=torch.tensor([0.0807, 0.6329, 0.0559, 0.9860, 0.3595]),
+    ...     gt_label=torch.tensor([0, 0, 1, 1, 1])
+    ... )
     >>> # Initialize and compute min/max
-    >>> minmax = MinMax()
-    >>> min_val, max_val = minmax(predictions)
+    >>> minmax = MinMax(fields=["pred_score"])
+    >>> min_val, max_val = minmax(batch)
     >>> min_val, max_val
     (tensor(0.0559), tensor(0.9860))
 
     The metric can be updated incrementally with new batches:
 
-    >>> new_predictions = torch.tensor([0.3251, 0.3169, 0.3072, 0.6247, 0.9999])
-    >>> minmax.update(new_predictions)
+    >>> new_batch = ImageBatch(
+    ...     image=torch.rand(5, 3, 32, 32),
+    ...     pred_score=torch.tensor([0.3251, 0.3169, 0.3072, 0.6247, 0.9999]),
+    ...     gt_label=torch.tensor([0, 0, 1, 1, 1])
+    ... )
+    >>> minmax.update(new_batch)
     >>> min_val, max_val = minmax.compute()
     >>> min_val, max_val
     (tensor(0.0559), tensor(0.9999))

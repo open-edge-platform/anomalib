@@ -13,13 +13,17 @@ The threshold is computed by:
 
 Example:
     >>> from anomalib.metrics import F1AdaptiveThreshold
+    >>> from anomalib.data import ImageBatch
     >>> import torch
-    >>> # Create sample data
-    >>> labels = torch.tensor([0, 0, 0, 1, 1])  # Binary labels
-    >>> scores = torch.tensor([2.3, 1.6, 2.6, 7.9, 3.3])  # Anomaly scores
+    >>> # Create sample batch
+    >>> batch = ImageBatch(
+    ...     image=torch.rand(4, 3, 32, 32),
+    ...     pred_score=torch.tensor([2.3, 1.6, 2.6, 7.9, 3.3]),
+    ...     gt_label=torch.tensor([0, 0, 0, 1, 1])
+    ... )
     >>> # Initialize and compute threshold
-    >>> threshold = F1AdaptiveThreshold(default_value=0.5)
-    >>> optimal_threshold = threshold(scores, labels)
+    >>> threshold = F1AdaptiveThreshold(fields=["pred_score", "gt_label"])
+    >>> optimal_threshold = threshold(batch)
     >>> optimal_threshold
     tensor(3.3000)
 
