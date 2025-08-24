@@ -30,13 +30,21 @@ This module provides various metrics for evaluating anomaly detection performanc
 
 Example:
     >>> from anomalib.metrics import AUROC, F1Score
-    >>> auroc = AUROC()
-    >>> f1 = F1Score()
-    >>> labels = torch.tensor([0, 1, 0, 1])
-    >>> scores = torch.tensor([0.1, 0.9, 0.2, 0.8])
-    >>> auroc(scores, labels)
+    >>> from anomalib.data import ImageBatch
+    >>> import torch
+    >>> # Initialize metrics with required fields
+    >>> auroc = AUROC(fields=["pred_score", "gt_label"])
+    >>> f1 = F1Score(fields=["pred_score", "gt_label"], threshold=0.5)
+    >>> # Create sample batch
+    >>> batch = ImageBatch(
+    ...     image=torch.rand(4, 3, 32, 32),
+    ...     pred_score=torch.tensor([0.1, 0.9, 0.2, 0.8]),
+    ...     gt_label=torch.tensor([0, 1, 0, 1])
+    ... )
+    >>> # Calculate metrics
+    >>> auroc(batch)
     tensor(1.)
-    >>> f1(scores, labels, threshold=0.5)
+    >>> f1(batch)
     tensor(1.)
 """
 

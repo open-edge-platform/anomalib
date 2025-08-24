@@ -12,21 +12,24 @@ anomalies are rare.
 
 Example:
     >>> from anomalib.metrics import AUPR
+    >>> from anomalib.data import ImageBatch
     >>> import torch
-    >>> # Create sample data
-    >>> labels = torch.tensor([0, 0, 1, 1])  # Binary labels
-    >>> scores = torch.tensor([0.1, 0.2, 0.8, 0.9])  # Anomaly scores
+    >>> # Create sample batch
+    >>> batch = ImageBatch(
+    ...     image=torch.rand(4, 3, 32, 32),
+    ...     pred_score=torch.tensor([0.1, 0.2, 0.8, 0.9]),
+    ...     gt_label=torch.tensor([0, 0, 1, 1])
+    ... )
     >>> # Initialize and compute AUPR
-    >>> metric = AUPR()
-    >>> aupr_score = metric(scores, labels)
-    >>> aupr_score
-    tensor(1.0)
+    >>> aupr = AUPR(fields=["pred_score", "gt_label"])
+    >>> aupr(batch)
+    tensor(0.8750)
 
-The metric can also be updated incrementally with batches:
+The metric can also be updated incrementally:
 
-    >>> for batch_scores, batch_labels in dataloader:
-    ...     metric.update(batch_scores, batch_labels)
-    >>> final_score = metric.compute()
+    >>> for batch in dataloader:
+    ...     aupr.update(batch)
+    >>> final_score = aupr.compute()
 
 Note:
     The AUPR score ranges from 0 to 1, with 1 indicating perfect ranking of
@@ -53,17 +56,18 @@ class _AUPR(BinaryPrecisionRecallCurve):
 
     Examples:
         To compute the metric for a set of predictions and ground truth targets:
-
+        >>> from anomalib.metrics.aupr import _AUPR
+        >>> import torch
         >>> true = torch.tensor([0, 1, 1, 1, 0, 0, 0, 0, 1, 1])
         >>> pred = torch.tensor([0.59, 0.35, 0.72, 0.33, 0.73, 0.81, 0.30, 0.05, 0.04, 0.48])
 
-        >>> metric = AUPR()
+        >>> metric = _AUPR()
         >>> metric(pred, true)
         tensor(0.4899)
 
         It is also possible to update the metric state incrementally within batches:
 
-        >>> for batch in dataloader:
+        >>> for pred, true in dataloader:
         ...     # Compute prediction and target tensors
         ...     metric.update(pred, true)
         >>> metric.compute()
