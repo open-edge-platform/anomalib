@@ -25,6 +25,8 @@ This module provides various metrics for evaluating anomaly detection performanc
     - ``BinaryPrecisionRecallCurve``: Computes precision-recall curves
     - ``Evaluator``: Combines multiple metrics for evaluation
     - ``MinMax``: Normalizes scores to [0,1] range
+    - ``PBn``: Presorted bad with n% good samples misclassified
+    - ``PGn``: Presorted good with n% bad samples missed
     - ``PRO``: Per-Region Overlap score
     - ``PIMO``: Per-Image Missed Overlap score
 
