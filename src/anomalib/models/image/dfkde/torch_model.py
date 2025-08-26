@@ -89,7 +89,7 @@ class DfkdeModel(nn.Module):
             feature_scaling_method=feature_scaling_method,
             max_training_points=max_training_points,
         )
-        self.memory_bank = torch.empty(0)
+        self.memory_bank = []
 
     def get_features(self, batch: torch.Tensor) -> torch.Tensor:
         """Extract features from the pre-trained backbone network.
@@ -142,11 +142,7 @@ class DfkdeModel(nn.Module):
         # 1. apply feature extraction
         features = self.get_features(batch)
         if self.training:
-            if self.memory_bank.size(0) == 0:
-                self.memory_bank = features
-            else:
-                new_bank = torch.cat((self.memory_bank, features), dim=0).to(self.memory_bank)
-                self.memory_bank = new_bank
+            self.memory_bank.append(features)
             return features
 
         # 2. apply density estimation
@@ -164,6 +160,7 @@ class DfkdeModel(nn.Module):
         Raises:
             ValueError: If the memory bank is empty.
         """
+        self.memory_bank = torch.vstack(self.memory_bank)
         if self.memory_bank.size(0) == 0:
             msg = "Memory bank is empty. Cannot perform coreset selection."
             raise ValueError(msg)
@@ -172,4 +169,4 @@ class DfkdeModel(nn.Module):
         self.classifier.fit(self.memory_bank)
 
         # clear memory bank, redcues gpu size
-        self.memory_bank = torch.empty(0).to(self.memory_bank)
+        self.memory_bank = []
