@@ -240,4 +240,4 @@ class PadimModel(nn.Module):
         self.gaussian.fit(self.memory_bank)
 
         # clear memory bank, redcues gpu usage
-        self.memory_bank = torch.empty(0)
+        self.memory_bank = []
