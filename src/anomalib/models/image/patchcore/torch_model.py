@@ -270,7 +270,7 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
             del embeddings
 
         self.memory_bank = torch.vstack(self.embedding_store)
-        self.embeddings_store.clear()
+        self.embedding_store.clear()
 
         if self.memory_bank.size(0) == 0:
             msg = "Memory bank is empty. Cannot perform coreset selection."
