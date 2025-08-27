@@ -89,7 +89,7 @@ class DfkdeModel(nn.Module):
             feature_scaling_method=feature_scaling_method,
             max_training_points=max_training_points,
         )
-        self.memory_bank = []
+        self.memory_bank: list[torch.tensor] = []
 
     def get_features(self, batch: torch.Tensor) -> torch.Tensor:
         """Extract features from the pre-trained backbone network.
@@ -160,10 +160,10 @@ class DfkdeModel(nn.Module):
         Raises:
             ValueError: If the memory bank is empty.
         """
-        self.memory_bank = torch.vstack(self.memory_bank)
-        if self.memory_bank.size(0) == 0:
+        if len(self.memory_bank) == 0:
             msg = "Memory bank is empty. Cannot perform coreset selection."
             raise ValueError(msg)
+        self.memory_bank = torch.vstack(self.memory_bank)
 
         # fit gaussian
         self.classifier.fit(self.memory_bank)

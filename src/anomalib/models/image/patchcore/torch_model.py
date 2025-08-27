@@ -269,13 +269,14 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         if embeddings is not None:
             del embeddings
 
+        if len(self.embedding_store) == 0:
+            msg = "Embedding store is empty. Cannot perform coreset selection."
+            raise ValueError(msg)
+
+        # Coreset Subsampling
         self.memory_bank = torch.vstack(self.embedding_store)
         self.embedding_store.clear()
 
-        if self.memory_bank.size(0) == 0:
-            msg = "Memory bank is empty. Cannot perform coreset selection."
-            raise ValueError(msg)
-        # Coreset Subsampling
         sampler = KCenterGreedy(embedding=self.memory_bank, sampling_ratio=sampling_ratio)
         self.memory_bank = sampler.sample_coreset()
 

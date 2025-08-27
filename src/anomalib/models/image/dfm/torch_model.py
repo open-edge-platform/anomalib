@@ -153,7 +153,7 @@ class DFMModel(nn.Module):
             layers=[layer],
         ).eval()
 
-        self.memory_bank = []
+        self.memory_bank: list[torch.tensor] = []
 
     def fit(self) -> None:
         """Fit PCA and Gaussian model to dataset."""
