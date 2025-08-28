@@ -52,7 +52,7 @@ interfaces, and might be easier for those who would like to use anomalib off-the
 
 ```{literalinclude} ../../../../examples/api/01_getting_started/basic_training.py
 :language: python
-:lines: 10-34
+:lines: 10-53
 ```
 
 :::
@@ -61,6 +61,7 @@ interfaces, and might be easier for those who would like to use anomalib off-the
 
 ```{literalinclude} ../../../../examples/cli/01_getting_started/basic_training.sh
 :language: bash
+:lines: 10-33
 ```
 
 :::
@@ -81,6 +82,7 @@ Anomalib includes multiple inferencing scripts, including Torch, Lightning, Grad
 
 ```{literalinclude} ../../../../examples/api/01_getting_started/basic_inference.py
 :language: python
+:lines: 10-40
 ```
 
 :::
@@ -104,8 +106,9 @@ Anomalib includes multiple inferencing scripts, including Torch, Lightning, Grad
 :::{tab-item} API
 :sync: label-1
 
-```{code-block} python
-
+```{literalinclude} ../../../../examples/api/01_getting_started/basic_torch_inference.py
+:language: python
+:lines: 10-11
 ```
 
 :::
@@ -129,8 +132,9 @@ Anomalib includes multiple inferencing scripts, including Torch, Lightning, Grad
 :::{tab-item} API
 :sync: label-1
 
-```{code-block} python
-
+```{literalinclude} ../../../../examples/api/01_getting_started/basic_openvino_inference.py
+:language: python
+:lines: 10-28
 ```
 
 :::

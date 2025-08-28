@@ -12,22 +12,27 @@ This module provides two metrics for evaluating binary classification performanc
 
 Example:
     >>> from anomalib.metrics import F1Score, F1Max
+    >>> from anomalib.data import ImageBatch
     >>> import torch
-    >>> # Create sample data
-    >>> preds = torch.tensor([0.1, 0.4, 0.35, 0.8])
-    >>> target = torch.tensor([0, 0, 1, 1])
+    >>> # Create sample batch
+    >>> batch = ImageBatch(
+    ...     image=torch.rand(4, 3, 32, 32),
+    ...     pred_score=torch.tensor([0.1, 0.4, 0.35, 0.8]),
+    ...     pred_label=torch.tensor([0, 1, 1, 1]),
+    ...     gt_label=torch.tensor([0, 0, 1, 1])
+    ... )
     >>> # Compute standard F1 score
-    >>> f1 = F1Score()
-    >>> f1.update(preds > 0.5, target)
+    >>> f1 = F1Score(fields=["pred_label", "gt_label"])
+    >>> f1.update(batch)
     >>> f1.compute()
-    tensor(1.0)
+    tensor(0.8000)
     >>> # Compute maximum F1 score
-    >>> f1_max = F1Max()
-    >>> f1_max.update(preds, target)
+    >>> f1_max = F1Max(fields=["pred_score", "gt_label"])
+    >>> f1_max.update(batch)
     >>> f1_max.compute()
-    tensor(1.0)
+    tensor(0.8000)
     >>> f1_max.threshold
-    tensor(0.6000)
+    tensor(0.3500)
 """
 
 import torch
@@ -47,16 +52,20 @@ class F1Score(AnomalibMetric, BinaryF1Score):
 
     Example:
         >>> from anomalib.metrics import F1Score
+        >>> from anomalib.data import ImageBatch
         >>> import torch
         >>> # Create metric
-        >>> f1 = F1Score()
-        >>> # Create sample data
-        >>> preds = torch.tensor([0, 0, 1, 1])
-        >>> target = torch.tensor([0, 1, 1, 1])
+        >>> f1 = F1Score(fields=["pred_score", "gt_label"])
+        >>> # Create sample batch
+        >>> batch = ImageBatch(
+        ...     image=torch.rand(4, 3, 32, 32),
+        ...     pred_score=torch.tensor([0, 0, 1, 1]),
+        ...     gt_label=torch.tensor([0, 1, 1, 1])
+        ... )
         >>> # Update and compute
-        >>> f1.update(preds, target)
+        >>> f1.update(batch)
         >>> f1.compute()
-        tensor(0.8571)
+        tensor(0.8000)
     """
 
 
@@ -81,19 +90,19 @@ class _F1Max(Metric):
         threshold (torch.Tensor): Threshold value that yields maximum F1 score.
 
     Example:
-        >>> from anomalib.metrics import F1Max
+        >>> from anomalib.metrics.f1_score import _F1Max
         >>> import torch
         >>> # Create metric
-        >>> f1_max = F1Max()
+        >>> f1_max = _F1Max()
         >>> # Create sample data
         >>> preds = torch.tensor([0.1, 0.4, 0.35, 0.8])
         >>> target = torch.tensor([0, 0, 1, 1])
         >>> # Update and compute
         >>> f1_max.update(preds, target)
         >>> f1_max.compute()
-        tensor(1.0)
+        tensor(0.8000)
         >>> f1_max.threshold
-        tensor(0.6000)
+        tensor(0.3500)
     """
 
     full_state_update: bool = False
@@ -163,5 +172,5 @@ class F1Max(AnomalibMetric, _F1Max):  # type: ignore[misc]
         >>> # Update and compute
         >>> f1_max.update(batch)
         >>> f1_max.compute()
-        tensor(1.0)
+        tensor(0.8000)
     """
