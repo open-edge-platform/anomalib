@@ -1,0 +1,7 @@
+# Lock files
+package-lock.json
+
+# Tauri
+src-tauri/bin
+src-tauri/target
+src-tauri/gen

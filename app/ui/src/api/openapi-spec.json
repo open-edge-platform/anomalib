@@ -1,0 +1,1739 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Geti Inspect",
+        "description": "",
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/api/sources": {
+            "get": {
+                "tags": ["Sources"],
+                "summary": "List Sources",
+                "description": "List the available sources",
+                "operationId": "list_sources_api_sources_get",
+                "responses": {
+                    "200": {
+                        "description": "List of available source configurations",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "oneOf": [
+                                            { "$ref": "#/components/schemas/WebcamSourceConfig" },
+                                            { "$ref": "#/components/schemas/IPCameraSourceConfig" },
+                                            { "$ref": "#/components/schemas/VideoFileSourceConfig" },
+                                            { "$ref": "#/components/schemas/ImagesFolderSourceConfig" },
+                                            { "$ref": "#/components/schemas/DisconnectedSourceConfig" },
+                                            { "$ref": "#/components/schemas/WebcamSourceConfig" },
+                                            { "$ref": "#/components/schemas/IPCameraSourceConfig" },
+                                            { "$ref": "#/components/schemas/VideoFileSourceConfig" },
+                                            { "$ref": "#/components/schemas/ImagesFolderSourceConfig" },
+                                            { "$ref": "#/components/schemas/DisconnectedSourceConfig" }
+                                        ],
+                                        "discriminator": {
+                                            "propertyName": "source_type",
+                                            "mapping": {
+                                                "webcam": "#/components/schemas/WebcamSourceConfig",
+                                                "ip_camera": "#/components/schemas/IPCameraSourceConfig",
+                                                "video_file": "#/components/schemas/VideoFileSourceConfig",
+                                                "images_folder": "#/components/schemas/ImagesFolderSourceConfig",
+                                                "disconnected": "#/components/schemas/DisconnectedSourceConfig"
+                                            }
+                                        }
+                                    },
+                                    "type": "array",
+                                    "title": "Response 200 List Sources Api Sources Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": ["Sources"],
+                "summary": "Create Source",
+                "description": "Create and configure a new source",
+                "operationId": "create_source_api_sources_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "anyOf": [
+                                    { "$ref": "#/components/schemas/WebcamSourceConfig" },
+                                    { "$ref": "#/components/schemas/IPCameraSourceConfig" },
+                                    { "$ref": "#/components/schemas/VideoFileSourceConfig" },
+                                    { "$ref": "#/components/schemas/ImagesFolderSourceConfig" },
+                                    { "$ref": "#/components/schemas/DisconnectedSourceConfig" }
+                                ],
+                                "title": "Source Config",
+                                "description": "\nConfiguration for the new source. The exact list of fields that can be configured depends on the source type.\n"
+                            },
+                            "examples": {
+                                "webcam": {
+                                    "summary": "Webcam source",
+                                    "description": "Configuration for a webcam source",
+                                    "value": { "source_type": "webcam", "name": "My Webcam", "device_id": 0 }
+                                },
+                                "ip_camera": {
+                                    "summary": "IP camera source",
+                                    "description": "Configuration for an IP camera source",
+                                    "value": {
+                                        "source_type": "ip_camera",
+                                        "name": "IP Camera 1",
+                                        "stream_url": "rtsp://192.168.1.100:554/stream1",
+                                        "auth_required": true
+                                    }
+                                },
+                                "video_file": {
+                                    "summary": "Video file source",
+                                    "description": "Configuration for a video file source",
+                                    "value": {
+                                        "source_type": "video_file",
+                                        "name": "Camera recording 123",
+                                        "video_path": "/path/to/video.mp4"
+                                    }
+                                },
+                                "images_folder": {
+                                    "summary": "Images folder source",
+                                    "description": "Configuration for a folder containing images source",
+                                    "value": {
+                                        "source_type": "images_folder",
+                                        "name": "Production Samples",
+                                        "folder_path": "/path/to/images",
+                                        "ignore_existing_images": true
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Source created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        { "$ref": "#/components/schemas/WebcamSourceConfig" },
+                                        { "$ref": "#/components/schemas/IPCameraSourceConfig" },
+                                        { "$ref": "#/components/schemas/VideoFileSourceConfig" },
+                                        { "$ref": "#/components/schemas/ImagesFolderSourceConfig" },
+                                        { "$ref": "#/components/schemas/DisconnectedSourceConfig" },
+                                        { "$ref": "#/components/schemas/WebcamSourceConfig" },
+                                        { "$ref": "#/components/schemas/IPCameraSourceConfig" },
+                                        { "$ref": "#/components/schemas/VideoFileSourceConfig" },
+                                        { "$ref": "#/components/schemas/ImagesFolderSourceConfig" },
+                                        { "$ref": "#/components/schemas/DisconnectedSourceConfig" }
+                                    ],
+                                    "title": "Response 201 Create Source Api Sources Post",
+                                    "discriminator": {
+                                        "propertyName": "source_type",
+                                        "mapping": {
+                                            "webcam": "#/components/schemas/WebcamSourceConfig",
+                                            "ip_camera": "#/components/schemas/IPCameraSourceConfig",
+                                            "video_file": "#/components/schemas/VideoFileSourceConfig",
+                                            "images_folder": "#/components/schemas/ImagesFolderSourceConfig",
+                                            "disconnected": "#/components/schemas/DisconnectedSourceConfig"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": { "description": "Invalid source ID or request body" },
+                    "409": { "description": "Source already exists" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sources/{source_id}": {
+            "get": {
+                "tags": ["Sources"],
+                "summary": "Get Source",
+                "description": "Get info about a source",
+                "operationId": "get_source_api_sources__source_id__get",
+                "parameters": [
+                    {
+                        "name": "source_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Source Id" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Source found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        { "$ref": "#/components/schemas/WebcamSourceConfig" },
+                                        { "$ref": "#/components/schemas/IPCameraSourceConfig" },
+                                        { "$ref": "#/components/schemas/VideoFileSourceConfig" },
+                                        { "$ref": "#/components/schemas/ImagesFolderSourceConfig" },
+                                        { "$ref": "#/components/schemas/DisconnectedSourceConfig" },
+                                        { "$ref": "#/components/schemas/WebcamSourceConfig" },
+                                        { "$ref": "#/components/schemas/IPCameraSourceConfig" },
+                                        { "$ref": "#/components/schemas/VideoFileSourceConfig" },
+                                        { "$ref": "#/components/schemas/ImagesFolderSourceConfig" },
+                                        { "$ref": "#/components/schemas/DisconnectedSourceConfig" }
+                                    ],
+                                    "discriminator": {
+                                        "propertyName": "source_type",
+                                        "mapping": {
+                                            "webcam": "#/components/schemas/WebcamSourceConfig",
+                                            "ip_camera": "#/components/schemas/IPCameraSourceConfig",
+                                            "video_file": "#/components/schemas/VideoFileSourceConfig",
+                                            "images_folder": "#/components/schemas/ImagesFolderSourceConfig",
+                                            "disconnected": "#/components/schemas/DisconnectedSourceConfig"
+                                        }
+                                    },
+                                    "title": "Response 200 Get Source Api Sources  Source Id  Get"
+                                }
+                            }
+                        }
+                    },
+                    "400": { "description": "Invalid source ID" },
+                    "404": { "description": "Source not found" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "tags": ["Sources"],
+                "summary": "Update Source",
+                "description": "Reconfigure an existing source",
+                "operationId": "update_source_api_sources__source_id__patch",
+                "parameters": [
+                    {
+                        "name": "source_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Source Id" }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true,
+                                "description": "Partial source configuration update. May contain any subset of fields from the respective source type (e.g., 'device_id' for webcams; 'video_path' for video files). Fields not included in the request will remain unchanged. The 'source_type' field cannot be changed.",
+                                "title": "Source Config"
+                            },
+                            "examples": {
+                                "webcam": {
+                                    "summary": "Update webcam source",
+                                    "description": "Rename a webcam source",
+                                    "value": { "name": "Updated Webcam Name" }
+                                },
+                                "video_file": {
+                                    "summary": "Update video file source",
+                                    "description": "Change the video path for a video file source",
+                                    "value": { "video_path": "/new/path/to/video.mp4" }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Source successfully updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        { "$ref": "#/components/schemas/WebcamSourceConfig" },
+                                        { "$ref": "#/components/schemas/IPCameraSourceConfig" },
+                                        { "$ref": "#/components/schemas/VideoFileSourceConfig" },
+                                        { "$ref": "#/components/schemas/ImagesFolderSourceConfig" },
+                                        { "$ref": "#/components/schemas/DisconnectedSourceConfig" },
+                                        { "$ref": "#/components/schemas/WebcamSourceConfig" },
+                                        { "$ref": "#/components/schemas/IPCameraSourceConfig" },
+                                        { "$ref": "#/components/schemas/VideoFileSourceConfig" },
+                                        { "$ref": "#/components/schemas/ImagesFolderSourceConfig" },
+                                        { "$ref": "#/components/schemas/DisconnectedSourceConfig" }
+                                    ],
+                                    "discriminator": {
+                                        "propertyName": "source_type",
+                                        "mapping": {
+                                            "webcam": "#/components/schemas/WebcamSourceConfig",
+                                            "ip_camera": "#/components/schemas/IPCameraSourceConfig",
+                                            "video_file": "#/components/schemas/VideoFileSourceConfig",
+                                            "images_folder": "#/components/schemas/ImagesFolderSourceConfig",
+                                            "disconnected": "#/components/schemas/DisconnectedSourceConfig"
+                                        }
+                                    },
+                                    "title": "Response 200 Update Source Api Sources  Source Id  Patch"
+                                }
+                            }
+                        }
+                    },
+                    "400": { "description": "Invalid source ID or request body" },
+                    "404": { "description": "Source not found" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["Sources"],
+                "summary": "Delete Source",
+                "description": "Remove a source",
+                "operationId": "delete_source_api_sources__source_id__delete",
+                "parameters": [
+                    {
+                        "name": "source_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Source Id" }
+                    }
+                ],
+                "responses": {
+                    "204": { "description": "Source configuration successfully deleted" },
+                    "400": { "description": "Invalid source ID or source is used by at least one pipeline" },
+                    "404": { "description": "Source not found" },
+                    "409": { "description": "Source is used by at least one pipeline" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sources/{source_id}:export": {
+            "post": {
+                "tags": ["Sources"],
+                "summary": "Export Source",
+                "description": "Export a source to file",
+                "operationId": "export_source_api_sources__source_id__export_post",
+                "parameters": [
+                    {
+                        "name": "source_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Source Id" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Source configuration exported as a YAML file",
+                        "content": { "application/x-yaml": { "schema": { "type": "string", "format": "binary" } } }
+                    },
+                    "400": { "description": "Invalid source ID or request body" },
+                    "404": { "description": "Source not found" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sources:import": {
+            "post": {
+                "tags": ["Sources"],
+                "summary": "Import Source",
+                "description": "Import a source from file",
+                "operationId": "import_source_api_sources_import_post",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": { "$ref": "#/components/schemas/Body_import_source_api_sources_import_post" }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Source imported successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        { "$ref": "#/components/schemas/WebcamSourceConfig" },
+                                        { "$ref": "#/components/schemas/IPCameraSourceConfig" },
+                                        { "$ref": "#/components/schemas/VideoFileSourceConfig" },
+                                        { "$ref": "#/components/schemas/ImagesFolderSourceConfig" },
+                                        { "$ref": "#/components/schemas/DisconnectedSourceConfig" },
+                                        { "$ref": "#/components/schemas/WebcamSourceConfig" },
+                                        { "$ref": "#/components/schemas/IPCameraSourceConfig" },
+                                        { "$ref": "#/components/schemas/VideoFileSourceConfig" },
+                                        { "$ref": "#/components/schemas/ImagesFolderSourceConfig" },
+                                        { "$ref": "#/components/schemas/DisconnectedSourceConfig" }
+                                    ],
+                                    "title": "Response 201 Import Source Api Sources Import Post",
+                                    "discriminator": {
+                                        "propertyName": "source_type",
+                                        "mapping": {
+                                            "webcam": "#/components/schemas/WebcamSourceConfig",
+                                            "ip_camera": "#/components/schemas/IPCameraSourceConfig",
+                                            "video_file": "#/components/schemas/VideoFileSourceConfig",
+                                            "images_folder": "#/components/schemas/ImagesFolderSourceConfig",
+                                            "disconnected": "#/components/schemas/DisconnectedSourceConfig"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": { "description": "Invalid YAML format or source type is DISCONNECTED" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sinks": {
+            "get": {
+                "tags": ["Sinks"],
+                "summary": "List Sinks",
+                "description": "List the available sinks",
+                "operationId": "list_sinks_api_sinks_get",
+                "responses": {
+                    "200": {
+                        "description": "List of available sink configurations",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "oneOf": [
+                                            { "$ref": "#/components/schemas/FolderSinkConfig" },
+                                            { "$ref": "#/components/schemas/MqttSinkConfig" },
+                                            { "$ref": "#/components/schemas/RosSinkConfig" },
+                                            { "$ref": "#/components/schemas/WebhookSinkConfig" },
+                                            { "$ref": "#/components/schemas/DisconnectedSinkConfig" },
+                                            { "$ref": "#/components/schemas/FolderSinkConfig" },
+                                            { "$ref": "#/components/schemas/MqttSinkConfig" },
+                                            { "$ref": "#/components/schemas/RosSinkConfig" },
+                                            { "$ref": "#/components/schemas/WebhookSinkConfig" },
+                                            { "$ref": "#/components/schemas/DisconnectedSinkConfig" }
+                                        ],
+                                        "discriminator": {
+                                            "propertyName": "sink_type",
+                                            "mapping": {
+                                                "folder": "#/components/schemas/FolderSinkConfig",
+                                                "mqtt": "#/components/schemas/MqttSinkConfig",
+                                                "ros": "#/components/schemas/RosSinkConfig",
+                                                "webhook": "#/components/schemas/WebhookSinkConfig",
+                                                "disconnected": "#/components/schemas/DisconnectedSinkConfig"
+                                            }
+                                        }
+                                    },
+                                    "type": "array",
+                                    "title": "Response 200 List Sinks Api Sinks Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": ["Sinks"],
+                "summary": "Create Sink",
+                "description": "Create and configure a new sink",
+                "operationId": "create_sink_api_sinks_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "anyOf": [
+                                    { "$ref": "#/components/schemas/FolderSinkConfig" },
+                                    { "$ref": "#/components/schemas/MqttSinkConfig" },
+                                    { "$ref": "#/components/schemas/RosSinkConfig" },
+                                    { "$ref": "#/components/schemas/WebhookSinkConfig" },
+                                    { "$ref": "#/components/schemas/DisconnectedSinkConfig" }
+                                ],
+                                "title": "Sink Config",
+                                "description": "\nConfiguration for the new sink. The exact list of fields that can be configured depends on the sink type.\n"
+                            },
+                            "examples": {
+                                "folder": {
+                                    "summary": "Folder sink",
+                                    "description": "Configuration for a local filesystem folder sink",
+                                    "value": {
+                                        "sink_type": "folder",
+                                        "name": "My Output Folder",
+                                        "folder_path": "/path/to/output",
+                                        "output_formats": ["image_with_predictions"],
+                                        "rate_limit": 0.2
+                                    }
+                                },
+                                "mqtt": {
+                                    "summary": "MQTT sink",
+                                    "description": "Configuration for an MQTT message broker sink",
+                                    "value": {
+                                        "sink_type": "mqtt",
+                                        "name": "Local MQTT Broker",
+                                        "broker_host": "localhost",
+                                        "broker_port": 1883,
+                                        "topic": "predictions",
+                                        "output_formats": ["predictions"]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Sink created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        { "$ref": "#/components/schemas/FolderSinkConfig" },
+                                        { "$ref": "#/components/schemas/MqttSinkConfig" },
+                                        { "$ref": "#/components/schemas/RosSinkConfig" },
+                                        { "$ref": "#/components/schemas/WebhookSinkConfig" },
+                                        { "$ref": "#/components/schemas/DisconnectedSinkConfig" },
+                                        { "$ref": "#/components/schemas/FolderSinkConfig" },
+                                        { "$ref": "#/components/schemas/MqttSinkConfig" },
+                                        { "$ref": "#/components/schemas/RosSinkConfig" },
+                                        { "$ref": "#/components/schemas/WebhookSinkConfig" },
+                                        { "$ref": "#/components/schemas/DisconnectedSinkConfig" }
+                                    ],
+                                    "title": "Response 201 Create Sink Api Sinks Post",
+                                    "discriminator": {
+                                        "propertyName": "sink_type",
+                                        "mapping": {
+                                            "folder": "#/components/schemas/FolderSinkConfig",
+                                            "mqtt": "#/components/schemas/MqttSinkConfig",
+                                            "ros": "#/components/schemas/RosSinkConfig",
+                                            "webhook": "#/components/schemas/WebhookSinkConfig",
+                                            "disconnected": "#/components/schemas/DisconnectedSinkConfig"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": { "description": "Invalid sink ID or request body" },
+                    "409": { "description": "Sink already exists" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sinks/{sink_id}": {
+            "get": {
+                "tags": ["Sinks"],
+                "summary": "Get Sink",
+                "description": "Get info about a sink",
+                "operationId": "get_sink_api_sinks__sink_id__get",
+                "parameters": [
+                    {
+                        "name": "sink_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Sink Id" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sink found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        { "$ref": "#/components/schemas/FolderSinkConfig" },
+                                        { "$ref": "#/components/schemas/MqttSinkConfig" },
+                                        { "$ref": "#/components/schemas/RosSinkConfig" },
+                                        { "$ref": "#/components/schemas/WebhookSinkConfig" },
+                                        { "$ref": "#/components/schemas/DisconnectedSinkConfig" },
+                                        { "$ref": "#/components/schemas/FolderSinkConfig" },
+                                        { "$ref": "#/components/schemas/MqttSinkConfig" },
+                                        { "$ref": "#/components/schemas/RosSinkConfig" },
+                                        { "$ref": "#/components/schemas/WebhookSinkConfig" },
+                                        { "$ref": "#/components/schemas/DisconnectedSinkConfig" }
+                                    ],
+                                    "discriminator": {
+                                        "propertyName": "sink_type",
+                                        "mapping": {
+                                            "folder": "#/components/schemas/FolderSinkConfig",
+                                            "mqtt": "#/components/schemas/MqttSinkConfig",
+                                            "ros": "#/components/schemas/RosSinkConfig",
+                                            "webhook": "#/components/schemas/WebhookSinkConfig",
+                                            "disconnected": "#/components/schemas/DisconnectedSinkConfig"
+                                        }
+                                    },
+                                    "title": "Response 200 Get Sink Api Sinks  Sink Id  Get"
+                                }
+                            }
+                        }
+                    },
+                    "400": { "description": "Invalid sink ID" },
+                    "404": { "description": "Sink not found" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "tags": ["Sinks"],
+                "summary": "Update Sink",
+                "description": "Reconfigure an existing sink",
+                "operationId": "update_sink_api_sinks__sink_id__patch",
+                "parameters": [
+                    {
+                        "name": "sink_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Sink Id" }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true,
+                                "description": "Partial sink configuration update. May contain any subset of fields from the respective sink type (e.g., 'broker_host' and 'broker_port' for MQTT; 'output_path' for folder sinks). Fields not included in the request will remain unchanged. The 'sink_type' field cannot be changed.",
+                                "title": "Sink Config"
+                            },
+                            "examples": {
+                                "folder": {
+                                    "summary": "Update folder sink",
+                                    "description": "Change the output path for a folder sink",
+                                    "value": { "folder_path": "/new/output/directory" }
+                                },
+                                "mqtt": {
+                                    "summary": "Update MQTT sink",
+                                    "description": "Change the topic for an MQTT sink",
+                                    "value": { "topic": "new_predictions_topic" }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Sink successfully updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        { "$ref": "#/components/schemas/FolderSinkConfig" },
+                                        { "$ref": "#/components/schemas/MqttSinkConfig" },
+                                        { "$ref": "#/components/schemas/RosSinkConfig" },
+                                        { "$ref": "#/components/schemas/WebhookSinkConfig" },
+                                        { "$ref": "#/components/schemas/DisconnectedSinkConfig" },
+                                        { "$ref": "#/components/schemas/FolderSinkConfig" },
+                                        { "$ref": "#/components/schemas/MqttSinkConfig" },
+                                        { "$ref": "#/components/schemas/RosSinkConfig" },
+                                        { "$ref": "#/components/schemas/WebhookSinkConfig" },
+                                        { "$ref": "#/components/schemas/DisconnectedSinkConfig" }
+                                    ],
+                                    "discriminator": {
+                                        "propertyName": "sink_type",
+                                        "mapping": {
+                                            "folder": "#/components/schemas/FolderSinkConfig",
+                                            "mqtt": "#/components/schemas/MqttSinkConfig",
+                                            "ros": "#/components/schemas/RosSinkConfig",
+                                            "webhook": "#/components/schemas/WebhookSinkConfig",
+                                            "disconnected": "#/components/schemas/DisconnectedSinkConfig"
+                                        }
+                                    },
+                                    "title": "Response 200 Update Sink Api Sinks  Sink Id  Patch"
+                                }
+                            }
+                        }
+                    },
+                    "400": { "description": "Invalid sink ID or request body" },
+                    "404": { "description": "Sink not found" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["Sinks"],
+                "summary": "Delete Sink",
+                "description": "Remove a sink",
+                "operationId": "delete_sink_api_sinks__sink_id__delete",
+                "parameters": [
+                    {
+                        "name": "sink_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Sink Id" }
+                    }
+                ],
+                "responses": {
+                    "204": { "description": "Sink configuration successfully deleted" },
+                    "400": { "description": "Invalid sink ID" },
+                    "404": { "description": "Sink not found" },
+                    "409": { "description": "Sink is used by at least one pipeline" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sinks/{sink_id}:export": {
+            "post": {
+                "tags": ["Sinks"],
+                "summary": "Export Sink",
+                "description": "Export a sink to file",
+                "operationId": "export_sink_api_sinks__sink_id__export_post",
+                "parameters": [
+                    {
+                        "name": "sink_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Sink Id" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sink configuration exported as a YAML file",
+                        "content": { "application/x-yaml": { "schema": { "type": "string", "format": "binary" } } }
+                    },
+                    "400": { "description": "Invalid sink ID or request body" },
+                    "404": { "description": "Sink not found" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sinks:import": {
+            "post": {
+                "tags": ["Sinks"],
+                "summary": "Import Sink",
+                "description": "Import a sink from file",
+                "operationId": "import_sink_api_sinks_import_post",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": { "$ref": "#/components/schemas/Body_import_sink_api_sinks_import_post" }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Sink imported successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        { "$ref": "#/components/schemas/FolderSinkConfig" },
+                                        { "$ref": "#/components/schemas/MqttSinkConfig" },
+                                        { "$ref": "#/components/schemas/RosSinkConfig" },
+                                        { "$ref": "#/components/schemas/WebhookSinkConfig" },
+                                        { "$ref": "#/components/schemas/DisconnectedSinkConfig" },
+                                        { "$ref": "#/components/schemas/FolderSinkConfig" },
+                                        { "$ref": "#/components/schemas/MqttSinkConfig" },
+                                        { "$ref": "#/components/schemas/RosSinkConfig" },
+                                        { "$ref": "#/components/schemas/WebhookSinkConfig" },
+                                        { "$ref": "#/components/schemas/DisconnectedSinkConfig" }
+                                    ],
+                                    "title": "Response 201 Import Sink Api Sinks Import Post",
+                                    "discriminator": {
+                                        "propertyName": "sink_type",
+                                        "mapping": {
+                                            "folder": "#/components/schemas/FolderSinkConfig",
+                                            "mqtt": "#/components/schemas/MqttSinkConfig",
+                                            "ros": "#/components/schemas/RosSinkConfig",
+                                            "webhook": "#/components/schemas/WebhookSinkConfig",
+                                            "disconnected": "#/components/schemas/DisconnectedSinkConfig"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": { "description": "Invalid YAML format or sink type is DISCONNECTED" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/pipelines": {
+            "get": {
+                "tags": ["Pipelines"],
+                "summary": "List Pipelines",
+                "description": "List the available pipelines",
+                "operationId": "list_pipelines_api_pipelines_get",
+                "responses": {
+                    "200": {
+                        "description": "List of available pipelines",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": { "$ref": "#/components/schemas/Pipeline" },
+                                    "type": "array",
+                                    "title": "Response 200 List Pipelines Api Pipelines Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": ["Pipelines"],
+                "summary": "Create Pipeline",
+                "description": "Create and configure a new pipeline",
+                "operationId": "create_pipeline_api_pipelines_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Pipeline",
+                                "description": "\nConfiguration for the new pipeline. Requires the IDs of a source, sink, and model to be combined into a pipeline.\nThe fields 'source_id', 'sink_id', and 'model_id' can be set to `None` to only partially initialize the pipeline. \n"
+                            },
+                            "examples": {
+                                "basic": {
+                                    "summary": "Fully configured pipeline",
+                                    "description": "Configuration for a basic pipeline with source, model, and sink",
+                                    "value": {
+                                        "name": "Production Pipeline",
+                                        "source_id": "d2cbd8d0-17b8-463e-85a2-4aaed031674d",
+                                        "sink_id": "b5787c06-964b-4097-8eca-238b8cf79fc8",
+                                        "model_id": "b0feaabc-da2b-442e-9b3e-55c11c2c2ff2"
+                                    }
+                                },
+                                "minimal": {
+                                    "summary": "Partially configured pipeline",
+                                    "description": "Pipeline with only a name (components can be assigned later)",
+                                    "value": { "name": "Experimental Pipeline" }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Pipeline successfully created",
+                        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Pipeline" } } }
+                    },
+                    "409": { "description": "Pipeline already exists" },
+                    "422": { "description": "Invalid request body" }
+                }
+            }
+        },
+        "/api/pipelines/{pipeline_id}": {
+            "get": {
+                "tags": ["Pipelines"],
+                "summary": "Get Pipeline",
+                "description": "Get info about a given pipeline",
+                "operationId": "get_pipeline_api_pipelines__pipeline_id__get",
+                "parameters": [
+                    {
+                        "name": "pipeline_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Pipeline Id" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pipeline found",
+                        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Pipeline" } } }
+                    },
+                    "400": { "description": "Invalid pipeline ID" },
+                    "404": { "description": "Pipeline not found" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "tags": ["Pipelines"],
+                "summary": "Update Pipeline",
+                "description": "Reconfigure an existing pipeline",
+                "operationId": "update_pipeline_api_pipelines__pipeline_id__patch",
+                "parameters": [
+                    {
+                        "name": "pipeline_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Pipeline Id" }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true,
+                                "description": "\nPartial pipeline configuration update. May contain any subset of fields including 'name', 'source_id', \n'sink_id', or 'model_id'. Fields not included in the request will remain unchanged.\n",
+                                "title": "Pipeline Config"
+                            },
+                            "examples": {
+                                "switch_model": {
+                                    "summary": "Switch active model",
+                                    "description": "Change the active model for the pipeline",
+                                    "value": { "model_id": "c1feaabc-da2b-442e-9b3e-55c11c2c2ff3" }
+                                },
+                                "reconfigure": {
+                                    "summary": "Reconfigure pipeline",
+                                    "description": "Change the name, source and sink of the pipeline",
+                                    "value": {
+                                        "name": "Updated Production Pipeline",
+                                        "source_id": "e3cbd8d0-17b8-463e-85a2-4aaed031674e",
+                                        "sink_id": "c6787c06-964b-4097-8eca-238b8cf79fc9"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Pipeline successfully updated",
+                        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Pipeline" } } }
+                    },
+                    "400": { "description": "Invalid pipeline ID or request body" },
+                    "404": { "description": "Pipeline not found" },
+                    "409": { "description": "Pipeline cannot be updated" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["Pipelines"],
+                "summary": "Delete Pipeline",
+                "description": "Delete a pipeline. Pipelines must be first disabled (status must be idle) before deletion.",
+                "operationId": "delete_pipeline_api_pipelines__pipeline_id__delete",
+                "parameters": [
+                    {
+                        "name": "pipeline_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Pipeline Id" }
+                    }
+                ],
+                "responses": {
+                    "204": { "description": "Pipeline successfully deleted" },
+                    "400": { "description": "Invalid pipeline ID" },
+                    "404": { "description": "Pipeline not found" },
+                    "409": { "description": "Pipeline is currently in running state and cannot be deleted" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/pipelines/{pipeline_id}:enable": {
+            "post": {
+                "tags": ["Pipelines"],
+                "summary": "Enable Pipeline",
+                "description": "Activate a pipeline.\nThe pipeline will start processing data from the source, run it through the model, and send results to the sink.",
+                "operationId": "enable_pipeline_api_pipelines__pipeline_id__enable_post",
+                "parameters": [
+                    {
+                        "name": "pipeline_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Pipeline Id" }
+                    }
+                ],
+                "responses": {
+                    "204": { "description": "Pipeline successfully enabled" },
+                    "400": { "description": "Invalid pipeline ID" },
+                    "404": { "description": "Pipeline not found" },
+                    "409": { "description": "Pipeline cannot be enabled" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/pipelines/{pipeline_id}:disable": {
+            "post": {
+                "tags": ["Pipelines"],
+                "summary": "Disable Pipeline",
+                "description": "Stop a pipeline. The pipeline will become idle, and it won't process any data until re-enabled.",
+                "operationId": "disable_pipeline_api_pipelines__pipeline_id__disable_post",
+                "parameters": [
+                    {
+                        "name": "pipeline_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Pipeline Id" }
+                    }
+                ],
+                "responses": {
+                    "204": { "description": "Pipeline successfully disabled" },
+                    "400": { "description": "Invalid pipeline ID" },
+                    "404": { "description": "Pipeline not found" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/pipelines/{pipeline_id}:export": {
+            "post": {
+                "tags": ["Pipelines"],
+                "summary": "Export Pipeline",
+                "description": "Export a pipeline to file",
+                "operationId": "export_pipeline_api_pipelines__pipeline_id__export_post",
+                "responses": {
+                    "200": {
+                        "description": "Pipeline configuration exported as a ZIP file",
+                        "content": { "application/zip": { "schema": { "type": "string", "format": "binary" } } }
+                    }
+                }
+            }
+        },
+        "/api/pipelines:import": {
+            "post": {
+                "tags": ["Pipelines"],
+                "summary": "Import Pipeline",
+                "description": "Import a pipeline from file",
+                "operationId": "import_pipeline_api_pipelines_import_post",
+                "responses": { "204": { "description": "Successful Response" } }
+            }
+        },
+        "/api/models": {
+            "post": {
+                "tags": ["Models"],
+                "summary": "Add Model",
+                "description": "Upload a new model\n\nNOTE: this endpoint will be replaced by preconfigured model selection",
+                "operationId": "add_model_api_models_post",
+                "parameters": [
+                    {
+                        "name": "model_name",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "Name for the model files",
+                            "title": "Model Name"
+                        },
+                        "description": "Name for the model files"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": { "$ref": "#/components/schemas/Body_add_model_api_models_post" }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Model" } } }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": ["Models"],
+                "summary": "List Models",
+                "description": "Get information about available models",
+                "operationId": "list_models_api_models_get",
+                "responses": {
+                    "200": {
+                        "description": "List of available models",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": { "$ref": "#/components/schemas/Model" },
+                                    "title": "Response 200 List Models Api Models Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/models/{model_id}": {
+            "get": {
+                "tags": ["Models"],
+                "summary": "Get Model",
+                "description": "Get information about a specific model",
+                "operationId": "get_model_api_models__model_id__get",
+                "parameters": [
+                    {
+                        "name": "model_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Model Id" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Model found",
+                        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Model" } } }
+                    },
+                    "400": { "description": "Invalid model ID" },
+                    "404": { "description": "Model not found" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "tags": ["Models"],
+                "summary": "Update Model Metadata",
+                "description": "Update the metadata of an existing model",
+                "operationId": "update_model_metadata_api_models__model_id__patch",
+                "parameters": [
+                    {
+                        "name": "model_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Model Id" }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": { "type": "object", "additionalProperties": true, "title": "Model Metadata" },
+                            "examples": {
+                                "rename_model": {
+                                    "summary": "Rename model",
+                                    "description": "Change the name of the model",
+                                    "value": { "name": "New Model Name" }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Model successfully updated",
+                        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Model" } } }
+                    },
+                    "400": { "description": "Invalid model ID or request body" },
+                    "404": { "description": "Model not found" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["Models"],
+                "summary": "Delete Model",
+                "description": "Delete a model",
+                "operationId": "delete_model_api_models__model_id__delete",
+                "parameters": [
+                    {
+                        "name": "model_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Model Id" }
+                    }
+                ],
+                "responses": {
+                    "204": { "description": "Model configuration successfully deleted" },
+                    "400": { "description": "Invalid model ID" },
+                    "404": { "description": "Model not found" },
+                    "409": { "description": "Model is used by at least one pipeline" },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/models/{model_name}:activate": {
+            "post": {
+                "tags": ["Models"],
+                "summary": "Activate Model",
+                "description": "Activate a model\n\nNOTE: this endpoint will be removed; use instead `PATCH /api/pipelines/{pipeline_id}` to change the active model",
+                "operationId": "activate_model_api_models__model_name__activate_post",
+                "deprecated": true,
+                "parameters": [
+                    {
+                        "name": "model_name",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Model Name" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Model" } } }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/models/{model_name}:deactivate": {
+            "post": {
+                "tags": ["Models"],
+                "summary": "Deactivate Model",
+                "description": "Deactivate a model\n\nNOTE: this endpoint will be removed; use instead `PATCH /api/pipelines/{pipeline_id}` to change the active model",
+                "operationId": "deactivate_model_api_models__model_name__deactivate_post",
+                "deprecated": true,
+                "parameters": [
+                    {
+                        "name": "model_name",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Model Name" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Model" } } }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/system/metrics/memory": {
+            "get": {
+                "summary": "Get Memory",
+                "description": "Returns the used memory in MB and total available memory in MB.",
+                "operationId": "get_memory_api_system_metrics_memory_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": true,
+                                    "type": "object",
+                                    "title": "Response Get Memory Api System Metrics Memory Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/input_hook": {
+            "post": {
+                "tags": ["webrtc"],
+                "summary": "Webrtc Input Hook",
+                "description": "Update webrtc input for user",
+                "operationId": "webrtc_input_hook_api_input_hook_post",
+                "requestBody": {
+                    "content": { "application/json": { "schema": { "$ref": "#/components/schemas/InputData" } } },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": { "application/json": { "schema": {} } }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "summary": "Health Check",
+                "description": "Health check endpoint",
+                "operationId": "health_check_health_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": { "type": "string" },
+                                    "type": "object",
+                                    "title": "Response Health Check Health Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/webrtc/offer": {
+            "post": {
+                "summary": "Offer",
+                "description": "Handle an incoming WebRTC offer via HTTP POST.\n\nProcesses the SDP offer and ICE candidates from the client to establish\na WebRTC connection.\n\nArgs:\n    body: A Pydantic model containing the SDP offer, optional ICE candidate,\n          type ('offer'), and a unique WebRTC ID.\n\nReturns:\n    A dictionary containing the SDP answer generated by the server.",
+                "operationId": "offer_api_webrtc_offer_post",
+                "requestBody": {
+                    "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Body" } } },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": { "application/json": { "schema": {} } }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/telephone/incoming": {
+            "post": {
+                "summary": "Handle Incoming Call",
+                "description": "Handle incoming telephone calls (e.g., via Twilio).\n\nGenerates TwiML instructions to connect the incoming call to the\nWebSocket handler (`/telephone/handler`) for audio streaming.\n\nArgs:\n    request: The FastAPI Request object for the incoming call webhook.\n\nReturns:\n    An HTMLResponse containing the TwiML instructions as XML.",
+                "operationId": "handle_incoming_call_api_telephone_incoming_post",
+                "responses": {
+                    "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Body": {
+                "properties": {
+                    "sdp": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Sdp" },
+                    "candidate": {
+                        "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "null" }],
+                        "title": "Candidate"
+                    },
+                    "type": { "type": "string", "title": "Type" },
+                    "webrtc_id": { "type": "string", "title": "Webrtc Id" }
+                },
+                "type": "object",
+                "required": ["type", "webrtc_id"],
+                "title": "Body"
+            },
+            "Body_add_model_api_models_post": {
+                "properties": {
+                    "xml_file": { "type": "string", "format": "binary", "title": "Xml File" },
+                    "bin_file": { "type": "string", "format": "binary", "title": "Bin File" }
+                },
+                "type": "object",
+                "required": ["xml_file", "bin_file"],
+                "title": "Body_add_model_api_models_post"
+            },
+            "Body_import_sink_api_sinks_import_post": {
+                "properties": {
+                    "yaml_file": {
+                        "type": "string",
+                        "format": "binary",
+                        "title": "Yaml File",
+                        "description": "YAML file containing the sink configuration"
+                    }
+                },
+                "type": "object",
+                "required": ["yaml_file"],
+                "title": "Body_import_sink_api_sinks_import_post"
+            },
+            "Body_import_source_api_sources_import_post": {
+                "properties": {
+                    "yaml_file": {
+                        "type": "string",
+                        "format": "binary",
+                        "title": "Yaml File",
+                        "description": "YAML file containing the source configuration"
+                    }
+                },
+                "type": "object",
+                "required": ["yaml_file"],
+                "title": "Body_import_source_api_sources_import_post"
+            },
+            "DisconnectedSinkConfig": {
+                "properties": {
+                    "id": { "type": "string", "format": "uuid", "title": "Id" },
+                    "name": { "type": "string", "title": "Name", "default": "No Sink" },
+                    "output_formats": {
+                        "items": { "$ref": "#/components/schemas/OutputFormat" },
+                        "type": "array",
+                        "title": "Output Formats",
+                        "default": []
+                    },
+                    "rate_limit": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Rate Limit" },
+                    "sink_type": {
+                        "type": "string",
+                        "const": "disconnected",
+                        "title": "Sink Type",
+                        "default": "disconnected"
+                    }
+                },
+                "type": "object",
+                "title": "DisconnectedSinkConfig",
+                "example": {
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "name": "No Sink",
+                    "sink_type": "disconnected"
+                }
+            },
+            "DisconnectedSourceConfig": {
+                "properties": {
+                    "id": { "type": "string", "format": "uuid", "title": "Id" },
+                    "name": { "type": "string", "title": "Name", "default": "No Source" },
+                    "source_type": {
+                        "type": "string",
+                        "const": "disconnected",
+                        "title": "Source Type",
+                        "default": "disconnected"
+                    }
+                },
+                "type": "object",
+                "title": "DisconnectedSourceConfig"
+            },
+            "FolderSinkConfig": {
+                "properties": {
+                    "id": { "type": "string", "format": "uuid", "title": "Id" },
+                    "name": { "type": "string", "title": "Name", "default": "Default Name" },
+                    "output_formats": {
+                        "items": { "$ref": "#/components/schemas/OutputFormat" },
+                        "type": "array",
+                        "title": "Output Formats"
+                    },
+                    "rate_limit": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Rate Limit" },
+                    "sink_type": { "type": "string", "const": "folder", "title": "Sink Type" },
+                    "folder_path": { "type": "string", "title": "Folder Path" }
+                },
+                "type": "object",
+                "required": ["output_formats", "sink_type", "folder_path"],
+                "title": "FolderSinkConfig",
+                "example": {
+                    "folder_path": "/path/to/output",
+                    "id": "b5787c06-964b-4097-8eca-238b8cf79fc8",
+                    "name": "Local Folder",
+                    "output_formats": ["image_original", "image_with_predictions", "predictions"],
+                    "rate_limit": 0.2,
+                    "sink_type": "folder"
+                }
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": { "$ref": "#/components/schemas/ValidationError" },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "IPCameraSourceConfig": {
+                "properties": {
+                    "id": { "type": "string", "format": "uuid", "title": "Id" },
+                    "name": { "type": "string", "title": "Name", "default": "Default Name" },
+                    "source_type": { "type": "string", "const": "ip_camera", "title": "Source Type" },
+                    "stream_url": { "type": "string", "title": "Stream Url" },
+                    "auth_required": { "type": "boolean", "title": "Auth Required", "default": false }
+                },
+                "type": "object",
+                "required": ["source_type", "stream_url"],
+                "title": "IPCameraSourceConfig",
+                "example": {
+                    "auth_required": true,
+                    "id": "3d055c8a-2536-46ea-8f3c-832bd6f8bbdc",
+                    "name": "Street Camera 123",
+                    "source_type": "ip_camera",
+                    "stream_url": "http://example.com/stream"
+                }
+            },
+            "ImagesFolderSourceConfig": {
+                "properties": {
+                    "id": { "type": "string", "format": "uuid", "title": "Id" },
+                    "name": { "type": "string", "title": "Name", "default": "Default Name" },
+                    "source_type": { "type": "string", "const": "images_folder", "title": "Source Type" },
+                    "images_folder_path": { "type": "string", "title": "Images Folder Path" },
+                    "ignore_existing_images": { "type": "boolean", "title": "Ignore Existing Images" }
+                },
+                "type": "object",
+                "required": ["source_type", "images_folder_path", "ignore_existing_images"],
+                "title": "ImagesFolderSourceConfig",
+                "example": {
+                    "id": "4a580a0e-b841-4c70-bf88-2d68a28f780d",
+                    "ignore_existing_images": true,
+                    "images_folder_path": "/path/to/images",
+                    "name": "Best Photos",
+                    "source_type": "images_folder"
+                }
+            },
+            "InputData": {
+                "properties": {
+                    "webrtc_id": { "type": "string", "title": "Webrtc Id" },
+                    "conf_threshold": { "type": "number", "maximum": 1.0, "minimum": 0.0, "title": "Conf Threshold" }
+                },
+                "type": "object",
+                "required": ["webrtc_id", "conf_threshold"],
+                "title": "InputData"
+            },
+            "Model": {
+                "properties": {
+                    "id": { "type": "string", "format": "uuid", "title": "Id" },
+                    "name": { "type": "string", "title": "Name", "default": "Default Name" },
+                    "format": { "$ref": "#/components/schemas/ModelFormat", "default": "openvino_ir" }
+                },
+                "type": "object",
+                "title": "Model",
+                "description": "Base model schema that includes common fields for all models.\nThis can be extended by other schemas to include additional fields.",
+                "example": {
+                    "format": "openvino_ir",
+                    "id": "76e07d18-196e-4e33-bf98-ac1d35dca4cb",
+                    "name": "YOLO-X for Vehicle Detection"
+                }
+            },
+            "ModelFormat": { "type": "string", "enum": ["openvino_ir", "onnx"], "title": "ModelFormat" },
+            "MqttSinkConfig": {
+                "properties": {
+                    "id": { "type": "string", "format": "uuid", "title": "Id" },
+                    "name": { "type": "string", "title": "Name", "default": "Default Name" },
+                    "output_formats": {
+                        "items": { "$ref": "#/components/schemas/OutputFormat" },
+                        "type": "array",
+                        "title": "Output Formats"
+                    },
+                    "rate_limit": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Rate Limit" },
+                    "sink_type": { "type": "string", "const": "mqtt", "title": "Sink Type" },
+                    "broker_host": { "type": "string", "title": "Broker Host" },
+                    "broker_port": { "type": "integer", "title": "Broker Port" },
+                    "topic": { "type": "string", "title": "Topic" },
+                    "auth_required": { "type": "boolean", "title": "Auth Required", "default": false }
+                },
+                "type": "object",
+                "required": ["output_formats", "sink_type", "broker_host", "broker_port", "topic"],
+                "title": "MqttSinkConfig",
+                "example": {
+                    "auth_required": true,
+                    "broker_host": "localhost",
+                    "broker_port": 1883,
+                    "id": "c1a70159-9c9e-4f02-821a-02576321056c",
+                    "name": "Local MQTT Broker",
+                    "output_formats": ["predictions"],
+                    "sink_type": "mqtt",
+                    "topic": "predictions"
+                }
+            },
+            "OutputFormat": {
+                "type": "string",
+                "enum": ["image_original", "image_with_predictions", "predictions"],
+                "title": "OutputFormat"
+            },
+            "Pipeline": {
+                "properties": {
+                    "id": { "type": "string", "format": "uuid", "title": "Id" },
+                    "name": { "type": "string", "title": "Name", "default": "Default Name" },
+                    "source_id": {
+                        "anyOf": [{ "type": "string", "format": "uuid" }, { "type": "null" }],
+                        "title": "Source Id"
+                    },
+                    "sink_id": {
+                        "anyOf": [{ "type": "string", "format": "uuid" }, { "type": "null" }],
+                        "title": "Sink Id"
+                    },
+                    "model_id": {
+                        "anyOf": [{ "type": "string", "format": "uuid" }, { "type": "null" }],
+                        "title": "Model Id"
+                    },
+                    "status": { "$ref": "#/components/schemas/PipelineStatus", "default": "idle" }
+                },
+                "type": "object",
+                "title": "Pipeline",
+                "example": {
+                    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                    "model_id": "b0feaabc-da2b-442e-9b3e-55c11c2c2ff2",
+                    "name": "Production Pipeline",
+                    "sink_id": "b5787c06-964b-4097-8eca-238b8cf79fc8",
+                    "source_id": "d2cbd8d0-17b8-463e-85a2-4aaed031674d",
+                    "status": "running"
+                }
+            },
+            "PipelineStatus": { "type": "string", "enum": ["idle", "running"], "title": "PipelineStatus" },
+            "RosSinkConfig": {
+                "properties": {
+                    "id": { "type": "string", "format": "uuid", "title": "Id" },
+                    "name": { "type": "string", "title": "Name", "default": "Default Name" },
+                    "output_formats": {
+                        "items": { "$ref": "#/components/schemas/OutputFormat" },
+                        "type": "array",
+                        "title": "Output Formats"
+                    },
+                    "rate_limit": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Rate Limit" },
+                    "sink_type": { "type": "string", "const": "ros", "title": "Sink Type" },
+                    "topic": { "type": "string", "title": "Topic" }
+                },
+                "type": "object",
+                "required": ["output_formats", "sink_type", "topic"],
+                "title": "RosSinkConfig",
+                "example": {
+                    "id": "6f1d96ac-db38-42a9-9a11-142d404f493f",
+                    "name": "ROS2 Predictions Topic",
+                    "output_formats": ["predictions"],
+                    "sink_type": "ros",
+                    "topic": "/predictions"
+                }
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": { "type": "string", "title": "Message" },
+                    "type": { "type": "string", "title": "Error Type" }
+                },
+                "type": "object",
+                "required": ["loc", "msg", "type"],
+                "title": "ValidationError"
+            },
+            "VideoFileSourceConfig": {
+                "properties": {
+                    "id": { "type": "string", "format": "uuid", "title": "Id" },
+                    "name": { "type": "string", "title": "Name", "default": "Default Name" },
+                    "source_type": { "type": "string", "const": "video_file", "title": "Source Type" },
+                    "video_path": { "type": "string", "title": "Video Path" }
+                },
+                "type": "object",
+                "required": ["source_type", "video_path"],
+                "title": "VideoFileSourceConfig",
+                "example": {
+                    "id": "712750b2-5a82-47ee-8fba-f3dc96cb615d",
+                    "name": "Sample Video",
+                    "source_type": "video_file",
+                    "video_path": "/path/to/video.mp4"
+                }
+            },
+            "WebcamSourceConfig": {
+                "properties": {
+                    "id": { "type": "string", "format": "uuid", "title": "Id" },
+                    "name": { "type": "string", "title": "Name", "default": "Default Name" },
+                    "source_type": { "type": "string", "const": "webcam", "title": "Source Type" },
+                    "device_id": { "type": "integer", "title": "Device Id" }
+                },
+                "type": "object",
+                "required": ["source_type", "device_id"],
+                "title": "WebcamSourceConfig",
+                "example": {
+                    "device_id": 0,
+                    "id": "f9e0ae4f-d96c-4304-baab-2ab845362d03",
+                    "name": "Webcam 0",
+                    "source_type": "webcam"
+                }
+            },
+            "WebhookSinkConfig": {
+                "properties": {
+                    "id": { "type": "string", "format": "uuid", "title": "Id" },
+                    "name": { "type": "string", "title": "Name", "default": "Default Name" },
+                    "output_formats": {
+                        "items": { "$ref": "#/components/schemas/OutputFormat" },
+                        "type": "array",
+                        "title": "Output Formats"
+                    },
+                    "rate_limit": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Rate Limit" },
+                    "sink_type": { "type": "string", "const": "webhook", "title": "Sink Type" },
+                    "webhook_url": { "type": "string", "title": "Webhook Url" },
+                    "http_method": {
+                        "type": "string",
+                        "enum": ["POST", "PUT", "PATCH"],
+                        "title": "Http Method",
+                        "default": "POST"
+                    },
+                    "headers": {
+                        "anyOf": [
+                            { "additionalProperties": { "type": "string" }, "type": "object" },
+                            { "type": "null" }
+                        ],
+                        "title": "Headers"
+                    },
+                    "timeout": { "type": "integer", "title": "Timeout", "default": 10 }
+                },
+                "type": "object",
+                "required": ["output_formats", "sink_type", "webhook_url"],
+                "title": "WebhookSinkConfig",
+                "example": {
+                    "headers": { "Authorization": "Bearer YOUR_TOKEN" },
+                    "http_method": "PUT",
+                    "id": "39ba53e5-9a03-44fc-b78a-83245cf14676",
+                    "name": "Webhook Endpoint",
+                    "output_formats": ["predictions"],
+                    "sink_type": "webhook",
+                    "webhook_url": "https://example.com/webhook"
+                }
+            }
+        }
+    }
+}
