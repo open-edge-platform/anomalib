@@ -1,0 +1,10 @@
+*
+!src
+!packages
+!package.json
+!package-lock.json
+!eslint.config.js
+!.prettierrc
+!tsconfig.json
+!rsbuild.config.ts
+!nginx.conf
