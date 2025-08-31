@@ -56,6 +56,7 @@ from .efficient_ad import EfficientAd
 from .fastflow import Fastflow
 from .fre import Fre
 from .ganomaly import Ganomaly
+from .glass import Glass
 from .padim import Padim
 from .patchcore import Patchcore
 from .reverse_distillation import ReverseDistillation
@@ -78,6 +79,7 @@ __all__ = [
     "Fastflow",
     "Fre",
     "Ganomaly",
+    "Glass",
     "Padim",
     "Patchcore",
     "ReverseDistillation",
