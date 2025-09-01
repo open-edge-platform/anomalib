@@ -83,5 +83,4 @@ __all__ = [
     "PRO",
     "PIMO",
     "AUPIMO",
-    "PBn",
 ]
