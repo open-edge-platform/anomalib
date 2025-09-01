@@ -3,10 +3,10 @@
 
 """Compute statistics of anomaly score distributions.
 
-This module provides the ``AnomalyScoreDistribution`` class which computes mean
+This module provides the ``AnomalyScoreDistribution`` class, which computes the mean
 and standard deviation statistics of anomaly scores.
 Statistics are computed for both image-level and pixel-level scores.
-The ``generate_figure`` method generates a histogram of anomaly scores,
+The ``plot`` method generates a histogram of anomaly scores,
 separated by label, to visualize score distributions for normal and abnormal samples.
 
 The class tracks:
@@ -24,7 +24,7 @@ Example:
     >>> dist = AnomalyScoreDistribution()
     >>> dist.update(anomaly_scores=scores, anomaly_maps=maps, labels=labels)
     >>> image_mean, image_std, pixel_mean, pixel_std = dist.compute()
-    >>> fig, title = dist.generate_figure()
+    >>> fig, title = dist.plot()
 
 Note:
     The input scores and maps are log-transformed before computing statistics.
