@@ -129,7 +129,7 @@ class AnomalyScoreDistribution(Metric):
 
         return self.image_mean, self.image_std, self.pixel_mean, self.pixel_std
 
-    def generate_figure(
+    def plot(
         self,
         bins: int = 30,
         good_color: str = "skyblue",
