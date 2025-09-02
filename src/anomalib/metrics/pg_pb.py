@@ -4,7 +4,7 @@
 """PGn and PBn metrics for binary image-level classification tasks.
 
 This module provides two metrics for evaluating binary image-level classification performance
-on assumption that bad (anomalous) samples are considered to be positive class:
+on the assumption that bad (anomalous) samples are considered to be the positive class:
 
 - ``PGn``: Presorted good with n% bad samples missed, can be interpreted as true negative rate
 at a fixed false negative rate (TNR@nFNR).
@@ -42,8 +42,15 @@ Example:
     tensor(1.0)
 
 Note:
-    Scores for both metric range from 0 to 1, with 1 indicating perfect separation
-    of the respective class with ``n``% or less of other class misclassified.
+    Scores for both metrics range from 0 to 1, with 1 indicating perfect separation
+    of the respective class with ``n``% or less of the other class misclassified.
+
+Reference:
+    Aimira Baitieva, Yacine Bouaouni, Alexandre Briot, Dick Ameln, Souhaiel Khalfaoui, 
+    Samet Akcay; Beyond Academic Benchmarks: Critical Analysis and Best Practices 
+    for Visual Industrial Anomaly Detection; in: Proceedings of the IEEE/CVF Conference 
+    on Computer Vision and Pattern Recognition (CVPR) Workshops, 2025, pp. 4024-4034, 
+    https://arxiv.org/abs/2503.23451
 """
 
 import torch
@@ -102,7 +109,7 @@ class _PGn(Metric):
         self.preds.append(preds)
 
     def compute(self) -> torch.Tensor:
-        """Compute the PGn score at given false negative rate.
+        """Compute the PGn score at a given false negative rate.
 
         Returns:
             torch.Tensor: PGn score value.
@@ -179,7 +186,7 @@ class _PBn(Metric):
         self.preds.append(preds)
 
     def compute(self) -> torch.Tensor:
-        """Compute the PBn score at given false positive rate.
+        """Compute the PBn score at a given false positive rate.
 
         Returns:
             torch.Tensor: PBn score value.
