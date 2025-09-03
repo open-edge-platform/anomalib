@@ -140,6 +140,7 @@ class AnomalyScoreDistribution(Metric):
         legend_labels: tuple[str, str] = ("Good", "Bad"),
     ) -> tuple[Figure, str]:
         """Generate a histogram of scores.
+
         Args:
             bins (int, optional): Number of histogram bins. Defaults to 30.
             good_color (str, optional): Color for good samples. Defaults to "skyblue".
@@ -147,8 +148,9 @@ class AnomalyScoreDistribution(Metric):
             xlabel (str, optional): Label for the x-axis. Defaults to "Score".
             ylabel (str, optional): Label for the y-axis. Defaults to "Relative Count".
             title (str, optional): Title of the plot. Defaults to "Score Histogram".
-            legend_labels (tuple[str, str], optional): Legend labels for good and bad samples. Defaults to ("Good", "Bad").
-            
+            legend_labels (tuple[str, str], optional): Legend labels for good and bad samples.
+                Defaults to ("Good", "Bad").
+
         Returns:
             tuple[Figure, str]: Tuple containing both the figure and the figure
                 title to be used for logging
