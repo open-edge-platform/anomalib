@@ -35,7 +35,7 @@ line-length = 120
 
 exclude = [".venv*"]
 
-src = ["app"]
+src = ["src"]
 
 [tool.ruff.lint]
 select = ["ARG", "E", "F", "I", "N", "UP", "YTT", "ASYNC", "S", "COM", "C4", "FA", "PIE", "PYI", "Q", "RSE", "RET", "SIM",
