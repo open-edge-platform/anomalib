@@ -46,10 +46,10 @@ Note:
     of the respective class with ``n``% or less of the other class misclassified.
 
 Reference:
-    Aimira Baitieva, Yacine Bouaouni, Alexandre Briot, Dick Ameln, Souhaiel Khalfaoui, 
-    Samet Akcay; Beyond Academic Benchmarks: Critical Analysis and Best Practices 
-    for Visual Industrial Anomaly Detection; in: Proceedings of the IEEE/CVF Conference 
-    on Computer Vision and Pattern Recognition (CVPR) Workshops, 2025, pp. 4024-4034, 
+    Aimira Baitieva, Yacine Bouaouni, Alexandre Briot, Dick Ameln, Souhaiel Khalfaoui,
+    Samet Akcay; Beyond Academic Benchmarks: Critical Analysis and Best Practices
+    for Visual Industrial Anomaly Detection; in: Proceedings of the IEEE/CVF Conference
+    on Computer Vision and Pattern Recognition (CVPR) Workshops, 2025, pp. 4024-4034,
     https://arxiv.org/abs/2503.23451
 """
 
