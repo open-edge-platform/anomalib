@@ -8,18 +8,25 @@ segmentation performance. The PRO metric computes the macro average of the
 per-region overlap between predicted anomaly masks and ground truth masks.
 
 Example:
-    >>> import torch
     >>> from anomalib.metrics import PRO
+    >>> from anomalib.data import ImageBatch
+    >>> import torch
     >>> # Create sample predictions and targets
-    >>> preds = torch.rand(2, 1, 32, 32)  # Batch of 2 images
-    >>> target = torch.zeros(2, 1, 32, 32)
-    >>> target[0, 0, 10:20, 10:20] = 1  # Add anomalous region
+    >>> pred_mask = torch.rand(2, 1, 32, 32)
+    >>> gt_mask = torch.zeros(2, 1, 32, 32)
+    >>> gt_mask[0, 0, 10:20, 10:20] = 1  # Add anomalous region
+    >>> # Create sample batch
+    >>> batch = ImageBatch(
+    ...     image=torch.rand(2, 3, 32, 32),
+    ...     pred_mask=pred_mask,
+    ...     gt_mask=gt_mask
+    ... )
     >>> # Initialize metric
-    >>> pro = PRO()
+    >>> pro = PRO(fields=["pred_mask", "gt_mask"])
     >>> # Update metric state
-    >>> pro.update(preds, target)
+    >>> pro.update(batch)
     >>> # Compute PRO score
-    >>> score = pro.compute()
+    >>> pro.compute()
 """
 
 import torch
@@ -51,14 +58,14 @@ class _PRO(Metric):
         threshold (float): Threshold for binarizing predictions
 
     Example:
+        >>> from anomalib.metrics.pro import _PRO
         >>> import torch
-        >>> from anomalib.metrics import PRO
         >>> # Create random predictions and targets
         >>> preds = torch.rand(2, 1, 32, 32)  # Batch of 2 images
         >>> target = torch.zeros(2, 1, 32, 32)
         >>> target[0, 0, 10:20, 10:20] = 1  # Add anomalous region
         >>> # Initialize and compute PRO score
-        >>> pro = PRO(threshold=0.5)
+        >>> pro = _PRO(threshold=0.5)
         >>> pro.update(preds, target)
         >>> score = pro.compute()
     """
