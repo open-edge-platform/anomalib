@@ -5,6 +5,7 @@ import { redirect } from 'react-router';
 import { createBrowserRouter } from 'react-router-dom';
 import { path } from 'static-path';
 
+import { ErrorPage } from './components/error-page/error-page';
 import { Layout } from './layout';
 import { Inference } from './routes/inference/inference';
 
@@ -26,7 +27,7 @@ export const router = createBrowserRouter([
                 <Layout />
             </Suspense>
         ),
-        errorElement: <div>Oh no</div>,
+        errorElement: <ErrorPage />,
         children: [
             {
                 index: true,
