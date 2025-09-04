@@ -16,22 +16,23 @@ from fastapi.exceptions import RequestValidationError
 from starlette.responses import JSONResponse, Response
 
 from db import init_models
+from exceptions import GetiBaseException
 from rest_api.endpoints.job_endpoints import job_router
 from rest_api.endpoints.media_endpoints import media_router
 from rest_api.endpoints.model_endpoints import model_router
 from rest_api.endpoints.project_endpoints import project_router
-from exceptions import GetiBaseException
 
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):  # type: ignore # noqa: ANN201
+async def lifespan(_: FastAPI):  # type: ignore # noqa: ANN201
     """
     Defines startup and shutdown of the fastAPI app
     """
     await init_models()
     yield
+
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(project_router)

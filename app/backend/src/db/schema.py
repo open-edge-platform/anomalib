@@ -3,10 +3,10 @@
 
 from datetime import datetime
 from uuid import uuid4
+
 from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.sql import func
-from sqlalchemy.orm import DeclarativeBase
 
 
 class Base(DeclarativeBase):
@@ -14,7 +14,7 @@ class Base(DeclarativeBase):
 
 
 class ProjectDB(Base):
-    __tablename__ = 'projects'
+    __tablename__ = "projects"
 
     id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid4()))
     name: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -23,7 +23,7 @@ class ProjectDB(Base):
 
 
 class MediaDB(Base):
-    __tablename__ = 'media'
+    __tablename__ = "media"
 
     id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid4()))
     project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"))
@@ -62,4 +62,3 @@ class JobDB(Base):
     start_time: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     end_time: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     payload: Mapped[str] = mapped_column(JSON, nullable=False)
-

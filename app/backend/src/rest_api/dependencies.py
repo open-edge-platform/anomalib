@@ -2,12 +2,11 @@ from functools import lru_cache
 from typing import Annotated
 from uuid import UUID
 
+from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
-from fastapi import Depends, HTTPException, status
-
 from db import get_async_db_session
-from services import ProjectService, JobService, MediaService
+from services import JobService, MediaService, ProjectService
 from services.model_service import ModelService
 
 

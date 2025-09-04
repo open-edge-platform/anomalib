@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from db.schema import MediaDB
-from models import media, Media
+from models import Media
 from repositories.mappers.base_mapper_interface import IBaseMapper
 
 
@@ -12,5 +12,5 @@ class MediaMapper(IBaseMapper):
         return MediaDB(**media.model_dump(mode="json"))
 
     @staticmethod
-    def from_schema(media_db: MediaDB) -> media:
+    def from_schema(media_db: MediaDB) -> Media:
         return Media.model_validate(media_db, from_attributes=True)

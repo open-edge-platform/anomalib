@@ -5,8 +5,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
-from models import Model
-from models import ModelList
+from models import Model, ModelList
 from repositories import ModelRepository
 
 
@@ -23,5 +22,5 @@ class ModelService:
     async def get_model_by_id(self, project_id: UUID, model_id: UUID) -> Model | None:
         return await self.repository(project_id).get_by_id(model_id)
 
-    async def delete_model(self, project_id: UUID, model_id) -> None:
+    async def delete_model(self, project_id: UUID, model_id: UUID) -> None:
         return await self.repository(project_id).delete(model_id)

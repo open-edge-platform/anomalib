@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from fastapi.openapi.utils import get_openapi
+
 from main import app
 
 

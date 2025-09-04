@@ -5,10 +5,10 @@ import logging
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Body, HTTPException, status
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 
 from models import Project, ProjectList
-from rest_api.dependencies import get_project_service, get_project_id
+from rest_api.dependencies import get_project_id, get_project_service
 from rest_api.endpoints import API_PREFIX
 from services import ProjectService
 
@@ -21,24 +21,27 @@ project_router = APIRouter(
 )
 
 
-@project_router.get("", response_model=ProjectList)
-async def get_projects(project_service: Annotated[ProjectService, Depends(get_project_service)]):
+@project_router.get("")
+async def get_projects(project_service: Annotated[ProjectService, Depends(get_project_service)]) -> ProjectList:
+    """Endpoint to get list of all projects"""
     return await project_service.get_project_list()
 
 
-@project_router.post("", response_model=Project)
+@project_router.post("")
 async def create_project(
     project_service: Annotated[ProjectService, Depends(get_project_service)],
     project: Annotated[Project, Body()],
-):
+) -> Project:
+    """Endpoint to create a new project"""
     return await project_service.create_project(project)
 
 
-@project_router.get("/{project_id}", response_model=Project)
+@project_router.get("/{project_id}")
 async def get_project_by_id(
     project_service: Annotated[ProjectService, Depends(get_project_service)],
     project_id: Annotated[UUID, Depends(get_project_id)],
-):
+) -> Project:
+    """Endpoint to get project metadata by ID"""
     project = await project_service.get_project_by_id(project_id)
     if project is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")

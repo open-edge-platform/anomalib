@@ -10,7 +10,7 @@ import click
 
 from db import migration_manager
 from db.engine import get_sync_db_session
-from db.schema import ProjectDB, ModelDB
+from db.schema import ModelDB, ProjectDB
 from models.model import ModelFormat
 
 logging.basicConfig(level=logging.INFO)
@@ -113,7 +113,7 @@ def clean_db() -> None:
 def gen_api(target_path: str) -> None:
     """Generate OpenAPI specification JSON file."""
     # Importing create_openapi imports threading which is slow. Importing here to not slow down other cli commands.
-    from create_openapi import create_openapi
+    from create_openapi import create_openapi  # noqa: PLC0415
 
     try:
         create_openapi(target_path=target_path)

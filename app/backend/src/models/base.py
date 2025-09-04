@@ -2,11 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC
-from typing import Literal, Any, Callable
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
-from pydantic.main import IncEx
 
 
 class BaseIDModel(ABC, BaseModel):

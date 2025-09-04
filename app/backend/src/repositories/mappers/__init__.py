@@ -6,9 +6,4 @@ from .media_mapper import MediaMapper
 from .model_mapper import ModelMapper
 from .project_mapper import ProjectMapper
 
-__all__ = [
-    "JobMapper",
-    "MediaMapper",
-    "ModelMapper",
-    "ProjectMapper"
-]
+__all__ = ["JobMapper", "MediaMapper", "ModelMapper", "ProjectMapper"]

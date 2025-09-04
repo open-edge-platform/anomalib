@@ -3,7 +3,7 @@
 from enum import StrEnum
 from uuid import UUID
 
-from pydantic import Field, BaseModel
+from pydantic import BaseModel, Field
 
 from models.base import BaseIDNameModel
 
@@ -37,4 +37,3 @@ class Model(BaseIDNameModel):
 
 class ModelList(BaseModel):
     models: list[Model]
-

@@ -1,23 +1,19 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Iterator
 from contextlib import contextmanager
 from sqlite3 import Connection
-from typing import Any, Iterator
+from typing import Any
 
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.create import create_engine, event
-from sqlalchemy.ext.asyncio import (
-    AsyncSession,
-    create_async_engine,
-    async_sessionmaker,
-)
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm.session import Session, sessionmaker
 from sqlalchemy.pool.impl import NullPool
 
-from settings import get_settings
 from db.schema import Base
+from settings import get_settings
 
 DATABASE_URL = "sqlite+aiosqlite:///.inspect.db"
 settings = get_settings()
@@ -79,5 +75,5 @@ async def init_models() -> None:
     In a real-life example we would use Alembic to manage migrations.
     """
     async with async_engine.begin() as conn:
-        # await conn.run_sync(Base.metadata.drop_all)  # noqa: ERA001
+        # await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)

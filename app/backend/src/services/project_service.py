@@ -5,8 +5,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
-from models import Project
-from models import ProjectList
+from models import Project, ProjectList
 from repositories import ProjectRepository
 
 
@@ -23,8 +22,5 @@ class ProjectService:
     async def create_project(self, project: Project) -> Project:
         return await self.project_repository.save(project)
 
-    async def update_project(self, project_id, project_data) -> Project:
-        return await self.project_repository.update(project_id, project_data)
-
-    async def delete_project(self, project_id):
-        return await self.project_repository.delete(project_id)
+    async def delete_project(self, project_id: UUID) -> None:
+        await self.project_repository.delete(project_id)

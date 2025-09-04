@@ -1,13 +1,13 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import abc
-from typing import TypeVar, Generic, Callable, cast, Any
+from collections.abc import Callable
+from typing import Any, TypeVar
 from uuid import UUID
 
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy.sql import expression
-
-from pydantic import BaseModel
 from sqlalchemy.sql.selectable import Select, and_
 
 from db.schema import Base
@@ -16,7 +16,7 @@ ModelType = TypeVar("ModelType", bound=BaseModel)
 SchemaType = TypeVar("SchemaType", bound=Base)
 
 
-class BaseRepository(Generic[ModelType], metaclass=abc.ABCMeta):
+class BaseRepository[ModelType, SchemaType](metaclass=abc.ABCMeta):
     """Base repository class for database operations."""
 
     def __init__(self, db: AsyncSession, schema: type[SchemaType]):
@@ -58,12 +58,14 @@ class BaseRepository(Generic[ModelType], metaclass=abc.ABCMeta):
     async def get_by_id(self, obj_id: str | UUID) -> ModelType | None:
         return await self.get_one(extra_filters={"id": self._id_to_str(obj_id)})
 
-    async def get_one(self, extra_filters: dict | None = None, expressions: list[Any] | None = None) -> ModelType | None:
+    async def get_one(
+        self, extra_filters: dict | None = None, expressions: list[Any] | None = None
+    ) -> ModelType | None:
         query = self._get_filter_query(extra_filters=extra_filters, expressions=expressions)
         result = await self.db.execute(query)
         first_result = result.scalars().first()
         if first_result:
-            return self.from_schema(cast(SchemaType, first_result))
+            return self.from_schema(first_result)
         return None
 
     async def get_all(self, extra_filters: dict | None = None, expressions: list[Any] | None = None) -> list[ModelType]:
@@ -73,20 +75,20 @@ class BaseRepository(Generic[ModelType], metaclass=abc.ABCMeta):
         return [self.from_schema(result) for result in scalars]
 
     async def save(self, item: ModelType) -> ModelType:
-        schema_item = self.to_schema(item)
+        schema_item: SchemaType = self.to_schema(item)
         self.db.add(schema_item)
         await self.db.commit()
         return item
 
     async def update(self, item: ModelType) -> ModelType:
-        schema_item = self.to_schema(item)
+        schema_item: SchemaType = self.to_schema(item)
         await self.db.merge(schema_item)
         await self.db.commit()
         return item
 
     async def delete(self, obj_id: str | UUID) -> None:
         obj_id = self._id_to_str(obj_id)
-        query = expression.delete(self.schema).where(self.schema.id == obj_id, self.base_filter_expression) # type: ignore[attr-defined]
+        query = expression.delete(self.schema).where(self.schema.id == obj_id, self.base_filter_expression)  # type: ignore[attr-defined]
         await self.db.execute(query)
 
     @staticmethod
@@ -96,7 +98,7 @@ class BaseRepository(Generic[ModelType], metaclass=abc.ABCMeta):
         return obj_id
 
 
-class ProjectBaseRepository(BaseRepository[ModelType], metaclass=abc.ABCMeta):
+class ProjectBaseRepository(BaseRepository, metaclass=abc.ABCMeta):
     def __init__(self, db: AsyncSession, project_id: str | UUID, schema: type[SchemaType]):
         super().__init__(db, schema)
         self.project_id = self._id_to_str(project_id)

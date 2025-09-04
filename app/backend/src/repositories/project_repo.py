@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from datetime import datetime
-from typing import Callable
+from collections.abc import Callable
 
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
@@ -11,7 +10,7 @@ from repositories.base import BaseRepository
 from repositories.mappers import ProjectMapper
 
 
-class ProjectRepository(BaseRepository[Project]):
+class ProjectRepository(BaseRepository):
     def __init__(self, db: AsyncSession):
         super().__init__(db, ProjectDB)
 

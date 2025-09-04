@@ -3,11 +3,10 @@
 
 import os
 
-from fastapi import Depends, File, Request, UploadFile
-
-from models import ImageExtension
+from fastapi import File, Request, UploadFile
 
 from exceptions import InvalidMediaException, PayloadTooLargeException
+from models import ImageExtension
 
 
 class MediaRestValidator:

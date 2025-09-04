@@ -1,16 +1,14 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
-from exceptions import ResourceNotFoundException, DuplicateJobException
+from exceptions import DuplicateJobException, ResourceNotFoundException
 from models import Job, JobList, JobType
-from models.job import TrainJobPayload, JobSubmitted
+from models.job import JobSubmitted, TrainJobPayload
 from repositories import JobRepository
-from services.model_service import ModelService
 
 
 class JobService:
@@ -23,7 +21,7 @@ class JobService:
 
     async def submit_train_job(self, payload: TrainJobPayload) -> JobSubmitted:
         if await self.job_repository.is_job_duplicate(project_id=payload.project_id, payload=payload):
-            raise DuplicateJobException()
+            raise DuplicateJobException
 
         try:
             job = Job(

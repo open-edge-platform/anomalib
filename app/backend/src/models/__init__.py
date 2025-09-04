@@ -1,21 +1,21 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from .project import Project, ProjectList
+from .job import Job, JobList, JobStatus, JobType
+from .media import ImageExtension, Media, MediaList
 from .model import Model, ModelList
-from .job import Job, JobList, JobType, JobStatus
-from .media import Media, ImageExtension, MediaList
+from .project import Project, ProjectList
 
 __all__ = [
-    "Project",
-    "ProjectList",
-    "Model",
-    "ModelList",
+    "ImageExtension",
     "Job",
     "JobList",
-    "JobType",
     "JobStatus",
+    "JobType",
     "Media",
     "MediaList",
-    "ImageExtension",
+    "Model",
+    "ModelList",
+    "Project",
+    "ProjectList",
 ]

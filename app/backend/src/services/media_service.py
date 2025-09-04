@@ -1,16 +1,15 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import io
 import logging
 import os
 from uuid import UUID, uuid4
 
-from sqlalchemy.ext.asyncio.session import AsyncSession
 from fastapi import UploadFile
+from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from models import Media, MediaList
 from repositories import MediaRepository
-from repositories.binary_repo import BinaryRepository, FILETYPE
+from repositories.binary_repo import FILETYPE, BinaryRepository
 
 logger = logging.getLogger(__name__)
 

@@ -1,11 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from pydantic import Field
 from datetime import datetime
 
+from pydantic import BaseModel, Field
+
 from models.base import BaseIDNameModel
-from pydantic import BaseModel
 
 
 class Project(BaseIDNameModel):

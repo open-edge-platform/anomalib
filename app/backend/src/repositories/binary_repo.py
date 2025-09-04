@@ -6,13 +6,14 @@ from enum import StrEnum
 from uuid import UUID
 
 STORAGE_ROOT_PATH = "data"
-IMAGES_PATH = f"images"
-MODELS_PATH = f"models"
+IMAGES_PATH = "images"
+MODELS_PATH = "models"
 
 
 class FILETYPE(StrEnum):
     IMAGES = "images"
     MODELS = "models"
+
 
 class BinaryRepository:
     def __init__(self, project_id: str | UUID):
@@ -26,12 +27,14 @@ class BinaryRepository:
         :param path: Relative path to the file.
         :return: Binary content of the file.
         """
+
         def stdlib_read():
             full_path = os.path.join(STORAGE_ROOT_PATH, path)
             if not os.path.isfile(full_path):
                 raise FileNotFoundError(f"File not found: {full_path}")
-            with open(full_path, 'rb') as fp:
+            with open(full_path, "rb") as fp:
                 return fp.read()
+
         return await asyncio.to_thread(stdlib_read)
 
     def get_full_path(self, filename: str, file_type: FILETYPE) -> str:
@@ -53,17 +56,19 @@ class BinaryRepository:
         :param file_type: Type of the file
         :return: The path where the file was saved.
         """
+
         def stdlib_write():
             full_path = self.get_full_path(filename=filename, file_type=file_type)
             folder, _ = full_path.split(filename)
             os.makedirs(folder, exist_ok=True)
-            with open(full_path, 'wb') as f:
+            with open(full_path, "wb") as f:
                 f.write(content)
             return full_path
+
         try:
             destination_path = await asyncio.to_thread(stdlib_write)
         except Exception as e:
-            raise IOError(f"Failed to save {file_type.value} file: {filename}") from e
+            raise OSError(f"Failed to save {file_type.value} file: {filename}") from e
         return destination_path
 
     async def delete_file(self, filename: str, file_type: FILETYPE) -> None:
@@ -73,10 +78,12 @@ class BinaryRepository:
         :param filename: Name of the file to delete.
         :param file_type: Type of the file
         """
+
         def stdlib_delete():
             full_path = self.get_full_path(filename=filename, file_type=file_type)
             if os.path.isfile(full_path):
                 os.remove(full_path)
             else:
                 raise FileNotFoundError(f"File not found: {full_path}")
+
         await asyncio.to_thread(stdlib_delete)

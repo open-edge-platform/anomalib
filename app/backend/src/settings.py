@@ -20,9 +20,7 @@ class Settings(BaseSettings):
     app_name: str = "Geti Inspect"
     version: str = "0.1.0"
     summary: str = "Geti Inspect server"
-    description: str = (
-        "Geti Inspect allows to fine-tune anomaly models at the edge."
-    )
+    description: str = "Geti Inspect allows to fine-tune anomaly models at the edge."
     openapi_url: str = "/rest_api/openapi.json"
     debug: bool = Field(default=False, alias="DEBUG")
     environment: Literal["dev", "prod"] = "dev"
