@@ -109,7 +109,10 @@ class Huggingface(Backend):
         """
         if self._processor is None:
             if transformers is None:
-                msg = "transformers is not installed."
+                msg = (
+                    "transformers is not installed. Please install it with: "
+                    "'pip install anomalib[vlm]' or 'uv pip install anomalib[vlm]'"
+                )
                 raise ValueError(msg)
             self._processor = transformers.LlavaNextProcessor.from_pretrained(self.model_name)
         return self._processor
@@ -126,7 +129,10 @@ class Huggingface(Backend):
         """
         if self._model is None:
             if transformers is None:
-                msg = "transformers is not installed."
+                msg = (
+                    "transformers is not installed. Please install it with: "
+                    "'pip install anomalib[vlm]' or 'uv pip install anomalib[vlm]'"
+                )
                 raise ValueError(msg)
             self._model = transformers.LlavaNextForConditionalGeneration.from_pretrained(self.model_name)
         return self._model

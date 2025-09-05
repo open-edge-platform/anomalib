@@ -70,7 +70,10 @@ class NNCFCallback(Callback):
 
     def __init__(self, config: dict, export_dir: str | None = None) -> None:
         if not module_available("nncf"):
-            msg = "NNCF is not installed. Please install it using: pip install anomalib[openvino]"
+            msg = (
+                "NNCF is not installed. Please install it using: "
+                "'pip install anomalib[openvino]' or 'uv pip install anomalib[openvino]'"
+            )
             raise ImportError(msg)
 
         from nncf import NNCFConfig

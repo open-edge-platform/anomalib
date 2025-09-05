@@ -61,7 +61,10 @@ class InitLoader:
 
     def __init__(self, data_loader: DataLoader) -> None:
         if not module_available("nncf"):
-            msg = "NNCF is not installed. Please install it using: pip install anomalib[openvino]"
+            msg = (
+                "NNCF is not installed. Please install it using: "
+                "'pip install anomalib[openvino]' or 'uv pip install anomalib[openvino]'"
+            )
             raise ImportError(msg)
 
         from nncf.torch.initialization import PTInitializingDataLoader
@@ -175,7 +178,10 @@ def wrap_nncf_model(
         True
     """
     if not module_available("nncf"):
-        msg = "NNCF is not installed. Please install it using: pip install anomalib[openvino]"
+        msg = (
+            "NNCF is not installed. Please install it using: "
+            "'pip install anomalib[openvino]' or 'uv pip install anomalib[openvino]'"
+        )
         raise ImportError(msg)
 
     from nncf import NNCFConfig
