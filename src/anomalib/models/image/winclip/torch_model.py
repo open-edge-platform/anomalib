@@ -41,15 +41,13 @@ from torchvision.transforms import Compose, ToPILImage
 from anomalib.data import InferenceBatch
 from anomalib.models.components import BufferListMixin, DynamicBufferMixin
 
+from .prompting import create_prompt_ensemble
+from .utils import class_scores, harmonic_aggregation, make_masks, visual_association_score
+
 if TYPE_CHECKING or module_available("open_clip"):
     import open_clip
     from open_clip.tokenizer import tokenize
-else:
-    msg = "open_clip is required for VLM models. Install it with: pip install anomalib[vlm_clip]"
-    raise ImportError(msg)
 
-from .prompting import create_prompt_ensemble
-from .utils import class_scores, harmonic_aggregation, make_masks, visual_association_score
 
 BACKBONE = "ViT-B-16-plus-240"
 PRETRAINED = "laion400m_e31"
