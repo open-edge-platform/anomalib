@@ -14,12 +14,18 @@ tasks in anomaly detection. The backend handles:
 Example:
     >>> from anomalib.models.image.vlm_ad.backends import Huggingface
     >>> backend = Huggingface(model_name="llava-hf/llava-1.5-7b-hf")  # doctest: +SKIP
+    >>> # Or with specific revision for reproducible downloads:
+    >>> backend = Huggingface(  # doctest: +SKIP
+    ...     model_name="llava-hf/llava-1.5-7b-hf",
+    ...     model_revision="v1.0.0"
+    ... )
     >>> backend.add_reference_images("normal_image.jpg")  # doctest: +SKIP
     >>> response = backend.predict("test.jpg", prompt)  # doctest: +SKIP
 
 Args:
     model_name (str): Name of the Hugging Face model to use (e.g.
         ``"llava-hf/llava-1.5-7b-hf"``)
+    model_revision (str): Model revision/branch/tag to use. Defaults to "main".
 
 See Also:
     - :class:`Backend`: Base class for VLM backends
@@ -65,11 +71,17 @@ class Huggingface(Backend):
     Args:
         model_name (str): Name of the Hugging Face model to use (e.g.
             ``"llava-hf/llava-1.5-7b-hf"``)
+        model_revision (str): Model revision/branch/tag to use. Defaults to "main".
 
     Example:
         >>> from anomalib.models.image.vlm_ad.backends import Huggingface
         >>> backend = Huggingface(  # doctest: +SKIP
         ...     model_name="llava-hf/llava-1.5-7b-hf"
+        ... )
+        >>> # Or with specific revision:
+        >>> backend = Huggingface(  # doctest: +SKIP
+        ...     model_name="llava-hf/llava-1.5-7b-hf",
+        ...     model_revision="v1.0.0"
         ... )
         >>> backend.add_reference_images("normal_image.jpg")  # doctest: +SKIP
         >>> response = backend.predict("test.jpg", prompt)  # doctest: +SKIP
@@ -86,13 +98,17 @@ class Huggingface(Backend):
     def __init__(
         self,
         model_name: str,
+        model_revision: str = "main",
     ) -> None:
         """Initialize the Huggingface backend.
 
         Args:
             model_name (str): Name of the Hugging Face model to use
+            model_revision (str): Model revision/branch/tag to use. Defaults to "main".
+                Can be a branch name, tag, or commit hash for reproducible downloads.
         """
         self.model_name: str = model_name
+        self.model_revision: str = model_revision
         self._ref_images: list[str] = []
         self._processor: ProcessorMixin | None = None
         self._model: PreTrainedModel | None = None
@@ -111,7 +127,10 @@ class Huggingface(Backend):
             if transformers is None:
                 msg = "transformers is not installed."
                 raise ValueError(msg)
-            self._processor = transformers.LlavaNextProcessor.from_pretrained(self.model_name)
+            self._processor = transformers.LlavaNextProcessor.from_pretrained(
+                self.model_name,
+                revision=self.model_revision,
+            )
         return self._processor
 
     @property
@@ -128,7 +147,10 @@ class Huggingface(Backend):
             if transformers is None:
                 msg = "transformers is not installed."
                 raise ValueError(msg)
-            self._model = transformers.LlavaNextForConditionalGeneration.from_pretrained(self.model_name)
+            self._model = transformers.LlavaNextForConditionalGeneration.from_pretrained(
+                self.model_name,
+                revision=self.model_revision,
+            )
         return self._model
 
     @staticmethod
