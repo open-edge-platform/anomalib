@@ -268,7 +268,21 @@ class PerlinAnomalyGenerator(v2.Transform):
                 - Mask tensor of shape ``[H, W, 1]``
         """
         # Generate perlin noise
-        perlin_noise = generate_perlin_noise(height, width, device=device)
+
+        # plain random noise for initial setup
+        perlin_noise = torch.randn(height, width, device=device)
+
+        # it is possible that the max value is less than 0.5, so the generated mask is all zeros
+        # so we need to generate a new mask. This is a hack :) to ensure that the mask is valid.
+        # we can always just use return generate_perlin_noise(.) but in very rare occurence, we might
+        # get infinite loop. (imagine setting a seed or something)
+        for _retries in range(3):
+            perlin_noise = generate_perlin_noise(height, width, device=device)
+            if (perlin_noise > 0.5).any():
+                break
+        else:
+            msg = "Failed to generate perlin noise mask with valid values after 3 retries."
+            raise ValueError(msg)
 
         # Create rotated noise pattern
         perlin_noise = perlin_noise.unsqueeze(0)  # [1, H, W]

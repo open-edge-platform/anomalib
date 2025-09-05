@@ -34,7 +34,6 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from dotenv import load_dotenv
 from lightning_utilities.core.imports import module_available
 
 from anomalib.models.image.vlm_ad.utils import Prompt
@@ -45,6 +44,11 @@ if module_available("openai"):
     from openai import OpenAI
 else:
     OpenAI = None
+
+if module_available("dotenv"):
+    from dotenv import load_dotenv
+else:
+    load_dotenv = None
 
 if TYPE_CHECKING:
     from openai.types.chat import ChatCompletion
