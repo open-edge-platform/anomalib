@@ -24,5 +24,6 @@ Example:
 from .base import BaseThreshold, Threshold
 from .f1_adaptive_threshold import F1AdaptiveThreshold
 from .manual_threshold import ManualThreshold
+from .mebin import MEBin
 
-__all__ = ["BaseThreshold", "Threshold", "F1AdaptiveThreshold", "ManualThreshold"]
+__all__ = ["BaseThreshold", "Threshold", "F1AdaptiveThreshold", "ManualThreshold", "MEBin"]

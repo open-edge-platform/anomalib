@@ -59,7 +59,7 @@ from .min_max import MinMax
 from .pimo import AUPIMO, PIMO
 from .precision_recall_curve import BinaryPrecisionRecallCurve
 from .pro import PRO
-from .threshold import F1AdaptiveThreshold, ManualThreshold
+from .threshold import F1AdaptiveThreshold, ManualThreshold ,MEBin
 
 __all__ = [
     "AUROC",
@@ -78,4 +78,5 @@ __all__ = [
     "PRO",
     "PIMO",
     "AUPIMO",
+    "MEBin",
 ]
