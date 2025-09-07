@@ -7,7 +7,7 @@ This module provides PyTorch Dataset implementation for the VAD dataset. The
 dataset will be downloaded and extracted automatically if not found locally.
 
 The dataset contains one category of industrial objects with both normal and
-anomalous samples. It includes RGB images only (no pixel-level masks).
+anomalous samples.
 
 License:
     VAD dataset is released under the Creative Commons
@@ -29,6 +29,7 @@ from pandas import DataFrame
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datasets.base import AnomalibDataset
+from anomalib.data.errors import MisMatchError
 from anomalib.data.utils import LabelName, Split, validate_path
 
 IMG_EXTENSIONS = (".png", ".PNG")
@@ -66,6 +67,13 @@ class VADDataset(AnomalibDataset):
         >>> list(sample.keys())
         ['image_path', 'label', 'image']
 
+        For segmentation tasks, samples also include mask paths and masks:
+
+        >>> dataset.task = "segmentation"
+        >>> sample = dataset[0]
+        >>> list(sample.keys())
+        ['image_path', 'label', 'image', 'mask_path', 'mask']
+
         Images are PyTorch tensors with shape ``(C, H, W)``, masks have shape
         ``(H, W)``:
 
@@ -101,6 +109,7 @@ def make_vad_dataset(
 
     The files are expected to follow the structure:
         ``path/to/dataset/split/category/image_filename.png``
+        ``path/to/dataset/ground_truth/category/mask_filename.png``
 
     Args:
         root (Path | str): Path to dataset root directory
@@ -115,7 +124,7 @@ def make_vad_dataset(
             - split: Dataset split (train/test)
             - label: Class label
             - image_path: Path to image file
-            - mask_path: Empty path for compatibility, no masks are available for this dataset
+            - mask_path: Path to mask file (if available)
             - label_index: Numeric label (0=normal, 1=abnormal)
 
     Example:
@@ -149,11 +158,42 @@ def make_vad_dataset(
     samples.loc[(samples.label != "good"), "label_index"] = LabelName.ABNORMAL
     samples.label_index = samples.label_index.astype(int)
 
-    # assign mask paths to empty string
-    samples["mask_path"] = ""
+    # separate masks from samples
+    mask_samples = samples.loc[samples.split == "ground_truth"].sort_values(
+        by="image_path",
+        ignore_index=True,
+    )
+    samples = samples[samples.split != "ground_truth"].sort_values(
+        by="image_path",
+        ignore_index=True,
+    )
+
+    # assign mask paths to anomalous test images
+    samples["mask_path"] = None
+    samples.loc[
+        (samples.split == "test") & (samples.label_index == LabelName.ABNORMAL),
+        "mask_path",
+    ] = mask_samples.image_path.to_numpy()
+
+    # assert that the right mask files are associated with the right test images
+    abnormal_samples = samples.loc[samples.label_index == LabelName.ABNORMAL]
+    if (
+        len(abnormal_samples)
+        and not abnormal_samples.apply(
+            lambda x: Path(x.image_path).stem in Path(x.mask_path).stem,
+            axis=1,
+        ).all()
+    ):
+        msg = (
+            "Mismatch between anomalous images and ground truth masks. Make sure "
+            "mask files in 'ground_truth' folder follow the same naming "
+            "convention as the anomalous images (e.g. image: '000.png', "
+            "mask: '000.png' or '000_mask.png')."
+        )
+        raise MisMatchError(msg)
 
     # infer the task type
-    samples.attrs["task"] = "classification"
+    samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
 
     if split:
         samples = samples[samples.split == split].reset_index(drop=True)
