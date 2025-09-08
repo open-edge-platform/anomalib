@@ -32,7 +32,7 @@ async def get_media_list(
     return await media_service.get_media_list(project_id=project_id)
 
 
-@media_router.get("/images/{media_id}", response_model_exclude_none=True)
+@media_router.get("/images/{media_id}/full", response_model_exclude_none=True)
 async def get_media(
     media_service: Annotated[MediaService, Depends(get_media_service)],
     project_id: Annotated[UUID, Depends(get_project_id)],
