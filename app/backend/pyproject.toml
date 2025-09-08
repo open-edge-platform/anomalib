@@ -1,0 +1,63 @@
+[project]
+name = "geti-inspect"
+version = "1.0.0"
+description = "Geti inspect server"
+requires-python = ">=3.10, <=3.13"
+
+dependencies = [
+  "fastapi[standard]==0.115.4",
+  "jsonschema>=4.18.0a10",
+  "uvicorn~=0.17",
+  "sqlalchemy[asyncio]~=2.0",
+  "aiosqlite~=0.21",
+  "alembic~=1.16.4",
+  "aiofiles==24.1.0",
+  "openvino==2025.2.0",
+  "pydantic-settings~=2.10.1",
+]
+
+[dependency-groups]
+dev = [
+  "pytest~=8.3",
+  "ruff~=0.11.2",
+  "pre-commit~=4.1",
+  "mypy~=1.15",
+  "pdbpp~=0.10",
+  "flaky~=3.8",
+  "testfixtures~=8.2",
+  "pytest-freezegun~=0.4",
+  "httpx~=0.24",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+exclude = [".venv*"]
+
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["ARG", "E", "F", "I", "N", "UP", "YTT", "ASYNC", "S", "COM", "C4", "FA", "PIE", "PYI", "Q", "RSE", "RET", "SIM",
+    "TID", "TC", "PL", "RUF", "C90", "D103", "ANN001", "ANN201", "ANN205", "FAST"]
+
+ignore = ["N801", "N805","N806","N807", "N818", "COM812", "RET503", "SIM108", "SIM105", "PLR2004",
+
+    "RUF010", "TC001",  "RUF012"]
+
+fixable = ["ALL"]
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.per-file-ignores]
+"*test*.py" = ["S", "ANN", "D", "ARG", "PLR"]
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = false
+
+[tool.ruff.lint.pylint]
+max-args=7
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+show_error_codes = true

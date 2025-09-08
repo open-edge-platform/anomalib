@@ -14,7 +14,7 @@ The Geti Edge applications aim to provide a user experience and design language 
 
 The application follows a modular, feature-oriented structure:
 
-```
+```text
 .
 ├── packages/
 │   ├── config           # Shared configuration (`@geti/config`)
@@ -42,7 +42,7 @@ The application follows a modular, feature-oriented structure:
 - **routes/** & **router.tsx**: Routing setup; keep route files minimal—extract complex routes into feature modules.
 - **providers.tsx**: Global application providers, e.g., `QueryClientProvider`, `ThemeProvider`, `RouterProvider`.
 
-> **Note:**  
+> **Note:**
 > Currently, `@geti/ui` and `@geti/config` are installed via [Degit](https://github.com/Rich-Harris/degit) to avoid npm publishing. These will be published to npm as the Geti Edge ecosystem matures.
 
 ---
