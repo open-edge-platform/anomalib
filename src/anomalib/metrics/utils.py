@@ -1,7 +1,7 @@
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Helper functions to generate ROC-style plots of various metrics.
+"""Helper functions to generate plots of various metrics.
 
 This module provides utility functions for generating ROC-style plots and other
 visualization helpers used by metrics in Anomalib.
@@ -13,6 +13,64 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 from anomalib.utils.deprecation import deprecate
+
+
+def plot_score_histogram(
+    scores: torch.Tensor,
+    labels: torch.Tensor,
+    bins: int = 30,
+    good_color: str = "skyblue",
+    bad_color: str = "salmon",
+    xlabel: str = "Score",
+    ylabel: str = "Relative Count",
+    title: str = "Score Histogram",
+    legend_labels: tuple[str, str] = ("Good", "Bad"),
+) -> tuple[Figure, Axes]:
+    """Plot a histogram of scores using two colors for good and bad images.
+
+    Args:
+        scores (torch.Tensor): 1D tensor of scores for all images.
+        labels (torch.Tensor): 1D tensor of binary labels (0=good, 1=bad).
+        bins (int, optional): Number of histogram bins. Defaults to ``30``.
+        good_color (str, optional): Color for good images. Defaults to "skyblue".
+        bad_color (str, optional): Color for bad images. Defaults to "salmon".
+        xlabel (str, optional): Label for x-axis. Defaults to "Score".
+        ylabel (str, optional): Label for y-axis. Defaults to "Relative Count".
+        title (str, optional): Title of the plot. Defaults to "Score Histogram".
+        legend_labels (tuple[str, str], optional): Labels for legend. Defaults to ("Good", "Bad").
+
+    Returns:
+        tuple[Figure, Axes]: Tuple containing the figure and its main axis.
+    """
+    fig, axis = plt.subplots()
+    scores = scores.detach().cpu().numpy()
+    labels = labels.detach().cpu().numpy()
+
+    good_scores = scores[labels == 0]
+    bad_scores = scores[labels == 1]
+
+    axis.hist(
+        good_scores,
+        bins=bins,
+        color=good_color,
+        alpha=0.7,
+        label=legend_labels[0],
+        density=True,
+    )
+    axis.hist(
+        bad_scores,
+        bins=bins,
+        color=bad_color,
+        alpha=0.7,
+        label=legend_labels[1],
+        density=True,
+    )
+
+    axis.set_xlabel(xlabel)
+    axis.set_ylabel(ylabel)
+    axis.set_title(title)
+    axis.legend()
+    return fig, axis
 
 
 def plot_metric_curve(
