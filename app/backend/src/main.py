@@ -34,7 +34,12 @@ async def lifespan(_: FastAPI):  # type: ignore # noqa: ANN201
     yield
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    lifespan=lifespan,
+    openapi_url="/api/openapi.json",
+    redoc_url=None,
+    docs_url=None,
+)
 app.include_router(project_router)
 app.include_router(job_router)
 app.include_router(media_router)
