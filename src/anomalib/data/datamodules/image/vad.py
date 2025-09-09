@@ -51,8 +51,8 @@ logger = logging.getLogger(__name__)
 
 DOWNLOAD_INFO = DownloadInfo(
     name="VAD",
-    url="https://eu.mydrive.ch/shares/88472/0eb328ff388ac0614b383cdfdeada104/download/452926775-1741958563/VAD.zip",
-    hashsum="bfffce213d1649c8dd6b8e3afd8d85512736131e9ec7c5edfa0c26e774b5760b",
+    url="https://eu.mydrive.ch/shares/90677/c42f2e42db42dd710153dbadc2160f88/download/453437487-1757245265/VAD.zip",
+    hashsum="8655b46d9de19f1c50d3eb79567cc3504773979892281a669d0c36680050050a",
 )
 
 

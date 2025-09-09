@@ -25,6 +25,8 @@ This module provides various metrics for evaluating anomaly detection performanc
     - ``BinaryPrecisionRecallCurve``: Computes precision-recall curves
     - ``Evaluator``: Combines multiple metrics for evaluation
     - ``MinMax``: Normalizes scores to [0,1] range
+    - ``PBn``: Presorted bad with n% good samples misclassified
+    - ``PGn``: Presorted good with n% bad samples missed
     - ``PRO``: Per-Region Overlap score
     - ``PIMO``: Per-Image Missed Overlap score
 
@@ -56,6 +58,7 @@ from .base import AnomalibMetric, create_anomalib_metric
 from .evaluator import Evaluator
 from .f1_score import F1Max, F1Score
 from .min_max import MinMax
+from .pg_pb import PBn, PGn
 from .pimo import AUPIMO, PIMO
 from .precision_recall_curve import BinaryPrecisionRecallCurve
 from .pro import PRO
@@ -75,6 +78,8 @@ __all__ = [
     "F1Score",
     "ManualThreshold",
     "MinMax",
+    "PGn",
+    "PBn",
     "PRO",
     "PIMO",
     "AUPIMO",
