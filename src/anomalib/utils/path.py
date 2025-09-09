@@ -92,9 +92,6 @@ def _make_latest_windows(latest: Path, target: Path) -> None:
         tmp.replace(latest)
         return
 
-    tmp.replace(latest)
-
-
 def create_versioned_dir(root_dir: str | Path) -> Path:
     """Create a new version directory and update the ``latest`` symbolic link.
 
