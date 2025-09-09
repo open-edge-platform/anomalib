@@ -10,11 +10,19 @@ dependencies = [
   "uvicorn~=0.17",
   "sqlalchemy[asyncio]~=2.0",
   "aiosqlite~=0.21",
+  "psutil~=7.0.0",
   "alembic~=1.16.4",
   "aiofiles==24.1.0",
   "openvino==2025.2.0",
   "pydantic-settings~=2.10.1",
+  "openvino-model-api~=0.3.0.2",
+  "aiortc~=1.13.0",
+  "anomalib[full]",
+  "torchmetrics>=1.8.2",
 ]
+
+[tool.uv.sources]
+anomalib = { path = "../../", editable = true }
 
 [dependency-groups]
 dev = [

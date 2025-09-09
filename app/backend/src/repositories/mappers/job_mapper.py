@@ -9,7 +9,7 @@ from repositories.mappers.base_mapper_interface import IBaseMapper
 class JobMapper(IBaseMapper):
     @staticmethod
     def to_schema(job: Job) -> JobDB:
-        return JobDB(**job.model_dump(mode="json"))
+        return JobDB(**job.model_dump())
 
     @staticmethod
     def from_schema(job_db: JobDB) -> Job:

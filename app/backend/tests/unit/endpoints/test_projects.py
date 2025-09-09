@@ -9,7 +9,7 @@ from fastapi import status
 
 from main import app
 from models import Project, ProjectList
-from rest_api.dependencies import get_project_service
+from api.dependencies import get_project_service
 from services import ProjectService
 
 

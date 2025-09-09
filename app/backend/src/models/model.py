@@ -1,16 +1,12 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from enum import StrEnum
+import os
 from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from anomalib.deploy import ExportType
 from models.base import BaseIDNameModel
-
-
-class ModelFormat(StrEnum):
-    OPENVINO = "openvino_ir"
-    ONNX = "onnx"
 
 
 class Model(BaseIDNameModel):
@@ -19,10 +15,15 @@ class Model(BaseIDNameModel):
     This can be extended by other schemas to include additional fields.
     """
 
-    format: ModelFormat = ModelFormat.OPENVINO
+    format: ExportType = ExportType.OPENVINO
     project_id: UUID
     threshold: float = Field(default=0.5, gt=0.0, lt=1.0, description="Confidence threshold for the model")
     is_ready: bool = Field(default=False, description="Indicates if the model is ready for use")
+    export_path: str | None = None
+
+    @property
+    def weights_path(self) -> str:
+        return os.path.join(self.export_path, self.format.name.lower())
 
     model_config = {
         "json_schema_extra": {

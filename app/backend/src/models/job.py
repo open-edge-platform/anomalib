@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 from models.base import BaseIDModel
 
@@ -31,6 +31,10 @@ class Job(BaseIDModel):
     message: str = "Job created"
     start_time: datetime | None = None
     end_time: datetime | None = None
+
+    @field_serializer('project_id')
+    def serialize_project_id(self, project_id, _info):
+        return str(project_id)
 
 
 class JobList(BaseModel):

@@ -8,9 +8,10 @@ from fastapi import APIRouter, Body, Depends
 
 from models import JobList
 from models.job import JobSubmitted, TrainJobPayload
-from rest_api.dependencies import get_job_service
-from rest_api.endpoints import API_PREFIX
+from api.dependencies import get_job_service
+from api.endpoints import API_PREFIX
 from services import JobService
+from services.training_service import TrainingService
 
 logger = logging.getLogger(__name__)
 
@@ -34,3 +35,11 @@ async def submit_train_job(
 ) -> JobSubmitted:
     """Endpoint to submit a training job"""
     return await job_service.submit_train_job(payload=payload)
+
+
+@job_router.get("/test")
+async def get_test_job(
+    job_service: Annotated[JobService, Depends(get_job_service)],
+):
+    """Test endpoint to verify the job router is working"""
+    return await job_service.get_pending_train_job()

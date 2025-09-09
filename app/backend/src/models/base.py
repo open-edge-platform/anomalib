@@ -4,13 +4,17 @@
 from abc import ABC
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 
 class BaseIDModel(ABC, BaseModel):
     """Base model with an id field."""
 
     id: UUID = Field(default_factory=uuid4)
+
+    @field_serializer('id')
+    def serialize_id(self, id, _info):
+        return str(id)
 
 
 class BaseIDNameModel(BaseIDModel):

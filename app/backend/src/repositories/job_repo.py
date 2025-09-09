@@ -31,7 +31,18 @@ class JobRepository(BaseRepository):
         # Check for jobs with same payload that are not completed
         existing_job = await self.get_one(
             extra_filters={"project_id": self._id_to_str(project_id), "payload": payload_dict},
-            expressions=[JobDB.status != JobStatus.COMPLETED],
+            expressions=[
+                JobDB.status != JobStatus.COMPLETED,
+                JobDB.status != JobStatus.FAILED,
+                JobDB.status != JobStatus.CANCELED,
+            ],
         )
 
         return existing_job is not None
+
+    async def get_pending_job_by_type(self, job_type: str) -> Job | None:
+        return await self.get_one(
+            extra_filters={"type": job_type, "status": JobStatus.PENDING},
+            order_by=self.schema.created_at,
+            ascending=True,
+        )

@@ -59,9 +59,15 @@ class BaseRepository[ModelType, SchemaType](metaclass=abc.ABCMeta):
         return await self.get_one(extra_filters={"id": self._id_to_str(obj_id)})
 
     async def get_one(
-        self, extra_filters: dict | None = None, expressions: list[Any] | None = None
+        self,
+        extra_filters: dict | None = None,
+        expressions: list[Any] | None = None,
+        order_by: Any | None = None,
+        ascending: bool = False
     ) -> ModelType | None:
         query = self._get_filter_query(extra_filters=extra_filters, expressions=expressions)
+        if order_by is not None:
+            query = query.order_by(order_by.asc() if ascending else order_by.desc())
         result = await self.db.execute(query)
         first_result = result.scalars().first()
         if first_result:
@@ -88,7 +94,11 @@ class BaseRepository[ModelType, SchemaType](metaclass=abc.ABCMeta):
 
     async def delete(self, obj_id: str | UUID) -> None:
         obj_id = self._id_to_str(obj_id)
-        query = expression.delete(self.schema).where(self.schema.id == obj_id, self.base_filter_expression)  # type: ignore[attr-defined]
+        where_expression = [
+            self.schema.id == obj_id,
+            *[self.schema.__table__.c[k] == v for k, v in self.base_filters.items()]
+        ]
+        query = expression.delete(self.schema).where(*where_expression)  # type: ignore[attr-defined]
         await self.db.execute(query)
 
     @staticmethod
