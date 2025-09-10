@@ -14,6 +14,7 @@ from repositories.binary_repo import ModelBinaryRepository, ImageBinaryRepositor
 from services import ModelService
 from services.job_service import JobService
 from utils import is_platform_darwin
+from utils.asyncio_helpers import run_in_process_pool
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,9 @@ class TrainingService:
             logger.info(f"Training model `{model_name}` for job `{job.id}`")
 
             try:
-                model = await cls._train_model(model=model)
+                # Direct call - no helper function needed!
+                model = await run_in_process_pool(cls._train_model, model)
+                
                 await job_service.update_job_status(
                     job_id=job.id, status=JobStatus.COMPLETED, message=f"Training completed successfully"
                 )
@@ -57,7 +60,7 @@ class TrainingService:
 
 
     @staticmethod
-    async def _train_model(model: Model) -> Model | None:
+    def _train_model(model: Model) -> Model | None:
         model_binary_repo = ModelBinaryRepository(project_id=model.project_id, model_id=model.id)
         image_binary_repo = ImageBinaryRepository(project_id=model.project_id)
         image_folder_path = image_binary_repo.project_folder_path
@@ -75,9 +78,8 @@ class TrainingService:
 
         # Offload CPU-heavy train/export to a worker thread
         export_format = ExportType.OPENVINO
-        eval_result = await asyncio.to_thread(engine.train, model=anomalib_model, datamodule=datamodule)
-        export_path = await asyncio.to_thread(
-            engine.export,
+        engine.train(model=anomalib_model, datamodule=datamodule)
+        export_path = engine.export(
             model=anomalib_model,
             export_type=export_format,
             export_root=model_binary_repo.model_folder_path,

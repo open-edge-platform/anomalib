@@ -6,12 +6,10 @@ from uuid import UUID
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
-from db import get_async_db_session
 from exceptions import DuplicateJobException, ResourceNotFoundException
 from models import Job, JobList, JobType
 from models.job import JobSubmitted, TrainJobPayload, JobStatus
 from repositories import JobRepository
-from utils.sync_helpers import sync_method
 
 
 class JobService:
