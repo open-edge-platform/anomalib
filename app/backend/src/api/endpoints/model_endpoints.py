@@ -1,19 +1,14 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import base64
-import io
 import logging
-import cv2
 from typing import Annotated
 from uuid import UUID
 
-import numpy as np
-from PIL import Image
-from fastapi import APIRouter, Depends, Request, UploadFile, Response
+from fastapi import APIRouter, Depends, Request, UploadFile
 
 from api.media_rest_validator import MediaRestValidator
 from exceptions import ResourceNotFoundException
-from models import Model, ModelList
+from models import Model, ModelList, PredictionResponse
 from api.dependencies import get_model_id, get_model_service, get_project_id
 from api.endpoints.project_endpoints import project_api_prefix_url
 from services import ModelService
@@ -56,36 +51,18 @@ async def predict(
     project_id: Annotated[UUID, Depends(get_project_id)],
     model_id: Annotated[UUID, Depends(get_model_id)],
     file: UploadFile = Depends(MediaRestValidator.validate_image_file),
-):
-    """Endpoint to run prediction using the specified model"""
-    inference_model = request.app.state.active_models.get(model_id)
-    if inference_model is None:
-        model = await model_service.get_model_by_id(project_id=project_id, model_id=model_id)
-        if model is None:
-            raise ResourceNotFoundException(resource_id=model_id, resource_name="model")
-        inference_model = await model_service.load_inference_model(model=model)
-        request.app.state.active_models[model_id] = inference_model
+) -> PredictionResponse:
+    """
+    Run prediction on an uploaded image using the specified model.
+    
+    Returns prediction results including anomaly map, label, and confidence score.
+    """
+    # Get model from database
+    model = await model_service.get_model_by_id(project_id=project_id, model_id=model_id)
+    if model is None:
+        raise ResourceNotFoundException(resource_id=model_id, resource_name="model")
 
+    # Read uploaded image and run prediction with model caching
+    # Models are cached in request.app.state.active_models for performance
     image_bytes = await file.read()
-    npd = np.frombuffer(image_bytes, np.uint8)
-    bgr_image = cv2.imdecode(npd, -1)
-    numpy_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
-
-    pred = inference_model.predict(numpy_image)
-    arr = pred.anomaly_map.squeeze()  # Remove dimensions of size 1
-    arr_normalized = (arr * 255).astype(np.uint8)  # Normalize to 0-255 and convert to uint8
-    im = Image.fromarray(arr_normalized, mode='L')  # 'L' for grayscale
-
-    # save image to an in-memory bytes buffer
-    with io.BytesIO() as buf:
-        im.save(buf, format='PNG')
-        im_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
-
-    # Create response with all prediction data
-    label_str = "Anomalous" if pred.pred_label.item() else "Normal"
-    response_data = {
-        "anomaly_map": im_base64,
-        "label": label_str,
-        "score": float(pred.pred_score.item())
-    }
-    return response_data
+    return await model_service.predict_image(model, image_bytes, request.app.state.active_models)

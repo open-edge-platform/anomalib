@@ -14,14 +14,33 @@ from repositories.binary_repo import ModelBinaryRepository, ImageBinaryRepositor
 from services import ModelService
 from services.job_service import JobService
 from utils import is_platform_darwin
-from utils.asyncio_helpers import run_in_process_pool
 
 logger = logging.getLogger(__name__)
 
 
 class TrainingService:
+    """
+    Service for managing model training jobs.
+    
+    Handles the complete training pipeline including job fetching, model training,
+    status updates, and error handling. Currently uses asyncio.to_thread for
+    CPU-intensive training to maintain event loop responsiveness.
+    
+    Note: asyncio.to_thread is used assuming single concurrent training job.
+    For true parallelism with multiple training jobs, consider ProcessPoolExecutor.
+    """
+    
     @classmethod
     async def train_pending_job(cls) -> Model | None:
+        """
+        Process the next pending training job from the queue.
+        
+        Fetches a pending job, executes training in a separate thread to maintain
+        event loop responsiveness, and updates job status accordingly.
+        
+        Returns:
+            Model: Trained model if successful, None if no pending jobs
+        """
         async with get_async_db_session_ctx() as session:
             job_service = JobService(session)
             job = await job_service.get_pending_train_job()
@@ -39,8 +58,9 @@ class TrainingService:
             logger.info(f"Training model `{model_name}` for job `{job.id}`")
 
             try:
-                # Direct call - no helper function needed!
-                model = await run_in_process_pool(cls._train_model, model)
+                # Use asyncio.to_thread to keep event loop responsive
+                # TODO: Consider ProcessPoolExecutor for true parallelism with multiple jobs
+                model = await asyncio.to_thread(cls._train_model, model)
                 
                 await job_service.update_job_status(
                     job_id=job.id, status=JobStatus.COMPLETED, message=f"Training completed successfully"
@@ -61,11 +81,26 @@ class TrainingService:
 
     @staticmethod
     def _train_model(model: Model) -> Model | None:
+        """
+        Execute CPU-intensive model training using anomalib.
+        
+        This synchronous function runs in a separate thread via asyncio.to_thread
+        to prevent blocking the event loop. Sets up the anomalib model, trains it
+        on the dataset, and exports it in OpenVINO format.
+        
+        Args:
+            model: Model object with training configuration
+            
+        Returns:
+            Model: Trained model with updated export_path and is_ready=True
+        """
         model_binary_repo = ModelBinaryRepository(project_id=model.project_id, model_id=model.id)
         image_binary_repo = ImageBinaryRepository(project_id=model.project_id)
         image_folder_path = image_binary_repo.project_folder_path
         model.export_path = model_binary_repo.model_folder_path
         name = f"{model.project_id}-{model.name}"
+        
+        # Configure datamodule for anomalib training
         datamodule = Folder(
             name=name,
             normal_dir=image_folder_path,
@@ -73,10 +108,12 @@ class TrainingService:
             num_workers=0 if is_platform_darwin() else 8,
         )
         logger.info(f"Training from image folder: {image_folder_path} to model folder: {model.export_path}")
+        
+        # Initialize anomalib model and engine
         anomalib_model = get_model(model=model.name)
         engine = Engine(default_root_dir=model.export_path)
 
-        # Offload CPU-heavy train/export to a worker thread
+        # Execute training and export
         export_format = ExportType.OPENVINO
         engine.train(model=anomalib_model, datamodule=datamodule)
         export_path = engine.export(
