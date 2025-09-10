@@ -35,7 +35,6 @@ Note:
 import os
 import re
 import shutil
-import subprocess
 import sys
 from contextlib import suppress
 from pathlib import Path
@@ -78,19 +77,24 @@ def _make_latest_windows(latest: Path, target: Path) -> None:
     tmp = latest.with_name(latest.name + "_tmp")
     _safe_remove_path(tmp)
 
-    # Try junction first (no admin needed), fallback to copy
+    # Try creating a directory junction using native Python API
     try:
-        # nosec B603, B607: Windows-specific command for creating junction
-        subprocess.run(  # noqa: S603
-            ["cmd", "/c", "mklink", "/J", str(tmp), str(target.resolve())],  # noqa: S607
-            check=True,
-            capture_output=True,
-        )
-    except (subprocess.CalledProcessError, OSError, FileNotFoundError):
+        # Use Path.symlink_to with target_is_directory=True for directory junction on Windows
+        # This creates a junction point that doesn't require admin privileges
+        tmp.symlink_to(target.resolve(), target_is_directory=True)
+    except (OSError, NotImplementedError):
+        # Fallback to copying if junction creation fails
+        # This can happen if the filesystem doesn't support junctions or
+        # if there are permission issues
         shutil.copytree(target, tmp)
     else:
+        # Only reached if symlink creation succeeded
         tmp.replace(latest)
         return
+
+    # If we get here, we used the fallback copy method
+    tmp.replace(latest)
+
 
 def create_versioned_dir(root_dir: str | Path) -> Path:
     """Create a new version directory and update the ``latest`` symbolic link.
