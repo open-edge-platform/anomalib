@@ -103,7 +103,10 @@ class ChatGPT(Backend):
             ImportError: If OpenAI package is not installed
         """
         if OpenAI is None:
-            msg = "OpenAI is not installed. Please install it to use ChatGPT backend."
+            msg = (
+                "OpenAI is not installed. Please install it with: "
+                "'pip install anomalib[vlm]' or 'uv pip install anomalib[vlm]'"
+            )
             raise ImportError(msg)
         if self._client is None:
             self._client = OpenAI(api_key=self.api_key)

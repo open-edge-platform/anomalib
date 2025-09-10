@@ -46,7 +46,7 @@ else:
             del args, kwargs
             msg = (
                 "PyAV is not installed, but is required for video processing. "
-                "Please install it with: pip install anomalib[video]"
+                "Please install it with: 'pip install anomalib[video]' or 'uv pip install anomalib[video]'"
             )
             raise ImportError(msg)
 
