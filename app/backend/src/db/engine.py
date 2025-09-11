@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import AsyncGenerator, Iterator
-from contextlib import contextmanager, asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 from sqlite3 import Connection
-from typing import Any, AsyncContextManager
+from typing import Any
 
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.create import create_engine, event

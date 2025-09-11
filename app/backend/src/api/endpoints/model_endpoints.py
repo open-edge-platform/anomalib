@@ -6,11 +6,11 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request, UploadFile
 
+from api.dependencies import get_model_id, get_model_service, get_project_id
+from api.endpoints.project_endpoints import project_api_prefix_url
 from api.media_rest_validator import MediaRestValidator
 from exceptions import ResourceNotFoundException
 from models import Model, ModelList, PredictionResponse
-from api.dependencies import get_model_id, get_model_service, get_project_id
-from api.endpoints.project_endpoints import project_api_prefix_url
 from services import ModelService
 
 logger = logging.getLogger(__name__)
@@ -50,11 +50,11 @@ async def predict(
     model_service: Annotated[ModelService, Depends(get_model_service)],
     project_id: Annotated[UUID, Depends(get_project_id)],
     model_id: Annotated[UUID, Depends(get_model_id)],
-    file: UploadFile = Depends(MediaRestValidator.validate_image_file),
+    file: Annotated[UploadFile, Depends(MediaRestValidator.validate_image_file)],
 ) -> PredictionResponse:
     """
     Run prediction on an uploaded image using the specified model.
-    
+
     Returns prediction results including anomaly map, label, and confidence score.
     """
     # Get model from database

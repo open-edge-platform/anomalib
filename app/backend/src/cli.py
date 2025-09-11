@@ -7,8 +7,8 @@ import logging
 import sys
 
 import click
-
 from anomalib.deploy import ExportType
+
 from db import migration_manager
 from db.engine import get_sync_db_session
 from db.schema import ModelDB, ProjectDB
@@ -102,8 +102,8 @@ def seed(with_model: bool, model_name: str) -> None:
 def clean_db() -> None:
     """Remove all data from the database (clean but don't drop tables)."""
     with get_sync_db_session() as db:
-        db.query(ModelDB).delete()
-        db.query(ProjectDB).delete()
+        db.query(ModelDB).delete_by_id()
+        db.query(ProjectDB).delete_by_id()
         db.commit()
     click.echo("✓ Database cleaned successfully!")
 

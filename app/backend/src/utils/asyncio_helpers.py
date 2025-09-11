@@ -1,14 +1,14 @@
 import asyncio
 import concurrent.futures
-from functools import wraps, partial
-from typing import Callable, Any, Awaitable
+from collections.abc import Callable
+from typing import Any
 
 
 async def run_in_process_pool(func: Callable, *args, **kwargs) -> Any:
     """
     Run a synchronous function in a separate process using ProcessPoolExecutor.
     This is useful for CPU-bound tasks that would block the event loop if run directly.
-    
+
     This function safely handles the asyncio loop by using a different approach that
     doesn't rely on get_running_loop() which can fail in certain contexts.
 
@@ -26,6 +26,6 @@ async def run_in_process_pool(func: Callable, *args, **kwargs) -> Any:
     except RuntimeError:
         # No running loop, get the event loop
         loop = asyncio.get_event_loop()
-    
+
     with concurrent.futures.ProcessPoolExecutor() as pool:
         return await loop.run_in_executor(pool, func, *args, **kwargs)

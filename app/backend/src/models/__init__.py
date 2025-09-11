@@ -16,8 +16,8 @@ __all__ = [
     "MediaList",
     "Model",
     "ModelList",
+    "PredictionLabel",
+    "PredictionResponse",
     "Project",
     "ProjectList",
-    "PredictionLabel",
-    "PredictionResponse"
 ]

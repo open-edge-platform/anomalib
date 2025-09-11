@@ -3,7 +3,6 @@
 import asyncio
 import logging
 from multiprocessing.synchronize import Event as EventClass
-import time
 
 from services.training_service import TrainingService
 from utils import suppress_child_shutdown_signals
@@ -18,7 +17,7 @@ async def _train_loop(stop_event: EventClass) -> None:
     """Main training loop that polls for jobs and manages concurrent training tasks."""
     training_service = TrainingService()
     running_tasks: set[asyncio.Task] = set()
-    
+
     while not stop_event.is_set():
         try:
             # Clean up completed tasks
@@ -29,18 +28,16 @@ async def _train_loop(stop_event: EventClass) -> None:
             # - Multiple training jobs to run concurrently
             # - Event loop to remain responsive for shutdown signals
             if len(running_tasks) < MAX_CONCURRENT_TRAINING:
-                running_tasks.add(
-                    asyncio.create_task(training_service.train_pending_job())
-                )
+                running_tasks.add(asyncio.create_task(training_service.train_pending_job()))
         except Exception as e:
             logger.error(f"Error occurred in training loop: {e}", exc_info=True)
-        
+
         # Check for shutdown signals frequently
         for _ in range(SCHEDULE_INTERVAL_SEC * 2):
             if stop_event.is_set():
                 break
             await asyncio.sleep(0.5)
-    
+
     # Cancel any remaining tasks on shutdown
     for task in running_tasks:
         task.cancel()
@@ -59,4 +56,3 @@ def training_routine(stop_event: EventClass, cleanup: bool = True) -> None:
 
 def _cleanup_resources() -> None:
     """Clean up resources when the worker shuts down."""
-    pass

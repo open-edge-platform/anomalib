@@ -30,6 +30,7 @@ class BinaryRepository(metaclass=abc.ABCMeta):
         :param filename: Relative path to the file.
         :return: Binary content of the file.
         """
+
         def stdlib_read():
             full_path = self.get_full_path(filename)
             if not os.path.isfile(full_path):
@@ -38,14 +39,14 @@ class BinaryRepository(metaclass=abc.ABCMeta):
                 return fp.read()
 
         return await asyncio.to_thread(stdlib_read)
-    
+
     @cached_property
     def project_folder_path(self) -> str:
         """
         Get the project folder path containing the binary files.
         """
         return os.path.join(STORAGE_ROOT_PATH, self.file_type, "projects", self.project_id)
-    
+
     @abc.abstractmethod
     def get_full_path(self, filename: str) -> str:
         """
@@ -63,6 +64,7 @@ class BinaryRepository(metaclass=abc.ABCMeta):
         :param content: Binary content of the file.
         :return: The path where the file was saved.
         """
+
         def stdlib_write():
             full_path = self.get_full_path(filename)
             folder, _ = full_path.split(filename)
@@ -83,6 +85,7 @@ class BinaryRepository(metaclass=abc.ABCMeta):
 
         :param filename: Name of the file to delete.
         """
+
         def stdlib_delete():
             full_path = self.get_full_path(filename)
             if os.path.isfile(full_path):
@@ -91,12 +94,12 @@ class BinaryRepository(metaclass=abc.ABCMeta):
                 raise FileNotFoundError(f"File not found: {full_path}")
 
         await asyncio.to_thread(stdlib_delete)
-        
+
 
 class ImageBinaryRepository(BinaryRepository):
     def __init__(self, project_id: str | UUID):
         super().__init__(project_id=project_id, file_type=FileType.IMAGES)
-        
+
     def get_full_path(self, filename: str) -> str:
         return os.path.join(self.project_folder_path, filename)
 
@@ -105,7 +108,7 @@ class ModelBinaryRepository(BinaryRepository):
     def __init__(self, project_id: str | UUID, model_id: str | UUID):
         super().__init__(project_id=project_id, file_type=FileType.MODELS)
         self._model_id = str(model_id)
-        
+
     def get_full_path(self, filename: str) -> str:
         return os.path.join(self.model_folder_path, filename)
 

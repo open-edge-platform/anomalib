@@ -1,6 +1,5 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from typing import Optional
 from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
@@ -8,7 +7,7 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from exceptions import DuplicateJobException, ResourceNotFoundException
 from models import Job, JobList, JobType
-from models.job import JobSubmitted, TrainJobPayload, JobStatus
+from models.job import JobStatus, JobSubmitted, TrainJobPayload
 from repositories import JobRepository
 
 
@@ -44,6 +43,8 @@ class JobService:
 
     async def update_job_status(self, job_id: UUID, status: JobStatus, message: str | None = None) -> None:
         job = await self.job_repository.get_by_id(job_id)
+        if job is None:
+            raise ResourceNotFoundException(resource_id=job_id, resource_name="job")
         job.status = status
         if message:
             job.message = message

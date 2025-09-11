@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from models import Media, MediaList
 from repositories import MediaRepository
-from repositories.binary_repo import FileType, BinaryRepository, ImageBinaryRepository
+from repositories.binary_repo import ImageBinaryRepository
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ class MediaService:
             except Exception as delete_error:
                 logger.error(f"Failed to delete file during rollback: {delete_error}")
             if saved_media is not None:
-                await media_repo.delete(saved_media.id)
+                await media_repo.delete_by_id(saved_media.id)
             raise e
         return saved_media
 
@@ -86,7 +86,7 @@ class MediaService:
         bin_repo = ImageBinaryRepository(project_id=project_id)
         try:
             await bin_repo.delete_file(filename=media.filename)
-            await media_repo.delete(media_id)
+            await media_repo.delete_by_id(media_id)
         except FileNotFoundError:
             logger.warning(f"File {media.filename} not found during media deletion.")
         except Exception as e:

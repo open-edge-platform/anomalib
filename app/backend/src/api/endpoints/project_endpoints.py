@@ -7,9 +7,9 @@ from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 
-from models import Project, ProjectList
 from api.dependencies import get_project_id, get_project_service
 from api.endpoints import API_PREFIX
+from models import Project, ProjectList
 from services import ProjectService
 
 logger = logging.getLogger(__name__)

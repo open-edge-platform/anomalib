@@ -5,9 +5,12 @@ import logging
 import multiprocessing as mp
 import os
 import queue
-import threading
+from typing import TYPE_CHECKING
 
 import psutil
+
+if TYPE_CHECKING:
+    import threading
 
 from utils.singleton import Singleton
 from workers import training_routine

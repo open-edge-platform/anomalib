@@ -6,7 +6,6 @@ import logging
 import os
 from collections import defaultdict
 from collections.abc import Sequence
-from contextlib import asynccontextmanager
 
 import pydantic
 import uvicorn
@@ -15,12 +14,12 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from starlette.responses import JSONResponse, Response
 
-from exceptions import GetiBaseException
 from api.endpoints.job_endpoints import job_router
 from api.endpoints.media_endpoints import media_router
 from api.endpoints.model_endpoints import model_router
 from api.endpoints.project_endpoints import project_router
 from core.lifecycle import lifespan
+from exceptions import GetiBaseException
 
 logger = logging.getLogger(__name__)
 

@@ -14,4 +14,4 @@ __all__ = ["Singleton", "Visualizer", "flush_queue", "log_threads", "suppress_ch
 
 @lru_cache
 def is_platform_darwin() -> bool:
-    return platform  == "darwin"
+    return platform == "darwin"

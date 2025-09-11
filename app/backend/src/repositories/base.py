@@ -63,7 +63,7 @@ class BaseRepository[ModelType, SchemaType](metaclass=abc.ABCMeta):
         extra_filters: dict | None = None,
         expressions: list[Any] | None = None,
         order_by: Any | None = None,
-        ascending: bool = False
+        ascending: bool = False,
     ) -> ModelType | None:
         query = self._get_filter_query(extra_filters=extra_filters, expressions=expressions)
         if order_by is not None:
@@ -92,11 +92,14 @@ class BaseRepository[ModelType, SchemaType](metaclass=abc.ABCMeta):
         await self.db.commit()
         return item
 
-    async def delete(self, obj_id: str | UUID) -> None:
+    async def delete_by_id(self, obj_id: str | UUID) -> None:
+        if not hasattr(self.schema, "id"):
+            raise AttributeError(f"Delete by ID is not supported by schema: `{self.schema}`")
+
         obj_id = self._id_to_str(obj_id)
         where_expression = [
-            self.schema.id == obj_id,
-            *[self.schema.__table__.c[k] == v for k, v in self.base_filters.items()]
+            self.schema.id == obj_id,  # type: ignore[attr-defined]
+            *[self.schema.__table__.c[k] == v for k, v in self.base_filters.items()],  # type: ignore[attr-defined]
         ]
         query = expression.delete(self.schema).where(*where_expression)  # type: ignore[attr-defined]
         await self.db.execute(query)
