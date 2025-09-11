@@ -9,7 +9,7 @@ from fastapi import status
 
 from main import app
 from models import Media, MediaList
-from rest_api.dependencies import get_media_service
+from api.dependencies import get_media_service
 from services import MediaService
 
 

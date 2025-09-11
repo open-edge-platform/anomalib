@@ -9,7 +9,7 @@ from fastapi import status
 
 from main import app
 from models import Model, ModelList
-from rest_api.dependencies import get_model_service
+from api.dependencies import get_model_service
 from services import ModelService
 
 
@@ -19,6 +19,7 @@ def fxt_model(fxt_project):
         id=uuid4(),
         name="test_model",
         project_id=fxt_project.id,
+        export_path="/path/to/model",
     )
 
 

@@ -7,11 +7,11 @@ import logging
 import sys
 
 import click
+from anomalib.deploy import ExportType
 
 from db import migration_manager
 from db.engine import get_sync_db_session
 from db.schema import ModelDB, ProjectDB
-from models.model import ModelFormat
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -90,7 +90,7 @@ def seed(with_model: bool, model_name: str) -> None:
             model = ModelDB(
                 id="977eeb18-eaac-449d-bc80-e340fbe052ad",
                 name=model_name,
-                format=ModelFormat.OPENVINO,
+                format=ExportType.OPENVINO,
             )
             db.add(model)
         db.flush()
@@ -102,8 +102,8 @@ def seed(with_model: bool, model_name: str) -> None:
 def clean_db() -> None:
     """Remove all data from the database (clean but don't drop tables)."""
     with get_sync_db_session() as db:
-        db.query(ModelDB).delete()
-        db.query(ProjectDB).delete()
+        db.query(ModelDB).delete_by_id()
+        db.query(ProjectDB).delete_by_id()
         db.commit()
     click.echo("✓ Database cleaned successfully!")
 

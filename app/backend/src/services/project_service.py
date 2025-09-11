@@ -23,4 +23,4 @@ class ProjectService:
         return await self.project_repository.save(project)
 
     async def delete_project(self, project_id: UUID) -> None:
-        await self.project_repository.delete(project_id)
+        await self.project_repository.delete_by_id(project_id)

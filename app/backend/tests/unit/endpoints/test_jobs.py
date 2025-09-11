@@ -7,7 +7,7 @@ from fastapi import status
 
 from main import app
 from models import JobList
-from rest_api.dependencies import get_job_service
+from api.dependencies import get_job_service
 from services import JobService
 
 

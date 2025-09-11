@@ -45,6 +45,7 @@ class ModelDB(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     format: Mapped[str] = mapped_column(String(64), nullable=False)
     threshold: Mapped[float] = mapped_column(Float, nullable=False)
+    export_path: Mapped[str] = mapped_column(Text, nullable=False)
     is_ready: Mapped[bool] = mapped_column(Boolean, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
 
