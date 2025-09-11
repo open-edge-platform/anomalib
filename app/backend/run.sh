@@ -23,7 +23,7 @@ set -euo pipefail
 # -----------------------------------------------------------------------------
 
 SEED_DB=${SEED_DB:-false}
-APP_MODULE=${APP_MODULE:-app/main.py}
+APP_MODULE=${APP_MODULE:-src/main.py}
 UV_CMD=${UV_CMD:-uv run}
 
 export PYTHONUNBUFFERED=1
@@ -31,8 +31,8 @@ export PYTHONPATH=.
 
 if [[ "$SEED_DB" == "true" ]]; then
   echo "Seeding the database..."
-  $UV_CMD app/cli.py init-db
-  $UV_CMD app/cli.py seed --with-model=True
+  $UV_CMD src/cli.py init-db
+  $UV_CMD src/cli.py seed --with-model=True
 fi
 
 echo "Starting FastAPI server..."

@@ -32,7 +32,7 @@ npm run preview
 
 Use the following commands to test your changes.
 
-```
+```bash
 npm run format
 npm run lint
 npm run type-check
