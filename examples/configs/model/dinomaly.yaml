@@ -1,0 +1,15 @@
+model:
+  class_path: anomalib.models.Dinomaly
+  init_args:
+    encoder_name: dinov2reg_vit_base_14
+    bottleneck_dropout: 0.2
+    decoder_depth: 8
+
+trainer:
+  max_steps: 5000
+  callbacks:
+    - class_path: lightning.pytorch.callbacks.EarlyStopping
+      init_args:
+        patience: 20
+        monitor: image_AUROC
+        mode: max

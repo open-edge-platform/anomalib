@@ -8,19 +8,26 @@
 # This example shows the basic steps to train an anomaly detection model.
 
 # 1. Basic Training
-# Train a model using default configuration (recommended for beginners)
+# Train and test a model using default configuration on MVTecAD bottle (default category)
 echo "Training with default configuration..."
-anomalib train --model efficient_ad
+anomalib train --model Patchcore --data anomalib.data.MVTecAD
 
 # 2. Training with Basic Customization
-# Customize basic parameters like batch size and epochs
+# Customize basic parameters like batch size and epochs.
+# For example `EfficientAd` requires a train batch size of 1
 echo -e "\nTraining with custom parameters..."
-anomalib train --model efficient_ad \
-    --data.train_batch_size 32 \
-    --trainer.max_epochs 10
+anomalib train --model EfficientAd --data anomalib.data.MVTecAD \
+    --data.category hazelnut \
+    --data.train_batch_size 1 \
+    --trainer.max_epochs 200
 
-# 3. Using a Different Dataset
-# Train on a specific category of MVTecAD dataset
-echo -e "\nTraining on MVTecAD bottle category..."
-anomalib train --model efficient_ad \
-    --data.category bottle
+# 3. Train with config file
+# Train with a custom config file
+echo -e "\nTraining with config file..."
+anomalib train --config path/to/config.yaml
+
+# 4. Export a trained model into OpenVINO
+echo .e "\nExporting model into OpenVINO..."
+anomalib export --model Patchcore \
+        --ckpt_path /path/to/model.ckpt \
+        --export_type OPENVINO

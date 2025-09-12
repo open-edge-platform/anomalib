@@ -380,6 +380,16 @@ class EfficientAd(AnomalibModule):
             channel_mean_std = self.teacher_channel_mean_std(self.trainer.datamodule.train_dataloader())
             self.model.mean_std.update(channel_mean_std)
 
+    def __getstate__(self) -> dict:
+        """Modifies the python objects __getstate__ method.
+
+        To ensure that the imagenet iterator instance will not get pickled
+        when the model is saved, it needs to be removed from the objects dict.
+        """
+        state = self.__dict__.copy()
+        state.pop("imagenet_iterator", None)
+        return state
+
     def training_step(self, batch: Batch, *args, **kwargs) -> dict[str, torch.Tensor]:
         """Perform training step.
 

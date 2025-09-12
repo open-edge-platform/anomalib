@@ -210,7 +210,11 @@ class PostProcessor(nn.Module, Callback):
         if predictions.pred_score is None and predictions.anomaly_map is None:
             msg = "At least one of pred_score or anomaly_map must be provided."
             raise ValueError(msg)
-        pred_score = predictions.pred_score or torch.amax(predictions.anomaly_map, dim=(-2, -1))
+        pred_score = (
+            predictions.pred_score
+            if predictions.pred_score is not None
+            else torch.amax(predictions.anomaly_map, dim=(-2, -1))
+        )
 
         if self.enable_normalization:
             pred_score = self._normalize(pred_score, self.image_min, self.image_max, self.image_threshold)

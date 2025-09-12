@@ -69,7 +69,7 @@ runs:
   steps:
     # Set up Python environment with caching
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6
       with:
         python-version: ${{ inputs.python-version }}
         cache: pip # Enable pip caching
@@ -77,7 +77,7 @@ runs:
 
     # Set up Node.js for JavaScript-related hooks
     - name: Set up Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
       with:
         node-version: ${{ inputs.node-version }}
 
@@ -92,7 +92,7 @@ runs:
     - name: Cache pre-commit hooks
       if: inputs.cache == 'true'
       id: pre-commit-cache
-      uses: actions/cache@v3
+      uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4
       with:
         path: ~/.cache/pre-commit
         # Cache key includes Python and Node versions to ensure correct environment

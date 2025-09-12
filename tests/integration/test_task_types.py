@@ -9,10 +9,11 @@ from typing import Any
 
 import pytest
 import torch
+from torch import nn
 from torchmetrics import Metric
 
 from anomalib import LearningType
-from anomalib.data import AnomalibDataModule, Batch, Folder, ImageDataFormat
+from anomalib.data import AnomalibDataModule, Batch, Folder, ImageDataFormat, InferenceBatch
 from anomalib.engine import Engine
 from anomalib.metrics import AnomalibMetric, Evaluator
 from anomalib.models import AnomalibModule
@@ -21,12 +22,28 @@ from anomalib.visualization import ImageVisualizer
 from tests.helpers.data import DummyImageDatasetGenerator
 
 
+class _DummyModel(nn.Module):
+    """Dummy model for testing."""
+
+    @staticmethod
+    def forward(image_tensor: torch.Tensor) -> InferenceBatch:
+        """Dummy forward pass."""
+        return InferenceBatch(
+            pred_score=torch.rand(image_tensor.shape[0], device=image_tensor.device),
+            anomaly_map=torch.rand(image_tensor.shape[0], *image_tensor.shape[-2:], device=image_tensor.device),
+        )
+
+
 class DummyBaseModel(AnomalibModule):
     """Dummy model for testing.
 
     No training, and all auxiliary components default to None. This allows testing of the different components
     in isolation.
     """
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.model = _DummyModel()
 
     def training_step(self, *args, **kwargs) -> None:
         """Dummy training step."""
@@ -66,7 +83,7 @@ class DummyClassificationModel(DummyBaseModel):
     def validation_step(self, batch: Batch, *args, **kwargs) -> Batch:
         """Validation steps that returns random image-level scores."""
         del args, kwargs
-        batch.pred_score = torch.rand(batch.batch_size, device=self.device)
+        batch.pred_score = self.model(batch.image).pred_score
         return batch
 
 
@@ -79,8 +96,9 @@ class DummySegmentationModel(DummyBaseModel):
     def validation_step(self, batch: Batch, *args, **kwargs) -> Batch:
         """Validation steps that returns random image- and pixel-level scores."""
         del args, kwargs
-        batch.pred_score = torch.rand(batch.batch_size, device=self.device)
-        batch.anomaly_map = torch.rand(batch.batch_size, *batch.image.shape[-2:], device=self.device)
+        result = self.model(batch.image)
+        batch.pred_score = result.pred_score
+        batch.anomaly_map = result.anomaly_map
         return batch
 
 
