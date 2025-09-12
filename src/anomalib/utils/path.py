@@ -32,8 +32,68 @@ Note:
     across different working directories.
 """
 
+import os
 import re
+import shutil
+import sys
+from contextlib import suppress
 from pathlib import Path
+
+
+def _is_windows_junction(p: Path) -> bool:
+    """Return True if path is a directory junction."""
+    if not sys.platform.startswith("win"):
+        return False
+
+    try:
+        # On Windows, check if it's a directory that's not a symlink
+        # Junctions appear as directories but resolve to different paths
+        return p.exists() and p.is_dir() and not p.is_symlink() and p.resolve() != p
+    except (OSError, RuntimeError):
+        # Handle cases where path operations fail
+        return False
+
+
+def _safe_remove_path(p: Path) -> None:
+    """Remove file/dir/symlink/junction at p without following links."""
+    if not os.path.lexists(str(p)):
+        return
+    with suppress(FileNotFoundError):
+        if p.is_symlink():
+            p.unlink()
+        elif _is_windows_junction(p):
+            # Use rmdir for Windows junctions
+            p.rmdir()
+        elif p.is_dir():
+            shutil.rmtree(p)
+        else:
+            p.unlink()
+
+
+def _make_latest_windows(latest: Path, target: Path) -> None:
+    # Clean previous latest (symlink/junction/dir/file)
+    _safe_remove_path(latest)
+
+    tmp = latest.with_name(latest.name + "_tmp")
+    _safe_remove_path(tmp)
+
+    # Try creating a directory junction using native Python API
+    try:
+        # Use Path.symlink_to with target_is_directory=True for directory junction on Windows
+        # This creates a junction point that doesn't require admin privileges
+        tmp.symlink_to(target.resolve(), target_is_directory=True)
+    except (OSError, NotImplementedError):
+        # Fallback to copying if junction creation fails
+        # This can happen if the filesystem doesn't support junctions or
+        # if there are permission issues
+        shutil.copytree(target, tmp)
+    else:
+        # Only reached if symlink creation succeeded
+        tmp.replace(latest)
+        return
+
+    # If we get here, we used the fallback copy method
+    tmp.replace(latest)
 
 
 def create_versioned_dir(root_dir: str | Path) -> Path:
@@ -100,10 +160,12 @@ def create_versioned_dir(root_dir: str | Path) -> Path:
 
     # Update the 'latest' symbolic link to point to the new version directory
     latest_link_path = root_dir / "latest"
-    if latest_link_path.is_symlink() or latest_link_path.exists():
-        latest_link_path.unlink()
-    latest_link_path.symlink_to(new_version_dir, target_is_directory=True)
-
+    if sys.platform.startswith("win"):
+        _make_latest_windows(latest_link_path, new_version_dir)
+    else:
+        if latest_link_path.is_symlink() or latest_link_path.exists():
+            latest_link_path.unlink()
+        latest_link_path.symlink_to(new_version_dir, target_is_directory=True)
     return latest_link_path
 
 
