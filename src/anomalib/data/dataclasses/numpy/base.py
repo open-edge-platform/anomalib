@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Numpy-based dataclasses for Anomalib.
@@ -13,6 +13,7 @@ The module contains two main classes:
 """
 
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 
@@ -55,3 +56,57 @@ class NumpyBatch(_GenericBatch[np.ndarray, np.ndarray, np.ndarray, list[str]]):
     Where ``B`` represents the batch dimension that is prepended to all
     tensor-like fields.
     """
+
+    def keys(self, include_none: bool = True) -> list[str]:
+        """Return a list of field names in the NumpyBatch.
+
+        Args:
+            include_none: If True, returns all possible field names including those
+                that are None. If False, returns only field names that have non-None values.
+                Defaults to True for backward compatibility.
+
+        Returns:
+            List of field names that can be accessed on this NumpyBatch instance.
+            When include_none=True, includes all fields from the input, output, and any
+            additional field classes that the specific batch type inherits from.
+            When include_none=False, includes only fields with actual data.
+
+        Example:
+            >>> batch = NumpyBatch(image=np.random.rand(2, 224, 224, 3))
+            >>> all_keys = batch.keys()  # Default: include_none=True
+            >>> 'pred_score' in all_keys  # True (even though it's None)
+            True
+            >>> set_keys = batch.keys(include_none=False)
+            >>> 'pred_score' in set_keys  # False (because it's None)
+            False
+        """
+        from dataclasses import fields
+
+        if include_none:
+            return [field.name for field in fields(self)]
+
+        return [field.name for field in fields(self) if getattr(self, field.name) is not None]
+
+    def __getitem__(self, key: str) -> Any:  # noqa: ANN401
+        """Get a field value using dictionary-like syntax.
+
+        Args:
+            key: Field name to access.
+
+        Returns:
+            The value of the specified field.
+
+        Raises:
+            KeyError: If the field name is not found.
+
+        Example:
+            >>> batch = NumpyBatch(image=np.random.rand(2, 224, 224, 3))
+            >>> batch["image"].shape
+            (2, 224, 224, 3)
+            >>> batch["gt_label"]
+            None
+        """
+        if not hasattr(self, key):
+            msg = f"Field '{key}' not found in {self.__class__.__name__}"
+            raise KeyError(msg)
+        return getattr(self, key)

@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """ImageItem visualization module.
@@ -347,8 +347,6 @@ def visualize_image_item(
             field_value = getattr(item, field, None)
             if field_value is not None:
                 image = get_visualize_function(field)(field_value, **fields_config.get(field, {}))
-            else:
-                logger.warning(f"Field '{field}' is None in item. Skipping visualization.")
         if image:
             field_images[field] = image.resize(field_size)
 
