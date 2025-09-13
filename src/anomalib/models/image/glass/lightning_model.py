@@ -135,6 +135,11 @@ class Glass(AnomalibModule):
         if layers is None:
             layers = ["layer2", "layer3"]
 
+        if anomaly_source_path is not None:
+            dtd_dir = Path(anomaly_source_path)
+            if not dtd_dir.is_dir():
+                download_and_extract(dtd_dir, DTD_DOWNLOAD_INFO)
+
         self.model = GlassModel(
             input_shape=input_shape,
             anomaly_source_path=anomaly_source_path,
@@ -154,6 +159,7 @@ class Glass(AnomalibModule):
         )
 
         self.learning_rate = learning_rate
+        self.pre_trained = pre_trained
 
         if pre_projection > 0:
             self.projection_opt = optim.Adam(
@@ -164,7 +170,7 @@ class Glass(AnomalibModule):
         else:
             self.projection_opt = None
 
-        if not pre_trained:
+        if not self.pre_trained:
             self.backbone_opt = optim.AdamW(
                 self.model.forward_modules["feature_aggregator"].backbone.parameters(),
                 self.learning_rate,
@@ -173,11 +179,6 @@ class Glass(AnomalibModule):
             self.backbone_opt = None
 
         self.automatic_optimization = False
-
-        if anomaly_source_path is not None:
-            dtd_dir = Path(anomaly_source_path)
-            if not dtd_dir.is_dir():
-                download_and_extract(dtd_dir, DTD_DOWNLOAD_INFO)
 
     @classmethod
     def configure_pre_processor(
@@ -247,9 +248,11 @@ class Glass(AnomalibModule):
             STEP_OUTPUT: Dictionary containing loss values and metrics
         """
         del batch_idx
+
         discriminator_opt = self.optimizers()
 
-        self.model.forward_modules.eval()
+        if not self.pre_trained:
+            self.model.forward_modules["feature_aggregator"].train()
         if self.model.pre_projection > 0:
             self.model.projection.train()
         self.model.discriminator.train()
@@ -295,7 +298,7 @@ class Glass(AnomalibModule):
         predictions = self.model(batch.image)
         return batch.update(**predictions._asdict())
 
-    def on_train_start(self) -> None:
+    def on_train_epoch_start(self) -> None:
         """Initialize model by computing mean feature representation across training dataset.
 
         This method is called at the start of training and computes a mean feature vector

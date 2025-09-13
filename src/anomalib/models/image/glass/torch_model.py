@@ -128,7 +128,7 @@ class GlassModel(nn.Module):
 
         self.patch_maker = PatchMaker(patchsize, stride=patchstride)
 
-        self.anomaly_segmentor = RescaleSegmentor(target_size=input_shape[:])
+        self.anomaly_segmentor = RescaleSegmentor(target_size=input_shape)
 
     def calculate_center(self, dataloader: dataloader, device: torch.device) -> None:
         """Calculates and updates the center embedding from a dataset.
@@ -164,7 +164,8 @@ class GlassModel(nn.Module):
                 else:
                     self.center += torch.mean(outputs, dim=0)
 
-    def calculate_features(self,
+    def calculate_features(
+        self,
         img: torch.Tensor,
         aug: torch.Tensor,
         evaluation: bool = False,
@@ -193,8 +194,10 @@ class GlassModel(nn.Module):
             true_feats = true_feats[0] if len(true_feats) == 2 else true_feats
         else:
             fake_feats = self.generate_embeddings(aug, evaluation=evaluation)[0]
+            assert isinstance(fake_feats, torch.Tensor)
             fake_feats.requires_grad = True
             true_feats = self.generate_embeddings(img, evaluation=evaluation)[0]
+            assert isinstance(true_feats, torch.Tensor)
             true_feats.requires_grad = True
 
         return true_feats, fake_feats
@@ -227,7 +230,7 @@ class GlassModel(nn.Module):
         """
         if not evaluation and not self.pre_trained:
             self.forward_modules["feature_aggregator"].train()
-            features = self.forward_modules["feature_aggregator"](images)
+            features = self.forward_modules["feature_aggregator"](images, eval=evaluation)
         else:
             self.forward_modules["feature_aggregator"].eval()
             with torch.no_grad():
@@ -315,7 +318,7 @@ class GlassModel(nn.Module):
     def forward(
         self,
         img: torch.Tensor,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor] | InferenceBatch:
         """Forward pass to compute patch-wise feature embeddings for original and augmented images.
 
         Depending on whether a pre-projection module is used, this method optionally applies it to the

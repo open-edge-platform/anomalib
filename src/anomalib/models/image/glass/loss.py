@@ -75,7 +75,7 @@ class FocalLoss(nn.Module):
     def __init__(
         self,
         apply_nonlinearity: nn.Module | None = None,
-        alpha: float | list | np.ndarray | None = None,
+        alpha: float | torch.Tensor | np.ndarray | None = None,
         gamma: float = 2,
         balance_index: int = 0,
         smooth: float = 1e-5,
@@ -129,13 +129,12 @@ class FocalLoss(nn.Module):
         target = target.view(-1, 1)
 
         alpha = self.alpha
-        if alpha is None:
+        if self.alpha is None:
             alpha = torch.ones(num_classes, 1)
-        elif isinstance(alpha, (list | np.ndarray)):
-            assert len(alpha) == num_classes
+        elif isinstance(self.alpha, (list | np.ndarray)):
             alpha = torch.FloatTensor(alpha).view(num_classes, 1)
             alpha = alpha / alpha.sum()
-        elif isinstance(alpha, float):
+        elif isinstance(self.alpha, float):
             alpha = torch.ones(num_classes, 1)
             alpha = alpha * (1 - self.alpha)
             alpha[self.balance_index] = self.alpha

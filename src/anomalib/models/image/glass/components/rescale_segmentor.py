@@ -17,7 +17,7 @@ class RescaleSegmentor:
         smoothing (int): The standard deviation used for Gaussian smoothing.
     """
 
-    def __init__(self, target_size: int = 288) -> None:
+    def __init__(self, target_size: tuple[int, int] = (288, 288)) -> None:
         """Initializes the RescaleSegmentor.
 
         Args:
@@ -48,7 +48,10 @@ class RescaleSegmentor:
             scores = patch_scores.to(device)
             scores = scores.unsqueeze(1)  # [N, 1, H, W]
             scores = f.interpolate(
-                scores, size=self.target_size, mode="bilinear", align_corners=False,
+                scores,
+                size=self.target_size,
+                mode="bilinear",
+                align_corners=False,
             )
             patch_scores = scores.squeeze(1)  # [N, H, W]
 
