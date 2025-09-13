@@ -20,10 +20,11 @@ from typing import Any
 import torch
 from lightning.pytorch.utilities.types import STEP_OUTPUT
 from torch import nn
-from torchvision.transforms.v2 import Compose, Resize
+from torchvision.transforms.v2 import Compose, Normalize, Resize
 
 from anomalib import LearningType
 from anomalib.data import Batch
+from anomalib.data.transforms.utils import extract_transforms_by_type
 from anomalib.data.utils import DownloadInfo, download_and_extract
 from anomalib.data.utils.generators.perlin import PerlinAnomalyGenerator
 from anomalib.metrics import Evaluator
@@ -144,6 +145,16 @@ class Draem(AnomalibModule):
 
         self.model.reconstructive_subnetwork.encoder.mp4.register_forward_hook(get_activation("input"))
         self.model.reconstructive_subnetwork.encoder.block5.register_forward_hook(get_activation("output"))
+
+    def on_train_start(self) -> None:
+        """Validates transforms before training begins.
+
+        Raises:
+            ValueError: If transforms contain normalization.
+        """
+        if self.pre_processor and extract_transforms_by_type(self.pre_processor.transform, Normalize):
+            msg = "Transforms for DRÆM should not contain Normalize."
+            raise ValueError(msg)
 
     def training_step(self, batch: Batch, *args, **kwargs) -> STEP_OUTPUT:
         """Perform training step for DRAEM.

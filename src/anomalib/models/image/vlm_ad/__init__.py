@@ -15,8 +15,8 @@ Example:
     >>> # Initialize model and data
     >>> datamodule = MVTecAD()
     >>> model = VlmAd(
-    ...     backend="chatgpt",
-    ...     model_name="gpt-4-vision-preview"
+    ...     model="gpt-4o-mini",
+    ...     api_key="YOUR_API_KEY"
     ... )
 
     >>> # Predict using the Engine

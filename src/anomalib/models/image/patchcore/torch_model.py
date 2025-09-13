@@ -126,6 +126,7 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         self.anomaly_map_generator = AnomalyMapGenerator()
         self.memory_bank: torch.Tensor
         self.register_buffer("memory_bank", torch.empty(0))
+        self.embedding_store: list[torch.tensor] = []
 
     def forward(self, input_tensor: torch.Tensor) -> torch.Tensor | InferenceBatch:
         """Process input tensor through the model.
@@ -169,11 +170,7 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         embedding = self.reshape_embedding(embedding)
 
         if self.training:
-            if self.memory_bank.size(0) == 0:
-                self.memory_bank = embedding
-            else:
-                new_bank = torch.cat((self.memory_bank, embedding), dim=0).to(self.memory_bank)
-                self.memory_bank = new_bank
+            self.embedding_store.append(embedding)
             return embedding
 
         # Ensure memory bank is not empty
@@ -272,13 +269,16 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         if embeddings is not None:
             del embeddings
 
-        if self.memory_bank.size(0) == 0:
-            msg = "Memory bank is empty. Cannot perform coreset selection."
+        if len(self.embedding_store) == 0:
+            msg = "Embedding store is empty. Cannot perform coreset selection."
             raise ValueError(msg)
+
         # Coreset Subsampling
+        self.memory_bank = torch.vstack(self.embedding_store)
+        self.embedding_store.clear()
+
         sampler = KCenterGreedy(embedding=self.memory_bank, sampling_ratio=sampling_ratio)
-        coreset = sampler.sample_coreset().to(self.memory_bank)
-        self.memory_bank = coreset
+        self.memory_bank = sampler.sample_coreset()
 
     @staticmethod
     def euclidean_dist(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:

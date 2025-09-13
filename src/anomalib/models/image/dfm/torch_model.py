@@ -153,17 +153,18 @@ class DFMModel(nn.Module):
             layers=[layer],
         ).eval()
 
-        self.memory_bank = torch.empty(0)
+        self.memory_bank: list[torch.tensor] = []
 
     def fit(self) -> None:
         """Fit PCA and Gaussian model to dataset."""
+        self.memory_bank = torch.vstack(self.memory_bank)
         self.pca_model.fit(self.memory_bank)
         if self.score_type == "nll":
             features_reduced = self.pca_model.transform(self.memory_bank)
             self.gaussian_model.fit(features_reduced.T)
 
         # clear memory bank, reduces GPU size
-        self.memory_bank = torch.empty(0).to(self.memory_bank)
+        self.memory_bank = []
 
     def score(self, features: torch.Tensor, feature_shapes: tuple) -> torch.Tensor:
         """Compute anomaly scores.
@@ -228,11 +229,7 @@ class DFMModel(nn.Module):
         feature_vector, feature_shapes = self.get_features(batch)
 
         if self.training:
-            if self.memory_bank.size(0) == 0:
-                self.memory_bank = feature_vector
-            else:
-                new_bank = torch.cat((self.memory_bank, feature_vector), dim=0).to(self.memory_bank)
-                self.memory_bank = new_bank
+            self.memory_bank.append(feature_vector)
             return feature_vector
 
         pred_score, anomaly_map = self.score(feature_vector.view(feature_vector.shape[:2]), feature_shapes)
