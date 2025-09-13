@@ -21,9 +21,9 @@ Example:
 
     The engine can also be used with a custom configuration:
 
-    >>> from anomalib.config import Config
-    >>> config = Config(path="config.yaml")
-    >>> engine = Engine(config=config)  # doctest: +SKIP
+    >>> engine, model, datamodule = Engine.from_config(config_path="config.yaml") # doctest: +SKIP
+
+
 """
 
 from .accelerator import XPUAccelerator

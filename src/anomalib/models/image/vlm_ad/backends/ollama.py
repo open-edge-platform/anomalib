@@ -141,7 +141,10 @@ class Ollama(Backend):
             ImportError: If Ollama package is not installed
         """
         if not chat:
-            msg = "Ollama is not installed. Please install it using `pip install ollama`."
+            msg = (
+                "Ollama is not installed. Please install it with: "
+                "'pip install anomalib[vlm]' or 'uv pip install anomalib[vlm]'"
+            )
             raise ImportError(msg)
         image_encoded = Image(value=image)
         messages = []

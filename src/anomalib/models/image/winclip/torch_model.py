@@ -45,7 +45,10 @@ if TYPE_CHECKING or module_available("open_clip"):
     import open_clip
     from open_clip.tokenizer import tokenize
 else:
-    msg = "open_clip is required for VLM models. Install it with: pip install anomalib[vlm_clip]"
+    msg = (
+        "open_clip is required for VLM models. Install it with: "
+        "'pip install anomalib[vlm,clip]' or 'uv pip install anomalib[vlm,clip]'"
+    )
     raise ImportError(msg)
 
 from .prompting import create_prompt_ensemble
