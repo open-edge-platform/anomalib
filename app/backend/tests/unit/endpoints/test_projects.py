@@ -7,9 +7,9 @@ from uuid import uuid4
 import pytest
 from fastapi import status
 
-from main import app
-from models import Project, ProjectList
 from api.dependencies import get_project_service
+from main import app
+from models import ProjectList
 from services import ProjectService
 
 
