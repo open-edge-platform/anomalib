@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import abc
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import Any, Generic, TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -16,7 +16,7 @@ ModelType = TypeVar("ModelType", bound=BaseModel)
 SchemaType = TypeVar("SchemaType", bound=Base)
 
 
-class BaseRepository[ModelType, SchemaType](metaclass=abc.ABCMeta):
+class BaseRepository(Generic[ModelType, SchemaType], metaclass=abc.ABCMeta):
     """Base repository class for database operations."""
 
     def __init__(self, db: AsyncSession, schema: type[SchemaType]):
