@@ -5,7 +5,7 @@ description = "Geti inspect server"
 requires-python = ">=3.10, <=3.13"
 
 dependencies = [
-  "fastapi[standard]==0.115.4",
+  "fastapi[standard]~=0.116",
   "jsonschema>=4.18.0a10",
   "uvicorn~=0.17",
   "sqlalchemy[asyncio]~=2.0",

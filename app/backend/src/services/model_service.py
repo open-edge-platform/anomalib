@@ -97,7 +97,7 @@ class ModelService:
         # Process anomaly map
         arr = pred.anomaly_map.squeeze()  # Remove dimensions of size 1
         arr_normalized = (arr * 255).astype(np.uint8)  # Normalize to 0-255 and convert to uint8
-        im = Image.fromarray(arr_normalized, mode="L")  # 'L' for grayscale
+        im = Image.fromarray(arr_normalized)  # Automatically detects grayscale mode
 
         # Convert to base64
         with io.BytesIO() as buf:
