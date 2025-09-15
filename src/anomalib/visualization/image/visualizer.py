@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Image visualization module for anomaly detection.
@@ -16,7 +16,7 @@ Example:
     >>> # Create visualizer with default settings
     >>> visualizer = ImageVisualizer()
     >>> # Generate visualization
-    >>> vis_result = visualizer.visualize(image=img, pred_mask=mask)
+    >>> vis_result = visualizer.visualize(predictions)
 
 The module ensures consistent visualization by:
     - Providing standardized field configurations
@@ -186,7 +186,7 @@ class ImageVisualizer(Visualizer):
         self.text_config = {**DEFAULT_TEXT_CONFIG, **(text_config or {})}
         self.output_dir = output_dir
 
-    def visualize_image(
+    def visualize(
         self,
         predictions: "ImageItem | NumpyImageItem | ImageBatch | NumpyImageBatch",
     ) -> Image.Image | list[Image.Image | None] | None:
@@ -218,7 +218,7 @@ class ImageVisualizer(Visualizer):
             ...     pred_mask=torch.rand(224, 224) > 0.5
             ... )
             >>> visualizer = ImageVisualizer()
-            >>> result = visualizer.visualize_image(item)
+            >>> result = visualizer.visualize(item)
             >>> isinstance(result, Image.Image) or result is None
             True
 
@@ -231,7 +231,7 @@ class ImageVisualizer(Visualizer):
             ...     anomaly_map=np.random.rand(224, 224),
             ...     pred_mask=np.random.rand(224, 224) > 0.5
             ... )
-            >>> result = visualizer.visualize_image(item)
+            >>> result = visualizer.visualize(item)
             >>> isinstance(result, Image.Image) or result is None
             True
 
@@ -242,7 +242,7 @@ class ImageVisualizer(Visualizer):
             ...     image=torch.rand(1, 3, 224, 224),
             ...     anomaly_map=torch.rand(1, 224, 224)
             ... )
-            >>> result = visualizer.visualize_image(single_batch)
+            >>> result = visualizer.visualize(single_batch)
             >>> isinstance(result, Image.Image) or result is None
             True
 
@@ -252,7 +252,7 @@ class ImageVisualizer(Visualizer):
             ...     image=torch.rand(3, 3, 224, 224),
             ...     anomaly_map=torch.rand(3, 224, 224)
             ... )
-            >>> results = visualizer.visualize_image(multi_batch)
+            >>> results = visualizer.visualize(multi_batch)
             >>> isinstance(results, list) and len(results) == 3
             True
 
@@ -323,19 +323,19 @@ class ImageVisualizer(Visualizer):
         """Make the visualizer callable.
 
         This method allows the visualizer to be used as a callable object.
-        It behaves identically to the ``visualize_image`` method.
+        It behaves identically to the ``visualize`` method.
 
         Args:
-            predictions: The predictions to visualize. Same as ``visualize_image``.
+            predictions: The predictions to visualize. Same as ``visualize``.
 
         Returns:
-            Same as ``visualize_image`` method.
+            Same as ``visualize`` method.
 
         Examples:
             >>> visualizer = ImageVisualizer()
-            >>> result = visualizer(predictions)  # Equivalent to visualizer.visualize_image(predictions)
+            >>> result = visualizer(predictions)  # Equivalent to visualizer.visualize(predictions)
         """
-        return self.visualize_image(predictions)
+        return self.visualize(predictions)
 
     def on_test_batch_end(
         self,
