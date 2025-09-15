@@ -49,6 +49,7 @@ from .cflow import Cflow
 from .csflow import Csflow
 from .dfkde import Dfkde
 from .dfm import Dfm
+from .dinomaly import Dinomaly
 from .draem import Draem
 from .dsr import Dsr
 from .efficient_ad import EfficientAd
@@ -61,6 +62,7 @@ from .reverse_distillation import ReverseDistillation
 from .stfpm import Stfpm
 from .supersimplenet import Supersimplenet
 from .uflow import Uflow
+from .uninet import UniNet
 from .vlm_ad import VlmAd
 from .winclip import WinClip
 
@@ -82,6 +84,8 @@ __all__ = [
     "Stfpm",
     "Supersimplenet",
     "Uflow",
+    "UniNet",
     "VlmAd",
     "WinClip",
+    "Dinomaly",
 ]

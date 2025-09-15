@@ -12,21 +12,24 @@ model can distinguish between normal and anomalous samples.
 
 Example:
     >>> from anomalib.metrics import AUROC
+    >>> from anomalib.data import ImageBatch
     >>> import torch
-    >>> # Create sample data
-    >>> labels = torch.tensor([0, 0, 1, 1])  # Binary labels
-    >>> scores = torch.tensor([0.1, 0.2, 0.8, 0.9])  # Anomaly scores
+    >>> # Create sample batch
+    >>> batch = ImageBatch(
+    ...     image=torch.rand(4, 3, 32, 32),
+    ...     pred_score=torch.tensor([0.1, 0.2, 0.8, 0.9]),
+    ...     gt_label=torch.tensor([0, 0, 1, 1])
+    ... )
     >>> # Initialize and compute AUROC
-    >>> metric = AUROC()
-    >>> auroc_score = metric(scores, labels)
-    >>> auroc_score
+    >>> auroc = AUROC(fields=["pred_score", "gt_label"])
+    >>> auroc(batch)
     tensor(1.0)
 
-The metric can also be updated incrementally with batches:
+The metric can also be updated incrementally:
 
-    >>> for batch_scores, batch_labels in dataloader:
-    ...     metric.update(batch_scores, batch_labels)
-    >>> final_score = metric.compute()
+    >>> for batch in dataloader:
+    ...     auroc.update(batch)
+    >>> final_score = auroc.compute()
 
 Once computed, the ROC curve can be visualized:
 
@@ -56,12 +59,11 @@ class _AUROC(BinaryROC):
 
     Examples:
         To compute the metric for a set of predictions and ground truth targets:
-
+        >>> from anomalib.metrics.auroc import _AUROC
         >>> import torch
-        >>> from anomalib.metrics import AUROC
         >>> preds = torch.tensor([0.13, 0.26, 0.08, 0.92, 0.03])
         >>> target = torch.tensor([0, 0, 1, 1, 0])
-        >>> auroc = AUROC()
+        >>> auroc = _AUROC()
         >>> auroc(preds, target)
         tensor(0.6667)
 
@@ -148,4 +150,23 @@ class _AUROC(BinaryROC):
 
 
 class AUROC(AnomalibMetric, _AUROC):  # type: ignore[misc]
-    """Wrapper to add AnomalibMetric functionality to AUROC metric."""
+    """Wrapper to add AnomalibMetric functionality to AUROC metric.
+
+    This class wraps the internal ``_AUROC`` metric to make it compatible with
+    Anomalib's batch processing capabilities.
+
+    Example:
+        >>> from anomalib.metrics import AUROC
+        >>> from anomalib.data import ImageBatch
+        >>> import torch
+        >>> # Create sample batch
+        >>> batch = ImageBatch(
+        ...     image=torch.rand(4, 3, 32, 32),
+        ...     pred_score=torch.tensor([0.1, 0.2, 0.8, 0.9]),
+        ...     gt_label=torch.tensor([0, 0, 1, 1])
+        ... )
+        >>> # Initialize and compute AUROC
+        >>> auroc = AUROC(fields=["pred_score", "gt_label"])
+        >>> auroc(batch)
+        tensor(1.0)
+    """

@@ -1,0 +1,101 @@
+// Dependency Update Configuration
+//
+// See https://docs.renovatebot.com/configuration-options/
+// See https://json5.org/ for JSON5 syntax
+
+// [!] While updating the Renovate config, test changes on your own fork.
+//  1. Modify the Renovate configuration, which is located in .github/renovate.json5 and push your changes to the default branch of your fork.
+//  2. Enable the Renovate GitHub app in your GitHub account.
+//     Verify that Renovate is activated in the repository settings within the Renovate Dashboard.
+//     To enable the dashboard set `dependencyDashboard` to true
+//  3. Trigger the Renovate app from the dashboard, or push a new commit to your fork’s default branch to re-trigger Renovate.
+//  4. Use the dashboard to initiate Renovate and create a PR on your fork, then check that the proposed PRs are modifying the correct parts.
+//  5. Once you’ve validated that the Renovate configuration works on your fork, submit a PR,
+//     and include links in the description to share details about the testing you've conducted.
+
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+
+  // regenerate lock weekly https://docs.renovatebot.com/configuration-options/#lockfilemaintenance
+  lockFileMaintenance: {
+    enabled: true,
+    schedule: ["* * * * 0"], // weekly
+  },
+
+  extends: ["config:base", ":gitSignOff", "helpers:pinGitHubActionDigests"],
+  // https://docs.renovatebot.com/presets-default/#gitsignoff
+  // https://docs.renovatebot.com/presets-helpers/#helperspingithubactiondigests
+
+  // if necessary, add supported releases branches here
+  // it is possible to enable/disable specific upgrades per branch with
+  // `matchBaseBranches` in specific rule
+  baseBranches: ["main"],
+
+  enabledManagers: ["github-actions", "pep621", "custom.regex"],
+
+  // Set limit to 10
+  ignorePresets: [":prHourlyLimit2"],
+  prHourlyLimit: 10,
+
+  packageRules: [
+    // weekly dependencies upgrades
+    {
+      enabled: true,
+      matchManagers: ["pep621"],
+      schedule: ["* * * * 0"], // weekly
+    },
+
+    // Python version is upgraded manually
+    {
+      enabled: false,
+      matchDatasources: ["python-version"],
+      matchDepNames: ["python"],
+      matchDepTypes: ["requires-python"],
+    },
+
+    // disable open-clip-torch upgrades as
+    // open-clip-torch throws error on v2.26.1
+    {
+      enabled: false,
+      matchDatasources: ["pypi"],
+      matchDepNames: ["open-clip-torch"],
+      matchDepTypes: ["project.optional-dependencies"],
+    },
+
+    // Group GitHub Actions updates
+    {
+      enabled: true,
+      separateMajorMinor: false,
+      groupName: "GitHub Actions",
+      matchManagers: ["github-actions"],
+      matchPackagePatterns: ["*"],
+      schedule: ["* * 1 * *"], // every month
+    },
+
+    // Python version used in GitHub Actions is updated manually
+    {
+      enabled: false,
+      matchDatasources: ["github-releases"],
+      matchDepNames: ["python"],
+      matchDepTypes: ["uses-with"],
+    },
+  ],
+
+  // is used to upgrade Zizmor version
+  customManagers: [
+    {
+      fileMatch: ["^\\.github/actions/security/zizmor/[^/]+\\.ya?ml$"],
+      //   https://docs.renovatebot.com/modules/manager/regex/#advanced-capture
+      matchStrings: [
+        "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\s+.+default: (?<currentValue>.*)",
+      ],
+    },
+  ],
+
+  // Enable security upgrades
+  vulnerabilityAlerts: {
+    enabled: true,
+  },
+  osvVulnerabilityAlerts: true,
+  dependencyDashboard: true,
+}

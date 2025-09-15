@@ -42,6 +42,7 @@ from torch.nn import functional as F  # noqa: N812
 
 from anomalib.data import InferenceBatch
 from anomalib.models.components import DynamicBufferMixin, KCenterGreedy, TimmFeatureExtractor
+from anomalib.utils import deprecate
 
 from .anomaly_map import AnomalyMapGenerator
 
@@ -123,9 +124,9 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         ).eval()
         self.feature_pooler = torch.nn.AvgPool2d(3, 1, 1)
         self.anomaly_map_generator = AnomalyMapGenerator()
-
-        self.register_buffer("memory_bank", torch.empty(0))
         self.memory_bank: torch.Tensor
+        self.register_buffer("memory_bank", torch.empty(0))
+        self.embedding_store: list[torch.tensor] = []
 
     def forward(self, input_tensor: torch.Tensor) -> torch.Tensor | InferenceBatch:
         """Process input tensor through the model.
@@ -169,7 +170,14 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         embedding = self.reshape_embedding(embedding)
 
         if self.training:
+            self.embedding_store.append(embedding)
             return embedding
+
+        # Ensure memory bank is not empty
+        if self.memory_bank.size(0) == 0:
+            msg = "Memory bank is empty. Cannot provide anomaly scores"
+            raise ValueError(msg)
+
         # apply nearest neighbor search
         patch_scores, locations = self.nearest_neighbors(embedding=embedding, n_neighbors=1)
         # reshape to batch dimension
@@ -239,26 +247,38 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         embedding_size = embedding.size(1)
         return embedding.permute(0, 2, 3, 1).reshape(-1, embedding_size)
 
-    def subsample_embedding(self, embedding: torch.Tensor, sampling_ratio: float) -> None:
-        """Subsample embeddings using coreset selection.
+    @deprecate(args={"embeddings": None}, since="2.1.0", reason="Use the default memory bank instead.")
+    def subsample_embedding(self, sampling_ratio: float, embeddings: torch.Tensor = None) -> None:
+        """Subsample the memory_banks embeddings using coreset selection.
 
         Uses k-center-greedy coreset subsampling to select a representative
         subset of patch embeddings to store in the memory bank.
 
         Args:
-            embedding (torch.Tensor): Embedding tensor to subsample from.
             sampling_ratio (float): Fraction of embeddings to keep, in range (0,1].
+            embeddings (torch.Tensor): **[DEPRECATED]**
+            This argument is deprecated and will be removed in a future release.
+            Use the default behavior (i.e., rely on `self.memory_bank`) instead.
 
         Example:
-            >>> embedding = torch.randn(1000, 512)
-            >>> model.subsample_embedding(embedding, sampling_ratio=0.1)
+            >>> model.memory_bank = torch.randn(1000, 512)
+            >>> model.subsample_embedding(sampling_ratio=0.1)
             >>> model.memory_bank.shape
             torch.Size([100, 512])
         """
+        if embeddings is not None:
+            del embeddings
+
+        if len(self.embedding_store) == 0:
+            msg = "Embedding store is empty. Cannot perform coreset selection."
+            raise ValueError(msg)
+
         # Coreset Subsampling
-        sampler = KCenterGreedy(embedding=embedding, sampling_ratio=sampling_ratio)
-        coreset = sampler.sample_coreset()
-        self.memory_bank = coreset
+        self.memory_bank = torch.vstack(self.embedding_store)
+        self.embedding_store.clear()
+
+        sampler = KCenterGreedy(embedding=self.memory_bank, sampling_ratio=sampling_ratio)
+        self.memory_bank = sampler.sample_coreset()
 
     @staticmethod
     def euclidean_dist(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:

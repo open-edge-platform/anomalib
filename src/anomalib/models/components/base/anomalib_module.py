@@ -208,8 +208,9 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
     ) -> STEP_OUTPUT:
         """Perform prediction step.
 
-        This method is called during the predict stage of training. By default,
-        it calls the validation step.
+        This method is called during the predict stage of training. It calls
+        the model's forward method to ensure consistency with exported model behavior,
+        then merges the predictions into the batch for post-processing.
 
         Args:
             batch (Batch): Input batch
@@ -218,17 +219,19 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
                 Defaults to ``0``.
 
         Returns:
-            STEP_OUTPUT: Model predictions
+            STEP_OUTPUT: Updated batch with model predictions
         """
-        del dataloader_idx  # These variables are not used.
+        del dataloader_idx, batch_idx  # These variables are not used.
 
-        return self.validation_step(batch, batch_idx)
+        predictions = self.model(batch.image)
+        return batch.update(**predictions._asdict())
 
     def test_step(self, batch: Batch, batch_idx: int, *args, **kwargs) -> STEP_OUTPUT:
         """Perform test step.
 
-        This method is called during the test stage of training. By default,
-        it calls the predict step.
+        This method is called during the test stage of training. It calls
+        the model's forward method to ensure consistency with exported model behavior,
+        then merges the predictions into the batch for post-processing.
 
         Args:
             batch (Batch): Input batch
@@ -237,11 +240,12 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
             **kwargs: Additional keyword arguments (unused)
 
         Returns:
-            STEP_OUTPUT: Model predictions
+            STEP_OUTPUT: Updated batch with model predictions
         """
-        del args, kwargs  # These variables are not used.
+        del args, kwargs, batch_idx  # These variables are not used.
 
-        return self.predict_step(batch, batch_idx)
+        predictions = self.model(batch.image)
+        return batch.update(**predictions._asdict())
 
     @property
     @abstractmethod

@@ -133,6 +133,18 @@ anomalib = "anomalib.cli.cli:main"
 [tool.hatch.version]
 path = "src/anomalib/__init__.py"
 
+[tool.hatch.build.targets.sdist]
+only-include = [
+    "CHANGELOG.md",
+    "CITATION.cff",
+    "LICENSE",
+    "MANIFEST.in",
+    "pyproject.toml",
+    "README.md",
+    "src/",
+    "third-party-programs.txt",
+]
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # UV CONFIGURATION                                                            #
 [tool.uv]

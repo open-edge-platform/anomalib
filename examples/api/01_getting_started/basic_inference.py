@@ -8,20 +8,18 @@ using the Anomalib Python API.
 """
 
 # 1. Import required modules
-from pathlib import Path
-
 from anomalib.data import PredictDataset
 from anomalib.engine import Engine
-from anomalib.models import EfficientAd
+from anomalib.models import Patchcore
 
 # 2. Initialize the model and load weights
-model = EfficientAd()
+model = Patchcore()
 engine = Engine()
 
 # 3. Prepare test data
 # You can use a single image or a folder of images
 dataset = PredictDataset(
-    path=Path("path/to/test/images"),
+    path="path/to/test/images",
     image_size=(256, 256),
 )
 

@@ -25,18 +25,28 @@ This module provides various metrics for evaluating anomaly detection performanc
     - ``BinaryPrecisionRecallCurve``: Computes precision-recall curves
     - ``Evaluator``: Combines multiple metrics for evaluation
     - ``MinMax``: Normalizes scores to [0,1] range
+    - ``PBn``: Presorted bad with n% good samples misclassified
+    - ``PGn``: Presorted good with n% bad samples missed
     - ``PRO``: Per-Region Overlap score
     - ``PIMO``: Per-Image Missed Overlap score
 
 Example:
     >>> from anomalib.metrics import AUROC, F1Score
-    >>> auroc = AUROC()
-    >>> f1 = F1Score()
-    >>> labels = torch.tensor([0, 1, 0, 1])
-    >>> scores = torch.tensor([0.1, 0.9, 0.2, 0.8])
-    >>> auroc(scores, labels)
+    >>> from anomalib.data import ImageBatch
+    >>> import torch
+    >>> # Initialize metrics with required fields
+    >>> auroc = AUROC(fields=["pred_score", "gt_label"])
+    >>> f1 = F1Score(fields=["pred_score", "gt_label"], threshold=0.5)
+    >>> # Create sample batch
+    >>> batch = ImageBatch(
+    ...     image=torch.rand(4, 3, 32, 32),
+    ...     pred_score=torch.tensor([0.1, 0.9, 0.2, 0.8]),
+    ...     gt_label=torch.tensor([0, 1, 0, 1])
+    ... )
+    >>> # Calculate metrics
+    >>> auroc(batch)
     tensor(1.)
-    >>> f1(scores, labels, threshold=0.5)
+    >>> f1(batch)
     tensor(1.)
 """
 
@@ -48,6 +58,7 @@ from .base import AnomalibMetric, create_anomalib_metric
 from .evaluator import Evaluator
 from .f1_score import F1Max, F1Score
 from .min_max import MinMax
+from .pg_pb import PBn, PGn
 from .pimo import AUPIMO, PIMO
 from .precision_recall_curve import BinaryPrecisionRecallCurve
 from .pro import PRO
@@ -67,6 +78,8 @@ __all__ = [
     "F1Score",
     "ManualThreshold",
     "MinMax",
+    "PGn",
+    "PBn",
     "PRO",
     "PIMO",
     "AUPIMO",

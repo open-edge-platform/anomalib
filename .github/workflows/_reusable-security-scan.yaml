@@ -79,7 +79,7 @@ jobs:
     if: contains(inputs.tools, 'bandit')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           persist-credentials: false
       - name: Run Bandit scan
@@ -94,9 +94,9 @@ jobs:
     if: contains(inputs.tools, 'semgrep')
     runs-on: ubuntu-latest
     container:
-      image: returntocorp/semgrep@sha256:14e073f6417e5d2d0797aa13f26d569270b86fac9d52052d2358c985f1a4e9f0 # v1.124.0
+      image: returntocorp/semgrep@sha256:62aaded52737fc401299d994f29fcd3d4049bd90bbb77407eca2e29e51ab0d98 # v1.124.0
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           persist-credentials: false
       - name: Run Semgrep scan
@@ -110,20 +110,10 @@ jobs:
     if: contains(inputs.tools, 'trivy')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           fetch-depth: 0 # Required for changed files detection
           persist-credentials: false
-
-      # These steps are required to lock dependencies in requirements.txt that will by used by Trivy
-      - name: Set up Python
-        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
-        with:
-          python-version: "3.10"
-      - name: Install dependencies
-        run: python -m pip install pip-tools
-      - name: Freeze dependencies
-        run: pip-compile --extra=full -o requirements.txt pyproject.toml
 
       - name: Run Trivy scan
         id: trivy
@@ -142,7 +132,7 @@ jobs:
     if: contains(inputs.tools, 'clamav')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           persist-credentials: false
       - name: Run ClamAV scan
@@ -155,7 +145,7 @@ jobs:
     if: contains(inputs.tools, 'zizmor')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           persist-credentials: false
       - name: Run Zizmor scan
@@ -187,7 +177,7 @@ jobs:
 
       # Download artifacts with error handling
       - name: Download all results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         continue-on-error: true # Don't fail if some tools didn't generate results
         with:
           pattern: "*-results"
@@ -197,7 +187,7 @@ jobs:
       # Only upload if there are files
       - name: Upload combined results
         if: hashFiles('all-results/**/*') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: security-scan-results
           path: all-results

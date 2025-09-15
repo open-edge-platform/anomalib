@@ -7,9 +7,9 @@
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""PyTorch model defining the decoder network for Reverse Distillation.
+"""PyTorch model defining the decoder network for Reverse Distillation and UniNet.
 
-This module implements the decoder network used in the Reverse Distillation model
+This module implements the decoder network used in the Reverse Distillation and UniNet models
 architecture. The decoder reconstructs features from the bottleneck representation
 back to the original feature space.
 
@@ -19,7 +19,7 @@ The module contains:
 - Full decoder network architecture
 
 Example:
-    >>> from anomalib.models.image.reverse_distillation.components.de_resnet import (
+    >>> from anomalib.models.components.backbone.resnet_decoder import (
     ...     get_decoder
     ... )
     >>> decoder = get_decoder()
@@ -27,9 +27,7 @@ Example:
     >>> reconstructed = decoder(features)
 
 See Also:
-    - :class:`anomalib.models.image.reverse_distillation.torch_model.ReverseDistillationModel`:
-        Main model implementation using this decoder
-    - :class:`anomalib.models.image.reverse_distillation.components.DecoderBasicBlock`:
+    - :class:`anomalib.models.components.backbone.resnet_decoder.DecoderBasicBlock`:
         Basic building block for the decoder network
 """
 
@@ -157,8 +155,8 @@ class DecoderBottleneck(nn.Module):
     """Bottleneck block for the decoder network.
 
     This module implements a bottleneck block used in the decoder part of the Reverse
-    Distillation model. It performs upsampling and feature reconstruction through a series of
-    convolutional layers.
+    Distillation and UniNet models. It performs upsampling and feature reconstruction
+    through a series of convolutional layers.
 
     The block consists of three convolution layers:
     1. 1x1 conv to adjust channels
@@ -186,7 +184,7 @@ class DecoderBottleneck(nn.Module):
 
     Example:
         >>> import torch
-        >>> from anomalib.models.image.reverse_distillation.components.de_resnet import (
+        >>> from anomalib.models.components.backbone.resnet_decoder import (
         ...     DecoderBottleneck
         ... )
         >>> layer = DecoderBottleneck(256, 64)
@@ -269,7 +267,7 @@ class DecoderBottleneck(nn.Module):
         return self.relu(out)
 
 
-class ResNet(nn.Module):
+class ResNetDecoder(nn.Module):
     """Decoder ResNet model for feature reconstruction.
 
     This module implements a decoder version of the ResNet architecture, which
@@ -297,11 +295,11 @@ class ResNet(nn.Module):
             layer to use. If ``None``, uses ``BatchNorm2d``. Defaults to ``None``.
 
     Example:
-        >>> from anomalib.models.image.reverse_distillation.components import (
+        >>> from anomalib.models.components.backbone.resnet_decoder import (
         ...     DecoderBasicBlock,
-        ...     ResNet
+        ...     ResNetDecoder
         ... )
-        >>> model = ResNet(
+        >>> model = ResNetDecoder(
         ...     block=DecoderBasicBlock,
         ...     layers=[2, 2, 2, 2]
         ... )
@@ -437,63 +435,63 @@ class ResNet(nn.Module):
         return [feature_c, feature_b, feature_a]
 
 
-def _resnet(block: type[DecoderBasicBlock | DecoderBottleneck], layers: list[int], **kwargs) -> ResNet:
-    return ResNet(block, layers, **kwargs)
+def _resnet(block: type[DecoderBasicBlock | DecoderBottleneck], layers: list[int], **kwargs) -> ResNetDecoder:
+    return ResNetDecoder(block, layers, **kwargs)
 
 
-def de_resnet18() -> ResNet:
+def de_resnet18() -> ResNetDecoder:
     """ResNet-18 model."""
     return _resnet(DecoderBasicBlock, [2, 2, 2, 2])
 
 
-def de_resnet34() -> ResNet:
+def de_resnet34() -> ResNetDecoder:
     """ResNet-34 model."""
     return _resnet(DecoderBasicBlock, [3, 4, 6, 3])
 
 
-def de_resnet50() -> ResNet:
+def de_resnet50() -> ResNetDecoder:
     """ResNet-50 model."""
     return _resnet(DecoderBottleneck, [3, 4, 6, 3])
 
 
-def de_resnet101() -> ResNet:
+def de_resnet101() -> ResNetDecoder:
     """ResNet-101 model."""
     return _resnet(DecoderBottleneck, [3, 4, 23, 3])
 
 
-def de_resnet152() -> ResNet:
+def de_resnet152() -> ResNetDecoder:
     """ResNet-152 model."""
     return _resnet(DecoderBottleneck, [3, 8, 36, 3])
 
 
-def de_resnext50_32x4d() -> ResNet:
+def de_resnext50_32x4d() -> ResNetDecoder:
     """ResNeXt-50 32x4d model."""
     return _resnet(DecoderBottleneck, [3, 4, 6, 3], groups=32, width_per_group=4)
 
 
-def de_resnext101_32x8d() -> ResNet:
+def de_resnext101_32x8d() -> ResNetDecoder:
     """ResNeXt-101 32x8d model."""
     return _resnet(DecoderBottleneck, [3, 4, 23, 3], groups=32, width_per_group=8)
 
 
-def de_wide_resnet50_2() -> ResNet:
+def de_wide_resnet50_2() -> ResNetDecoder:
     """Wide ResNet-50-2 model."""
     return _resnet(DecoderBottleneck, [3, 4, 6, 3], width_per_group=128)
 
 
-def de_wide_resnet101_2() -> ResNet:
+def de_wide_resnet101_2() -> ResNetDecoder:
     """Wide ResNet-101-2 model."""
     return _resnet(DecoderBottleneck, [3, 4, 23, 3], width_per_group=128)
 
 
-def get_decoder(name: str) -> ResNet:
+def get_decoder(name: str) -> ResNetDecoder:
     """Get decoder model based on the name of the backbone.
 
     Args:
         name (str): Name of the backbone.
 
     Returns:
-        ResNet: Decoder ResNet architecture.
+        ResNetDecoder: Decoder ResNet architecture.
     """
     decoder_map = {
         "resnet18": de_resnet18,

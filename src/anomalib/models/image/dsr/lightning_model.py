@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """DSR - A Dual Subspace Re-Projection Network for Surface Anomaly Detection.
@@ -39,10 +39,11 @@ from typing import Any
 
 import torch
 from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
-from torchvision.transforms.v2 import Compose, Resize
+from torchvision.transforms.v2 import Compose, Normalize, Resize
 
 from anomalib import LearningType
 from anomalib.data import Batch
+from anomalib.data.transforms.utils import extract_transforms_by_type
 from anomalib.data.utils import DownloadInfo, download_and_extract
 from anomalib.data.utils.generators.perlin import PerlinAnomalyGenerator
 from anomalib.metrics import Evaluator
@@ -182,7 +183,19 @@ class Dsr(AnomalibModule):
         return ({"optimizer": optimizer_d, "lr_scheduler": scheduler_d}, {"optimizer": optimizer_u})
 
     def on_train_start(self) -> None:
-        """Load pretrained weights of the discrete model when starting training."""
+        """Set up model before training begins.
+
+        Performs the following steps:
+        1. Validates that pre_processor uses no normalization
+        2. Load pretrained weights of the discrete model
+
+        Raises:
+            ValueError: If transforms contain normalization.
+        """
+        if self.pre_processor and extract_transforms_by_type(self.pre_processor.transform, Normalize):
+            msg = "Transforms for DSR should not contain Normalize."
+            raise ValueError(msg)
+
         ckpt: Path = self.prepare_pretrained_model()
         self.model.load_pretrained_discrete_model_weights(ckpt, self.device)
 
