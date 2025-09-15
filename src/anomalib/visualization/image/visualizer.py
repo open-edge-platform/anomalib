@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Image visualization module for anomaly detection.
@@ -16,7 +16,7 @@ Example:
     >>> # Create visualizer with default settings
     >>> visualizer = ImageVisualizer()
     >>> # Generate visualization
-    >>> vis_result = visualizer.visualize(image=img, pred_mask=mask)
+    >>> vis_result = visualizer.visualize(predictions)
 
 The module ensures consistent visualization by:
     - Providing standardized field configurations
@@ -32,11 +32,13 @@ Note:
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from PIL import Image
+
 # Only import types during type checking to avoid circular imports
 if TYPE_CHECKING:
     from lightning.pytorch import Trainer
 
-    from anomalib.data import ImageBatch
+    from anomalib.data import ImageBatch, ImageItem, NumpyImageBatch, NumpyImageItem
     from anomalib.models import AnomalibModule
 
 from anomalib.utils.path import generate_output_filename
@@ -184,6 +186,157 @@ class ImageVisualizer(Visualizer):
         self.text_config = {**DEFAULT_TEXT_CONFIG, **(text_config or {})}
         self.output_dir = output_dir
 
+    def visualize(
+        self,
+        predictions: "ImageItem | NumpyImageItem | ImageBatch | NumpyImageBatch",
+    ) -> Image.Image | list[Image.Image | None] | None:
+        """Visualize image predictions.
+
+        This method visualizes anomaly detection predictions intelligently:
+        - For single items or single-item batches: returns a single image
+        - For multi-item batches: returns a list of images
+
+        Args:
+            predictions: The image prediction(s) to visualize. Can be:
+                - ``ImageItem``: Single torch-based image item
+                - ``NumpyImageItem``: Single numpy-based image item
+                - ``ImageBatch``: Batch of torch-based image items
+                - ``NumpyImageBatch``: Batch of numpy-based image items
+
+        Returns:
+            - For single items or single-item batches: ``Image.Image`` or ``None``
+            - For multi-item batches: ``list[Image.Image | None]``
+
+        Examples:
+            Visualize a torch-based image item:
+
+            >>> from anomalib.data import ImageItem
+            >>> import torch
+            >>> item = ImageItem(
+            ...     image=torch.rand(3, 224, 224),
+            ...     anomaly_map=torch.rand(224, 224),
+            ...     pred_mask=torch.rand(224, 224) > 0.5
+            ... )
+            >>> visualizer = ImageVisualizer()
+            >>> result = visualizer.visualize(item)
+            >>> isinstance(result, Image.Image) or result is None
+            True
+
+            Visualize a numpy-based image item:
+
+            >>> from anomalib.data import NumpyImageItem
+            >>> import numpy as np
+            >>> item = NumpyImageItem(
+            ...     image=np.random.rand(224, 224, 3),
+            ...     anomaly_map=np.random.rand(224, 224),
+            ...     pred_mask=np.random.rand(224, 224) > 0.5
+            ... )
+            >>> result = visualizer.visualize(item)
+            >>> isinstance(result, Image.Image) or result is None
+            True
+
+            Visualize a batch with one image (returns single image, not list):
+
+            >>> from anomalib.data import ImageBatch
+            >>> single_batch = ImageBatch(
+            ...     image=torch.rand(1, 3, 224, 224),
+            ...     anomaly_map=torch.rand(1, 224, 224)
+            ... )
+            >>> result = visualizer.visualize(single_batch)
+            >>> isinstance(result, Image.Image) or result is None
+            True
+
+            Visualize a batch with multiple images (returns list):
+
+            >>> multi_batch = ImageBatch(
+            ...     image=torch.rand(3, 3, 224, 224),
+            ...     anomaly_map=torch.rand(3, 224, 224)
+            ... )
+            >>> results = visualizer.visualize(multi_batch)
+            >>> isinstance(results, list) and len(results) == 3
+            True
+
+        Note:
+            - The method uses the same configuration (fields, overlays, etc.) as specified
+              during initialization of the ``ImageVisualizer``.
+            - If an item cannot be visualized (e.g., missing required fields), the
+              corresponding result will be ``None``.
+            - This method now behaves identically to the ``__call__`` method.
+        """
+        # Import here to avoid circular imports
+        from anomalib.data import ImageBatch, ImageItem, NumpyImageBatch, NumpyImageItem
+
+        # Handle single items
+        if isinstance(predictions, (ImageItem, NumpyImageItem)):
+            return visualize_image_item(
+                predictions,
+                fields=self.fields,
+                overlay_fields=self.overlay_fields,
+                field_size=self.field_size,
+                fields_config=self.fields_config,
+                overlay_fields_config=self.overlay_fields_config,
+                text_config=self.text_config,
+            )
+
+        # Handle batches
+        if isinstance(predictions, (ImageBatch, NumpyImageBatch)):
+            batch_size = len(predictions)
+
+            # Single-item batch - return single image
+            if batch_size == 1:
+                image_item = next(iter(predictions))
+                return visualize_image_item(
+                    image_item,  # type: ignore[arg-type]
+                    fields=self.fields,
+                    overlay_fields=self.overlay_fields,
+                    field_size=self.field_size,
+                    fields_config=self.fields_config,
+                    overlay_fields_config=self.overlay_fields_config,
+                    text_config=self.text_config,
+                )
+
+            # Multi-item batch - return list of images
+            results = []
+            for image_item in predictions:
+                visualization = visualize_image_item(
+                    image_item,  # type: ignore[arg-type]
+                    fields=self.fields,
+                    overlay_fields=self.overlay_fields,
+                    field_size=self.field_size,
+                    fields_config=self.fields_config,
+                    overlay_fields_config=self.overlay_fields_config,
+                    text_config=self.text_config,
+                )
+                results.append(visualization)
+            return results
+
+        msg = (
+            f"Unsupported input type: {type(predictions)}. "
+            "Expected ImageItem, NumpyImageItem, ImageBatch, or NumpyImageBatch."
+        )
+        raise TypeError(msg)
+
+    def __call__(
+        self,
+        predictions: "ImageItem | NumpyImageItem | ImageBatch | NumpyImageBatch",
+    ) -> Image.Image | list[Image.Image | None] | None:
+        """Make the visualizer callable.
+
+        This method allows the visualizer to be used as a callable object.
+        It behaves identically to the ``visualize`` method.
+
+        Args:
+            predictions: The predictions to visualize. Same as ``visualize``.
+
+        Returns:
+            Same as ``visualize`` method.
+
+        Examples:
+            >>> visualizer = ImageVisualizer()
+            >>> result = visualizer(predictions)  # Equivalent to visualizer.visualize(predictions)
+        """
+        return self.visualize(predictions)
+
     def on_test_batch_end(
         self,
         trainer: "Trainer",
@@ -212,11 +365,14 @@ class ImageVisualizer(Visualizer):
 
             if image is not None:
                 # Get the dataset name and category to save the image
+                datamodule = getattr(trainer, "datamodule", None)
+                dataset_name = getattr(datamodule, "name", None) if datamodule else None
+                category = getattr(datamodule, "category", None) if datamodule else None
                 filename = generate_output_filename(
                     input_path=item.image_path or "",
                     output_path=self.output_dir,
-                    dataset_name=getattr(trainer.datamodule, "name", "") or "",
-                    category=getattr(trainer.datamodule, "category", "") or "",
+                    dataset_name=dataset_name,
+                    category=category,
                 )
 
                 # Save the image to the specified filename
