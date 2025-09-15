@@ -30,10 +30,8 @@ See Also:
 
 from collections.abc import Callable
 from copy import copy
-from typing import TYPE_CHECKING
 
 import torch
-from lightning_utilities.core.imports import module_available
 from torch import nn
 from torch.nn.modules.linear import Identity
 from torchvision.transforms import Compose, ToPILImage
@@ -41,15 +39,13 @@ from torchvision.transforms import Compose, ToPILImage
 from anomalib.data import InferenceBatch
 from anomalib.models.components import BufferListMixin, DynamicBufferMixin
 
-if TYPE_CHECKING or module_available("open_clip"):
+# Optional import for open_clip
+try:
     import open_clip
     from open_clip.tokenizer import tokenize
-else:
-    msg = (
-        "open_clip is required for VLM models. Install it with: "
-        "'pip install anomalib[vlm,clip]' or 'uv pip install anomalib[vlm,clip]'"
-    )
-    raise ImportError(msg)
+except ImportError:
+    open_clip = None
+    tokenize = None
 
 from .prompting import create_prompt_ensemble
 from .utils import class_scores, harmonic_aggregation, make_masks, visual_association_score
@@ -108,6 +104,15 @@ class WinClipModel(DynamicBufferMixin, BufferListMixin, nn.Module):
         apply_transform: bool = False,
     ) -> None:
         super().__init__()
+
+        # Check if open_clip is available
+        if open_clip is None:
+            msg = (
+                "open_clip is required for VLM models. Install it with: "
+                "'pip install anomalib[vlm,clip]' or 'uv pip install anomalib[vlm,clip]'"
+            )
+            raise ImportError(msg)
+
         self.backbone = BACKBONE
         self.pretrained = PRETRAINED
         self.temperature = TEMPERATURE
@@ -395,6 +400,13 @@ class WinClipModel(DynamicBufferMixin, BufferListMixin, nn.Module):
         Args:
             class_name (str): Object class name for prompt ensemble.
         """
+        if tokenize is None:
+            msg = (
+                "open_clip is required for VLM models. Install it with: "
+                "'pip install anomalib[vlm,clip]' or 'uv pip install anomalib[vlm,clip]'"
+            )
+            raise ImportError(msg)
+
         # get the device, this is to ensure that we move the text embeddings to the same device as the model
         device = next(self.parameters()).device
         # collect prompt ensemble
