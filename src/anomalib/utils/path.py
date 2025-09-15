@@ -43,36 +43,6 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
-def _is_windows_junction(p: Path) -> bool:
-    """Return True if path is a directory junction."""
-    if not sys.platform.startswith("win"):
-        return False
-
-    try:
-        # On Windows, check if it's a directory that's not a symlink
-        # Junctions appear as directories but resolve to different paths
-        return p.exists() and p.is_dir() and not p.is_symlink() and p.resolve() != p
-    except (OSError, RuntimeError):
-        # Handle cases where path operations fail
-        return False
-
-
-def _safe_remove_path(p: Path) -> None:
-    """Remove file/dir/symlink/junction at p without following links."""
-    if not os.path.lexists(str(p)):
-        return
-    with suppress(FileNotFoundError):
-        if p.is_symlink():
-            p.unlink()
-        elif _is_windows_junction(p):
-            # Use rmdir for Windows junctions
-            p.rmdir()
-        elif p.is_dir():
-            shutil.rmtree(p)
-        else:
-            p.unlink()
-
-
 def _validate_windows_path(path: Path) -> bool:
     """Validate that a path is safe for use in Windows commands.
 
@@ -106,115 +76,91 @@ def _validate_windows_path(path: Path) -> bool:
         return False
 
 
-def _create_windows_junction_native(tmp: Path, target: Path) -> bool:
-    """Try to create a Windows junction using native Python API.
+def _is_windows_junction(p: Path) -> bool:
+    """Return True if path is a directory junction."""
+    if not sys.platform.startswith("win"):
+        return False
 
-    Args:
-        tmp: Temporary path for the junction
-        target: Target directory to link to
-
-    Returns:
-        True if successful, False otherwise
-    """
     try:
-        tmp.symlink_to(target.resolve(), target_is_directory=True)
-    except (OSError, NotImplementedError):
-        _safe_remove_path(tmp)
-        return False
-    else:
-        return True
-
-
-def _create_windows_junction_subprocess(tmp: Path, target: Path) -> bool:
-    """Try to create a Windows junction using subprocess mklink.
-
-    Args:
-        tmp: Temporary path for the junction
-        target: Target directory to link to
-
-    Returns:
-        True if successful, False otherwise
-    """
-    import subprocess
-
-    # Validate paths before subprocess call
-    if not _validate_windows_path(tmp) or not _validate_windows_path(target):
-        logger.warning(
-            "Path validation failed for Windows junction creation. "
-            "Paths contain potentially unsafe characters or exceed length limits. "
-            "Falling back to directory with version pointer method. "
-            "tmp='%s', target='%s'",
-            tmp,
-            target,
-        )
-        return False
-
-    # Convert to absolute path strings and re-validate
-    tmp_str = str(tmp.resolve())
-    target_str = str(target.resolve())
-
-    if not _validate_windows_path(Path(tmp_str)) or not _validate_windows_path(Path(target_str)):
-        logger.warning(
-            "Resolved path validation failed for Windows junction creation. "
-            "Resolved paths contain potentially unsafe characters. "
-            "Falling back to directory with version pointer method. "
-            "resolved_tmp='%s', resolved_target='%s'",
-            tmp_str,
-            target_str,
-        )
-        return False
-
-    # Execute mklink command
-    try:
-        result = subprocess.run(  # noqa: S603
-            ["cmd", "/c", "mklink", "/J", tmp_str, target_str],  # noqa: S607
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=30,
-        )
-        return result.returncode == 0 and tmp.exists()
-    except (subprocess.SubprocessError, subprocess.TimeoutExpired, OSError):
-        _safe_remove_path(tmp)
+        # On Windows, check if it's a directory that's not a symlink
+        # Junctions appear as directories but resolve to different paths
+        return p.exists() and p.is_dir() and not p.is_symlink() and p.resolve() != p
+    except (OSError, RuntimeError):
+        # Handle cases where path operations fail
         return False
 
 
-def _create_fallback_latest(latest: Path, target: Path) -> None:
-    """Create fallback 'latest' directory with version pointer file.
-
-    Args:
-        latest: Path where the latest link should be created
-        target: Target directory to point to
-    """
-    latest.mkdir(exist_ok=True)
-    version_file = latest / ".version_pointer"
-    version_file.write_text(str(target.resolve()))
+def _safe_remove_path(p: Path) -> None:
+    """Remove file/dir/symlink/junction at p without following links."""
+    if not os.path.lexists(str(p)):
+        return
+    with suppress(FileNotFoundError):
+        if p.is_symlink():
+            p.unlink()
+        elif _is_windows_junction(p):
+            # Use rmdir for Windows junctions
+            p.rmdir()
+        elif p.is_dir():
+            shutil.rmtree(p)
+        else:
+            p.unlink()
 
 
 def _make_latest_windows(latest: Path, target: Path) -> None:
-    """Create a Windows 'latest' link using the best available method.
-
-    Tries in order: native junction, subprocess mklink, fallback directory.
-    """
-    # Clean up any existing latest link
+    # Clean previous latest (symlink/junction/dir/file)
     _safe_remove_path(latest)
 
-    # Create temporary path for atomic replacement
     tmp = latest.with_name(latest.name + "_tmp")
     _safe_remove_path(tmp)
 
-    # Try native Python junction creation
-    if _create_windows_junction_native(tmp, target):
+    # Try creating a directory junction using native Python API
+    try:
+        # Use Path.symlink_to with target_is_directory=True for directory junction on Windows
+        # This creates a junction point that doesn't require admin privileges
+        tmp.symlink_to(target.resolve(), target_is_directory=True)
+    except (OSError, NotImplementedError):
+        # Try using Windows mklink command via subprocess
+        try:
+            import subprocess
+
+            # Note: Using subprocess with mklink is safe here as we control
+            # the command and arguments. This is a standard Windows command.
+            if not _validate_windows_path(tmp) or not _validate_windows_path(target):
+                logger.warning(
+                    "Warning: Unsafe characters detected in paths. Falling back to text pointer file for 'latest'.",
+                )
+                msg = f"Unsafe path detected: {tmp} -> {target}"
+                raise ValueError(msg)
+            result = subprocess.run(  # noqa: S603
+                [  # noqa: S607
+                    "cmd",
+                    "/c",
+                    "mklink",
+                    "/J",
+                    str(tmp),
+                    str(target.resolve()),
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            if result.returncode == 0 and tmp.exists():
+                tmp.replace(latest)
+                return
+        except (subprocess.SubprocessError, OSError):
+            # Subprocess failed, fall through to fallback
+            pass
+    else:
+        # Only reached if symlink creation succeeded
         tmp.replace(latest)
         return
 
-    # Try subprocess mklink command
-    if _create_windows_junction_subprocess(tmp, target):
-        tmp.replace(latest)
-        return
-
-    # Final fallback: create directory with version pointer
-    _create_fallback_latest(latest, target)
+    # Final fallback: create a text file indicating the latest version
+    # This preserves the intended behavior without breaking the system
+    latest.mkdir(exist_ok=True)
+    version_file = latest / ".version_pointer"
+    version_file.write_text(str(target.resolve()))
 
 
 def create_versioned_dir(root_dir: str | Path) -> Path:
@@ -230,9 +176,8 @@ def create_versioned_dir(root_dir: str | Path) -> Path:
             created if it doesn't exist.
 
     Returns:
-        Path: Path to the newly created version directory (e.g., ``v1``, ``v2``).
-            Training should save files to this directory. The ``latest`` symlink
-            will point to this directory for convenience.
+        Path: Path to the ``latest`` symbolic link that points to the newly created
+            version directory.
 
     Examples:
         Create first version directory:
@@ -240,12 +185,14 @@ def create_versioned_dir(root_dir: str | Path) -> Path:
         >>> from pathlib import Path
         >>> version_dir = create_versioned_dir(Path("experiments"))
         >>> version_dir
-        PosixPath('experiments/v1')
+        PosixPath('experiments/latest')
+        >>> version_dir.resolve().name  # Points to v1
+        'v1'
 
         Create second version directory:
 
         >>> version_dir = create_versioned_dir("experiments")
-        >>> version_dir.name
+        >>> version_dir.resolve().name  # Now points to v2
         'v2'
 
     Note:
