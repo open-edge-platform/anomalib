@@ -33,22 +33,16 @@ import torch
 from lightning_utilities.core.imports import module_available
 
 from anomalib.data import VideoItem
+from anomalib.utils.imports import OptionalImport
 
 if TYPE_CHECKING or module_available("av"):
     from torchvision.datasets.video_utils import VideoClips
 else:
-
-    class VideoClips:
-        """Dummy class for VideoClips."""
-
-        def __init__(self, *args, **kwargs) -> None:
-            """Raise ImportError."""
-            del args, kwargs
-            msg = (
-                "PyAV is not installed, but is required for video processing. "
-                "Please install it with: 'pip install anomalib[video]' or 'uv pip install anomalib[video]'"
-            )
-            raise ImportError(msg)
+    VideoClips = OptionalImport(
+        "av",
+        "uv pip install av",
+        "or `uv pip install anomalib[video]`",
+    )
 
 
 class ClipsIndexer(VideoClips, ABC):

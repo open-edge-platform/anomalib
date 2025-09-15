@@ -30,23 +30,18 @@ from lightning.pytorch.utilities import rank_zero_only
 from lightning_utilities.core.imports import module_available
 from matplotlib.figure import Figure
 
+from anomalib.utils.imports import OptionalImport
+
 from .base import ImageLoggerBase
 
 if TYPE_CHECKING or module_available("mlflow"):
     from lightning.pytorch.loggers.mlflow import MLFlowLogger
 else:
-
-    class MLFlowLogger:
-        """Dummy class for MLFlowLogger."""
-
-        def __init__(self, *args, **kwargs) -> None:
-            """Raise ImportError."""
-            del args, kwargs
-            msg = (
-                "MLFlow is not installed. "
-                "Please install it using: `uv pip install mlflow` or `uv pip install anomalib[loggers]`"
-            )
-            raise ImportError(msg)
+    MLFlowLogger = OptionalImport(
+        "mlflow",
+        "uv pip install mlflow",
+        "or `uv pip install anomalib[loggers]`",
+    )
 
 
 class AnomalibMLFlowLogger(ImageLoggerBase, MLFlowLogger):

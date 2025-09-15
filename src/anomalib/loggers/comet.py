@@ -30,23 +30,18 @@ from lightning.pytorch.utilities import rank_zero_only
 from lightning_utilities.core.imports import module_available
 from matplotlib.figure import Figure
 
+from anomalib.utils.imports import OptionalImport
+
 from .base import ImageLoggerBase
 
 if TYPE_CHECKING or module_available("comet_ml"):
     from lightning.pytorch.loggers.comet import CometLogger
 else:
-    # Create a dummy CometLogger class for when comet_ml is not available
-    class CometLogger:
-        """Dummy class for CometLogger."""
-
-        def __init__(self, *args, **kwargs) -> None:
-            """Raise ImportError."""
-            del args, kwargs
-            msg = (
-                "Comet ML is not installed. "
-                "Please install it using: `uv pip install comet-ml` or `uv pip install anomalib[loggers]`"
-            )
-            raise ImportError(msg)
+    CometLogger = OptionalImport(
+        "comet-ml",
+        "uv pip install comet-ml",
+        "or `uv pip install anomalib[loggers]`",
+    )
 
 
 class AnomalibCometLogger(ImageLoggerBase, CometLogger):
