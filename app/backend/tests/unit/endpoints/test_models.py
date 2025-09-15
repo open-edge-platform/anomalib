@@ -7,9 +7,9 @@ from uuid import uuid4
 import pytest
 from fastapi import status
 
+from api.dependencies import get_model_service
 from main import app
 from models import Model, ModelList
-from api.dependencies import get_model_service
 from services import ModelService
 
 
