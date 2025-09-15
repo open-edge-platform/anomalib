@@ -48,7 +48,7 @@ class OptionalImport:
         if install_command is None:
             install_command = f"uv pip install {package_name}"
 
-        msg = f"{package_name} is not installed. Please install it using: `{install_command}`"
+        message = f"{package_name} is not installed. Please install it using: `{install_command}`"
         if extra_message:
-            msg += f" {extra_message}"
-        raise ImportError(msg)
+            message += f" {extra_message}"
+        raise ImportError(message)
