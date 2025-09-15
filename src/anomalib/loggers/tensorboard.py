@@ -24,6 +24,7 @@ Example:
 """
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 from lightning.pytorch.utilities import rank_zero_only
@@ -32,11 +33,21 @@ from matplotlib.figure import Figure
 
 from .base import ImageLoggerBase
 
-if not module_available("tensorboard"):
-    msg = "TensorBoard is not installed. Please install it using: pip install tensorboard"
-    raise ImportError(msg)
+if TYPE_CHECKING or module_available("tensorboard"):
+    from lightning.pytorch.loggers.tensorboard import TensorBoardLogger
+else:
 
-from lightning.pytorch.loggers.tensorboard import TensorBoardLogger
+    class TensorBoardLogger:
+        """Dummy class for TensorBoardLogger."""
+
+        def __init__(self, *args, **kwargs) -> None:
+            """Raise ImportError."""
+            del args, kwargs
+            msg = (
+                "TensorBoard is not installed. "
+                "Please install it using: `uv pip install tensorboard` or `uv pip install anomalib[loggers]`"
+            )
+            raise ImportError(msg)
 
 
 class AnomalibTensorBoardLogger(ImageLoggerBase, TensorBoardLogger):
