@@ -22,12 +22,15 @@ Example:
     normal
 """
 
+import logging
 import os
 import re
 from enum import Enum
 from pathlib import Path
 
 from torchvision.datasets.folder import IMG_EXTENSIONS
+
+logger = logging.getLogger(__name__)
 
 
 class DirType(str, Enum):
@@ -107,11 +110,12 @@ def _prepare_files_labels(
         msg = f"All extensions {extensions} must start with the dot"
         raise RuntimeError(msg)
 
-    filenames = [
-        f
-        for f in path.glob("**/*")
-        if f.suffix in extensions and not f.is_dir() and not any(part.startswith(".") for part in f.parts)
-    ]
+    filenames = [f for f in path.glob("**/*") if f.suffix in extensions and not f.is_dir()]
+    # list of files that are in hidden directories or are hidden files themselves
+    hidden_files = [f for f in filenames if any(part.startswith(".") for part in f.parts)]
+    if hidden_files:
+        logger.warning(f"{len(hidden_files)} hidden files found in {path}. Please make sure this is intended.")
+
     if not filenames:
         msg = f"Found 0 {path_type} images in {path} with extensions {extensions}"
         raise RuntimeError(msg)
