@@ -6,8 +6,8 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from db.schema import JobDB
-from models import Job
-from models.job import JobStatus, TrainJobPayload
+from pydantic_models import Job
+from pydantic_models.job import JobStatus, TrainJobPayload
 from repositories.base import BaseRepository
 from repositories.mappers import JobMapper
 

@@ -3,6 +3,7 @@
 import asyncio
 import base64
 import io
+from dataclasses import dataclass
 from uuid import UUID
 
 import cv2
@@ -11,9 +12,16 @@ from anomalib.deploy import ExportType, OpenVINOInferencer
 from PIL import Image
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
-from models import Model, ModelList, PredictionLabel, PredictionResponse
+from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
 from repositories import ModelRepository
 from repositories.binary_repo import ModelBinaryRepository
+
+
+@dataclass
+class LoadedModel:
+    name: str
+    id: UUID
+    model: Model
 
 
 class ModelService:

@@ -6,7 +6,7 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from db import get_async_db_session
-from services import JobService, MediaService, ProjectService
+from services import ActivePipelineService, JobService, MediaService, ProjectService
 from services.model_service import ModelService
 
 
@@ -68,3 +68,9 @@ def get_media_id(media_id: str) -> UUID:
 def get_model_id(model_id: str) -> UUID:
     """Initializes and validates a media ID"""
     return get_uuid(model_id, "model")
+
+
+@lru_cache
+def get_active_pipeline_service() -> ActivePipelineService:
+    """Provides an ActivePipelineService instance for managing the active pipeline."""
+    return ActivePipelineService()

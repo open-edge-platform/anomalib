@@ -2,7 +2,7 @@
 name = "geti-inspect"
 version = "1.0.0"
 description = "Geti inspect server"
-requires-python = ">=3.10, <=3.13"
+requires-python = ">=3.13"
 
 dependencies = [
   "fastapi[standard]~=0.116",
@@ -18,24 +18,33 @@ dependencies = [
   "aiortc~=1.13.0",
   "anomalib[full]",
   "torchmetrics>=1.8.2",
-  "opencv-python-headless~=4.12"
+  "opencv-python-headless~=4.12",
+  "watchdog==6.0.0",
 ]
-
-[tool.uv.sources]
-anomalib = { path = "../../", editable = true }
 
 [dependency-groups]
 dev = [
   "pytest~=8.3",
-  "ruff~=0.11.2",
   "pre-commit~=4.1",
-  "mypy~=1.15",
   "pdbpp~=0.10",
   "flaky~=3.8",
   "testfixtures~=8.2",
   "pytest-freezegun~=0.4",
   "httpx~=0.24",
 ]
+lint = [
+    "ruff~=0.11.2",
+    "mypy~=1.17",
+    "types-requests~=2.32.4",
+]
+
+[project.optional-dependencies]
+mqtt = [
+    "paho-mqtt~=2.1.0",
+]
+
+[tool.uv.sources]
+anomalib = { path = "../../", editable = true }
 
 [tool.ruff]
 target-version = "py310"

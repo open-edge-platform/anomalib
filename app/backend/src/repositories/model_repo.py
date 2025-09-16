@@ -5,7 +5,7 @@ from collections.abc import Callable
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from db.schema import ModelDB
-from models import Model
+from pydantic_models import Model
 from repositories.base import ProjectBaseRepository
 from repositories.mappers import ModelMapper
 

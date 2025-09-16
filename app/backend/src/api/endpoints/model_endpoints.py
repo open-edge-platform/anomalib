@@ -10,7 +10,7 @@ from api.dependencies import get_model_id, get_model_service, get_project_id
 from api.endpoints.project_endpoints import project_api_prefix_url
 from api.media_rest_validator import MediaRestValidator
 from exceptions import ResourceNotFoundException
-from models import Model, ModelList, PredictionResponse
+from pydantic_models import Model, ModelList, PredictionResponse
 from services import ModelService
 
 logger = logging.getLogger(__name__)

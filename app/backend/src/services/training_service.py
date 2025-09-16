@@ -10,7 +10,7 @@ from anomalib.engine import Engine
 from anomalib.models import get_model
 
 from db.engine import get_async_db_session_ctx
-from models import JobStatus, Model
+from pydantic_models import JobStatus, Model
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import ModelService
 from services.job_service import JobService

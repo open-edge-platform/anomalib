@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from models import JobStatus
+from pydantic_models import JobStatus
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import JobService, ModelService, TrainingService
 

@@ -6,8 +6,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from exceptions import DuplicateJobException, ResourceNotFoundException
-from models import Job, JobList, JobType
-from models.job import JobStatus, JobSubmitted, TrainJobPayload
+from pydantic_models import Job, JobList, JobType
+from pydantic_models.job import JobStatus, JobSubmitted, TrainJobPayload
 from repositories import JobRepository
 
 

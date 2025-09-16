@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
-from models import Media, MediaList
+from pydantic_models import Media, MediaList
 from repositories import MediaRepository
 from repositories.binary_repo import ImageBinaryRepository
 

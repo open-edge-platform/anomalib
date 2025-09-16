@@ -5,7 +5,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
-from models import Project, ProjectList
+from pydantic_models import Project, ProjectList
 from repositories import ProjectRepository
 
 

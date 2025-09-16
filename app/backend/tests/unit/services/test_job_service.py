@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 
 from exceptions import DuplicateJobException, ResourceNotFoundException
-from models import JobStatus, JobType
+from pydantic_models import JobStatus, JobType
 from repositories import JobRepository
 from services import JobService
 

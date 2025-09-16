@@ -9,7 +9,7 @@ import pytest
 from anomalib.deploy import ExportType, OpenVINOInferencer
 from PIL import Image
 
-from models import PredictionLabel
+from pydantic_models import PredictionLabel
 from repositories import ModelRepository
 from repositories.binary_repo import ModelBinaryRepository
 from services import ModelService

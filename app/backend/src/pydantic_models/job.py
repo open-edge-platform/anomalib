@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_serializer
 
-from models.base import BaseIDModel
+from pydantic_models.base import BaseIDModel
 
 
 class JobType(StrEnum):

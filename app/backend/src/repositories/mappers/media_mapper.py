@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from db.schema import MediaDB
-from models import Media
+from pydantic_models import Media
 from repositories.mappers.base_mapper_interface import IBaseMapper
 
 
