@@ -1,35 +1,38 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import abc
 import asyncio
 import os
+import shutil
 from enum import StrEnum
+from functools import cached_property
 from uuid import UUID
 
+from anomalib.deploy import ExportType
+
 STORAGE_ROOT_PATH = "data"
-IMAGES_PATH = "images"
-MODELS_PATH = "models"
 
 
-class FILETYPE(StrEnum):
+class FileType(StrEnum):
     IMAGES = "images"
     MODELS = "models"
 
 
-class BinaryRepository:
-    def __init__(self, project_id: str | UUID):
+class BinaryRepository(metaclass=abc.ABCMeta):
+    def __init__(self, project_id: str | UUID, file_type: FileType):
         self.project_id = str(project_id)
+        self.file_type = file_type
 
-    @staticmethod
-    async def read_file(path: str) -> bytes:
+    async def read_file(self, filename: str) -> bytes:
         """
         Read a binary file from the filesystem.
 
-        :param path: Relative path to the file.
+        :param filename: Relative path to the file.
         :return: Binary content of the file.
         """
 
         def stdlib_read():
-            full_path = os.path.join(STORAGE_ROOT_PATH, path)
+            full_path = self.get_full_path(filename)
             if not os.path.isfile(full_path):
                 raise FileNotFoundError(f"File not found: {full_path}")
             with open(full_path, "rb") as fp:
@@ -37,28 +40,33 @@ class BinaryRepository:
 
         return await asyncio.to_thread(stdlib_read)
 
-    def get_full_path(self, filename: str, file_type: FILETYPE) -> str:
+    @cached_property
+    def project_folder_path(self) -> str:
         """
-        Get the full filesystem path for a given relative path.
-
-        :param filename: name of the file.
-        :param file_type: Type of the file
-        :return: Full filesystem path.
+        Get the project folder path containing the binary files.
         """
-        return os.path.join(STORAGE_ROOT_PATH, file_type, "projects", self.project_id, filename)
+        return os.path.join(STORAGE_ROOT_PATH, self.file_type, "projects", self.project_id)
 
-    async def save_file(self, filename: str, content: bytes, file_type: FILETYPE) -> str:
+    @abc.abstractmethod
+    def get_full_path(self, filename: str) -> str:
+        """
+        Get the full path for a given filename within the project folder.
+
+        :param filename: Name of the file.
+        :return: Full path to the file.
+        """
+
+    async def save_file(self, filename: str, content: bytes) -> str:
         """
         Save a binary file to the filesystem under the project directory.
 
         :param filename: Name of the file to save.
         :param content: Binary content of the file.
-        :param file_type: Type of the file
         :return: The path where the file was saved.
         """
 
         def stdlib_write():
-            full_path = self.get_full_path(filename=filename, file_type=file_type)
+            full_path = self.get_full_path(filename)
             folder, _ = full_path.split(filename)
             os.makedirs(folder, exist_ok=True)
             with open(full_path, "wb") as f:
@@ -68,22 +76,71 @@ class BinaryRepository:
         try:
             destination_path = await asyncio.to_thread(stdlib_write)
         except Exception as e:
-            raise OSError(f"Failed to save {file_type.value} file: {filename}") from e
+            raise OSError(f"Failed to save {self.file_type} file: {filename}") from e
         return destination_path
 
-    async def delete_file(self, filename: str, file_type: FILETYPE) -> None:
+    async def delete_file(self, filename: str) -> None:
         """
         Delete a binary file from the filesystem.
 
         :param filename: Name of the file to delete.
-        :param file_type: Type of the file
         """
 
         def stdlib_delete():
-            full_path = self.get_full_path(filename=filename, file_type=file_type)
+            full_path = self.get_full_path(filename)
             if os.path.isfile(full_path):
                 os.remove(full_path)
             else:
                 raise FileNotFoundError(f"File not found: {full_path}")
 
         await asyncio.to_thread(stdlib_delete)
+
+
+class ImageBinaryRepository(BinaryRepository):
+    def __init__(self, project_id: str | UUID):
+        super().__init__(project_id=project_id, file_type=FileType.IMAGES)
+
+    def get_full_path(self, filename: str) -> str:
+        return os.path.join(self.project_folder_path, filename)
+
+
+class ModelBinaryRepository(BinaryRepository):
+    def __init__(self, project_id: str | UUID, model_id: str | UUID):
+        super().__init__(project_id=project_id, file_type=FileType.MODELS)
+        self._model_id = str(model_id)
+
+    def get_full_path(self, filename: str) -> str:
+        return os.path.join(self.model_folder_path, filename)
+
+    @cached_property
+    def model_folder_path(self) -> str:
+        """
+        Get the folder path for models.
+
+        :return: Folder path for models.
+        """
+        return os.path.join(self.project_folder_path, self._model_id)
+
+    async def delete_model_folder(self) -> None:
+        """
+        Delete a model folder from the filesystem.
+        """
+
+        def stdlib_delete_folder():
+            folder_path = self.model_folder_path
+            if os.path.exists(folder_path):
+                shutil.rmtree(folder_path)
+            else:
+                raise FileNotFoundError(f"Model folder not found: {folder_path}")
+
+        await asyncio.to_thread(stdlib_delete_folder)
+
+    def get_weights_file_path(self, format: ExportType, name: str) -> str:
+        """
+        Read a weights file from the model folder.
+
+        :param format: Format of the model (e.g., ExportType.OPENVINO).
+        :param name: Name of the weights to read.
+        :return: path of the weights file.
+        """
+        return os.path.join(self.model_folder_path, "weights", format, name)

@@ -3,7 +3,7 @@
 
 from .job import Job, JobList, JobStatus, JobType
 from .media import ImageExtension, Media, MediaList
-from .model import Model, ModelList
+from .model import Model, ModelList, PredictionLabel, PredictionResponse
 from .project import Project, ProjectList
 
 __all__ = [
@@ -16,6 +16,8 @@ __all__ = [
     "MediaList",
     "Model",
     "ModelList",
+    "PredictionLabel",
+    "PredictionResponse",
     "Project",
     "ProjectList",
 ]

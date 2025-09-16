@@ -5,16 +5,24 @@ description = "Geti inspect server"
 requires-python = ">=3.10, <=3.13"
 
 dependencies = [
-  "fastapi[standard]==0.115.4",
+  "fastapi[standard]~=0.116",
   "jsonschema>=4.18.0a10",
   "uvicorn~=0.17",
   "sqlalchemy[asyncio]~=2.0",
   "aiosqlite~=0.21",
+  "psutil~=7.0.0",
   "alembic~=1.16.4",
   "aiofiles==24.1.0",
   "openvino==2025.2.0",
   "pydantic-settings~=2.10.1",
+  "aiortc~=1.13.0",
+  "anomalib[full]",
+  "torchmetrics>=1.8.2",
+  "opencv-python-headless~=4.12"
 ]
+
+[tool.uv.sources]
+anomalib = { path = "../../", editable = true }
 
 [dependency-groups]
 dev = [
@@ -30,26 +38,21 @@ dev = [
 ]
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py310"
 line-length = 120
 
 exclude = [".venv*"]
 
 src = ["src"]
 
+lint.select = ["ARG", "E", "F", "I", "N", "UP", "YTT", "ASYNC", "S", "COM", "C4", "FA", "PIE", "PYI", "Q", "RSE", "RET", "SIM",
+    "TID", "TC", "PL", "RUF", "C90", "D103", "ANN001", "ANN201", "ANN205", "FAST"]
+lint.ignore = ["N801", "N805","N806","N807", "N818", "COM812", "RET503", "SIM108", "SIM105", "PLR2004",
+    "RUF010", "TC001",  "RUF012"]
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
 [tool.pytest.ini_options]
 pythonpath = ["src"]
-
-[tool.ruff.lint]
-select = ["ARG", "E", "F", "I", "N", "UP", "YTT", "ASYNC", "S", "COM", "C4", "FA", "PIE", "PYI", "Q", "RSE", "RET", "SIM",
-    "TID", "TC", "PL", "RUF", "C90", "D103", "ANN001", "ANN201", "ANN205", "FAST"]
-
-ignore = ["N801", "N805","N806","N807", "N818", "COM812", "RET503", "SIM108", "SIM105", "PLR2004",
-
-    "RUF010", "TC001",  "RUF012"]
-
-fixable = ["ALL"]
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.ruff.lint.per-file-ignores]
 "*test*.py" = ["S", "ANN", "D", "ARG", "PLR"]

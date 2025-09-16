@@ -8,10 +8,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, UploadFile
 from fastapi.responses import FileResponse
 
+from api.dependencies import get_media_id, get_media_service, get_project_id
+from api.endpoints import API_PREFIX
+from api.media_rest_validator import MediaRestValidator
 from models import Media, MediaList
-from rest_api.dependencies import get_media_id, get_media_service, get_project_id
-from rest_api.endpoints import API_PREFIX
-from rest_api.media_rest_validator import MediaRestValidator
 from services.media_service import MediaService
 
 logger = logging.getLogger(__name__)
