@@ -30,8 +30,6 @@ from lightning.pytorch.utilities import rank_zero_only
 from lightning_utilities.core.imports import module_available
 from matplotlib.figure import Figure
 
-from anomalib.utils.imports import OptionalImport
-
 from .base import ImageLoggerBase
 
 if TYPE_CHECKING or module_available("wandb"):
@@ -39,11 +37,16 @@ if TYPE_CHECKING or module_available("wandb"):
     from lightning.pytorch.loggers.wandb import WandbLogger
 else:
     wandb = None
-    WandbLogger = OptionalImport(
-        "wandb",
-        "uv pip install wandb",
-        "or `uv pip install anomalib[loggers]`",
-    )
+
+    class WandbLogger:
+        """Dummy WandbLogger class for when wandb is not installed."""
+
+        def __init__(self, *args, **kwargs) -> None:  # noqa: ARG002
+            msg = (
+                "wandb is not installed. Please install it using: "
+                "`uv pip install wandb` or `uv pip install anomalib[loggers]`"
+            )
+            raise ImportError(msg)
 
 
 if TYPE_CHECKING:

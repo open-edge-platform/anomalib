@@ -41,18 +41,23 @@ from typing import TYPE_CHECKING
 from lightning_utilities.core.imports import module_available
 
 from anomalib.models.image.vlm_ad.utils import Prompt
-from anomalib.utils.imports import OptionalImport
 
 from .base import Backend
 
 if TYPE_CHECKING or module_available("ollama"):
     from ollama import Image, chat
 else:
-    Image = OptionalImport(
-        "ollama",
-        "uv pip install ollama",
-        "or `uv pip install anomalib[vlm]`",
-    )
+
+    class Image:
+        """Dummy Image class for when ollama is not installed."""
+
+        def __init__(self, *args, **kwargs) -> None:  # noqa: ARG002
+            msg = (
+                "ollama is not installed. Please install it using: "
+                "`uv pip install ollama` or `uv pip install anomalib[vlm]`"
+            )
+            raise ImportError(msg)
+
     chat = None
 
 
