@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from models import Media, MediaList
 from repositories import MediaRepository
-from repositories.binary_repo import FILETYPE, BinaryRepository
+from repositories.binary_repo import ImageBinaryRepository
 
 logger = logging.getLogger(__name__)
 
@@ -33,15 +33,15 @@ class MediaService:
         media = await self.get_media_by_id(project_id=project_id, media_id=media_id)
         if media is None:
             raise FileNotFoundError(f"Media with ID {media_id} not found.")
-        bin_repo = BinaryRepository(project_id=project_id)
-        return bin_repo.get_full_path(filename=media.filename, file_type=FILETYPE.IMAGES)
+        bin_repo = ImageBinaryRepository(project_id=project_id)
+        return bin_repo.get_full_path(filename=media.filename)
 
     async def upload_image(self, project_id: UUID, file: UploadFile, is_anomalous: bool) -> Media:
         # Generate unique filename and media ID
         media_id = uuid4()
         extension = list(os.path.splitext(file.filename)).pop().lower()
         filename = f"{media_id}{extension}"
-        bin_repo = BinaryRepository(project_id=str(project_id))
+        bin_repo = ImageBinaryRepository(project_id=project_id)
         media_repo = self.repository(str(project_id))
         saved_media: Media | None = None
         image_bytes = await file.read()
@@ -51,7 +51,6 @@ class MediaService:
             saved_file_path = await bin_repo.save_file(
                 filename=filename,
                 content=image_bytes,
-                file_type=FILETYPE.IMAGES,
             )
             logger.info(f"Saved media file: {saved_file_path}")
 
@@ -68,13 +67,13 @@ class MediaService:
             logger.error(f"Rolling back media upload due to error: {e}")
             # Attempt to delete the file if it was saved
             try:
-                await bin_repo.delete_file(filename=filename, file_type=FILETYPE.IMAGES)
+                await bin_repo.delete_file(filename=filename)
             except FileNotFoundError:
                 pass
             except Exception as delete_error:
                 logger.error(f"Failed to delete file during rollback: {delete_error}")
             if saved_media is not None:
-                await media_repo.delete(saved_media.id)
+                await media_repo.delete_by_id(saved_media.id)
             raise e
         return saved_media
 
@@ -84,10 +83,10 @@ class MediaService:
         if media is None:
             logger.warning(f"Media with ID {media_id} not found for deletion.")
             return
-        bin_repo = BinaryRepository(project_id=str(project_id))
+        bin_repo = ImageBinaryRepository(project_id=project_id)
         try:
-            await bin_repo.delete_file(filename=media.filename, file_type=FILETYPE.IMAGES)
-            await media_repo.delete(media_id)
+            await bin_repo.delete_file(filename=media.filename)
+            await media_repo.delete_by_id(media_id)
         except FileNotFoundError:
             logger.warning(f"File {media.filename} not found during media deletion.")
         except Exception as e:

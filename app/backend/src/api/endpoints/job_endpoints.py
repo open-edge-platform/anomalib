@@ -6,10 +6,10 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends
 
+from api.dependencies import get_job_service
+from api.endpoints import API_PREFIX
 from models import JobList
 from models.job import JobSubmitted, TrainJobPayload
-from rest_api.dependencies import get_job_service
-from rest_api.endpoints import API_PREFIX
 from services import JobService
 
 logger = logging.getLogger(__name__)

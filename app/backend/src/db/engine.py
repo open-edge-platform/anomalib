@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import AsyncGenerator, Iterator
-from contextlib import contextmanager
+from contextlib import asynccontextmanager, contextmanager
 from sqlite3 import Connection
 from typing import Any
 
@@ -43,11 +43,23 @@ def set_sqlite_pragma(dbapi_connection: Connection, _: Any) -> None:
     cursor.close()
 
 
+# @asynccontextmanager
 async def get_async_db_session() -> AsyncGenerator[AsyncSession, Any]:
     """Get a database session.
 
     To be used for dependency injection.
     """
+    async with async_session() as session:
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
+
+
+@asynccontextmanager
+async def get_async_db_session_ctx() -> AsyncGenerator[AsyncSession, Any]:
+    """Get a database session for direct async context manager usage."""
     async with async_session() as session:
         try:
             yield session

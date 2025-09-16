@@ -5,9 +5,9 @@ from unittest.mock import MagicMock
 import pytest
 from fastapi import status
 
+from api.dependencies import get_job_service
 from main import app
 from models import JobList
-from rest_api.dependencies import get_job_service
 from services import JobService
 
 
@@ -34,6 +34,3 @@ def test_get_jobs_empty(fxt_client, fxt_job_service, fxt_job):
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["jobs"]) == 0
     fxt_job_service.get_job_list.assert_called_once()
-
-
-
