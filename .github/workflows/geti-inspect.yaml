@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'app/**'
+      - "app/**"
   pull_request:
     types:
       - opened
@@ -13,9 +13,8 @@ on:
       - synchronize
       - ready_for_review
     paths:
-      - 'app/**'
+      - "app/**"
   workflow_dispatch: # run on request (no need for PR)
-
 
 jobs:
   ui-build:
