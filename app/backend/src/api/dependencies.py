@@ -1,37 +1,34 @@
 from functools import lru_cache
-from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, status
-from sqlalchemy.ext.asyncio.session import AsyncSession
+from fastapi import HTTPException, status
 
-from db import get_async_db_session
 from services import ActivePipelineService, JobService, MediaService, ProjectService
 from services.model_service import ModelService
 
 
 @lru_cache
-def get_project_service(db_session: Annotated[AsyncSession, Depends(get_async_db_session)]) -> ProjectService:
+def get_project_service() -> ProjectService:
     """Provides a ProjectService"""
-    return ProjectService(db_session=db_session)
+    return ProjectService()
 
 
 @lru_cache
-def get_job_service(db_session: Annotated[AsyncSession, Depends(get_async_db_session)]) -> JobService:
+def get_job_service() -> JobService:
     """Provides a JobService"""
-    return JobService(db_session=db_session)
+    return JobService()
 
 
 @lru_cache
-def get_media_service(db_session: Annotated[AsyncSession, Depends(get_async_db_session)]) -> MediaService:
+def get_media_service() -> MediaService:
     """Provides a MediaService"""
-    return MediaService(db_session=db_session)
+    return MediaService()
 
 
 @lru_cache
-def get_model_service(db_session: Annotated[AsyncSession, Depends(get_async_db_session)]) -> ModelService:
+def get_model_service() -> ModelService:
     """Provides a MediaService"""
-    return ModelService(db_session=db_session)
+    return ModelService()
 
 
 def is_valid_uuid(identifier: str) -> bool:

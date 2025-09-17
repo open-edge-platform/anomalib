@@ -9,7 +9,6 @@ from anomalib.deploy import ExportType
 from anomalib.engine import Engine
 from anomalib.models import get_model
 
-from db.engine import get_async_db_session_ctx
 from pydantic_models import JobStatus, Model
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import ModelService
@@ -42,44 +41,43 @@ class TrainingService:
         Returns:
             Model: Trained model if successful, None if no pending jobs
         """
-        async with get_async_db_session_ctx() as session:
-            job_service = JobService(session)
-            job = await job_service.get_pending_train_job()
-            if job is None:
-                logger.info("No pending training job")
-                return None
+        job_service = JobService()
+        job = await job_service.get_pending_train_job()
+        if job is None:
+            logger.info("No pending training job")
+            return None
 
-            project_id = job.project_id
-            model_name = job.payload.get("model_name")
-            model_service = ModelService(session)
-            model = Model(
-                project_id=project_id,
-                name=model_name,
+        project_id = job.project_id
+        model_name = job.payload.get("model_name")
+        model_service = ModelService()
+        model = Model(
+            project_id=project_id,
+            name=model_name,
+        )
+        logger.info(f"Training model `{model_name}` for job `{job.id}`")
+
+        try:
+            # Use asyncio.to_thread to keep event loop responsive
+            # TODO: Consider ProcessPoolExecutor for true parallelism with multiple jobs
+            trained_model = await asyncio.to_thread(cls._train_model, model)
+            if trained_model is None:
+                raise ValueError("Training failed - model is None")
+
+            await job_service.update_job_status(
+                job_id=job.id, status=JobStatus.COMPLETED, message="Training completed successfully"
             )
-            logger.info(f"Training model `{model_name}` for job `{job.id}`")
-
-            try:
-                # Use asyncio.to_thread to keep event loop responsive
-                # TODO: Consider ProcessPoolExecutor for true parallelism with multiple jobs
-                trained_model = await asyncio.to_thread(cls._train_model, model)
-                if trained_model is None:
-                    raise ValueError("Training failed - model is None")
-
-                await job_service.update_job_status(
-                    job_id=job.id, status=JobStatus.COMPLETED, message="Training completed successfully"
-                )
-                return await model_service.create_model(trained_model)
-            except Exception as e:
-                logger.exception("Failed to train pending training job: %s", e)
-                await job_service.update_job_status(
-                    job_id=job.id, status=JobStatus.FAILED, message=f"Failed with exception: {str(e)}"
-                )
-                if model.export_path:
-                    logger.warning("Deleting partially created model with id: %s", model.id)
-                    model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model.id)
-                    await model_binary_repo.delete_model_folder()
-                    await model_service.delete_model(project_id=project_id, model_id=model.id)
-                raise e
+            return await model_service.create_model(trained_model)
+        except Exception as e:
+            logger.exception("Failed to train pending training job: %s", e)
+            await job_service.update_job_status(
+                job_id=job.id, status=JobStatus.FAILED, message=f"Failed with exception: {str(e)}"
+            )
+            if model.export_path:
+                logger.warning("Deleting partially created model with id: %s", model.id)
+                model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model.id)
+                await model_binary_repo.delete_model_folder()
+                await model_service.delete_model(project_id=project_id, model_id=model.id)
+            raise e
 
     @staticmethod
     def _train_model(model: Model) -> Model | None:

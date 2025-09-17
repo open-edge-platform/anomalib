@@ -10,8 +10,8 @@ import cv2
 import numpy as np
 from anomalib.deploy import ExportType, OpenVINOInferencer
 from PIL import Image
-from sqlalchemy.ext.asyncio.session import AsyncSession
 
+from db.engine import get_async_db_session_ctx
 from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
 from repositories import ModelRepository
 from repositories.binary_repo import ModelBinaryRepository
@@ -33,25 +33,32 @@ class ModelService:
     to maintain event loop responsiveness.
     """
 
-    def __init__(self, db_session: AsyncSession):
-        self.db_session = db_session
+    @staticmethod
+    async def create_model(model: Model) -> Model:
+        async with get_async_db_session_ctx() as session:
+            repo = ModelRepository(session, project_id=model.project_id)
+            return await repo.save(model)
 
-    def repository(self, project_id: str | UUID) -> ModelRepository:
-        return ModelRepository(self.db_session, project_id=str(project_id))
+    @staticmethod
+    async def get_model_list(project_id: UUID) -> ModelList:
+        async with get_async_db_session_ctx() as session:
+            repo = ModelRepository(session, project_id=project_id)
+            return ModelList(models=await repo.get_all())
 
-    async def create_model(self, model: Model) -> Model:
-        return await self.repository(model.project_id).save(model)
+    @staticmethod
+    async def get_model_by_id(project_id: UUID, model_id: UUID) -> Model | None:
+        async with get_async_db_session_ctx() as session:
+            repo = ModelRepository(session, project_id=project_id)
+            return await repo.get_by_id(model_id)
 
-    async def get_model_list(self, project_id: UUID) -> ModelList:
-        return ModelList(models=await self.repository(project_id).get_all())
+    @staticmethod
+    async def delete_model(project_id: UUID, model_id: UUID) -> None:
+        async with get_async_db_session_ctx() as session:
+            repo = ModelRepository(session, project_id=project_id)
+            return await repo.delete_by_id(model_id)
 
-    async def get_model_by_id(self, project_id: UUID, model_id: UUID) -> Model | None:
-        return await self.repository(project_id).get_by_id(model_id)
-
-    async def delete_model(self, project_id: UUID, model_id: UUID) -> None:
-        return await self.repository(project_id).delete_by_id(model_id)
-
-    async def load_inference_model(self, model: Model, device: str = "CPU") -> OpenVINOInferencer:
+    @staticmethod
+    async def load_inference_model(model: Model, device: str = "CPU") -> OpenVINOInferencer:
         """Load a model for inference using the anomalib OpenVINO inferencer."""
         if model.format is not ExportType.OPENVINO:
             raise NotImplementedError(f"Model format {model.format} is not supported for inference at this moment.")
