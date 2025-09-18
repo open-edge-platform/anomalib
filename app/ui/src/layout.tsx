@@ -52,11 +52,7 @@ export const Layout = () => {
             >
                 <Header />
                 <View backgroundColor={'gray-50'} gridArea={'content'}>
-                    <TabPanels height={'100%'} UNSAFE_style={{ border: 'none' }}>
-                        <Item textValue='index' key={paths.inference.index({})}>
-                            <Outlet />
-                        </Item>
-                    </TabPanels>
+                    <Outlet />
                 </View>
             </Grid>
         </Tabs>

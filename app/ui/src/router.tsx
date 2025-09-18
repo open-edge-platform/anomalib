@@ -8,12 +8,14 @@ import { path } from 'static-path';
 import { ErrorPage } from './components/error-page/error-page';
 import { Layout } from './layout';
 import { Inference } from './routes/inference/inference';
+import { OpenApi } from './routes/openapi/openapi';
 
 const root = path('/');
 const inference = root.path('/inference');
 
 export const paths = {
     root,
+    openapi: root.path('/openapi'),
     inference: {
         index: inference,
     },
@@ -40,6 +42,10 @@ export const router = createBrowserRouter([
             {
                 path: paths.inference.index.pattern,
                 element: <Inference />,
+            },
+            {
+                path: paths.openapi.pattern,
+                element: <OpenApi />,
             },
         ],
     },
