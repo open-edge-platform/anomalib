@@ -29,6 +29,7 @@
     "dependencies": {
         "@geti/config": "*",
         "@geti/ui": "*",
+        "@scalar/api-reference-react": "^0.7.49",
         "@tanstack/react-query": "^5.80.10",
         "clsx": "^2.1.1",
         "comlink": "^4.4.2",
@@ -92,8 +93,12 @@
         "vite-plugin-svgr": "^4.3.0",
         "vitest": "^3.2.4"
     },
-    "workspaces": ["packages/*"],
+    "workspaces": [
+        "packages/*"
+    ],
     "msw": {
-        "workerDirectory": ["public"]
+        "workerDirectory": [
+            "public"
+        ]
     }
 }

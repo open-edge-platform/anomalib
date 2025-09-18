@@ -42,4 +42,14 @@ export default defineConfig({
             },
         },
     },
+    server: {
+        proxy: {
+            '/api': {
+                target: 'http://localhost:7860',
+                changeOrigin: true,
+                ws: true,
+                //pathRewrite: { '^/api': '' }, // strip the /api prefix
+            },
+        },
+    },
 });

@@ -3,11 +3,11 @@
 
 import { Grid } from '@geti/ui';
 
-import { Aside } from '../../features/inference/aside';
-import { StreamContainer } from '../../features/inference/stream/stream-container';
-import { Toolbar } from '../../features/inference/toolbar';
+import { Aside } from '../../features/inspect/aside';
+import { StreamContainer } from '../../features/inspect/stream/stream-container';
+import { Toolbar } from '../../features/inspect/toolbar';
 
-export const Inference = () => {
+export const Inspect = () => {
     return (
         <Grid
             areas={['toolbar aside', 'canvas aside']}
