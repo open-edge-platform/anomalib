@@ -1,24 +1,19 @@
 import { Suspense } from 'react';
 
 import { Loading } from '@geti/ui';
-import { redirect } from 'react-router';
 import { createBrowserRouter } from 'react-router-dom';
 import { path } from 'static-path';
 
 import { ErrorPage } from './components/error-page/error-page';
 import { Layout } from './layout';
-import { Inference } from './routes/inference/inference';
+import { Inspect } from './routes/inspect/inspect';
 import { OpenApi } from './routes/openapi/openapi';
 
 const root = path('/');
-const inference = root.path('/inference');
 
 export const paths = {
     root,
     openapi: root.path('/openapi'),
-    inference: {
-        index: inference,
-    },
 };
 
 export const router = createBrowserRouter([
@@ -33,15 +28,7 @@ export const router = createBrowserRouter([
         children: [
             {
                 index: true,
-                loader: () => {
-                    // TODO: if no pipeline configured then redirect to source
-                    // else redirect to live-feed
-                    return redirect(paths.inference.index({}));
-                },
-            },
-            {
-                path: paths.inference.index.pattern,
-                element: <Inference />,
+                element: <Inspect />,
             },
             {
                 path: paths.openapi.pattern,
