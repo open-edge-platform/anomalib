@@ -1,5 +1,3 @@
-import { fetchClient } from '../../api/client';
-
 export type WebRTCConnectionStatus = 'idle' | 'connecting' | 'connected' | 'disconnected' | 'failed';
 
 type WebRTCConnectionEvent =
@@ -72,7 +70,6 @@ export class WebRTCConnection {
 
             if (!this.handleOfferResponse(data)) return;
 
-            await this.updateConfThreshold(0.5); // Initial confidence threshold
             this.setupConnectionStateListener();
         } catch (err) {
             clearTimeout(this.timeoutId);
@@ -126,15 +123,7 @@ export class WebRTCConnection {
     private async sendOffer(): Promise<SessionData | undefined> {
         if (!this.peerConnection) return;
 
-        const { data } = await fetchClient.POST('/api/webrtc/offer', {
-            body: {
-                sdp: this.peerConnection.localDescription?.sdp,
-                type: this.peerConnection.localDescription?.type ?? '',
-                webrtc_id: this.webrtcId,
-            },
-        });
-
-        return data as SessionData;
+        throw new Error('Work in progress: not implemented');
     }
 
     private async handleOfferResponse(data: SessionData | undefined): Promise<boolean> {
@@ -244,14 +233,5 @@ export class WebRTCConnection {
             this.status = newStatus;
             this.emit({ type: 'status_change', status: newStatus });
         }
-    }
-
-    private updateConfThreshold(value: number) {
-        return fetchClient.POST('/api/input_hook', {
-            body: {
-                conf_threshold: value,
-                webrtc_id: this.webrtcId,
-            },
-        });
     }
 }

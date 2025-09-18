@@ -44,7 +44,7 @@ const useErrorMessage = () => {
     return 'An unknown error occurred';
 };
 
-export const ErrorPage = (): JSX.Element => {
+export const ErrorPage = () => {
     const message = useErrorMessage();
 
     return (

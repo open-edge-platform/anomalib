@@ -9,23 +9,7 @@ interface Fixtures {
 
 const test = testBase.extend<Fixtures>({
     network: createNetworkFixture({
-        initialHandlers: [
-            ...handlers,
-            http.get('/api/system/metrics/memory', ({ response }) => {
-                return response(200).json({});
-            }),
-            http.get('/api/models', ({ response }) => {
-                return response(200).json([]);
-            }),
-            http.post('/api/webrtc/offer', ({ response }) => {
-                // Schema is empty, so we return an empty object
-                return response(200).json({} as never);
-            }),
-            http.post('/api/input_hook', ({ response }) => {
-                // Schema is empty, so we return an empty object
-                return response(200).json({} as never);
-            }),
-        ],
+        initialHandlers: [...handlers],
     }),
 });
 

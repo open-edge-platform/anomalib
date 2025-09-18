@@ -6,7 +6,6 @@ import { useState } from 'react';
 import { ActionButton, Flex, Grid, Heading, View } from '@geti/ui';
 
 import { ReactComponent as DoubleChevronRight } from './../../assets/icons/double-chevron-right-icon.svg';
-import { SourceForm } from './source/source-form';
 
 export const Aside = () => {
     const [isHidden, setIsHidden] = useState(false);
@@ -48,7 +47,7 @@ export const Aside = () => {
                 </Heading>
             </Flex>
             <View gridArea={'graphs'} isHidden={isHidden} UNSAFE_style={{ overflow: 'hidden auto' }}>
-                <SourceForm />
+                <View>Work in progress</View>
             </View>
         </Grid>
     );
