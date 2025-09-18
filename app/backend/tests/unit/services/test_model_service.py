@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 import io
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import numpy as np
 import pytest
@@ -28,12 +28,19 @@ def fxt_model_binary_repo():
 
 
 @pytest.fixture
-def fxt_model_service(fxt_db_session, fxt_model_repository, fxt_model_binary_repo):
-    """Fixture for ModelService with mocked repositories."""
-    service = ModelService(fxt_db_session)
-    # Mock the repository method to return our mock
-    service.repository = MagicMock(return_value=fxt_model_repository)
-    return service
+def fxt_model_service():
+    """Fixture for ModelService - most methods are static, predict_image is instance method."""
+    return ModelService
+
+
+@pytest.fixture(autouse=True)
+def mock_db_context():
+    """Mock the database context for all tests."""
+    with patch("services.model_service.get_async_db_session_ctx") as mock_db_ctx:
+        mock_session = AsyncMock()
+        mock_db_ctx.return_value.__aenter__.return_value = mock_session
+        mock_db_ctx.return_value.__aexit__.return_value = None
+        yield mock_db_ctx
 
 
 class TestModelService:
@@ -41,7 +48,10 @@ class TestModelService:
         """Test creating a model."""
         fxt_model_repository.save.return_value = fxt_model
 
-        result = asyncio.run(fxt_model_service.create_model(fxt_model))
+        with patch("services.model_service.ModelRepository") as mock_repo_class:
+            mock_repo_class.return_value = fxt_model_repository
+
+            result = asyncio.run(fxt_model_service.create_model(fxt_model))
 
         assert result == fxt_model
         fxt_model_repository.save.assert_called_once_with(fxt_model)
@@ -50,7 +60,10 @@ class TestModelService:
         """Test getting model list."""
         fxt_model_repository.get_all.return_value = fxt_model_list.models
 
-        result = asyncio.run(fxt_model_service.get_model_list(fxt_project.id))
+        with patch("services.model_service.ModelRepository") as mock_repo_class:
+            mock_repo_class.return_value = fxt_model_repository
+
+            result = asyncio.run(fxt_model_service.get_model_list(fxt_project.id))
 
         assert result == fxt_model_list
         fxt_model_repository.get_all.assert_called_once()
@@ -59,7 +72,10 @@ class TestModelService:
         """Test getting model by ID."""
         fxt_model_repository.get_by_id.return_value = fxt_model
 
-        result = asyncio.run(fxt_model_service.get_model_by_id(fxt_project.id, fxt_model.id))
+        with patch("services.model_service.ModelRepository") as mock_repo_class:
+            mock_repo_class.return_value = fxt_model_repository
+
+            result = asyncio.run(fxt_model_service.get_model_by_id(fxt_project.id, fxt_model.id))
 
         assert result == fxt_model
         fxt_model_repository.get_by_id.assert_called_once_with(fxt_model.id)
@@ -68,7 +84,10 @@ class TestModelService:
         """Test getting model by ID when not found."""
         fxt_model_repository.get_by_id.return_value = None
 
-        result = asyncio.run(fxt_model_service.get_model_by_id(fxt_project.id, "non-existent-id"))
+        with patch("services.model_service.ModelRepository") as mock_repo_class:
+            mock_repo_class.return_value = fxt_model_repository
+
+            result = asyncio.run(fxt_model_service.get_model_by_id(fxt_project.id, "non-existent-id"))
 
         assert result is None
         fxt_model_repository.get_by_id.assert_called_once_with("non-existent-id")
@@ -77,7 +96,10 @@ class TestModelService:
         """Test deleting a model."""
         fxt_model_repository.delete_by_id.return_value = None
 
-        asyncio.run(fxt_model_service.delete_model(fxt_project.id, fxt_model.id))
+        with patch("services.model_service.ModelRepository") as mock_repo_class:
+            mock_repo_class.return_value = fxt_model_repository
+
+            asyncio.run(fxt_model_service.delete_model(fxt_project.id, fxt_model.id))
 
         fxt_model_repository.delete_by_id.assert_called_once_with(fxt_model.id)
 
@@ -121,7 +143,7 @@ class TestModelService:
                 "score": 0.1,
             }
 
-            result = asyncio.run(fxt_model_service.predict_image(fxt_model, fxt_image_bytes, cached_models))
+            result = asyncio.run(fxt_model_service().predict_image(fxt_model, fxt_image_bytes, cached_models))
 
             assert result.anomaly_map == "base64_encoded_image"
             assert result.label == PredictionLabel.NORMAL
@@ -142,7 +164,7 @@ class TestModelService:
                     "score": 0.1,
                 }
 
-                result = asyncio.run(fxt_model_service.predict_image(fxt_model, fxt_image_bytes, {}))
+                result = asyncio.run(fxt_model_service().predict_image(fxt_model, fxt_image_bytes, {}))
 
                 assert result.anomaly_map == "base64_encoded_image"
                 assert result.label == PredictionLabel.NORMAL
@@ -164,7 +186,7 @@ class TestModelService:
                     "score": 0.1,
                 }
 
-                asyncio.run(fxt_model_service.predict_image(fxt_model, fxt_image_bytes, cached_models))
+                asyncio.run(fxt_model_service().predict_image(fxt_model, fxt_image_bytes, cached_models))
 
                 assert fxt_model.id in cached_models
                 assert cached_models[fxt_model.id] == fxt_openvino_inferencer
