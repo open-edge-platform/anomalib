@@ -5,7 +5,7 @@ const Header = () => {
     return (
         <View backgroundColor={'gray-300'} gridArea={'header'}>
             <Flex height='100%' alignItems={'center'} marginX='1rem' gap='size-200'>
-                <View marginEnd='size-200'>
+                <View marginEnd='size-200' maxWidth={'5ch'}>
                     <span>Geti Inspect</span>
                 </View>
             </Flex>
