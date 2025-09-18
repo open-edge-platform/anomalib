@@ -20,5 +20,6 @@ Example:
 """
 
 from .post_processor import PostProcessor
+from .mebin_post_processor import MEBinPostProcessor
 
-__all__ = ["PostProcessor"]
+__all__ = ["PostProcessor", "MEBinPostProcessor"]
