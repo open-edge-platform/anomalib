@@ -5,7 +5,6 @@ import { StatusLight } from '@adobe/react-spectrum';
 import { Button, Divider, Flex, View } from '@geti/ui';
 
 import { useWebRTCConnection } from '../../components/stream/web-rtc-connection-provider';
-import { SourceModal } from './source/source-modal';
 
 const WebRTCConnectionStatus = () => {
     const { status, stop } = useWebRTCConnection();
@@ -79,9 +78,7 @@ export const Toolbar = () => {
 
                 <Divider orientation='vertical' size='S' />
 
-                <Flex marginStart='auto'>
-                    <SourceModal />
-                </Flex>
+                <Flex marginStart='auto'>Work in progress</Flex>
             </Flex>
         </View>
     );

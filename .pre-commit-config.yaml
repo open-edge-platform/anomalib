@@ -72,6 +72,7 @@ repos:
     rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
+        exclude: ^app/ui/
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.45.0
