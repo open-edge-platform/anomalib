@@ -27,7 +27,6 @@ def inference_routine(
         while not stop_event.is_set():
             # Get the model, reloading it if necessary
             time.sleep(10)
-            print("inference_routine")
     finally:
         # https://docs.python.org/3/library/multiprocessing.html#all-start-methods
         # section: Joining processes that use queues

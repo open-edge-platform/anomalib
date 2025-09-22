@@ -2,10 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import StrEnum
-from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from pydantic_models.model import Model
 from pydantic_models.sink import Sink
@@ -38,9 +37,11 @@ class Pipeline(BaseModel):
         default=None, exclude=True
     )  # ID of the model, used for DB mapping, not exposed in API
     status: PipelineStatus = PipelineStatus.IDLE  # Current status of the pipeline
+    is_running: bool | None = Field(default=None, exclude=True)  # If set will overwrite status
 
-    model_config = {
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        validate_assignment=True,
+        json_schema_extra={
             "example": {
                 "project_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
                 "source": {
@@ -64,20 +65,13 @@ class Pipeline(BaseModel):
                 },
                 "status": "running",
             }
-        }
-    }
-
-    @model_validator(mode="before")
-    def set_status_from_is_running(self, data: Any) -> Any:
-        if hasattr(data, "is_running") and not hasattr(data, "status"):
-            status = PipelineStatus.from_bool(getattr(data, "is_running"))
-            d = data.__dict__.copy()
-            d["status"] = status
-            return d
-        return data
+        },
+    )
 
     @model_validator(mode="after")
     def validate_running_status(self) -> "Pipeline":
+        if self.is_running:
+            self.status = PipelineStatus.RUNNING
         if self.status == PipelineStatus.RUNNING and any(
             x is None for x in (self.source_id, self.sink_id, self.model_id)
         ):

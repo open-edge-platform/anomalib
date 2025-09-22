@@ -86,11 +86,14 @@ class BaseRepository(Generic[ModelType, SchemaType], metaclass=abc.ABCMeta):
         await self.db.commit()
         return item
 
-    async def update(self, item: ModelType) -> ModelType:
-        schema_item: SchemaType = self.to_schema(item)
+    async def update(self, item: ModelType, partial_update: dict) -> ModelType:
+        # note: model_copy does not validate the model, so we need to validate explicitly
+        to_update = item.model_copy(update=partial_update, deep=True)  # type: ignore[attr-defined]
+        validated_update = item.__class__.model_validate(to_update.model_dump())  # type: ignore[attr-defined]
+        schema_item: SchemaType = self.to_schema(validated_update)
         await self.db.merge(schema_item)
         await self.db.commit()
-        return item
+        return validated_update
 
     async def delete_by_id(self, obj_id: str | UUID) -> None:
         if not hasattr(self.schema, "id"):

@@ -23,7 +23,7 @@ class TrainingService:
     Service for managing model training jobs.
 
     Handles the complete training pipeline including job fetching, model training,
-    status updates, and error handling. Currently uses asyncio.to_thread for
+    status updates, and error handling. Currently, using asyncio.to_thread for
     CPU-intensive training to maintain event loop responsiveness.
 
     Note: asyncio.to_thread is used assuming single concurrent training job.
@@ -46,6 +46,8 @@ class TrainingService:
         if job is None:
             logger.info("No pending training job")
             return None
+        # Mark job as running
+        await job_service.update_job_status(job_id=job.id, status=JobStatus.RUNNING, message="Training started")
 
         project_id = job.project_id
         model_name = job.payload.get("model_name")

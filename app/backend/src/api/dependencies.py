@@ -1,34 +1,70 @@
 from functools import lru_cache
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 
-from services import ActivePipelineService, JobService, MediaService, ProjectService
+from core import Scheduler
+from services import ActivePipelineService, JobService, MediaService, PipelineService, ProjectService
+from services.metrics_service import MetricsService
 from services.model_service import ModelService
 
 
-@lru_cache
-def get_project_service() -> ProjectService:
+async def get_project_service() -> ProjectService:
     """Provides a ProjectService"""
     return ProjectService()
 
 
-@lru_cache
-def get_job_service() -> JobService:
+async def get_job_service() -> JobService:
     """Provides a JobService"""
     return JobService()
 
 
-@lru_cache
-def get_media_service() -> MediaService:
+async def get_media_service() -> MediaService:
     """Provides a MediaService"""
     return MediaService()
 
 
-@lru_cache
-def get_model_service() -> ModelService:
+async def get_model_service() -> ModelService:
     """Provides a MediaService"""
     return ModelService()
+
+
+async def get_scheduler(request: Request) -> Scheduler:
+    """Provides the global Scheduler instance."""
+    return request.app.state.scheduler
+
+
+@lru_cache
+def get_metrics_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)]) -> MetricsService:
+    """Provides a MetricsService instance for collecting and retrieving metrics."""
+    return MetricsService(scheduler.shm_metrics.name, scheduler.shm_metrics_lock)
+
+
+async def get_active_pipeline_service() -> ActivePipelineService:
+    """
+    Provides an ActivePipelineService instance for managing the active pipeline.
+
+    This dependency is designed for use in FastAPI endpoints and creates a service
+    without the daemon thread. For worker processes, create ActivePipelineService
+    directly with the config_changed_condition.
+    """
+    # Create service without daemon thread for API endpoints
+    return await ActivePipelineService.create()
+
+
+@lru_cache
+def get_pipeline_service(
+    active_pipeline_service: Annotated[ActivePipelineService, Depends(get_active_pipeline_service)],
+    metrics_service: Annotated[MetricsService, Depends(get_metrics_service)],
+    scheduler: Annotated[Scheduler, Depends(get_scheduler)],
+) -> PipelineService:
+    """Provides a PipelineService instance with the active pipeline service and config changed condition."""
+    return PipelineService(
+        active_pipeline_service=active_pipeline_service,
+        metrics_service=metrics_service,
+        config_changed_condition=scheduler.mp_config_changed_condition,
+    )
 
 
 def is_valid_uuid(identifier: str) -> bool:
@@ -65,9 +101,3 @@ def get_media_id(media_id: str) -> UUID:
 def get_model_id(model_id: str) -> UUID:
     """Initializes and validates a media ID"""
     return get_uuid(model_id, "model")
-
-
-@lru_cache
-def get_active_pipeline_service() -> ActivePipelineService:
-    """Provides an ActivePipelineService instance for managing the active pipeline."""
-    return ActivePipelineService()

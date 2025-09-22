@@ -5,9 +5,12 @@ import logging
 import multiprocessing as mp
 import os
 import queue
+from multiprocessing.shared_memory import SharedMemory
 from typing import TYPE_CHECKING
 
 import psutil
+
+from services.metrics_service import SIZE
 
 if TYPE_CHECKING:
     import threading
@@ -39,6 +42,10 @@ class Scheduler(metaclass=Singleton):
         # Condition variable to notify processes about configuration updates
         self.mp_config_changed_condition = mp.Condition()
 
+        # Shared memory for metrics collector
+        self.shm_metrics = SharedMemory(create=True, size=SIZE)
+        self.shm_metrics_lock = mp.Lock()
+
         self.processes: list[mp.Process] = []
         self.threads: list[threading.Thread] = []
         logger.info("Scheduler initialized")
@@ -50,8 +57,8 @@ class Scheduler(metaclass=Singleton):
         # Create and start processes
         training_proc = mp.Process(
             target=training_routine,
-            name="Stream loader",
-            args=(self.mp_stop_event, self.mp_config_changed_condition),
+            name="Training worker",
+            args=(self.mp_stop_event,),
         )
 
         # Start all workers
@@ -101,6 +108,7 @@ class Scheduler(metaclass=Singleton):
         self.threads.clear()
 
         self._cleanup_queues()
+        self._cleanup_shared_memory()
 
     def _cleanup_queues(self) -> None:
         """Final queue cleanup"""
@@ -113,3 +121,13 @@ class Scheduler(metaclass=Singleton):
                     logger.debug("Successfully cleaned up %s", name)
                 except Exception as e:
                     logger.warning("Error cleaning up %s: %s", name, e)
+
+    def _cleanup_shared_memory(self) -> None:
+        """Clean up shared memory objects"""
+        if hasattr(self, "shm_metrics") and self.shm_metrics is not None:
+            try:
+                self.shm_metrics.close()
+                self.shm_metrics.unlink()  # Remove the shared memory segment
+                logger.debug("Successfully cleaned up shared memory")
+            except Exception as e:
+                logger.warning("Error cleaning up shared memory: %s", e)

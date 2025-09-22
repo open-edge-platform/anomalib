@@ -18,12 +18,14 @@ class JobService:
             repo = JobRepository(session)
             return JobList(jobs=await repo.get_all())
 
-    async def get_job_by_id(self, job_id: UUID) -> Job | None:
+    @staticmethod
+    async def get_job_by_id(job_id: UUID) -> Job | None:
         async with get_async_db_session_ctx() as session:
             repo = JobRepository(session)
             return await repo.get_by_id(job_id)
 
-    async def submit_train_job(self, payload: TrainJobPayload) -> JobSubmitted:
+    @staticmethod
+    async def submit_train_job(payload: TrainJobPayload) -> JobSubmitted:
         async with get_async_db_session_ctx() as session:
             repo = JobRepository(session)
             if await repo.is_job_duplicate(project_id=payload.project_id, payload=payload):
@@ -41,18 +43,20 @@ class JobService:
             except IntegrityError:
                 raise ResourceNotFoundException(resource_id=payload.project_id, resource_name="project")
 
-    async def get_pending_train_job(self) -> Job | None:
+    @staticmethod
+    async def get_pending_train_job() -> Job | None:
         async with get_async_db_session_ctx() as session:
             repo = JobRepository(session)
             return await repo.get_pending_job_by_type(JobType.TRAINING)
 
-    async def update_job_status(self, job_id: UUID, status: JobStatus, message: str | None = None) -> None:
+    @staticmethod
+    async def update_job_status(job_id: UUID, status: JobStatus, message: str | None = None) -> None:
         async with get_async_db_session_ctx() as session:
             repo = JobRepository(session)
             job = await repo.get_by_id(job_id)
             if job is None:
                 raise ResourceNotFoundException(resource_id=job_id, resource_name="job")
-            job.status = status
-            if message:
-                job.message = message
-            await repo.update(job)
+            updates: dict = {"status": status}
+            if message is not None:
+                updates["message"] = message
+            await repo.update(job, updates)
