@@ -11,7 +11,7 @@ import numpy as np
 from anomalib.deploy import ExportType, OpenVINOInferencer
 from PIL import Image
 
-from db.engine import get_async_db_session_ctx
+from db import get_async_db_session_ctx
 from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
 from repositories import ModelRepository
 from repositories.binary_repo import ModelBinaryRepository

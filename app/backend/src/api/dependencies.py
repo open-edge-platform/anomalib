@@ -5,7 +5,14 @@ from uuid import UUID
 from fastapi import Depends, HTTPException, Request, status
 
 from core import Scheduler
-from services import ActivePipelineService, JobService, MediaService, PipelineService, ProjectService
+from services import (
+    ActivePipelineService,
+    ConfigurationService,
+    JobService,
+    MediaService,
+    PipelineService,
+    ProjectService,
+)
 from services.metrics_service import MetricsService
 from services.model_service import ModelService
 
@@ -54,6 +61,18 @@ async def get_active_pipeline_service() -> ActivePipelineService:
 
 
 @lru_cache
+def get_configuration_service(
+    active_pipeline_service: Annotated[ActivePipelineService, Depends(get_active_pipeline_service)],
+    scheduler: Annotated[Scheduler, Depends(get_scheduler)],
+) -> ConfigurationService:
+    """Provides a ConfigurationService instance with the active pipeline service and config changed condition."""
+    return ConfigurationService(
+        active_pipeline_service=active_pipeline_service,
+        config_changed_condition=scheduler.mp_config_changed_condition,
+    )
+
+
+@lru_cache
 def get_pipeline_service(
     active_pipeline_service: Annotated[ActivePipelineService, Depends(get_active_pipeline_service)],
     metrics_service: Annotated[MetricsService, Depends(get_metrics_service)],
@@ -86,6 +105,20 @@ def get_uuid(identifier: str, name: str = "DIO") -> UUID:
     if not is_valid_uuid(identifier):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid {name} ID")
     return UUID(identifier)
+
+
+def get_source_id(source_id: str) -> UUID:
+    """Initializes and validates a source ID"""
+    if not is_valid_uuid(source_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid source ID")
+    return UUID(source_id)
+
+
+def get_sink_id(sink_id: str) -> UUID:
+    """Initializes and validates a sink ID"""
+    if not is_valid_uuid(sink_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid sink ID")
+    return UUID(sink_id)
 
 
 def get_project_id(project_id: str) -> UUID:

@@ -8,7 +8,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
-from db.engine import get_async_db_session_ctx
+from db import get_async_db_session_ctx
 from exceptions import ResourceNotFoundException
 from pydantic_models import Pipeline, PipelineStatus
 from pydantic_models.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, TimeWindow

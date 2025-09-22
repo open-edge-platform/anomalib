@@ -6,6 +6,8 @@ from .media_repo import MediaRepository
 from .model_repo import ModelRepository
 from .pipeline_repo import PipelineRepository
 from .project_repo import ProjectRepository
+from .sink_repo import SinkRepository
+from .source_repo import SourceRepository
 
 __all__ = [
     "JobRepository",
@@ -13,4 +15,6 @@ __all__ = [
     "ModelRepository",
     "PipelineRepository",
     "ProjectRepository",
+    "SinkRepository",
+    "SourceRepository",
 ]

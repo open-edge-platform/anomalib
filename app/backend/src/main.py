@@ -19,6 +19,8 @@ from api.endpoints.media_endpoints import media_router
 from api.endpoints.model_endpoints import model_router
 from api.endpoints.pipeline_endpoints import router as pipeline_router
 from api.endpoints.project_endpoints import project_router
+from api.endpoints.sink_endpoints import router as sink_router
+from api.endpoints.source_endpoints import router as source_router
 from core.lifecycle import lifespan
 from exceptions import GetiBaseException
 
@@ -35,6 +37,8 @@ app.include_router(job_router)
 app.include_router(media_router)
 app.include_router(model_router)
 app.include_router(pipeline_router)
+app.include_router(source_router)
+app.include_router(sink_router)
 
 
 @app.exception_handler(GetiBaseException)

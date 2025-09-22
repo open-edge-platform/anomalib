@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 
 from fastapi import UploadFile
 
-from db.engine import get_async_db_session_ctx
+from db import get_async_db_session_ctx
 from pydantic_models import Media, MediaList
 from repositories import MediaRepository
 from repositories.binary_repo import ImageBinaryRepository

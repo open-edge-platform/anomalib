@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from .active_pipeline_service import ActivePipelineService
+from .configuration_service import ConfigurationService
 from .dispatch_service import DispatchService
+from .exceptions import ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 from .job_service import JobService
 from .media_service import MediaService
 from .model_service import ModelService
@@ -13,12 +15,16 @@ from .video_stream_service import VideoStreamService
 
 __all__ = [
     "ActivePipelineService",
+    "ConfigurationService",
     "DispatchService",
     "JobService",
     "MediaService",
     "ModelService",
     "PipelineService",
     "ProjectService",
+    "ResourceAlreadyExistsError",
+    "ResourceInUseError",
+    "ResourceNotFoundError",
     "TrainingService",
     "VideoStreamService",
 ]

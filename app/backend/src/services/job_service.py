@@ -4,7 +4,7 @@ from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
 
-from db.engine import get_async_db_session_ctx
+from db import get_async_db_session_ctx
 from exceptions import DuplicateJobException, ResourceNotFoundException
 from pydantic_models import Job, JobList, JobType
 from pydantic_models.job import JobStatus, JobSubmitted, TrainJobPayload

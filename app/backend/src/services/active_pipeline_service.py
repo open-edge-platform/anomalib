@@ -6,7 +6,7 @@ import multiprocessing as mp
 from multiprocessing.synchronize import Condition as ConditionClass
 from threading import Thread
 
-from db.engine import get_async_db_session_ctx
+from db import get_async_db_session_ctx
 from pydantic_models import DisconnectedSinkConfig, DisconnectedSourceConfig, Sink, Source
 from repositories import PipelineRepository
 

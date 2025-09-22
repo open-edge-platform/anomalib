@@ -3,7 +3,7 @@
 
 from uuid import UUID
 
-from db.engine import get_async_db_session_ctx
+from db import get_async_db_session_ctx
 from pydantic_models import Project, ProjectList
 from repositories import ProjectRepository
 
