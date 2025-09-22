@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 import psutil
 
 from services.metrics_service import SIZE
+from workers.stream_loading import frame_acquisition_routine
 
 if TYPE_CHECKING:
     import threading
@@ -61,11 +62,18 @@ class Scheduler(metaclass=Singleton):
             args=(self.mp_stop_event,),
         )
 
+        stream_loader_proc = mp.Process(
+            target=frame_acquisition_routine,
+            name="Stream loader worker",
+            args=(self.frame_queue, self.mp_stop_event, self.mp_config_changed_condition),
+        )
+
         # Start all workers
         training_proc.start()
+        stream_loader_proc.start()
 
         # Track processes and threads
-        self.processes.extend([training_proc])
+        self.processes.extend([training_proc, stream_loader_proc])
 
         logger.info("All worker processes started successfully")
 

@@ -17,7 +17,7 @@ from starlette.responses import JSONResponse, Response
 from api.endpoints.job_endpoints import job_router
 from api.endpoints.media_endpoints import media_router
 from api.endpoints.model_endpoints import model_router
-from api.endpoints.pipelines import router as pipeline_router
+from api.endpoints.pipeline_endpoints import router as pipeline_router
 from api.endpoints.project_endpoints import project_router
 from core.lifecycle import lifespan
 from exceptions import GetiBaseException
@@ -150,5 +150,5 @@ async def pydantic_validation_exception_handler(request: Request, exc: pydantic.
 
 
 if __name__ == "__main__":
-    uvicorn_port = int(os.environ.get("HTTP_SERVER_PORT", "9001"))
-    uvicorn.run("main:app", host="0.0.0.0", port=uvicorn_port)  # noqa: S104
+    uvicorn_port = int(os.environ.get("HTTP_SERVER_PORT", "8000"))
+    uvicorn.run("main:app", host="0.0.0.0", port=uvicorn_port, log_level="info")  # noqa: S104
