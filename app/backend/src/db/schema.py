@@ -21,7 +21,7 @@ class ProjectDB(Base):
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.current_timestamp())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
 
-    pipeline = relationship("PipelineDB", back_populates="project", uselist=False)
+    pipeline = relationship("PipelineDB", back_populates="project", uselist=False, lazy="joined")
 
 
 class MediaDB(Base):
@@ -79,10 +79,10 @@ class PipelineDB(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
 
-    project = relationship("ProjectDB", back_populates="pipeline")
-    sink = relationship("SinkDB", uselist=False)
-    source = relationship("SourceDB", uselist=False)
-    model = relationship("ModelDB", uselist=False)
+    project = relationship("ProjectDB", back_populates="pipeline", lazy="joined")
+    sink = relationship("SinkDB", uselist=False, lazy="joined")
+    source = relationship("SourceDB", uselist=False, lazy="joined")
+    model = relationship("ModelDB", uselist=False, lazy="joined")
 
 
 class SourceDB(Base):

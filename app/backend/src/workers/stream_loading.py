@@ -37,8 +37,8 @@ async def _acquisition_loop(
                     await asyncio.sleep(1)
                     continue
 
-                print("wait 10s")
-                await asyncio.sleep(10)
+                print("stream Connected... wait 1s")
+                await asyncio.sleep(1)
 
                 # Reset the video stream if the configuration has changed
                 if prev_source_config is None or source_config != prev_source_config:
