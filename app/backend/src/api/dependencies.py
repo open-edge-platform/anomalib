@@ -15,6 +15,7 @@ from services import (
 )
 from services.metrics_service import MetricsService
 from services.model_service import ModelService
+from webrtc.manager import WebRTCManager
 
 
 async def get_project_service() -> ProjectService:
@@ -134,3 +135,8 @@ def get_media_id(media_id: str) -> UUID:
 def get_model_id(model_id: str) -> UUID:
     """Initializes and validates a media ID"""
     return get_uuid(model_id, "model")
+
+
+async def get_webrtc_manager(request: Request) -> WebRTCManager:
+    """Provides the global WebRTCManager instance from FastAPI application's state."""
+    return request.app.state.webrtc_manager
