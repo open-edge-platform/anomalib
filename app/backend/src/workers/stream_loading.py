@@ -23,7 +23,6 @@ async def _acquisition_loop(  # noqa: C901
     active_pipeline_service = await ActivePipelineService.create(config_changed_condition, start_daemon=True)
     prev_source_config: Source | None = None
     video_stream: VideoStream | None = None
-    source_config = active_pipeline_service.get_source_config()
 
     try:
         while not stop_event.is_set():

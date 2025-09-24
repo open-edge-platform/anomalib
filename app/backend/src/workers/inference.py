@@ -1,21 +1,23 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
-import base64
 import logging
 import multiprocessing as mp
 import queue as std_queue
 from multiprocessing.synchronize import Event as EventClass
 from multiprocessing.synchronize import Lock
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import cv2
-import numpy as np
+
+if TYPE_CHECKING:
+    import numpy as np
 
 from services import ModelService
 from services.metrics_service import MetricsService
 from services.model_service import LoadedModel
 from utils import log_threads, suppress_child_shutdown_signals
+from utils.visualization import Visualizer
 
 logger = logging.getLogger(__name__)
 
@@ -136,65 +138,8 @@ async def _inference_loop(  # noqa: C901, PLR0912, PLR0915
                 except Exception as e:
                     logger.debug("Failed to record inference metric: %s", e)
 
-            # Build visualization: overlay anomaly heatmap and label/score
-            try:
-                vis_frame: np.ndarray = frame.copy()
-
-                # Decode anomaly map from base64 → numpy image
-                try:
-                    anomaly_png_bytes = base64.b64decode(prediction_response.anomaly_map)
-                    anomaly_np = np.frombuffer(anomaly_png_bytes, dtype=np.uint8)
-                    anomaly_img = cv2.imdecode(anomaly_np, cv2.IMREAD_UNCHANGED)
-                except Exception:
-                    anomaly_img = None
-
-                # If available, colorize, resize and overlay the anomaly map (thresholded)
-                if anomaly_img is not None:
-                    try:
-                        if anomaly_img.ndim == 3 and anomaly_img.shape[2] > 1:
-                            # Convert to single channel if needed
-                            anomaly_gray = cv2.cvtColor(anomaly_img, cv2.COLOR_BGR2GRAY)
-                        else:
-                            anomaly_gray = anomaly_img
-
-                        # Ensure uint8 for colormap, then apply heatmap
-                        if anomaly_gray.dtype != np.uint8:
-                            anomaly_gray = anomaly_gray.astype(np.uint8)
-
-                        # Build heatmap and a 0.5-threshold mask (0.5 * 255 == 128)
-                        heatmap = cv2.applyColorMap(anomaly_gray, cv2.COLORMAP_JET)
-                        heatmap_resized = cv2.resize(heatmap, (vis_frame.shape[1], vis_frame.shape[0]))
-
-                        mask_gray = cv2.resize(anomaly_gray, (vis_frame.shape[1], vis_frame.shape[0]))
-                        threshold_value = 128
-                        mask_bool = mask_gray >= threshold_value
-
-                        # Create masked overlay (zeros outside mask)
-                        masked_heatmap = np.zeros_like(heatmap_resized)
-                        try:
-                            masked_heatmap[mask_bool] = heatmap_resized[mask_bool]
-                        except Exception as e:
-                            logger.debug("Failed to apply heatmap mask: %s", e)
-
-                        # More transparent overlay
-                        alpha = 0.25
-                        vis_frame = cv2.addWeighted(vis_frame, 1.0, masked_heatmap, alpha, 0)
-                    except Exception as e:
-                        logger.debug("Failed to overlay heatmap: %s", e)
-
-                # Draw larger, clearer label text with background
-                label_text = f"{prediction_response.label.value} ({prediction_response.score:.3f})"
-                font = cv2.FONT_HERSHEY_SIMPLEX
-                font_scale = 2.0
-                thickness = 3
-                (text_w, text_h), _ = cv2.getTextSize(label_text, font, font_scale, thickness)
-                x, y = 10, 20 + text_h  # top-left with margin
-                # Background rectangle for readability
-                cv2.rectangle(vis_frame, (x - 8, y - text_h - 8), (x - 8 + text_w + 16, y + 8), (0, 0, 0), -1)
-                cv2.putText(vis_frame, label_text, (x, y), font, font_scale, (0, 255, 0), thickness, cv2.LINE_AA)
-            except Exception as e:
-                logger.debug("Failed to create visualization: %s", e)
-                vis_frame = frame
+            # Build visualization via utility (no direct overlay/manipulation here)
+            vis_frame: np.ndarray = Visualizer.overlay_predictions(frame, prediction_response)
 
             # Package inference data into stream payload
             try:

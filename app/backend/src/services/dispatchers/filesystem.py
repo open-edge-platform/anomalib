@@ -7,9 +7,7 @@ from datetime import datetime
 
 import cv2
 import numpy as np
-
-# TODO: check naming
-from anomalib.data import NumpyImageBatch as Result
+from anomalib.data import NumpyImageBatch as PredictionResult
 
 from pydantic_models.sink import FolderSinkConfig, OutputFormat
 from services.dispatchers.base import BaseDispatcher
@@ -49,7 +47,7 @@ class FolderDispatcher(BaseDispatcher):
         self,
         original_image: np.ndarray,
         image_with_visualization: np.ndarray,
-        predictions: Result,
+        predictions: PredictionResult,
     ) -> None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]  # up to milliseconds
         image_orig_file = os.path.join(self.output_folder, f"{timestamp}-original.jpg")

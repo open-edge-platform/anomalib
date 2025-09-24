@@ -8,9 +8,7 @@ import time
 from typing import Any
 
 import numpy as np
-
-# TODO: check naming
-from anomalib.data import NumpyImageBatch as Result
+from anomalib.data import NumpyImageBatch as PredictionResult
 
 from pydantic_models.sink import MqttSinkConfig
 from services.dispatchers.base import BaseDispatcher
@@ -115,14 +113,19 @@ class MqttDispatcher(BaseDispatcher):
                 logger.exception("Reconnect failed")
 
         try:
-            result = self.client.publish(topic, json.dumps(payload))
-            if result.rc == mqtt.MQTT_ERR_SUCCESS and self._track_messages:
+            PredictionResult = self.client.publish(topic, json.dumps(payload))
+            if PredictionResult.rc == mqtt.MQTT_ERR_SUCCESS and self._track_messages:
                 self._published_messages.append({"topic": topic, "payload": payload})
-            logger.error(f"Publish failed: {mqtt.error_string(result.rc)}")
+            logger.error(f"Publish failed: {mqtt.error_string(PredictionResult.rc)}")
         except ValueError:
             logger.exception("Invalid payload for MQTT publish")
 
-    def _dispatch(self, original_image: np.ndarray, image_with_visualization: np.ndarray, predictions: Result) -> None:
+    def _dispatch(
+        self,
+        original_image: np.ndarray,
+        image_with_visualization: np.ndarray,
+        predictions: PredictionResult,
+    ) -> None:
         payload = self._create_payload(original_image, image_with_visualization, predictions)
 
         self.__publish_message(self.topic, payload)

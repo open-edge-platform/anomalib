@@ -5,9 +5,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
-
-# TODO: check naming
-from anomalib.data import NumpyImageBatch as Result
+from anomalib.data import NumpyImageBatch as PredictionResult
 
 
 @dataclass(kw_only=True)
@@ -16,7 +14,7 @@ class InferenceData:
     InferenceData represents the data that is produced by the inference stage of the pipeline.
     """
 
-    prediction: Result  # prediction result, e.g., bounding boxes, masks, etc.
+    prediction: PredictionResult  # prediction result, e.g., bounding boxes, masks, etc.
     visualized_prediction: np.ndarray  # visualized prediction (e.g., bounding boxes, masks, etc. drawn on the frame)
     model_name: str  # name of the model that produced the prediction
 

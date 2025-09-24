@@ -8,9 +8,7 @@ from typing import Any
 
 import numpy as np
 import requests
-
-# TODO: check naming
-from anomalib.data import NumpyImageBatch as Result
+from anomalib.data import NumpyImageBatch as PredictionResult
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -59,7 +57,7 @@ class WebhookDispatcher(BaseDispatcher):
         self,
         original_image: np.ndarray,
         image_with_visualization: np.ndarray,
-        predictions: Result,
+        predictions: PredictionResult,
     ) -> None:
         payload = self._create_payload(original_image, image_with_visualization, predictions)
 
