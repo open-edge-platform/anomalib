@@ -5,19 +5,15 @@ import logging
 import multiprocessing as mp
 import os
 import queue
+import threading
 from multiprocessing.shared_memory import SharedMemory
-from typing import TYPE_CHECKING
 
 import psutil
 
 from services.metrics_service import SIZE
-from workers.stream_loading import frame_acquisition_routine
-
-if TYPE_CHECKING:
-    import threading
-
 from utils.singleton import Singleton
-from workers import training_routine
+from workers import dispatching_routine, inference_routine, training_routine
+from workers.stream_loading import frame_acquisition_routine
 
 logger = logging.getLogger(__name__)
 
@@ -61,19 +57,47 @@ class Scheduler(metaclass=Singleton):
             name="Training worker",
             args=(self.mp_stop_event,),
         )
+        training_proc.daemon = True
+
+        # Inference worker consumes frames and produces predictions
+        inference_proc = mp.Process(
+            target=inference_routine,
+            name="Inference worker",
+            args=(
+                self.frame_queue,
+                self.pred_queue,
+                self.mp_stop_event,
+                self.mp_model_reload_event,
+                self.shm_metrics.name,
+                self.shm_metrics_lock,
+            ),
+        )
+        inference_proc.daemon = True
+
+        # Dispatching worker consumes predictions and publishes to outputs/WebRTC
+        dispatching_thread = threading.Thread(
+            target=dispatching_routine,
+            name="Dispatching thread",
+            args=(self.pred_queue, self.rtc_stream_queue, self.mp_stop_event),
+        )
 
         stream_loader_proc = mp.Process(
             target=frame_acquisition_routine,
             name="Stream loader worker",
             args=(self.frame_queue, self.mp_stop_event, self.mp_config_changed_condition),
         )
+        stream_loader_proc.daemon = True
 
         # Start all workers
         training_proc.start()
+        inference_proc.start()
         stream_loader_proc.start()
+        dispatching_thread.daemon = True
+        dispatching_thread.start()
 
         # Track processes and threads
-        self.processes.extend([training_proc, stream_loader_proc])
+        self.processes.extend([training_proc, inference_proc, stream_loader_proc])
+        self.threads.append(dispatching_thread)
 
         logger.info("All worker processes started successfully")
 

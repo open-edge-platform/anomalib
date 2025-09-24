@@ -15,6 +15,7 @@ from pydantic_models.metrics import InferenceMetrics, LatencyMetrics, PipelineMe
 from repositories import PipelineRepository
 from services import ActivePipelineService
 from services.metrics_service import MetricsService
+from services.model_service import ModelService
 
 MSG_ERR_DELETE_RUNNING_PIPELINE = "Cannot delete a running pipeline."
 
@@ -25,10 +26,12 @@ class PipelineService:
         active_pipeline_service: ActivePipelineService,
         metrics_service: MetricsService,
         config_changed_condition: Condition,
+        model_service: ModelService,
     ) -> None:
         self._active_pipeline_service: ActivePipelineService = active_pipeline_service
         self._config_changed_condition: Condition = config_changed_condition
         self._metrics_service: MetricsService = metrics_service
+        self._model_service: ModelService = model_service
 
     def _notify_source_changed(self) -> None:
         with self._config_changed_condition:
@@ -69,9 +72,15 @@ class PipelineService:
                     self._notify_source_changed()
                 if pipeline.sink.id != updated.sink.id:  # type: ignore[union-attr] # sink is always there for running pipeline
                     await self._notify_sink_changed()
+                # If the active model changes while running, notify inference to reload
+                if pipeline.model.id != updated.model.id:  # type: ignore[union-attr]
+                    self._model_service.activate_model()
             elif pipeline.status != updated.status:
                 # If the pipeline is being activated or stopped
                 await self._notify_pipeline_changed()
+                # On activation, trigger model activation so inference reloads the active model
+                if updated.status == PipelineStatus.RUNNING and updated.model is not None:
+                    self._model_service.activate_model()
             return updated
 
     async def get_pipeline_metrics(self, pipeline_id: UUID, time_window: int = 60) -> PipelineMetrics:

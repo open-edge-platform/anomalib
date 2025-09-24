@@ -32,13 +32,16 @@ class ActivePipelineService:
     """
 
     @classmethod
-    async def create(cls, config_changed_condition: ConditionClass | None = None) -> "ActivePipelineService":
+    async def create(
+        cls, config_changed_condition: ConditionClass | None = None, start_daemon: bool = False
+    ) -> "ActivePipelineService":
         """
         Factory method to create and initialize the service asynchronously.
 
         Args:
             config_changed_condition: Multiprocessing Condition object for getting configuration
                                     updates in child processes. Required for child processes.
+            start_daemon: whether or not to start daemon thread to monitor configuration changes.
 
         Returns:
             ActivePipelineService: Fully initialized service instance.
@@ -47,16 +50,19 @@ class ActivePipelineService:
             ValueError: When config_changed_condition is None in a child process.
         """
         instance = cls()
-        await instance._initialize(config_changed_condition)
+        await instance._initialize(config_changed_condition, start_daemon)
         return instance
 
-    async def _initialize(self, config_changed_condition: ConditionClass | None = None) -> None:
+    async def _initialize(
+        self, config_changed_condition: ConditionClass | None = None, start_daemon: bool = False
+    ) -> None:
         """
         Initialize the service asynchronously.
 
         Args:
             config_changed_condition: Multiprocessing Condition object for getting configuration
                                     updates in child processes. Required for child processes.
+            start_daemon: whether or not to start daemon thread to monitor configuration changes.
 
         Raises:
             ValueError: When config_changed_condition is None in a child process.
@@ -67,7 +73,7 @@ class ActivePipelineService:
         await self._load_app_config()
 
         # For child processes with config_changed_condition, start a daemon to monitor configuration changes
-        if mp.parent_process() is not None and self.config_changed_condition is not None:
+        if start_daemon is not None and self.config_changed_condition is not None:
             # Store the current event loop for the daemon thread to use
             self._event_loop = asyncio.get_running_loop()
 
@@ -75,7 +81,7 @@ class ActivePipelineService:
                 target=self._reload_config_daemon_routine, name="Config reloader", daemon=True
             )
             self._config_reload_daemon.start()
-        elif mp.parent_process() is not None and self.config_changed_condition is None:
+        elif start_daemon is not None and self.config_changed_condition is None:
             # This is a child process but no condition provided - this is likely an API process
             # that doesn't need the daemon thread, so we just log and continue
             logger.debug("Child process detected but no config_changed_condition provided - skipping daemon thread")
@@ -135,7 +141,7 @@ class ActivePipelineService:
                     continue
                 logger.debug("Configuration changes detected. Process: %s", mp.current_process().name)
                 # Schedule the async reload in the event loop using the stored loop reference
-                asyncio.run_coroutine_threadsafe(self.reload(), self._event_loop)
+                asyncio.run(self.reload())
 
     def get_source_config(self) -> Source:
         """

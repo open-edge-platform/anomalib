@@ -3,7 +3,9 @@
 import asyncio
 import base64
 import io
+import logging
 from dataclasses import dataclass
+from multiprocessing.synchronize import Event as EventClass
 from uuid import UUID
 
 import cv2
@@ -15,6 +17,8 @@ from db import get_async_db_session_ctx
 from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
 from repositories import ModelRepository
 from repositories.binary_repo import ModelBinaryRepository
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -32,6 +36,22 @@ class ModelService:
     predictions on images. Uses asyncio.to_thread for CPU-intensive operations
     to maintain event loop responsiveness.
     """
+
+    def __init__(self, mp_model_reload_event: EventClass | None = None) -> None:
+        self._mp_model_reload_event = mp_model_reload_event
+
+    def activate_model(self) -> None:
+        """Notify workers to (re)load the active model.
+
+        Sets the shared multiprocessing event so the inference worker reloads
+        the current active model lazily and only once.
+        """
+        try:
+            if self._mp_model_reload_event is not None:
+                self._mp_model_reload_event.set()
+        except Exception as e:
+            # Best-effort signaling; avoid bubbling up to API layer
+            logger.debug("Failed to signal model reload event: %s", e)
 
     @staticmethod
     async def create_model(model: Model) -> Model:

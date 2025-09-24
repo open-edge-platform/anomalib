@@ -17,28 +17,27 @@ from utils import log_threads, suppress_child_shutdown_signals
 logger = logging.getLogger(__name__)
 
 
-async def _acquisition_loop(
+async def _acquisition_loop(  # noqa: C901
     frame_queue: mp.Queue, stop_event: EventClass, config_changed_condition: ConditionClass, cleanup: bool = True
 ) -> None:
-    active_pipeline_service = await ActivePipelineService.create(config_changed_condition)
+    active_pipeline_service = await ActivePipelineService.create(config_changed_condition, start_daemon=True)
     prev_source_config: Source | None = None
     video_stream: VideoStream | None = None
+    source_config = active_pipeline_service.get_source_config()
 
     try:
         while not stop_event.is_set():
+            # Exit if parent process died
+            parent_process = mp.parent_process()
+            if parent_process is not None and not parent_process.is_alive():
+                break
             try:
                 source_config = active_pipeline_service.get_source_config()
 
-                print(f"got source: {source_config}")
-
                 if source_config.source_type == SourceType.DISCONNECTED:
                     logger.debug("No source available... retrying in 1 second")
-                    print(".. source is disconnected")
                     await asyncio.sleep(1)
                     continue
-
-                print("stream Connected... wait 1s")
-                await asyncio.sleep(1)
 
                 # Reset the video stream if the configuration has changed
                 if prev_source_config is None or source_config != prev_source_config:
@@ -87,7 +86,6 @@ def _enqueue_frame_with_retry(
     while not stop_event.is_set():
         try:
             frame_queue.put(payload, timeout=1)
-            print(f"enqueuing frame with payload: {payload}")
             break
         except queue.Full:
             if is_real_time:

@@ -33,14 +33,14 @@ async def get_media_service() -> MediaService:
     return MediaService()
 
 
-async def get_model_service() -> ModelService:
-    """Provides a MediaService"""
-    return ModelService()
-
-
 async def get_scheduler(request: Request) -> Scheduler:
     """Provides the global Scheduler instance."""
     return request.app.state.scheduler
+
+
+async def get_model_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)]) -> ModelService:
+    """Provides a ModelService with access to the model reload event"""
+    return ModelService(mp_model_reload_event=scheduler.mp_model_reload_event)
 
 
 @lru_cache
@@ -49,7 +49,7 @@ def get_metrics_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)])
     return MetricsService(scheduler.shm_metrics.name, scheduler.shm_metrics_lock)
 
 
-async def get_active_pipeline_service() -> ActivePipelineService:
+async def get_active_pipeline_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)]) -> ActivePipelineService:
     """
     Provides an ActivePipelineService instance for managing the active pipeline.
 
@@ -58,7 +58,7 @@ async def get_active_pipeline_service() -> ActivePipelineService:
     directly with the config_changed_condition.
     """
     # Create service without daemon thread for API endpoints
-    return await ActivePipelineService.create()
+    return await ActivePipelineService.create(scheduler.mp_config_changed_condition)
 
 
 @lru_cache
@@ -78,12 +78,14 @@ def get_pipeline_service(
     active_pipeline_service: Annotated[ActivePipelineService, Depends(get_active_pipeline_service)],
     metrics_service: Annotated[MetricsService, Depends(get_metrics_service)],
     scheduler: Annotated[Scheduler, Depends(get_scheduler)],
+    model_service: Annotated[ModelService, Depends(get_model_service)],
 ) -> PipelineService:
     """Provides a PipelineService instance with the active pipeline service and config changed condition."""
     return PipelineService(
         active_pipeline_service=active_pipeline_service,
         metrics_service=metrics_service,
         config_changed_condition=scheduler.mp_config_changed_condition,
+        model_service=model_service,
     )
 
 

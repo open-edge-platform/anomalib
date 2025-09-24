@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import StrEnum
+from functools import cached_property
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -77,3 +78,7 @@ class Pipeline(BaseModel):
         ):
             raise ValueError("Pipeline cannot be in 'running' status when source, sink, or model is not configured.")
         return self
+
+    @cached_property
+    def id(self) -> UUID:
+        return self.project_id

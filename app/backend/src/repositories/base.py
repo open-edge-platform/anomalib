@@ -93,7 +93,10 @@ class BaseRepository(Generic[ModelType, SchemaType], metaclass=abc.ABCMeta):
         schema_item: SchemaType = self.to_schema(to_update)
         await self.db.merge(schema_item)
         await self.db.commit()
-        return to_update
+        updated = await self.get_by_id(item.id)
+        if updated is None:
+            raise ValueError(f"{item.__class__} with ID `{item.id}` doesn't exist")
+        return updated
 
     async def delete_by_id(self, obj_id: str | UUID) -> None:
         if not hasattr(self.schema, "id"):
