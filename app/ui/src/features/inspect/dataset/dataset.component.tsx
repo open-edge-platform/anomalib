@@ -11,7 +11,7 @@ const NotEnoughNormalImagesToTrain = () => {
             <Heading>{requiredNumberOfNormalImages} images required</Heading>
             <Content>
                 Capture {requiredNumberOfNormalImages} images of normal cases. They help the model learn what is
-                standard, so it can better detect anomalies. Learn more
+                standard, so it can better detect anomalies.
             </Content>
         </InlineAlert>
     );
