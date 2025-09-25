@@ -36,6 +36,7 @@ const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
             UNSAFE_className={styles.container}
             columns={gridTemplateColumns}
             data-expanded={tab !== null}
+            minHeight={0}
         >
             <View
                 gridColumn={'1/2'}

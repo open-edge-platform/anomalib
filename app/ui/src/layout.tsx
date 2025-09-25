@@ -26,7 +26,7 @@ export const Layout = () => {
             <Grid
                 areas={['header', 'content']}
                 UNSAFE_style={{
-                    gridTemplateRows: 'var(--spectrum-global-dimension-size-800, 4rem) auto',
+                    gridTemplateRows: 'var(--spectrum-global-dimension-size-800, 4rem) minmax(0, 1fr)',
                 }}
                 minHeight={'100vh'}
                 maxHeight={'100vh'}
