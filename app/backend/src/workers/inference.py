@@ -13,6 +13,9 @@ import cv2
 if TYPE_CHECKING:
     import numpy as np
 
+from db import get_async_db_session_ctx
+from entities.stream_data import InferenceData, StreamData
+from repositories import PipelineRepository
 from services import ModelService
 from services.metrics_service import MetricsService
 from services.model_service import LoadedModel
@@ -30,11 +33,6 @@ async def _inference_loop(  # noqa: C901, PLR0912, PLR0915
     shm_name: str,
     shm_lock: Lock,
 ) -> None:
-    # Local imports to avoid circular dependencies in workers
-    from db import get_async_db_session_ctx  # noqa: PLC0415
-    from entities.stream_data import InferenceData, StreamData  # noqa: PLC0415
-    from repositories import PipelineRepository  # noqa: PLC0415
-
     metrics_collector = MetricsService(shm_name, shm_lock)
 
     model_service = ModelService()
