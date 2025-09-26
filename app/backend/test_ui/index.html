@@ -1,0 +1,1291 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Pipeline Test UI</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+      /* --- Tiny Tailwind-like utilities (only what we use) --- */
+      *,
+      ::before,
+      ::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      :root {
+        --bg: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        --card: rgba(255, 255, 255, 0.8);
+        --text: #1e293b;
+        --muted: #64748b;
+        --border: rgba(148, 163, 184, 0.3);
+        --primary: #3b82f6;
+        --primary-fore: #ffffff;
+        --ok: #10b981;
+        --err: #ef4444;
+        --glass: rgba(255, 255, 255, 0.25);
+        --glass-border: rgba(255, 255, 255, 0.18);
+      }
+      .dark {
+        --bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        --card: rgba(15, 23, 42, 0.8);
+        --text: #f1f5f9;
+        --muted: #94a3b8;
+        --border: rgba(148, 163, 184, 0.2);
+        --primary: #60a5fa;
+        --primary-fore: #0f172a;
+        --ok: #34d399;
+        --err: #f87171;
+        --glass: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.1);
+      }
+      .flex {
+        display: flex;
+      }
+      .flex-col {
+        flex-direction: column;
+      }
+      .items-center {
+        align-items: center;
+      }
+      .justify-between {
+        justify-content: space-between;
+      }
+      .gap-2 {
+        gap: 0.5rem;
+      }
+      .gap-4 {
+        gap: 1rem;
+      }
+      .p-4 {
+        padding: 1rem;
+      }
+      .p-2 {
+        padding: 0.5rem;
+      }
+      .rounded {
+        border-radius: 0.375rem;
+      }
+      .rounded-lg {
+        border-radius: 0.5rem;
+      }
+      .border {
+        border: 1px solid var(--border);
+      }
+      .border-b {
+        border-bottom: 1px solid var(--border);
+      }
+      .text-sm {
+        font-size: 0.875rem;
+      }
+      .text-lg {
+        font-size: 1.125rem;
+      }
+      .font-bold {
+        font-weight: 700;
+      }
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        border: none;
+        background: linear-gradient(
+          135deg,
+          var(--primary) 0%,
+          color-mix(in srgb, var(--primary) 90%, #000) 100%
+        );
+        color: var(--primary-fore);
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.3);
+      }
+      .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 25px 0 rgba(59, 130, 246, 0.4);
+      }
+      .btn:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.3);
+      }
+      .btn[disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn-secondary {
+        background: linear-gradient(
+          135deg,
+          var(--glass) 0%,
+          rgba(255, 255, 255, 0.1) 100%
+        );
+        color: var(--text);
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(20px);
+      }
+      .btn-secondary:hover {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.3) 0%,
+          rgba(255, 255, 255, 0.15) 100%
+        );
+      }
+      .w-full {
+        width: 100%;
+      }
+      .max-w-screen-lg {
+        max-width: 64rem;
+      }
+      .mt-2 {
+        margin-top: 0.5rem;
+      }
+      .mt-4 {
+        margin-top: 1rem;
+      }
+      .bg-app {
+        background: var(--bg);
+        min-height: 100vh;
+      }
+      .card {
+        background: var(--card);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+      }
+      .text {
+        color: var(--text);
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .text-red {
+        color: var(--err);
+      }
+      .text-green {
+        color: var(--ok);
+      }
+      .grid {
+        display: grid;
+      }
+      .grid-cards {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      @media (min-width: 1024px) {
+        .grid-cards {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .relative {
+        position: relative;
+      }
+      .absolute {
+        position: absolute;
+      }
+      .top-2 {
+        top: 0.5rem;
+      }
+      .left-2 {
+        left: 0.5rem;
+      }
+      .right-2 {
+        right: 0.5rem;
+      }
+      .hidden {
+        display: none;
+      }
+      .input {
+        border: 1px solid var(--glass-border);
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        background: var(--glass);
+        backdrop-filter: blur(10px);
+        color: var(--text);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+      .select {
+        border: 1px solid var(--glass-border);
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        background: var(--glass);
+        backdrop-filter: blur(10px);
+        color: var(--text);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+      .link {
+        color: var(--primary);
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      .toast {
+        position: fixed;
+        bottom: 1.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--card);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        padding: 0.75rem 1.5rem;
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+      }
+      .toast {
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.2s ease,
+          transform 0.2s ease;
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+      }
+      .toast.show {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translate(-50%, 0);
+      }
+      .toast-success {
+        border-color: var(--ok);
+      }
+      .toast-error {
+        border-color: var(--err);
+      }
+      .toast-info {
+        border-color: var(--border);
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        height: 2rem;
+        padding: 0 0.75rem;
+        border-radius: 50px;
+        border: 1px solid var(--glass-border);
+        font-size: 0.75rem;
+        font-weight: 500;
+        backdrop-filter: blur(10px);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .chip-ok {
+        background: rgba(34, 197, 94, 0.12);
+        color: var(--ok);
+        border-color: rgba(34, 197, 94, 0.4);
+      }
+      .chip-error {
+        background: rgba(239, 68, 68, 0.12);
+        color: var(--err);
+        border-color: rgba(239, 68, 68, 0.4);
+      }
+      .chip-muted {
+        background: transparent;
+        color: var(--muted);
+      }
+      /* Camera-centric layout */
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        width: 100%;
+        max-width: 90rem;
+      }
+      @media (min-width: 1024px) {
+        .layout {
+          grid-template-columns: 1fr 360px;
+        }
+      }
+      @media (min-width: 1024px) {
+        .layout.collapsed {
+          grid-template-columns: 1fr;
+        }
+      }
+      .sidebar {
+        transition:
+          transform 0.25s ease,
+          opacity 0.25s ease;
+        will-change: transform, opacity;
+      }
+      .layout.collapsed .sidebar {
+        transform: translateX(110%);
+        opacity: 0;
+        pointer-events: none;
+      }
+      .main {
+        transition: all 0.25s ease;
+      }
+      .sidebar-card {
+        background: var(--card);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .sidebar-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+      }
+      .video-shell {
+        background: linear-gradient(
+          135deg,
+          var(--glass) 0%,
+          rgba(255, 255, 255, 0.05) 100%
+        );
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+      }
+      /* Mid toggle */
+      .mid-toggle {
+        position: absolute;
+        top: 50%;
+        right: -16px;
+        transform: translateY(-50%);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 1px solid var(--glass-border);
+        background: var(--card);
+        backdrop-filter: blur(20px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .mid-toggle:hover {
+        transform: translateY(-50%) scale(1.1);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+      }
+      .dark .mid-toggle {
+        background: rgba(15, 23, 42, 0.8);
+      }
+      /* Drag handle */
+      .sidebar-card {
+        position: relative;
+      }
+      .drag-handle {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        width: 28px;
+        height: 28px;
+        border-radius: 0.5rem;
+        border: 1px solid var(--glass-border);
+        background: var(--glass);
+        backdrop-filter: blur(10px);
+        color: var(--muted);
+        cursor: grab;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .drag-handle:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.05);
+      }
+      .drag-handle:active {
+        cursor: grabbing;
+      }
+      .dnd-ghost {
+        opacity: 0.6;
+      }
+      /* Video toolbar & spinner */
+      .toolbar {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 16px;
+        color: #fff;
+        z-index: 20;
+        pointer-events: auto;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      }
+      .toolbar.docked {
+        position: static;
+        top: auto;
+        right: auto;
+        margin-bottom: 0.5rem;
+        margin-left: auto;
+      }
+      .toolbar .btn {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.25);
+      }
+      .toolbar label {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+      }
+      .toolbar select {
+        background: rgba(0, 0, 0, 0.2);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 0.25rem;
+        border-radius: 0.25rem;
+      }
+      .spinner {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+      .spinner .ring {
+        width: 48px;
+        height: 48px;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      .capture-fab {
+        position: absolute;
+        bottom: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 20;
+      }
+      .capture-fab .btn {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        border-radius: 50px;
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+      .capture-fab .btn:hover {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 12px 35px rgba(239, 68, 68, 0.5);
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Project Dialog Styling */
+      .project-dialog {
+        border: none;
+        padding: 0;
+        background: transparent;
+        max-width: 480px;
+        width: 90vw;
+        border-radius: 24px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        margin: 0;
+      }
+
+      .project-dialog::backdrop {
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      .project-dialog-content {
+        background: var(--card);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        overflow: hidden;
+        animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .project-form {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .project-header {
+        padding: 2rem 2rem 1rem;
+        text-align: center;
+        border-bottom: 1px solid var(--glass-border);
+        background: linear-gradient(
+          135deg,
+          var(--glass) 0%,
+          rgba(255, 255, 255, 0.05) 100%
+        );
+      }
+
+      .project-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text);
+        margin: 0 0 0.5rem;
+        letter-spacing: -0.025em;
+      }
+
+      .project-subtitle {
+        font-size: 0.875rem;
+        color: var(--muted);
+        margin: 0;
+        font-weight: 400;
+      }
+
+      .project-body {
+        padding: 2rem;
+        flex: 1;
+      }
+
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .input-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text);
+        margin: 0;
+      }
+
+      .project-input {
+        padding: 1rem 1.25rem;
+        border: 2px solid var(--glass-border);
+        border-radius: 16px;
+        background: var(--glass);
+        backdrop-filter: blur(10px);
+        color: var(--text);
+        font-size: 1rem;
+        font-weight: 500;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        outline: none;
+      }
+
+      .project-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-1px);
+      }
+
+      .project-input::placeholder {
+        color: var(--muted);
+        font-weight: 400;
+      }
+
+      .input-hint {
+        font-size: 0.75rem;
+        color: var(--muted);
+        margin: 0;
+        line-height: 1.4;
+      }
+
+      .project-footer {
+        padding: 1.5rem 2rem 2rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        border-top: 1px solid var(--glass-border);
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.02) 0%,
+          var(--glass) 100%
+        );
+      }
+
+      .project-cancel {
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        border-radius: 12px;
+      }
+
+      .project-create {
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        border-radius: 12px;
+        background: linear-gradient(
+          135deg,
+          var(--primary) 0%,
+          color-mix(in srgb, var(--primary) 90%, #000) 100%
+        );
+        box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.3);
+      }
+
+      .project-create:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 25px 0 rgba(59, 130, 246, 0.4);
+      }
+
+      .project-create:active {
+        transform: translateY(0);
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px) scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      /* Dark mode adjustments */
+      .dark .project-dialog-content {
+        background: rgba(15, 23, 42, 0.9);
+      }
+
+      .dark .project-header {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.05) 0%,
+          rgba(0, 0, 0, 0.1) 100%
+        );
+      }
+
+      .dark .project-footer {
+        background: linear-gradient(
+          135deg,
+          rgba(0, 0, 0, 0.1) 0%,
+          rgba(255, 255, 255, 0.02) 100%
+        );
+      }
+
+      /* Source Dialog Styling */
+      .source-dialog {
+        border: none;
+        padding: 0;
+        background: transparent;
+        max-width: 600px;
+        width: 90vw;
+        border-radius: 24px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        margin: 0;
+      }
+
+      .source-dialog::backdrop {
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      .source-dialog-content {
+        background: var(--card);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        overflow: hidden;
+        animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .source-form {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .source-header {
+        padding: 2rem 2rem 1rem;
+        text-align: center;
+        border-bottom: 1px solid var(--glass-border);
+        background: linear-gradient(
+          135deg,
+          var(--glass) 0%,
+          rgba(255, 255, 255, 0.05) 100%
+        );
+      }
+
+      .source-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text);
+        margin: 0 0 0.5rem;
+        letter-spacing: -0.025em;
+      }
+
+      .source-subtitle {
+        font-size: 0.875rem;
+        color: var(--muted);
+        margin: 0;
+        font-weight: 400;
+      }
+
+      .source-body {
+        padding: 2rem;
+        flex: 1;
+      }
+
+      .input-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .camera-section {
+        margin-bottom: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .camera-controls {
+        display: flex;
+        gap: 1rem;
+        align-items: end;
+        margin-bottom: 1rem;
+      }
+
+      .camera-detect {
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        border-radius: 12px;
+        white-space: nowrap;
+      }
+
+      .camera-preview {
+        width: 100%;
+        max-width: 320px;
+        height: 240px;
+        object-fit: cover;
+        border-radius: 16px;
+        border: 2px solid var(--glass-border);
+        background: var(--glass);
+        display: block;
+        margin: 0 auto;
+      }
+
+      .path-section {
+        margin-bottom: 2rem;
+      }
+
+      .source-select {
+        padding: 1rem 1.25rem;
+        border: 2px solid var(--glass-border);
+        border-radius: 16px;
+        background: var(--glass);
+        backdrop-filter: blur(10px);
+        color: var(--text);
+        font-size: 1rem;
+        font-weight: 500;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        outline: none;
+      }
+
+      .source-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-1px);
+      }
+
+      .source-input {
+        padding: 1rem 1.25rem;
+        border: 2px solid var(--glass-border);
+        border-radius: 16px;
+        background: var(--glass);
+        backdrop-filter: blur(10px);
+        color: var(--text);
+        font-size: 1rem;
+        font-weight: 500;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        outline: none;
+      }
+
+      .source-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-1px);
+      }
+
+      .source-input::placeholder {
+        color: var(--muted);
+        font-weight: 400;
+      }
+
+      .source-footer {
+        padding: 1.5rem 2rem 2rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        border-top: 1px solid var(--glass-border);
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.02) 0%,
+          var(--glass) 100%
+        );
+      }
+
+      .source-cancel {
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        border-radius: 12px;
+      }
+
+      .source-create {
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        border-radius: 12px;
+        background: linear-gradient(
+          135deg,
+          var(--primary) 0%,
+          color-mix(in srgb, var(--primary) 90%, #000) 100%
+        );
+        box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.3);
+      }
+
+      .source-create:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 25px 0 rgba(59, 130, 246, 0.4);
+      }
+
+      .source-create:active {
+        transform: translateY(0);
+      }
+
+      .source-status {
+        font-size: 0.875rem;
+        color: var(--muted);
+        text-align: center;
+        padding: 0.5rem 0.75rem;
+        background: var(--glass);
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+        margin: 0 2rem 1rem;
+      }
+
+      /* Dark mode adjustments for source dialog */
+      .dark .source-dialog-content {
+        background: rgba(15, 23, 42, 0.9);
+      }
+
+      .dark .source-header {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.05) 0%,
+          rgba(0, 0, 0, 0.1) 100%
+        );
+      }
+
+      .dark .source-footer {
+        background: linear-gradient(
+          135deg,
+          rgba(0, 0, 0, 0.1) 0%,
+          rgba(255, 255, 255, 0.02) 100%
+        );
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 640px) {
+        .input-row {
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
+
+        .camera-controls {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .camera-detect {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-app text flex flex-col items-center p-4 gap-4">
+    <div class="w-full max-w-screen-lg flex justify-between items-center">
+      <div class="flex items-center gap-4">
+        <h1 class="text-lg font-bold">Geti Inspect Test Vibe UI</h1>
+        <div class="flex items-center gap-2 text-sm">
+          <button id="tabInference" class="btn btn-secondary text-sm">
+            Inference
+          </button>
+          <button id="tabDataset" class="btn btn-secondary text-sm">
+            Dataset
+          </button>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 text-sm muted">
+        <span>Backend:</span>
+        <span id="backendLabel" class="muted"></span>
+        <button id="sidebarToggle" class="btn btn-secondary text-sm">
+          Config
+        </button>
+        <button id="themeToggle" class="btn btn-secondary text-sm">Dark</button>
+      </div>
+    </div>
+
+    <div id="toast" class="toast text-sm hidden"></div>
+
+    <div id="layout" class="layout w-full">
+      <main
+        id="videoMain"
+        class="main video-shell p-4 relative flex flex-col gap-2 items-center"
+      >
+        <button
+          id="midSidebarToggle"
+          class="mid-toggle"
+          title="Toggle config"
+          aria-label="Toggle config"
+        >
+          ›
+        </button>
+        <div id="videoToolbar" class="toolbar docked">
+          <label id="autoConnectWrap"
+            ><input id="autoConnectToggle" type="checkbox" />
+            Auto-connect</label
+          >
+          <button id="fullscreenBtn" class="btn btn-secondary text-sm">
+            Fullscreen
+          </button>
+        </div>
+        <div
+          id="datasetToolbar"
+          class="flex gap-2 self-end mb-2 hidden"
+          data-tab="dataset"
+        >
+          <label class="text-sm font-medium muted">Camera:</label>
+          <select id="datasetCameras" class="select"></select>
+        </div>
+        <div id="statsOverlay" class="absolute top-2 left-2 text-sm muted">
+          0 kbps · 0 fps
+        </div>
+        <video
+          id="remoteVideo"
+          width="100%"
+          autoplay
+          muted
+          playsinline
+          class="border rounded"
+        ></video>
+        <video
+          id="datasetPreview"
+          width="100%"
+          autoplay
+          muted
+          playsinline
+          class="border rounded hidden"
+        ></video>
+        <div id="connectionBar" class="flex gap-2 mt-2">
+          <button id="connectBtn" class="btn">Connect</button>
+          <button id="disconnectBtn" class="btn btn-secondary">
+            Disconnect
+          </button>
+        </div>
+        <div id="captureBar" class="capture-fab hidden">
+          <button id="captureBtn" class="btn">Capture</button>
+        </div>
+      </main>
+
+      <aside
+        id="sidebar"
+        class="sidebar flex flex-col gap-4"
+        data-tab="inference"
+      >
+        <div
+          id="pipelineCard"
+          class="sidebar-card flex flex-col gap-2"
+          draggable="true"
+          data-key="pipeline"
+        >
+          <button class="drag-handle" title="Drag">≡</button>
+          <div class="flex flex-col gap-2">
+            <div class="flex gap-2">
+              <select id="projectSelect" class="select w-full"></select>
+              <button id="refreshProjectsBtn" class="btn">Latest</button>
+            </div>
+            <input
+              id="projectIdInput"
+              class="input w-full"
+              placeholder="project UUID (manual)"
+            />
+          </div>
+
+          <div class="flex gap-2 mt-2 items-center">
+            <button id="enableBtn" class="btn">Enable</button>
+            <button id="disableBtn" class="btn btn-secondary">Disable</button>
+            <span id="pipelineStatus" class="text-sm muted"></span>
+          </div>
+        </div>
+
+        <div
+          id="modelsCard"
+          class="sidebar-card flex flex-col gap-2"
+          draggable="true"
+          data-key="models"
+        >
+          <button class="drag-handle" title="Drag">≡</button>
+          <div class="flex justify-between items-center">
+            <span class="font-bold">Models</span>
+            <button id="refreshModelsBtn" class="btn btn-secondary text-sm">
+              Reload
+            </button>
+          </div>
+          <input id="modelsSearch" class="input" placeholder="Search models" />
+          <select id="modelsSelect" class="select w-full"></select>
+          <div class="flex justify-between items-center">
+            <button id="setModelBtn" class="btn mt-2">Set Active Model</button>
+            <span id="modelsUpdated" class="text-sm muted"></span>
+          </div>
+          <div id="modelsEmpty" class="muted text-sm hidden">No models</div>
+        </div>
+
+        <div
+          id="sourcesCard"
+          class="sidebar-card flex flex-col gap-2"
+          draggable="true"
+          data-key="sources"
+        >
+          <button class="drag-handle" title="Drag">≡</button>
+          <div class="flex justify-between items-center">
+            <span class="font-bold">Sources</span>
+            <div class="flex gap-2">
+              <button id="refreshSourcesBtn" class="btn btn-secondary text-sm">
+                Reload
+              </button>
+              <button id="addSourceBtn" class="btn btn-secondary text-sm">
+                Add
+              </button>
+            </div>
+          </div>
+          <input
+            id="sourcesSearch"
+            class="input"
+            placeholder="Search sources"
+          />
+          <select id="sourcesSelect" class="select w-full"></select>
+          <div class="flex justify-between items-center">
+            <button id="setSourceBtn" class="btn mt-2">
+              Set Active Source
+            </button>
+            <span id="sourcesUpdated" class="text-sm muted"></span>
+          </div>
+          <div id="sourcesEmpty" class="muted text-sm hidden">No sources</div>
+        </div>
+
+        <div
+          id="sinksCard"
+          class="sidebar-card flex flex-col gap-2"
+          draggable="true"
+          data-key="sinks"
+        >
+          <button class="drag-handle" title="Drag">≡</button>
+          <div class="flex justify-between items-center">
+            <span class="font-bold">Sinks</span>
+            <button id="refreshSinksBtn" class="btn btn-secondary text-sm">
+              Reload
+            </button>
+          </div>
+          <input id="sinksSearch" class="input" placeholder="Search sinks" />
+          <select id="sinksSelect" class="select w-full"></select>
+          <div class="flex justify-between items-center">
+            <button id="setSinkBtn" class="btn mt-2">Set Active Sink</button>
+            <span id="sinksUpdated" class="text-sm muted"></span>
+          </div>
+          <button id="useDefaultSinkBtn" class="btn btn-secondary text-sm">
+            Use default sink (./sink)
+          </button>
+          <div id="sinksEmpty" class="muted text-sm hidden">No sinks</div>
+        </div>
+      </aside>
+
+      <aside
+        id="sidebarDataset"
+        class="sidebar flex flex-col gap-4 hidden"
+        data-tab="dataset"
+      >
+        <div class="sidebar-card flex flex-col gap-2">
+          <div class="flex justify-between items-center">
+            <span class="font-bold">Dataset</span>
+            <span id="datasetCount" class="text-sm muted">0 images</span>
+          </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-medium">Project:</label>
+            <select id="datasetProjectSelect" class="select w-full">
+              <option value="">Select project...</option>
+            </select>
+            <button id="createProjectBtn" class="btn btn-secondary text-sm">
+              Create New Project
+            </button>
+          </div>
+          <div
+            id="datasetGrid"
+            class="grid"
+            style="
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 0.5rem;
+              max-height: 480px;
+              overflow: auto;
+            "
+          ></div>
+          <div class="flex items-center gap-2">
+            <select
+              id="trainModelSelect"
+              class="select"
+              style="min-width: 160px"
+            >
+              <option value="padim">PaDiM</option>
+              <option value="patchcore">PatchCore</option>
+            </select>
+            <button id="trainBtn" class="btn" disabled>Train</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Source creation dialog -->
+    <dialog id="sourceDialog" class="source-dialog">
+      <div class="source-dialog-content">
+        <form method="dialog" class="source-form">
+          <div class="source-header">
+            <h2 class="source-title">Add New Source</h2>
+            <p class="source-subtitle">
+              Configure your data source for anomaly detection
+            </p>
+          </div>
+          <div class="source-body">
+            <div class="input-row">
+              <div class="input-group">
+                <label for="srcTypeSel" class="input-label">Source Type</label>
+                <select id="srcTypeSel" class="source-select">
+                  <option value="webcam">Webcam</option>
+                  <option value="video_file">Video File</option>
+                  <option value="images_folder">Images Folder</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label for="srcName" class="input-label">Source Name</label>
+                <input
+                  required
+                  id="srcName"
+                  class="source-input"
+                  placeholder="Enter source name..."
+                />
+              </div>
+            </div>
+
+            <div id="camSection" class="camera-section">
+              <div class="camera-controls">
+                <button
+                  type="button"
+                  id="detectBtn"
+                  class="btn btn-secondary camera-detect"
+                >
+                  Detect Cameras
+                </button>
+                <select required id="camSelect" class="source-select">
+                  <option value="">Select camera...</option>
+                </select>
+              </div>
+              <video
+                id="camPreview"
+                width="320"
+                autoplay
+                muted
+                class="camera-preview hidden"
+              ></video>
+            </div>
+
+            <div id="pathSection" class="path-section hidden">
+              <div class="input-group">
+                <label for="srcPath" class="input-label"
+                  >File/Folder Path</label
+                >
+                <input
+                  id="srcPath"
+                  class="source-input"
+                  placeholder="Enter path to video file or images folder..."
+                />
+                <div class="input-hint">
+                  Provide the full path to your video file or images directory
+                </div>
+              </div>
+            </div>
+          </div>
+          <span id="srcDialogStatus" class="source-status"></span>
+          <div class="source-footer">
+            <button
+              type="button"
+              id="cancelSrcBtn"
+              class="btn btn-secondary source-cancel"
+            >
+              Cancel
+            </button>
+            <button id="createSrcBtn" type="submit" class="btn source-create">
+              Create Source
+            </button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- Project creation dialog -->
+    <dialog id="projectDialog" class="project-dialog">
+      <div class="project-dialog-content">
+        <form method="dialog" class="project-form">
+          <div class="project-header">
+            <h2 class="project-title">Create New Project</h2>
+            <p class="project-subtitle">Give your project a memorable name</p>
+          </div>
+          <div class="project-body">
+            <div class="input-group">
+              <label for="projectName" class="input-label">Project Name</label>
+              <input
+                id="projectName"
+                type="text"
+                class="project-input"
+                placeholder="Enter project name..."
+                required
+              />
+              <div class="input-hint">
+                Choose a descriptive name for your anomaly detection project
+              </div>
+            </div>
+          </div>
+          <div class="project-footer">
+            <button
+              type="button"
+              id="cancelProject"
+              class="btn btn-secondary project-cancel"
+            >
+              Cancel
+            </button>
+            <button type="submit" id="createProject" class="btn project-create">
+              Create Project
+            </button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <script type="module" src="ui.js"></script>
+    <script type="module" src="webrtc.js"></script>
+  </body>
+</html>
