@@ -7,7 +7,7 @@ from uuid import UUID
 from anomalib.deploy import ExportType
 from pydantic import BaseModel, Field, model_validator
 
-from models.base import BaseIDNameModel
+from pydantic_models.base import BaseIDNameModel
 
 
 class PredictionLabel(str, Enum):
@@ -39,8 +39,8 @@ class Model(BaseIDNameModel):
         "json_schema_extra": {
             "example": {
                 "id": "76e07d18-196e-4e33-bf98-ac1d35dca4cb",
-                "name": "YOLO-X for Vehicle Detection",
-                "format": "openvino_ir",
+                "name": "PatchCore",
+                "format": "openvino",
             }
         }
     }

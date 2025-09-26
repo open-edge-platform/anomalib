@@ -43,7 +43,6 @@ def set_sqlite_pragma(dbapi_connection: Connection, _: Any) -> None:
     cursor.close()
 
 
-# @asynccontextmanager
 async def get_async_db_session() -> AsyncGenerator[AsyncSession, Any]:
     """Get a database session.
 

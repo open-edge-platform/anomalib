@@ -6,7 +6,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from db.schema import MediaDB
-from models import Media
+from pydantic_models import Media
 from repositories.base import ProjectBaseRepository
 from repositories.mappers import MediaMapper
 

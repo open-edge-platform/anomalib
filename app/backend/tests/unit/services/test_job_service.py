@@ -1,13 +1,13 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from sqlalchemy.exc import IntegrityError
 
 from exceptions import DuplicateJobException, ResourceNotFoundException
-from models import JobStatus, JobType
+from pydantic_models import JobStatus, JobType
 from repositories import JobRepository
 from services import JobService
 
@@ -15,130 +15,171 @@ from services import JobService
 @pytest.fixture
 def fxt_job_repository():
     """Fixture for a mock job repository."""
-    return MagicMock(spec=JobRepository)
+    mock_repo = MagicMock(spec=JobRepository)
+    # Set up async methods to return coroutines
+    mock_repo.get_by_id = AsyncMock()
+    mock_repo.get_one = AsyncMock()
+    mock_repo.get_all = AsyncMock()
+    mock_repo.save = AsyncMock()
+    mock_repo.update = AsyncMock()
+    mock_repo.delete_by_id = AsyncMock()
+    mock_repo.get_pending_job_by_type = AsyncMock()
+    return mock_repo
 
 
-@pytest.fixture
-def fxt_job_service(fxt_db_session, fxt_job_repository):
-    """Fixture for JobService with mocked repository."""
-    service = JobService(fxt_db_session)
-    service.job_repository = fxt_job_repository
-    return service
+@pytest.fixture(autouse=True)
+def mock_db_context():
+    """Mock the database context for all tests."""
+    with patch("services.job_service.get_async_db_session_ctx") as mock_db_ctx:
+        mock_session = AsyncMock()
+        mock_db_ctx.return_value.__aenter__.return_value = mock_session
+        mock_db_ctx.return_value.__aexit__.return_value = None
+        yield mock_db_ctx
 
 
 class TestJobService:
-    def test_get_job_list(self, fxt_job_service, fxt_job_repository, fxt_job_list):
+    def test_get_job_list(self, fxt_job_repository, fxt_job_list):
         """Test getting job list."""
         fxt_job_repository.get_all.return_value = fxt_job_list.jobs
 
-        result = asyncio.run(fxt_job_service.get_job_list())
+        with patch("services.job_service.JobRepository") as mock_repo_class:
+            mock_repo_class.return_value = fxt_job_repository
+
+            result = asyncio.run(JobService.get_job_list())
 
         assert result == fxt_job_list
         fxt_job_repository.get_all.assert_called_once()
 
-    def test_get_job_by_id(self, fxt_job_service, fxt_job_repository, fxt_job):
-        """Test getting job by ID."""
-        fxt_job_repository.get_by_id.return_value = fxt_job
+    @pytest.mark.parametrize(
+        "job_exists,expected_result",
+        [
+            (True, "job_found"),
+            (False, None),
+        ],
+    )
+    def test_get_job_by_id(self, fxt_job_repository, fxt_job, job_exists, expected_result):
+        """Test getting job by ID with different scenarios."""
+        if job_exists:
+            fxt_job_repository.get_by_id.return_value = fxt_job
+            job_id = fxt_job.id
+        else:
+            fxt_job_repository.get_by_id.return_value = None
+            job_id = "non-existent-id"
 
-        result = asyncio.run(fxt_job_service.get_job_by_id(fxt_job.id))
+        with patch("services.job_service.JobRepository") as mock_repo_class:
+            mock_repo_class.return_value = fxt_job_repository
 
-        assert result == fxt_job
-        fxt_job_repository.get_by_id.assert_called_once_with(fxt_job.id)
+            result = asyncio.run(JobService.get_job_by_id(job_id))
 
-    def test_get_job_by_id_not_found(self, fxt_job_service, fxt_job_repository):
-        """Test getting job by ID when not found."""
-        fxt_job_repository.get_by_id.return_value = None
+        if job_exists:
+            assert result == fxt_job
+        else:
+            assert result is None
+        fxt_job_repository.get_by_id.assert_called_once_with(job_id)
 
-        result = asyncio.run(fxt_job_service.get_job_by_id("non-existent-id"))
+    @pytest.mark.parametrize(
+        "is_duplicate,save_side_effect,expected_exception,expected_message",
+        [
+            (False, None, None, "success"),
+            (True, None, DuplicateJobException, None),
+            (False, IntegrityError("", "", ""), ResourceNotFoundException, "project"),
+        ],
+    )
+    def test_submit_train_job(
+        self,
+        fxt_job_repository,
+        fxt_job_payload,
+        fxt_job,
+        is_duplicate,
+        save_side_effect,
+        expected_exception,
+        expected_message,
+    ):
+        """Test job submission with different scenarios."""
+        fxt_job_repository.is_job_duplicate.return_value = is_duplicate
+        if save_side_effect:
+            fxt_job_repository.save.side_effect = save_side_effect
+        else:
+            fxt_job_repository.save.return_value = fxt_job
 
-        assert result is None
-        fxt_job_repository.get_by_id.assert_called_once_with("non-existent-id")
+        with patch("services.job_service.JobRepository") as mock_repo_class:
+            mock_repo_class.return_value = fxt_job_repository
 
-    def test_submit_train_job_success(self, fxt_job_service, fxt_job_repository, fxt_job_payload, fxt_job):
-        """Test successful job submission."""
-        fxt_job_repository.is_job_duplicate.return_value = False
-        fxt_job_repository.save.return_value = fxt_job
+            if expected_exception:
+                with pytest.raises(expected_exception) as exc_info:
+                    asyncio.run(JobService().submit_train_job(fxt_job_payload))
 
-        result = asyncio.run(fxt_job_service.submit_train_job(fxt_job_payload))
+                if expected_message:
+                    assert expected_message in str(exc_info.value)
+            else:
+                result = asyncio.run(JobService().submit_train_job(fxt_job_payload))
+                assert result.job_id == fxt_job.id
 
-        assert result.job_id == fxt_job.id
         fxt_job_repository.is_job_duplicate.assert_called_once_with(
             project_id=fxt_job_payload.project_id, payload=fxt_job_payload
         )
-        fxt_job_repository.save.assert_called_once()
+        if not is_duplicate:
+            fxt_job_repository.save.assert_called_once()
 
-    def test_submit_train_job_duplicate(self, fxt_job_service, fxt_job_repository, fxt_job_payload):
-        """Test job submission with duplicate job."""
-        fxt_job_repository.is_job_duplicate.return_value = True
+    @pytest.mark.parametrize(
+        "job_exists,expected_result",
+        [
+            (True, "job_found"),
+            (False, None),
+        ],
+    )
+    def test_get_pending_train_job(self, fxt_job_repository, fxt_job, job_exists, expected_result):
+        """Test getting pending training job with different scenarios."""
+        if job_exists:
+            fxt_job_repository.get_pending_job_by_type.return_value = fxt_job
+        else:
+            fxt_job_repository.get_pending_job_by_type.return_value = None
 
-        with pytest.raises(DuplicateJobException):
-            asyncio.run(fxt_job_service.submit_train_job(fxt_job_payload))
+        with patch("services.job_service.JobRepository") as mock_repo_class:
+            mock_repo_class.return_value = fxt_job_repository
 
-        fxt_job_repository.is_job_duplicate.assert_called_once_with(
-            project_id=fxt_job_payload.project_id, payload=fxt_job_payload
-        )
+            result = asyncio.run(JobService.get_pending_train_job())
 
-    def test_submit_train_job_integrity_error(self, fxt_job_service, fxt_job_repository, fxt_job_payload):
-        """Test job submission with integrity error."""
-        fxt_job_repository.is_job_duplicate.return_value = False
-        fxt_job_repository.save.side_effect = IntegrityError("", "", "")
-
-        with pytest.raises(ResourceNotFoundException) as exc_info:
-            asyncio.run(fxt_job_service.submit_train_job(fxt_job_payload))
-
-        # Check that the exception was raised with correct parameters
-        assert str(fxt_job_payload.project_id) in str(exc_info.value)
-        assert "project" in str(exc_info.value)
-
-    def test_get_pending_train_job(self, fxt_job_service, fxt_job_repository, fxt_job):
-        """Test getting pending training job."""
-        fxt_job_repository.get_pending_job_by_type.return_value = fxt_job
-
-        result = asyncio.run(fxt_job_service.get_pending_train_job())
-
-        assert result == fxt_job
+        if job_exists:
+            assert result == fxt_job
+        else:
+            assert result is None
         fxt_job_repository.get_pending_job_by_type.assert_called_once_with(JobType.TRAINING)
 
-    def test_get_pending_train_job_none(self, fxt_job_service, fxt_job_repository):
-        """Test getting pending training job when none exists."""
-        fxt_job_repository.get_pending_job_by_type.return_value = None
-
-        result = asyncio.run(fxt_job_service.get_pending_train_job())
-
-        assert result is None
-        fxt_job_repository.get_pending_job_by_type.assert_called_once_with(JobType.TRAINING)
-
-    def test_update_job_status_success(self, fxt_job_service, fxt_job_repository, fxt_job):
-        """Test updating job status successfully."""
+    @pytest.mark.parametrize(
+        "has_message,message,expected_updates",
+        [
+            (True, "Test message", {"status": JobStatus.COMPLETED, "message": "Test message"}),
+            (False, None, {"status": JobStatus.COMPLETED}),
+        ],
+    )
+    def test_update_job_status_success(self, fxt_job_repository, fxt_job, has_message, message, expected_updates):
+        """Test updating job status successfully with and without message."""
+        # Create an updated job object that the repository would return
+        updated_job = fxt_job.model_copy(update=expected_updates)
         fxt_job_repository.get_by_id.return_value = fxt_job
-        fxt_job_repository.update.return_value = None
+        fxt_job_repository.update.return_value = updated_job
 
-        asyncio.run(fxt_job_service.update_job_status(fxt_job.id, JobStatus.COMPLETED, "Test message"))
+        with patch("services.job_service.JobRepository") as mock_repo_class:
+            mock_repo_class.return_value = fxt_job_repository
 
-        assert fxt_job.status == JobStatus.COMPLETED
-        assert fxt_job.message == "Test message"
+            if has_message:
+                asyncio.run(JobService.update_job_status(fxt_job.id, JobStatus.COMPLETED, message))
+            else:
+                asyncio.run(JobService.update_job_status(fxt_job.id, JobStatus.COMPLETED))
+
         fxt_job_repository.get_by_id.assert_called_once_with(fxt_job.id)
-        fxt_job_repository.update.assert_called_once_with(fxt_job)
+        fxt_job_repository.update.assert_called_once_with(fxt_job, expected_updates)
 
-    def test_update_job_status_without_message(self, fxt_job_service, fxt_job_repository, fxt_job):
-        """Test updating job status without message."""
-        fxt_job_repository.get_by_id.return_value = fxt_job
-        fxt_job_repository.update.return_value = None
-        original_message = fxt_job.message
-
-        asyncio.run(fxt_job_service.update_job_status(fxt_job.id, JobStatus.COMPLETED))
-
-        assert fxt_job.status == JobStatus.COMPLETED
-        assert fxt_job.message == original_message
-        fxt_job_repository.get_by_id.assert_called_once_with(fxt_job.id)
-        fxt_job_repository.update.assert_called_once_with(fxt_job)
-
-    def test_update_job_status_not_found(self, fxt_job_service, fxt_job_repository):
+    def test_update_job_status_not_found(self, fxt_job_repository):
         """Test updating job status when job not found."""
         fxt_job_repository.get_by_id.return_value = None
 
-        with pytest.raises(ResourceNotFoundException) as exc_info:
-            asyncio.run(fxt_job_service.update_job_status("non-existent-id", JobStatus.COMPLETED))
+        with patch("services.job_service.JobRepository") as mock_repo_class:
+            mock_repo_class.return_value = fxt_job_repository
+
+            with pytest.raises(ResourceNotFoundException) as exc_info:
+                asyncio.run(JobService.update_job_status("non-existent-id", JobStatus.COMPLETED))
 
         # Check that the exception was raised with correct parameters
         assert "non-existent-id" in str(exc_info.value)

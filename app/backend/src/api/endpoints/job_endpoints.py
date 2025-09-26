@@ -8,8 +8,8 @@ from fastapi import APIRouter, Body, Depends
 
 from api.dependencies import get_job_service
 from api.endpoints import API_PREFIX
-from models import JobList
-from models.job import JobSubmitted, TrainJobPayload
+from pydantic_models import JobList
+from pydantic_models.job import JobSubmitted, TrainJobPayload
 from services import JobService
 
 logger = logging.getLogger(__name__)

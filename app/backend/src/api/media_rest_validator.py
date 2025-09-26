@@ -6,7 +6,7 @@ import os
 from fastapi import File, Request, UploadFile
 
 from exceptions import InvalidMediaException, PayloadTooLargeException
-from models import ImageExtension
+from pydantic_models import ImageExtension
 
 
 class MediaRestValidator:
