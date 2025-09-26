@@ -58,7 +58,6 @@ class PipelineService:
             raise ResourceNotFoundException(resource_id=project_id, resource_name="pipeline")
         return pipeline
 
-    # @parent_process_only
     async def update_pipeline(self, project_id: UUID, partial_config: dict) -> Pipeline:
         """Update an existing pipeline."""
         async with get_async_db_session_ctx() as session:

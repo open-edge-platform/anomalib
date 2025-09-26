@@ -30,7 +30,6 @@ dev = [
     "pdbpp~=0.10",
     "flaky~=3.8",
     "testfixtures~=8.2",
-    "pytest-freezegun~=0.4",
     "httpx~=0.24",
 ]
 lint = [
@@ -63,6 +62,14 @@ lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+filterwarnings = [
+    "ignore:.*fork.*may lead to deadlocks.*:DeprecationWarning:multiprocessing",
+    "ignore:Please use.*python_multipart.*:PendingDeprecationWarning:starlette",
+    "ignore:Importing from timm.models.layers is deprecated.*:FutureWarning:timm",
+    # Suppress AsyncMock coroutine warnings - these are test artifacts from unittest.mock
+    # framework internals during garbage collection, not actual code issues
+    "ignore:coroutine.*was never awaited:RuntimeWarning:unittest.mock",
+]
 
 [tool.ruff.lint.per-file-ignores]
 "*test*.py" = ["S", "ANN", "D", "ARG", "PLR"]
