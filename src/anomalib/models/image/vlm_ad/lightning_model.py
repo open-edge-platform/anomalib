@@ -49,6 +49,12 @@ from .utils import ModelName, Prompt
 
 logger = logging.getLogger(__name__)
 
+ALLOWED_HF_MODELS: frozenset[ModelName] = frozenset({
+    ModelName.VICUNA_7B_HF,
+    ModelName.VICUNA_13B_HF,
+    ModelName.MISTRAL_7B_HF,
+})
+
 
 class VlmAd(AnomalibModule):
     """Vision Language Model (VLM) based anomaly detection model.
@@ -68,6 +74,8 @@ class VlmAd(AnomalibModule):
             authentication. Defaults to None.
         k_shot (int, optional): Number of reference normal images to use for
             few-shot learning. If 0, uses zero-shot approach. Defaults to 0.
+        hf_model_revision (str, optional): Model revision/branch/tag to use
+            when using HuggingFace models. Defaults to "main".
 
     Example:
         >>> from anomalib.models.image import VlmAd
@@ -82,6 +90,12 @@ class VlmAd(AnomalibModule):
         ...     api_key="YOUR_API_KEY",
         ...     k_shot=3
         ... )
+        >>> # Using a HuggingFace model with specific revision
+        >>> model = VlmAd(  # doctest: +SKIP
+        ...     model="llava-hf/llava-v1.6-vicuna-7b-hf",
+        ...     k_shot=5,
+        ...     hf_model_revision="c916e6cdcd760b4cecd1dd4907f84ac649f93b23"
+        ... )
 
     Raises:
         ValueError: If an unsupported VLM model is specified.
@@ -92,20 +106,39 @@ class VlmAd(AnomalibModule):
         model: ModelName | str = ModelName.LLAMA_OLLAMA,
         api_key: str | None = None,
         k_shot: int = 0,
+        hf_model_revision: str | None = None,
     ) -> None:
         super().__init__()
         self.k_shot = k_shot
         model = ModelName(model)
-        self.vlm_backend: Backend = self._setup_vlm_backend(model, api_key)
+        self.vlm_backend: Backend = self._setup_vlm_backend(model, api_key, hf_model_revision)
 
     @staticmethod
-    def _setup_vlm_backend(model_name: ModelName, api_key: str | None) -> Backend:
+    def _setup_vlm_backend(
+        model_name: ModelName,
+        api_key: str | None = None,
+        hf_model_revision: str | None = None,
+    ) -> Backend:
+        if hf_model_revision is not None and model_name not in ALLOWED_HF_MODELS:
+            warn_msg = (
+                "hf_model_revision is only applicable for HuggingFace models. "
+                f"Ignoring hf_model_revision for model {model_name.value}."
+            )
+            logger.warning(warn_msg)
+
         if model_name == ModelName.LLAMA_OLLAMA:
             return Ollama(model_name=model_name.value)
         if model_name == ModelName.GPT_4O_MINI:
             return ChatGPT(api_key=api_key, model_name=model_name.value)
-        if model_name in {ModelName.VICUNA_7B_HF, ModelName.VICUNA_13B_HF, ModelName.MISTRAL_7B_HF}:
-            return Huggingface(model_name=model_name.value)
+        if model_name in ALLOWED_HF_MODELS:
+            model_revision = hf_model_revision or "main"
+            if hf_model_revision is None:
+                warn_msg = (
+                    "Using default model revision 'main'. For reproducible results, "
+                    "specify a commit hash or tag via hf_model_revision argument."
+                )
+                logger.warning(warn_msg)
+            return Huggingface(model_name=model_name.value, model_revision=model_revision)
 
         msg = f"Unsupported VLM model: {model_name}"
         raise ValueError(msg)

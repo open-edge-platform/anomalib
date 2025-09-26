@@ -23,16 +23,28 @@ Example:
     ... )  # doctest: +SKIP
 """
 
+from typing import TYPE_CHECKING
+
 import numpy as np
+from lightning.pytorch.utilities import rank_zero_only
+from lightning_utilities.core.imports import module_available
 from matplotlib.figure import Figure
 
-try:
-    from lightning.pytorch.loggers.comet import CometLogger
-except ModuleNotFoundError:
-    print("To use comet logger install it using `pip install comet-ml`")
-from lightning.pytorch.utilities import rank_zero_only
-
 from .base import ImageLoggerBase
+
+if TYPE_CHECKING or module_available("comet_ml"):
+    from lightning.pytorch.loggers.comet import CometLogger
+else:
+
+    class CometLogger:
+        """Dummy CometLogger class for when comet-ml is not installed."""
+
+        def __init__(self, *args, **kwargs) -> None:  # noqa: ARG002
+            msg = (
+                "comet-ml is not installed. Please install it using: "
+                "`uv pip install comet-ml` or `uv pip install anomalib[loggers]`"
+            )
+            raise ImportError(msg)
 
 
 class AnomalibCometLogger(ImageLoggerBase, CometLogger):

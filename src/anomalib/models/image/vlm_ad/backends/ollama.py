@@ -36,6 +36,7 @@ See Also:
 
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from lightning_utilities.core.imports import module_available
 
@@ -43,10 +44,22 @@ from anomalib.models.image.vlm_ad.utils import Prompt
 
 from .base import Backend
 
-if module_available("ollama"):
+if TYPE_CHECKING or module_available("ollama"):
     from ollama import Image, chat
 else:
+
+    class Image:
+        """Dummy Image class for when ollama is not installed."""
+
+        def __init__(self, *args, **kwargs) -> None:  # noqa: ARG002
+            msg = (
+                "ollama is not installed. Please install it using: "
+                "`uv pip install ollama` or `uv pip install anomalib[vlm]`"
+            )
+            raise ImportError(msg)
+
     chat = None
+
 
 logger = logging.getLogger(__name__)
 
@@ -99,6 +112,9 @@ class Ollama(Backend):
 
         Args:
             image (str | Path): Path to the reference image file
+
+        Raises:
+            ImportError: If Ollama package is not installed
         """
         self._ref_images_encoded.append(Image(value=image))
 
@@ -140,8 +156,11 @@ class Ollama(Backend):
         Raises:
             ImportError: If Ollama package is not installed
         """
-        if not chat:
-            msg = "Ollama is not installed. Please install it using `pip install ollama`."
+        if chat is None:
+            msg = (
+                "Ollama is not installed. Please install it with: "
+                "'pip install anomalib[vlm]' or 'uv pip install anomalib[vlm]'"
+            )
             raise ImportError(msg)
         image_encoded = Image(value=image)
         messages = []

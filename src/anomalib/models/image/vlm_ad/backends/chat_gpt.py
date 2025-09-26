@@ -36,6 +36,12 @@ from typing import TYPE_CHECKING
 
 from lightning_utilities.core.imports import module_available
 
+# Optional import for dotenv
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None
+
 from anomalib.models.image.vlm_ad.utils import Prompt
 
 from .base import Backend
@@ -107,7 +113,10 @@ class ChatGPT(Backend):
             ImportError: If OpenAI package is not installed
         """
         if OpenAI is None:
-            msg = "OpenAI is not installed. Please install it to use ChatGPT backend."
+            msg = (
+                "OpenAI is not installed. Please install it with: "
+                "'pip install anomalib[vlm]' or 'uv pip install anomalib[vlm]'"
+            )
             raise ImportError(msg)
         if self._client is None:
             self._client = OpenAI(api_key=self.api_key)
@@ -206,7 +215,7 @@ class ChatGPT(Backend):
         Attempts to get the API key in the following order:
         1. From the provided argument
         2. From environment variable ``OPENAI_API_KEY``
-        3. From ``.env`` file
+        3. From ``.env`` file (if dotenv is available)
 
         Args:
             api_key (str | None, optional): API key provided directly. Defaults to
@@ -219,13 +228,18 @@ class ChatGPT(Backend):
             ValueError: If no API key is found
         """
         if api_key is None:
-            load_dotenv()
+            # Try to load from .env file if dotenv is available
+            if load_dotenv is not None:
+                load_dotenv()
             api_key = os.getenv("OPENAI_API_KEY")
         if api_key is None:
             msg = (
                 f"OpenAI API key must be provided to use {self.model_name}."
                 " Please provide the API key in the constructor, or set the OPENAI_API_KEY environment variable"
-                " or in a `.env` file."
             )
+            if load_dotenv is not None:
+                msg += " or in a `.env` file."
+            else:
+                msg += " (Note: .env file support requires 'python-dotenv' package)"
             raise ValueError(msg)
         return api_key

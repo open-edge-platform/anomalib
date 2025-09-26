@@ -26,15 +26,28 @@ from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 from lightning.fabric.utilities.types import _PATH
-from lightning.pytorch.loggers.wandb import WandbLogger
 from lightning.pytorch.utilities import rank_zero_only
 from lightning_utilities.core.imports import module_available
 from matplotlib.figure import Figure
 
 from .base import ImageLoggerBase
 
-if module_available("wandb"):
+if TYPE_CHECKING or module_available("wandb"):
     import wandb
+    from lightning.pytorch.loggers.wandb import WandbLogger
+else:
+    wandb = None
+
+    class WandbLogger:
+        """Dummy WandbLogger class for when wandb is not installed."""
+
+        def __init__(self, *args, **kwargs) -> None:  # noqa: ARG002
+            msg = (
+                "wandb is not installed. Please install it using: "
+                "`uv pip install wandb` or `uv pip install anomalib[loggers]`"
+            )
+            raise ImportError(msg)
+
 
 if TYPE_CHECKING:
     from wandb.sdk.lib import RunDisabled
@@ -128,7 +141,10 @@ class AnomalibWandbLogger(ImageLoggerBase, WandbLogger):
             checkpoint_name=checkpoint_name,
             **kwargs,
         )
-        self.image_list: list[wandb.Image] = []  # Cache images
+        if wandb is not None:
+            self.image_list: list[wandb.Image] = []  # Cache images
+        else:
+            self.image_list = []
 
     @rank_zero_only
     def add_image(self, image: np.ndarray | Figure, name: str | None = None, **kwargs) -> None:
@@ -143,6 +159,13 @@ class AnomalibWandbLogger(ImageLoggerBase, WandbLogger):
         """
         del kwargs  # Unused argument.
 
+        if wandb is None:
+            msg = (
+                "Weights & Biases is not installed. "
+                "Please install it using: `uv pip install wandb` or `uv pip install anomalib[loggers]`"
+            )
+            raise ImportError(msg)
+
         image = wandb.Image(image, caption=name)
         self.image_list.append(image)
 
@@ -155,7 +178,6 @@ class AnomalibWandbLogger(ImageLoggerBase, WandbLogger):
             to the W&B server.
         """
         super().save()
-        if len(self.image_list) > 1:
+        if wandb is not None and len(self.image_list) > 1:
             wandb.log({"Predictions": self.image_list})
-            self.image_list = []
             self.image_list = []

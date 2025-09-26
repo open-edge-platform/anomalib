@@ -39,14 +39,11 @@ if TYPE_CHECKING or module_available("av"):
 else:
 
     class VideoClips:
-        """Dummy class for VideoClips."""
+        """Dummy VideoClips class for when av is not installed."""
 
-        def __init__(self, *args, **kwargs) -> None:
-            """Raise ImportError."""
-            del args, kwargs
+        def __init__(self, *args, **kwargs) -> None:  # noqa: ARG002
             msg = (
-                "PyAV is not installed, but is required for video processing. "
-                "Please install it with: pip install anomalib[video]"
+                "av is not installed. Please install it using: `uv pip install av` or `uv pip install anomalib[video]`"
             )
             raise ImportError(msg)
 

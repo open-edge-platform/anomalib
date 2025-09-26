@@ -24,13 +24,29 @@ Example:
 """
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 from lightning.pytorch.loggers.tensorboard import TensorBoardLogger
 from lightning.pytorch.utilities import rank_zero_only
+from lightning_utilities.core.imports import module_available
 from matplotlib.figure import Figure
 
 from .base import ImageLoggerBase
+
+if TYPE_CHECKING or module_available("tensorboard"):
+    from lightning.pytorch.loggers.tensorboard import TensorBoardLogger
+else:
+
+    class TensorBoardLogger:
+        """Dummy TensorBoardLogger class for when tensorboard is not installed."""
+
+        def __init__(self, *args, **kwargs) -> None:  # noqa: ARG002
+            msg = (
+                "tensorboard is not installed. Please install it using: "
+                "`uv pip install tensorboard` or `uv pip install anomalib[loggers]`"
+            )
+            raise ImportError(msg)
 
 
 class AnomalibTensorBoardLogger(ImageLoggerBase, TensorBoardLogger):
