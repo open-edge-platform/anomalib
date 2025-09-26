@@ -36,12 +36,6 @@ from typing import TYPE_CHECKING
 
 from lightning_utilities.core.imports import module_available
 
-# Optional import for dotenv
-try:
-    from dotenv import load_dotenv
-except ImportError:
-    load_dotenv = None
-
 from anomalib.models.image.vlm_ad.utils import Prompt
 
 from .base import Backend

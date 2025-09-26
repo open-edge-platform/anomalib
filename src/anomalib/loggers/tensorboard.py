@@ -27,7 +27,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
-from lightning.pytorch.loggers.tensorboard import TensorBoardLogger
 from lightning.pytorch.utilities import rank_zero_only
 from lightning_utilities.core.imports import module_available
 from matplotlib.figure import Figure
