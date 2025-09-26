@@ -13,8 +13,7 @@ from api.dependencies import get_pipeline_service
 from main import app
 from pydantic_models.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, TimeWindow
 from pydantic_models.pipeline import Pipeline, PipelineStatus
-from services import PipelineService, ResourceNotFoundError
-from services.exceptions import ResourceType
+from services import PipelineService
 
 
 @pytest.fixture
