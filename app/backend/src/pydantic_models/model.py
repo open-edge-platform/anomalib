@@ -39,7 +39,7 @@ class Model(BaseIDNameModel):
         "json_schema_extra": {
             "example": {
                 "id": "76e07d18-196e-4e33-bf98-ac1d35dca4cb",
-                "name": "YOLO-X for Vehicle Detection",
+                "name": "PatchCore",
                 "format": "openvino",
             }
         }
