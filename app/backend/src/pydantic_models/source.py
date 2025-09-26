@@ -15,6 +15,7 @@ IP_CAMERA_PASSWORD = "IP_CAMERA_PASSWORD"  # noqa: S105
 
 
 class SourceType(StrEnum):
+    # TODO: remove or refactor "DISCONNECTED" into separate enums if needed
     DISCONNECTED = "disconnected"
     WEBCAM = "webcam"
     IP_CAMERA = "ip_camera"
