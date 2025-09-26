@@ -9,7 +9,7 @@ from fastapi import status
 
 from api.dependencies import get_model_service
 from main import app
-from models import Model, ModelList
+from pydantic_models import Model, ModelList
 from services import ModelService
 
 

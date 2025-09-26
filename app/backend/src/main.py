@@ -12,12 +12,17 @@ import uvicorn
 from fastapi import FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse, Response
 
 from api.endpoints.job_endpoints import job_router
 from api.endpoints.media_endpoints import media_router
 from api.endpoints.model_endpoints import model_router
+from api.endpoints.pipeline_endpoints import router as pipeline_router
 from api.endpoints.project_endpoints import project_router
+from api.endpoints.sink_endpoints import router as sink_router
+from api.endpoints.source_endpoints import router as source_router
+from api.endpoints.webrtc import router as webrtc_router
 from core.lifecycle import lifespan
 from exceptions import GetiBaseException
 
@@ -29,10 +34,27 @@ app = FastAPI(
     redoc_url=None,
     docs_url=None,
 )
+
+# TODO: check if middleware is required
+# Enable CORS for local test UI
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:9000",
+        "http://127.0.0.1:9000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(project_router)
 app.include_router(job_router)
 app.include_router(media_router)
 app.include_router(model_router)
+app.include_router(pipeline_router)
+app.include_router(source_router)
+app.include_router(sink_router)
+app.include_router(webrtc_router)
 
 
 @app.exception_handler(GetiBaseException)
@@ -148,5 +170,5 @@ async def pydantic_validation_exception_handler(request: Request, exc: pydantic.
 
 
 if __name__ == "__main__":
-    uvicorn_port = int(os.environ.get("HTTP_SERVER_PORT", "7860"))
-    uvicorn.run("main:app", host="0.0.0.0", port=uvicorn_port)  # noqa: S104
+    uvicorn_port = int(os.environ.get("HTTP_SERVER_PORT", "8000"))
+    uvicorn.run("main:app", loop="uvloop", host="0.0.0.0", port=uvicorn_port, log_level="debug")  # noqa: S104

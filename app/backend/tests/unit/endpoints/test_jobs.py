@@ -7,7 +7,7 @@ from fastapi import status
 
 from api.dependencies import get_job_service
 from main import app
-from models import JobList
+from pydantic_models import JobList
 from services import JobService
 
 

@@ -2,40 +2,49 @@
 name = "geti-inspect"
 version = "1.0.0"
 description = "Geti inspect server"
-requires-python = ">=3.10, <=3.13"
+requires-python = ">=3.13"
 
 dependencies = [
-  "fastapi[standard]~=0.116",
-  "jsonschema>=4.18.0a10",
-  "uvicorn~=0.17",
-  "sqlalchemy[asyncio]~=2.0",
-  "aiosqlite~=0.21",
-  "psutil~=7.0.0",
-  "alembic~=1.16.4",
-  "aiofiles==24.1.0",
-  "openvino==2025.2.0",
-  "pydantic-settings~=2.10.1",
-  "aiortc~=1.13.0",
-  "anomalib[full]",
-  "torchmetrics>=1.8.2",
-  "opencv-python-headless~=4.12"
+    "fastapi[standard]~=0.116",
+    "jsonschema>=4.18.0a10",
+    "uvicorn~=0.17",
+    "sqlalchemy[asyncio]~=2.0",
+    "aiosqlite~=0.21",
+    "psutil~=7.0.0",
+    "alembic~=1.16.4",
+    "aiofiles==24.1.0",
+    "openvino==2025.2.0",
+    "pydantic-settings~=2.10.1",
+    "aiortc~=1.13.0",
+    "anomalib[full]",
+    "torchmetrics>=1.8.2",
+    "opencv-python-headless~=4.12",
+    "watchdog==6.0.0",
+    "uvloop==0.21.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest~=8.3",
+    "pre-commit~=4.1",
+    "pdbpp~=0.10",
+    "flaky~=3.8",
+    "testfixtures~=8.2",
+    "httpx~=0.24",
+]
+lint = [
+    "ruff~=0.11.2",
+    "mypy~=1.17",
+    "types-requests~=2.32.4",
+]
+
+[project.optional-dependencies]
+mqtt = [
+    "paho-mqtt~=2.1.0",
 ]
 
 [tool.uv.sources]
 anomalib = { path = "../../", editable = true }
-
-[dependency-groups]
-dev = [
-  "pytest~=8.3",
-  "ruff~=0.11.2",
-  "pre-commit~=4.1",
-  "mypy~=1.15",
-  "pdbpp~=0.10",
-  "flaky~=3.8",
-  "testfixtures~=8.2",
-  "pytest-freezegun~=0.4",
-  "httpx~=0.24",
-]
 
 [tool.ruff]
 target-version = "py310"
@@ -53,6 +62,14 @@ lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+filterwarnings = [
+    "ignore:.*fork.*may lead to deadlocks.*:DeprecationWarning:multiprocessing",
+    "ignore:Please use.*python_multipart.*:PendingDeprecationWarning:starlette",
+    "ignore:Importing from timm.models.layers is deprecated.*:FutureWarning:timm",
+    # Suppress AsyncMock coroutine warnings - these are test artifacts from unittest.mock
+    # framework internals during garbage collection, not actual code issues
+    "ignore:coroutine.*was never awaited:RuntimeWarning:unittest.mock",
+]
 
 [tool.ruff.lint.per-file-ignores]
 "*test*.py" = ["S", "ANN", "D", "ARG", "PLR"]

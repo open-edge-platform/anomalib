@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from models.base import BaseIDModel
+from pydantic_models.base import BaseIDModel
 
 
 class Subset(StrEnum):

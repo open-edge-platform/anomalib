@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from db.schema import JobDB
-from models import Job
+from pydantic_models import Job
 from repositories.mappers.base_mapper_interface import IBaseMapper
 
 

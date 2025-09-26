@@ -7,7 +7,7 @@ import pytest
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
-from models import (
+from pydantic_models import (
     Job,
     JobList,
     JobStatus,
@@ -21,7 +21,7 @@ from models import (
     Project,
     ProjectList,
 )
-from models.job import TrainJobPayload
+from pydantic_models.job import TrainJobPayload
 
 
 @pytest.fixture

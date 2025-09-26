@@ -3,24 +3,32 @@
 
 from uuid import UUID
 
-from sqlalchemy.ext.asyncio.session import AsyncSession
-
-from models import Project, ProjectList
+from db import get_async_db_session_ctx
+from pydantic_models import Project, ProjectList
 from repositories import ProjectRepository
 
 
 class ProjectService:
-    def __init__(self, db_session: AsyncSession):
-        self.project_repository = ProjectRepository(db_session)
+    @staticmethod
+    async def get_project_list() -> ProjectList:
+        async with get_async_db_session_ctx() as session:
+            repo = ProjectRepository(session)
+            return ProjectList(projects=await repo.get_all())
 
-    async def get_project_list(self) -> ProjectList:
-        return ProjectList(projects=await self.project_repository.get_all())
+    @staticmethod
+    async def get_project_by_id(project_id: UUID) -> Project | None:
+        async with get_async_db_session_ctx() as session:
+            repo = ProjectRepository(session)
+            return await repo.get_by_id(project_id)
 
-    async def get_project_by_id(self, project_id: UUID) -> Project | None:
-        return await self.project_repository.get_by_id(project_id)
+    @staticmethod
+    async def create_project(project: Project) -> Project:
+        async with get_async_db_session_ctx() as session:
+            repo = ProjectRepository(session)
+            return await repo.save(project)
 
-    async def create_project(self, project: Project) -> Project:
-        return await self.project_repository.save(project)
-
-    async def delete_project(self, project_id: UUID) -> None:
-        await self.project_repository.delete_by_id(project_id)
+    @staticmethod
+    async def delete_project(project_id: UUID) -> None:
+        async with get_async_db_session_ctx() as session:
+            repo = ProjectRepository(session)
+            await repo.delete_by_id(project_id)

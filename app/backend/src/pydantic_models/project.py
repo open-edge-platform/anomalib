@@ -5,7 +5,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from models.base import BaseIDNameModel
+from pydantic_models.base import BaseIDNameModel
 
 
 class Project(BaseIDNameModel):

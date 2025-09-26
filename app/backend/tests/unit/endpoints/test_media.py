@@ -9,7 +9,7 @@ from fastapi import status
 
 from api.dependencies import get_media_service
 from main import app
-from models import Media, MediaList
+from pydantic_models import Media, MediaList
 from services import MediaService
 
 

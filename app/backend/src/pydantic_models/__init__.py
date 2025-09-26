@@ -4,9 +4,14 @@
 from .job import Job, JobList, JobStatus, JobType
 from .media import ImageExtension, Media, MediaList
 from .model import Model, ModelList, PredictionLabel, PredictionResponse
+from .pipeline import Pipeline, PipelineStatus
 from .project import Project, ProjectList
+from .sink import DisconnectedSinkConfig, OutputFormat, Sink, SinkType
+from .source import DisconnectedSourceConfig, Source, SourceType
 
 __all__ = [
+    "DisconnectedSinkConfig",
+    "DisconnectedSourceConfig",
     "ImageExtension",
     "Job",
     "JobList",
@@ -16,8 +21,15 @@ __all__ = [
     "MediaList",
     "Model",
     "ModelList",
+    "OutputFormat",
+    "Pipeline",
+    "PipelineStatus",
     "PredictionLabel",
     "PredictionResponse",
     "Project",
     "ProjectList",
+    "Sink",
+    "SinkType",
+    "Source",
+    "SourceType",
 ]

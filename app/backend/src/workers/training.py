@@ -43,16 +43,10 @@ async def _train_loop(stop_event: EventClass) -> None:
         task.cancel()
 
 
-def training_routine(stop_event: EventClass, cleanup: bool = True) -> None:
+def training_routine(stop_event: EventClass) -> None:
     """Entry point for the training worker process."""
     suppress_child_shutdown_signals()
     try:
         asyncio.run(_train_loop(stop_event))
     finally:
-        if cleanup:
-            _cleanup_resources()
         logger.info("Stopped training worker")
-
-
-def _cleanup_resources() -> None:
-    """Clean up resources when the worker shuts down."""

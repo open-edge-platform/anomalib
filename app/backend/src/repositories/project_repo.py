@@ -4,8 +4,8 @@ from collections.abc import Callable
 
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
-from db.schema import ProjectDB
-from models import Project
+from db.schema import PipelineDB, ProjectDB
+from pydantic_models import Project
 from repositories.base import BaseRepository
 from repositories.mappers import ProjectMapper
 
@@ -24,3 +24,12 @@ class ProjectRepository(BaseRepository):
 
     async def get_by_name(self, name: str) -> list[Project]:
         return await self.get_all(extra_filters={"name": name})
+
+    async def save(self, project: Project) -> Project:
+        project_schema: ProjectDB = self.to_schema(project)
+        project_schema.pipeline = PipelineDB(
+            project_id=project_schema.id,
+        )
+        self.db.add(project_schema)
+        await self.db.commit()
+        return project

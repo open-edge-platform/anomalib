@@ -5,21 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from models import JobStatus
+from pydantic_models import JobStatus
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
-from services import JobService, ModelService, TrainingService
-
-
-@pytest.fixture
-def fxt_job_service():
-    """Fixture for a mock job service."""
-    return MagicMock(spec=JobService)
-
-
-@pytest.fixture
-def fxt_model_service():
-    """Fixture for a mock model service."""
-    return MagicMock(spec=ModelService)
+from services import TrainingService
 
 
 @pytest.fixture
@@ -32,20 +20,6 @@ def fxt_model_binary_repo():
 def fxt_image_binary_repo():
     """Fixture for a mock image binary repository."""
     return MagicMock(spec=ImageBinaryRepository)
-
-
-@pytest.fixture
-def fxt_mock_session():
-    """Fixture for a mock database session."""
-    return AsyncMock()
-
-
-@pytest.fixture
-def fxt_mock_session_ctx(fxt_mock_session):
-    """Fixture for a mock database session context manager."""
-    with patch("services.training_service.get_async_db_session_ctx") as mock_session_ctx:
-        mock_session_ctx.return_value.__aenter__.return_value = fxt_mock_session
-        yield mock_session_ctx
 
 
 @pytest.fixture
@@ -152,45 +126,52 @@ class TestTrainingService:
             result = asyncio.run(TrainingService.train_pending_job())
 
             assert result == fxt_model
-            fxt_mock_job_service.update_job_status.assert_called_once_with(
+            # Should be called twice: RUNNING then COMPLETED
+            assert fxt_mock_job_service.update_job_status.call_count == 2
+            fxt_mock_job_service.update_job_status.assert_any_call(
+                job_id=fxt_job.id, status=JobStatus.RUNNING, message="Training started"
+            )
+            fxt_mock_job_service.update_job_status.assert_any_call(
                 job_id=fxt_job.id, status=JobStatus.COMPLETED, message="Training completed successfully"
             )
             fxt_mock_model_service.create_model.assert_called_once()
 
-    def test_train_pending_job_training_fails(
-        self, fxt_job, fxt_mock_job_service_class, fxt_mock_model_service_class, fxt_mock_job_service
+    @pytest.mark.parametrize(
+        "exception,expected_message",
+        [
+            (Exception("Training failed"), "Training failed"),
+            (ValueError("Training failed - model is None"), "Training failed - model is None"),
+        ],
+    )
+    def test_train_pending_job_training_failures(
+        self,
+        fxt_job,
+        fxt_mock_job_service_class,
+        fxt_mock_model_service_class,
+        fxt_mock_job_service,
+        exception,
+        expected_message,
     ):
-        """Test training failure handling."""
+        """Test training failure handling with different failure scenarios."""
         fxt_job.payload = {"model_name": "padim"}
         fxt_mock_job_service.get_pending_train_job.return_value = fxt_job
 
         with patch("services.training_service.asyncio.to_thread") as mock_to_thread:
-            mock_to_thread.side_effect = Exception("Training failed")
+            if isinstance(exception, ValueError) and "model is None" in str(exception):
+                mock_to_thread.return_value = None
+            else:
+                mock_to_thread.side_effect = exception
 
-            with pytest.raises(Exception, match="Training failed"):
+            with pytest.raises(type(exception), match=expected_message):
                 asyncio.run(TrainingService.train_pending_job())
 
-            fxt_mock_job_service.update_job_status.assert_called_once_with(
-                job_id=fxt_job.id, status=JobStatus.FAILED, message="Failed with exception: Training failed"
+            # Should be called twice: RUNNING then FAILED
+            assert fxt_mock_job_service.update_job_status.call_count == 2
+            fxt_mock_job_service.update_job_status.assert_any_call(
+                job_id=fxt_job.id, status=JobStatus.RUNNING, message="Training started"
             )
-
-    def test_train_pending_job_training_returns_none(
-        self, fxt_job, fxt_mock_job_service_class, fxt_mock_model_service_class, fxt_mock_job_service
-    ):
-        """Test training when model training returns None."""
-        fxt_job.payload = {"model_name": "padim"}
-        fxt_mock_job_service.get_pending_train_job.return_value = fxt_job
-
-        with patch("services.training_service.asyncio.to_thread") as mock_to_thread:
-            mock_to_thread.return_value = None
-
-            with pytest.raises(ValueError, match="Training failed - model is None"):
-                asyncio.run(TrainingService.train_pending_job())
-
-            fxt_mock_job_service.update_job_status.assert_called_once_with(
-                job_id=fxt_job.id,
-                status=JobStatus.FAILED,
-                message="Failed with exception: Training failed - model is None",
+            fxt_mock_job_service.update_job_status.assert_any_call(
+                job_id=fxt_job.id, status=JobStatus.FAILED, message=f"Failed with exception: {expected_message}"
             )
 
     def test_train_pending_job_cleanup_on_failure(
@@ -226,7 +207,7 @@ class TestTrainingService:
             assert call_args[1]["project_id"] == fxt_job.project_id
 
     @pytest.mark.parametrize("is_darwin,expected_workers", [(True, 0), (False, 8)])
-    def test_train_model_platform_specific_workers(
+    def test_train_model_success(
         self,
         fxt_model,
         fxt_model_binary_repo,
@@ -236,7 +217,7 @@ class TestTrainingService:
         is_darwin,
         expected_workers,
     ):
-        """Test model training with platform-specific worker configuration."""
+        """Test successful model training with platform-specific worker configuration."""
         # Setup platform mock
         with patch("services.training_service.is_platform_darwin") as mock_is_darwin:
             mock_is_darwin.return_value = is_darwin
@@ -258,32 +239,10 @@ class TestTrainingService:
             call_kwargs = fxt_mock_anomalib_components["folder_class"].call_args[1]
             assert call_kwargs["num_workers"] == expected_workers
 
-    def test_train_model_success(
-        self,
-        fxt_model,
-        fxt_model_binary_repo,
-        fxt_image_binary_repo,
-        fxt_mock_anomalib_components,
-        fxt_mock_binary_repos,
-    ):
-        """Test successful model training."""
-        # Setup binary repo paths
-        fxt_image_binary_repo.project_folder_path = "/path/to/images"
-        fxt_model_binary_repo.model_folder_path = "/path/to/model"
-
-        # Call the method
-        result = TrainingService._train_model(fxt_model)
-
-        # Verify the result
-        assert result == fxt_model
-        assert fxt_model.is_ready is True
-        assert fxt_model.export_path == "/path/to/model"
-
-        # Verify all components were called correctly
-        fxt_mock_anomalib_components["folder_class"].assert_called_once()
-        fxt_mock_anomalib_components["get_model"].assert_called_once_with(model=fxt_model.name)
-        fxt_mock_anomalib_components["engine_class"].assert_called_once_with(default_root_dir="/path/to/model")
-        fxt_mock_anomalib_components["engine"].train.assert_called_once_with(
-            model=fxt_mock_anomalib_components["anomalib_model"], datamodule=fxt_mock_anomalib_components["folder"]
-        )
-        fxt_mock_anomalib_components["engine"].export.assert_called_once()
+            # Verify all components were called correctly
+            fxt_mock_anomalib_components["get_model"].assert_called_once_with(model=fxt_model.name)
+            fxt_mock_anomalib_components["engine_class"].assert_called_once_with(default_root_dir="/path/to/model")
+            fxt_mock_anomalib_components["engine"].train.assert_called_once_with(
+                model=fxt_mock_anomalib_components["anomalib_model"], datamodule=fxt_mock_anomalib_components["folder"]
+            )
+            fxt_mock_anomalib_components["engine"].export.assert_called_once()

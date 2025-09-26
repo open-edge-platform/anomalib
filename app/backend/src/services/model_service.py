@@ -3,17 +3,29 @@
 import asyncio
 import base64
 import io
+import logging
+from dataclasses import dataclass
+from multiprocessing.synchronize import Event as EventClass
 from uuid import UUID
 
 import cv2
 import numpy as np
 from anomalib.deploy import ExportType, OpenVINOInferencer
 from PIL import Image
-from sqlalchemy.ext.asyncio.session import AsyncSession
 
-from models import Model, ModelList, PredictionLabel, PredictionResponse
+from db import get_async_db_session_ctx
+from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
 from repositories import ModelRepository
 from repositories.binary_repo import ModelBinaryRepository
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class LoadedModel:
+    name: str
+    id: UUID
+    model: Model
 
 
 class ModelService:
@@ -25,25 +37,48 @@ class ModelService:
     to maintain event loop responsiveness.
     """
 
-    def __init__(self, db_session: AsyncSession):
-        self.db_session = db_session
+    def __init__(self, mp_model_reload_event: EventClass | None = None) -> None:
+        self._mp_model_reload_event = mp_model_reload_event
 
-    def repository(self, project_id: str | UUID) -> ModelRepository:
-        return ModelRepository(self.db_session, project_id=str(project_id))
+    def activate_model(self) -> None:
+        """Notify workers to (re)load the active model.
 
-    async def create_model(self, model: Model) -> Model:
-        return await self.repository(model.project_id).save(model)
+        Sets the shared multiprocessing event so the inference worker reloads
+        the current active model lazily and only once.
+        """
+        try:
+            if self._mp_model_reload_event is not None:
+                self._mp_model_reload_event.set()
+        except Exception as e:
+            # Best-effort signaling; avoid bubbling up to API layer
+            logger.debug("Failed to signal model reload event: %s", e)
 
-    async def get_model_list(self, project_id: UUID) -> ModelList:
-        return ModelList(models=await self.repository(project_id).get_all())
+    @staticmethod
+    async def create_model(model: Model) -> Model:
+        async with get_async_db_session_ctx() as session:
+            repo = ModelRepository(session, project_id=model.project_id)
+            return await repo.save(model)
 
-    async def get_model_by_id(self, project_id: UUID, model_id: UUID) -> Model | None:
-        return await self.repository(project_id).get_by_id(model_id)
+    @staticmethod
+    async def get_model_list(project_id: UUID) -> ModelList:
+        async with get_async_db_session_ctx() as session:
+            repo = ModelRepository(session, project_id=project_id)
+            return ModelList(models=await repo.get_all())
 
-    async def delete_model(self, project_id: UUID, model_id: UUID) -> None:
-        return await self.repository(project_id).delete_by_id(model_id)
+    @staticmethod
+    async def get_model_by_id(project_id: UUID, model_id: UUID) -> Model | None:
+        async with get_async_db_session_ctx() as session:
+            repo = ModelRepository(session, project_id=project_id)
+            return await repo.get_by_id(model_id)
 
-    async def load_inference_model(self, model: Model, device: str = "CPU") -> OpenVINOInferencer:
+    @staticmethod
+    async def delete_model(project_id: UUID, model_id: UUID) -> None:
+        async with get_async_db_session_ctx() as session:
+            repo = ModelRepository(session, project_id=project_id)
+            return await repo.delete_by_id(model_id)
+
+    @staticmethod
+    async def load_inference_model(model: Model, device: str = "CPU") -> OpenVINOInferencer:
         """Load a model for inference using the anomalib OpenVINO inferencer."""
         if model.format is not ExportType.OPENVINO:
             raise NotImplementedError(f"Model format {model.format} is not supported for inference at this moment.")

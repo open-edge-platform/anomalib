@@ -6,8 +6,8 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from db.schema import JobDB
-from models import Job
-from models.job import JobStatus, TrainJobPayload
+from pydantic_models import Job
+from pydantic_models.job import JobStatus, JobType, TrainJobPayload
 from repositories.base import BaseRepository
 from repositories.mappers import JobMapper
 
@@ -40,7 +40,7 @@ class JobRepository(BaseRepository):
 
         return existing_job is not None
 
-    async def get_pending_job_by_type(self, job_type: str) -> Job | None:
+    async def get_pending_job_by_type(self, job_type: JobType) -> Job | None:
         return await self.get_one(
             extra_filters={"type": job_type, "status": JobStatus.PENDING},
             order_by=self.schema.created_at,
