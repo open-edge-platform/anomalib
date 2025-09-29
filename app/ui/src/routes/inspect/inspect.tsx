@@ -3,14 +3,14 @@
 
 import { Grid } from '@geti/ui';
 
-import { Aside } from '../../features/inspect/aside';
+import { Sidebar } from '../../features/inspect/sidebar.component';
 import { StreamContainer } from '../../features/inspect/stream/stream-container';
 import { Toolbar } from '../../features/inspect/toolbar';
 
 export const Inspect = () => {
     return (
         <Grid
-            areas={['toolbar aside', 'canvas aside']}
+            areas={['toolbar sidebar', 'canvas sidebar']}
             UNSAFE_style={{
                 gridTemplateRows: 'var(--spectrum-global-dimension-size-800, 4rem) auto',
                 gridTemplateColumns: 'auto min-content',
@@ -21,7 +21,7 @@ export const Inspect = () => {
         >
             <Toolbar />
             <StreamContainer />
-            <Aside />
+            <Sidebar />
         </Grid>
     );
 };
