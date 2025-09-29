@@ -5,7 +5,7 @@ import { afterAll, afterEach, beforeAll } from 'vitest';
 
 import { server } from './msw-node-setup';
 
-process.env.PUBLIC_API_BASE_URL = 'http://localhost:7860';
+process.env.PUBLIC_API_BASE_URL = 'http://localhost:8000';
 
 beforeAll(() => {
     server.listen({ onUnhandledRequest: 'bypass' });
