@@ -30,6 +30,7 @@ Example:
 
 from enum import Enum
 
+from .bmad import BMAD
 from .btech import BTech
 from .datumaro import Datumaro
 from .folder import Folder
@@ -82,6 +83,7 @@ class ImageDataFormat(str, Enum):
 
 
 __all__ = [
+    "BMAD",
     "BTech",
     "Datumaro",
     "Folder",
