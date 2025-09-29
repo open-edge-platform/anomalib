@@ -5,7 +5,10 @@
         "types": ["vitest/globals"],
         "baseUrl": ".",
         "paths": {
-            "@geti-inspect/icons": ["./src/assets/icons"]
+            "@geti-inspect/icons": ["./src/assets/icons"],
+            "@geti-inspect/api": ["./src/api/client"],
+            "@geti-inspect/api/spec": ["./src/api/openapi-spec.d"],
+            "@geti-inspect/hooks": ["./src/hooks"]
         }
     },
 }
