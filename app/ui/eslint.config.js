@@ -45,6 +45,17 @@ export default [
             'header/header': 'off',
         },
     },
+    {
+        settings: {
+            'import/resolver': {
+                typescript: {
+                    alwaysTryTypes: true,
+                    project: ['./tsconfig.json', './tests/tsconfig.json'],
+                    noWarnOnMultipleProjects: true,
+                },
+            },
+        },
+    },
     ...compat.extends('plugin:playwright/playwright-test').map((config) => ({
         ...config,
         files: ['tests/features/**/*.ts', 'tests/utils/**/*.ts', 'tests/fixtures/**/*.ts', 'tests/e2e/**/*.ts'],
