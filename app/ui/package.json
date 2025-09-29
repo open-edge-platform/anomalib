@@ -9,9 +9,9 @@
     },
     "scripts": {
         "build": "rsbuild build",
-        "build:api": "npx openapi-typescript ./src/api/openapi-spec.json -o ./src/api/openapi-spec.d.ts  --root-types && prettier --write src/api/openapi-spec.d.ts",
-        "build:api:download": "curl -o ./src/api/openapi-spec.json http://localhost:7860/api/openapi.json && prettier --write src/api/openapi-spec.json",
-        "update-spec": "npm run build:api:download && npm run build:api",
+        "build:api:types": "npx openapi-typescript ./src/api/openapi-spec.json -o ./src/api/openapi-spec.d.ts  --root-types && prettier --write src/api/openapi-spec.d.ts",
+        "build:api:download": "curl -o ./src/api/openapi-spec.json http://localhost:8000/api/openapi.json && prettier --write src/api/openapi-spec.json",
+        "build:api": "npm run build:api:download && npm run build:api:types",
         "clone-geti-ui-packages": "npx degit git@github.com:open-edge-platform/geti.git/web_ui/packages/config packages/config --force && npx degit git@github.com:open-edge-platform/geti.git/web_ui/packages/ui packages/ui --force",
         "cyclic-deps-check": "npx madge --circular src/**/*.ts*",
         "start": "rsbuild dev",
