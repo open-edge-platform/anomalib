@@ -3,6 +3,7 @@ datasets
 !src/anomalib/data/datasets
 pre_trained
 results
+openvino_cache
 
 # Test-related files and directories
 tmp*
