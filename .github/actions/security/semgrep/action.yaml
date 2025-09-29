@@ -141,6 +141,7 @@ runs:
           --error \
           --timeout "$INPUTS_TIMEOUT" \
           --metrics=off \
+          --exclude "uv.lock" \
           ${FILES}
         exit_code="$?"
         echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
@@ -151,6 +152,7 @@ runs:
           ${SEMGREP_SEVERITY} \
           --error \
           --metrics=off \
+          --exclude "uv.lock" \
           --timeout "$INPUTS_TIMEOUT" \
           --"$INPUTS_OUTPUT_FORMAT" \
           -o "${REPORT_FILE}" \
