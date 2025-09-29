@@ -5,13 +5,15 @@
 
 import { useState } from 'react';
 
-import { Dataset, Models, Stats } from '@geti-inspect/icons';
+import { Dataset as DatasetIcon, Models, Stats } from '@geti-inspect/icons';
 import { Flex, Grid, ToggleButton, View } from '@geti/ui';
+
+import { Dataset } from './dataset/dataset.component';
 
 import styles from './sidebar.module.scss';
 
 const TABS = [
-    { label: 'Dataset', icon: <Dataset />, content: <>Dataset</> },
+    { label: 'Dataset', icon: <DatasetIcon />, content: <Dataset /> },
     { label: 'Models', icon: <Models />, content: <>Models</> },
     { label: 'Stats', icon: <Stats />, content: <>Stats</> },
 ];
@@ -34,6 +36,7 @@ const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
             UNSAFE_className={styles.container}
             columns={gridTemplateColumns}
             data-expanded={tab !== null}
+            minHeight={0}
         >
             <View
                 gridColumn={'1/2'}
