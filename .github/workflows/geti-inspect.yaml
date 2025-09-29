@@ -172,7 +172,7 @@ jobs:
 
       - name: Build OpenAPI type definitions
         working-directory: "app/ui"
-        run: npm run build:api
+        run: npm run build:api:types
 
       - name: Prettier
         working-directory: "app/ui"
@@ -221,7 +221,7 @@ jobs:
 
       - name: Build OpenAPI type definitions
         working-directory: "app/ui"
-        run: npm run build:api
+        run: npm run build:api:types
 
       - name: UI Unit tests
         working-directory: "app/ui"
@@ -274,7 +274,7 @@ jobs:
 
       - name: Build OpenAPI type definitions
         working-directory: "app/ui"
-        run: npm run build:api
+        run: npm run build:api:types
 
       - name: Run Playwright tests
         working-directory: "app/ui"
