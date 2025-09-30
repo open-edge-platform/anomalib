@@ -49,4 +49,7 @@ terms are listed below.
 
 9. UninetModel
    Copyright (c) 2025 @pangdatangtt, https://github.com/pangdatangtt/UniNet/
-   SPDX-License-Identifier: MIT
+
+10. GLASS Model implementation is based on the original code
+    Copyright (c) 2024 Qiyu Chen, https://github.com/cqylunlun/GLASS
+    SPDX-License-Identifier: MIT
