@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """BMAD Data Module.
@@ -14,16 +14,18 @@ while the remaining three are for sample-level anomaly detection only :contentRe
 Example:
     Create a BMAD datamodule::
 
-        >>> from your_module import BMADDataModule
-        >>> datamodule = BMADDataModule(
+        >>> from anomalib.data import BMAD
+        >>> datamodule = BMAD(
         ...     root="./datasets/BMAD",
-        ...     dataset="brain",       # options: "Brain", "Chest", "Histopathology", "Liver", "Retina_OCT2017",
+        ...     dataset="Brain",       # options: "Brain", "Chest", "Histopathology", "Liver", "Retina_OCT2017",
                                                     "Retina_RESC"
         ... )
 
 Notes:
     The dataset will be automatically downloaded and reorganized upon first usage.
     Directory structure after preparation may look like:
+
+    .. code-block:: text
 
         datasets/
         └── BMAD/
@@ -67,12 +69,10 @@ from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode
 logger = logging.getLogger(__name__)
 
 DOWNLOAD_INFO = DownloadInfo(
-    name="mvtecad",
-    url="https://www.mydrive.ch/shares/38536/3830184030e49fe74747669442f0f282/"
-    "download/420938113-1629952094/mvtec_anomaly_detection.tar.xz",
-    hashsum="cf4313b13603bec67abb49ca959488f7eedce2a9f7795ec54446c649ac98cd3d",
+    name="bmad",
+    url="https://huggingface.co/datasets/code-dev05/BMAD/resolve/main/bmad.zip",
+    hashsum="df655def31f3f638a91c567550de54d6e45a74b2368f666c13a6a3052c063165",
 )
-# TODO(Devansh Agarwal): Update the download url.  # noqa: TD003
 
 
 class BMAD(AnomalibDataModule):
@@ -149,8 +149,8 @@ class BMAD(AnomalibDataModule):
         augmentations: Transform | None = None,
         test_split_mode: TestSplitMode | str = TestSplitMode.FROM_DIR,
         test_split_ratio: float = 0.2,
-        val_split_mode: ValSplitMode | str = ValSplitMode.SAME_AS_TEST,
-        val_split_ratio: float = 0.5,
+        val_split_mode: ValSplitMode | str = ValSplitMode.FROM_DIR,
+        val_split_ratio: float | None = None,
         seed: int | None = None,
     ) -> None:
         super().__init__(
@@ -177,11 +177,12 @@ class BMAD(AnomalibDataModule):
             root=self.root,
             category=self.category,
         )
-        self.validation_data = BMADDataset(
-            split="valid",
-            root=self.root,
-            category=self.category,
-        )
+        if self.val_split_mode == ValSplitMode.FROM_DIR:
+            self.val_data = BMADDataset(
+                split="valid",
+                root=self.root,
+                category=self.category,
+            )
         self.test_data = BMADDataset(
             split=Split.TEST,
             root=self.root,
@@ -208,7 +209,7 @@ class BMAD(AnomalibDataModule):
 
                 datasets/
                 └── BMAD/
-                    ├── brain/
+                    ├── Brain/
                     ├── Liver/
                     └── ...
         """

@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """BMAD Dataset.
@@ -109,12 +109,34 @@ def make_bmad_dataset(path: Path, split: str | Split | None = None) -> DataFrame
     """Create BMAD samples by parsing the dataset structure.
 
     The files are expected to follow the structure:
-        ``path/to/dataset/category/split/image_filename.png``
-        ``path/to/dataset/category/split/mask_filename.png``
+
+    .. code-block:: text
+
+        path/to/dataset
+        ├── category
+        │   ├── train
+        │   │   ├── good
+        │   │   │   ├── image_filename.png
+        │   │   ├── Ungood
+        │   │   │   ├── img
+        │   │   │   │   ├── image_filename.png
+        │   │   │   │   └── label
+        │   │   │   │       └── image_filename.png
+        │   │   └── test
+        │   │       ├── good
+        │   │       │   ├── img
+        │   │       │   │   ├── image_filename.png
+        │   │       │   │   └── label
+        │   │       │   │       └── image_filename.png
+        │   │       └── Ungood
+        │   │           ├── img
+        │   │           │   ├── image_filename.png
+        │   │           │   └── label
+
+
     Args:
-        root (Path | str): Path to dataset root directory.
+        path (Path | str): Path to dataset root directory.
         split (str | Split | None, optional): Dataset split (train/test/val). Defaults to ``None``.
-        extensions (Sequence[str] | None, optional): Valid image extensions. Defaults to ``None``.
 
     Returns:
         DataFrame with columns:
@@ -175,7 +197,7 @@ def make_bmad_dataset(path: Path, split: str | Split | None = None) -> DataFrame
     samples["mask_path"] = None
     if len(mask_samples):
         samples.loc[
-            (samples.split == "test") | (samples.split == "valid"),
+            ((samples.split == "test") | (samples.split == "valid")) & (samples.label_index == LabelName.ABNORMAL),
             "mask_path",
         ] = mask_samples.image_path.to_numpy()
 
@@ -190,14 +212,13 @@ def make_bmad_dataset(path: Path, split: str | Split | None = None) -> DataFrame
         ):
             msg = (
                 "Mismatch between anomalous images and ground truth masks. Make sure "
-                "mask files in 'ground_truth' folder follow the same naming "
+                "mask files in 'Ungood/label/' folder follow the same naming "
                 "convention as the anomalous images (e.g. image: '000.png', "
-                "mask: '000.png' or '000_mask.png')."
+                "mask: '000.png')."
             )
             raise MisMatchError(msg)
 
     samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
-    split = "train"
     if split:
         samples = samples[samples.split == split].reset_index(drop=True)
 
