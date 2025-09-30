@@ -17,26 +17,9 @@ import {
     View,
 } from '@geti/ui';
 
-import { DatasetItem } from './dataset-item/dataset-item.component';
+import { DatasetItem, MediaItem } from './dataset-item/dataset-item.component';
 
-const NotEnoughNormalImagesToTrain = () => {
-    // TODO: This should change dynamically when user provides more normal images
-    const requiredNumberOfNormalImages = 20;
-
-    return (
-        <InlineAlert variant='info'>
-            <Heading>{requiredNumberOfNormalImages} images required</Heading>
-            <Content>
-                Capture {requiredNumberOfNormalImages} images of normal cases. They help the model learn what is
-                standard, so it can better detect anomalies.
-            </Content>
-        </InlineAlert>
-    );
-};
-
-const REQUIRED_NUMBER_OF_NORMAL_IMAGES = 20;
-
-const useMediaItems = () => {
+const useMediaItemsQuery = () => {
     const { projectId } = useProjectIdentifier();
 
     const { data } = $api.useSuspenseQuery('get', '/api/projects/{project_id}/images', {
@@ -46,6 +29,41 @@ const useMediaItems = () => {
             },
         },
     });
+
+    return { data };
+};
+
+interface NotEnoughNormalImagesToTrainProps {
+    mediaItems: (MediaItem | undefined)[];
+}
+
+const REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING = 20;
+
+const NotEnoughNormalImagesToTrain = ({ mediaItems }: NotEnoughNormalImagesToTrainProps) => {
+    // TODO: This should change dynamically when user provides more normal images
+    const mediaItemsCount = mediaItems.filter((mediaItem) => mediaItem !== undefined).length;
+
+    if (mediaItemsCount >= REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING) {
+        return null;
+    }
+
+    const missingNormalImages = REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING - mediaItemsCount;
+
+    return (
+        <InlineAlert variant='info'>
+            <Heading>{missingNormalImages} images required</Heading>
+            <Content>
+                Capture {missingNormalImages} images of normal cases. They help the model learn what is standard, so it
+                can better detect anomalies.
+            </Content>
+        </InlineAlert>
+    );
+};
+
+const REQUIRED_NUMBER_OF_NORMAL_IMAGES = 20;
+
+const useMediaItems = () => {
+    const { data } = useMediaItemsQuery();
 
     if (data.media.length >= REQUIRED_NUMBER_OF_NORMAL_IMAGES) {
         return {
@@ -60,9 +78,11 @@ const useMediaItems = () => {
     return { mediaItems };
 };
 
-const DatasetItemsList = () => {
-    const { mediaItems } = useMediaItems();
+interface DatasetItemProps {
+    mediaItems: (MediaItem | undefined)[];
+}
 
+const DatasetItemsList = ({ mediaItems }: DatasetItemProps) => {
     return (
         <Grid
             flex={1}
@@ -87,10 +107,8 @@ const UploadImages = () => {
         formData.append('file', file);
 
         captureImageMutation.mutate({
-            body: {
-                // @ts-expect-error Incorrect OpenAPI types
-                file: formData,
-            },
+            // @ts-expect-error There is an incorrect type in OpenAPI
+            body: formData,
             params: {
                 path: {
                     project_id: projectId,
@@ -99,19 +117,30 @@ const UploadImages = () => {
         });
     };
 
-    const captureImages = (files: FileList) => {
+    const captureImages = (files: FileList | null) => {
+        if (files === null) return;
+
         Array.from(files).forEach((file) => captureImage(file));
     };
 
     return (
-        <FileTrigger
-            onSelect={(files) => {
-                files?.item();
-                console.log(files);
-            }}
-        >
+        <FileTrigger allowsMultiple onSelect={captureImages}>
             <Button>Upload images</Button>
         </FileTrigger>
+    );
+};
+
+const DatasetContent = () => {
+    const { mediaItems } = useMediaItems();
+
+    return (
+        <>
+            <NotEnoughNormalImagesToTrain mediaItems={mediaItems} />
+
+            <Divider size={'S'} />
+
+            <DatasetItemsList mediaItems={mediaItems} />
+        </>
     );
 };
 
@@ -124,11 +153,7 @@ export const Dataset = () => {
             <Suspense fallback={<Loading mode={'inline'} />}>
                 <View flex={1} padding={'size-300'}>
                     <Flex direction={'column'} height={'100%'} gap={'size-300'}>
-                        <NotEnoughNormalImagesToTrain />
-
-                        <Divider size={'S'} />
-
-                        <DatasetItemsList />
+                        <DatasetContent />
                     </Flex>
                 </View>
             </Suspense>
