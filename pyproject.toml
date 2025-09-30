@@ -37,7 +37,7 @@ dependencies = [
     "rich_argparse",        # CLI help-formatter
     # Torch and Lightning dependencies
     "lightning>=2.2",
-    "torchmetrics>=1.3.2",
+    "torchmetrics>=1.8.2",
     "lightning-utilities",
     # Deep learning models and utilities
     "timm",

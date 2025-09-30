@@ -36,12 +36,6 @@ from typing import TYPE_CHECKING
 
 from lightning_utilities.core.imports import module_available
 
-# Optional import for dotenv
-try:
-    from dotenv import load_dotenv
-except ImportError:
-    load_dotenv = None
-
 from anomalib.models.image.vlm_ad.utils import Prompt
 
 from .base import Backend
@@ -50,6 +44,11 @@ if module_available("openai"):
     from openai import OpenAI
 else:
     OpenAI = None
+
+if module_available("dotenv"):
+    from dotenv import load_dotenv
+else:
+    load_dotenv = None
 
 if TYPE_CHECKING:
     from openai.types.chat import ChatCompletion
