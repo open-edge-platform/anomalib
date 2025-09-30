@@ -16,15 +16,6 @@ interface ProjectListProps {
 }
 
 export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition }: ProjectListProps) => {
-    /*
-    server does not support a project edition
-    const updateProjectName = (): void => {
-    };*/
-
-    const deleteProject = (): void => {
-        // Note: server does not support a project deletion
-    };
-
     const isInEditionMode = (projectId?: string) => {
         return projectIdInEdition === projectId;
     };
@@ -36,13 +27,7 @@ export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition
         if (projectToUpdate?.name === newName || isEmpty(newName.trim())) {
             return;
         }
-
-        // updateProjectName(projectId, newName);
     };
-
-    /*const handleRename = (projectId: string) => {
-        setProjectInEdition(projectId);
-    };*/
 
     return (
         <ul className={styles.projectList}>
@@ -50,8 +35,6 @@ export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition
                 <ProjectListItem
                     key={project.id}
                     project={project}
-                    //onRename={handleRename}
-                    onDelete={deleteProject}
                     onBlur={handleBlur}
                     isInEditMode={isInEditionMode(project.id)}
                 />
