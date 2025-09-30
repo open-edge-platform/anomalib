@@ -1,7 +1,11 @@
 import { Image } from '@geti-inspect/icons';
 import { Flex, View } from '@geti/ui';
 
+import { SchemaMediaList } from '../../../../api/openapi-spec';
+
 import styles from './dataset-item.module.scss';
+
+type MediaItem = SchemaMediaList['media'][number];
 
 const DatasetItemPlaceholder = () => {
     return (
@@ -14,7 +18,7 @@ const DatasetItemPlaceholder = () => {
 };
 
 interface DatasetItemProps {
-    mediaItem: string | undefined;
+    mediaItem: MediaItem | undefined;
 }
 
 export const DatasetItem = ({ mediaItem }: DatasetItemProps) => {
