@@ -16,3 +16,4 @@ TODO*
 data/
 .idea
 .DS_Store
+.inspect.db
