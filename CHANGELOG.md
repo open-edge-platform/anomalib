@@ -16,6 +16,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+## [v2.2.0] - 2025-09-17
+
+### Added
+
+- 🚀 Implement type-safe deprecation decorator with version support (#2771)
+- 🚀 **model**: add automatic download of DTD dataset to DRAEM model (#2866)
+- 🚀 **metric**: added histogram of anomaly scores (#2920)
+- 🚀 **metric**: added PGn, PBn metrics (#2889)
+- 🚀 **data**: added ground truth masks to VAD dataset (#2940)
+- 🚀 **workflow**: add CodeQL analysis workflow for security scanning (#2951)
+- 🚀 **data**: add backward compatibility methods and update docstring examples (#2950)
+
+### Fixed
+
+- 🐞 **docs**: revert correct symlink and update pre-commit config (#2875)
+- 🐞 **deploy**: Fix discrepancy between lightning and standalone inferencers (#2843)
+- 🐞 **docs**: revert correct symlink (#2854)
+- 🐞 **imports**: update OpenVINO import paths in inferencer and post-processor (#2829, #2789)
+- 🐞 **data**: MVTecAD2 CLI bug fix enum serialisation (#2817)
+- 🐞 **model**: remove in-place ops in CombinedDensityEstimator.predict for ONNX dynamic_axes export (#2808)
+- 🐞 **export**: enhance model export with flexible kwargs support for ONNX and OpenVINO (#2780)
+- 🐞 **visualization**: modify the image font loading logic to ensure the right font is installed (#2783)
+- 🐞 **data**: enhance ToNumpyMixin for improved tensor conversion (#2775)
+- 🐞 **docs**: fixed the "Anomalib in 15 Minutes" train and inference code (#2904)
+- 🐞 **metric**: fixed examples to work with Anomalib metrics (#2911)
+- 🐞 **model**: Reduce memory reserved for memory bank based models PatchCore, Padim, Dfkde (#2913)
+- 🐞 **bandit**: Suppress Bandit NoSec incorrectly flagging HuggingFace model loading (#2937, #2947)
+- 🐞 **docs**: Update documentation and log messages to reflect recent changes (#2931)
+- 🐞 **path**: Remove filter to remove hidden files (#2955)
+- 🐞 **utils**: Improve optional import handling across loggers and model backends (#2956, #2954)
+
+### Changed
+
+- 🔧 **visualizer**: remove unnecessary warning log in `visualize_image_item` (#2778)
+- 🔧 **model**: check if no normalization is in transforms for DRAEM, DSR (#2867)
+- 📦 **pyproject.toml**: Select files in source distribution for builds (#2869)
+- 🔧 **deps**: update github actions (#2921)
+
 ## [v2.1.0]
 
 ### Added
