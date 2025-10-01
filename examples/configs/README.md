@@ -8,6 +8,7 @@ The configurations in this folder are organized as follows.
 configs/
 ├── data
 │   ├── avenue.yaml
+│   ├── bmad.yaml
 │   ├── btech.yaml
 │   ├── folder_3d.yaml
 │   ├── folder.yaml

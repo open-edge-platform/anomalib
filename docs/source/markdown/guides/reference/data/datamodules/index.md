@@ -7,6 +7,13 @@ Anomalib provides various datamodules for different types of data modalities. Th
 ```{grid} 3
 :gutter: 2
 
+:::{grid-item-card} BMAD
+:link: image/bmad
+:link-type: doc
+
+BMAD dataset datamodule for medical anomaly detection.
+:::
+
 :::{grid-item-card} BTech
 :link: image/btech
 :link-type: doc
