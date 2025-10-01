@@ -2,6 +2,8 @@ import { Flex, Header as SpectrumHeader, View } from '@geti/ui';
 import { ApiReferenceReact } from '@scalar/api-reference-react';
 import { Link } from 'react-router-dom';
 
+import { paths } from '../../router';
+
 import classes from './openapi.module.scss';
 
 import '@scalar/api-reference-react/style.css';
@@ -10,7 +12,7 @@ const Header = () => {
     return (
         <SpectrumHeader UNSAFE_className={classes.header}>
             <View padding={'size-200'}>
-                <Link to={'/'}>Back</Link>
+                <Link to={paths.root({})}>Back</Link>
             </View>
         </SpectrumHeader>
     );
@@ -30,9 +32,9 @@ export const OpenApi = () => {
                         hideClientButton: true,
                         hideDarkModeToggle: true,
                         metaData: {
-                            title: 'Geti Action | REST API specification',
+                            title: 'Geti Inspect | REST API specification',
                         },
-                        servers: [{ url: `/api/`, description: 'Geti Action' }],
+                        servers: [{ url: `/api/`, description: 'Geti Inspect' }],
                         forceDarkModeState: 'dark',
                     }}
                 />
