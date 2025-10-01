@@ -20,6 +20,7 @@
     --annotation-stroke: #7bdeff;
 
     --moss-tint-1: #b1d272;
+    --brand-moss: #8bae46;
 
     --spectrum-button-primary-text-font-weight: 500;
     --spectrum-accent-background-color-default: var(--energy-blue);
@@ -44,6 +45,7 @@
 
     --spectrum-high-contrast-button-face: var(--spectrum-global-color-gray-50);
     --spectrum-high-contrast-gray-text: var(--spectrum-global-color-gray-500);
+    --spectrum-positive-visual-color: var(--brand-moss);
 }
 
 body,

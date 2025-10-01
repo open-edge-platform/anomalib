@@ -1,55 +1,90 @@
-import { Content, Divider, Flex, Grid, Heading, InlineAlert, minmax, repeat, View } from '@geti/ui';
+import { Suspense } from 'react';
 
-import { DatasetItem } from './dataset-item/dataset-item.component';
+import { $api } from '@geti-inspect/api';
+import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { Button, Divider, FileTrigger, Flex, Heading, Loading, View } from '@geti/ui';
 
-const NotEnoughNormalImagesToTrain = () => {
-    // TODO: This should change dynamically when user provides more normal images
-    const requiredNumberOfNormalImages = 20;
+import { DatasetList } from './dataset-list.component';
+import { DatasetStatusPanel } from './dataset-status-panel.component';
+
+const useMediaItems = () => {
+    const { projectId } = useProjectIdentifier();
+
+    const { data } = $api.useSuspenseQuery('get', '/api/projects/{project_id}/images', {
+        params: {
+            path: {
+                project_id: projectId,
+            },
+        },
+    });
+
+    return {
+        mediaItems: data.media,
+    };
+};
+
+const UploadImages = () => {
+    const { projectId } = useProjectIdentifier();
+
+    const captureImageMutation = $api.useMutation('post', '/api/projects/{project_id}/capture');
+
+    const captureImage = (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        captureImageMutation.mutate({
+            // @ts-expect-error There is an incorrect type in OpenAPI
+            body: formData,
+            params: {
+                path: {
+                    project_id: projectId,
+                },
+            },
+        });
+    };
+
+    const captureImages = (files: FileList | null) => {
+        if (files === null) return;
+
+        Array.from(files).forEach((file) => captureImage(file));
+    };
 
     return (
-        <InlineAlert variant='info'>
-            <Heading>{requiredNumberOfNormalImages} images required</Heading>
-            <Content>
-                Capture {requiredNumberOfNormalImages} images of normal cases. They help the model learn what is
-                standard, so it can better detect anomalies.
-            </Content>
-        </InlineAlert>
+        <FileTrigger allowsMultiple onSelect={captureImages}>
+            <Button>Upload images</Button>
+        </FileTrigger>
     );
 };
 
-const DatasetItemsList = () => {
-    const mediaItems = Array.from({ length: 20 }).map((_, index) => ({
-        id: index,
-        mediaItem: undefined,
-    }));
+const DatasetContent = () => {
+    const { mediaItems } = useMediaItems();
 
     return (
-        <Grid
-            flex={1}
-            columns={repeat('auto-fill', minmax('size-1600', '1fr'))}
-            gap={'size-100'}
-            alignContent={'start'}
-        >
-            {mediaItems.map(({ id, mediaItem }) => (
-                <DatasetItem key={id} mediaItem={mediaItem} />
-            ))}
-        </Grid>
+        <>
+            <DatasetStatusPanel mediaItemsCount={mediaItems.length} />
+
+            <Divider size={'S'} />
+
+            <DatasetList mediaItems={mediaItems} />
+        </>
     );
 };
 
 export const Dataset = () => {
     return (
         <Flex direction={'column'} height={'100%'}>
-            <Heading margin={0}>Dataset</Heading>
-            <View flex={1} padding={'size-300'}>
-                <Flex direction={'column'} height={'100%'} gap={'size-300'}>
-                    <NotEnoughNormalImagesToTrain />
-
-                    <Divider size={'S'} />
-
-                    <DatasetItemsList />
+            <Heading margin={0}>
+                <Flex justifyContent={'space-between'}>
+                    Dataset <UploadImages />
                 </Flex>
-            </View>
+            </Heading>
+            <Suspense fallback={<Loading mode={'inline'} />}>
+                <View flex={1} padding={'size-300'}>
+                    <Flex direction={'column'} height={'100%'} gap={'size-300'}>
+                        <DatasetContent />
+                    </Flex>
+                </View>
+            </Suspense>
         </Flex>
     );
 };
