@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """3D-ADAM Datamodule.
 
 This module provides a PyTorch Lightning DataModule for the 3D-ADAM dataset.
@@ -18,7 +21,7 @@ License:
     (CC BY-NC-SA 4.0).
     https://creativecommons.org/licenses/by-nc-sa/4.0/
 
-Reference:
+Reference: https://arxiv.org/abs/2507.07838
 
 """
 
@@ -27,8 +30,7 @@ from pathlib import Path
 
 from torchvision.transforms.v2 import Transform
 
-from anomalib.data.datamodules.base.image import AnomalibDataModule
-from anomalib.data.datasets.depth.adam_3d import ADAM3DDataset
+from anomalib.data import ADAM3DDataset, AnomalibDataModule
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
 
 logger = logging.getLogger(__name__)

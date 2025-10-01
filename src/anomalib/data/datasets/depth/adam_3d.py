@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """3D-ADAM Datamodule.
@@ -12,7 +12,7 @@ License:
     Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)
     https://creativecommons.org/licenses/by-nc-sa/4.0/
 
-Reference:
+Reference: https://arxiv.org/abs/2507.07838
 
 """
 
@@ -22,7 +22,7 @@ from pathlib import Path
 from pandas import DataFrame
 from torchvision.transforms.v2 import Transform
 
-from anomalib.data.datasets.base.depth import AnomalibDepthDataset
+from anomalib.data.datasets import AnomalibDepthDataset
 from anomalib.data.errors import MisMatchError
 from anomalib.data.utils import LabelName, Split, validate_path
 
@@ -59,9 +59,9 @@ class ADAM3DDataset(AnomalibDepthDataset):
 
     Args:
         root (Path | str): Path to the root of the dataset.
-            Defaults to ``"./datasets/MVTec3D"``.
-        category (str): Category name, e.g. ``"bagel"``.
-            Defaults to ``"bagel"``.
+            Defaults to ``"./datasets/ADAM3D"``.
+        category (str): Category name, e.g. ``"1m1"``.
+            Defaults to ``"1m1"``.
         augmentations (Transform, optional): Augmentations that should be applied to the input images.
             Defaults to ``None``.
         split (str | Split | None): Dataset split - usually ``Split.TRAIN`` or
@@ -69,9 +69,9 @@ class ADAM3DDataset(AnomalibDepthDataset):
 
     Example:
         >>> from pathlib import Path
-        >>> dataset = MVTec3DDataset(
-        ...     root=Path("./datasets/MVTec3D"),
-        ...     category="bagel",
+        >>> dataset = ADAM3DDataset(
+        ...     root=Path("./datasets/ADAM3D"),
+        ...     category="1m1",
         ...     split="train"
         ... )
     """
@@ -126,12 +126,12 @@ def make_adam_3d_dataset(
 
     Example:
         >>> from pathlib import Path
-        >>> root = Path("./datasets/MVTec3D/bagel")
-        >>> samples = make_mvtec_3d_dataset(root, split="train")
+        >>> root = Path("./datasets/ADAM3D/1m1")
+        >>> samples = make_adam_3d_dataset(root, split="train")
         >>> samples.head()
            path     split label image_path                  mask_path
-        0  MVTec3D  train good  train/good/rgb/105.png     ground_truth/105.png
-        1  MVTec3D  train good  train/good/rgb/017.png     ground_truth/017.png
+        0  ADAM3D  train good  train/good/rgb/001_C.png     ground_truth/001_C.png
+        1  ADAM3D  train good  train/good/rgb/015_D.png     ground_truth/015_D.png
 
     Raises:
         RuntimeError: If no images are found in the root directory.

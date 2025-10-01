@@ -5,9 +5,9 @@
 
 from enum import Enum
 
+from .adam_3d import ADAM3D
 from .folder_3d import Folder3D
 from .mvtec_3d import MVTec3D
-from .adam_3d import ADAM3D
 
 
 class DepthDataFormat(str, Enum):

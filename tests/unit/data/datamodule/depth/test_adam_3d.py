@@ -1,15 +1,16 @@
-# Copyright (C) 2024-2025 Intel Corporation
+# Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Unit Tests - ADAM3D Datamodule."""
 
 from pathlib import Path
 
-import pytest 
+import pytest
 from torchvision.transforms.v2 import Resize
 
 from anomalib.data.datamodules.depth import ADAM3D
 from tests.unit.data.datamodule.base.depth import _TestAnomalibDepthDatamodule
+
 
 class TestADAM3D(_TestAnomalibDepthDatamodule):
     """3D ADAM Datamodule Unit Tests."""
@@ -30,13 +31,13 @@ class TestADAM3D(_TestAnomalibDepthDatamodule):
         datamodule_.setup()
 
         return datamodule_
-    
+
     @pytest.fixture()
     @staticmethod
     def fxt_data_config_path() -> str:
         """Return the path to the data config file."""
         return "examples/configs/data/adam_3d.py"
-    
+
     @staticmethod
     def test_datamodule_from_config(fxt_data_config_path: str) -> None:
         """Test method to create a datamodule from a configuration file.

@@ -26,8 +26,8 @@ Example:
     ... )
 """
 
+from .adam_3d import ADAM3DDataset
 from .folder_3d import Folder3DDataset
 from .mvtec_3d import MVTec3DDataset
-from .adam_3d import ADAM3DDataset
 
 __all__ = ["Folder3DDataset", "MVTec3DDataset", "ADAM3DDataset"]
