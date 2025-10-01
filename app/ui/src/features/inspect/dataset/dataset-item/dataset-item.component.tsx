@@ -1,11 +1,10 @@
-import { SchemaMediaList } from '@geti-inspect/api/spec';
 import { Image } from '@geti-inspect/icons';
 import { Flex, View } from '@geti/ui';
 import { clsx } from 'clsx';
 
-import styles from './dataset-item.module.scss';
+import { type MediaItem } from '../types';
 
-export type MediaItem = SchemaMediaList['media'][number];
+import styles from './dataset-item.module.scss';
 
 const DatasetItemPlaceholder = () => {
     return (
