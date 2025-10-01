@@ -29,7 +29,7 @@ Notes:
 
         datasets/
         └── BMAD/
-            ├── brain/
+            ├── Brain/
             │   ├── train/
             │   │   └── good/
             │   ├── valid/
