@@ -30,7 +30,8 @@ from pathlib import Path
 
 from torchvision.transforms.v2 import Transform
 
-from anomalib.data import ADAM3DDataset, AnomalibDataModule
+from anomalib.data.datamodules.base.image import AnomalibDataModule
+from anomalib.data.datasets.depth.adam_3d import ADAM3DDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
 
 logger = logging.getLogger(__name__)

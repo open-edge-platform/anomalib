@@ -22,7 +22,7 @@ from pathlib import Path
 from pandas import DataFrame
 from torchvision.transforms.v2 import Transform
 
-from anomalib.data.datasets import AnomalibDepthDataset
+from anomalib.data.datasets.base.depth import AnomalibDepthDataset
 from anomalib.data.errors import MisMatchError
 from anomalib.data.utils import LabelName, Split, validate_path
 
