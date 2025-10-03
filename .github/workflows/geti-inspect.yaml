@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "app/**"
+      - "application/**"
   pull_request:
     types:
       - opened
@@ -13,7 +13,7 @@ on:
       - synchronize
       - ready_for_review
     paths:
-      - "app/**"
+      - "application/**"
   workflow_dispatch: # run on request (no need for PR)
 
 jobs:
@@ -45,13 +45,13 @@ jobs:
           sudo apt-get install -y libgl1 libglib2.0-0
 
       - name: Prepare venv and install Python dependencies
-        working-directory: app/backend
+        working-directory: application/backend
         run: |
           uv lock --check
           uv sync --frozen --all-extras
 
       - name: Get OpenAPI spec
-        working-directory: app/backend
+        working-directory: application/backend
         run: |
           export PYTHONPATH=.
           uv run src/cli.py gen-api --target-path openapi-spec.json
@@ -59,7 +59,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: openapi-spec
-          path: app/backend/openapi-spec.json
+          path: application/backend/openapi-spec.json
 
   python-checks:
     runs-on: ubuntu-latest
@@ -83,19 +83,19 @@ jobs:
           version: "0.8.8"
 
       - name: Prepare venv and install Python dependencies
-        working-directory: app/backend
+        working-directory: application/backend
         run: |
           uv lock --check
           uv sync --frozen --all-extras
 
       - name: Check formatting with ruff
-        working-directory: app/backend
+        working-directory: application/backend
         run: |
           uv run ruff check --output-format=github .
           uv run ruff format --check .
 
       - name: Check source code with mypy
-        working-directory: app/backend
+        working-directory: application/backend
         run: |
           uv run mypy . --config-file=pyproject.toml
 
@@ -116,30 +116,30 @@ jobs:
       - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
         id: setup-node
         with:
-          node-version-file: app/ui/.nvmrc
+          node-version-file: application/ui/.nvmrc
 
       - name: Install dependencies
-        working-directory: "app/ui"
+        working-directory: "application/ui"
         run: npm ci
 
       - name: Download OpenAPI spec artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: openapi-spec
-          path: app/ui/src/api
+          path: application/ui/src/api
 
       - name: Build UI
-        working-directory: "app/ui"
+        working-directory: "application/ui"
         run: npm run build
 
       - name: Compress build
-        working-directory: "app/ui"
+        working-directory: "application/ui"
         run: tar -czf dist.tar.gz dist
 
       - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
         with:
           name: ui-dist
-          path: "app/ui/dist.tar.gz"
+          path: "application/ui/dist.tar.gz"
 
   ui-lint:
     name: Eslint checks
@@ -158,36 +158,36 @@ jobs:
       - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
         id: setup-node
         with:
-          node-version-file: app/ui/.nvmrc
+          node-version-file: application/ui/.nvmrc
 
       - name: Install dependencies
-        working-directory: "app/ui"
+        working-directory: "application/ui"
         run: npm ci
 
       - name: Download OpenAPI spec artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: openapi-spec
-          path: app/ui/src/api
+          path: application/ui/src/api
 
       - name: Build OpenAPI type definitions
-        working-directory: "app/ui"
+        working-directory: "application/ui"
         run: npm run build:api:types
 
       - name: Prettier
-        working-directory: "app/ui"
+        working-directory: "application/ui"
         run: npm run format:check
 
       - name: Eslint
-        working-directory: "app/ui"
+        working-directory: "application/ui"
         run: npm run lint
 
       - name: Eslint cyclic imports
-        working-directory: "app/ui"
+        working-directory: "application/ui"
         run: npm run cyclic-deps-check
 
       - name: Typescript
-        working-directory: "app/ui"
+        working-directory: "application/ui"
         run: npm run type-check
 
   ui-unit-tests:
@@ -207,24 +207,24 @@ jobs:
       - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
         id: setup-node
         with:
-          node-version-file: app/ui/.nvmrc
+          node-version-file: application/ui/.nvmrc
 
       - name: Install dependencies
-        working-directory: "app/ui"
+        working-directory: "application/ui"
         run: npm ci
 
       - name: Download OpenAPI spec artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: openapi-spec
-          path: app/ui/src/api
+          path: application/ui/src/api
 
       - name: Build OpenAPI type definitions
-        working-directory: "app/ui"
+        working-directory: "application/ui"
         run: npm run build:api:types
 
       - name: UI Unit tests
-        working-directory: "app/ui"
+        working-directory: "application/ui"
         run: npm run test:unit
 
   ui-playwright-tests:
@@ -251,33 +251,33 @@ jobs:
       - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
         id: setup-node
         with:
-          node-version-file: app/ui/.nvmrc
+          node-version-file: application/ui/.nvmrc
 
       - name: Install dependencies
-        working-directory: "app/ui"
+        working-directory: "application/ui"
         run: npm ci
 
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: ui-dist
-          path: "app/ui"
+          path: "application/ui"
 
       - name: Unpack build
-        working-directory: "app/ui"
+        working-directory: "application/ui"
         run: tar -xzf dist.tar.gz
 
       - name: Download OpenAPI spec artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: openapi-spec
-          path: app/ui/src/api
+          path: application/ui/src/api
 
       - name: Build OpenAPI type definitions
-        working-directory: "app/ui"
+        working-directory: "application/ui"
         run: npm run build:api:types
 
       - name: Run Playwright tests
-        working-directory: "app/ui"
+        working-directory: "application/ui"
         run: npm run test:component -- --project "Component tests"
 
       - name: Upload blob report to GitHub Actions Artifacts
@@ -285,5 +285,5 @@ jobs:
         if: always()
         with:
           name: playwright-report
-          path: app/ui/playwright-report/
+          path: application/ui/playwright-report/
           retention-days: 30
