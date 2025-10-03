@@ -30,14 +30,15 @@ import styles from './projects-list.module.scss';
 
 interface SelectedProjectProps {
     name: string;
+    id: string | undefined;
 }
 
-const SelectedProjectButton = ({ name }: SelectedProjectProps) => {
+const SelectedProjectButton = ({ name, id }: SelectedProjectProps) => {
     return (
         <ActionButton aria-label={`Selected project ${name}`} isQuiet height={'max-content'} staticColor='white'>
             <View margin={'size-50'}>{name}</View>
             <View margin='size-50'>
-                <PhotoPlaceholder name={name} email='' height={'size-400'} width={'size-400'} />
+                <PhotoPlaceholder name={name} indicator={id ?? name} height={'size-400'} width={'size-400'} />
             </View>
         </ActionButton>
     );
@@ -86,18 +87,19 @@ export const ProjectsListPanel = () => {
 
     const [projectInEdition, setProjectInEdition] = useState<string | null>(null);
 
-    const selectedProjectName = data.projects.find((project) => project.id === projectId)?.name || '';
+    const selectedProject = data.projects.find((project) => project.id === projectId);
+    const selectedProjectName = selectedProject?.name ?? '';
 
     return (
         <DialogTrigger type='popover' hideArrow>
-            <SelectedProjectButton name={selectedProjectName} />
+            <SelectedProjectButton name={selectedProjectName} id={selectedProject?.id} />
 
             <Dialog width={'size-4600'} UNSAFE_className={styles.dialog}>
                 <Header>
                     <Flex direction={'column'} justifyContent={'center'} width={'100%'} alignItems={'center'}>
                         <PhotoPlaceholder
                             name={selectedProjectName}
-                            email=''
+                            indicator={selectedProject?.id ?? selectedProjectName}
                             height={'size-1000'}
                             width={'size-1000'}
                         />
