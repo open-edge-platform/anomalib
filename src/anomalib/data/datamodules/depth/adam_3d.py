@@ -39,8 +39,8 @@ logger = logging.getLogger(__name__)
 
 DOWNLOAD_INFO = DownloadInfo(
     name="adam_3d",
-    url="https://huggingface.co/datasets/pmchard/3D-ADAM_anomalib/adam3d_cropped.zip",
-    hashsum="FFC4C52AFA1566A4165C42300C21758EC8292FF04305C65E81E830ABB8200C36",
+    url="https://huggingface.co/datasets/pmchard/3D-ADAM_anomalib/blob/main/adam3d_cropped.zip",
+    hashsum="ffc4c52afa1566a4165c42300c21758ec8292ff04305c65e81e830abb8200c36",
 )
 
 
