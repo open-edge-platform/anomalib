@@ -29,7 +29,7 @@ class MigrationManager:
     def __ensure_data_directory(self) -> None:
         """Ensure the data directory exists"""
         db_path = self.settings.database_dir
-        db_path.parent.mkdir(parents=True, exist_ok=True)
+        db_path.mkdir(parents=True, exist_ok=True)
 
     @staticmethod
     def check_connection() -> bool:
