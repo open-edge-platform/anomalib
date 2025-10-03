@@ -9,12 +9,12 @@ interface DatasetItemProps {
 }
 
 export const DatasetList = ({ mediaItems }: DatasetItemProps) => {
-    const mediaItemsToRender =
-        mediaItems.length >= REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING
-            ? mediaItems
-            : Array.from({ length: REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING }).map((_, index) =>
-                  index <= mediaItems.length - 1 ? mediaItems[index] : undefined
-              );
+    const mediaItemsToRender = [
+        ...mediaItems,
+        ...Array.from({
+            length: Math.max(0, REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING - mediaItems.length),
+        }).map(() => undefined),
+    ];
 
     return (
         <Grid

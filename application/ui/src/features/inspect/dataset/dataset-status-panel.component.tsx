@@ -1,8 +1,9 @@
 import { useState } from 'react';
 
 import { $api } from '@geti-inspect/api';
+import { SchemaJob as Job } from '@geti-inspect/api/spec';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
-import { Button, Content, Flex, Heading, InlineAlert, Item, Picker, ProgressBar, Text } from '@geti/ui';
+import { Button, Content, Divider, Flex, Heading, InlineAlert, Item, Picker, ProgressBar, Text } from '@geti/ui';
 
 import { REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING } from './utils';
 
@@ -35,20 +36,16 @@ const useAvailableModels = () => {
     return AVAILABLE_MODELS;
 };
 
-interface ReadyToTrainProps {
-    onStartTraining: (body: { project_id: string; model_name: string }) => void;
-    isPending: boolean;
-}
+const ReadyToTrain = () => {
+    const startTrainingMutation = $api.useMutation('post', '/api/jobs:train');
 
-const ReadyToTrain = ({ onStartTraining, isPending }: ReadyToTrainProps) => {
     const availableModels = useAvailableModels();
     const { projectId } = useProjectIdentifier();
     const [selectedModel, setSelectedModel] = useState<string>(availableModels[0].id);
 
     const startTraining = () => {
-        onStartTraining({
-            project_id: projectId,
-            model_name: selectedModel,
+        startTrainingMutation.mutate({
+            body: { project_id: projectId, model_name: selectedModel },
         });
     };
 
@@ -70,7 +67,7 @@ const ReadyToTrain = ({ onStartTraining, isPending }: ReadyToTrainProps) => {
                             ))}
                         </Picker>
 
-                        <Button isPending={isPending} onPress={startTraining}>
+                        <Button isPending={startTrainingMutation.isPending} onPress={startTraining}>
                             Start training
                         </Button>
                     </Flex>
@@ -81,39 +78,44 @@ const ReadyToTrain = ({ onStartTraining, isPending }: ReadyToTrainProps) => {
 };
 
 interface TrainingInProgressProps {
-    jobId: string;
+    job: Job;
 }
 
-const TrainingInProgress = ({ jobId }: TrainingInProgressProps) => {
+const REFETCH_INTERVAL_WITH_TRAINING = 1_000;
+
+const useProjectTrainingJobs = () => {
+    const { projectId } = useProjectIdentifier();
+
     const { data } = $api.useQuery('get', '/api/jobs', undefined, {
         refetchInterval: ({ state }) => {
-            const job = state.data?.jobs.find(({ id }) => id === jobId);
+            const job = state.data?.jobs.find(
+                ({ project_id, type, status }) =>
+                    projectId === project_id && type === 'training' && (status === 'running' || status === 'pending')
+            );
 
             if (job === undefined) {
                 return undefined;
             }
 
-            if (job.status === 'pending' || job.status === 'running') {
-                return 1000;
-            }
-
-            return undefined;
+            return REFETCH_INTERVAL_WITH_TRAINING;
         },
     });
 
-    const jobProgress = data?.jobs.find((job) => job.id === jobId);
+    return { jobs: data?.jobs };
+};
 
-    if (jobProgress === undefined || jobProgress.status === 'completed') {
+const TrainingInProgress = ({ job }: TrainingInProgressProps) => {
+    if (job === undefined || job.status === 'completed') {
         return null;
     }
 
-    if (jobProgress.status === 'pending') {
+    if (job.status === 'pending') {
         return (
             <InlineAlert variant='info'>
                 <Heading>Training will start soon</Heading>
                 <Content>
                     <Flex direction={'column'} gap={'size-100'}>
-                        <Text>{jobProgress.message}</Text>
+                        <Text>{job.message}</Text>
                         <ProgressBar aria-label='Training progress' isIndeterminate />
                     </Flex>
                 </Content>
@@ -121,38 +123,55 @@ const TrainingInProgress = ({ jobId }: TrainingInProgressProps) => {
         );
     }
 
-    if (jobProgress.status === 'running') {
+    if (job.status === 'running') {
         return (
             <InlineAlert variant='info'>
                 <Heading>Training in progress</Heading>
                 <Content>
                     <Flex direction={'column'} gap={'size-100'}>
-                        <Text>{jobProgress.message}</Text>
-                        <ProgressBar value={jobProgress.progress} aria-label='Training progress' />
+                        <Text>{job.message}</Text>
+                        <ProgressBar value={job.progress} aria-label='Training progress' />
                     </Flex>
                 </Content>
             </InlineAlert>
         );
     }
 
-    if (jobProgress.status === 'failed') {
+    if (job.status === 'failed') {
         return (
             <InlineAlert variant='negative'>
                 <Heading>Training failed</Heading>
                 <Content>
-                    <Text>{jobProgress.message}</Text>
+                    <Text>{job.message}</Text>
                 </Content>
             </InlineAlert>
         );
     }
 
+    if (job.status === 'canceled') {
+        return (
+            <InlineAlert variant='negative'>
+                <Heading>Training canceled</Heading>
+                <Content>
+                    <Text>{job.message}</Text>
+                </Content>
+            </InlineAlert>
+        );
+    }
+
+    return null;
+};
+
+const TrainingInProgressList = () => {
+    const { jobs } = useProjectTrainingJobs();
+
     return (
-        <InlineAlert variant='negative'>
-            <Heading>Training canceled</Heading>
-            <Content>
-                <Text>{jobProgress.message}</Text>
-            </Content>
-        </InlineAlert>
+        <>
+            <Flex direction={'column'} gap={'size-50'}>
+                {jobs?.map((job) => <TrainingInProgress job={job} key={job.id} />)}
+            </Flex>
+            <Divider size={'S'} />
+        </>
     );
 };
 
@@ -161,22 +180,14 @@ interface DatasetStatusPanelProps {
 }
 
 export const DatasetStatusPanel = ({ mediaItemsCount }: DatasetStatusPanelProps) => {
-    const startTrainingMutation = $api.useMutation('post', '/api/jobs:train');
-
-    const handleStartTraining = (body: { project_id: string; model_name: string }) => {
-        startTrainingMutation.mutate({
-            body,
-        });
-    };
-
-    // TODO: Investigate how to handle that case (local storage, poll for job status) after refreshing a page.
-    if (startTrainingMutation.data !== undefined) {
-        return <TrainingInProgress jobId={startTrainingMutation.data.job_id} />;
+    if (mediaItemsCount < REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING) {
+        return <NotEnoughNormalImagesToTrain mediaItemsCount={mediaItemsCount} />;
     }
 
-    if (mediaItemsCount >= REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING) {
-        return <ReadyToTrain isPending={startTrainingMutation.isPending} onStartTraining={handleStartTraining} />;
-    }
-
-    return <NotEnoughNormalImagesToTrain mediaItemsCount={mediaItemsCount} />;
+    return (
+        <>
+            <TrainingInProgressList />
+            <ReadyToTrain />
+        </>
+    );
 };
