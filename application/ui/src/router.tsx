@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 
 import { IntelBrandedLoading } from '@geti/ui';
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { path } from 'static-path';
 
 import { $api } from './api/client';
@@ -31,29 +31,35 @@ const RedirectToProject = () => {
 export const router = createBrowserRouter([
     {
         path: paths.root.pattern,
-        element: <RedirectToProject />,
-    },
-    {
         errorElement: <ErrorPage />,
-        path: paths.project.pattern,
         element: (
             <Suspense fallback={<IntelBrandedLoading />}>
-                <Layout />
+                <Outlet />
             </Suspense>
         ),
         children: [
             {
                 index: true,
-                element: <Inspect />,
+                element: <RedirectToProject />,
+            },
+            {
+                path: paths.project.pattern,
+                element: <Layout />,
+                children: [
+                    {
+                        index: true,
+                        element: <Inspect />,
+                    },
+                ],
+            },
+            {
+                path: paths.openapi.pattern,
+                element: <OpenApi />,
+            },
+            {
+                path: '*',
+                element: <RedirectToProject />,
             },
         ],
-    },
-    {
-        path: paths.openapi.pattern,
-        element: <OpenApi />,
-    },
-    {
-        path: '*',
-        element: <RedirectToProject />,
     },
 ]);
