@@ -175,3 +175,4 @@ docs/source/_build/
 wandb/
 lightning_logs/
 mlruns
+node_modules
