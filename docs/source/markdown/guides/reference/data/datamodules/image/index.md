@@ -7,6 +7,13 @@ Anomalib provides various datamodules for handling image-based anomaly detection
 ```{grid} 3
 :gutter: 2
 
+:::{grid-item-card} BMAD
+:link: bmad
+:link-type: doc
+
+BMAD dataset datamodule for medical anomaly detection.
+:::
+
 :::{grid-item-card} BTech
 :link: btech
 :link-type: doc
@@ -54,6 +61,7 @@ Visual Anomaly (VisA) dataset datamodule.
 :hidden:
 :maxdepth: 1
 
+bmad
 btech
 datumaro
 folder
