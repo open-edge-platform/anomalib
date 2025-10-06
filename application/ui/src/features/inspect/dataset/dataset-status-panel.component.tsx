@@ -27,11 +27,25 @@ const NotEnoughNormalImagesToTrain = ({ mediaItemsCount }: NotEnoughNormalImages
 
 const useAvailableModels = () => {
     const AVAILABLE_MODELS = [
-        {
-            id: 'padim',
-            name: 'PADIM',
-        },
-    ];
+        'ai_vad',
+        'cfa',
+        'cflow',
+        'csflow',
+        'dfkde',
+        'dfm',
+        'draem',
+        'efficient_ad',
+        'fastflow',
+        'fre',
+        'ganomaly',
+        'padim',
+        'patchcore',
+        'reverse_distillation',
+        'stfpm',
+        'uflow',
+        'vlm_ad',
+        'winclip',
+    ].map((name) => ({ id: name, name }));
 
     return AVAILABLE_MODELS;
 };
@@ -88,16 +102,12 @@ const useProjectTrainingJobs = () => {
 
     const { data } = $api.useQuery('get', '/api/jobs', undefined, {
         refetchInterval: ({ state }) => {
-            const job = state.data?.jobs.find(
+            const projectHasTrainingJob = state.data?.jobs.some(
                 ({ project_id, type, status }) =>
                     projectId === project_id && type === 'training' && (status === 'running' || status === 'pending')
             );
 
-            if (job === undefined) {
-                return undefined;
-            }
-
-            return REFETCH_INTERVAL_WITH_TRAINING;
+            return projectHasTrainingJob ? REFETCH_INTERVAL_WITH_TRAINING : undefined;
         },
     });
 
