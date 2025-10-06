@@ -110,6 +110,7 @@ runs:
       run: |
         # Create isolated test environment with uv using the configured Python
         uv venv --python "$(command -v python)" .venv
+        source .venv/bin/activate
         # Install dependencies with dev extras into the uv-managed environment
         uv pip install ".[dev]"
         uv pip install codecov
