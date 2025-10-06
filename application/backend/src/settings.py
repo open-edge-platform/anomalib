@@ -31,7 +31,9 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str = Field(
-        default="sqlite:///./data/geti_inspect.db", alias="DATABASE_URL", description="Database connection URL"
+        default="sqlite+aiosqlite:///./data/geti_inspect.db?journal_mode=WAL",
+        alias="DATABASE_URL",
+        description="Database connection URL",
     )
     db_echo: bool = Field(default=False, alias="DB_ECHO")
 
