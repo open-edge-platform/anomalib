@@ -54,7 +54,7 @@
 #        with:
 #          python-version: "3.11"
 #          test-type: "unit"
-#          timeout: 15
+#          timeout: 30
 #        secrets:
 #          codecov-token: ${{ secrets.CODECOV_TOKEN }}
 #
