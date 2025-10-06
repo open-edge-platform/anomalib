@@ -39,6 +39,9 @@ from torchvision.transforms import Compose, ToPILImage
 from anomalib.data import InferenceBatch
 from anomalib.models.components import BufferListMixin, DynamicBufferMixin
 
+from .prompting import create_prompt_ensemble
+from .utils import class_scores, harmonic_aggregation, make_masks, visual_association_score
+
 # Optional import for open_clip
 try:
     import open_clip
@@ -47,8 +50,6 @@ except ImportError:
     open_clip = None
     tokenize = None
 
-from .prompting import create_prompt_ensemble
-from .utils import class_scores, harmonic_aggregation, make_masks, visual_association_score
 
 BACKBONE = "ViT-B-16-plus-240"
 PRETRAINED = "laion400m_e31"
