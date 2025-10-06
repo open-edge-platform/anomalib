@@ -93,6 +93,11 @@ jobs:
   semgrep:
     if: contains(inputs.tools, 'semgrep')
     runs-on: ubuntu-latest
+<<<<<<< HEAD
+=======
+    container:
+      image: returntocorp/semgrep@sha256:ee3c01c9d33a975209d6bcda050520a45366d79e2919c15baca4014e8634a9ac # v1.124.0
+>>>>>>> chore(deps): update github actions (#2983)
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
