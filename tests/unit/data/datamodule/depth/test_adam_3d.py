@@ -36,7 +36,7 @@ class TestADAM3D(_TestAnomalibDepthDatamodule):
     @staticmethod
     def fxt_data_config_path() -> str:
         """Return the path to the data config file."""
-        return "examples/configs/data/adam_3d.py"
+        return "examples/configs/data/adam_3d.yaml"
 
     @staticmethod
     def test_datamodule_from_config(fxt_data_config_path: str) -> None:
