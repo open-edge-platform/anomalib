@@ -75,6 +75,11 @@ class DsrAnomalyGenerator(nn.Module):
         # Generate perlin noise using the new function
         perlin_noise = generate_perlin_noise(height, width, scale=(perlin_scalex, perlin_scaley))
 
+        # Rescale with threshold at center if all values are below the threshold
+        if not (perlin_noise > threshold).any():
+            perlin_noise = (perlin_noise - perlin_noise.min()) / (perlin_noise.max() - perlin_noise.min())
+            perlin_noise = (perlin_noise * 2) - 1
+
         # Apply random rotation
         perlin_noise = perlin_noise.unsqueeze(0)  # Add channel dimension for transform
         perlin_noise = self.rot(perlin_noise).squeeze(0)  # Remove channel dimension
