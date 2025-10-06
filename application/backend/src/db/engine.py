@@ -15,10 +15,16 @@ from sqlalchemy.pool.impl import NullPool
 from db.schema import Base
 from settings import get_settings
 
-DATABASE_URL = "sqlite+aiosqlite:///.inspect.db"
 settings = get_settings()
 
-async_engine = create_async_engine(DATABASE_URL, echo=False)
+async_engine = create_async_engine(
+    settings.database_url,
+    connect_args={"check_same_thread": False, "timeout": 30},
+    # Using NullPool to disable connection pooling, which is necessary for SQLite when using multiprocessing
+    # https://docs.sqlalchemy.org/en/20/core/pooling.html#using-connection-pools-with-multiprocessing-or-os-fork
+    poolclass=NullPool,
+    echo=settings.db_echo,
+)
 async_session = async_sessionmaker(async_engine, expire_on_commit=False)
 
 sync_engine = create_engine(
