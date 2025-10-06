@@ -8,6 +8,7 @@ from .pipeline import Pipeline, PipelineStatus
 from .project import Project, ProjectList
 from .sink import DisconnectedSinkConfig, OutputFormat, Sink, SinkType
 from .source import DisconnectedSourceConfig, Source, SourceType
+from .trainable_model import TrainableModelList
 
 __all__ = [
     "DisconnectedSinkConfig",
@@ -32,4 +33,5 @@ __all__ = [
     "SinkType",
     "Source",
     "SourceType",
+    "TrainableModelList",
 ]
