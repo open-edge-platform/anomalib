@@ -122,18 +122,19 @@ class ADAM3D(AnomalibDataModule):
         """
         self.train_data = ADAM3DDataset(
             split=Split.TRAIN,
-            root=self.root,
+            root=self.root / "adam3d_cropped",
             category=self.category,
         )
         self.test_data = ADAM3DDataset(
             split=Split.TEST,
-            root=self.root,
+            root=self.root / "adam3d_cropped",
             category=self.category,
         )
 
     def prepare_data(self) -> None:
         """Download the dataset if not available."""
-        if (self.root / self.category).is_dir():
+        # The Huggingface dataset is stored in adam3d_cropped
+        if (self.root / "adam3d_cropped" / self.category).is_dir():
             logger.info("Found the dataset.")
         else:
             download_and_extract(self.root, DOWNLOAD_INFO)
