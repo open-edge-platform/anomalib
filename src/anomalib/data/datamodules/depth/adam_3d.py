@@ -27,6 +27,7 @@ Reference: https://arxiv.org/abs/2507.07838
 
 import logging
 from pathlib import Path
+from shutil import move
 
 from torchvision.transforms.v2 import Transform
 
@@ -137,3 +138,9 @@ class ADAM3D(AnomalibDataModule):
             logger.info("Found the dataset.")
         else:
             download_and_extract(self.root, DOWNLOAD_INFO)
+            # The Huggingface dataset is stored in adam3d_cropped
+            # Move the contents to the root
+            extracted_folder = self.root / "adam3d_cropped"
+            for filename in extracted_folder.glob("*"):
+                move(str(filename), str(self.root / filename.name))
+            extracted_folder.rmdir()

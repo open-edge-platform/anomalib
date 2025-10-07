@@ -1,4 +1,4 @@
-class_path: anomalib.data.ADA3D
+class_path: anomalib.data.ADAM3D
 init_args:
   root: ./datasets/ADAM3D
   category: "1m1"
