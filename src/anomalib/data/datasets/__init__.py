@@ -43,6 +43,7 @@ Example:
 from .base import AnomalibDataset, AnomalibDepthDataset, AnomalibVideoDataset
 from .depth import ADAM3DDataset, Folder3DDataset, MVTec3DDataset
 from .image import (
+    BMADDataset,
     BTechDataset,
     DatumaroDataset,
     FolderDataset,
@@ -65,6 +66,7 @@ __all__ = [
     "MVTec3DDataset",
     "ADAM3DDataset",
     # Image
+    "BMADDataset",
     "BTechDataset",
     "DatumaroDataset",
     "FolderDataset",

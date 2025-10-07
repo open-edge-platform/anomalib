@@ -415,6 +415,36 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
         """Generate dummy folder structure for tabular dataset in a temporary directory."""
         self._generate_dummy_folder_dataset()
 
+    def _generate_dummy_bmad_dataset(self) -> None:
+        """Generate dummy BMAD dataset in directory."""
+        dataset_category = "dummy"
+        # train split. Images are in train/good
+        split_path = self.dataset_root / dataset_category / "train" / self.normal_category
+        for i in range(self.num_train):
+            label = LabelName.NORMAL
+            image_filename = split_path / f"{i:03}.png"
+            self.image_generator.generate_image(label=label, image_filename=image_filename)
+        # Good images are in subset/normal_category/img/i000.png
+        for split in ("test", "valid"):
+            split_path = self.dataset_root / dataset_category / split / self.normal_category / "img"
+            for i in range(self.num_test):
+                label = LabelName.NORMAL
+                image_filename = split_path / f"{i:03}.png"
+                self.image_generator.generate_image(label=label, image_filename=image_filename)
+        # Abnormal images are in subset/abnormal_category/img/i000.png
+        # and subset/abnormal_category/label/i000.png
+        for split in ("test", "valid"):
+            split_path = self.dataset_root / dataset_category / split / self.abnormal_category
+            for i in range(self.num_test):
+                label = LabelName.ABNORMAL
+                image_filename = split_path / "img" / f"{i:03}.png"
+                mask_filename = split_path / "label" / f"{i:03}.png"
+                self.image_generator.generate_image(
+                    label=label,
+                    image_filename=image_filename,
+                    mask_filename=mask_filename,
+                )
+
     def _generate_dummy_btech_dataset(self) -> None:
         """Generate dummy BeanTech dataset in directory using the same convention as BeanTech AD."""
         # BeanTech AD follows the same convention as MVTec AD.

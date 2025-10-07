@@ -6,6 +6,7 @@
 This module contains data modules for loading and processing image datasets for
 anomaly detection. The following data modules are available:
 
+- ``BMAD``: BMAD Dataset for Medical Anomaly Detection
 - ``BTech``: BTech Surface Defect Dataset
 - ``Datumaro``: Dataset in Datumaro format (Intel Geti™ export)
 - ``Folder``: Custom folder structure with normal/abnormal images
@@ -30,6 +31,7 @@ Example:
 
 from enum import Enum
 
+from .bmad import BMAD
 from .btech import BTech
 from .datumaro import Datumaro
 from .folder import Folder
@@ -49,6 +51,7 @@ class ImageDataFormat(str, Enum):
 
         The following dataset formats are supported:
 
+    - ``BMAD``: BMAD Dataset for Medical Anomaly Detection
     - ``BTECH``: BTech Surface Defect Dataset
     - ``DATUMARO``: Dataset in Datumaro format
     - ``FOLDER``: Custom folder structure
@@ -66,6 +69,7 @@ class ImageDataFormat(str, Enum):
     """
 
     ADAM_3D = "adam_3d"
+    BMAD = "bmad"
     BTECH = "btech"
     DATUMARO = "datumaro"
     FOLDER = "folder"
@@ -84,6 +88,7 @@ class ImageDataFormat(str, Enum):
 
 __all__ = [
     "ADAM_3D",
+    "BMAD",
     "BTech",
     "Datumaro",
     "Folder",
