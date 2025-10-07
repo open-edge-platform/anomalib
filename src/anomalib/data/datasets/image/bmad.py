@@ -199,7 +199,7 @@ def make_bmad_dataset(path: Path, split: str | Split | None = None) -> DataFrame
         samples.loc[
             ((samples.split == "test") | (samples.split == "valid")) & (samples.label_index == LabelName.ABNORMAL),
             "mask_path",
-        ] = mask_samples.image_path.to_numpy()
+        ] = mask_samples[mask_samples.label_index == LabelName.ABNORMAL].image_path.to_numpy()
 
     if len(mask_samples):
         abnormal_samples = samples.loc[samples.label_index == LabelName.ABNORMAL]
