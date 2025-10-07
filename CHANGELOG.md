@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- 🚀 Add 3D-ADAM dataset by @PaulMcHard in https://github.com/open-edge-platform/anomalib/pull/2986
+
 ### Removed
 
 ### Changed

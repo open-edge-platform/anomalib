@@ -20,7 +20,7 @@ class TestADAM3D(_TestAnomalibDepthDatamodule):
     def datamodule(dataset_path: Path) -> ADAM3D:
         """Create and return a 3D ADAM datamodule."""
         datamodule_ = ADAM3D(
-            root=dataset_path,
+            root=dataset_path / "adam_3d",
             category="dummy",
             train_batch_size=4,
             eval_batch_size=4,
@@ -37,16 +37,3 @@ class TestADAM3D(_TestAnomalibDepthDatamodule):
     def fxt_data_config_path() -> str:
         """Return the path to the data config file."""
         return "examples/configs/data/adam_3d.yaml"
-
-    @staticmethod
-    def test_datamodule_from_config(fxt_data_config_path: str) -> None:
-        """Test method to create a datamodule from a configuration file.
-
-        Args:
-            fxt_data_config_path (str): The path to the configuration file.
-
-        Returns:
-            None
-        """
-        pytest.skip("The configuration file does not exist.")
-        _ = fxt_data_config_path
