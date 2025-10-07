@@ -42,6 +42,16 @@ async def get_media(
     return FileResponse(await media_service.get_media_file_path(project_id=project_id, media_id=media_id))
 
 
+@media_router.get("/images/{media_id}/thumbnail", response_model_exclude_none=True)
+async def get_media_thumbnail(
+    media_service: Annotated[MediaService, Depends(get_media_service)],
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    media_id: Annotated[UUID, Depends(get_media_id)],
+) -> FileResponse:
+    """Return a PNG thumbnail for the requested image."""
+    return FileResponse(await media_service.get_thumbnail_file_path(project_id=project_id, media_id=media_id))
+
+
 @media_router.post("/capture", response_model_exclude_none=True)
 async def capture_image(
     media_service: Annotated[MediaService, Depends(get_media_service)],
