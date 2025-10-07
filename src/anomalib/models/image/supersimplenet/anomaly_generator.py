@@ -63,6 +63,13 @@ class AnomalyGenerator(nn.Module):
             # keep power of 2 here for reproduction purpose, although this function supports power2 internally
             perlin_noise = generate_perlin_noise(height=perlin_height, width=perlin_width)
 
+            # Rescale with threshold at center if all values are below the threshold
+            if not (perlin_noise > self.threshold).any():
+                # First normalize to [0,1] range by min-max normalization
+                perlin_noise = (perlin_noise - perlin_noise.min()) / (perlin_noise.max() - perlin_noise.min())
+                # Then rescale to [-1, 1] range
+                perlin_noise = (perlin_noise * 2) - 1
+
             # original is power of 2 scale, so fit to our size
             perlin_noise = F.interpolate(
                 perlin_noise.reshape(1, 1, perlin_height, perlin_width),
