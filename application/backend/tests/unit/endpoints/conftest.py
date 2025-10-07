@@ -9,4 +9,4 @@ from main import app
 
 @pytest.fixture
 def fxt_client():
-    return TestClient(app)
+    return TestClient(app, raise_server_exceptions=False)
