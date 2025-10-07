@@ -68,7 +68,10 @@ class ImageDataFormat(str, Enum):
     - ``VISA``: Visual Anomaly Dataset
     """
 
+<<<<<<< HEAD
     ADAM_3D = "adam_3d"
+=======
+>>>>>>> 🚀 feat(data): BMAD dataset (#3000)
     BMAD = "bmad"
     BTECH = "btech"
     DATUMARO = "datumaro"
@@ -87,7 +90,10 @@ class ImageDataFormat(str, Enum):
 
 
 __all__ = [
+<<<<<<< HEAD
     "ADAM_3D",
+=======
+>>>>>>> 🚀 feat(data): BMAD dataset (#3000)
     "BMAD",
     "BTech",
     "Datumaro",
