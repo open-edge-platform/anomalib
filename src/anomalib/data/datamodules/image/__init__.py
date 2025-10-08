@@ -68,6 +68,7 @@ class ImageDataFormat(str, Enum):
     - ``VISA``: Visual Anomaly Dataset
     """
 
+    ADAM_3D = "adam_3d"
     BMAD = "bmad"
     BTECH = "btech"
     DATUMARO = "datumaro"
@@ -86,6 +87,7 @@ class ImageDataFormat(str, Enum):
 
 
 __all__ = [
+    "ADAM_3D",
     "BMAD",
     "BTech",
     "Datumaro",

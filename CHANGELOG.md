@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- 🚀 **data**: Add 3D-ADAM dataset by @PaulMcHard in https://github.com/open-edge-platform/anomalib/pull/2986, https://github.com/open-edge-platform/anomalib/pull/3003
 - 🚀 **model**: Make coreset selection for patchcore faster in https://github.com/open-edge-platform/anomalib/pull/2968
 - 🚀 **data**: BMAD dataset by @code-dev05 in https://github.com/open-edge-platform/anomalib/pull/2900, https://github.com/open-edge-platform/anomalib/pull/3000
 - 🚀 **utils**: Implement type-safe deprecation decorator with version support in https://github.com/open-edge-platform/anomalib/pull/2771

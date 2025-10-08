@@ -450,7 +450,7 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
         # BeanTech AD follows the same convention as MVTec AD.
         self._generate_dummy_mvtecad_dataset(normal_dir="ok", abnormal_dir="ko", mask_suffix="")
 
-    def _generate_dummy_mvtec_3d_dataset(self) -> None:
+    def _generate_dummy_mvtec_3d_dataset(self, ground_truth_dir: str = "gt") -> None:
         """Generate dummy MVTec 3D AD dataset in a temporary directory using the same convention as MVTec AD."""
         # MVTec 3D AD has multiple subcategories within the dataset.
         dataset_category = "dummy"
@@ -474,15 +474,19 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
                 image, mask = self.image_generator.generate_image(label=label)
 
                 # Create rgb, xyz, and gt filenames.
-                for directory in ("rgb", "xyz", "gt"):
+                for directory in ("rgb", "xyz", ground_truth_dir):
                     extension = ".png" if directory == "gt" else ".tiff" if directory == "xyz" else ".png"
                     filename = test_path / category / directory / f"{i:03}{extension}"
 
                     # Save image or mask.
-                    if directory == "gt":
+                    if directory == ground_truth_dir:
                         self.image_generator.save_image(filename=filename, image=img_as_ubyte(mask))
                     else:
                         self.image_generator.save_image(filename=filename, image=image)
+
+    def _generate_dummy_adam_3d_dataset(self) -> None:
+        """Generates dummy 3D-ADAM dataset in a temporary directory using the same convention as 3D-ADAM."""
+        self._generate_dummy_mvtec_3d_dataset(ground_truth_dir="ground_truth")
 
     def _generate_dummy_mvtec_loco_dataset(self) -> None:
         """Generates dummy MVTec LOCO AD dataset in a temporary directory using the same convention as MVTec LOCO AD."""

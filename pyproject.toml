@@ -48,6 +48,7 @@ dependencies = [
     "opencv-python>=4.5.3.56",
     "scikit-image",
     "tifffile",
+    "imagecodecs",
     "kornia>=0.6.6",
     # Data science and analysis
     "pandas>=1.1.0",
