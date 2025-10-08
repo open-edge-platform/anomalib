@@ -49,3 +49,31 @@ def test_get_media_list(fxt_client, fxt_media_service, fxt_media):
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["media"]) == 1
     fxt_media_service.get_media_list.assert_called_once_with(project_id=project_id)
+
+
+def test_get_media_thumbnail_success(fxt_client, fxt_media_service, tmp_path):
+    """Test successful thumbnail retrieval."""
+    project_id = uuid4()
+    media_id = uuid4()
+    thumbnail_path = tmp_path / f"thumb_{media_id}.png"
+    thumbnail_path.write_bytes(b"fake thumbnail content")
+
+    fxt_media_service.get_thumbnail_file_path.return_value = str(thumbnail_path)
+
+    response = fxt_client.get(f"/api/projects/{project_id}/images/{media_id}/thumbnail")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.content == b"fake thumbnail content"
+    fxt_media_service.get_thumbnail_file_path.assert_called_once_with(project_id=project_id, media_id=media_id)
+
+
+def test_get_media_thumbnail_not_found(fxt_client, fxt_media_service):
+    """Test thumbnail retrieval raises FileNotFoundError when media not found."""
+    project_id = uuid4()
+    media_id = uuid4()
+
+    fxt_media_service.get_thumbnail_file_path.side_effect = FileNotFoundError("Media not found")
+
+    # Create client that doesn't raise server exceptions immediately
+    response = fxt_client.get(f"/api/projects/{project_id}/images/{media_id}/thumbnail")
+    assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
