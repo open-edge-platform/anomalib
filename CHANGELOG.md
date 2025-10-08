@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- 🐞 **ci**: Increase unit test timeout from 15 to 30 seconds by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/2988
 - 🐞 **data**: Perlin noise generator masks by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/2936
 - 🐞 **deploy**: Fix openvino cache directory by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/2979
 - 🐞 **utils**: Run CS Flow model in eval() so the weights of the model itself will not be modified by @monzelr in https://github.com/open-edge-platform/anomalib/pull/2966
