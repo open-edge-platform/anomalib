@@ -8,6 +8,7 @@ anomaly detection tasks. The following datasets are available:
 
 - ``Folder3DDataset``: Custom dataset for loading RGB-D data from a folder structure
 - ``MVTec3DDataset``: Implementation of the MVTec 3D-AD dataset
+- ``ADAM3DDataset``: Implementation of the 3D-ADAM dataset
 
 Example:
     >>> from anomalib.data.datasets import Folder3DDataset
@@ -25,7 +26,8 @@ Example:
     ... )
 """
 
+from .adam_3d import ADAM3DDataset
 from .folder_3d import Folder3DDataset
 from .mvtec_3d import MVTec3DDataset
 
-__all__ = ["Folder3DDataset", "MVTec3DDataset"]
+__all__ = ["Folder3DDataset", "MVTec3DDataset", "ADAM3DDataset"]
