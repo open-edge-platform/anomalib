@@ -8,9 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- 🚀 Add 3D-ADAM dataset by @PaulMcHard in https://github.com/open-edge-platform/anomalib/pull/2986
-- 🚀 Add BMAD dataset by @code-dev05 in https://github.com/open-edge-platform/anomalib/pull/2900
-
 ### Removed
 
 ### Changed
@@ -18,6 +15,51 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Deprecated
 
 ### Fixed
+
+## [v2.2.0] - 2025-10-08
+
+### Added
+
+- 🚀 **data**: Add 3D-ADAM dataset by @PaulMcHard in https://github.com/open-edge-platform/anomalib/pull/2986, https://github.com/open-edge-platform/anomalib/pull/3003
+- 🚀 **model**: Make coreset selection for patchcore faster by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/2968
+- 🚀 **data**: BMAD dataset by @code-dev05 in https://github.com/open-edge-platform/anomalib/pull/2900, https://github.com/open-edge-platform/anomalib/pull/3000
+- 🚀 **utils**: Implement type-safe deprecation decorator with version support by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2771
+- 🚀 **model**: add automatic download of DTD dataset to DRAEM model by @abc-125 in https://github.com/open-edge-platform/anomalib/pull/2866
+- 🚀 **metric**: added histogram of anomaly scores by @abc-125 in https://github.com/open-edge-platform/anomalib/pull/2920
+- 🚀 **metric**: added PGn, PBn metrics by @abc-125 in https://github.com/open-edge-platform/anomalib/pull/2889
+- 🚀 **data**: added ground truth masks to VAD dataset by @abc-125 in https://github.com/open-edge-platform/anomalib/pull/2940
+- 🚀 **workflow**: add CodeQL analysis workflow for security scanning by @kamillipka in https://github.com/open-edge-platform/anomalib/pull/2951
+- 🚀 **data**: add backward compatibility methods and update docstring examples by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2950
+
+### Fixed
+
+- 🐞 **data**: Perlin noise generator masks by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/2936
+- 🐞 **deploy**: Fix openvino cache directory by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/2979
+- 🐞 **utils**: Run CS Flow model in eval() so the weights of the model itself will not be modified by @monzelr in https://github.com/open-edge-platform/anomalib/pull/2966
+- 🐞 **ci**: ignore uv.lock in semgrep by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/2972
+- 🐞 **docs**: revert correct symlink and update pre-commit config by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/2875
+- 🐞 **deploy**: Fix discrepancy between lightning and standalone inferencers by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/2843
+- 🐞 **docs**: revert correct symlink by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/2854
+- 🐞 **imports**: update OpenVINO import paths in inferencer and post-processor by @IceboxDev in https://github.com/open-edge-platform/anomalib/pull/2829, in https://github.com/open-edge-platform/anomalib/pull/2789
+- 🐞 **data**: MVTecAD2 CLI bug fix enum serialisation by @alfieroddan in https://github.com/open-edge-platform/anomalib/pull/2817
+- 🐞 **model**: remove in-place ops in CombinedDensityEstimator.predict for ONNX dynamic_axes export by @grannycola in https://github.com/open-edge-platform/anomalib/pull/2808
+- 🐞 **export**: enhance model export with flexible kwargs support for ONNX and OpenVINO by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2780
+- 🐞 **visualization**: modify the image font loading logic to ensure the right font is installed by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2783
+- 🐞 **data**: enhance ToNumpyMixin for improved tensor conversion by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2775
+- 🐞 **docs**: fixed the "Anomalib in 15 Minutes" train and inference code by @FedericoDeBona in https://github.com/open-edge-platform/anomalib/pull/2904
+- 🐞 **metric**: fixed examples to work with Anomalib metrics by @abc-125 in https://github.com/open-edge-platform/anomalib/pull/2911
+- 🐞 **model**: Reduce memory reserved for memory bank based models PatchCore, Padim, Dfkde by @alfieroddan in https://github.com/open-edge-platform/anomalib/pull/2913
+- 🐞 **bandit**: Suppress Bandit NoSec incorrectly flagging HuggingFace model loading by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/2937, in https://github.com/open-edge-platform/anomalib/pull/2947
+- 🐞 **docs**: Update documentation and log messages to reflect recent changes by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/2931
+- 🐞 **path**: Remove filter to remove hidden files by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/2955
+- 🐞 **utils**: Improve optional import handling across loggers and model backends by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2956, in https://github.com/open-edge-platform/anomalib/pull/2954
+
+### Changed
+
+- 🔧 **visualizer**: remove unnecessary warning log in `visualize_image_item` by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2778
+- 🔧 **model**: check if no normalization is in transforms for DRAEM, DSR by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/2867
+- 📦 **pyproject.toml**: Select files in source distribution for builds by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/2869
+- 🔧 **deps**: update github actions by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/2921
 
 ## [v2.1.0]
 
