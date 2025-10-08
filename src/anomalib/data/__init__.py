@@ -50,6 +50,7 @@ from .dataclasses import (
 from .datamodules.base import AnomalibDataModule
 from .datamodules.depth import DepthDataFormat, Folder3D, MVTec3D
 from .datamodules.image import (
+    BMAD,
     MPDD,
     VAD,
     BTech,
@@ -71,6 +72,7 @@ from .datamodules.video import Avenue, ShanghaiTech, UCSDped, VideoDataFormat
 from .datasets import AnomalibDataset
 from .datasets.depth import Folder3DDataset, MVTec3DDataset
 from .datasets.image import (
+    BMADDataset,
     BTechDataset,
     DatumaroDataset,
     FolderDataset,
@@ -176,6 +178,7 @@ __all__ = [
     "Folder3D",
     "MVTec3D",
     # Image Data Modules
+    "BMAD",
     "BTech",
     "Datumaro",
     "Folder",
@@ -210,6 +213,7 @@ __all__ = [
     "ShanghaiTechDataset",
     "UCSDpedDataset",
     "PredictDataset",
+    "BMADDataset",
     # Functions
     "get_datamodule",
     # Exceptions
