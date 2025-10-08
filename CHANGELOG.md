@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- 🐞 **ci**: Increase unit test timeout from 15 to 30 seconds by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/2988
 - 🐞 **data**: Perlin noise generator masks by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/2936
 - 🐞 **deploy**: Fix openvino cache directory by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/2979
 - 🐞 **utils**: Run CS Flow model in eval() so the weights of the model itself will not be modified by @monzelr in https://github.com/open-edge-platform/anomalib/pull/2966
@@ -42,7 +43,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 🐞 **docs**: revert correct symlink by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/2854
 - 🐞 **imports**: update OpenVINO import paths in inferencer and post-processor by @IceboxDev in https://github.com/open-edge-platform/anomalib/pull/2829, in https://github.com/open-edge-platform/anomalib/pull/2789
 - 🐞 **data**: MVTecAD2 CLI bug fix enum serialisation by @alfieroddan in https://github.com/open-edge-platform/anomalib/pull/2817
-- 🐞 **model**: remove in-place ops in CombinedDensityEstimator.predict for ONNX dynamic_axes export by @grannycola in https://github.com/open-edge-platform/anomalib/pull/2808
 - 🐞 **export**: enhance model export with flexible kwargs support for ONNX and OpenVINO by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2780
 - 🐞 **visualization**: modify the image font loading logic to ensure the right font is installed by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2783
 - 🐞 **data**: enhance ToNumpyMixin for improved tensor conversion by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2775
