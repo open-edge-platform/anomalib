@@ -8,8 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- 🚀 Add BMAD dataset by @code-dev05 in https://github.com/open-edge-platform/anomalib/pull/2900
-
 ### Removed
 
 ### Changed
@@ -18,10 +16,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
-## [v2.2.0] - 2025-09-17
+## [v2.2.0] - 2025-10-08
 
 ### Added
 
+- 🚀 **data**: BMAD dataset (#3000)
+- 🚀 **model**: Make coreset selection for patchcore faster (#2968)
+- 🚀 Add BMAD dataset by @code-dev05 in (#2900)
 - 🚀 Implement type-safe deprecation decorator with version support (#2771)
 - 🚀 **model**: add automatic download of DTD dataset to DRAEM model (#2866)
 - 🚀 **metric**: added histogram of anomaly scores (#2920)
@@ -32,6 +33,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- 🐞 **data**: Perlin noise generator masks (#2936)
+- 🐞 **deploy**: Fix openvino cache directory (#2979)
+- 🐞 **utils**: Run CS Flow model in eval() so the weights of the model itself will not be modified (#2966)
+- 🐞 **ci**: ignore uv.lock in semgrep (#2972)
 - 🐞 **docs**: revert correct symlink and update pre-commit config (#2875)
 - 🐞 **deploy**: Fix discrepancy between lightning and standalone inferencers (#2843)
 - 🐞 **docs**: revert correct symlink (#2854)
