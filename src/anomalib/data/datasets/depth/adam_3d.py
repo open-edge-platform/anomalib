@@ -3,7 +3,7 @@
 
 """3D-ADAM Datamodule.
 
-This module provides PyTorch Dataset, Dataloader and PyTorch Lightning DataModule for
+This module provides PyTorch Dataset for
 the 3D-ADAM dataset. If the dataset is not available locally, it will be
 downloaded and extracted automatically.
 
