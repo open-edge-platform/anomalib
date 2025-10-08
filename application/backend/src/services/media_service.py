@@ -128,9 +128,26 @@ class MediaService:
         height_px: int = THUMBNAIL_SIZE,
         width_px: int = THUMBNAIL_SIZE,
     ) -> None:
-        """Generate thumbnail bytes (PNG) with maximum height_px x width_px.
+        """Create and persist a PNG thumbnail for a media item.
 
-        It returns the raw bytes of a PNG image so the caller can decide where/how to persist them.
+        Resizes the input image to fit within width_px x height_px while
+        preserving aspect ratio. Intended to run as a background task so the
+        upload path stays fast.
+
+        Args:
+            project_id: Identifier of the owning project.
+            media_id: Identifier of the media item the thumbnail belongs to.
+            image_bytes: Original image bytes used to create the thumbnail.
+            height_px: Maximum thumbnail height in pixels. Defaults to
+                ``THUMBNAIL_SIZE``.
+            width_px: Maximum thumbnail width in pixels. Defaults to
+                ``THUMBNAIL_SIZE``.
+
+        Returns:
+            None
+
+        Raises:
+            Exception: If processing or persistence fails
         """
 
         def _create() -> bytes:
