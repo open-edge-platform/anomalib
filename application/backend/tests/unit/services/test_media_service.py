@@ -102,10 +102,10 @@ class TestMediaService:
 
         assert "Media with ID non-existent-id not found" in str(exc_info.value)
 
-    def test_upload_image_success(self, fxt_media_service, fxt_upload_file, fxt_project):
-        """Test successful image upload."""
+    def test_upload_image_success(self, fxt_media_service, fxt_upload_file, fxt_project, fxt_image_bytes):
+        """Test successful image upload (no inline thumbnail generation)."""
         mock_bin_repo = MagicMock()
-        mock_bin_repo.save_file = AsyncMock(side_effect=["/path/to/file.jpg", "/path/to/thumb.png"])
+        mock_bin_repo.save_file = AsyncMock(return_value="/path/to/file.jpg")
 
         mock_media_repo = MagicMock()
         mock_media_repo.save = AsyncMock(return_value=MagicMock())
@@ -113,18 +113,19 @@ class TestMediaService:
         with (
             patch("services.media_service.ImageBinaryRepository", return_value=mock_bin_repo),
             patch("services.media_service.MediaRepository", return_value=mock_media_repo),
-            patch.object(fxt_media_service, "generate_thumbnail", new=AsyncMock(return_value=b"thumb_data")),
         ):
-            result = asyncio.run(fxt_media_service.upload_image(fxt_project.id, fxt_upload_file, False))
+            result = asyncio.run(
+                fxt_media_service.upload_image(fxt_project.id, fxt_upload_file, fxt_image_bytes, False)
+            )
 
         assert result is not None
-        assert mock_bin_repo.save_file.call_count == 2  # original + thumbnail
+        assert mock_bin_repo.save_file.call_count == 1  # only original saved
         mock_media_repo.save.assert_called_once()
 
-    def test_upload_image_rollback_on_error(self, fxt_media_service, fxt_upload_file, fxt_project):
+    def test_upload_image_rollback_on_error(self, fxt_media_service, fxt_upload_file, fxt_project, fxt_image_bytes):
         """Test image upload rollback on error."""
         mock_bin_repo = MagicMock()
-        mock_bin_repo.save_file = AsyncMock(side_effect=["/path/to/file.jpg", "/path/to/thumb.png"])
+        mock_bin_repo.save_file = AsyncMock(return_value="/path/to/file.jpg")
         mock_bin_repo.delete_file = AsyncMock()
 
         mock_media_repo = MagicMock()
@@ -133,18 +134,19 @@ class TestMediaService:
         with (
             patch("services.media_service.ImageBinaryRepository", return_value=mock_bin_repo),
             patch("services.media_service.MediaRepository", return_value=mock_media_repo),
-            patch.object(fxt_media_service, "generate_thumbnail", new=AsyncMock(return_value=b"thumb_data")),
             pytest.raises(Exception, match="Database error"),
         ):
-            asyncio.run(fxt_media_service.upload_image(fxt_project.id, fxt_upload_file, False))
+            asyncio.run(fxt_media_service.upload_image(fxt_project.id, fxt_upload_file, fxt_image_bytes, False))
 
         # Verify rollback deletes both files
-        assert mock_bin_repo.delete_file.call_count == 2
+        assert mock_bin_repo.delete_file.call_count == 1
 
-    def test_upload_image_rollback_file_not_found(self, fxt_media_service, fxt_upload_file, fxt_project):
+    def test_upload_image_rollback_file_not_found(
+        self, fxt_media_service, fxt_upload_file, fxt_project, fxt_image_bytes
+    ):
         """Test image upload rollback when file deletion fails with FileNotFoundError."""
         mock_bin_repo = MagicMock()
-        mock_bin_repo.save_file = AsyncMock(side_effect=["/path/to/file.jpg", "/path/to/thumb.png"])
+        mock_bin_repo.save_file = AsyncMock(return_value="/path/to/file.jpg")
         mock_bin_repo.delete_file = AsyncMock(side_effect=FileNotFoundError())
 
         mock_media_repo = MagicMock()
@@ -153,13 +155,12 @@ class TestMediaService:
         with (
             patch("services.media_service.ImageBinaryRepository", return_value=mock_bin_repo),
             patch("services.media_service.MediaRepository", return_value=mock_media_repo),
-            patch.object(fxt_media_service, "generate_thumbnail", new=AsyncMock(return_value=b"thumb_data")),
             pytest.raises(Exception, match="Database error"),
         ):
-            asyncio.run(fxt_media_service.upload_image(fxt_project.id, fxt_upload_file, False))
+            asyncio.run(fxt_media_service.upload_image(fxt_project.id, fxt_upload_file, fxt_image_bytes, False))
 
         # Verify rollback attempted to delete both files
-        assert mock_bin_repo.delete_file.call_count == 2
+        assert mock_bin_repo.delete_file.call_count == 1
 
     def test_delete_media_success(self, fxt_media_service, fxt_media, fxt_project):
         """Test successful media deletion."""
@@ -230,27 +231,39 @@ class TestMediaService:
                 with pytest.raises(Exception, match="File system error"):
                     asyncio.run(fxt_media_service.delete_media(fxt_media.id, fxt_project.id))
 
-    def test_thumbnail_generation_success(self, fxt_media_service):
-        """Test thumbnail generation creates valid PNG with correct dimensions."""
+    def test_thumbnail_generation_success(self, fxt_media_service, fxt_project):
+        """Test thumbnail generation saves PNG and uses expected filename."""
+        # Create valid image bytes
         img = Image.new("RGB", (512, 512), color="red")
         with BytesIO() as buf:
             img.save(buf, format="JPEG")
             image_bytes = buf.getvalue()
 
-        thumbnail_bytes = asyncio.run(fxt_media_service.generate_thumbnail(image_bytes, 256, 256))
+        mock_bin_repo = MagicMock()
 
-        # Verify valid PNG format and dimensions
-        assert thumbnail_bytes.startswith(b"\x89PNG")
-        with BytesIO(thumbnail_bytes) as buf:
-            thumb_img = Image.open(buf)
-            assert thumb_img.format == "PNG"
-            assert thumb_img.width <= 256
-            assert thumb_img.height <= 256
+        # Capture arguments to validate content and filename
+        async def _save_file(filename: str, content: bytes) -> str:  # type: ignore[override]
+            assert filename.startswith("thumb_") and filename.endswith(".png")
+            assert content.startswith(b"\x89PNG")
+            return "/path/to/thumb.png"
+
+        mock_bin_repo.save_file = AsyncMock(side_effect=_save_file)
+
+        media_id = uuid4()
+
+        with patch("services.media_service.ImageBinaryRepository", return_value=mock_bin_repo):
+            asyncio.run(
+                fxt_media_service.generate_thumbnail(
+                    project_id=fxt_project.id,
+                    media_id=media_id,
+                    image_bytes=image_bytes,
+                )
+            )
 
     def test_thumbnail_upload_and_deletion(self, fxt_media_service, fxt_upload_file, fxt_project):
-        """Test upload saves thumbnail and deletion removes both files."""
+        """Test manual thumbnail generation after upload and deletion of both files."""
         mock_bin_repo = MagicMock()
-        mock_bin_repo.save_file = AsyncMock(side_effect=["/path/to/file.jpg", "/path/to/thumb.png"])
+        mock_bin_repo.save_file = AsyncMock(return_value="/path/to/file.jpg")
         mock_bin_repo.delete_file = AsyncMock()
 
         mock_media_repo = MagicMock()
@@ -258,15 +271,29 @@ class TestMediaService:
         mock_media_repo.save = AsyncMock(return_value=saved_media)
         mock_media_repo.get_by_id = AsyncMock(return_value=saved_media)
 
+        # Valid image bytes for thumbnail generation
+        img = Image.new("RGB", (512, 512), color="blue")
+        with BytesIO() as buf:
+            img.save(buf, format="JPEG")
+            image_bytes = buf.getvalue()
+
         with (
             patch("services.media_service.ImageBinaryRepository", return_value=mock_bin_repo),
             patch("services.media_service.MediaRepository", return_value=mock_media_repo),
-            patch.object(fxt_media_service, "generate_thumbnail", new=AsyncMock(return_value=b"thumb_data")),
         ):
-            # Upload saves both original and thumbnail
-            result = asyncio.run(fxt_media_service.upload_image(fxt_project.id, fxt_upload_file, False))
+            # Upload saves only original
+            result = asyncio.run(fxt_media_service.upload_image(fxt_project.id, fxt_upload_file, image_bytes, False))
             assert result is not None
-            assert mock_bin_repo.save_file.call_count == 2
+            assert mock_bin_repo.save_file.call_count == 1
+
+            # Generate and save thumbnail (background-equivalent)
+            asyncio.run(
+                fxt_media_service.generate_thumbnail(
+                    project_id=fxt_project.id,
+                    media_id=saved_media.id,
+                    image_bytes=image_bytes,
+                )
+            )
 
             # Deletion removes both files
             asyncio.run(fxt_media_service.delete_media(saved_media.id, fxt_project.id))

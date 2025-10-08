@@ -56,15 +56,13 @@ class MediaService:
         return bin_repo.get_full_path(filename=thumbnail_filename)
 
     @classmethod
-    async def upload_image(cls, project_id: UUID, file: UploadFile, is_anomalous: bool) -> Media:
+    async def upload_image(cls, project_id: UUID, file: UploadFile, image_bytes: bytes, is_anomalous: bool) -> Media:
         # Generate unique filename and media ID
         media_id = uuid4()
         extension = list(os.path.splitext(file.filename)).pop().lower()
         filename = f"{media_id}{extension}"
-        thumbnail_filename = cls._get_thumbnail_filename(media_id)
         bin_repo = ImageBinaryRepository(project_id=project_id)
         saved_media: Media | None = None
-        image_bytes = await file.read()
 
         async with get_async_db_session_ctx() as session:
             media_repo = MediaRepository(session, project_id=project_id)
@@ -75,18 +73,6 @@ class MediaService:
                     content=image_bytes,
                 )
                 logger.info(f"Saved media file: {saved_file_path}")
-
-                # Generate and save thumbnail
-                thumbnail_bytes = await cls.generate_thumbnail(
-                    image_bytes=image_bytes,
-                    height_px=THUMBNAIL_SIZE,
-                    width_px=THUMBNAIL_SIZE,
-                )
-                thumbnail_path = await bin_repo.save_file(
-                    filename=thumbnail_filename,
-                    content=thumbnail_bytes,
-                )
-                logger.info(f"Saved thumbnail: {thumbnail_path}")
 
                 # Create media record in database
                 media = Media(
@@ -102,7 +88,6 @@ class MediaService:
                 # Attempt to delete the files if they were saved
                 try:
                     await cls._delete_media_file(project_id=project_id, filename=filename)
-                    await cls._delete_media_file(project_id=project_id, filename=thumbnail_filename)
                 except Exception as delete_error:
                     logger.error(f"Failed to delete media file during rollback: {delete_error}")
                 if saved_media is not None:
@@ -134,8 +119,15 @@ class MediaService:
             logger.error(f"Error deleting file `{filename}`: {e}")
             raise e
 
-    @staticmethod
-    async def generate_thumbnail(image_bytes: bytes, height_px: int, width_px: int) -> bytes:
+    @classmethod
+    async def generate_thumbnail(
+        cls,
+        project_id: UUID,
+        media_id: UUID,
+        image_bytes: bytes,
+        height_px: int = THUMBNAIL_SIZE,
+        width_px: int = THUMBNAIL_SIZE,
+    ) -> None:
         """Generate thumbnail bytes (PNG) with maximum height_px x width_px.
 
         It returns the raw bytes of a PNG image so the caller can decide where/how to persist them.
@@ -149,4 +141,20 @@ class MediaService:
                     img.save(buf, format="PNG")
                     return buf.getvalue()
 
-        return await asyncio.to_thread(_create)
+        thumbnail_bytes = await asyncio.to_thread(_create)
+        thumbnail_filename = cls._get_thumbnail_filename(media_id)
+        bin_repo = ImageBinaryRepository(project_id=project_id)
+        try:
+            thumbnail_path = await bin_repo.save_file(
+                filename=thumbnail_filename,
+                content=thumbnail_bytes,
+            )
+            logger.info(f"Saved thumbnail: {thumbnail_path}")
+        except Exception as e:
+            logger.error(f"Rolling back media thumbnail generation due to error: {e}")
+            # Attempt to delete the files if they were saved
+            try:
+                await cls._delete_media_file(project_id=project_id, filename=thumbnail_filename)
+            except Exception as delete_error:
+                logger.error(f"Failed to delete media file during rollback: {delete_error}")
+            raise e
