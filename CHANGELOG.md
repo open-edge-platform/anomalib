@@ -56,7 +56,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- 🔧 **visualizer**: remove unnecessary warning log in `visualize_image_item` by @samet-akcayin https://github.com/open-edge-platform/anomalib/pull/2778
+- 🔧 **visualizer**: remove unnecessary warning log in `visualize_image_item` by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2778
 - 🔧 **model**: check if no normalization is in transforms for DRAEM, DSR by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/2867
 - 📦 **pyproject.toml**: Select files in source distribution for builds by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/2869
 - 🔧 **deps**: update github actions by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/2921
