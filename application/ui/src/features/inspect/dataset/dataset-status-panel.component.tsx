@@ -1,9 +1,21 @@
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 
 import { $api } from '@geti-inspect/api';
 import { SchemaJob as Job } from '@geti-inspect/api/spec';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
-import { Button, Content, Divider, Flex, Heading, InlineAlert, Item, Picker, ProgressBar, Text } from '@geti/ui';
+import {
+    Button,
+    Content,
+    Divider,
+    Flex,
+    Heading,
+    InlineAlert,
+    IntelBrandedLoading,
+    Item,
+    Picker,
+    ProgressBar,
+    Text,
+} from '@geti/ui';
 
 import { REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING } from './utils';
 
@@ -26,28 +38,12 @@ const NotEnoughNormalImagesToTrain = ({ mediaItemsCount }: NotEnoughNormalImages
 };
 
 const useAvailableModels = () => {
-    const AVAILABLE_MODELS = [
-        'ai_vad',
-        'cfa',
-        'cflow',
-        'csflow',
-        'dfkde',
-        'dfm',
-        'draem',
-        'efficient_ad',
-        'fastflow',
-        'fre',
-        'ganomaly',
-        'padim',
-        'patchcore',
-        'reverse_distillation',
-        'stfpm',
-        'uflow',
-        'vlm_ad',
-        'winclip',
-    ].map((name) => ({ id: name, name }));
+    const { data } = $api.useSuspenseQuery('get', '/api/trainable-models', undefined, {
+        staleTime: Infinity,
+        gcTime: Infinity,
+    });
 
-    return AVAILABLE_MODELS;
+    return data.trainable_models.map((model) => ({ id: model, name: model }));
 };
 
 const ReadyToTrain = () => {
@@ -195,9 +191,9 @@ export const DatasetStatusPanel = ({ mediaItemsCount }: DatasetStatusPanelProps)
     }
 
     return (
-        <>
+        <Suspense fallback={<IntelBrandedLoading />}>
             <TrainingInProgressList />
             <ReadyToTrain />
-        </>
+        </Suspense>
     );
 };
