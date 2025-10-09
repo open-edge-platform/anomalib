@@ -138,8 +138,8 @@ class Scheduler(metaclass=Singleton):
                 # Explicitly close the process' resources
                 try:
                     process.close()
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning("Error closing process %s: %s", process.name, e)
 
         logger.info("All workers shut down gracefully")
 
