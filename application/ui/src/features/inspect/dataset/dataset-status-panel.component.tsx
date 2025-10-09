@@ -111,7 +111,7 @@ const useProjectTrainingJobs = () => {
 };
 
 const TrainingInProgress = ({ job }: TrainingInProgressProps) => {
-    if (job === undefined || job.status === 'completed') {
+    if (job === undefined) {
         return null;
     }
 
@@ -165,6 +165,17 @@ const TrainingInProgress = ({ job }: TrainingInProgressProps) => {
         );
     }
 
+    if (job.status === 'completed') {
+        return (
+            <InlineAlert variant='positive'>
+                <Heading>Training completed</Heading>
+                <Content>
+                    <Text>{job.message}</Text>
+                </Content>
+            </InlineAlert>
+        );
+    }
+
     return null;
 };
 
@@ -174,7 +185,9 @@ const TrainingInProgressList = () => {
     return (
         <>
             <Flex direction={'column'} gap={'size-50'}>
-                {jobs?.map((job) => <TrainingInProgress job={job} key={job.id} />)}
+                {jobs
+                    ?.filter((job) => job.status === 'completed')
+                    .map((job) => <TrainingInProgress job={job} key={job.id} />)}
             </Flex>
             <Divider size={'S'} />
         </>

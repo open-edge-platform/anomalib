@@ -3,6 +3,7 @@
 
 import { Grid } from '@geti/ui';
 
+import { SelectedMediaItemProvider } from '../../features/inspect/selected-media-item-provider.component';
 import { Sidebar } from '../../features/inspect/sidebar.component';
 import { StreamContainer } from '../../features/inspect/stream/stream-container';
 import { Toolbar } from '../../features/inspect/toolbar';
@@ -19,9 +20,11 @@ export const Inspect = () => {
                 gap: '1px',
             }}
         >
-            <Toolbar />
-            <StreamContainer />
-            <Sidebar />
+            <SelectedMediaItemProvider>
+                <Toolbar />
+                <StreamContainer />
+                <Sidebar />
+            </SelectedMediaItemProvider>
         </Grid>
     );
 };
