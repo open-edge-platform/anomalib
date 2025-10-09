@@ -48,7 +48,7 @@ class Scheduler(metaclass=Singleton):
         self.threads: list[threading.Thread] = []
         logger.info("Scheduler initialized")
         # Ensure we always attempt a graceful shutdown when the main process exits
-        atexit.register(self._atexit_shutdown)
+        atexit.register(self.shutdown)
 
     def start_workers(self) -> None:
         """Start all worker processes and threads"""
@@ -60,6 +60,7 @@ class Scheduler(metaclass=Singleton):
             name="Training worker",
             args=(self.mp_stop_event,),
         )
+        # Training worker is not a daemon so that training script can spawn child processes
         training_proc.daemon = False
 
         # Inference worker consumes frames and produces predictions
@@ -150,29 +151,6 @@ class Scheduler(metaclass=Singleton):
         self._cleanup_queues()
         self._cleanup_shared_memory()
 
-    def _atexit_shutdown(self) -> None:
-        """Best-effort shutdown invoked by atexit to prevent orphans."""
-        try:
-            # Only attempt shutdown if we haven't already done so
-            if hasattr(self, "processes") and self.processes:
-                # Signal all processes to stop
-                if hasattr(self, "mp_stop_event") and self.mp_stop_event is not None:
-                    self.mp_stop_event.set()
-                
-                # Force terminate any remaining alive processes
-                for process in self.processes:
-                    if process.is_alive():
-                        try:
-                            process.terminate()
-                            process.join(timeout=1)
-                            if process.is_alive():
-                                process.kill()
-                        except Exception:
-                            logger.warning("Exception occurred while terminating process %r", process, exc_info=True)
-        except Exception:
-            # Avoid raising during interpreter shutdown
-            pass
-
     def _cleanup_queues(self) -> None:
         """Final queue cleanup"""
         for q, name in [(self.frame_queue, "frame_queue"), (self.pred_queue, "pred_queue")]:
@@ -191,7 +169,6 @@ class Scheduler(metaclass=Singleton):
             try:
                 self.shm_metrics.close()
                 self.shm_metrics.unlink()  # Remove the shared memory segment
-                self.shm_metrics = None  # Mark as cleaned up
                 logger.debug("Successfully cleaned up shared memory")
             except Exception as e:
                 logger.warning("Error cleaning up shared memory: %s", e)
