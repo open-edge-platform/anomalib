@@ -29,8 +29,7 @@ export const DatasetItem = ({ mediaItem }: DatasetItemProps) => {
         return <DatasetItemPlaceholder />;
     }
 
-    // TODO: Replace with thumbnail once supported by the backend
-    const mediaUrl = `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/full`;
+    const mediaUrl = `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail`;
 
     return (
         <View UNSAFE_className={styles.datasetItem}>
