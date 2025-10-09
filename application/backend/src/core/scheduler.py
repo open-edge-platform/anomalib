@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+import atexit
 import multiprocessing as mp
 import os
 import queue
@@ -46,6 +47,8 @@ class Scheduler(metaclass=Singleton):
         self.processes: list[mp.Process] = []
         self.threads: list[threading.Thread] = []
         logger.info("Scheduler initialized")
+        # Ensure we always attempt a graceful shutdown when the main process exits
+        atexit.register(self.shutdown)
 
     def start_workers(self) -> None:
         """Start all worker processes and threads"""
@@ -57,7 +60,8 @@ class Scheduler(metaclass=Singleton):
             name="Training worker",
             args=(self.mp_stop_event,),
         )
-        training_proc.daemon = True
+        # Training worker is not a daemon so that training script can spawn child processes
+        training_proc.daemon = False
 
         # Inference worker consumes frames and produces predictions
         inference_proc = mp.Process(
@@ -132,6 +136,11 @@ class Scheduler(metaclass=Singleton):
                     if process.is_alive():
                         logger.error("Force killing process %s", process.name)
                         process.kill()
+                # Explicitly close the process' resources
+                try:
+                    process.close()
+                except Exception as e:
+                    logger.warning("Error closing process %s: %s", process.name, e)
 
         logger.info("All workers shut down gracefully")
 
@@ -160,6 +169,8 @@ class Scheduler(metaclass=Singleton):
             try:
                 self.shm_metrics.close()
                 self.shm_metrics.unlink()  # Remove the shared memory segment
+                # Clear the Python handle to make shutdown idempotent and prevent accidental reuse
+                self.shm_metrics = None
                 logger.debug("Successfully cleaned up shared memory")
             except Exception as e:
                 logger.warning("Error cleaning up shared memory: %s", e)

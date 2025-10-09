@@ -41,6 +41,12 @@ async def _train_loop(stop_event: EventClass) -> None:
     # Cancel any remaining tasks on shutdown
     for task in running_tasks:
         task.cancel()
+    if running_tasks:
+        try:
+            await asyncio.gather(*running_tasks, return_exceptions=True)
+        except Exception as e:
+            # Log exceptions during cancellation to ensure clean shutdown and aid debugging
+            logger.error(f"Exception during task cancellation: {e}", exc_info=True)
 
 
 def training_routine(stop_event: EventClass) -> None:

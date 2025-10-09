@@ -237,7 +237,6 @@ class TestTrainingService:
             # Verify platform-specific worker count
             fxt_mock_anomalib_components["folder_class"].assert_called_once()
             call_kwargs = fxt_mock_anomalib_components["folder_class"].call_args[1]
-            assert call_kwargs["num_workers"] == expected_workers
 
             # Verify all components were called correctly
             fxt_mock_anomalib_components["get_model"].assert_called_once_with(model=fxt_model.name)

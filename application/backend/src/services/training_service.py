@@ -107,7 +107,6 @@ class TrainingService:
             name=name,
             normal_dir=image_folder_path,
             test_split_mode=TestSplitMode.SYNTHETIC,
-            num_workers=0 if is_platform_darwin() else 8,
         )
         logger.info(f"Training from image folder: {image_folder_path} to model folder: {model.export_path}")
 
