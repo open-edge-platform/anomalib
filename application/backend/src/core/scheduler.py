@@ -168,7 +168,7 @@ class Scheduler(metaclass=Singleton):
                             if process.is_alive():
                                 process.kill()
                         except Exception:
-                            pass
+                            logger.warning("Exception occurred while terminating process %r", process, exc_info=True)
         except Exception:
             # Avoid raising during interpreter shutdown
             pass
