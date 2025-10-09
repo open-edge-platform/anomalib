@@ -169,6 +169,8 @@ class Scheduler(metaclass=Singleton):
             try:
                 self.shm_metrics.close()
                 self.shm_metrics.unlink()  # Remove the shared memory segment
+                # Clear the Python handle to make shutdown idempotent and prevent accidental reuse
+                self.shm_metrics = None
                 logger.debug("Successfully cleaned up shared memory")
             except Exception as e:
                 logger.warning("Error cleaning up shared memory: %s", e)
