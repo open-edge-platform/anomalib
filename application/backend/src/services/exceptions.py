@@ -46,3 +46,10 @@ class ResourceAlreadyExistsError(ResourceError):
     def __init__(self, resource_type: ResourceType, resource_name: str, message: str | None = None):
         msg = message or f"{resource_type} with name '{resource_name}' already exists."
         super().__init__(resource_type, resource_name, msg)
+
+
+class DeviceNotFoundError(Exception):
+    """Exception raised when a specified device is not found."""
+
+    def __init__(self, device_name: str):
+        super().__init__(f"Device '{device_name}' not found.")
