@@ -34,6 +34,8 @@ Note:
 """
 
 import logging
+from collections.abc import Generator
+from contextlib import contextmanager
 
 import torch
 
@@ -43,6 +45,30 @@ from anomalib.metrics.precision_recall_curve import BinaryPrecisionRecallCurve
 from .base import Threshold
 
 logger = logging.getLogger(__name__)
+
+
+@contextmanager
+def handle_mac(metric: "_F1AdaptiveThreshold") -> Generator[None, None, None]:
+    """Temporarily move tensors to CPU on macOS/MPS and restore after.
+
+    This context manager checks whether the provided metric instance has
+    predictions on an MPS device. If so, it moves both predictions and
+    targets to CPU for the duration of the context and restores them to
+    the original device on exit.
+    """
+    # Check if we have any predictions and if they're on MPS
+    if bool(metric.preds) and metric.preds[0].is_mps:
+        original_device = metric.preds[0].device
+        metric.preds = [pred.cpu() for pred in metric.preds]
+        metric.target = [target.cpu() for target in metric.target]
+        try:
+            yield
+        finally:
+            # Restore to original device
+            metric.preds = [pred.to(original_device) for pred in metric.preds]
+            metric.target = [target.to(original_device) for target in metric.target]
+    else:
+        yield
 
 
 class _F1AdaptiveThreshold(BinaryPrecisionRecallCurve, Threshold):
@@ -94,7 +120,9 @@ class _F1AdaptiveThreshold(BinaryPrecisionRecallCurve, Threshold):
             )
             logging.warning(msg)
 
-        precision, recall, thresholds = super().compute()
+        with handle_mac(self):
+            precision, recall, thresholds = super().compute()
+
         f1_score = (2 * precision * recall) / (precision + recall + 1e-10)
 
         # account for special case where recall is 1.0 even for the highest threshold.
