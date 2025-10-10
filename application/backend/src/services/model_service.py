@@ -12,6 +12,7 @@ import cv2
 import numpy as np
 from anomalib.deploy import ExportType, OpenVINOInferencer
 from PIL import Image
+import openvino.properties.hint as ov_hints
 
 from db import get_async_db_session_ctx
 from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
@@ -78,14 +79,19 @@ class ModelService:
             return await repo.delete_by_id(model_id)
 
     @staticmethod
-    async def load_inference_model(model: Model, device: str = "CPU") -> OpenVINOInferencer:
+    async def load_inference_model(model: Model, device: str = "AUTO:GPU,NPU,CPU") -> OpenVINOInferencer:
         """Load a model for inference using the anomalib OpenVINO inferencer."""
         if model.format is not ExportType.OPENVINO:
             raise NotImplementedError(f"Model format {model.format} is not supported for inference at this moment.")
 
         model_bin_repo = ModelBinaryRepository(project_id=model.project_id, model_id=model.id)
         model_path = model_bin_repo.get_weights_file_path(format=model.format, name="model.xml")
-        return await asyncio.to_thread(OpenVINOInferencer, path=model_path, device=device)
+        return await asyncio.to_thread(
+            OpenVINOInferencer,
+            path=model_path,
+            device=device,
+            config={ov_hints.performance_mode: ov_hints.PerformanceMode.CUMULATIVE_THROUGHPUT},
+        )
 
     async def predict_image(
         self, model: Model, image_bytes: bytes, cached_models: dict[UUID, OpenVINOInferencer] | None = None
