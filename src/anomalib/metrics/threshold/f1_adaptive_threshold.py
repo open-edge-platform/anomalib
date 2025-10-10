@@ -95,6 +95,16 @@ class _F1AdaptiveThreshold(BinaryPrecisionRecallCurve, Threshold):
             logging.warning(msg)
 
         precision, recall, thresholds = super().compute()
+
+        # torchmetrics uses sklearn precision recall curve format:
+        # https://scikit-learn.org/stable/modules/generated/sklearn.metrics.precision_recall_curve.html
+        # precision has shape (n_thresholds + 1,), where last element is 1.0
+        # recall has shape (n_thresholds + 1,), where last element is 0.0
+        if precision.numel() == thresholds.numel() + 1:
+            # Drop last element
+            precision = precision[:-1]
+            recall = recall[:-1]
+
         f1_score = (2 * precision * recall) / (precision + recall + 1e-10)
 
         # account for special case where recall is 1.0 even for the highest threshold.
