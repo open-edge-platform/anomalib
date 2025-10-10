@@ -10,12 +10,16 @@ from uuid import UUID
 
 import cv2
 import numpy as np
+from cachetools.func import lru_cache
+
 from anomalib.deploy import ExportType, OpenVINOInferencer
 from PIL import Image
 import openvino.properties.hint as ov_hints
+import openvino as ov
 
 from db import get_async_db_session_ctx
 from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
+from pydantic_models.model import SupportedDevices
 from repositories import ModelRepository
 from repositories.binary_repo import ModelBinaryRepository
 from services.exceptions import DeviceNotFoundError
@@ -81,8 +85,8 @@ class ModelService:
             repo = ModelRepository(session, project_id=project_id)
             return await repo.delete_by_id(model_id)
 
-    @staticmethod
-    async def load_inference_model(model: Model, device: str | None = None) -> OpenVINOInferencer:
+    @classmethod
+    async def load_inference_model(cls, model: Model, device: str | None = None) -> OpenVINOInferencer:
         """Load a model for inference using the anomalib OpenVINO inferencer.
         
         Args:
@@ -94,15 +98,18 @@ class ModelService:
 
         model_bin_repo = ModelBinaryRepository(project_id=model.project_id, model_id=model.id)
         model_path = model_bin_repo.get_weights_file_path(format=model.format, name="model.xml")
+        _device = device or DEFAULT_DEVICE
         try:
             return await asyncio.to_thread(
                 OpenVINOInferencer,
                 path=model_path,
-                device=device or DEFAULT_DEVICE,
+                device=_device,
                 config={ov_hints.performance_mode: ov_hints.PerformanceMode.CUMULATIVE_THROUGHPUT},
             )
         except Exception as e:
-            raise DeviceNotFoundError(device_name=device) from e
+            if _device not in cls.get_supported_devices():
+                raise DeviceNotFoundError(device_name=_device) from e
+            raise e
 
     async def predict_image(
         self,
@@ -173,3 +180,10 @@ class ModelService:
         score = float(pred.pred_score.item())
 
         return {"anomaly_map": im_base64, "label": label, "score": score}
+
+    @staticmethod
+    @lru_cache
+    def get_supported_devices() -> SupportedDevices:
+        """Get list of supported devices for inference."""
+        core = ov.Core()
+        return SupportedDevices(devices=core.available_devices)

@@ -75,3 +75,15 @@ class PredictionResponse(BaseModel):
             }
         }
     }
+
+
+class SupportedDevices(BaseModel):
+    devices: list[str]
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "devices": ["CPU", "GPU", "NPU"]
+            }
+        }
+    }
