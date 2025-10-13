@@ -95,7 +95,7 @@ class ModelService:
         
         Args:
             model: The model to load
-            device: Device to use for inference. If None, defaults to "AUTO:GPU,NPU,CPU"
+            device: Device to use for inference. If None, defaults to "AUTO"
         """
         if model.format is not ExportType.OPENVINO:
             raise NotImplementedError(f"Model format {model.format} is not supported for inference at this moment.")
