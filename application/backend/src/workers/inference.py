@@ -17,6 +17,7 @@ from db import get_async_db_session_ctx
 from entities.stream_data import InferenceData, StreamData
 from repositories import PipelineRepository
 from services import ModelService
+from services.exceptions import DeviceNotFoundError
 from services.metrics_service import MetricsService
 from services.model_service import LoadedModel
 from utils import log_threads, suppress_child_shutdown_signals
@@ -46,7 +47,7 @@ async def _inference_loop(  # noqa: C901, PLR0912, PLR0915
             if pipeline is None or pipeline.model is None:
                 return None
             model = pipeline.model
-            return LoadedModel(name=model.name, id=model.id, model=model)
+            return LoadedModel(name=model.name, id=model.id, model=model, device=pipeline.inference_device)
 
     try:
         while not stop_event.is_set():
@@ -66,8 +67,8 @@ async def _inference_loop(  # noqa: C901, PLR0912, PLR0915
                 await asyncio.sleep(1)
                 continue
 
-            # Refresh loaded model reference if changed
-            if loaded_model is None or loaded_model.id != active_model.id:
+            # Refresh loaded model if reference or device changed
+            if loaded_model is None or loaded_model.id != active_model.id or loaded_model.device != active_model.device:
                 loaded_model = active_model
                 logger.info("Using model '%s' (%s) for inference", loaded_model.name, loaded_model.id)
 
@@ -88,9 +89,26 @@ async def _inference_loop(  # noqa: C901, PLR0912, PLR0915
                             )
                         # Preload the model for faster first inference
                         try:
-                            inferencer = await model_service.load_inference_model(loaded_model.model)
+                            inferencer = await model_service.load_inference_model(
+                                loaded_model.model, device=loaded_model.device
+                            )
                             cached_models[loaded_model.id] = inferencer
-                            logger.info("Reloaded inference model '%s' (%s)", loaded_model.name, loaded_model.id)
+                            logger.info(
+                                "Reloaded inference model '%s' (%s) on device %s",
+                                loaded_model.name,
+                                loaded_model.id,
+                                loaded_model.device,
+                            )
+                        except DeviceNotFoundError as e:
+                            # Load model using the default device
+                            logger.warning(
+                                "Device '%s' not found; loading model '%s' (%s) on default device",
+                                loaded_model.device,
+                                loaded_model.name,
+                                loaded_model.id,
+                            )
+                            inferencer = await model_service.load_inference_model(loaded_model.model)
+                            cached_models[loaded_model.id] = inferencer                             
                         except Exception as e:
                             logger.error("Failed to reload model '%s': %s", loaded_model.name, e, exc_info=True)
                             # Leave cache empty; next predict will attempt to load again

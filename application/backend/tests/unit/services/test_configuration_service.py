@@ -62,8 +62,11 @@ def fxt_condition():
 def fxt_active_pipeline_service():
     """Fixture for a mock active pipeline service."""
     service = MagicMock(spec=ActivePipelineService)
-    # Use AsyncMock for the async method
-    service.reload = AsyncMock(return_value=None)
+    # Provide a real async function to avoid un-awaited AsyncMock warnings
+    async def _reload():
+        return None
+
+    service.reload = _reload
     return service
 
 
@@ -145,7 +148,16 @@ class TestConfigurationService:
         """Test sink change notification when event loop is running."""
         mock_loop = MagicMock()
         mock_task = MagicMock()
-        mock_loop.create_task.return_value = mock_task
+        # Ensure the created coroutine is properly closed to avoid RuntimeWarning
+        def _create_task_side_effect(coro):
+            try:
+                # Close the coroutine to prevent "never awaited" warnings in this mocked path
+                coro.close()
+            except Exception:
+                pass
+            return mock_task
+
+        mock_loop.create_task.side_effect = _create_task_side_effect
         mock_loop.run_until_complete.return_value = None
 
         with patch("asyncio.get_running_loop", return_value=mock_loop):

@@ -74,6 +74,7 @@ class PipelineDB(Base):
     source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="RESTRICT"))
     sink_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sinks.id", ondelete="RESTRICT"))
     model_id: Mapped[str | None] = mapped_column(Text, ForeignKey("models.id", ondelete="RESTRICT"))
+    inference_device: Mapped[str | None] = mapped_column(String(64), nullable=True)
     is_running: Mapped[bool] = mapped_column(Boolean, default=False)
     data_collection_policies: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())

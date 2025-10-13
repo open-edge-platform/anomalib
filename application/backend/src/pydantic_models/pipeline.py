@@ -38,6 +38,7 @@ class Pipeline(BaseModel):
         default=None, exclude=True
     )  # ID of the model, used for DB mapping, not exposed in API
     status: PipelineStatus = PipelineStatus.IDLE  # Current status of the pipeline
+    inference_device: str | None = Field(default=None)
     is_running: bool | None = Field(default=None, exclude=True)  # If set will overwrite status
 
     model_config = ConfigDict(

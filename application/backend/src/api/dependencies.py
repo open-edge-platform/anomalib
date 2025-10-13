@@ -2,7 +2,7 @@ from functools import lru_cache
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, status, Form
 
 from core import Scheduler
 from services import (
@@ -142,3 +142,8 @@ def get_model_id(model_id: str) -> UUID:
 async def get_webrtc_manager(request: Request) -> WebRTCManager:
     """Provides the global WebRTCManager instance from FastAPI application's state."""
     return request.app.state.webrtc_manager
+
+
+async def get_device_name(device: Annotated[str | None, Form()] = None) -> str | None:
+    """Converts the device name to uppercase if provided"""
+    return device.upper() if device is not None else None

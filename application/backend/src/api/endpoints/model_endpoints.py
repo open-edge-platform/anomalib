@@ -4,14 +4,16 @@ import logging
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request, UploadFile
+from fastapi import APIRouter, Depends, Request, UploadFile, HTTPException, status
 
-from api.dependencies import get_model_id, get_model_service, get_project_id
+from api.dependencies import get_model_id, get_model_service, get_project_id, get_device_name
 from api.endpoints.project_endpoints import project_api_prefix_url
 from api.media_rest_validator import MediaRestValidator
 from exceptions import ResourceNotFoundException
 from pydantic_models import Model, ModelList, PredictionResponse
+from pydantic_models.model import SupportedDevices
 from services import ModelService
+from services.exceptions import DeviceNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +53,7 @@ async def predict(
     project_id: Annotated[UUID, Depends(get_project_id)],
     model_id: Annotated[UUID, Depends(get_model_id)],
     file: Annotated[UploadFile, Depends(MediaRestValidator.validate_image_file)],
+    device: Annotated[str | None, Depends(get_device_name)] = None,
 ) -> PredictionResponse:
     """
     Run prediction on an uploaded image using the specified model.
@@ -65,4 +68,15 @@ async def predict(
     # Read uploaded image and run prediction with model caching
     # Models are cached in request.app.state.active_models for performance
     image_bytes = await file.read()
-    return await model_service.predict_image(model, image_bytes, request.app.state.active_models)
+    try:
+        return await model_service.predict_image(model, image_bytes, request.app.state.active_models, device=device)
+    except DeviceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@model_router.post(":supported-devices")
+async def get_supported_devices(
+    model_service: Annotated[ModelService, Depends(get_model_service)],
+) -> SupportedDevices:
+    """Endpoint to get list of supported devices for inference"""
+    return model_service.get_supported_devices()

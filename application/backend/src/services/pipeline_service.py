@@ -80,6 +80,9 @@ class PipelineService:
                 # On activation, trigger model activation so inference reloads the active model
                 if updated.status == PipelineStatus.RUNNING and updated.model is not None:
                     self._model_service.activate_model()
+            if updated.inference_device != pipeline.inference_device:
+                # reload model on device change
+                self._model_service.activate_model()
             return updated
 
     async def get_pipeline_metrics(self, pipeline_id: UUID, time_window: int = 60) -> PipelineMetrics:
