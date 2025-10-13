@@ -34,6 +34,10 @@ class LoadedModel:
     name: str
     id: UUID
     model: Model
+    device: str | None = None
+
+    def __post_init__(self):
+        self.device = self.device or DEFAULT_DEVICE
 
 
 class ModelService:
@@ -104,7 +108,7 @@ class ModelService:
                 OpenVINOInferencer,
                 path=model_path,
                 device=_device,
-                config={ov_hints.performance_mode: ov_hints.PerformanceMode.CUMULATIVE_THROUGHPUT},
+                config={ov_hints.performance_mode: ov_hints.PerformanceMode.LATENCY},
             )
         except Exception as e:
             if _device not in cls.get_supported_devices():

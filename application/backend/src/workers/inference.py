@@ -46,7 +46,7 @@ async def _inference_loop(  # noqa: C901, PLR0912, PLR0915
             if pipeline is None or pipeline.model is None:
                 return None
             model = pipeline.model
-            return LoadedModel(name=model.name, id=model.id, model=model)
+            return LoadedModel(name=model.name, id=model.id, model=model, device=pipeline.inference_device)
 
     try:
         while not stop_event.is_set():
@@ -88,9 +88,16 @@ async def _inference_loop(  # noqa: C901, PLR0912, PLR0915
                             )
                         # Preload the model for faster first inference
                         try:
-                            inferencer = await model_service.load_inference_model(loaded_model.model)
+                            inferencer = await model_service.load_inference_model(
+                                loaded_model.model, device=loaded_model.device
+                            )
                             cached_models[loaded_model.id] = inferencer
-                            logger.info("Reloaded inference model '%s' (%s)", loaded_model.name, loaded_model.id)
+                            logger.info(
+                                "Reloaded inference model '%s' (%s) on device %s",
+                                loaded_model.name,
+                                loaded_model.id,
+                                loaded_model.device,
+                            )
                         except Exception as e:
                             logger.error("Failed to reload model '%s': %s", loaded_model.name, e, exc_info=True)
                             # Leave cache empty; next predict will attempt to load again
