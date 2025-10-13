@@ -111,7 +111,7 @@ class ModelService:
                 config={ov_hints.performance_mode: ov_hints.PerformanceMode.LATENCY},
             )
         except Exception as e:
-            if _device not in cls.get_supported_devices():
+            if _device not in cls.get_supported_devices().devices:
                 raise DeviceNotFoundError(device_name=_device) from e
             raise e
 
