@@ -1,13 +1,11 @@
 import { createContext, ReactNode, use, useState } from 'react';
 
 import { $api } from '@geti-inspect/api';
+import { components } from '@geti-inspect/api/spec';
 
 import { MediaItem } from './dataset/types';
 
-type InferenceResult = ReturnType<
-    // @ts-expect-error There is an issue in the OpenAPI type
-    typeof $api.useMutation<'post', '/api/projects/{project_id}/models/{model_id}:predict'>
->['data'];
+type InferenceResult = components['schemas']['PredictionResponse'] | undefined;
 
 interface InferenceContextProps {
     onInference: (media: MediaItem, modelId: string) => Promise<void>;

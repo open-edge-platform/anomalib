@@ -1,6 +1,5 @@
 .canvasContainer {
     display: grid;
-    grid-template-areas: 'innercanvas';
     overflow: hidden;
     justify-items: center;
     align-items: center;
@@ -9,7 +8,7 @@
     padding: var(--spectrum-global-dimension-size-1200);
 }
 
-.inferencedImage {
+.img {
     display: block;
     height: 100%;
     width: auto;
@@ -19,6 +18,36 @@
 
 .notReadyInference {
     filter: grayscale(1) blur(8px);
+}
+
+.inferencedImage {
+    grid-area: inference-result;
+    justify-self: start;
+}
+
+.label {
+    padding: var(--spectrum-global-dimension-size-65);
+    color: var(--spectrum-global-color-gray-50);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    font-weight: 500;
+}
+
+.labelNormal {
+    background-color: var(--brand-moss);
+}
+
+.labelAnomalous {
+    background-color: var(--brand-coral-cobalt);
+}
+
+.inferenceResultContainer {
+    display: grid;
+    grid-template-columns: max-content max-content;
+    grid-template-rows: max-content 1fr;
+    grid-template-areas:
+        'label .'
+        'inference-result inference-result';
+    justify-content: center;
 }
 
 .canvasItem {
