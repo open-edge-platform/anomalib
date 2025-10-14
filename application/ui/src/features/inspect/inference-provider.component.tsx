@@ -20,16 +20,6 @@ interface InferenceContextProps {
 const InferenceContext = createContext<InferenceContextProps | undefined>(undefined);
 
 const downloadImageAsFile = async (media: MediaItem) => {
-    /*const { response } = await fetchClient.GET('/api/projects/{project_id}/images/{media_id}/full', {
-        params: {
-            path: {
-                project_id: media.project_id,
-                // TODO: id might be undefined, we need to fix id type on a server side
-                media_id: String(media.id),
-            },
-        },
-    });*/
-
     const response = await fetch(`/api/projects/${media.project_id}/images/${media.id}/full`);
 
     const blob = await response.blob();
@@ -45,9 +35,10 @@ const useInferenceMutation = () => {
 
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('device', 'CPU');
 
         inferenceMutation.mutate({
-            // @ts-expect-error There is an issue in the OpenAPI type
+            // @ts-expect-error There is an incorrect type in OpenAPI
             body: formData,
             params: {
                 path: {

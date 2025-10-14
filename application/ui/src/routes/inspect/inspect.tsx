@@ -3,8 +3,8 @@
 
 import { Grid } from '@geti/ui';
 
-import { ImageInference } from '../../features/inspect/image-inference.component';
 import { InferenceProvider } from '../../features/inspect/inference-provider.component';
+import { InferenceResult } from '../../features/inspect/inference-result.component';
 import { SelectedMediaItemProvider } from '../../features/inspect/selected-media-item-provider.component';
 import { Sidebar } from '../../features/inspect/sidebar.component';
 /*import { StreamContainer } from '../../features/inspect/stream/stream-container';*/
@@ -25,7 +25,7 @@ export const Inspect = () => {
             <InferenceProvider>
                 <SelectedMediaItemProvider>
                     <Toolbar />
-                    <ImageInference />
+                    <InferenceResult />
                     {/*<StreamContainer />*/}
                     <Sidebar />
                 </SelectedMediaItemProvider>

@@ -36,7 +36,6 @@ const DatasetItem = ({ mediaItem }: DatasetItemProps) => {
 
     const handleClick = async () => {
         onSetSelectedMediaItem(mediaItem);
-        console.log({ selectedModelId });
         selectedModelId !== undefined && (await onInference(mediaItem, selectedModelId));
     };
 

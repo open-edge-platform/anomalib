@@ -1,11 +1,12 @@
-import { Heading, View } from '@geti/ui';
+import { Heading, Loading, View } from '@geti/ui';
+import { clsx } from 'clsx';
 
 import { useInference } from './inference-provider.component';
 import { useSelectedMediaItem } from './selected-media-item-provider.component';
 
 import styles from './inference.module.scss';
 
-export const ImageInference = () => {
+export const InferenceResult = () => {
     const { selectedMediaItem } = useSelectedMediaItem();
     const { isPending, inferenceResult } = useInference();
 
@@ -17,21 +18,26 @@ export const ImageInference = () => {
         );
     }
 
-    if (!isPending || inferenceResult === undefined) {
+    if (isPending || inferenceResult === undefined) {
         const mediaUrl = `/api/projects/${selectedMediaItem.project_id}/images/${selectedMediaItem.id}/full`;
 
         return (
-            <View gridArea={'canvas'} UNSAFE_className={styles.canvasContainer}>
-                <img src={mediaUrl} alt={selectedMediaItem.filename} className={styles.inferencedImage} />
+            <View gridArea={'canvas'} UNSAFE_className={styles.canvasContainer} position={'relative'}>
+                <img
+                    src={mediaUrl}
+                    alt={selectedMediaItem.filename}
+                    className={clsx(styles.inferencedImage, { [styles.notReadyInference]: isPending })}
+                />
+                <Loading mode={'overlay'} />
             </View>
         );
     }
 
-    return null;
+    const src = `data:image/png;base64,${inferenceResult.anomaly_map}`;
 
-    /*return (
+    return (
         <View gridArea={'canvas'} UNSAFE_className={styles.canvasContainer}>
-            <img src={mediaUrl} alt={selectedMediaItem.filename} />
+            <img src={src} alt={selectedMediaItem.filename} className={styles.inferencedImage} />
         </View>
-    );*/
+    );
 };

@@ -1,4 +1,4 @@
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 
 import { $api } from '@geti-inspect/api';
 import { SchemaJob as Job } from '@geti-inspect/api/spec';
@@ -16,8 +16,9 @@ import {
     ProgressBar,
     Text,
 } from '@geti/ui';
+import { useQueryClient } from '@tanstack/react-query';
+import { differenceBy, isEqual } from 'lodash-es';
 
-import { useProjectTrainingJobs } from '../hooks/use-project-training-jobs.hook';
 import { REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING } from './utils';
 
 interface NotEnoughNormalImagesToTrainProps {
@@ -98,9 +99,11 @@ const TrainingInProgress = ({ job }: TrainingInProgressProps) => {
     }
 
     if (job.status === 'pending') {
+        const heading = `Training will start soon - ${job.payload.model_name}`;
+
         return (
             <InlineAlert variant='info'>
-                <Heading>Training will start soon</Heading>
+                <Heading>{heading}</Heading>
                 <Content>
                     <Flex direction={'column'} gap={'size-100'}>
                         <Text>{job.message}</Text>
@@ -112,9 +115,11 @@ const TrainingInProgress = ({ job }: TrainingInProgressProps) => {
     }
 
     if (job.status === 'running') {
+        const heading = `Training in progress - ${job.payload.model_name}`;
+
         return (
             <InlineAlert variant='info'>
-                <Heading>Training in progress</Heading>
+                <Heading>{heading}</Heading>
                 <Content>
                     <Flex direction={'column'} gap={'size-100'}>
                         <Text>{job.message}</Text>
@@ -126,9 +131,11 @@ const TrainingInProgress = ({ job }: TrainingInProgressProps) => {
     }
 
     if (job.status === 'failed') {
+        const heading = `Training failed - ${job.payload.model_name}`;
+
         return (
             <InlineAlert variant='negative'>
-                <Heading>Training failed</Heading>
+                <Heading>{heading}</Heading>
                 <Content>
                     <Text>{job.message}</Text>
                 </Content>
@@ -137,9 +144,11 @@ const TrainingInProgress = ({ job }: TrainingInProgressProps) => {
     }
 
     if (job.status === 'canceled') {
+        const heading = `Training canceled - ${job.payload.model_name}`;
+
         return (
             <InlineAlert variant='negative'>
-                <Heading>Training canceled</Heading>
+                <Heading>{heading}</Heading>
                 <Content>
                     <Text>{job.message}</Text>
                 </Content>
@@ -148,9 +157,11 @@ const TrainingInProgress = ({ job }: TrainingInProgressProps) => {
     }
 
     if (job.status === 'completed') {
+        const heading = `Training completed - ${job.payload.model_name}`;
+
         return (
             <InlineAlert variant='positive'>
-                <Heading>Training completed</Heading>
+                <Heading>{heading}</Heading>
                 <Content>
                     <Text>{job.message}</Text>
                 </Content>
@@ -161,15 +172,61 @@ const TrainingInProgress = ({ job }: TrainingInProgressProps) => {
     return null;
 };
 
+const REFETCH_INTERVAL_WITH_TRAINING = 1_000;
+
+const useProjectTrainingJobs = () => {
+    const queryClient = useQueryClient();
+    const { projectId } = useProjectIdentifier();
+    const prevJobsRef = useRef<Job[]>([]);
+
+    const { data } = $api.useQuery('get', '/api/jobs', undefined, {
+        refetchInterval: ({ state }) => {
+            const projectHasTrainingJob = state.data?.jobs.some(
+                ({ project_id, type, status }) =>
+                    projectId === project_id && type === 'training' && (status === 'running' || status === 'pending')
+            );
+
+            return projectHasTrainingJob ? REFETCH_INTERVAL_WITH_TRAINING : undefined;
+        },
+    });
+
+    useEffect(() => {
+        if (data === undefined) {
+            return;
+        }
+
+        if (!isEqual(prevJobsRef.current, data?.jobs)) {
+            const differenceInJobsBasedOnStatus = differenceBy(prevJobsRef.current, data.jobs, (job) => job.status);
+            const shouldRefetchModels = differenceInJobsBasedOnStatus.some((job) => job.status === 'completed');
+
+            if (shouldRefetchModels) {
+                queryClient.invalidateQueries({
+                    queryKey: [
+                        'get',
+                        '/api/projects/{project_id}/models',
+                        { params: { path: { project_id: projectId } } },
+                    ],
+                });
+            }
+        }
+
+        prevJobsRef.current = data?.jobs ?? [];
+    }, [data, queryClient, projectId]);
+
+    return { jobs: data?.jobs.filter((job) => job.project_id === projectId) };
+};
+
 const TrainingInProgressList = () => {
     const { jobs } = useProjectTrainingJobs();
 
+    if (jobs === undefined || jobs.length === 0) {
+        return null;
+    }
+
     return (
         <>
-            <Flex direction={'column'} gap={'size-50'}>
-                {jobs
-                    ?.filter((job) => job.status === 'completed')
-                    .map((job) => <TrainingInProgress job={job} key={job.id} />)}
+            <Flex direction={'column'} gap={'size-50'} height={'size-2000'} UNSAFE_style={{ overflowY: 'auto' }}>
+                {jobs?.map((job) => <TrainingInProgress job={job} key={job.id} />)}
             </Flex>
             <Divider size={'S'} />
         </>

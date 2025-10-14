@@ -4,11 +4,11 @@
 import { useEffect } from 'react';
 
 import { StatusLight } from '@adobe/react-spectrum';
+import { $api } from '@geti-inspect/api';
+import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Button, Divider, Flex, Item, Picker, View } from '@geti/ui';
-import { isString, uniq } from 'lodash-es';
 
 import { useWebRTCConnection } from '../../components/stream/web-rtc-connection-provider';
-import { useProjectTrainingJobs } from './hooks/use-project-training-jobs.hook';
 import { useInference } from './inference-provider.component';
 
 const WebRTCConnectionStatus = () => {
@@ -67,16 +67,23 @@ const WebRTCConnectionStatus = () => {
     }
 };
 
+const useTrainedModels = () => {
+    const { projectId } = useProjectIdentifier();
+    const { data } = $api.useQuery('get', '/api/projects/{project_id}/models', {
+        params: {
+            path: {
+                project_id: projectId,
+            },
+        },
+    });
+
+    return data?.models.map((model) => ({ id: model.id, name: model.name })) || [];
+};
+
 const ModelsPicker = () => {
-    const { jobs } = useProjectTrainingJobs();
     const { selectedModelId, onSetSelectedModelId } = useInference();
 
-    const models = uniq(
-        jobs?.map((job) => job.payload.model_name).filter((name) => name !== undefined && isString(name))
-    ).map((name) => ({
-        id: name,
-        name,
-    }));
+    const models = useTrainedModels();
 
     useEffect(() => {
         if (selectedModelId !== undefined || models.length === 0) {
@@ -86,7 +93,7 @@ const ModelsPicker = () => {
         onSetSelectedModelId(models[0].id);
     }, [selectedModelId, models, onSetSelectedModelId]);
 
-    if (jobs === undefined || jobs.length === 0) {
+    if (models === undefined || models.length === 0) {
         return null;
     }
 

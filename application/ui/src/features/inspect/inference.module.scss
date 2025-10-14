@@ -17,6 +17,10 @@
     object-fit: contain;
 }
 
+.notReadyInference {
+    filter: grayscale(1) blur(8px);
+}
+
 .canvasItem {
     grid-area: innercanvas;
 }
