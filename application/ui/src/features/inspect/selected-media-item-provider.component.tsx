@@ -16,8 +16,6 @@ interface SelectedMediaItemProviderProps {
 export const SelectedMediaItemProvider = ({ children }: SelectedMediaItemProviderProps) => {
     const [selectedMediaItem, setSelectedMediaItem] = useState<MediaItem | undefined>(undefined);
 
-    console.log({ selectedMediaItem });
-
     return (
         <SelectedMediaItemContext value={{ selectedMediaItem, onSetSelectedMediaItem: setSelectedMediaItem }}>
             {children}

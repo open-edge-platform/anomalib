@@ -2,6 +2,7 @@ import { Image } from '@geti-inspect/icons';
 import { Flex } from '@geti/ui';
 import { clsx } from 'clsx';
 
+import { useInference } from '../../inference-provider.component';
 import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { type MediaItem } from '../types';
 
@@ -27,13 +28,16 @@ interface DatasetItemProps {
 
 const DatasetItem = ({ mediaItem }: DatasetItemProps) => {
     const { selectedMediaItem, onSetSelectedMediaItem } = useSelectedMediaItem();
+    const { onInference, selectedModelId } = useInference();
 
     const isSelected = selectedMediaItem?.id === mediaItem.id;
 
-    const mediaUrl = `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail`;
+    const mediaUrl = `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/full`;
 
-    const handleSelectMediaItem = () => {
+    const handleClick = async () => {
         onSetSelectedMediaItem(mediaItem);
+        console.log({ selectedModelId });
+        selectedModelId !== undefined && (await onInference(mediaItem, selectedModelId));
     };
 
     return (
@@ -41,7 +45,7 @@ const DatasetItem = ({ mediaItem }: DatasetItemProps) => {
             className={clsx(styles.datasetItem, {
                 [styles.datasetItemSelected]: isSelected,
             })}
-            onClick={handleSelectMediaItem}
+            onClick={handleClick}
         >
             <img src={mediaUrl} alt={mediaItem.filename} />
         </div>

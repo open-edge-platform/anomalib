@@ -3,9 +3,11 @@
 
 import { Grid } from '@geti/ui';
 
+import { ImageInference } from '../../features/inspect/image-inference.component';
+import { InferenceProvider } from '../../features/inspect/inference-provider.component';
 import { SelectedMediaItemProvider } from '../../features/inspect/selected-media-item-provider.component';
 import { Sidebar } from '../../features/inspect/sidebar.component';
-import { StreamContainer } from '../../features/inspect/stream/stream-container';
+/*import { StreamContainer } from '../../features/inspect/stream/stream-container';*/
 import { Toolbar } from '../../features/inspect/toolbar';
 
 export const Inspect = () => {
@@ -13,18 +15,21 @@ export const Inspect = () => {
         <Grid
             areas={['toolbar sidebar', 'canvas sidebar']}
             UNSAFE_style={{
-                gridTemplateRows: 'var(--spectrum-global-dimension-size-800, 4rem) auto',
+                gridTemplateRows: 'var(--spectrum-global-dimension-size-800, 4rem) minmax(0, 1fr)',
                 gridTemplateColumns: 'auto min-content',
                 height: '100%',
                 overflow: 'hidden',
                 gap: '1px',
             }}
         >
-            <SelectedMediaItemProvider>
-                <Toolbar />
-                <StreamContainer />
-                <Sidebar />
-            </SelectedMediaItemProvider>
+            <InferenceProvider>
+                <SelectedMediaItemProvider>
+                    <Toolbar />
+                    <ImageInference />
+                    {/*<StreamContainer />*/}
+                    <Sidebar />
+                </SelectedMediaItemProvider>
+            </InferenceProvider>
         </Grid>
     );
 };

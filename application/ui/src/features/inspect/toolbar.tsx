@@ -1,10 +1,15 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useEffect } from 'react';
+
 import { StatusLight } from '@adobe/react-spectrum';
-import { Button, Divider, Flex, View } from '@geti/ui';
+import { Button, Divider, Flex, Item, Picker, View } from '@geti/ui';
+import { isString, uniq } from 'lodash-es';
 
 import { useWebRTCConnection } from '../../components/stream/web-rtc-connection-provider';
+import { useProjectTrainingJobs } from './hooks/use-project-training-jobs.hook';
+import { useInference } from './inference-provider.component';
 
 const WebRTCConnectionStatus = () => {
     const { status, stop } = useWebRTCConnection();
@@ -62,6 +67,45 @@ const WebRTCConnectionStatus = () => {
     }
 };
 
+const ModelsPicker = () => {
+    const { jobs } = useProjectTrainingJobs();
+    const { selectedModelId, onSetSelectedModelId } = useInference();
+
+    const models = uniq(
+        jobs?.map((job) => job.payload.model_name).filter((name) => name !== undefined && isString(name))
+    ).map((name) => ({
+        id: name,
+        name,
+    }));
+
+    useEffect(() => {
+        if (selectedModelId !== undefined || models.length === 0) {
+            return;
+        }
+
+        onSetSelectedModelId(models[0].id);
+    }, [selectedModelId, models, onSetSelectedModelId]);
+
+    if (jobs === undefined || jobs.length === 0) {
+        return null;
+    }
+
+    if (models.length === 0) {
+        return null;
+    }
+
+    return (
+        <Picker
+            items={models}
+            label={'Model'}
+            selectedKey={selectedModelId}
+            onSelectionChange={(key) => onSetSelectedModelId(String(key))}
+        >
+            {(item) => <Item key={item.id}>{item.name}</Item>}
+        </Picker>
+    );
+};
+
 export const Toolbar = () => {
     return (
         <View
@@ -78,7 +122,9 @@ export const Toolbar = () => {
 
                 <Divider orientation='vertical' size='S' />
 
-                <Flex marginStart='auto'>Work in progress</Flex>
+                <Flex marginStart='auto'>
+                    <ModelsPicker />
+                </Flex>
             </Flex>
         </View>
     );
