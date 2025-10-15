@@ -97,10 +97,6 @@ const ModelsPicker = () => {
         return null;
     }
 
-    if (models.length === 0) {
-        return null;
-    }
-
     return (
         <Picker
             items={models}
