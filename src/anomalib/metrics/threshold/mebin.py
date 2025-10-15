@@ -141,8 +141,9 @@ class MEBin:
                 Longer intervals indicate more robust threshold selection.
 
         Returns:
-            threshold (int): The final threshold for binarization.
-            est_anomaly_num (int): The estimated number of anomalies.
+            tuple[int, int]: A tuple containing (threshold, est_anomaly_num) where
+                threshold is the final threshold for binarization and est_anomaly_num
+                is the estimated number of anomalies.
         """
         interval_result = {}
         current_index = 0
@@ -235,8 +236,9 @@ class MEBin:
         and perform binarization on the anomaly maps.
 
         Returns:
-            binarized_maps (list): List of binarized images.
-            thresholds (list): List of thresholds for each image.
+            tuple[list[np.ndarray], list[int]]: A tuple containing (binarized_maps, thresholds)
+                where binarized_maps is a list of binarized images and thresholds is a list
+                of thresholds for each image.
         """
         self.binarized_maps = []
         self.thresholds = []
