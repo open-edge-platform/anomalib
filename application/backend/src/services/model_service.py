@@ -10,12 +10,11 @@ from uuid import UUID
 
 import cv2
 import numpy as np
-from cachetools.func import lru_cache
-
-from anomalib.deploy import ExportType, OpenVINOInferencer
-from PIL import Image
-import openvino.properties.hint as ov_hints
 import openvino as ov
+import openvino.properties.hint as ov_hints
+from anomalib.deploy import ExportType, OpenVINOInferencer
+from cachetools.func import lru_cache
+from PIL import Image
 
 from db import get_async_db_session_ctx
 from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
@@ -41,8 +40,7 @@ class LoadedModel:
 
 
 class ModelService:
-    """
-    Service for managing models and inference operations.
+    """Service for managing models and inference operations.
 
     Handles model CRUD operations, loading inference models, and running
     predictions on images. Uses asyncio.to_thread for CPU-intensive operations
@@ -92,7 +90,7 @@ class ModelService:
     @classmethod
     async def load_inference_model(cls, model: Model, device: str | None = None) -> OpenVINOInferencer:
         """Load a model for inference using the anomalib OpenVINO inferencer.
-        
+
         Args:
             model: The model to load
             device: Device to use for inference. If None, defaults to "AUTO"
@@ -122,8 +120,7 @@ class ModelService:
         cached_models: dict[UUID, OpenVINOInferencer] | None = None,
         device: str | None = None,
     ) -> PredictionResponse:
-        """
-        Run prediction on an image using the specified model.
+        """Run prediction on an image using the specified model.
 
         Uses asyncio.to_thread to run the entire CPU-intensive prediction pipeline
         in a single thread, maintaining event loop responsiveness.
@@ -171,8 +168,14 @@ class ModelService:
 
         # Process anomaly map
         arr = pred.anomaly_map.squeeze()  # Remove dimensions of size 1
-        arr_normalized = (arr * 255).astype(np.uint8)  # Normalize to 0-255 and convert to uint8
-        im = Image.fromarray(arr_normalized)  # Automatically detects grayscale mode
+        arr_scaled = (arr * 255).astype(np.uint8)  # Scale to 0-255 and convert to uint8
+        # convert to color map
+        heatmap = cv2.applyColorMap(arr_scaled, cv2.COLORMAP_JET)
+        # Add alpha channel with opacity weighted according to the anomaly score
+        heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGBA)
+        heatmap[:, :, 3] = arr_scaled
+
+        im = Image.fromarray(heatmap)  # Automatically detects RGBA mode
 
         # Convert to base64
         with io.BytesIO() as buf:
