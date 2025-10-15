@@ -178,8 +178,8 @@ class MEBin:
             # number of connected component.
             count_result = {}
             for anomaly_num in interval_result:
-                count_result[anomaly_num] = max(x[1] - x[0] for x in interval_result[anomaly_num])
-            est_anomaly_num = max(count_result, key=lambda x: count_result[x])
+                count_result[anomaly_num] = max([x[1] - x[0] for x in interval_result[anomaly_num]])
+            est_anomaly_num = max(count_result, key=count_result.get)
             est_anomaly_num_interval_result = interval_result[est_anomaly_num]
 
             # Find the longest stable interval.
