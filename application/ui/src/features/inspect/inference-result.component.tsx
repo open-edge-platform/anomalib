@@ -77,7 +77,7 @@ export const InferenceResult = () => {
                 justifyContent={'center'}
                 alignContent={'center'}
             >
-                <Heading>Select an image to start inference.</Heading>
+                <Heading>Select an image to start inference and receive predictions.</Heading>
             </Grid>
         );
     }
