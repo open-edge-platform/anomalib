@@ -111,8 +111,8 @@ class MEBin:
         on the actual anomaly score distributions in the input maps.
 
         Returns:
-            max_th (int): Maximum threshold for binarization.
-            min_th (int): Minimum threshold for binarization.
+            max_th (float): Maximum threshold for binarization.
+            min_th (float): Minimum threshold for binarization.
         """
         # Get the anomaly scores of all anomaly maps
         anomaly_score_list = [np.max(x) for x in self.anomaly_map_list]
@@ -120,8 +120,6 @@ class MEBin:
         # Select the maximum and minimum anomaly scores from images
         max_score, min_score = max(anomaly_score_list), min(anomaly_score_list)
         max_th, min_th = max_score, min_score
-
-        print(f"Value range: {min_score} - {max_score}")
 
         return max_th, min_th
 
@@ -151,7 +149,7 @@ class MEBin:
         while current_index < len(anomaly_num_sequence):
             end = current_index
 
-            start = end
+            start = current_index
 
             # Find the interval where the connected component count remains constant.
             sequence_slice = anomaly_num_sequence[start : end + 1]
