@@ -12,15 +12,15 @@ import cv2
 import numpy as np
 import openvino as ov
 import openvino.properties.hint as ov_hints
+from anomalib.deploy import ExportType, OpenVINOInferencer
 from cachetools.func import lru_cache
-from db import get_async_db_session_ctx
 from PIL import Image
+
+from db import get_async_db_session_ctx
 from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
 from pydantic_models.model import SupportedDevices
 from repositories import ModelRepository
 from repositories.binary_repo import ModelBinaryRepository
-
-from anomalib.deploy import ExportType, OpenVINOInferencer
 from services.exceptions import DeviceNotFoundError
 
 logger = logging.getLogger(__name__)
