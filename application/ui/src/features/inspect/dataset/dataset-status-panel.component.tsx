@@ -175,9 +175,7 @@ const TrainingInProgress = ({ job }: TrainingInProgressProps) => {
 const REFETCH_INTERVAL_WITH_TRAINING = 1_000;
 
 const useProjectTrainingJobs = () => {
-    const queryClient = useQueryClient();
     const { projectId } = useProjectIdentifier();
-    const prevJobsRef = useRef<Job[]>([]);
 
     const { data } = $api.useQuery('get', '/api/jobs', undefined, {
         refetchInterval: ({ state }) => {
@@ -190,13 +188,21 @@ const useProjectTrainingJobs = () => {
         },
     });
 
+    return { jobs: data?.jobs.filter((job) => job.project_id === projectId) };
+};
+
+const useRefreshModelsOnJobUpdates = (jobs: Job[] | undefined) => {
+    const queryClient = useQueryClient();
+    const { projectId } = useProjectIdentifier();
+    const prevJobsRef = useRef<Job[]>([]);
+
     useEffect(() => {
-        if (data === undefined) {
+        if (jobs === undefined) {
             return;
         }
 
-        if (!isEqual(prevJobsRef.current, data?.jobs)) {
-            const differenceInJobsBasedOnStatus = differenceBy(prevJobsRef.current, data.jobs, (job) => job.status);
+        if (!isEqual(prevJobsRef.current, jobs)) {
+            const differenceInJobsBasedOnStatus = differenceBy(prevJobsRef.current, jobs, (job) => job.status);
             const shouldRefetchModels = differenceInJobsBasedOnStatus.some((job) => job.status === 'completed');
 
             if (shouldRefetchModels) {
@@ -210,14 +216,13 @@ const useProjectTrainingJobs = () => {
             }
         }
 
-        prevJobsRef.current = data?.jobs ?? [];
-    }, [data, queryClient, projectId]);
-
-    return { jobs: data?.jobs.filter((job) => job.project_id === projectId) };
+        prevJobsRef.current = jobs ?? [];
+    }, [jobs, queryClient, projectId]);
 };
 
 const TrainingInProgressList = () => {
     const { jobs } = useProjectTrainingJobs();
+    useRefreshModelsOnJobUpdates(jobs);
 
     if (jobs === undefined || jobs.length === 0) {
         return null;

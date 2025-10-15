@@ -8,7 +8,6 @@ import { InferenceProvider } from '../../features/inspect/inference-provider.com
 import { InferenceResult } from '../../features/inspect/inference-result.component';
 import { SelectedMediaItemProvider } from '../../features/inspect/selected-media-item-provider.component';
 import { Sidebar } from '../../features/inspect/sidebar.component';
-/*import { StreamContainer } from '../../features/inspect/stream/stream-container';*/
 import { Toolbar } from '../../features/inspect/toolbar';
 
 export const Inspect = () => {
@@ -30,7 +29,6 @@ export const Inspect = () => {
                 <SelectedMediaItemProvider>
                     <Toolbar />
                     <InferenceResult />
-                    {/*<StreamContainer />*/}
                     <Sidebar />
                 </SelectedMediaItemProvider>
             </InferenceProvider>

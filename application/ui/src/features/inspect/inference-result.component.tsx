@@ -94,19 +94,31 @@ export const InferenceResult = () => {
         );
     }
 
+    const mediaUrl = `/api/projects/${selectedMediaItem.project_id}/images/${selectedMediaItem.id}/full`;
     const src = `data:image/png;base64,${inferenceResult.anomaly_map}`;
 
     return (
         <Grid
             gridArea={'canvas'}
             columns={['max-content', 'max-content']}
-            rows={['max-content', '1fr']}
+            rows={['max-content', 'minmax(0, 1fr)']}
             areas={['label .', 'inference-result inference-result']}
             justifyContent={'center'}
             UNSAFE_className={styles.canvasContainer}
+            UNSAFE_style={{
+                overflow: 'hidden',
+            }}
         >
             <LabelScore label={inferenceResult.label} score={inferenceResult.score} />
-            <img src={src} alt={selectedMediaItem.filename} className={clsx(styles.img, styles.inferencedImage)} />
+            <img src={mediaUrl} alt={selectedMediaItem.filename} className={clsx(styles.img, styles.inferencedImage)} />
+            <img
+                src={src}
+                alt={`${selectedMediaItem.filename} inference`}
+                className={clsx(styles.img, styles.inferencedImage)}
+                style={{
+                    opacity: 0.5,
+                }}
+            />
         </Grid>
     );
 };
