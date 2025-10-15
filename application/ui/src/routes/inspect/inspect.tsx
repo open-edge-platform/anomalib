@@ -1,6 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Grid } from '@geti/ui';
 
 import { InferenceProvider } from '../../features/inspect/inference-provider.component';
@@ -11,6 +12,8 @@ import { Sidebar } from '../../features/inspect/sidebar.component';
 import { Toolbar } from '../../features/inspect/toolbar';
 
 export const Inspect = () => {
+    const { projectId } = useProjectIdentifier();
+
     return (
         <Grid
             areas={['toolbar sidebar', 'canvas sidebar']}
@@ -21,6 +24,7 @@ export const Inspect = () => {
             UNSAFE_style={{
                 overflow: 'hidden',
             }}
+            key={projectId}
         >
             <InferenceProvider>
                 <SelectedMediaItemProvider>
