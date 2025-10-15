@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 """MEBin (Main Element Binarization) adaptive thresholding for anomaly detection.
 
-This module provides the ``MEBin`` class which implements the Main Element 
-Binarization algorithm designed to address the non-prominence of anomalies 
-in anomaly maps. MEBin obtains anomaly-centered images by analyzing the 
+This module provides the ``MEBin`` class which implements the Main Element
+Binarization algorithm designed to address the non-prominence of anomalies
+in anomaly maps. MEBin obtains anomaly-centered images by analyzing the
 stability of connected components across multiple threshold levels.
 
 The algorithm is particularly effective for:
 - Industrial anomaly detection scenarios
-- Multi-class anomaly classification tasks  
+- Multi-class anomaly classification tasks
 - Cases where anomalies are non-prominent in anomaly maps
 - Avoiding the impact of incorrect detections
 
@@ -20,7 +20,7 @@ The threshold is computed by:
 4. Finding stable intervals where component count remains constant
 5. Selecting threshold from the longest stable interval
 
-MEBin was introduced in "AnomalyNCD: Towards Novel Anomaly Class Discovery 
+MEBin was introduced in "AnomalyNCD: Towards Novel Anomaly Class Discovery
 in Industrial Scenarios" (https://arxiv.org/abs/2410.14379).
 
 Example:
@@ -34,8 +34,8 @@ Example:
     >>> print(f"Computed {len(thresholds)} thresholds")
 
 Note:
-    MEBin is designed for industrial scenarios where anomalies may be 
-    non-prominent. The min_interval_len parameter should be tuned based 
+    MEBin is designed for industrial scenarios where anomalies may be
+    non-prominent. The min_interval_len parameter should be tuned based
     on the expected stability of connected component counts.
 """
 
@@ -49,14 +49,14 @@ from tqdm import tqdm
 class MEBin:
     """MEBin (Main Element Binarization) adaptive thresholding algorithm.
 
-    This class implements the Main Element Binarization algorithm designed 
+    This class implements the Main Element Binarization algorithm designed
     to address non-prominent anomalies in industrial anomaly detection scenarios.
     MEBin determines optimal thresholds by analyzing the stability of connected
     component counts across different threshold levels to obtain anomaly-centered
     binary representations.
 
     The algorithm works by:
-        - Adaptively determining threshold search ranges from anomaly statistics  
+        - Adaptively determining threshold search ranges from anomaly statistics
         - Sampling anomaly maps at configurable rates across threshold range
         - Counting connected components at each threshold level
         - Identifying stable intervals where component count remains constant
