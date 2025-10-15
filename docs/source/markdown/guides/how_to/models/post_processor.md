@@ -83,23 +83,13 @@ Normalization and thresholding only works when your datamodule contains a valida
 
 ## Basic Usage
 
-Anomalib provides two main post-processors: the default `PostProcessor` and the `MEBinPostProcessor`. To use the default `PostProcessor`, simply add it to any Anomalib model when creating the model:
+To use the `PostProcessor`, simply add it to any Anomalib model when creating the model:
 
 ```python
 from anomalib.models import Padim
 from anomalib.post_processing import PostProcessor
 
 post_processor = PostProcessor()
-model = Padim(post_processor=post_processor)
-```
-
-For alternative thresholding approaches, you can use the `MEBinPostProcessor`:
-
-```python
-from anomalib.models import Padim
-from anomalib.post_processing import MEBinPostProcessor
-
-post_processor = MEBinPostProcessor()
 model = Padim(post_processor=post_processor)
 ```
 
@@ -189,40 +179,6 @@ pred_scores = results[..., 1]      # Already normalized scores
 pred_labels = results[..., 2]      # Already thresholded (0/1)
 pred_masks = results[..., 3]       # Already thresholded masks (if applicable)
 ```
-
-## MEBinPostProcessor
-
-Anomalib provides the `MEBinPostProcessor` which implements the MEBin (Main Element Binarization) algorithm from AnomalyNCD. This post-processor is designed for industrial anomaly detection scenarios where traditional thresholding may not perform optimally.
-
-MEBin was introduced in "AnomalyNCD: Towards Novel Anomaly Class Discovery in Industrial Scenarios" ([arXiv:2410.14379](https://arxiv.org/abs/2410.14379)).
-
-### Basic Usage
-
-```python
-from anomalib.models import Padim
-from anomalib.post_processing import MEBinPostProcessor
-
-# Create MEBin post-processor with custom parameters
-post_processor = MEBinPostProcessor(
-    sample_rate=4,        # Threshold sampling step size
-    min_interval_len=4,   # Minimum stable interval length
-    erode=True            # Apply erosion to reduce noise
-)
-
-model = Padim(post_processor=post_processor)
-```
-
-### Basic Usage
-
-```python
-from anomalib.models import Padim
-from anomalib.post_processing import MEBinPostProcessor
-
-post_processor = MEBinPostProcessor()
-model = Padim(post_processor=post_processor)
-```
-
-For more details on the MEBin algorithm, see the [AnomalyNCD paper](https://arxiv.org/abs/2410.14379).
 
 ## Creating Custom Post-processors
 
