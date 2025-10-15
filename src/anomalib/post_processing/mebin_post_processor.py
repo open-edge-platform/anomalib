@@ -1,7 +1,12 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Post-processing module for MEBin-based anomaly detection results.
 
 This module provides post-processing functionality for anomaly detection
 outputs through the :class:`MEBinPostProcessor` class.
+
+MEBin was introduced in AnomalyNCD : https://arxiv.org/pdf/2410.14379
 
 The MEBin post-processor handles:
     - Converting anomaly maps to binary masks using MEBin algorithm
@@ -16,23 +21,13 @@ Example:
     >>> predictions = post_processor(anomaly_maps=anomaly_maps)
 """
 
-import argparse
-import yaml
-import os
-import json
-import shutil
-import cv2
-from tqdm import tqdm
-import csv
-import sys
-sys.path.append(os.getcwd())
-
-from anomalib.post_processing import PostProcessor
-from anomalib.data import InferenceBatch
-import torch
 import numpy as np
+import torch
 
+from anomalib.data import InferenceBatch
 from anomalib.metrics import MEBin
+
+from .post_processor import PostProcessor
 
 
 class MEBinPostProcessor(PostProcessor):
@@ -46,16 +41,14 @@ class MEBinPostProcessor(PostProcessor):
         - Formatting results for downstream use
 
     Args:
-        sample_rate (int, optional): Threshold sampling step size,  
-            Default to 4
-        min_interval_len (int, optional): Minimum length of the stable interval, 
-            can be fine-tuned according to the interval between normal and abnormal score distributions in the anomaly score maps, 
-            decrease if there are many false negatives, increase if there are many false positives.
-            Default to 4
-        erode (bool, optional): Whether to perform erosion after binarization to eliminate noise, 
-            this operation can smooth the change process of the number of abnormal 
-            connected components.
-            Default to True
+        sample_rate (int): Threshold sampling step size.
+            Defaults to 4
+        min_interval_len (int): Minimum length of the stable interval. Can be adjusted based on the interval
+            between normal and abnormal score distributions in the anomaly score maps.
+            Decrease if there are many false negatives, increase if there are many false positives.
+            Defaults to 4
+        erode (bool): Whether to perform erosion after binarization to eliminate noise.
+            Defaults to True
         **kwargs: Additional keyword arguments passed to parent class.
 
     Example:
@@ -78,6 +71,7 @@ class MEBinPostProcessor(PostProcessor):
         self.erode = erode
 
     """Custom post-processor using MEBin algorithm"""
+
     def forward(self, predictions: InferenceBatch) -> InferenceBatch:
         """Post-process model predictions using MEBin algorithm.
 
@@ -97,9 +91,13 @@ class MEBinPostProcessor(PostProcessor):
             The method automatically handles tensor-to-numpy conversion and back,
             ensuring compatibility with the original tensor device and dtype.
         """
-        anomaly_maps = predictions.anomaly_map
-        if isinstance(anomaly_maps, torch.Tensor):
-            anomaly_maps = anomaly_maps.detach().cpu().numpy()
+        if predictions.anomaly_map is None:
+            msg = "Anomaly map is required for MEBin post-processing"
+            raise ValueError(msg)
+
+        # Store the original tensor for device and dtype info
+        original_anomaly_map = predictions.anomaly_map
+        anomaly_maps = original_anomaly_map.detach().cpu().numpy()
         if anomaly_maps.ndim == 4:
             anomaly_maps = anomaly_maps[:, 0, :, :]  # Remove channel dimension
 
@@ -109,13 +107,17 @@ class MEBinPostProcessor(PostProcessor):
             amap_norm = (amap - amap.min()) / (amap.max() - amap.min() + 1e-8) * 255
             norm_maps.append(amap_norm.astype(np.uint8))
 
-        
-        mebin = MEBin(anomaly_map_list=norm_maps, sample_rate=self.sample_rate, min_interval_len=self.min_interval_len, erode=self.erode)
-        binarized_maps, thresholds = mebin.binarize_anomaly_maps()
+        mebin = MEBin(
+            anomaly_map_list=norm_maps,
+            sample_rate=self.sample_rate,
+            min_interval_len=self.min_interval_len,
+            erode=self.erode,
+        )
+        binarized_maps, _ = mebin.binarize_anomaly_maps()
 
         # Convert back to torch.Tensor and normalize to 0/1
-        pred_masks = torch.stack([torch.from_numpy(bm).to(predictions.anomaly_map.device) for bm in binarized_maps])
-        pred_masks = (pred_masks > 0).to(predictions.anomaly_map.dtype)
+        pred_masks = torch.stack([torch.from_numpy(bm).to(original_anomaly_map.device) for bm in binarized_maps])
+        pred_masks = (pred_masks > 0).to(original_anomaly_map.dtype)
 
         return InferenceBatch(
             pred_label=predictions.pred_label,
@@ -123,5 +125,3 @@ class MEBinPostProcessor(PostProcessor):
             pred_mask=pred_masks,
             anomaly_map=predictions.anomaly_map,
         )
-
-    

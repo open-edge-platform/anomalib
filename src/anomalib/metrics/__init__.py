@@ -62,7 +62,7 @@ from .pg_pb import PBn, PGn
 from .pimo import AUPIMO, PIMO
 from .precision_recall_curve import BinaryPrecisionRecallCurve
 from .pro import PRO
-from .threshold import F1AdaptiveThreshold, ManualThreshold ,MEBin
+from .threshold import F1AdaptiveThreshold, ManualThreshold, MEBin
 
 __all__ = [
     "AUROC",
