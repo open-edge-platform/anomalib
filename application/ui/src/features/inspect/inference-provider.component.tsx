@@ -33,7 +33,6 @@ const useInferenceMutation = () => {
 
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('device', 'CPU');
 
         inferenceMutation.mutate({
             // @ts-expect-error There is an incorrect type in OpenAPI
