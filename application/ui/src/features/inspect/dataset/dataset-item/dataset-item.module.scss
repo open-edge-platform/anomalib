@@ -1,5 +1,6 @@
 .datasetItem {
     aspect-ratio: 4/3;
+    cursor: pointer;
 
     img {
         display: block;
@@ -8,6 +9,14 @@
         object-fit: cover;
         object-position: center;
     }
+
+    border: var(--spectrum-alias-border-size-thick) solid transparent;
+
+    transition: border-color 0.3s ease-in-out;
+}
+
+.datasetItemSelected {
+    border-color: var(--energy-blue);
 }
 
 .datasetItemPlaceholder {

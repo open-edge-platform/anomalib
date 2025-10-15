@@ -1,10 +1,15 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useEffect } from 'react';
+
 import { StatusLight } from '@adobe/react-spectrum';
-import { Button, Divider, Flex, View } from '@geti/ui';
+import { $api } from '@geti-inspect/api';
+import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { Button, Divider, Flex, Item, Picker, View } from '@geti/ui';
 
 import { useWebRTCConnection } from '../../components/stream/web-rtc-connection-provider';
+import { useInference } from './inference-provider.component';
 
 const WebRTCConnectionStatus = () => {
     const { status, stop } = useWebRTCConnection();
@@ -62,6 +67,48 @@ const WebRTCConnectionStatus = () => {
     }
 };
 
+const useTrainedModels = () => {
+    const { projectId } = useProjectIdentifier();
+    const { data } = $api.useQuery('get', '/api/projects/{project_id}/models', {
+        params: {
+            path: {
+                project_id: projectId,
+            },
+        },
+    });
+
+    return data?.models.map((model) => ({ id: model.id, name: model.name })) || [];
+};
+
+const ModelsPicker = () => {
+    const { selectedModelId, onSetSelectedModelId } = useInference();
+
+    const models = useTrainedModels();
+
+    useEffect(() => {
+        if (selectedModelId !== undefined || models.length === 0) {
+            return;
+        }
+
+        onSetSelectedModelId(models[0].id);
+    }, [selectedModelId, models, onSetSelectedModelId]);
+
+    if (models === undefined || models.length === 0) {
+        return null;
+    }
+
+    return (
+        <Picker
+            items={models}
+            label={'Model'}
+            selectedKey={selectedModelId}
+            onSelectionChange={(key) => onSetSelectedModelId(String(key))}
+        >
+            {(item) => <Item key={item.id}>{item.name}</Item>}
+        </Picker>
+    );
+};
+
 export const Toolbar = () => {
     return (
         <View
@@ -78,7 +125,9 @@ export const Toolbar = () => {
 
                 <Divider orientation='vertical' size='S' />
 
-                <Flex marginStart='auto'>Work in progress</Flex>
+                <Flex marginStart='auto'>
+                    <ModelsPicker />
+                </Flex>
             </Flex>
         </View>
     );
