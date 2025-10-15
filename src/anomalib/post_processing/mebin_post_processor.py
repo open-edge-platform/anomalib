@@ -70,7 +70,6 @@ class MEBinPostProcessor(PostProcessor):
         self.min_interval_len = min_interval_len
         self.erode = erode
 
-    """Custom post-processor using MEBin algorithm"""
 
     def forward(self, predictions: InferenceBatch) -> InferenceBatch:
         """Post-process model predictions using MEBin algorithm.
