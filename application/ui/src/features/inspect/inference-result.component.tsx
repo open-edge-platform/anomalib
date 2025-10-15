@@ -1,4 +1,6 @@
 import { Flex, Text } from '@adobe/react-spectrum';
+import { $api } from '@geti-inspect/api';
+import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Grid, Heading, Loading, View } from '@geti/ui';
 import { clsx } from 'clsx';
 
@@ -33,9 +35,36 @@ const LabelScore = ({ label, score }: LabelProps) => {
     );
 };
 
+const useIsInferenceAvailable = () => {
+    const { projectId } = useProjectIdentifier();
+    const { data } = $api.useQuery('get', '/api/projects/{project_id}/models', {
+        params: {
+            path: {
+                project_id: projectId,
+            },
+        },
+    });
+
+    return data?.models.length !== 0;
+};
+
 export const InferenceResult = () => {
     const { selectedMediaItem } = useSelectedMediaItem();
     const { isPending, inferenceResult } = useInference();
+    const isInferenceAvailable = useIsInferenceAvailable();
+
+    if (!isInferenceAvailable && selectedMediaItem === undefined) {
+        return (
+            <Grid
+                gridArea={'canvas'}
+                UNSAFE_className={styles.canvasContainer}
+                justifyContent={'center'}
+                alignContent={'center'}
+            >
+                <Heading>No trained models available. Please train a model to start inference.</Heading>
+            </Grid>
+        );
+    }
 
     if (selectedMediaItem === undefined) {
         return (
@@ -45,7 +74,7 @@ export const InferenceResult = () => {
                 justifyContent={'center'}
                 alignContent={'center'}
             >
-                <Heading>Select an image to start inference</Heading>
+                <Heading>Select an image to start inference.</Heading>
             </Grid>
         );
     }
@@ -60,7 +89,7 @@ export const InferenceResult = () => {
                     alt={selectedMediaItem.filename}
                     className={clsx(styles.img, { [styles.notReadyInference]: isPending })}
                 />
-                <Loading mode={'overlay'} />
+                {isPending && <Loading mode={'overlay'} />}
             </View>
         );
     }
