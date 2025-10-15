@@ -14,12 +14,12 @@ export const Inspect = () => {
     return (
         <Grid
             areas={['toolbar sidebar', 'canvas sidebar']}
+            rows={['size-1000', 'minmax(0, 1fr)']}
+            columns={['1fr', 'min-content']}
+            height={'100%'}
+            gap={'size-10'}
             UNSAFE_style={{
-                gridTemplateRows: 'var(--spectrum-global-dimension-size-800, 4rem) minmax(0, 1fr)',
-                gridTemplateColumns: 'auto min-content',
-                height: '100%',
                 overflow: 'hidden',
-                gap: '1px',
             }}
         >
             <InferenceProvider>

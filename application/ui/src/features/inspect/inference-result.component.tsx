@@ -39,9 +39,14 @@ export const InferenceResult = () => {
 
     if (selectedMediaItem === undefined) {
         return (
-            <View gridArea={'canvas'} UNSAFE_className={styles.canvasContainer}>
+            <Grid
+                gridArea={'canvas'}
+                UNSAFE_className={styles.canvasContainer}
+                justifyContent={'center'}
+                alignContent={'center'}
+            >
                 <Heading>Select an image to start inference</Heading>
-            </View>
+            </Grid>
         );
     }
 
@@ -63,7 +68,14 @@ export const InferenceResult = () => {
     const src = `data:image/png;base64,${inferenceResult.anomaly_map}`;
 
     return (
-        <Grid gridArea={'canvas'} UNSAFE_className={clsx(styles.canvasContainer, styles.inferenceResultContainer)}>
+        <Grid
+            gridArea={'canvas'}
+            columns={['max-content', 'max-content']}
+            rows={['max-content', '1fr']}
+            areas={['label .', 'inference-result inference-result']}
+            justifyContent={'center'}
+            UNSAFE_className={styles.canvasContainer}
+        >
             <LabelScore label={inferenceResult.label} score={inferenceResult.score} />
             <img src={src} alt={selectedMediaItem.filename} className={clsx(styles.img, styles.inferencedImage)} />
         </Grid>
