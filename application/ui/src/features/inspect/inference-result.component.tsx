@@ -3,6 +3,7 @@ import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Grid, Heading, Loading } from '@geti/ui';
 import { clsx } from 'clsx';
+import { AnimatePresence, motion } from 'motion/react';
 import { useSpinDelay } from 'spin-delay';
 
 import { useInference } from './inference-provider.component';
@@ -97,19 +98,24 @@ export const InferenceResult = () => {
             position={'relative'}
         >
             <img src={mediaUrl} alt={selectedMediaItem.filename} className={clsx(styles.img, styles.inferencedImage)} />
-            {inferenceResult !== undefined && (
-                <>
-                    <LabelScore label={inferenceResult.label} score={inferenceResult.score} />
-                    <img
-                        src={`data:image/png;base64,${inferenceResult.anomaly_map}`}
-                        alt={`${selectedMediaItem.filename} inference`}
-                        className={clsx(styles.img, styles.inferencedImage)}
-                        style={{
-                            opacity: 0.5,
-                        }}
-                    />
-                </>
-            )}
+            <AnimatePresence>
+                {inferenceResult !== undefined && (
+                    <>
+                        <LabelScore label={inferenceResult.label} score={inferenceResult.score} />
+                        <motion.img
+                            initial={{ opacity: 0 }}
+                            exit={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            src={`data:image/png;base64,${inferenceResult.anomaly_map}`}
+                            alt={`${selectedMediaItem.filename} inference`}
+                            className={clsx(styles.img, styles.inferencedImage)}
+                            style={{
+                                opacity: 0.5,
+                            }}
+                        />
+                    </>
+                )}
+            </AnimatePresence>
             {isLoadingInference && <Loading mode={'overlay'} />}
         </Grid>
     );
