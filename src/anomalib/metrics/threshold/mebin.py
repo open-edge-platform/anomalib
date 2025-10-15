@@ -171,10 +171,8 @@ class MEBin:
                         interval_result[anomaly_num_sequence[start]].append((start, end))
             current_index += 1
 
-        """
-        If a 'stable interval' exists, calculate the final threshold based on the longest stable interval.
-        If no stable interval is found, it indicates that no anomaly regions exist, and 255 is returned.
-        """
+        # If a 'stable interval' exists, calculate the final threshold based on the longest stable interval.
+        # If no stable interval is found, it indicates that no anomaly regions exist, and 255 is returned.
 
         if interval_result:
             # Iterate through the stable intervals, calculating their lengths and corresponding
