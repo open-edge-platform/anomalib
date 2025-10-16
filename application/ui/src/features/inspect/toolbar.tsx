@@ -111,8 +111,8 @@ const ModelsPicker = () => {
 
     return (
         <Picker
+            aria-label='Select model'
             items={models}
-            label={'Model'}
             selectedKey={selectedModelId}
             onSelectionChange={(key) => onSetSelectedModelId(String(key))}
         >

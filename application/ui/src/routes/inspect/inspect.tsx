@@ -16,7 +16,7 @@ export const Inspect = () => {
     return (
         <Grid
             areas={['toolbar sidebar', 'canvas sidebar']}
-            rows={['size-1000', 'minmax(0, 1fr)']}
+            rows={['size-800', 'minmax(0, 1fr)']}
             columns={['1fr', 'min-content']}
             height={'100%'}
             gap={'size-10'}
