@@ -3,10 +3,22 @@
 
 import { useEffect } from 'react';
 
-import { StatusLight } from '@adobe/react-spectrum';
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
-import { Button, Divider, Flex, Item, Picker, View } from '@geti/ui';
+import {
+    ActionButton,
+    Button,
+    DialogTrigger,
+    Divider,
+    Flex,
+    Item,
+    Picker,
+    Slider,
+    StatusLight,
+    Text,
+    View,
+} from '@geti/ui';
+import { ChevronDownSmall } from '@geti/ui/icons';
 
 import { useWebRTCConnection } from '../../components/stream/web-rtc-connection-provider';
 import { useInference } from './inference-provider.component';
@@ -99,13 +111,42 @@ const ModelsPicker = () => {
 
     return (
         <Picker
+            aria-label='Select model'
             items={models}
-            label={'Model'}
             selectedKey={selectedModelId}
             onSelectionChange={(key) => onSetSelectedModelId(String(key))}
         >
             {(item) => <Item key={item.id}>{item.name}</Item>}
         </Picker>
+    );
+};
+
+const InferenceOpacity = () => {
+    const { inferenceOpacity, onInferenceOpacityChange, inferenceResult } = useInference();
+
+    return (
+        <Flex alignItems={'center'} gap={'size-50'}>
+            <Text>Opacity:</Text>
+            <DialogTrigger type={'popover'} placement={'bottom'}>
+                <ActionButton width={'size-800'} isDisabled={inferenceResult === undefined}>
+                    <Flex alignItems={'center'} gap={'size-50'}>
+                        <span>{Math.floor(inferenceOpacity * 100)}%</span>
+                        <Flex>
+                            <ChevronDownSmall style={{ order: 1 }} />
+                        </Flex>
+                    </Flex>
+                </ActionButton>
+                <View padding={'size-100'}>
+                    <Slider
+                        value={inferenceOpacity}
+                        onChange={onInferenceOpacityChange}
+                        maxValue={1}
+                        minValue={0}
+                        step={0.01}
+                    />
+                </View>
+            </DialogTrigger>
+        </Flex>
     );
 };
 
@@ -125,8 +166,10 @@ export const Toolbar = () => {
 
                 <Divider orientation='vertical' size='S' />
 
-                <Flex marginStart='auto'>
+                <Flex marginStart='auto' alignItems={'center'} gap={'size-200'}>
                     <ModelsPicker />
+                    <Divider size={'S'} orientation={'vertical'} />
+                    <InferenceOpacity />
                 </Flex>
             </Flex>
         </View>

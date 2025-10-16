@@ -8,7 +8,6 @@ import { InferenceProvider } from '../../features/inspect/inference-provider.com
 import { InferenceResult } from '../../features/inspect/inference-result.component';
 import { SelectedMediaItemProvider } from '../../features/inspect/selected-media-item-provider.component';
 import { Sidebar } from '../../features/inspect/sidebar.component';
-/*import { StreamContainer } from '../../features/inspect/stream/stream-container';*/
 import { Toolbar } from '../../features/inspect/toolbar';
 
 export const Inspect = () => {
@@ -17,7 +16,7 @@ export const Inspect = () => {
     return (
         <Grid
             areas={['toolbar sidebar', 'canvas sidebar']}
-            rows={['size-1000', 'minmax(0, 1fr)']}
+            rows={['size-800', 'minmax(0, 1fr)']}
             columns={['1fr', 'min-content']}
             height={'100%'}
             gap={'size-10'}
@@ -30,7 +29,6 @@ export const Inspect = () => {
                 <SelectedMediaItemProvider>
                     <Toolbar />
                     <InferenceResult />
-                    {/*<StreamContainer />*/}
                     <Sidebar />
                 </SelectedMediaItemProvider>
             </InferenceProvider>

@@ -1,8 +1,10 @@
 import { Flex, Text } from '@adobe/react-spectrum';
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
-import { Grid, Heading, Loading, View } from '@geti/ui';
+import { Grid, Heading, Loading } from '@geti/ui';
 import { clsx } from 'clsx';
+import { AnimatePresence, motion } from 'motion/react';
+import { useSpinDelay } from 'spin-delay';
 
 import { useInference } from './inference-provider.component';
 import { useSelectedMediaItem } from './selected-media-item-provider.component';
@@ -50,8 +52,9 @@ const useIsInferenceAvailable = () => {
 
 export const InferenceResult = () => {
     const { selectedMediaItem } = useSelectedMediaItem();
-    const { isPending, inferenceResult } = useInference();
+    const { isPending, inferenceResult, inferenceOpacity } = useInference();
     const isInferenceAvailable = useIsInferenceAvailable();
+    const isLoadingInference = useSpinDelay(isPending, { delay: 300 });
 
     if (!isInferenceAvailable && selectedMediaItem === undefined) {
         return (
@@ -74,39 +77,46 @@ export const InferenceResult = () => {
                 justifyContent={'center'}
                 alignContent={'center'}
             >
-                <Heading>Select an image to start inference.</Heading>
+                <Heading>Select an image to start inference and receive predictions.</Heading>
             </Grid>
         );
     }
 
-    if (isPending || inferenceResult === undefined) {
-        const mediaUrl = `/api/projects/${selectedMediaItem.project_id}/images/${selectedMediaItem.id}/full`;
-
-        return (
-            <View gridArea={'canvas'} UNSAFE_className={styles.canvasContainer} position={'relative'}>
-                <img
-                    src={mediaUrl}
-                    alt={selectedMediaItem.filename}
-                    className={clsx(styles.img, { [styles.notReadyInference]: isPending })}
-                />
-                {isPending && <Loading mode={'overlay'} />}
-            </View>
-        );
-    }
-
-    const src = `data:image/png;base64,${inferenceResult.anomaly_map}`;
+    const mediaUrl = `/api/projects/${selectedMediaItem.project_id}/images/${selectedMediaItem.id}/full`;
 
     return (
         <Grid
             gridArea={'canvas'}
             columns={['max-content', 'max-content']}
-            rows={['max-content', '1fr']}
+            rows={['max-content', 'minmax(0, 1fr)']}
             areas={['label .', 'inference-result inference-result']}
             justifyContent={'center'}
             UNSAFE_className={styles.canvasContainer}
+            UNSAFE_style={{
+                overflow: 'hidden',
+            }}
+            position={'relative'}
         >
-            <LabelScore label={inferenceResult.label} score={inferenceResult.score} />
-            <img src={src} alt={selectedMediaItem.filename} className={clsx(styles.img, styles.inferencedImage)} />
+            <img src={mediaUrl} alt={selectedMediaItem.filename} className={clsx(styles.img, styles.inferencedImage)} />
+            <AnimatePresence>
+                {inferenceResult !== undefined && (
+                    <>
+                        <LabelScore label={inferenceResult.label} score={inferenceResult.score} />
+                        <motion.img
+                            initial={{ opacity: 0 }}
+                            exit={{ opacity: 0 }}
+                            animate={{ opacity: inferenceOpacity }}
+                            src={`data:image/png;base64,${inferenceResult.anomaly_map}`}
+                            alt={`${selectedMediaItem.filename} inference`}
+                            className={clsx(styles.img, styles.inferencedImage)}
+                            style={{
+                                opacity: inferenceOpacity,
+                            }}
+                        />
+                    </>
+                )}
+            </AnimatePresence>
+            {isLoadingInference && <Loading mode={'overlay'} />}
         </Grid>
     );
 };

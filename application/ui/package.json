@@ -36,6 +36,7 @@
         "clsx": "^2.1.1",
         "comlink": "^4.4.2",
         "lodash-es": "^4.17.21",
+        "motion": "^12.23.24",
         "openapi-fetch": "^0.14.0",
         "openapi-react-query": "^0.5.0",
         "react": "^19.1.1",
@@ -45,6 +46,7 @@
         "react-router": "^6.30.1",
         "react-router-dom": "^6.30.1",
         "recharts": "^2.15.3",
+        "spin-delay": "^2.0.1",
         "static-path": "^0.0.4",
         "uuid": "^11.1.0"
     },
