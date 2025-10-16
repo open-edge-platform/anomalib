@@ -52,7 +52,7 @@ const useIsInferenceAvailable = () => {
 
 export const InferenceResult = () => {
     const { selectedMediaItem } = useSelectedMediaItem();
-    const { isPending, inferenceResult } = useInference();
+    const { isPending, inferenceResult, inferenceOpacity } = useInference();
     const isInferenceAvailable = useIsInferenceAvailable();
     const isLoadingInference = useSpinDelay(isPending, { delay: 300 });
 
@@ -105,12 +105,12 @@ export const InferenceResult = () => {
                         <motion.img
                             initial={{ opacity: 0 }}
                             exit={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
+                            animate={{ opacity: inferenceOpacity }}
                             src={`data:image/png;base64,${inferenceResult.anomaly_map}`}
                             alt={`${selectedMediaItem.filename} inference`}
                             className={clsx(styles.img, styles.inferencedImage)}
                             style={{
-                                opacity: 0.5,
+                                opacity: inferenceOpacity,
                             }}
                         />
                     </>
