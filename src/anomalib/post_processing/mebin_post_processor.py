@@ -16,9 +16,15 @@ The MEBin post-processor handles:
     - Formatting results for downstream use
 
 Example:
-    >>> from anomalib.post_processing import MEBinPostProcessor
-    >>> post_processor = MEBinPostProcessor(sample_rate=4, min_interval_len=4)
-    >>> predictions = post_processor(anomaly_maps=anomaly_maps)
+    Example:
+        >>> from anomalib.post_processing import MEBinPostProcessor
+        >>> from anomalib.data import InferenceBatch
+        >>> import torch
+        >>> # Create sample anomaly maps
+        >>> anomaly_maps = torch.rand(4, 1, 256, 256)
+        >>> predictions = InferenceBatch(anomaly_map=anomaly_maps)
+        >>> post_processor = MEBinPostProcessor(sample_rate=4, min_interval_len=4)
+        >>> results = post_processor(predictions)
 """
 
 import numpy as np
@@ -53,8 +59,13 @@ class MEBinPostProcessor(PostProcessor):
 
     Example:
         >>> from anomalib.post_processing import MEBinPostProcessor
+        >>> from anomalib.data import InferenceBatch
+        >>> import torch
+        >>> # Create sample predictions
+        >>> anomaly_maps = torch.rand(4, 1, 256, 256)
+        >>> predictions = InferenceBatch(anomaly_map=anomaly_maps)
         >>> post_processor = MEBinPostProcessor(sample_rate=4, min_interval_len=4)
-        >>> predictions = post_processor(anomaly_maps=anomaly_maps)
+        >>> results = post_processor(predictions)
     """
 
     def __init__(

@@ -24,14 +24,23 @@ MEBin was introduced in "AnomalyNCD: Towards Novel Anomaly Class Discovery
 in Industrial Scenarios" (https://arxiv.org/abs/2410.14379).
 
 Example:
-    >>> from anomalib.metrics.threshold import MEBin
     >>> import numpy as np
-    >>> # Create sample anomaly maps
-    >>> anomaly_maps = [np.random.rand(256, 256) * 255 for _ in range(10)]
-    >>> # Initialize and compute thresholds
-    >>> mebin = MEBin(anomaly_maps, sample_rate=4)
+    >>> from anomalib.metrics.threshold import MEBin
+    >>>
+    >>> # Create sample anomaly maps with simulated anomalous regions
+    >>> anomaly_maps = []
+    >>> for i in range(5):
+    ...     amap = np.random.rand(128, 128) * 50  # Background noise
+    ...     amap[40:80, 40:80] = np.random.rand(40, 40) * 200 + 55  # Anomalous region
+    ...     anomaly_maps.append(amap)
+    >>>
+    >>> # Initialize MEBin with appropriate parameters
+    >>> mebin = MEBin(anomaly_maps, sample_rate=8, min_interval_len=3)
+    >>>
+    >>> # Compute binary masks and thresholds
     >>> binarized_maps, thresholds = mebin.binarize_anomaly_maps()
-    >>> print(f"Computed {len(thresholds)} thresholds")
+    >>> print(f"Processed {len(binarized_maps)} maps, thresholds: {thresholds}")
+    Processed 5 maps, thresholds: [...]
 
 Note:
     MEBin is designed for industrial scenarios where anomalies may be
@@ -77,14 +86,25 @@ class MEBin:
             Defaults to True.
 
     Example:
-        >>> from anomalib.metrics.threshold import MEBin
         >>> import numpy as np
-        >>> # Create sample anomaly maps
-        >>> anomaly_maps = [np.random.rand(256, 256) * 255 for _ in range(10)]
-        >>> # Initialize MEBin
-        >>> mebin = MEBin(anomaly_maps, sample_rate=4)
-        >>> # Compute binary masks and thresholds
-        >>> binarized_maps, thresholds = mebin.binarize_anomaly_maps()
+        >>> from anomalib.metrics.threshold import MEBin
+        >>>
+        >>> # Create sample anomaly maps with realistic structure
+        >>> anomaly_maps = []
+        >>> for i in range(3):
+        ...     # Background with low anomaly scores
+        ...     amap = np.random.rand(64, 64) * 30
+        ...     # Add anomalous regions with higher scores
+        ...     amap[20:40, 20:40] = np.random.rand(20, 20) * 150 + 100
+        ...     anomaly_maps.append(amap)
+        >>>
+        >>> # Initialize MEBin with custom parameters
+        >>> mebin = MEBin(anomaly_maps, sample_rate=4, min_interval_len=3, erode=True)
+        >>>
+        >>> # Binarize anomaly maps
+        >>> binary_masks, thresholds = mebin.binarize_anomaly_maps()
+        >>> print(f"Generated {len(binary_masks)} binary masks")
+        Generated 3 binary masks
     """
 
     def __init__(
@@ -111,8 +131,9 @@ class MEBin:
         on the actual anomaly score distributions in the input maps.
 
         Returns:
-            max_th (float): Maximum threshold for binarization.
-            min_th (float): Minimum threshold for binarization.
+            tuple[float, float]: A tuple containing:
+                - max_th: Maximum threshold for binarization.
+                - min_th: Minimum threshold for binarization.
         """
         # Get the anomaly scores of all anomaly maps
         anomaly_score_list = [np.max(x) for x in self.anomaly_map_list]
@@ -148,27 +169,22 @@ class MEBin:
         interval_result = {}
         current_index = 0
         while current_index < len(anomaly_num_sequence):
-            end = current_index
-
             start = current_index
-
-            # Find the interval where the connected component count remains constant.
-            sequence_slice = anomaly_num_sequence[start : end + 1]
-            if len(set(sequence_slice)) == 1 and anomaly_num_sequence[start] != 0:
-                # Move the 'end' pointer forward until a different connected component number is encountered.
-                while (
-                    end < len(anomaly_num_sequence) - 1 and anomaly_num_sequence[end] == anomaly_num_sequence[end + 1]
-                ):
-                    end += 1
-                    current_index += 1
-                # If the length of the current stable interval is greater than or equal to the given
-                # threshold (min_interval_len), record this interval.
-                if end - start + 1 >= min_interval_len:
-                    if anomaly_num_sequence[start] not in interval_result:
-                        interval_result[anomaly_num_sequence[start]] = [(start, end)]
-                    else:
-                        interval_result[anomaly_num_sequence[start]].append((start, end))
-            current_index += 1
+            value = anomaly_num_sequence[start]
+            end = start
+            # Move the 'end' pointer forward until a different connected component number is encountered.
+            while (
+                end < len(anomaly_num_sequence) - 1 and anomaly_num_sequence[end] == anomaly_num_sequence[end + 1]
+            ):
+                end += 1
+            # If the length of the current stable interval is greater than or equal to the given
+            # threshold (min_interval_len), and the value is not zero, record this interval.
+            if end - start + 1 >= min_interval_len and value != 0:
+                if value not in interval_result:
+                    interval_result[value] = [(start, end)]
+                else:
+                    interval_result[value].append((start, end))
+            current_index = end + 1
 
         # If a 'stable interval' exists, calculate the final threshold based on the longest stable interval.
         # If no stable interval is found, it indicates that no anomaly regions exist, and 255 is returned.
@@ -178,8 +194,8 @@ class MEBin:
             # number of connected component.
             count_result = {}
             for anomaly_num in interval_result:
-                count_result[anomaly_num] = max([x[1] - x[0] for x in interval_result[anomaly_num]])
-            est_anomaly_num = max(count_result, key=count_result.get)
+                count_result[anomaly_num] = max(x[1] - x[0] for x in interval_result[anomaly_num])
+            est_anomaly_num = max(count_result, key=lambda k: count_result[k])
             est_anomaly_num_interval_result = interval_result[est_anomaly_num]
 
             # Find the longest stable interval.
