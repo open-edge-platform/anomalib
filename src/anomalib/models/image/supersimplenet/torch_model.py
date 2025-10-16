@@ -340,7 +340,7 @@ class SegmentationDetectionModule(nn.Module):
 
         # final dec layer: conv channel max and avg and map max and avg
         dec_cat = torch.cat((dec_max, dec_avg, map_max, map_avg), dim=1).squeeze()
-        ano_score = self.cls_fc(dec_cat).squeeze()
+        ano_score = self.cls_fc(dec_cat).reshape(-1)
 
         return ano_map, ano_score
 
