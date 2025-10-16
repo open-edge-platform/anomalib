@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: MIT
 #
 # Modified
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """PyTorch model for the SuperSimpleNet model implementation.
@@ -80,7 +80,14 @@ class SupersimplenetModel(nn.Module):
         adapted = self.adaptor(features)
 
         if self.training:
-            masks = self.downsample_mask(masks, *features.shape[-2:])
+            if masks is None:
+                if labels is not None and labels.any():
+                    msg = "Training with anomalous samples without GT masks is currently not supported!"
+                    raise RuntimeError(msg)
+                b, _, h, w = features.shape
+                masks = torch.zeros((b, 1, h, w), dtype=torch.float32, device=features.device)
+            else:
+                masks = self.downsample_mask(masks, *features.shape[-2:])
             # make linter happy :)
             if labels is not None:
                 labels = labels.type(torch.float32)
