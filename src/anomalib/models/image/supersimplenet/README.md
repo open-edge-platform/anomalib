@@ -1,6 +1,10 @@
-# SuperSimpleNet: Unifying Unsupervised and Supervised Learning for Fast and Reliable Surface Defect Detection
+# SuperSimpleNet
 
-This is an implementation of the [SuperSimpleNet](https://arxiv.org/pdf/2408.03143) paper, based on the [official code](https://github.com/blaz-r/SuperSimpleNet).
+This is an implementation of the SuperSimpleNet, based on the [official code](https://github.com/blaz-r/SuperSimpleNet).
+
+The model was first presented at ICPR 2024: [SuperSimpleNet : Unifying Unsupervised and Supervised Learning for Fast and Reliable Surface Defect Detection](https://arxiv.org/abs/2408.03143)
+
+An extension was later published in JIMS 2025: [No Label Left Behind: A Unified Surface Defect Detection Model for all Supervision Regimes](https://link.springer.com/article/10.1007/s10845-025-02680-8)
 
 Model Type: Segmentation
 
@@ -11,7 +15,7 @@ feature extractor with upscaling, feature adaptor, feature-level synthetic anoma
 segmentation-detection module.
 
 A ResNet-like feature extractor first extracts features, which are then upscaled and
-average-pooled to capture neighboring context. Features are further refined for anomaly detection task in the adaptor module.
+average-pooled to capture neighboring context. Features are (optionally) further refined for anomaly detection task in the adaptor module.
 During training, synthetic anomalies are generated at the feature level by adding Gaussian noise to regions defined by the
 binary Perlin noise mask. The perturbed features are then fed into the segmentation-detection
 module, which produces the anomaly map and the anomaly score. During inference, anomaly generation is skipped, and the model
@@ -23,6 +27,9 @@ This implementation supports both unsupervised and supervised setting, but Anoma
 ## Architecture
 
 ![SuperSimpleNet architecture](/docs/source/images/supersimplenet/architecture.png "SuperSimpleNet architecture")
+
+Currently, the difference between ICPR and JIMS code is only the `adapt_cls_features` which controls whether the features used for classification head are adapted or not.
+For ICPR this is set to True (i.e. the features for classification head are adapted), and for JIMS version this is False (which is also the default).
 
 ## Usage
 
@@ -36,11 +43,11 @@ This implementation supports both unsupervised and supervised setting, but Anoma
 >
 > It is recommended to train the model for 300 epochs with batch size of 32 to achieve stable training with random anomaly generation. Training with lower parameter values will still work, but might not yield the optimal results.
 >
-> For supervised learning, refer to the [official code](https://github.com/blaz-r/SuperSimpleNet).
+> For weakly, mixed and fully supervised training, refer to the [official code](https://github.com/blaz-r/SuperSimpleNet).
 
 ## MVTecAD AD results
 
-The following results were obtained using this Anomalib implementation trained for 300 epochs with seed 0, default params, and batch size 32.
+The following results were obtained using this Anomalib implementation (ICPR version) trained for 300 epochs with seed 0, default params, and batch size 32.
 
 |            | **Image AUROC** | **Pixel AUPRO** |
 | ---------- | :-------------: | :-------------: |
@@ -61,4 +68,4 @@ The following results were obtained using this Anomalib implementation trained f
 | Zipper     |      0.995      |      0.928      |
 | Average    |      0.980      |      0.914      |
 
-For other results on VisA, SensumSODF, and KSDD2, refer to the [paper](https://arxiv.org/pdf/2408.03143).
+For other results on VisA, SensumSODF, and KSDD2, refer to the [paper](https://link.springer.com/article/10.1007/s10845-025-02680-8).
