@@ -19,7 +19,6 @@ import math
 import torch
 import torch.nn.functional as F  # noqa: N812
 from torch import nn
-from torch.nn import Parameter
 
 from anomalib.data import InferenceBatch
 from anomalib.models.components import GaussianBlur2d, TimmFeatureExtractor
@@ -324,16 +323,6 @@ class SegmentationDetectionModule(nn.Module):
         self.cls_fc = nn.Linear(in_features=128 * 2 + 2, out_features=1)
 
         self.apply(init_weights)
-
-    def get_params(self) -> tuple[list[Parameter], list[Parameter]]:
-        """Get segmentation and classification head parameters.
-
-        Returns:
-            seg. head parameters and class. head parameters.
-        """
-        seg_params = list(self.seg_head.parameters())
-        dec_params = list(self.cls_conv.parameters()) + list(self.cls_fc.parameters())
-        return seg_params, dec_params
 
     def forward(self, seg_features: torch.Tensor, cls_features: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Predict anomaly map and anomaly score.
