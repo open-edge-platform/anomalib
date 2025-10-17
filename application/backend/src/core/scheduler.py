@@ -13,8 +13,7 @@ import psutil
 
 from services.metrics_service import SIZE
 from utils.singleton import Singleton
-from workers import dispatching_routine, inference_routine, training_routine
-from workers.stream_loading import frame_acquisition_routine
+from workers import DispatchingWorker, InferenceWorker, StreamLoader, TrainingWorker
 
 logger = logging.getLogger(__name__)
 
@@ -55,40 +54,35 @@ class Scheduler(metaclass=Singleton):
         logger.info("Starting worker processes...")
 
         # Create and start processes
-        training_proc = mp.Process(
-            target=training_routine,
-            name="Training worker",
-            args=(self.mp_stop_event,),
+        training_proc = TrainingWorker(
+            stop_event=self.mp_stop_event,
         )
         # Training worker is not a daemon so that training script can spawn child processes
         training_proc.daemon = False
 
         # Inference worker consumes frames and produces predictions
-        inference_proc = mp.Process(
-            target=inference_routine,
-            name="Inference worker",
-            args=(
-                self.frame_queue,
-                self.pred_queue,
-                self.mp_stop_event,
-                self.mp_model_reload_event,
-                self.shm_metrics.name,
-                self.shm_metrics_lock,
-            ),
+        inference_proc = InferenceWorker(
+            frame_queue=self.frame_queue,
+            pred_queue=self.pred_queue,
+            stop_event=self.mp_stop_event,
+            model_reload_event=self.mp_model_reload_event,
+            shm_name=self.shm_metrics.name,
+            shm_lock=self.shm_metrics_lock,
         )
         inference_proc.daemon = True
 
         # Dispatching worker consumes predictions and publishes to outputs/WebRTC
-        dispatching_thread = threading.Thread(
-            target=dispatching_routine,
-            name="Dispatching thread",
-            args=(self.pred_queue, self.rtc_stream_queue, self.mp_stop_event, self.mp_config_changed_condition),
+        dispatching_thread = DispatchingWorker(
+            pred_queue=self.pred_queue,
+            rtc_stream_queue=self.rtc_stream_queue,
+            stop_event=self.mp_stop_event,
+            active_config_changed_condition=self.mp_config_changed_condition,
         )
 
-        stream_loader_proc = mp.Process(
-            target=frame_acquisition_routine,
-            name="Stream loader worker",
-            args=(self.frame_queue, self.mp_stop_event, self.mp_config_changed_condition),
+        stream_loader_proc = StreamLoader(
+            frame_queue=self.frame_queue,
+            stop_event=self.mp_stop_event,
+            config_changed_condition=self.mp_config_changed_condition,
         )
         stream_loader_proc.daemon = True
 

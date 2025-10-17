@@ -21,6 +21,7 @@ dependencies = [
     "opencv-python-headless~=4.12",
     "watchdog==6.0.0",
     "uvloop==0.21.0",
+    "loguru==0.7.3",
 ]
 
 [dependency-groups]
