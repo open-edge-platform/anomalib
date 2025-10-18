@@ -2,12 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-from loguru import logger
 import queue
 from typing import Any
 
 from aiortc import RTCPeerConnection, RTCSessionDescription
 from aiortc.rtcconfiguration import RTCConfiguration, RTCIceServer
+from loguru import logger
 
 from pydantic_models.webrtc import Answer, InputData, Offer
 from webrtc.stream import InferenceVideoStreamTrack

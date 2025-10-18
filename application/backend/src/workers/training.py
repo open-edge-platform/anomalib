@@ -1,8 +1,15 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
+
 import asyncio
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from multiprocessing.synchronize import Event as EventClass
+
+import loguru
 from loguru import logger
-from multiprocessing.synchronize import Event as EventClass
 
 from services.training_service import TrainingService
 from workers.base import BaseProcessWorker
@@ -12,7 +19,7 @@ SCHEDULE_INTERVAL_SEC = 5
 
 
 class TrainingWorker(BaseProcessWorker):
-    def __init__(self, stop_event: EventClass, logger_ = None):
+    def __init__(self, stop_event: EventClass, logger_: loguru.Logger | None = None):
         super().__init__(stop_event=stop_event, logger_=logger_)
 
     async def run_loop(self) -> None:

@@ -1,10 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
-from loguru import logger
 import multiprocessing as mp
 from multiprocessing.synchronize import Condition as ConditionClass
 from threading import Thread
+
+from loguru import logger
 
 from db import get_async_db_session_ctx
 from pydantic_models import DisconnectedSinkConfig, DisconnectedSourceConfig, Sink, Source

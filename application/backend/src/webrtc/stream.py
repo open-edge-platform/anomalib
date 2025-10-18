@@ -4,11 +4,10 @@
 import asyncio
 import queue
 
-from loguru import logger
 import numpy as np
 from aiortc import VideoStreamTrack
 from av import VideoFrame
-
+from loguru import logger
 
 FALLBACK_FRAME = np.full((64, 64, 3), 16, dtype=np.uint8)
 

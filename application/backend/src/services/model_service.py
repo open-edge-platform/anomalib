@@ -3,7 +3,6 @@
 import asyncio
 import base64
 import io
-from loguru import logger
 from dataclasses import dataclass
 from multiprocessing.synchronize import Event as EventClass
 from uuid import UUID
@@ -11,6 +10,7 @@ from uuid import UUID
 import cv2
 import numpy as np
 from anomalib.deploy import ExportType, OpenVINOInferencer
+from loguru import logger
 from PIL import Image
 
 from db import get_async_db_session_ctx

@@ -1,9 +1,10 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from loguru import logger
 import multiprocessing as mp
 import queue
+
+from loguru import logger
 
 
 def flush_queue(queue_obj: mp.Queue) -> None:

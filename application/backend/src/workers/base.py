@@ -4,17 +4,20 @@ from __future__ import annotations
 
 import abc
 import asyncio
-
-import loguru
-from loguru import logger
 import multiprocessing as mp
 import os
 import signal
 import threading
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
-from multiprocessing.queues import Queue
-from multiprocessing.synchronize import Event
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from multiprocessing.queues import Queue
+    from multiprocessing.synchronize import Event
+
+import loguru
+from loguru import logger
 
 
 def log_threads(log_level="DEBUG") -> None:  # noqa: ANN001
@@ -38,7 +41,7 @@ class StoppableMixin:
         # Stop if parent process died
         parent_process = mp.parent_process()
         parent_died = parent_process is not None and not parent_process.is_alive()
-        return self._stop_event.is_set() or parent_died # type: ignore
+        return self._stop_event.is_set() or parent_died  # type: ignore
 
     def stop_aware_sleep(self, seconds: float) -> bool:
         """
@@ -79,9 +82,8 @@ class BaseProcessWorker(mp.Process, StoppableMixin, ABC):
         # Platforms that use "spawn" for multiprocessing (e.g. Windows) cause logging concurrency issues.
         # Therefore, we need to copy the logger with enqueue=True in child processes.
         # https://loguru.readthedocs.io/en/stable/resources/recipes.html#compatibility-with-multiprocessing-using-enqueue-argument
-        global logger
+        global logger  # noqa: PLW0603
         logger = logger_ or logger
-
 
     # Hooks to be implemented by subclasses
 
@@ -89,6 +91,7 @@ class BaseProcessWorker(mp.Process, StoppableMixin, ABC):
         """Allocate resources and initialize settings. Called once in the child process."""
         # Logging needs to be re-setup in child processes because settings are non-pickable.
         from core.logging import setup_logging
+
         setup_logging()
 
     @abstractmethod
@@ -176,7 +179,7 @@ class BaseThreadWorker(threading.Thread, StoppableMixin, abc.ABC):
                 self.setup()
                 asyncio.run(self.run_loop())
             except Exception:
-                logger.exception(f"Unhandled exception in {self.name}", )
+                logger.exception(f"Unhandled exception in {self.name}")
             finally:
                 try:
                     self.teardown()

@@ -1,13 +1,13 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from loguru import logger
 import os
 from datetime import datetime
 
 import cv2
 import numpy as np
 from anomalib.data import NumpyImageBatch as PredictionResult
+from loguru import logger
 
 from pydantic_models.sink import FolderSinkConfig, OutputFormat
 from services.dispatchers.base import BaseDispatcher

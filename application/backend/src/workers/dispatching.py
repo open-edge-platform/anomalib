@@ -2,11 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 import copy
-from loguru import logger
 import multiprocessing as mp
 import queue
 from multiprocessing.synchronize import Condition as ConditionClass
 from multiprocessing.synchronize import Event as EventClass
+
+from loguru import logger
 
 from entities.stream_data import StreamData
 from pydantic_models import Sink, SinkType

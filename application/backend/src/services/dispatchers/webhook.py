@@ -3,18 +3,17 @@
 
 """This module contains the WebhookDispatcher class for dispatching images and predictions to a webhook endpoint."""
 
-from loguru import logger
 from typing import Any
 
 import numpy as np
 import requests
 from anomalib.data import NumpyImageBatch as PredictionResult
+from loguru import logger
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from pydantic_models.sink import WebhookSinkConfig
 from services.dispatchers.base import BaseDispatcher
-
 
 MAX_RETRIES = 3
 BACKOFF_FACTOR = 0.3

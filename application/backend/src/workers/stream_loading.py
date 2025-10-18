@@ -1,12 +1,19 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
+
 import asyncio
 import copy
-from loguru import logger
-import multiprocessing as mp
 import queue
-from multiprocessing.synchronize import Condition as ConditionClass
-from multiprocessing.synchronize import Event as EventClass
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import multiprocessing as mp
+    from multiprocessing.synchronize import Condition as ConditionClass
+    from multiprocessing.synchronize import Event as EventClass
+
+import loguru
+from loguru import logger
 
 from entities.stream_data import StreamData
 from entities.video_stream import VideoStream
@@ -21,9 +28,13 @@ class StreamLoader(BaseProcessWorker):
     ROLE = "StreamLoader"
 
     def __init__(
-        self, frame_queue: mp.Queue, stop_event: EventClass, config_changed_condition: ConditionClass, logger_ = None
+        self,
+        frame_queue: mp.Queue,
+        stop_event: EventClass,
+        config_changed_condition: ConditionClass,
+        logger_: loguru.Logger | None = None,
     ) -> None:
-        super().__init__(stop_event=stop_event, queues_to_cancel=[frame_queue], logger_=logger)
+        super().__init__(stop_event=stop_event, queues_to_cancel=[frame_queue], logger_=logger_)
         self._frame_queue = frame_queue
         self._config_changed_condition = config_changed_condition
 

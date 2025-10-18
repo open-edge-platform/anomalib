@@ -1,15 +1,15 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
-from loguru import logger
 
 from anomalib.data import Folder
 from anomalib.data.utils import TestSplitMode
 from anomalib.deploy import ExportType
 from anomalib.engine import Engine
 from anomalib.models import get_model
+from loguru import logger
 
-from pydantic_models import JobStatus, Model, Job
+from pydantic_models import Job, JobStatus, Model
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import ModelService
 from services.job_service import JobService
@@ -46,6 +46,7 @@ class TrainingService:
 
         # Run the training job with logging context
         from core.logging import job_logging_ctx
+
         with job_logging_ctx(job_id=job.id):
             return await cls._run_training_job(job, job_service)
 
@@ -116,7 +117,7 @@ class TrainingService:
 
         # Initialize anomalib model and engine
         anomalib_model = get_model(model=model.name)
-        engine = Engine(default_root_dir=model.export_path) # TODO: need custom logger
+        engine = Engine(default_root_dir=model.export_path)  # TODO: need custom logger
 
         # Execute training and export
         export_format = ExportType.OPENVINO

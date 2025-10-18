@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from loguru import logger
 import time
 from datetime import UTC, datetime
 from multiprocessing.shared_memory import SharedMemory
@@ -10,7 +9,7 @@ from typing import NamedTuple
 from uuid import UUID
 
 import numpy as np
-
+from loguru import logger
 
 MAX_MEASUREMENTS = 1024  # max number of measurements to keep
 DTYPE = np.dtype(

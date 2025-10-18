@@ -1,15 +1,15 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from loguru import logger
 import atexit
 import multiprocessing as mp
 import os
 import queue
-import threading
+import threading  # noqa: TC003
 from multiprocessing.shared_memory import SharedMemory
 
 import psutil
+from loguru import logger
 
 from services.metrics_service import SIZE
 from utils.singleton import Singleton

@@ -2,19 +2,21 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-import cv2
 import asyncio
+import queue as std_queue
+from typing import TYPE_CHECKING, Any
+
+import cv2
 import loguru
 from loguru import logger
-import queue as std_queue
-from typing import TYPE_CHECKING
-import multiprocessing as mp
-from multiprocessing.synchronize import Event as EventClass
-from multiprocessing.synchronize import Lock
-from typing import Any
 
 if TYPE_CHECKING:
+    import multiprocessing as mp
+    from multiprocessing.synchronize import Event as EventClass
+    from multiprocessing.synchronize import Lock
+
     import numpy as np
+
 
 from db import get_async_db_session_ctx
 from entities.stream_data import InferenceData, StreamData
@@ -109,16 +111,14 @@ class InferenceWorker(BaseProcessWorker):
                     try:
                         inferencer = await self._model_service.load_inference_model(self._loaded_model.model)
                         self._cached_models[self._loaded_model.id] = inferencer
-                        logger.info(
-                            f"Reloaded inference model '{self._loaded_model.name}' ({self._loaded_model.id})"
-                        )
+                        logger.info(f"Reloaded inference model '{self._loaded_model.name}' ({self._loaded_model.id})")
                     except Exception as e:
                         logger.error(f"Failed to reload model '{self._loaded_model.name}': {e}", exc_info=True)
                         # Leave cache empty; next predict will attempt to load again
         except Exception as e:
             logger.debug(f"Error while handling model reload event: {e}")
 
-    async def run_loop(self) -> None:
+    async def run_loop(self) -> None:  # noqa: C901, PLR0912, PLR0915
         while not self.should_stop():
             # Ensure model is loaded/selected from active pipeline
             active_model = await self._get_active_model()
@@ -130,9 +130,7 @@ class InferenceWorker(BaseProcessWorker):
             # Refresh loaded model reference if changed
             if self._loaded_model is None or self._loaded_model.id != active_model.id:
                 self._loaded_model = active_model
-                logger.info(
-                    "Using model '%s' (%s) for inference", self._loaded_model.name, self._loaded_model.id
-                )
+                logger.info("Using model '%s' (%s) for inference", self._loaded_model.name, self._loaded_model.id)
 
             await self._handle_model_reload()
 

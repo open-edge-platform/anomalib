@@ -3,11 +3,11 @@
 
 """WebRTC API Endpoints"""
 
-from loguru import logger
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
+from loguru import logger
 
 from api.dependencies import get_webrtc_manager as get_webrtc
 from pydantic_models.webrtc import Answer, InputData, Offer

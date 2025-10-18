@@ -1,12 +1,12 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from loguru import logger
 import os
 import threading
 from collections.abc import Callable
 
 import cv2
+from loguru import logger
 from watchdog.events import DirCreatedEvent, DirDeletedEvent, FileCreatedEvent, FileDeletedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 

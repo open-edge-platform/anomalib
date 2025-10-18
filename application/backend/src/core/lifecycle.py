@@ -3,11 +3,11 @@
 
 """Application lifecycle management"""
 
-from loguru import logger
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from loguru import logger
 
 from core.logging import setup_logging
 from core.scheduler import Scheduler

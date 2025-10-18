@@ -27,7 +27,6 @@ from api.endpoints.webrtc import router as webrtc_router
 from core.lifecycle import lifespan
 from exceptions import GetiBaseException
 
-
 app = FastAPI(
     lifespan=lifespan,
     openapi_url="/api/openapi.json",

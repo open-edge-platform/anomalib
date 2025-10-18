@@ -1,11 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import base64
-from loguru import logger
 from collections.abc import Callable
 
 import cv2
 import numpy as np
+from loguru import logger
 
 from pydantic_models import PredictionResponse
 

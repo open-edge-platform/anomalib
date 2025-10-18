@@ -2,13 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import json
-from loguru import logger
 import threading
 import time
 from typing import Any
 
 import numpy as np
 from anomalib.data import NumpyImageBatch as PredictionResult
+from loguru import logger
 
 from pydantic_models.sink import MqttSinkConfig
 from services.dispatchers.base import BaseDispatcher

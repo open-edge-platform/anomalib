@@ -12,12 +12,17 @@ Provides centralized logging using loguru with:
 
 import os
 import re
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Generator
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from loguru import Record
 
 from loguru import logger
-from workers import TrainingWorker, InferenceWorker, DispatchingWorker, StreamLoader
+
+from workers import DispatchingWorker, InferenceWorker, StreamLoader, TrainingWorker
 
 LOG_FOLDER = "logs"
 WORKERS_FOLDER = os.path.join(LOG_FOLDER, "workers")
@@ -27,6 +32,7 @@ JOBS_FOLDER = os.path.join(LOG_FOLDER, "jobs")
 @dataclass
 class LogConfig:
     """Configuration for logging behavior."""
+
     rotation: str = "10 MB"
     retention: str = "10 days"
     level: str = "DEBUG"
@@ -58,10 +64,9 @@ def _validate_job_id(job_id: str) -> str:
         ValueError: If job_id contains invalid characters
     """
     # Only allow alphanumeric, hyphens, underscores
-    if not re.match(r'^[a-zA-Z0-9_-]+$', job_id):
+    if not re.match(r"^[a-zA-Z0-9_-]+$", job_id):
         raise ValueError(
-            f"Invalid job_id '{job_id}'. Only alphanumeric characters, "
-            "hyphens, and underscores are allowed."
+            f"Invalid job_id '{job_id}'. Only alphanumeric characters, hyphens, and underscores are allowed."
         )
     return job_id
 
@@ -90,11 +95,12 @@ def setup_logging(config: LogConfig | None = None) -> None:
         config = LogConfig()
 
     for worker_name, log_file in worker_log_info.items():
-        def worker_log_filter(record, worker=worker_name):
+
+        def worker_log_filter(record: "Record", worker: str | None = worker_name) -> bool:
             return record["extra"].get("worker") == worker
 
         log_path = os.path.join(config.log_folder, log_file)
-        
+
         try:
             os.makedirs(os.path.dirname(log_path), exist_ok=True)
         except OSError as e:
@@ -142,10 +148,10 @@ def job_logging_ctx(job_id: str, config: LogConfig | None = None) -> Generator[s
         config = LogConfig()
 
     job_id = _validate_job_id(job_id)
-    
+
     jobs_folder = os.path.join(config.log_folder, "jobs")
     log_file = f"{jobs_folder}/{job_id}.log"
-    
+
     try:
         os.makedirs(jobs_folder, exist_ok=True)
     except OSError as e:

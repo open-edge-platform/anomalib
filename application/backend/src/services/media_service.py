@@ -1,12 +1,12 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
-from loguru import logger
 import os
 from io import BytesIO
 from uuid import UUID, uuid4
 
 from fastapi import UploadFile
+from loguru import logger
 from PIL import Image
 
 from db import get_async_db_session_ctx
