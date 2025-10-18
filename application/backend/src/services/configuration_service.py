@@ -46,7 +46,9 @@ class ConfigurationService:
             self._config_changed_condition.notify_all()
 
     @staticmethod
-    async def _on_config_changed(config_id: UUID, field: PipelineField, db: AsyncSession, notify_fn: Callable[[], None]) -> None:
+    async def _on_config_changed(
+        config_id: UUID, field: PipelineField, db: AsyncSession, notify_fn: Callable[[], None]
+    ) -> None:
         """Notify threads or child processes that the configuration has changed.
         Notification triggered only when the configuration is used by the active pipeline."""
         pipeline_repo = PipelineRepository(db)
