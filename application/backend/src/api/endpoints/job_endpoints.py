@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends
@@ -11,8 +10,6 @@ from api.endpoints import API_PREFIX
 from pydantic_models import JobList
 from pydantic_models.job import JobSubmitted, TrainJobPayload
 from services import JobService
-
-logger = logging.getLogger(__name__)
 
 job_api_prefix_url = API_PREFIX + "/jobs"
 job_router = APIRouter(

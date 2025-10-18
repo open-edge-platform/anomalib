@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
+from loguru import logger
 import os
 import threading
 from collections.abc import Callable
@@ -13,8 +13,6 @@ from watchdog.observers import Observer
 from entities.stream_data import StreamData
 from entities.video_stream import VideoStream
 from pydantic_models.source import SourceType
-
-logger = logging.getLogger(__name__)
 
 
 class ImagesFolderEventHandler(FileSystemEventHandler):

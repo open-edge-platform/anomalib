@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
-import logging
+from loguru import logger
 import os
 from io import BytesIO
 from uuid import UUID, uuid4
@@ -13,8 +13,6 @@ from db import get_async_db_session_ctx
 from pydantic_models import Media, MediaList
 from repositories import MediaRepository
 from repositories.binary_repo import ImageBinaryRepository
-
-logger = logging.getLogger(__name__)
 
 THUMBNAIL_SIZE = 256  # Max width/height for thumbnails in pixels
 

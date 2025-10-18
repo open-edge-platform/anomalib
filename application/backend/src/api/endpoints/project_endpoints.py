@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 from typing import Annotated
 from uuid import UUID
 
@@ -11,8 +10,6 @@ from api.dependencies import get_project_id, get_project_service
 from api.endpoints import API_PREFIX
 from pydantic_models import Project, ProjectList
 from services import ProjectService
-
-logger = logging.getLogger(__name__)
 
 project_api_prefix_url = API_PREFIX + "/projects"
 project_router = APIRouter(

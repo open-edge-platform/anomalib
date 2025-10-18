@@ -1,21 +1,19 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
-import logging
+from loguru import logger
 from multiprocessing.synchronize import Event as EventClass
 
 from services.training_service import TrainingService
 from workers.base import BaseProcessWorker
-
-logger = logging.getLogger(__name__)
 
 MAX_CONCURRENT_TRAINING = 1
 SCHEDULE_INTERVAL_SEC = 5
 
 
 class TrainingWorker(BaseProcessWorker):
-    def __init__(self, stop_event: EventClass):
-        super().__init__(stop_event=stop_event)
+    def __init__(self, stop_event: EventClass, logger_ = None):
+        super().__init__(stop_event=stop_event, logger_=logger_)
 
     async def run_loop(self) -> None:
         """Main training loop that polls for jobs and manages concurrent training tasks."""

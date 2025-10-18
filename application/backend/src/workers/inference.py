@@ -1,16 +1,17 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import asyncio
-import logging
-import multiprocessing as mp
-import queue as std_queue
-from multiprocessing.synchronize import Event as EventClass
-from multiprocessing.synchronize import Lock
-from typing import TYPE_CHECKING, Any
+from __future__ import annotations
 
 import cv2
-
-from workers.base import BaseProcessWorker
+import asyncio
+import loguru
+from loguru import logger
+import queue as std_queue
+from typing import TYPE_CHECKING
+import multiprocessing as mp
+from multiprocessing.synchronize import Event as EventClass
+from multiprocessing.synchronize import Lock
+from typing import Any
 
 if TYPE_CHECKING:
     import numpy as np
@@ -21,16 +22,8 @@ from repositories import PipelineRepository
 from services import ModelService
 from services.metrics_service import MetricsService
 from services.model_service import LoadedModel
-from utils import log_threads, suppress_child_shutdown_signals
 from utils.visualization import Visualizer
-
-import logging
-import multiprocessing as mp
-from multiprocessing.synchronize import Event as EventClass
-from multiprocessing.synchronize import Lock
-from typing import Any
-
-logger = logging.getLogger(__name__)
+from workers.base import BaseProcessWorker
 
 
 class InferenceWorker(BaseProcessWorker):
@@ -46,8 +39,9 @@ class InferenceWorker(BaseProcessWorker):
         model_reload_event: EventClass,
         shm_name: str,
         shm_lock: Lock,
+        logger_: loguru.Logger = None,
     ) -> None:
-        super().__init__(stop_event=stop_event, queues_to_cancel=[pred_queue])
+        super().__init__(stop_event=stop_event, queues_to_cancel=[pred_queue], logger_=logger_)
         self._frame_queue = frame_queue
         self._pred_queue = pred_queue
         self._model_reload_event = model_reload_event
@@ -61,6 +55,7 @@ class InferenceWorker(BaseProcessWorker):
         self._cached_models: dict[Any, object] = {}
 
     def setup(self) -> None:
+        super().setup()
         self._metrics_service = MetricsService(self._shm_name, self._shm_lock)
         self._model_service = ModelService()
 
@@ -91,7 +86,7 @@ class InferenceWorker(BaseProcessWorker):
                 model = pipeline.model
                 return LoadedModel(name=model.name, id=model.id, model=model)
         except Exception as e:
-            logger.error("Failed to query active pipeline/model: %s", e, exc_info=True)
+            logger.error(f"Failed to query active pipeline/model: {e}", exc_info=True)
             return None
 
     async def _handle_model_reload(self) -> None:
@@ -115,103 +110,90 @@ class InferenceWorker(BaseProcessWorker):
                         inferencer = await self._model_service.load_inference_model(self._loaded_model.model)
                         self._cached_models[self._loaded_model.id] = inferencer
                         logger.info(
-                            "Reloaded inference model '%s' (%s)", self._loaded_model.name, self._loaded_model.id
+                            f"Reloaded inference model '{self._loaded_model.name}' ({self._loaded_model.id})"
                         )
                     except Exception as e:
-                        logger.error("Failed to reload model '%s': %s", self._loaded_model.name, e, exc_info=True)
+                        logger.error(f"Failed to reload model '{self._loaded_model.name}': {e}", exc_info=True)
                         # Leave cache empty; next predict will attempt to load again
         except Exception as e:
-            logger.debug("Error while handling model reload event: %s", e)
+            logger.debug(f"Error while handling model reload event: {e}")
 
     async def run_loop(self) -> None:
-        try:
-            while not self.should_stop():
-                # Ensure model is loaded/selected from active pipeline
-                active_model = await self._get_active_model()
-                if active_model is None:
-                    logger.debug("No active model configured; retrying in 1 second")
-                    await asyncio.sleep(1)
+        while not self.should_stop():
+            # Ensure model is loaded/selected from active pipeline
+            active_model = await self._get_active_model()
+            if active_model is None:
+                logger.debug("No active model configured; retrying in 1 second")
+                await asyncio.sleep(1)
+                continue
+
+            # Refresh loaded model reference if changed
+            if self._loaded_model is None or self._loaded_model.id != active_model.id:
+                self._loaded_model = active_model
+                logger.info(
+                    "Using model '%s' (%s) for inference", self._loaded_model.name, self._loaded_model.id
+                )
+
+            await self._handle_model_reload()
+
+            # Pull next frame
+            try:
+                stream_data: StreamData = self._frame_queue.get(timeout=1)
+            except std_queue.Empty:
+                logger.debug("No frame available for inference yet")
+                continue
+            except Exception:
+                logger.debug("No frame available for inference yet")
+                continue
+
+            # Prepare input bytes for ModelService.predict_image (expects encoded image bytes)
+            frame = stream_data.frame_data
+            if frame is None:
+                logger.debug("Received empty frame; skipping")
+                continue
+
+            try:
+                success, buf = cv2.imencode(".jpg", frame)
+                if not success:
+                    logger.warning("Failed to encode frame; skipping")
                     continue
+                image_bytes = buf.tobytes()
+            except Exception as e:
+                logger.error(f"Error encoding frame: {e}", exc_info=True)
+                continue
 
-                # Refresh loaded model reference if changed
-                if self._loaded_model is None or self._loaded_model.id != active_model.id:
-                    self._loaded_model = active_model
-                    logger.info(
-                        "Using model '%s' (%s) for inference", self._loaded_model.name, self._loaded_model.id
-                    )
-
-                await self._handle_model_reload()
-
-                # Pull next frame
+            # Run inference and collect latency metric
+            start_t = MetricsService.record_inference_start()
+            try:
+                prediction_response = await self._model_service.predict_image(
+                    self._loaded_model.model, image_bytes, self._cached_models
+                )
+            except Exception as e:
+                logger.error(f"Inference failed: {e}", exc_info=True)
+                continue
+            finally:
                 try:
-                    stream_data: StreamData = self._frame_queue.get(timeout=1)
-                except std_queue.Empty:
-                    logger.debug("No frame available for inference yet")
-                    continue
-                except Exception:
-                    logger.debug("No frame available for inference yet")
-                    continue
-
-                # Prepare input bytes for ModelService.predict_image (expects encoded image bytes)
-                frame = stream_data.frame_data
-                if frame is None:
-                    logger.debug("Received empty frame; skipping")
-                    continue
-
-                try:
-                    success, buf = cv2.imencode(".jpg", frame)
-                    if not success:
-                        logger.warning("Failed to encode frame; skipping")
-                        continue
-                    image_bytes = buf.tobytes()
+                    self._metrics_collector.record_inference_end(self._loaded_model.id, start_t)
                 except Exception as e:
-                    logger.error("Error encoding frame: %s", e, exc_info=True)
-                    continue
+                    logger.debug(f"Failed to record inference metric: {e}")
 
-                # Run inference and collect latency metric
-                start_t = MetricsService.record_inference_start()
-                try:
-                    prediction_response = await self._model_service.predict_image(
-                        self._loaded_model.model, image_bytes, self._cached_models
-                    )
-                except Exception as e:
-                    logger.error("Inference failed: %s", e, exc_info=True)
-                    continue
-                finally:
-                    try:
-                        self._metrics_collector.record_inference_end(self._loaded_model.id, start_t)
-                    except Exception as e:
-                        logger.debug("Failed to record inference metric: %s", e)
+            # Build visualization via utility (no direct overlay/manipulation here)
+            vis_frame: np.ndarray = Visualizer.overlay_predictions(frame, prediction_response)
 
-                # Build visualization via utility (no direct overlay/manipulation here)
-                vis_frame: np.ndarray = Visualizer.overlay_predictions(frame, prediction_response)
+            # Package inference data into stream payload
+            try:
+                stream_data.inference_data = InferenceData(
+                    prediction=prediction_response,  # type: ignore[assignment]
+                    visualized_prediction=vis_frame,
+                    model_name=self._loaded_model.name,
+                )
+            except Exception as e:
+                logger.error(f"Failed to attach inference data: {e}", exc_info=True)
+                continue
 
-                # Package inference data into stream payload
-                try:
-                    stream_data.inference_data = InferenceData(
-                        prediction=prediction_response,  # type: ignore[assignment]
-                        visualized_prediction=vis_frame,
-                        model_name=self._loaded_model.name,
-                    )
-                except Exception as e:
-                    logger.error("Failed to attach inference data: %s", e, exc_info=True)
-                    continue
-
-                # Enqueue for downstream dispatchers/visualization
-                try:
-                    self._pred_queue.put(stream_data, timeout=1)
-                except std_queue.Full:
-                    logger.debug("Prediction queue is full; dropping result")
-                    continue
-        finally:
-            # https://docs.python.org/3/library/multiprocessing.html#all-start-methods
-            # section: Joining processes that use queues
-            # Call cancel_join_thread() to prevent the parent process from blocking
-            # indefinitely when joining child processes that used this queue. This avoids potential
-            # deadlocks if the queue's background thread adds more items during the flush.
-            if self._pred_queue is not None:
-                logger.debug("Cancelling the pred_queue join thread to allow inference process to exit")
-                self._pred_queue.cancel_join_thread()
-
-            log_threads(log_level=logging.DEBUG)
-            logger.info("Stopped inference routine")
+            # Enqueue for downstream dispatchers/visualization
+            try:
+                self._pred_queue.put(stream_data, timeout=1)
+            except std_queue.Full:
+                logger.debug("Prediction queue is full; dropping result")
+                continue

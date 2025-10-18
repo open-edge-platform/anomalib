@@ -3,7 +3,6 @@
 
 """Endpoints for managing pipeline sinks"""
 
-import logging
 from typing import Annotated
 from uuid import UUID
 
@@ -18,7 +17,6 @@ from pydantic_models import Sink, SinkType
 from pydantic_models.sink import SinkAdapter
 from services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
-logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/sinks", tags=["Sinks"])
 
 CREATE_SINK_BODY_DESCRIPTION = """

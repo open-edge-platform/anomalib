@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
-import logging
+from loguru import logger
 
 from anomalib.data import Folder
 from anomalib.data.utils import TestSplitMode
@@ -9,13 +9,10 @@ from anomalib.deploy import ExportType
 from anomalib.engine import Engine
 from anomalib.models import get_model
 
-from pydantic_models import JobStatus, Model
+from pydantic_models import JobStatus, Model, Job
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import ModelService
 from services.job_service import JobService
-from utils import is_platform_darwin
-
-logger = logging.getLogger(__name__)
 
 
 class TrainingService:
@@ -44,11 +41,18 @@ class TrainingService:
         job_service = JobService()
         job = await job_service.get_pending_train_job()
         if job is None:
-            logger.info("No pending training job")
+            logger.debug("No pending training job")
             return None
+
+        # Run the training job with logging context
+        from core.logging import job_logging_ctx
+        with job_logging_ctx(job_id=job.id):
+            return await cls._run_training_job(job, job_service)
+
+    @classmethod
+    async def _run_training_job(cls, job: Job, job_service: JobService) -> Model:
         # Mark job as running
         await job_service.update_job_status(job_id=job.id, status=JobStatus.RUNNING, message="Training started")
-
         project_id = job.project_id
         model_name = job.payload.get("model_name")
         model_service = ModelService()
@@ -75,7 +79,7 @@ class TrainingService:
                 job_id=job.id, status=JobStatus.FAILED, message=f"Failed with exception: {str(e)}"
             )
             if model.export_path:
-                logger.warning("Deleting partially created model with id: %s", model.id)
+                logger.warning(f"Deleting partially created model with id: {model.id}")
                 model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model.id)
                 await model_binary_repo.delete_model_folder()
                 await model_service.delete_model(project_id=project_id, model_id=model.id)
@@ -112,7 +116,7 @@ class TrainingService:
 
         # Initialize anomalib model and engine
         anomalib_model = get_model(model=model.name)
-        engine = Engine(default_root_dir=model.export_path)
+        engine = Engine(default_root_dir=model.export_path) # TODO: need custom logger
 
         # Execute training and export
         export_format = ExportType.OPENVINO

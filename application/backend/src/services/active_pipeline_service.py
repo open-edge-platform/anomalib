@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
-import logging
+from loguru import logger
 import multiprocessing as mp
 from multiprocessing.synchronize import Condition as ConditionClass
 from threading import Thread
@@ -9,8 +9,6 @@ from threading import Thread
 from db import get_async_db_session_ctx
 from pydantic_models import DisconnectedSinkConfig, DisconnectedSourceConfig, Sink, Source
 from repositories import PipelineRepository
-
-logger = logging.getLogger(__name__)
 
 
 class ActivePipelineService:
@@ -139,7 +137,7 @@ class ActivePipelineService:
                 notified = self.config_changed_condition.wait(timeout=3)
                 if not notified:  # awakened before of timeout
                     continue
-                logger.debug("Configuration changes detected. Process: %s", mp.current_process().name)
+                logger.debug(f"Configuration changes detected. Process: {mp.current_process().name}")
                 # Schedule the async reload in the event loop using the stored loop reference
                 asyncio.run(self.reload())
 

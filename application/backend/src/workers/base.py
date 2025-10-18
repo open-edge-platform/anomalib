@@ -1,9 +1,12 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import abc
 import asyncio
-import logging
+
+import loguru
+from loguru import logger
 import multiprocessing as mp
 import os
 import signal
@@ -13,10 +16,8 @@ from collections.abc import Iterable
 from multiprocessing.queues import Queue
 from multiprocessing.synchronize import Event
 
-logger = logging.getLogger(__name__)
 
-
-def log_threads(log_level=logging.DEBUG) -> None:  # noqa: ANN001
+def log_threads(log_level="DEBUG") -> None:  # noqa: ANN001
     """Log all the alive threads associated with the current process"""
     pid = os.getpid()
     alive_threads = [thread for thread in threading.enumerate() if thread.is_alive()]
@@ -24,7 +25,7 @@ def log_threads(log_level=logging.DEBUG) -> None:  # noqa: ANN001
         f"Alive threads for process with pid '{pid}': "
         f"{', '.join([str((thread.name, thread.ident)) for thread in alive_threads])}"
     )
-    logger.log(level=log_level, msg=thread_list_msg)
+    logger.log(log_level, thread_list_msg)
 
 
 class StoppableMixin:
@@ -68,17 +69,27 @@ class BaseProcessWorker(mp.Process, StoppableMixin, ABC):
         *,
         stop_event: Event,
         queues_to_cancel: Iterable[Queue] | None = None,
+        logger_: loguru.Logger = None,
     ) -> None:
         super().__init__()
         self._stop_event = stop_event
         self._parent_pid = os.getpid()
         self._queues_to_cancel = list(queues_to_cancel or [])
 
+        # Platforms that use "spawn" for multiprocessing (e.g. Windows) cause logging concurrency issues.
+        # Therefore, we need to copy the logger with enqueue=True in child processes.
+        # https://loguru.readthedocs.io/en/stable/resources/recipes.html#compatibility-with-multiprocessing-using-enqueue-argument
+        global logger
+        logger = logger_ or logger
+
+
     # Hooks to be implemented by subclasses
 
     def setup(self) -> None:
-        """Allocate resources (Optional). Called once in the child process."""
-        pass
+        """Allocate resources and initialize settings. Called once in the child process."""
+        # Logging needs to be re-setup in child processes because settings are non-pickable.
+        from core.logging import setup_logging
+        setup_logging()
 
     @abstractmethod
     async def run_loop(self) -> None:
@@ -117,25 +128,26 @@ class BaseProcessWorker(mp.Process, StoppableMixin, ABC):
                 # indefinitely when joining child processes that used this queue. This avoids potential
                 # deadlocks if the queue's background thread adds more items during the flush.
                 q.cancel_join_thread()
-                logger.debug("Cancelled join thread for queue %r", getattr(q, "name", q))
+                logger.debug(f"Cancelled join thread for queue {getattr(q, 'name', q)!r}")
             except Exception as e:
-                logger.warning("Failed cancelling queue join thread: %s", e)
+                logger.warning(f"Failed cancelling queue join thread: {e}")
 
     def run(self) -> None:  # final orchestration; should not be overridden in subclasses
-        self._install_signal_policy()
-        self.name = self._auto_name()
-        logger.info("Starting %s...", self.name)
-        try:
-            self.setup()
-            asyncio.run(self.run_loop())
-        finally:
+        self.setup()
+        with logger.contextualize(worker=self.__class__.__name__):
+            self._install_signal_policy()
+            self.name = self._auto_name()
+            logger.info(f"Starting {self.name}...")
             try:
-                self.teardown()
+                asyncio.run(self.run_loop())
             finally:
-                # always try to cancel any declared queues
-                self._cancel_queue_join_threads()
-                log_threads(log_level=logging.DEBUG)
-                logger.info("Stopped %s.", self.name)
+                try:
+                    self.teardown()
+                finally:
+                    # always try to cancel any declared queues
+                    self._cancel_queue_join_threads()
+                    log_threads()
+                    logger.info(f"Stopped {self.name}.")
 
 
 class BaseThreadWorker(threading.Thread, StoppableMixin, abc.ABC):
@@ -158,14 +170,15 @@ class BaseThreadWorker(threading.Thread, StoppableMixin, abc.ABC):
 
     # final run orchestration
     def run(self) -> None:  # final orchestrator
-        logger.info("Starting %s", self.name)
-        try:
-            self.setup()
-            asyncio.run(self.run_loop())
-        except Exception:
-            logger.exception("Unhandled exception in %s", self.name)
-        finally:
+        with logger.contextualize(worker=self.__class__.__name__):
+            logger.info(f"Starting {self.name}")
             try:
-                self.teardown()
+                self.setup()
+                asyncio.run(self.run_loop())
+            except Exception:
+                logger.exception(f"Unhandled exception in {self.name}", )
             finally:
-                logger.info("Stopped %s", self.name)
+                try:
+                    self.teardown()
+                finally:
+                    logger.info(f"Stopped {self.name}")

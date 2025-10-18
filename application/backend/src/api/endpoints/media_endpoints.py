@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 from typing import Annotated
 from uuid import UUID
 
@@ -13,8 +12,6 @@ from api.endpoints import API_PREFIX
 from api.media_rest_validator import MediaRestValidator
 from pydantic_models import Media, MediaList
 from services.media_service import MediaService
-
-logger = logging.getLogger(__name__)
 
 media_api_prefix_url = API_PREFIX + "/projects/{project_id}"
 media_router = APIRouter(

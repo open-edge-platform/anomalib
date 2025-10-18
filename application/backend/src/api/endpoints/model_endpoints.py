@@ -1,6 +1,5 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import logging
 from typing import Annotated
 from uuid import UUID
 
@@ -12,8 +11,6 @@ from api.media_rest_validator import MediaRestValidator
 from exceptions import ResourceNotFoundException
 from pydantic_models import Model, ModelList, PredictionResponse
 from services import ModelService
-
-logger = logging.getLogger(__name__)
 
 model_api_prefix_url = project_api_prefix_url + "/{project_id}/models"
 model_router = APIRouter(

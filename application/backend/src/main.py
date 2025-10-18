@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import http
-import logging
 import os
 from collections import defaultdict
 from collections.abc import Sequence
@@ -13,6 +12,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
 from starlette.responses import JSONResponse, Response
 
 from api.endpoints.job_endpoints import job_router
@@ -27,7 +27,6 @@ from api.endpoints.webrtc import router as webrtc_router
 from core.lifecycle import lifespan
 from exceptions import GetiBaseException
 
-logger = logging.getLogger(__name__)
 
 app = FastAPI(
     lifespan=lifespan,
@@ -174,4 +173,4 @@ async def pydantic_validation_exception_handler(request: Request, exc: pydantic.
 
 if __name__ == "__main__":
     uvicorn_port = int(os.environ.get("HTTP_SERVER_PORT", "8000"))
-    uvicorn.run("main:app", loop="uvloop", host="0.0.0.0", port=uvicorn_port, log_level="debug")  # noqa: S104
+    uvicorn.run("main:app", loop="uvloop", host="0.0.0.0", port=uvicorn_port, log_level="info")  # noqa: S104

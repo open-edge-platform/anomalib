@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
+from loguru import logger
 import atexit
 import multiprocessing as mp
 import os
@@ -14,8 +14,6 @@ import psutil
 from services.metrics_service import SIZE
 from utils.singleton import Singleton
 from workers import DispatchingWorker, InferenceWorker, StreamLoader, TrainingWorker
-
-logger = logging.getLogger(__name__)
 
 
 class Scheduler(metaclass=Singleton):
@@ -56,6 +54,7 @@ class Scheduler(metaclass=Singleton):
         # Create and start processes
         training_proc = TrainingWorker(
             stop_event=self.mp_stop_event,
+            logger_=logger.bind(worker=TrainingWorker.__name__),
         )
         # Training worker is not a daemon so that training script can spawn child processes
         training_proc.daemon = False
@@ -68,6 +67,7 @@ class Scheduler(metaclass=Singleton):
             model_reload_event=self.mp_model_reload_event,
             shm_name=self.shm_metrics.name,
             shm_lock=self.shm_metrics_lock,
+            logger_=logger.bind(worker=InferenceWorker.__name__),
         )
         inference_proc.daemon = True
 
@@ -83,6 +83,7 @@ class Scheduler(metaclass=Singleton):
             frame_queue=self.frame_queue,
             stop_event=self.mp_stop_event,
             config_changed_condition=self.mp_config_changed_condition,
+            logger_=logger.bind(worker=StreamLoader.__name__),
         )
         stream_loader_proc.daemon = True
 
@@ -124,17 +125,17 @@ class Scheduler(metaclass=Singleton):
                 logger.debug(f"Joining process: {process.name}")
                 process.join(timeout=10)
                 if process.is_alive():
-                    logger.warning("Force terminating process: %s", process.name)
+                    logger.warning(f"Force terminating process: {process.name}")
                     process.terminate()
                     process.join(timeout=2)
                     if process.is_alive():
-                        logger.error("Force killing process %s", process.name)
+                        logger.error(f"Force killing process {process.name}")
                         process.kill()
                 # Explicitly close the process' resources
                 try:
                     process.close()
                 except Exception as e:
-                    logger.warning("Error closing process %s: %s", process.name, e)
+                    logger.warning(f"Error closing process {process.name}: {e}")
 
         logger.info("All workers shut down gracefully")
 
@@ -153,9 +154,9 @@ class Scheduler(metaclass=Singleton):
                     # https://runebook.dev/en/articles/python/library/multiprocessing/multiprocessing.Queue.close
                     q.close()
                     q.join_thread()
-                    logger.debug("Successfully cleaned up %s", name)
+                    logger.debug(f"Successfully cleaned up {name}")
                 except Exception as e:
-                    logger.warning("Error cleaning up %s: %s", name, e)
+                    logger.warning(f"Error cleaning up {name}: {e}")
 
     def _cleanup_shared_memory(self) -> None:
         """Clean up shared memory objects"""
@@ -167,4 +168,4 @@ class Scheduler(metaclass=Singleton):
                 self.shm_metrics = None
                 logger.debug("Successfully cleaned up shared memory")
             except Exception as e:
-                logger.warning("Error cleaning up shared memory: %s", e)
+                logger.warning(f"Error cleaning up shared memory: {e}")

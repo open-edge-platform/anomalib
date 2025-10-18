@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-import logging
 from collections.abc import Callable
 from enum import StrEnum
 from multiprocessing.synchronize import Condition
@@ -15,8 +14,6 @@ from pydantic_models import Sink, Source
 from repositories import PipelineRepository, SinkRepository, SourceRepository
 from services import ActivePipelineService
 from services.exceptions import ResourceNotFoundError, ResourceType
-
-logger = logging.getLogger(__name__)
 
 
 class PipelineField(StrEnum):

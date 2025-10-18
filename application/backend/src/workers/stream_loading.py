@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 import copy
-import logging
+from loguru import logger
 import multiprocessing as mp
 import queue
 from multiprocessing.synchronize import Condition as ConditionClass
@@ -14,16 +14,16 @@ from pydantic_models import Source, SourceType
 from services import ActivePipelineService, VideoStreamService
 from workers.base import BaseProcessWorker
 
-logger = logging.getLogger(__name__)
-
 
 class StreamLoader(BaseProcessWorker):
     """A process that loads frames from the video stream and injects them into the frame queue."""
 
     ROLE = "StreamLoader"
 
-    def __init__(self, frame_queue: mp.Queue, stop_event: EventClass, config_changed_condition: ConditionClass) -> None:
-        super().__init__(stop_event=stop_event, queues_to_cancel=[frame_queue])
+    def __init__(
+        self, frame_queue: mp.Queue, stop_event: EventClass, config_changed_condition: ConditionClass, logger_ = None
+    ) -> None:
+        super().__init__(stop_event=stop_event, queues_to_cancel=[frame_queue], logger_=logger)
         self._frame_queue = frame_queue
         self._config_changed_condition = config_changed_condition
 

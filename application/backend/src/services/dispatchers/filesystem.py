@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
+from loguru import logger
 import os
 from datetime import datetime
 
@@ -11,8 +11,6 @@ from anomalib.data import NumpyImageBatch as PredictionResult
 
 from pydantic_models.sink import FolderSinkConfig, OutputFormat
 from services.dispatchers.base import BaseDispatcher
-
-logger = logging.getLogger(__name__)
 
 
 class FolderDispatcher(BaseDispatcher):

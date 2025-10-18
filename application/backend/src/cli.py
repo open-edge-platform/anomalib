@@ -3,7 +3,6 @@
 
 """Command line interface for interacting with the Geti Inspect application."""
 
-import logging
 import sys
 
 import click
@@ -12,9 +11,6 @@ from anomalib.deploy import ExportType
 from db import migration_manager
 from db.engine import get_sync_db_session
 from db.schema import ModelDB, ProjectDB
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 @click.group()

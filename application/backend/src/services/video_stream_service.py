@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
+from loguru import logger
 
 from entities.images_folder_stream import ImagesFolderStream
 from entities.ip_camera_stream import IPCameraStream
@@ -9,8 +9,6 @@ from entities.video_file_stream import VideoFileStream
 from entities.video_stream import VideoStream
 from entities.webcam_stream import WebcamStream
 from pydantic_models import Source, SourceType
-
-logger = logging.getLogger(__name__)
 
 
 class VideoStreamService:

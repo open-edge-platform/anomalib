@@ -3,7 +3,7 @@
 import asyncio
 import base64
 import io
-import logging
+from loguru import logger
 from dataclasses import dataclass
 from multiprocessing.synchronize import Event as EventClass
 from uuid import UUID
@@ -17,8 +17,6 @@ from db import get_async_db_session_ctx
 from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
 from repositories import ModelRepository
 from repositories.binary_repo import ModelBinaryRepository
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -51,7 +49,7 @@ class ModelService:
                 self._mp_model_reload_event.set()
         except Exception as e:
             # Best-effort signaling; avoid bubbling up to API layer
-            logger.debug("Failed to signal model reload event: %s", e)
+            logger.debug(f"Failed to signal model reload event: {e}")
 
     @staticmethod
     async def create_model(model: Model) -> Model:
