@@ -47,7 +47,7 @@ class TrainingService:
         # Run the training job with logging context
         from core.logging import job_logging_ctx
 
-        with job_logging_ctx(job_id=job.id):
+        with job_logging_ctx(job_id=str(job.id)):
             return await cls._run_training_job(job, job_service)
 
     @classmethod
@@ -56,10 +56,13 @@ class TrainingService:
         await job_service.update_job_status(job_id=job.id, status=JobStatus.RUNNING, message="Training started")
         project_id = job.project_id
         model_name = job.payload.get("model_name")
+        if model_name is None:
+            raise ValueError("Job payload must contain 'model_name'")
+        
         model_service = ModelService()
         model = Model(
             project_id=project_id,
-            name=model_name,
+            name=str(model_name),
         )
         logger.info(f"Training model `{model_name}` for job `{job.id}`")
 

@@ -57,6 +57,10 @@ class MediaService:
     async def upload_image(cls, project_id: UUID, file: UploadFile, image_bytes: bytes, is_anomalous: bool) -> Media:
         # Generate unique filename and media ID
         media_id = uuid4()
+        
+        if file.filename is None or file.size is None:
+            raise ValueError("File must have a filename and size")
+
         extension = list(os.path.splitext(file.filename)).pop().lower()
         filename = f"{media_id}{extension}"
         bin_repo = ImageBinaryRepository(project_id=project_id)

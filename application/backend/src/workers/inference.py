@@ -41,7 +41,7 @@ class InferenceWorker(BaseProcessWorker):
         model_reload_event: EventClass,
         shm_name: str,
         shm_lock: Lock,
-        logger_: loguru.Logger = None,
+        logger_: loguru.Logger | None = None,
     ) -> None:
         super().__init__(stop_event=stop_event, queues_to_cancel=[pred_queue], logger_=logger_)
         self._frame_queue = frame_queue
@@ -98,6 +98,10 @@ class InferenceWorker(BaseProcessWorker):
                 # The loop handles the case when the active model is switched again while reloading
                 while self._model_reload_event.is_set():
                     self._model_reload_event.clear()
+                    
+                    if self._loaded_model is None:
+                        continue
+                    
                     # Remove cached model to force reload
                     try:
                         self._cached_models.pop(self._loaded_model.id, None)
@@ -109,6 +113,9 @@ class InferenceWorker(BaseProcessWorker):
                         )
                     # Preload the model for faster first inference
                     try:
+                        if self._model_service is None:
+                            raise RuntimeError("Model service not initialized")
+                        
                         inferencer = await self._model_service.load_inference_model(self._loaded_model.model)
                         self._cached_models[self._loaded_model.id] = inferencer
                         logger.info(f"Reloaded inference model '{self._loaded_model.name}' ({self._loaded_model.id})")
@@ -163,15 +170,19 @@ class InferenceWorker(BaseProcessWorker):
             # Run inference and collect latency metric
             start_t = MetricsService.record_inference_start()
             try:
+                if self._model_service is None:
+                    raise RuntimeError("Model service not initialized")
+                
                 prediction_response = await self._model_service.predict_image(
-                    self._loaded_model.model, image_bytes, self._cached_models
+                    self._loaded_model.model, image_bytes, self._cached_models  # type: ignore[arg-type]
                 )
             except Exception as e:
                 logger.error(f"Inference failed: {e}", exc_info=True)
                 continue
             finally:
                 try:
-                    self._metrics_collector.record_inference_end(self._loaded_model.id, start_t)
+                    if self._metrics_service is not None and self._loaded_model is not None:
+                        self._metrics_service.record_inference_end(self._loaded_model.id, start_t)
                 except Exception as e:
                     logger.debug(f"Failed to record inference metric: {e}")
 
@@ -181,7 +192,7 @@ class InferenceWorker(BaseProcessWorker):
             # Package inference data into stream payload
             try:
                 stream_data.inference_data = InferenceData(
-                    prediction=prediction_response,  # type: ignore[assignment]
+                    prediction=prediction_response,  # type: ignore[arg-type]
                     visualized_prediction=vis_frame,
                     model_name=self._loaded_model.name,
                 )

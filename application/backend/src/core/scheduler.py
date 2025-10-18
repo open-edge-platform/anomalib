@@ -38,7 +38,7 @@ class Scheduler(metaclass=Singleton):
         self.mp_config_changed_condition = mp.Condition()
 
         # Shared memory for metrics collector
-        self.shm_metrics = SharedMemory(create=True, size=SIZE)
+        self.shm_metrics: SharedMemory | None = SharedMemory(create=True, size=SIZE)
         self.shm_metrics_lock = mp.Lock()
 
         self.processes: list[mp.Process] = []
@@ -60,6 +60,9 @@ class Scheduler(metaclass=Singleton):
         training_proc.daemon = False
 
         # Inference worker consumes frames and produces predictions
+        if self.shm_metrics is None:
+            raise RuntimeError("Shared memory not initialized")
+        
         inference_proc = InferenceWorker(
             frame_queue=self.frame_queue,
             pred_queue=self.pred_queue,

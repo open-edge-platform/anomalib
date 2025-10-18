@@ -98,8 +98,8 @@ def seed(with_model: bool, model_name: str) -> None:
 def clean_db() -> None:
     """Remove all data from the database (clean but don't drop tables)."""
     with get_sync_db_session() as db:
-        db.query(ModelDB).delete_by_id()
-        db.query(ProjectDB).delete_by_id()
+        db.query(ModelDB).delete()
+        db.query(ProjectDB).delete()
         db.commit()
     click.echo("✓ Database cleaned successfully!")
 

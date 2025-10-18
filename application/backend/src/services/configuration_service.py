@@ -7,7 +7,7 @@ from enum import StrEnum
 from multiprocessing.synchronize import Condition
 from uuid import UUID
 
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_async_db_session_ctx
 from pydantic_models import Sink, Source
@@ -46,11 +46,11 @@ class ConfigurationService:
             self._config_changed_condition.notify_all()
 
     @staticmethod
-    def _on_config_changed(config_id: UUID, field: PipelineField, db: Session, notify_fn: Callable[[], None]) -> None:
+    async def _on_config_changed(config_id: UUID, field: PipelineField, db: AsyncSession, notify_fn: Callable[[], None]) -> None:
         """Notify threads or child processes that the configuration has changed.
         Notification triggered only when the configuration is used by the active pipeline."""
         pipeline_repo = PipelineRepository(db)
-        active_pipeline = pipeline_repo.get_active_pipeline()
+        active_pipeline = await pipeline_repo.get_active_pipeline()
         if active_pipeline and getattr(active_pipeline, field) == str(config_id):
             notify_fn()
 
@@ -64,7 +64,7 @@ class ConfigurationService:
             sink_repo = SinkRepository(db)
             return await sink_repo.get_all()
 
-    async def get_source_by_id(self, source_id: UUID, db: Session | None = None) -> Source:
+    async def get_source_by_id(self, source_id: UUID, db: AsyncSession | None = None) -> Source:
         if db is None:
             async with get_async_db_session_ctx() as db_session:
                 source_repo = SourceRepository(db_session)
@@ -76,7 +76,7 @@ class ConfigurationService:
             raise ResourceNotFoundError(ResourceType.SOURCE, str(source_id))
         return source
 
-    async def get_sink_by_id(self, sink_id: UUID, db: Session | None = None) -> Sink:
+    async def get_sink_by_id(self, sink_id: UUID, db: AsyncSession | None = None) -> Sink:
         if db is None:
             async with get_async_db_session_ctx() as db_session:
                 sink_repo = SinkRepository(db_session)
@@ -103,7 +103,7 @@ class ConfigurationService:
             source = await self.get_source_by_id(source_id, db)
             source_repo = SourceRepository(db)
             updated = await source_repo.update(source, partial_config)
-            self._on_config_changed(updated.id, PipelineField.SOURCE_ID, db, self._notify_source_changed)
+            await self._on_config_changed(updated.id, PipelineField.SOURCE_ID, db, self._notify_source_changed)
             return updated
 
     async def update_sink(self, sink_id: UUID, partial_config: dict) -> Sink:
@@ -111,7 +111,7 @@ class ConfigurationService:
             sink = await self.get_sink_by_id(sink_id, db)
             sink_repo = SinkRepository(db)
             updated = await sink_repo.update(sink, partial_config)
-            self._on_config_changed(updated.id, PipelineField.SINK_ID, db, self._notify_sink_changed)
+            await self._on_config_changed(updated.id, PipelineField.SINK_ID, db, self._notify_sink_changed)
             return updated
 
     async def delete_source_by_id(self, source_id: UUID) -> None:

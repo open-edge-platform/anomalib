@@ -122,12 +122,18 @@ class ModelService:
         # Process image
         npd = np.frombuffer(image_bytes, np.uint8)
         bgr_image = cv2.imdecode(npd, -1)
+        if bgr_image is None:
+            raise ValueError("Failed to decode image")
+        
         numpy_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
 
         # Run prediction
         pred = inference_model.predict(numpy_image)
 
         # Process anomaly map
+        if pred.anomaly_map is None:
+            raise ValueError("Prediction returned no anomaly map")
+        
         arr = pred.anomaly_map.squeeze()  # Remove dimensions of size 1
         arr_normalized = (arr * 255).astype(np.uint8)  # Normalize to 0-255 and convert to uint8
         im = Image.fromarray(arr_normalized)  # Automatically detects grayscale mode
@@ -138,6 +144,9 @@ class ModelService:
             im_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
 
         # Create response data
+        if pred.pred_label is None or pred.pred_score is None:
+            raise ValueError("Prediction returned no label or score")
+        
         label = PredictionLabel.ANOMALOUS if pred.pred_label.item() else PredictionLabel.NORMAL
         score = float(pred.pred_score.item())
 

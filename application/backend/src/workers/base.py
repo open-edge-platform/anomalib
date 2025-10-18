@@ -72,7 +72,7 @@ class BaseProcessWorker(mp.Process, StoppableMixin, ABC):
         *,
         stop_event: Event,
         queues_to_cancel: Iterable[Queue] | None = None,
-        logger_: loguru.Logger = None,
+        logger_: loguru.Logger | None = None,
     ) -> None:
         super().__init__()
         self._stop_event = stop_event
