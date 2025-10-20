@@ -7,6 +7,7 @@ from enum import StrEnum
 from multiprocessing.synchronize import Condition
 from uuid import UUID
 
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_async_db_session_ctx
@@ -33,8 +34,8 @@ class ConfigurationService:
         try:
             # Try to get the current event loop
             loop = asyncio.get_running_loop()
-            # If we're in an async context, schedule the coroutine as a background task
-            loop.create_task(self._active_pipeline_service.reload())
+            task = loop.create_task(self._active_pipeline_service.reload())
+            task.add_done_callback(lambda _: logger.debug("Sink changed notified"))
         except RuntimeError:
             # If no event loop is running, create a new one
             asyncio.run(self._active_pipeline_service.reload())
