@@ -60,14 +60,14 @@ class StreamLoader(BaseProcessWorker):
                 source_config = self._active_pipeline_service.get_source_config()
 
                 if source_config.source_type == SourceType.DISCONNECTED:
-                    logger.debug("No source available... retrying in 1 second")
+                    logger.trace("No source available... retrying in 1 second")
                     await asyncio.sleep(1)
                     continue
 
                 self._reset_stream_if_needed(source_config)
 
                 if self._video_stream is None:
-                    logger.debug("No video stream available, retrying in 1 second...")
+                    logger.trace("No video stream available, retrying in 1 second...")
                     await asyncio.sleep(1)
                     continue
 

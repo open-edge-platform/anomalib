@@ -59,17 +59,17 @@ class InferenceVideoStreamTrack(VideoStreamTrack):
 
         try:
             try:
-                logger.debug("Getting the frame from the stream_queue...")
+                logger.trace("Getting the frame from the stream_queue...")
                 frame_data = await asyncio.to_thread(self._stream_queue.get, True, 0.5)  # wait for 500ms
                 self._last_frame = frame_data  # cache the successful frame
             except queue.Empty:
-                logger.debug("Empty queue. Using the last frame...")
+                logger.trace("Empty queue. Using the last frame...")
                 if self._last_frame is None:
                     frame_data = FALLBACK_FRAME
                 else:
                     frame_data = self._last_frame
 
-            logger.debug("Received the frame from the stream_queue.")
+            logger.trace("Received the frame from the stream_queue.")
 
             # Convert numpy array to VideoFrame
             frame = VideoFrame.from_ndarray(frame_data, format="bgr24")

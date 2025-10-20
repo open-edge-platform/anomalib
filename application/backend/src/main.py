@@ -26,6 +26,7 @@ from api.endpoints.trainable_models_endpoints import router as trainable_model_r
 from api.endpoints.webrtc import router as webrtc_router
 from core.lifecycle import lifespan
 from exceptions import GetiBaseException
+from settings import get_settings
 
 app = FastAPI(
     lifespan=lifespan,
@@ -171,5 +172,6 @@ async def pydantic_validation_exception_handler(request: Request, exc: pydantic.
 
 
 if __name__ == "__main__":
-    uvicorn_port = int(os.environ.get("HTTP_SERVER_PORT", "8000"))
+    settings = get_settings()
+    uvicorn_port = int(os.environ.get("HTTP_SERVER_PORT", settings.port))
     uvicorn.run("main:app", loop="uvloop", host="0.0.0.0", port=uvicorn_port, log_level="info")  # noqa: S104

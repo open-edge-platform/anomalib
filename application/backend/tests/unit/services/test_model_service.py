@@ -310,7 +310,7 @@ class TestModelService:
         mock_cvt_color.return_value = None
 
         # This should handle the case where imdecode returns None
-        with pytest.raises((AttributeError, TypeError)):
+        with pytest.raises(ValueError, match="Failed to decode image"):
             ModelService._run_prediction_pipeline(fxt_openvino_inferencer, empty_bytes)
 
     @patch("services.model_service.cv2.imdecode")

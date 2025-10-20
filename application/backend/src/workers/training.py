@@ -19,6 +19,8 @@ SCHEDULE_INTERVAL_SEC = 5
 
 
 class TrainingWorker(BaseProcessWorker):
+    ROLE = "Training"
+
     def __init__(self, stop_event: EventClass, logger_: loguru.Logger | None = None):
         super().__init__(stop_event=stop_event, logger_=logger_)
 
@@ -56,3 +58,13 @@ class TrainingWorker(BaseProcessWorker):
             except Exception as e:
                 # Log exceptions during cancellation to ensure clean shutdown and aid debugging
                 logger.error(f"Exception during task cancellation: {e}", exc_info=True)
+
+    def setup(self) -> None:
+        super().setup()
+        with logger.contextualize(worker=self.__class__.__name__):
+            asyncio.run(TrainingService.abort_orphan_jobs())
+
+    def teardown(self) -> None:
+        super().teardown()
+        with logger.contextualize(worker=self.__class__.__name__):
+            asyncio.run(TrainingService.abort_orphan_jobs())

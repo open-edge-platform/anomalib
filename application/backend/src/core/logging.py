@@ -16,6 +16,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 if TYPE_CHECKING:
     from loguru import Record
@@ -38,20 +39,22 @@ class LogConfig:
     level: str = "DEBUG"
     serialize: bool = True
     log_folder: str = LOG_FOLDER
+    # Mapping of worker classes to their dedicated log files
+    # None key is used for application-level logs that don't belong to any specific worker
+    worker_log_info = {
+        TrainingWorker.__name__: "training.log",
+        InferenceWorker.__name__: "inference.log",
+        DispatchingWorker.__name__: "dispatching.log",
+        StreamLoader.__name__: "stream_loader.log",
+        None: "app.log",
+    }
+    tensorboard_log_path: str = os.path.join(LOG_FOLDER, "tensorboard")
 
 
-# Mapping of worker classes to their dedicated log files
-# None key is used for application-level logs that don't belong to any specific worker
-worker_log_info = {
-    TrainingWorker.__name__: "training.log",
-    InferenceWorker.__name__: "inference.log",
-    DispatchingWorker.__name__: "dispatching.log",
-    StreamLoader.__name__: "stream_loader.log",
-    None: "app.log",
-}
+log_config = LogConfig()
 
 
-def _validate_job_id(job_id: str) -> str:
+def _validate_job_id(job_id: str | UUID) -> str | UUID:
     """Validate and sanitize job_id to prevent path traversal attacks.
 
     Args:
@@ -64,9 +67,10 @@ def _validate_job_id(job_id: str) -> str:
         ValueError: If job_id contains invalid characters
     """
     # Only allow alphanumeric, hyphens, underscores
-    if not re.match(r"^[a-zA-Z0-9_-]+$", job_id):
+    job_id_ = str(job_id)
+    if not re.match(r"^[a-zA-Z0-9_-]+$", job_id_):
         raise ValueError(
-            f"Invalid job_id '{job_id}'. Only alphanumeric characters, hyphens, and underscores are allowed."
+            f"Invalid job_id '{job_id_}'. Only alphanumeric characters, hyphens, and underscores are allowed."
         )
     return job_id
 
@@ -94,7 +98,9 @@ def setup_logging(config: LogConfig | None = None) -> None:
     if config is None:
         config = LogConfig()
 
-    for worker_name, log_file in worker_log_info.items():
+    log_config = config
+
+    for worker_name, log_file in log_config.worker_log_info.items():
 
         def worker_log_filter(record: "Record", worker: str | None = worker_name) -> bool:
             return record["extra"].get("worker") == worker
@@ -121,8 +127,33 @@ def setup_logging(config: LogConfig | None = None) -> None:
             logger.error(f"Failed to add log sink for {worker_name}: {e}")
 
 
+def get_job_logs_path(job_id: str | UUID) -> str:
+    """Get the path to the logs folder for a specific job.
+
+    Args:
+        job_id: Unique identifier for the job
+
+    Returns:
+        str: Path to the job's logs folder (logs/jobs/{job_id})
+
+    Raises:
+        ValueError: If job_id contains invalid characters
+
+    Example:
+        >>> get_job_logs_path(job_id="foo-123")
+        'logs/jobs/foo-123'
+    """
+    job_id = _validate_job_id(job_id)
+    jobs_folder = os.path.join(log_config.log_folder, "jobs")
+    try:
+        os.makedirs(jobs_folder, exist_ok=True)
+    except OSError as e:
+        raise RuntimeError(f"Failed to create jobs log directory: {e}") from e
+    return os.path.join(jobs_folder, f"{job_id}.log")
+
+
 @contextmanager
-def job_logging_ctx(job_id: str, config: LogConfig | None = None) -> Generator[str, None, None]:
+def job_logging_ctx(job_id: str | UUID) -> Generator[str, None, None]:
     """Add a temporary log sink for a specific job.
 
     Captures all logs emitted during the context to logs/jobs/{job_id}.log.
@@ -131,7 +162,6 @@ def job_logging_ctx(job_id: str, config: LogConfig | None = None) -> Generator[s
 
     Args:
         job_id: Unique identifier for the job, used as the log filename
-        config: Optional LogConfig instance. If None, uses default configuration.
 
     Yields:
         str: Path to the created log file (logs/jobs/{job_id}.log)
@@ -144,26 +174,17 @@ def job_logging_ctx(job_id: str, config: LogConfig | None = None) -> Generator[s
         >>> with job_logging_ctx(job_id="foo-123"):
         ...     logger.info("bar")  # All logs saved to logs/jobs/train-123.log
     """
-    if config is None:
-        config = LogConfig()
-
     job_id = _validate_job_id(job_id)
 
-    jobs_folder = os.path.join(config.log_folder, "jobs")
-    log_file = f"{jobs_folder}/{job_id}.log"
-
-    try:
-        os.makedirs(jobs_folder, exist_ok=True)
-    except OSError as e:
-        raise RuntimeError(f"Failed to create jobs log directory: {e}") from e
+    log_file = get_job_logs_path(job_id)
 
     try:
         sink_id = logger.add(
             log_file,
-            rotation=config.rotation,
-            retention=config.retention,
-            level=config.level,
-            serialize=config.serialize,
+            rotation=log_config.rotation,
+            retention=log_config.retention,
+            level=log_config.level,
+            serialize=log_config.serialize,
             enqueue=True,
         )
     except Exception as e:

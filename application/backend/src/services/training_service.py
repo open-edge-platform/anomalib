@@ -1,18 +1,21 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
+from contextlib import redirect_stdout
 
 from anomalib.data import Folder
 from anomalib.data.utils import TestSplitMode
 from anomalib.deploy import ExportType
 from anomalib.engine import Engine
+from anomalib.loggers import AnomalibTensorBoardLogger
 from anomalib.models import get_model
 from loguru import logger
 
-from pydantic_models import Job, JobStatus, Model
+from pydantic_models import Job, JobStatus, JobType, Model
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import ModelService
 from services.job_service import JobService
+from utils.experiment_loggers import TrackioLogger
 
 
 class TrainingService:
@@ -41,7 +44,7 @@ class TrainingService:
         job_service = JobService()
         job = await job_service.get_pending_train_job()
         if job is None:
-            logger.debug("No pending training job")
+            logger.trace("No pending training job")
             return None
 
         # Run the training job with logging context
@@ -104,11 +107,13 @@ class TrainingService:
         Returns:
             Model: Trained model with updated export_path and is_ready=True
         """
+        from core.logging import log_config
+
         model_binary_repo = ModelBinaryRepository(project_id=model.project_id, model_id=model.id)
         image_binary_repo = ImageBinaryRepository(project_id=model.project_id)
         image_folder_path = image_binary_repo.project_folder_path
         model.export_path = model_binary_repo.model_folder_path
-        name = f"{model.project_id}-{model.name}"
+        name = f"{model.project_id}/{model.name}"
 
         # Configure datamodule for anomalib training
         datamodule = Folder(
@@ -120,11 +125,24 @@ class TrainingService:
 
         # Initialize anomalib model and engine
         anomalib_model = get_model(model=model.name)
-        engine = Engine(default_root_dir=model.export_path)  # TODO: need custom logger
+
+        trackio = TrackioLogger(project=str(model.project_id), name=model.name)
+        tensorboard = AnomalibTensorBoardLogger(save_dir=log_config.tensorboard_log_path, name=name)
+        engine = Engine(
+            default_root_dir=model.export_path,
+            logger=[trackio, tensorboard],
+            max_epochs=10,
+        )
 
         # Execute training and export
         export_format = ExportType.OPENVINO
-        engine.train(model=anomalib_model, datamodule=datamodule)
+
+        # Capture pytorch stdout logs into logger
+        logger.write = lambda msg: logger.info(msg) if msg != "\n" else None  # type: ignore[attr-defined]
+        logger.flush = lambda : None  # type: ignore[attr-defined]
+        with redirect_stdout(logger):  # type: ignore[type-var]
+            logger.info("calling train...")
+            engine.train(model=anomalib_model, datamodule=datamodule)
         export_path = engine.export(
             model=anomalib_model,
             export_type=export_format,
@@ -134,3 +152,21 @@ class TrainingService:
 
         model.is_ready = True
         return model
+
+    @staticmethod
+    async def abort_orphan_jobs() -> None:
+        """
+        Abort all running orphan training jobs (that do not belong to any worker).
+
+        This method can be called during application shutdown/setup to ensure that
+        any orphan in-progress training jobs are marked as failed.
+        """
+        query = {"status": JobStatus.RUNNING, "type": JobType.TRAINING}
+        running_jobs = await JobService.get_job_list(extra_filters=query)
+        for job in running_jobs.jobs:
+            logger.warning(f"Aborting orphan training job with id: {job.id}")
+            await JobService.update_job_status(
+                job_id=job.id,
+                status=JobStatus.FAILED,
+                message="Job aborted due to application shutdown",
+            )

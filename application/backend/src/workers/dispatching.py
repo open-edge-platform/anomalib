@@ -59,7 +59,7 @@ class DispatchingWorker(BaseThreadWorker):
             sink_config = active_pipeline_service.get_sink_config()
 
             if sink_config.sink_type == SinkType.DISCONNECTED:
-                logger.debug("No sink available... retrying in 1 second")
+                logger.trace("No sink available... retrying in 1 second")
                 await asyncio.sleep(1)
                 continue
 

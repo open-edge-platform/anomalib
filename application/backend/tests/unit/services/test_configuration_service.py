@@ -146,14 +146,12 @@ class TestConfigurationService:
         mock_loop = MagicMock()
         mock_task = MagicMock()
         mock_loop.create_task.return_value = mock_task
-        mock_loop.run_until_complete.return_value = None
 
         with patch("asyncio.get_running_loop", return_value=mock_loop):
             fxt_configuration_service._notify_sink_changed()
 
-        # Check that create_task was called with a coroutine
+        # Check that create_task was called with a coroutine (fire and forget)
         mock_loop.create_task.assert_called_once()
-        mock_loop.run_until_complete.assert_called_once_with(mock_task)
 
     def test_notify_sink_changed_without_running_loop(self, fxt_configuration_service, fxt_active_pipeline_service):
         """Test sink change notification when no event loop is running."""
@@ -180,59 +178,60 @@ class TestConfigurationService:
 
     def test_on_config_changed_with_active_pipeline_matching(self, fxt_pipeline, fxt_pipeline_repository):
         """Test config change notification when active pipeline matches."""
-        # Mock the repository to return the pipeline directly (not as a coroutine)
-        # Since the actual implementation has a bug where it doesn't await the async method,
-        # we need to mock it to return the pipeline directly
-        fxt_pipeline_repository.get_active_pipeline = MagicMock(return_value=fxt_pipeline)
+        # Mock the repository to return the pipeline via AsyncMock
+        fxt_pipeline_repository.get_active_pipeline = AsyncMock(return_value=fxt_pipeline)
         notify_fn = MagicMock()
         config_id = fxt_pipeline.source_id
 
-        with patch("services.configuration_service.PipelineRepository") as mock_repo_class:
-            mock_repo_class.return_value = fxt_pipeline_repository
+        async def run_test():
+            with patch("services.configuration_service.PipelineRepository") as mock_repo_class:
+                mock_repo_class.return_value = fxt_pipeline_repository
 
-            ConfigurationService._on_config_changed(config_id, PipelineField.SOURCE_ID, MagicMock(), notify_fn)
+                await ConfigurationService._on_config_changed(config_id, PipelineField.SOURCE_ID, MagicMock(), notify_fn)
 
-        fxt_pipeline_repository.get_active_pipeline.assert_called_once()
-        # The notification should be called because the pipeline's source_id matches the config_id
-        # Debug: Check if the IDs actually match
-        assert str(fxt_pipeline.source_id) == str(config_id)
-        # Note: Due to a bug in the actual implementation where get_active_pipeline() is not awaited,
-        # the notification function is not called. This test documents the current behavior.
-        # In a real fix, the implementation should await the async method.
-        notify_fn.assert_not_called()  # Current buggy behavior
+            fxt_pipeline_repository.get_active_pipeline.assert_called_once()
+            # The notification should be called because the pipeline's source_id matches the config_id
+            assert str(fxt_pipeline.source_id) == str(config_id)
+            notify_fn.assert_called_once()
+
+        asyncio.run(run_test())
 
     def test_on_config_changed_with_active_pipeline_not_matching(self, fxt_pipeline, fxt_pipeline_repository):
         """Test config change notification when active pipeline doesn't match."""
-        # Mock the async method to return the pipeline directly (not as a coroutine)
-        # This works around the bug in the actual implementation where get_active_pipeline
-        # is not awaited, so it returns a coroutine object instead of the pipeline
-        fxt_pipeline_repository.get_active_pipeline = MagicMock(return_value=fxt_pipeline)
+        # Mock the async method to return the pipeline via AsyncMock
+        fxt_pipeline_repository.get_active_pipeline = AsyncMock(return_value=fxt_pipeline)
         notify_fn = MagicMock()
         different_config_id = uuid.uuid4()
 
-        with patch("services.configuration_service.PipelineRepository") as mock_repo_class:
-            mock_repo_class.return_value = fxt_pipeline_repository
+        async def run_test():
+            with patch("services.configuration_service.PipelineRepository") as mock_repo_class:
+                mock_repo_class.return_value = fxt_pipeline_repository
 
-            ConfigurationService._on_config_changed(
-                different_config_id, PipelineField.SOURCE_ID, MagicMock(), notify_fn
-            )
+                await ConfigurationService._on_config_changed(
+                    different_config_id, PipelineField.SOURCE_ID, MagicMock(), notify_fn
+                )
 
-        fxt_pipeline_repository.get_active_pipeline.assert_called_once()
-        notify_fn.assert_not_called()
+            fxt_pipeline_repository.get_active_pipeline.assert_called_once()
+            notify_fn.assert_not_called()
+
+        asyncio.run(run_test())
 
     def test_on_config_changed_without_active_pipeline(self, fxt_pipeline_repository):
         """Test config change notification when no active pipeline."""
-        fxt_pipeline_repository.get_active_pipeline = MagicMock(return_value=None)
+        fxt_pipeline_repository.get_active_pipeline = AsyncMock(return_value=None)
         notify_fn = MagicMock()
         config_id = uuid.uuid4()
 
-        with patch("services.configuration_service.PipelineRepository") as mock_repo_class:
-            mock_repo_class.return_value = fxt_pipeline_repository
+        async def run_test():
+            with patch("services.configuration_service.PipelineRepository") as mock_repo_class:
+                mock_repo_class.return_value = fxt_pipeline_repository
 
-            ConfigurationService._on_config_changed(config_id, PipelineField.SOURCE_ID, MagicMock(), notify_fn)
+                await ConfigurationService._on_config_changed(config_id, PipelineField.SOURCE_ID, MagicMock(), notify_fn)
 
-        fxt_pipeline_repository.get_active_pipeline.assert_called_once()
-        notify_fn.assert_not_called()
+            fxt_pipeline_repository.get_active_pipeline.assert_called_once()
+            notify_fn.assert_not_called()
+
+        asyncio.run(run_test())
 
     def test_list_sources(self, fxt_configuration_service, fxt_source_repository, fxt_source):
         """Test listing sources."""
@@ -369,7 +368,7 @@ class TestConfigurationService:
         updated_source = fxt_source.model_copy(update={"name": "Updated Source"})
         fxt_source_repository.get_by_id.return_value = fxt_source
         fxt_source_repository.update.return_value = updated_source
-        fxt_pipeline_repository.get_active_pipeline = MagicMock(return_value=None)
+        fxt_pipeline_repository.get_active_pipeline = AsyncMock(return_value=None)
 
         with (
             patch("services.configuration_service.SourceRepository") as mock_source_repo_class,
@@ -396,7 +395,7 @@ class TestConfigurationService:
         updated_sink = fxt_sink.model_copy(update={"name": "Updated Sink"})
         fxt_sink_repository.get_by_id.return_value = fxt_sink
         fxt_sink_repository.update.return_value = updated_sink
-        fxt_pipeline_repository.get_active_pipeline = MagicMock(return_value=None)
+        fxt_pipeline_repository.get_active_pipeline = AsyncMock(return_value=None)
 
         with (
             patch("services.configuration_service.SinkRepository") as mock_sink_repo_class,
@@ -452,7 +451,7 @@ class TestConfigurationService:
         updated_source = fxt_source.model_copy(update={"name": "Updated Source"})
         fxt_source_repository.get_by_id.return_value = fxt_source
         fxt_source_repository.update.return_value = updated_source
-        fxt_pipeline_repository.get_active_pipeline = MagicMock(return_value=fxt_pipeline)
+        fxt_pipeline_repository.get_active_pipeline = AsyncMock(return_value=fxt_pipeline)
 
         with (
             patch("services.configuration_service.SourceRepository") as mock_source_repo_class,
@@ -485,7 +484,7 @@ class TestConfigurationService:
         updated_sink = fxt_sink.model_copy(update={"name": "Updated Sink"})
         fxt_sink_repository.get_by_id.return_value = fxt_sink
         fxt_sink_repository.update.return_value = updated_sink
-        fxt_pipeline_repository.get_active_pipeline = MagicMock(return_value=fxt_pipeline)
+        fxt_pipeline_repository.get_active_pipeline = AsyncMock(return_value=fxt_pipeline)
 
         with (
             patch("services.configuration_service.SinkRepository") as mock_sink_repo_class,

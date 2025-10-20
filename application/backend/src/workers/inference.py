@@ -130,7 +130,7 @@ class InferenceWorker(BaseProcessWorker):
             # Ensure model is loaded/selected from active pipeline
             active_model = await self._get_active_model()
             if active_model is None:
-                logger.debug("No active model configured; retrying in 1 second")
+                logger.trace("No active model configured; retrying in 1 second")
                 await asyncio.sleep(1)
                 continue
 

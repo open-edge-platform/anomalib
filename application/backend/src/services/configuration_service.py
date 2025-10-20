@@ -33,10 +33,8 @@ class ConfigurationService:
         try:
             # Try to get the current event loop
             loop = asyncio.get_running_loop()
-            # If we're in an async context, schedule the coroutine and wait for it
-            task = loop.create_task(self._active_pipeline_service.reload())
-            # Wait for the task to complete
-            loop.run_until_complete(task)
+            # If we're in an async context, schedule the coroutine as a background task
+            loop.create_task(self._active_pipeline_service.reload())
         except RuntimeError:
             # If no event loop is running, create a new one
             asyncio.run(self._active_pipeline_service.reload())
@@ -53,7 +51,7 @@ class ConfigurationService:
         Notification triggered only when the configuration is used by the active pipeline."""
         pipeline_repo = PipelineRepository(db)
         active_pipeline = await pipeline_repo.get_active_pipeline()
-        if active_pipeline and getattr(active_pipeline, field) == str(config_id):
+        if active_pipeline and str(getattr(active_pipeline, field)) == str(config_id):
             notify_fn()
 
     async def list_sources(self) -> list[Source]:

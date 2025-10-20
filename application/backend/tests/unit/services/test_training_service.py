@@ -206,7 +206,6 @@ class TestTrainingService:
             call_args = fxt_mock_model_service.delete_model.call_args
             assert call_args[1]["project_id"] == fxt_job.project_id
 
-    @pytest.mark.parametrize("is_darwin,expected_workers", [(True, 0), (False, 8)])
     def test_train_model_success(
         self,
         fxt_model,
@@ -214,34 +213,34 @@ class TestTrainingService:
         fxt_image_binary_repo,
         fxt_mock_anomalib_components,
         fxt_mock_binary_repos,
-        is_darwin,
-        expected_workers,
     ):
         """Test successful model training with platform-specific worker configuration."""
         # Setup platform mock
-        with patch("services.training_service.is_platform_darwin") as mock_is_darwin:
-            mock_is_darwin.return_value = is_darwin
+        # Setup binary repo paths
+        fxt_image_binary_repo.project_folder_path = "/path/to/images"
+        fxt_model_binary_repo.model_folder_path = "/path/to/model"
 
-            # Setup binary repo paths
-            fxt_image_binary_repo.project_folder_path = "/path/to/images"
-            fxt_model_binary_repo.model_folder_path = "/path/to/model"
+        # Call the method
+        result = TrainingService._train_model(fxt_model)
 
-            # Call the method
-            result = TrainingService._train_model(fxt_model)
+        # Verify the result
+        assert result == fxt_model
+        assert fxt_model.is_ready is True
+        assert fxt_model.export_path == "/path/to/model"
 
-            # Verify the result
-            assert result == fxt_model
-            assert fxt_model.is_ready is True
-            assert fxt_model.export_path == "/path/to/model"
-
-            # Verify platform-specific worker count
-            fxt_mock_anomalib_components["folder_class"].assert_called_once()
-            call_kwargs = fxt_mock_anomalib_components["folder_class"].call_args[1]
-
-            # Verify all components were called correctly
-            fxt_mock_anomalib_components["get_model"].assert_called_once_with(model=fxt_model.name)
-            fxt_mock_anomalib_components["engine_class"].assert_called_once_with(default_root_dir="/path/to/model")
-            fxt_mock_anomalib_components["engine"].train.assert_called_once_with(
-                model=fxt_mock_anomalib_components["anomalib_model"], datamodule=fxt_mock_anomalib_components["folder"]
-            )
-            fxt_mock_anomalib_components["engine"].export.assert_called_once()
+        # Verify all components were called correctly
+        fxt_mock_anomalib_components["folder_class"].assert_called_once()
+        fxt_mock_anomalib_components["get_model"].assert_called_once_with(model=fxt_model.name)
+        
+        # Verify Engine was called with expected parameters
+        fxt_mock_anomalib_components["engine_class"].assert_called_once()
+        call_args = fxt_mock_anomalib_components["engine_class"].call_args
+        assert call_args[1]["default_root_dir"] == "/path/to/model"
+        assert "logger" in call_args[1]
+        assert len(call_args[1]["logger"]) == 2  # trackio and tensorboard
+        assert call_args[1]["max_epochs"] == 10
+        
+        fxt_mock_anomalib_components["engine"].train.assert_called_once_with(
+            model=fxt_mock_anomalib_components["anomalib_model"], datamodule=fxt_mock_anomalib_components["folder"]
+        )
+        fxt_mock_anomalib_components["engine"].export.assert_called_once()
