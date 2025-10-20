@@ -2,7 +2,6 @@ import { ReactNode } from 'react';
 
 import { ThemeProvider } from '@geti/ui/theme';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { Toast } from 'packages/ui';
 import { MemoryRouterProps, RouterProvider } from 'react-router';
 import { MemoryRouter as Router } from 'react-router-dom';
 
@@ -18,7 +17,6 @@ export const Providers = () => {
                 <WebRTCConnectionProvider>
                     <ZoomProvider>
                         <RouterProvider router={router} />
-                        <Toast />
                     </ZoomProvider>
                 </WebRTCConnectionProvider>
             </ThemeProvider>

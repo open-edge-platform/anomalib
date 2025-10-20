@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 
-import { IntelBrandedLoading } from '@geti/ui';
+import { IntelBrandedLoading, Toast } from '@geti/ui';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { path } from 'static-path';
 
@@ -41,6 +41,8 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
         element: (
             <Suspense fallback={<IntelBrandedLoading />}>
+                <Toast />
+
                 <Outlet />
             </Suspense>
         ),
