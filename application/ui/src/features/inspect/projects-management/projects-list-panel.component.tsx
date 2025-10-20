@@ -50,7 +50,11 @@ interface AddProjectProps {
 }
 
 const AddProjectButton = ({ onSetProjectInEdition, projectsCount }: AddProjectProps) => {
-    const addProjectMutation = $api.useMutation('post', '/api/projects');
+    const addProjectMutation = $api.useMutation('post', '/api/projects', {
+        meta: {
+            invalidates: [['get', '/api/projects']],
+        },
+    });
 
     const addProject = () => {
         const newProjectId = uuid();
