@@ -9,22 +9,29 @@ import { ErrorPage } from './components/error-page/error-page';
 import { Layout } from './layout';
 import { Inspect } from './routes/inspect/inspect';
 import { OpenApi } from './routes/openapi/openapi';
+import { Welcome } from './routes/welcome';
 
 const root = path('/');
 const projects = root.path('/projects');
 const project = projects.path('/:projectId');
+const welcome = path('/welcome');
 
 export const paths = {
     root,
     openapi: root.path('/openapi'),
     project,
+    welcome,
 };
 
-const RedirectToProject = () => {
+const Redirect = () => {
     const { data } = $api.useSuspenseQuery('get', '/api/projects');
+    const projects = data.projects;
+
+    if (projects.length === 0) {
+        return <Navigate to={paths.welcome({})} replace />;
+    }
 
     const projectId = data.projects.at(0)?.id ?? '1';
-
     return <Navigate to={paths.project({ projectId })} replace />;
 };
 
@@ -40,7 +47,11 @@ export const router = createBrowserRouter([
         children: [
             {
                 index: true,
-                element: <RedirectToProject />,
+                element: <Redirect />,
+            },
+            {
+                path: paths.welcome.pattern,
+                element: <Welcome />,
             },
             {
                 path: paths.project.pattern,
@@ -58,7 +69,7 @@ export const router = createBrowserRouter([
             },
             {
                 path: '*',
-                element: <RedirectToProject />,
+                element: <Redirect />,
             },
         ],
     },
