@@ -4,6 +4,7 @@ import asyncio
 import base64
 import io
 from dataclasses import dataclass
+from functools import lru_cache
 from multiprocessing.synchronize import Event as EventClass
 from uuid import UUID
 
@@ -13,7 +14,6 @@ import openvino as ov
 import openvino.properties.hint as ov_hints
 from anomalib.deploy import ExportType, OpenVINOInferencer
 from loguru import logger
-from cachetools.func import lru_cache
 from PIL import Image
 
 from db import get_async_db_session_ctx
@@ -139,7 +139,7 @@ class ModelService:
             and (device is None or cached_models[model.id].device == device)
         )
 
-        if use_cached:
+        if use_cached and cached_models is not None:
             inference_model = cached_models[model.id]
         else:
             logger.info(f"Loading model with device: {device or DEFAULT_DEVICE}")

@@ -83,7 +83,7 @@ class JobService:
 
         async with await anyio.open_file(log_file) as f:
             while True:
-                line = f.readline()
+                line = await f.readline()
                 still_running = await is_job_still_running()
                 if not line:
                     # wait for more lines if job is still running

@@ -222,17 +222,20 @@ class TestJobService:
             mock_exists.return_value = True
             mock_repo_class.return_value = fxt_job_repository
 
-            # Mock file with readline method (synchronous, not async!)
+            # Mock file with async readline method
             mock_file = MagicMock()
-            mock_file.readline = MagicMock(side_effect=log_lines + [""])  # Empty string signals EOF
+            mock_file.readline = AsyncMock(side_effect=log_lines + [""])  # Empty string signals EOF
             
-            # Create async context manager mock
-            mock_context_manager = AsyncMock()
-            mock_context_manager.__aenter__ = AsyncMock(return_value=mock_file)
-            mock_context_manager.__aexit__ = AsyncMock(return_value=None)
+            # Create an async context manager
+            async_cm = MagicMock()
+            async_cm.__aenter__ = AsyncMock(return_value=mock_file)
+            async_cm.__aexit__ = AsyncMock(return_value=None)
             
-            # anyio.open_file returns an awaitable that yields the context manager
-            mock_open_file.return_value = mock_context_manager
+            # anyio.open_file() is a coroutine that returns an async context manager when awaited
+            async def mock_anyio_open_file(*args, **kwargs):
+                return async_cm
+            
+            mock_open_file.side_effect = mock_anyio_open_file
 
             async def consume_stream():
                 result = []

@@ -3,9 +3,9 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request, UploadFile, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, status
 
-from api.dependencies import get_model_id, get_model_service, get_project_id, get_device_name
+from api.dependencies import get_device_name, get_model_id, get_model_service, get_project_id
 from api.endpoints.project_endpoints import project_api_prefix_url
 from api.media_rest_validator import MediaRestValidator
 from exceptions import ResourceNotFoundException

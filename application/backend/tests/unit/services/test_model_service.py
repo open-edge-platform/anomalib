@@ -268,7 +268,7 @@ class TestModelService:
             [[[100, 100, 100], [200, 200, 200]], [[150, 150, 150], [250, 250, 250]]], dtype=np.uint8
         )
         mock_cvt_color.return_value = np.array(
-            [[[100, 100, 100], [200, 200, 200]], [[150, 150, 150], [250, 250, 250]]], dtype=np.uint8
+            [[[100, 100, 100, 255], [200, 200, 200, 255]], [[150, 150, 150, 255], [250, 250, 250, 255]]], dtype=np.uint8
         )
 
         # Create a test anomaly map
@@ -295,7 +295,7 @@ class TestModelService:
             [[[100, 100, 100], [200, 200, 200]], [[150, 150, 150], [250, 250, 250]]], dtype=np.uint8
         )
         mock_cvt_color.return_value = np.array(
-            [[[100, 100, 100], [200, 200, 200]], [[150, 150, 150], [250, 250, 250]]], dtype=np.uint8
+            [[[100, 100, 100, 255], [200, 200, 200, 255]], [[150, 150, 150, 255], [250, 250, 250, 255]]], dtype=np.uint8
         )
 
         # Create a test anomaly map
@@ -333,7 +333,7 @@ class TestModelService:
             [[[100, 100, 100], [200, 200, 200]], [[150, 150, 150], [250, 250, 250]]], dtype=np.uint8
         )
         mock_cvt_color.return_value = np.array(
-            [[[100, 100, 100], [200, 200, 200]], [[150, 150, 150], [250, 250, 250]]], dtype=np.uint8
+            [[[100, 100, 100, 255], [200, 200, 200, 255]], [[150, 150, 150, 255], [250, 250, 250, 255]]], dtype=np.uint8
         )
 
         # Test with 4D anomaly map (should be squeezed to 2D)

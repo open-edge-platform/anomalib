@@ -2,7 +2,7 @@ from functools import lru_cache
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, Request, status, Form
+from fastapi import Depends, Form, HTTPException, Request, status
 
 from core import Scheduler
 from services import (

@@ -113,9 +113,9 @@ class InferenceWorker(BaseProcessWorker):
                             e,
                         )
                     # Preload the model for faster first inference
+                    if self._model_service is None:
+                        raise RuntimeError("Model service not initialized")
                     try:
-                        if self._model_service is None:
-                            raise RuntimeError("Model service not initialized")
 
                         inferencer = await self._model_service.load_inference_model(
                             self._loaded_model.model, device=self._loaded_model.device
@@ -127,7 +127,7 @@ class InferenceWorker(BaseProcessWorker):
                             self._loaded_model.id,
                             self._loaded_model.device,
                         )
-                    except DeviceNotFoundError as e:
+                    except DeviceNotFoundError:
                         # Load model using the default device
                         logger.warning(
                             "Device '%s' not found; loading model '%s' (%s) on default device",
