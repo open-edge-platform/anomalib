@@ -2,26 +2,14 @@ import { Suspense } from 'react';
 
 import { IntelBrandedLoading, Toast } from '@geti/ui';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
-import { path } from 'static-path';
 
-import { $api } from './api/client';
-import { ErrorPage } from './components/error-page/error-page';
+import { $api } from './../api/client';
+import { ErrorPage } from './../components/error-page/error-page';
+import { Inspect } from './inspect/inspect';
 import { Layout } from './layout';
-import { Inspect } from './routes/inspect/inspect';
-import { OpenApi } from './routes/openapi/openapi';
-import { Welcome } from './routes/welcome';
-
-const root = path('/');
-const projects = root.path('/projects');
-const project = projects.path('/:projectId');
-const welcome = path('/welcome');
-
-export const paths = {
-    root,
-    openapi: root.path('/openapi'),
-    project,
-    welcome,
-};
+import { OpenApi } from './openapi/openapi';
+import { paths } from './paths';
+import { Welcome } from './welcome';
 
 const Redirect = () => {
     const { data } = $api.useSuspenseQuery('get', '/api/projects');

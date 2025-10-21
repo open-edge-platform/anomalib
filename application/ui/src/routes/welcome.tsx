@@ -5,7 +5,7 @@ import { v4 as uuid } from 'uuid';
 import { $api } from '../api/client';
 import Background from '../assets/background.png';
 import { Fireworks } from '../assets/icons';
-import { paths } from '../router';
+import { paths } from './paths';
 
 const useCreateProject = () => {
     const createProjectMutation = $api.useMutation('post', '/api/projects', {

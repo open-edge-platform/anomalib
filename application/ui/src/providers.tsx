@@ -8,7 +8,7 @@ import { MemoryRouter as Router } from 'react-router-dom';
 import { WebRTCConnectionProvider } from './components/stream/web-rtc-connection-provider';
 import { ZoomProvider } from './components/zoom/zoom';
 import { queryClient } from './query-client/query-client';
-import { router } from './router';
+import { router } from './routes/router';
 
 export const Providers = () => {
     return (
