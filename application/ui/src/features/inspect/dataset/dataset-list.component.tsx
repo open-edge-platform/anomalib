@@ -1,4 +1,4 @@
-import { Flex, Grid, Heading, minmax, repeat, View } from '@geti/ui';
+import { Flex, Grid, Heading, minmax, repeat } from '@geti/ui';
 
 import { DatasetItemContainer } from './dataset-item/dataset-item.component';
 import { MediaItem } from './types';

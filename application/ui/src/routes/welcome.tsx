@@ -1,6 +1,4 @@
-import { ReactNode } from 'react';
-
-import { Button, Content, Flex, Grid, Heading, IllustratedMessage, Text, View } from '@geti/ui';
+import { Button, Content, Flex, Grid, Heading, IllustratedMessage, Text } from '@geti/ui';
 import { Navigate, useNavigate } from 'react-router';
 import { v4 as uuid } from 'uuid';
 

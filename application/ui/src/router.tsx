@@ -25,9 +25,8 @@ export const paths = {
 
 const Redirect = () => {
     const { data } = $api.useSuspenseQuery('get', '/api/projects');
-    const projects = data.projects;
 
-    if (projects.length === 0) {
+    if (data.projects.length === 0) {
         return <Navigate to={paths.welcome({})} replace />;
     }
 
