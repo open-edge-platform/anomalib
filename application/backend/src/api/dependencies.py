@@ -46,8 +46,6 @@ async def get_model_service(scheduler: Annotated[Scheduler, Depends(get_schedule
 @lru_cache
 def get_metrics_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)]) -> MetricsService:
     """Provides a MetricsService instance for collecting and retrieving metrics."""
-    if scheduler.shm_metrics is None:
-        raise RuntimeError("Shared memory not initialized")
     return MetricsService(scheduler.shm_metrics.name, scheduler.shm_metrics_lock)
 
 
