@@ -41,4 +41,4 @@ async def get_job_logs(
     job_service: Annotated[JobService, Depends(get_job_service)],
 ) -> StreamingResponse:
     """Endpoint to get the logs of a job by its ID"""
-    return StreamingResponse(job_service.stream_logs(job_id=job_id), media_type="application/x-ndjson")
+    return StreamingResponse(job_service.stream_logs(job_id=job_id), media_type="text/event-stream")
