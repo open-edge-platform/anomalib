@@ -38,7 +38,7 @@ class Scheduler(metaclass=Singleton):
         self.mp_config_changed_condition = mp.Condition()
 
         # Shared memory for metrics collector
-        self.shm_metrics: SharedMemory | None = SharedMemory(create=True, size=SIZE)
+        self.shm_metrics: SharedMemory = SharedMemory(create=True, size=SIZE)
         self.shm_metrics_lock = mp.Lock()
 
         self.processes: list[mp.Process] = []

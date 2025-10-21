@@ -52,7 +52,6 @@ class InferenceWorker(BaseProcessWorker):
         self._shm_lock = shm_lock
 
         self._metrics_service: MetricsService | None = None
-        self._model_service: ModelService | None = None
         self._loaded_model: LoadedModel | None = None
         self._last_model_obj_id = 0  # track the id of the Model object to install the callback only once
         self._cached_models: dict[Any, object] = {}
@@ -60,23 +59,6 @@ class InferenceWorker(BaseProcessWorker):
     def setup(self) -> None:
         super().setup()
         self._metrics_service = MetricsService(self._shm_name, self._shm_lock)
-        self._model_service = ModelService()
-
-    def _refresh_loaded_model(self) -> LoadedModel | None:
-        """
-        Get (or reload) the active model. If reloads are requested repeatedly,
-        clear the event until the latest model is loaded.
-        """
-        # If no reload requested, return current model
-        if not self._model_reload_event.is_set():
-            return self._model_service.get_loaded_inference_model()  # type: ignore
-
-        # Process reload requests - keep reloading until event stabilizes
-        loaded_model = None
-        while self._model_reload_event.is_set():
-            self._model_reload_event.clear()
-            loaded_model = self._model_service.get_loaded_inference_model(force_reload=True)  # type: ignore
-        return loaded_model
 
     @staticmethod
     async def _get_active_model() -> LoadedModel | None:
@@ -87,7 +69,7 @@ class InferenceWorker(BaseProcessWorker):
                 if pipeline is None or pipeline.model is None:
                     return None
                 model = pipeline.model
-                return LoadedModel(name=model.name, id=model.id, model=model)
+                return LoadedModel(name=model.name, id=model.id, model=model, device=pipeline.inference_device)
         except Exception as e:
             logger.error(f"Failed to query active pipeline/model: {e}", exc_info=True)
             return None
@@ -113,11 +95,8 @@ class InferenceWorker(BaseProcessWorker):
                             e,
                         )
                     # Preload the model for faster first inference
-                    if self._model_service is None:
-                        raise RuntimeError("Model service not initialized")
                     try:
-
-                        inferencer = await self._model_service.load_inference_model(
+                        inferencer = await ModelService.load_inference_model(
                             self._loaded_model.model, device=self._loaded_model.device
                         )
                         self._cached_models[self._loaded_model.id] = inferencer
@@ -135,7 +114,7 @@ class InferenceWorker(BaseProcessWorker):
                             self._loaded_model.name,
                             self._loaded_model.id,
                         )
-                        inferencer = await self._model_service.load_inference_model(self._loaded_model.model)
+                        inferencer = await ModelService.load_inference_model(self._loaded_model.model)
                         self._cached_models[self._loaded_model.id] = inferencer
                     except Exception as e:
                         logger.error(f"Failed to reload model '{self._loaded_model.name}': {e}", exc_info=True)
@@ -188,10 +167,7 @@ class InferenceWorker(BaseProcessWorker):
             # Run inference and collect latency metric
             start_t = MetricsService.record_inference_start()
             try:
-                if self._model_service is None:
-                    raise RuntimeError("Model service not initialized")
-
-                prediction_response = await self._model_service.predict_image(
+                prediction_response = await ModelService.predict_image(
                     self._loaded_model.model, image_bytes, self._cached_models  # type: ignore[arg-type]
                 )
             except Exception as e:

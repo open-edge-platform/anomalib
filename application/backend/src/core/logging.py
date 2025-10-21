@@ -98,6 +98,7 @@ def setup_logging(config: LogConfig | None = None) -> None:
     if config is None:
         config = LogConfig()
 
+    # overwrite global log_config
     log_config = config
 
     for worker_name, log_file in log_config.worker_log_info.items():
@@ -196,3 +197,15 @@ def job_logging_ctx(job_id: str | UUID) -> Generator[str, None, None]:
     finally:
         logger.info(f"Stopped logging to {log_file}")
         logger.remove(sink_id)
+
+
+class LoggerStdoutWriter:
+    @staticmethod
+    def write(msg: str) -> None:
+        msg = msg.rstrip("\n")
+        if msg:
+            logger.info(msg)
+
+    @staticmethod
+    def flush() -> None:
+        pass

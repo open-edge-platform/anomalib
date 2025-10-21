@@ -52,7 +52,7 @@ class FolderDispatcher(BaseDispatcher):
         image_viz_file = os.path.join(self.output_folder, f"{timestamp}-pred.jpg")
         pred_txt_file = os.path.join(self.output_folder, f"{timestamp}-pred.txt")
 
-        logger.debug(f"Saving results to folder for timestamp '{timestamp}' to folder '{self.output_folder}'")
+        logger.trace(f"Saving results to folder for timestamp '{timestamp}' to folder '{self.output_folder}'")
 
         if OutputFormat.IMAGE_ORIGINAL in self.output_formats:
             self._write_image_to_file(original_image, image_orig_file)

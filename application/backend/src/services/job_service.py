@@ -79,6 +79,8 @@ class JobService:
 
         async def is_job_still_running():
             job = await cls.get_job_by_id(job_id=job_id)
+            if job is None:
+                raise ResourceNotFoundException(resource_id=job_id, resource_name="job")
             return job.status == JobStatus.RUNNING
 
         async with await anyio.open_file(log_file) as f:

@@ -65,7 +65,7 @@ class MetricsService:
             idx = self._head % MAX_MEASUREMENTS
             self._array[idx] = (measurement.model_id, measurement.latency_ms, measurement.timestamp)
             self._head += 1
-            logger.debug(f"Latency measurement recorded for model {model_id}: {latency_ms:.2f} ms")
+            logger.trace(f"Latency measurement recorded for model {model_id}: {latency_ms:.2f} ms")
 
     def get_latency_measurements(self, model_id: UUID, time_window: int = 60) -> list[float]:
         """

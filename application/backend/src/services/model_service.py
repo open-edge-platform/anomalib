@@ -111,8 +111,9 @@ class ModelService:
                 raise DeviceNotFoundError(device_name=_device) from e
             raise e
 
+    @classmethod
     async def predict_image(
-        self,
+        cls,
         model: Model,
         image_bytes: bytes,
         cached_models: dict[UUID, OpenVINOInferencer] | None = None,
@@ -143,13 +144,13 @@ class ModelService:
             inference_model = cached_models[model.id]
         else:
             logger.info(f"Loading model with device: {device or DEFAULT_DEVICE}")
-            inference_model = await self.load_inference_model(model, device=device)
+            inference_model = await cls.load_inference_model(model, device=device)
             if cached_models is not None:
                 cached_models[model.id] = inference_model
 
         # Run entire prediction pipeline in a single thread
         # This includes image processing, model inference, and result processing
-        response_data = await asyncio.to_thread(self._run_prediction_pipeline, inference_model, image_bytes)
+        response_data = await asyncio.to_thread(cls._run_prediction_pipeline, inference_model, image_bytes)
 
         return PredictionResponse(**response_data)
 

@@ -107,7 +107,7 @@ class TrainingService:
         Returns:
             Model: Trained model with updated export_path and is_ready=True
         """
-        from core.logging import log_config
+        from core.logging import LoggerStdoutWriter, log_config
 
         model_binary_repo = ModelBinaryRepository(project_id=model.project_id, model_id=model.id)
         image_binary_repo = ImageBinaryRepository(project_id=model.project_id)
@@ -138,10 +138,7 @@ class TrainingService:
         export_format = ExportType.OPENVINO
 
         # Capture pytorch stdout logs into logger
-        logger.write = lambda msg: logger.info(msg) if msg != "\n" else None  # type: ignore[attr-defined]
-        logger.flush = lambda : None  # type: ignore[attr-defined]
-        with redirect_stdout(logger):  # type: ignore[type-var]
-            logger.info("calling train...")
+        with redirect_stdout(LoggerStdoutWriter()):  # type: ignore[type-var]
             engine.train(model=anomalib_model, datamodule=datamodule)
         export_path = engine.export(
             model=anomalib_model,
