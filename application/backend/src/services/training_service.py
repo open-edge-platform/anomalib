@@ -60,7 +60,7 @@ class TrainingService:
         project_id = job.project_id
         model_name = job.payload.get("model_name")
         if model_name is None:
-            raise ValueError("Job payload must contain 'model_name'")
+            raise ValueError(f"Job {job.id} payload must contain 'model_name'")
         
         model_service = ModelService()
         model = Model(
