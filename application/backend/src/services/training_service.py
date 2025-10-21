@@ -113,7 +113,7 @@ class TrainingService:
         image_binary_repo = ImageBinaryRepository(project_id=model.project_id)
         image_folder_path = image_binary_repo.project_folder_path
         model.export_path = model_binary_repo.model_folder_path
-        name = f"{model.project_id}/{model.name}"
+        name = f"{model.project_id}-{model.name}"
 
         # Configure datamodule for anomalib training
         datamodule = Folder(
