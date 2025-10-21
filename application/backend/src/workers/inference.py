@@ -22,6 +22,7 @@ from db import get_async_db_session_ctx
 from entities.stream_data import InferenceData, StreamData
 from repositories import PipelineRepository
 from services import ModelService
+from services.exceptions import DeviceNotFoundError
 from services.metrics_service import MetricsService
 from services.model_service import LoadedModel
 from utils.visualization import Visualizer
@@ -98,10 +99,10 @@ class InferenceWorker(BaseProcessWorker):
                 # The loop handles the case when the active model is switched again while reloading
                 while self._model_reload_event.is_set():
                     self._model_reload_event.clear()
-                    
+
                     if self._loaded_model is None:
                         continue
-                    
+
                     # Remove cached model to force reload
                     try:
                         self._cached_models.pop(self._loaded_model.id, None)
@@ -115,10 +116,27 @@ class InferenceWorker(BaseProcessWorker):
                     try:
                         if self._model_service is None:
                             raise RuntimeError("Model service not initialized")
-                        
+
+                        inferencer = await self._model_service.load_inference_model(
+                            self._loaded_model.model, device=self._loaded_model.device
+                        )
+                        self._cached_models[self._loaded_model.id] = inferencer
+                        logger.info(
+                            "Reloaded inference model '%s' (%s) on device %s",
+                            self._loaded_model.name,
+                            self._loaded_model.id,
+                            self._loaded_model.device,
+                        )
+                    except DeviceNotFoundError as e:
+                        # Load model using the default device
+                        logger.warning(
+                            "Device '%s' not found; loading model '%s' (%s) on default device",
+                            self._loaded_model.device,
+                            self._loaded_model.name,
+                            self._loaded_model.id,
+                        )
                         inferencer = await self._model_service.load_inference_model(self._loaded_model.model)
                         self._cached_models[self._loaded_model.id] = inferencer
-                        logger.info(f"Reloaded inference model '{self._loaded_model.name}' ({self._loaded_model.id})")
                     except Exception as e:
                         logger.error(f"Failed to reload model '{self._loaded_model.name}': {e}", exc_info=True)
                         # Leave cache empty; next predict will attempt to load again
@@ -172,7 +190,7 @@ class InferenceWorker(BaseProcessWorker):
             try:
                 if self._model_service is None:
                     raise RuntimeError("Model service not initialized")
-                
+
                 prediction_response = await self._model_service.predict_image(
                     self._loaded_model.model, image_bytes, self._cached_models  # type: ignore[arg-type]
                 )

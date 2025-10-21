@@ -1,6 +1,6 @@
-import { Grid, minmax, repeat } from '@geti/ui';
+import { Grid, Heading, minmax, repeat } from '@geti/ui';
 
-import { DatasetItem } from './dataset-item/dataset-item.component';
+import { DatasetItemContainer } from './dataset-item/dataset-item.component';
 import { MediaItem } from './types';
 import { REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING } from './utils';
 
@@ -20,11 +20,13 @@ export const DatasetList = ({ mediaItems }: DatasetItemProps) => {
         <Grid
             flex={1}
             columns={repeat('auto-fill', minmax('size-1600', '1fr'))}
+            rows={['max-content', '1fr']}
             gap={'size-100'}
             alignContent={'start'}
         >
+            <Heading gridColumn={'1/-1'}>Normal images</Heading>
             {mediaItemsToRender.map((mediaItem, index) => (
-                <DatasetItem key={mediaItem?.id ?? index} mediaItem={mediaItem} />
+                <DatasetItemContainer key={mediaItem?.id ?? index} mediaItem={mediaItem} />
             ))}
         </Grid>
     );

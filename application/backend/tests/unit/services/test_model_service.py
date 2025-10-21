@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import numpy as np
 import pytest
 from anomalib.deploy import ExportType, OpenVINOInferencer
+import openvino.properties.hint as ov_hints
 
 from pydantic_models import PredictionLabel
 from repositories import ModelRepository
@@ -147,7 +148,12 @@ class TestModelService:
                 mock_bin_repo.get_weights_file_path.assert_called_once_with(
                     format=ExportType.OPENVINO, name="model.xml"
                 )
-                mock_to_thread.assert_called_once_with(OpenVINOInferencer, path="/path/to/model.xml", device="CPU")
+                mock_to_thread.assert_called_once_with(
+                    OpenVINOInferencer,
+                    path="/path/to/model.xml",
+                    device="CPU",
+                    config={ov_hints.performance_mode: ov_hints.PerformanceMode.LATENCY},
+                )
 
     def test_load_inference_model_unsupported_format(self, fxt_model_service, fxt_model):
         """Test loading inference model with unsupported format."""
@@ -174,7 +180,12 @@ class TestModelService:
                 result = asyncio.run(fxt_model_service.load_inference_model(fxt_model, device))
 
                 assert result == fxt_openvino_inferencer
-                mock_to_thread.assert_called_once_with(OpenVINOInferencer, path="/path/to/model.xml", device=device)
+                mock_to_thread.assert_called_once_with(
+                    OpenVINOInferencer,
+                    path="/path/to/model.xml",
+                    device=device,
+                    config={ov_hints.performance_mode: ov_hints.PerformanceMode.LATENCY},
+                )
 
     def test_predict_image_with_cached_model(
         self, fxt_model_service, fxt_model, fxt_image_bytes, fxt_prediction_response, fxt_openvino_inferencer
@@ -215,7 +226,7 @@ class TestModelService:
                 assert result.anomaly_map == "base64_encoded_image"
                 assert result.label == PredictionLabel.NORMAL
                 assert result.score == 0.1
-                mock_load_model.assert_called_once_with(fxt_model)
+                mock_load_model.assert_called_once_with(fxt_model, device=None)
                 mock_pipeline.assert_called_once()
 
     def test_predict_image_caches_model(self, fxt_model_service, fxt_model, fxt_image_bytes, fxt_openvino_inferencer):
@@ -246,7 +257,7 @@ class TestModelService:
                 asyncio.run(fxt_model_service().predict_image(fxt_model, fxt_image_bytes, {}))
 
             assert "Model loading failed" in str(exc_info.value)
-            mock_load_model.assert_called_once_with(fxt_model)
+            mock_load_model.assert_called_once_with(fxt_model, device=None)
 
     @patch("services.model_service.cv2.imdecode")
     @patch("services.model_service.cv2.cvtColor")

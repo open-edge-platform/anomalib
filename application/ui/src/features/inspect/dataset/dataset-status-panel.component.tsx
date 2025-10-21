@@ -1,4 +1,4 @@
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 
 import { $api } from '@geti-inspect/api';
 import { SchemaJob as Job } from '@geti-inspect/api/spec';
@@ -16,6 +16,8 @@ import {
     ProgressBar,
     Text,
 } from '@geti/ui';
+import { useQueryClient } from '@tanstack/react-query';
+import { differenceBy, isEqual } from 'lodash-es';
 
 import { REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING } from './utils';
 
@@ -91,6 +93,85 @@ interface TrainingInProgressProps {
     job: Job;
 }
 
+const TrainingInProgress = ({ job }: TrainingInProgressProps) => {
+    if (job === undefined) {
+        return null;
+    }
+
+    if (job.status === 'pending') {
+        const heading = `Training will start soon - ${job.payload.model_name}`;
+
+        return (
+            <InlineAlert variant='info'>
+                <Heading>{heading}</Heading>
+                <Content>
+                    <Flex direction={'column'} gap={'size-100'}>
+                        <Text>{job.message}</Text>
+                        <ProgressBar aria-label='Training progress' isIndeterminate />
+                    </Flex>
+                </Content>
+            </InlineAlert>
+        );
+    }
+
+    if (job.status === 'running') {
+        const heading = `Training in progress - ${job.payload.model_name}`;
+
+        return (
+            <InlineAlert variant='info'>
+                <Heading>{heading}</Heading>
+                <Content>
+                    <Flex direction={'column'} gap={'size-100'}>
+                        <Text>{job.message}</Text>
+                        <ProgressBar value={job.progress} aria-label='Training progress' />
+                    </Flex>
+                </Content>
+            </InlineAlert>
+        );
+    }
+
+    if (job.status === 'failed') {
+        const heading = `Training failed - ${job.payload.model_name}`;
+
+        return (
+            <InlineAlert variant='negative'>
+                <Heading>{heading}</Heading>
+                <Content>
+                    <Text>{job.message}</Text>
+                </Content>
+            </InlineAlert>
+        );
+    }
+
+    if (job.status === 'canceled') {
+        const heading = `Training canceled - ${job.payload.model_name}`;
+
+        return (
+            <InlineAlert variant='negative'>
+                <Heading>{heading}</Heading>
+                <Content>
+                    <Text>{job.message}</Text>
+                </Content>
+            </InlineAlert>
+        );
+    }
+
+    if (job.status === 'completed') {
+        const heading = `Training completed - ${job.payload.model_name}`;
+
+        return (
+            <InlineAlert variant='positive'>
+                <Heading>{heading}</Heading>
+                <Content>
+                    <Text>{job.message}</Text>
+                </Content>
+            </InlineAlert>
+        );
+    }
+
+    return null;
+};
+
 const REFETCH_INTERVAL_WITH_TRAINING = 1_000;
 
 const useProjectTrainingJobs = () => {
@@ -107,73 +188,49 @@ const useProjectTrainingJobs = () => {
         },
     });
 
-    return { jobs: data?.jobs };
+    return { jobs: data?.jobs.filter((job) => job.project_id === projectId) };
 };
 
-const TrainingInProgress = ({ job }: TrainingInProgressProps) => {
-    if (job === undefined || job.status === 'completed') {
-        return null;
-    }
+const useRefreshModelsOnJobUpdates = (jobs: Job[] | undefined) => {
+    const queryClient = useQueryClient();
+    const { projectId } = useProjectIdentifier();
+    const prevJobsRef = useRef<Job[]>([]);
 
-    if (job.status === 'pending') {
-        return (
-            <InlineAlert variant='info'>
-                <Heading>Training will start soon</Heading>
-                <Content>
-                    <Flex direction={'column'} gap={'size-100'}>
-                        <Text>{job.message}</Text>
-                        <ProgressBar aria-label='Training progress' isIndeterminate />
-                    </Flex>
-                </Content>
-            </InlineAlert>
-        );
-    }
+    useEffect(() => {
+        if (jobs === undefined) {
+            return;
+        }
 
-    if (job.status === 'running') {
-        return (
-            <InlineAlert variant='info'>
-                <Heading>Training in progress</Heading>
-                <Content>
-                    <Flex direction={'column'} gap={'size-100'}>
-                        <Text>{job.message}</Text>
-                        <ProgressBar value={job.progress} aria-label='Training progress' />
-                    </Flex>
-                </Content>
-            </InlineAlert>
-        );
-    }
+        if (!isEqual(prevJobsRef.current, jobs)) {
+            const differenceInJobsBasedOnStatus = differenceBy(prevJobsRef.current, jobs, (job) => job.status);
+            const shouldRefetchModels = differenceInJobsBasedOnStatus.some((job) => job.status === 'completed');
 
-    if (job.status === 'failed') {
-        return (
-            <InlineAlert variant='negative'>
-                <Heading>Training failed</Heading>
-                <Content>
-                    <Text>{job.message}</Text>
-                </Content>
-            </InlineAlert>
-        );
-    }
+            if (shouldRefetchModels) {
+                queryClient.invalidateQueries({
+                    queryKey: [
+                        'get',
+                        '/api/projects/{project_id}/models',
+                        { params: { path: { project_id: projectId } } },
+                    ],
+                });
+            }
+        }
 
-    if (job.status === 'canceled') {
-        return (
-            <InlineAlert variant='negative'>
-                <Heading>Training canceled</Heading>
-                <Content>
-                    <Text>{job.message}</Text>
-                </Content>
-            </InlineAlert>
-        );
-    }
-
-    return null;
+        prevJobsRef.current = jobs ?? [];
+    }, [jobs, queryClient, projectId]);
 };
 
 const TrainingInProgressList = () => {
     const { jobs } = useProjectTrainingJobs();
+    useRefreshModelsOnJobUpdates(jobs);
+
+    if (jobs === undefined || jobs.length === 0) {
+        return null;
+    }
 
     return (
         <>
-            <Flex direction={'column'} gap={'size-50'}>
+            <Flex direction={'column'} gap={'size-50'} height={'size-2000'} UNSAFE_style={{ overflowY: 'auto' }}>
                 {jobs?.map((job) => <TrainingInProgress job={job} key={job.id} />)}
             </Flex>
             <Divider size={'S'} />

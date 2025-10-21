@@ -62,8 +62,11 @@ def fxt_condition():
 def fxt_active_pipeline_service():
     """Fixture for a mock active pipeline service."""
     service = MagicMock(spec=ActivePipelineService)
-    # Use AsyncMock for the async method
-    service.reload = AsyncMock(return_value=None)
+    # Provide a real async function to avoid un-awaited AsyncMock warnings
+    async def _reload():
+        return None
+
+    service.reload = _reload
     return service
 
 

@@ -9,14 +9,21 @@ from uuid import UUID
 
 import cv2
 import numpy as np
+import openvino as ov
+import openvino.properties.hint as ov_hints
 from anomalib.deploy import ExportType, OpenVINOInferencer
 from loguru import logger
+from cachetools.func import lru_cache
 from PIL import Image
 
 from db import get_async_db_session_ctx
 from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
+from pydantic_models.model import SupportedDevices
 from repositories import ModelRepository
 from repositories.binary_repo import ModelBinaryRepository
+from services.exceptions import DeviceNotFoundError
+
+DEFAULT_DEVICE = "AUTO"
 
 
 @dataclass
@@ -24,11 +31,14 @@ class LoadedModel:
     name: str
     id: UUID
     model: Model
+    device: str | None = None
+
+    def __post_init__(self):
+        self.device = self.device or DEFAULT_DEVICE
 
 
 class ModelService:
-    """
-    Service for managing models and inference operations.
+    """Service for managing models and inference operations.
 
     Handles model CRUD operations, loading inference models, and running
     predictions on images. Uses asyncio.to_thread for CPU-intensive operations
@@ -75,21 +85,40 @@ class ModelService:
             repo = ModelRepository(session, project_id=project_id)
             return await repo.delete_by_id(model_id)
 
-    @staticmethod
-    async def load_inference_model(model: Model, device: str = "CPU") -> OpenVINOInferencer:
-        """Load a model for inference using the anomalib OpenVINO inferencer."""
+    @classmethod
+    async def load_inference_model(cls, model: Model, device: str | None = None) -> OpenVINOInferencer:
+        """Load a model for inference using the anomalib OpenVINO inferencer.
+
+        Args:
+            model: The model to load
+            device: Device to use for inference. If None, defaults to "AUTO"
+        """
         if model.format is not ExportType.OPENVINO:
             raise NotImplementedError(f"Model format {model.format} is not supported for inference at this moment.")
 
         model_bin_repo = ModelBinaryRepository(project_id=model.project_id, model_id=model.id)
         model_path = model_bin_repo.get_weights_file_path(format=model.format, name="model.xml")
-        return await asyncio.to_thread(OpenVINOInferencer, path=model_path, device=device)
+        _device = device or DEFAULT_DEVICE
+        try:
+            return await asyncio.to_thread(
+                OpenVINOInferencer,
+                path=model_path,
+                device=_device,
+                config={ov_hints.performance_mode: ov_hints.PerformanceMode.LATENCY},
+            )
+        except Exception as e:
+            if _device not in cls.get_supported_devices().devices:
+                raise DeviceNotFoundError(device_name=_device) from e
+            raise e
 
     async def predict_image(
-        self, model: Model, image_bytes: bytes, cached_models: dict[UUID, OpenVINOInferencer] | None = None
+        self,
+        model: Model,
+        image_bytes: bytes,
+        cached_models: dict[UUID, OpenVINOInferencer] | None = None,
+        device: str | None = None,
     ) -> PredictionResponse:
-        """
-        Run prediction on an image using the specified model.
+        """Run prediction on an image using the specified model.
 
         Uses asyncio.to_thread to run the entire CPU-intensive prediction pipeline
         in a single thread, maintaining event loop responsiveness.
@@ -98,15 +127,23 @@ class ModelService:
             model: The model to use for prediction
             image_bytes: Raw image bytes from uploaded file
             cached_models: Optional dict to cache loaded models (for performance)
+            device: Optional string indicating the device to use for inference
 
         Returns:
             PredictionResponse: Structured prediction results
         """
-        # Use cached model if available, otherwise load it
-        if cached_models and model.id in cached_models:
+        # Determine if we can use cached model (must exist and device must match if specified)
+        use_cached = (
+            cached_models is not None
+            and model.id in cached_models
+            and (device is None or cached_models[model.id].device == device)
+        )
+
+        if use_cached:
             inference_model = cached_models[model.id]
         else:
-            inference_model = await self.load_inference_model(model)
+            logger.info(f"Loading model with device: {device or DEFAULT_DEVICE}")
+            inference_model = await self.load_inference_model(model, device=device)
             if cached_models is not None:
                 cached_models[model.id] = inference_model
 
@@ -124,7 +161,7 @@ class ModelService:
         bgr_image = cv2.imdecode(npd, -1)
         if bgr_image is None:
             raise ValueError("Failed to decode image")
-        
+
         numpy_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
 
         # Run prediction
@@ -133,10 +170,16 @@ class ModelService:
         # Process anomaly map
         if pred.anomaly_map is None:
             raise ValueError("Prediction returned no anomaly map")
-        
+
         arr = pred.anomaly_map.squeeze()  # Remove dimensions of size 1
-        arr_normalized = (arr * 255).astype(np.uint8)  # Normalize to 0-255 and convert to uint8
-        im = Image.fromarray(arr_normalized)  # Automatically detects grayscale mode
+        arr_scaled = (arr * 255).astype(np.uint8)  # Scale to 0-255 and convert to uint8
+        # convert to color map
+        heatmap = cv2.applyColorMap(arr_scaled, cv2.COLORMAP_JET)
+        # Add alpha channel with opacity weighted according to the anomaly score
+        heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGBA)
+        heatmap[:, :, 3] = arr_scaled
+
+        im = Image.fromarray(heatmap)  # Automatically detects RGBA mode
 
         # Convert to base64
         with io.BytesIO() as buf:
@@ -146,8 +189,15 @@ class ModelService:
         # Create response data
         if pred.pred_label is None or pred.pred_score is None:
             raise ValueError("Prediction returned no label or score")
-        
+
         label = PredictionLabel.ANOMALOUS if pred.pred_label.item() else PredictionLabel.NORMAL
         score = float(pred.pred_score.item())
 
         return {"anomaly_map": im_base64, "label": label, "score": score}
+
+    @staticmethod
+    @lru_cache
+    def get_supported_devices() -> SupportedDevices:
+        """Get list of supported devices for inference."""
+        core = ov.Core()
+        return SupportedDevices(devices=core.available_devices)
