@@ -60,8 +60,6 @@ class Scheduler(metaclass=Singleton):
         training_proc.daemon = False
 
         # Inference worker consumes frames and produces predictions
-        if self.shm_metrics is None:
-            raise RuntimeError("Shared memory not initialized")
         
         inference_proc = InferenceWorker(
             frame_queue=self.frame_queue,
