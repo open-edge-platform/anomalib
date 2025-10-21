@@ -5,7 +5,7 @@ import multiprocessing as mp
 import queue
 import sys
 import time
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pytest
@@ -114,7 +114,9 @@ class TestStreamLoader:
             # Already set, ignore
             pass
 
-    def test_queue_full_realtime(self, frame_queue, mock_stream_data, stop_event, config_changed_condition, mock_services):
+    def test_queue_full_realtime(
+        self, frame_queue, mock_stream_data, stop_event, config_changed_condition, mock_services
+    ):
         """Test that frames are discarded when queue is full for real-time streams"""
 
         data1, data2 = mock_stream_data(), mock_stream_data()

@@ -190,7 +190,9 @@ class TestConfigurationService:
             with patch("services.configuration_service.PipelineRepository") as mock_repo_class:
                 mock_repo_class.return_value = fxt_pipeline_repository
 
-                await ConfigurationService._on_config_changed(config_id, PipelineField.SOURCE_ID, MagicMock(), notify_fn)
+                await ConfigurationService._on_config_changed(
+                    config_id, PipelineField.SOURCE_ID, MagicMock(), notify_fn
+                )
 
             fxt_pipeline_repository.get_active_pipeline.assert_called_once()
             # The notification should be called because the pipeline's source_id matches the config_id
@@ -229,7 +231,9 @@ class TestConfigurationService:
             with patch("services.configuration_service.PipelineRepository") as mock_repo_class:
                 mock_repo_class.return_value = fxt_pipeline_repository
 
-                await ConfigurationService._on_config_changed(config_id, PipelineField.SOURCE_ID, MagicMock(), notify_fn)
+                await ConfigurationService._on_config_changed(
+                    config_id, PipelineField.SOURCE_ID, MagicMock(), notify_fn
+                )
 
             fxt_pipeline_repository.get_active_pipeline.assert_called_once()
             notify_fn.assert_not_called()

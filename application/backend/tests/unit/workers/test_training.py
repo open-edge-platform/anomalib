@@ -15,8 +15,7 @@ class TestTrainingWorker:
     @pytest.fixture
     def mock_stop_event(self):
         """Fixture for a mock stop event."""
-        event = mp.Event()
-        return event
+        return mp.Event()
 
     @pytest.fixture
     def mock_training_service(self):

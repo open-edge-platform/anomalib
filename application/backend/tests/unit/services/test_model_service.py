@@ -4,9 +4,9 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import numpy as np
+import openvino.properties.hint as ov_hints
 import pytest
 from anomalib.deploy import ExportType, OpenVINOInferencer
-import openvino.properties.hint as ov_hints
 
 from pydantic_models import PredictionLabel
 from repositories import ModelRepository

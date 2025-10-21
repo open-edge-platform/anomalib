@@ -224,7 +224,7 @@ class TestJobService:
 
             # Mock file with async readline method
             mock_file = MagicMock()
-            mock_file.readline = AsyncMock(side_effect=log_lines + [""])  # Empty string signals EOF
+            mock_file.readline = AsyncMock(side_effect=[*log_lines, ""])  # Empty string signals EOF
             
             # Create an async context manager
             async_cm = MagicMock()
