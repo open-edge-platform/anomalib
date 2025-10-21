@@ -11,7 +11,6 @@ Provides centralized logging using loguru with:
 """
 
 import os
-import re
 from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -55,23 +54,24 @@ log_config = LogConfig()
 
 
 def _validate_job_id(job_id: str | UUID) -> str | UUID:
-    """Validate and sanitize job_id to prevent path traversal attacks.
+    """Validate job_id to prevent path traversal attacks.
 
     Args:
         job_id: The job identifier to validate
 
     Returns:
-        Sanitized job_id
+        Validated job_id
 
     Raises:
-        ValueError: If job_id contains invalid characters
+        ValueError: If job_id is not a valid UUID
     """
     # Only allow alphanumeric, hyphens, underscores
-    job_id_ = str(job_id)
-    if not re.match(r"^[a-zA-Z0-9_-]+$", job_id_):
+    try:
+        UUID(str(job_id))
+    except ValueError as e:
         raise ValueError(
-            f"Invalid job_id '{job_id_}'. Only alphanumeric characters, hyphens, and underscores are allowed."
-        )
+            f"Invalid job_id '{job_id}'. Only alphanumeric characters, hyphens, and underscores are allowed."
+        ) from e
     return job_id
 
 
