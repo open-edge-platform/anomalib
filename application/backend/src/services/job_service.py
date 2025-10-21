@@ -83,10 +83,21 @@ class JobService:
                 raise ResourceNotFoundException(resource_id=job_id, resource_name="job")
             return job.status == JobStatus.RUNNING
 
+        # Cache job status and only check every 2 seconds
+        status_check_interval = 2.0  # seconds
+        last_status_check = 0.0
+        cached_still_running = True
+        loop = asyncio.get_running_loop()
+
         async with await anyio.open_file(log_file) as f:
             while True:
                 line = await f.readline()
-                still_running = await is_job_still_running()
+                now = loop.time()
+                # Only check job status every status_check_interval seconds
+                if now - last_status_check > status_check_interval:
+                    cached_still_running = await is_job_still_running()
+                    last_status_check = now
+                still_running = cached_still_running
                 if not line:
                     # wait for more lines if job is still running
                     if still_running:
