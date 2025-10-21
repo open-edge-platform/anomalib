@@ -3,7 +3,6 @@
 
 """Endpoints for managing pipelines"""
 
-import logging
 from typing import Annotated
 from uuid import UUID
 
@@ -17,7 +16,6 @@ from pydantic_models.metrics import PipelineMetrics
 from pydantic_models.pipeline import Pipeline, PipelineStatus
 from services import PipelineService
 
-logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/projects/{project_id}/pipeline", tags=["Pipelines"])
 
 UPDATE_PIPELINE_BODY_DESCRIPTION = """

@@ -1,11 +1,10 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import multiprocessing as mp
 import queue
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 def flush_queue(queue_obj: mp.Queue) -> None:
@@ -21,14 +20,14 @@ def flush_queue(queue_obj: mp.Queue) -> None:
             break
         except (OSError, ValueError, EOFError, BrokenPipeError) as e:
             # Queue is closed/invalid or connection broken
-            logger.debug("Queue flush stopped due to: %s", e)
+            logger.debug(f"Queue flush stopped due to: {e}")
             break
         except Exception as e:
-            logger.error("Unexpected error during queue flush: %s", e)
+            logger.error(f"Unexpected error during queue flush: {e}")
             break
 
     if flushed_count > 0:
-        logger.info("Flushed %d items from queue", flushed_count)
+        logger.info(f"Flushed {flushed_count} items from queue")
 
     # https://docs.python.org/3/library/multiprocessing.html#all-start-methods
     # section: Joining processes that use queues

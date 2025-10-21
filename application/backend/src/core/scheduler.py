@@ -1,22 +1,19 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import atexit
 import multiprocessing as mp
 import os
 import queue
-import threading
+import threading  # noqa: TC003
 from multiprocessing.shared_memory import SharedMemory
 
 import psutil
+from loguru import logger
 
 from services.metrics_service import SIZE
 from utils.singleton import Singleton
-from workers import dispatching_routine, inference_routine, training_routine
-from workers.stream_loading import frame_acquisition_routine
-
-logger = logging.getLogger(__name__)
+from workers import DispatchingWorker, InferenceWorker, StreamLoader, TrainingWorker
 
 
 class Scheduler(metaclass=Singleton):
@@ -41,7 +38,7 @@ class Scheduler(metaclass=Singleton):
         self.mp_config_changed_condition = mp.Condition()
 
         # Shared memory for metrics collector
-        self.shm_metrics = SharedMemory(create=True, size=SIZE)
+        self.shm_metrics: SharedMemory = SharedMemory(create=True, size=SIZE)
         self.shm_metrics_lock = mp.Lock()
 
         self.processes: list[mp.Process] = []
@@ -55,40 +52,39 @@ class Scheduler(metaclass=Singleton):
         logger.info("Starting worker processes...")
 
         # Create and start processes
-        training_proc = mp.Process(
-            target=training_routine,
-            name="Training worker",
-            args=(self.mp_stop_event,),
+        training_proc = TrainingWorker(
+            stop_event=self.mp_stop_event,
+            logger_=logger.bind(worker=TrainingWorker.__name__),
         )
         # Training worker is not a daemon so that training script can spawn child processes
         training_proc.daemon = False
 
         # Inference worker consumes frames and produces predictions
-        inference_proc = mp.Process(
-            target=inference_routine,
-            name="Inference worker",
-            args=(
-                self.frame_queue,
-                self.pred_queue,
-                self.mp_stop_event,
-                self.mp_model_reload_event,
-                self.shm_metrics.name,
-                self.shm_metrics_lock,
-            ),
+        
+        inference_proc = InferenceWorker(
+            frame_queue=self.frame_queue,
+            pred_queue=self.pred_queue,
+            stop_event=self.mp_stop_event,
+            model_reload_event=self.mp_model_reload_event,
+            shm_name=self.shm_metrics.name,
+            shm_lock=self.shm_metrics_lock,
+            logger_=logger.bind(worker=InferenceWorker.__name__),
         )
         inference_proc.daemon = True
 
         # Dispatching worker consumes predictions and publishes to outputs/WebRTC
-        dispatching_thread = threading.Thread(
-            target=dispatching_routine,
-            name="Dispatching thread",
-            args=(self.pred_queue, self.rtc_stream_queue, self.mp_stop_event, self.mp_config_changed_condition),
+        dispatching_thread = DispatchingWorker(
+            pred_queue=self.pred_queue,
+            rtc_stream_queue=self.rtc_stream_queue,
+            stop_event=self.mp_stop_event,
+            active_config_changed_condition=self.mp_config_changed_condition,
         )
 
-        stream_loader_proc = mp.Process(
-            target=frame_acquisition_routine,
-            name="Stream loader worker",
-            args=(self.frame_queue, self.mp_stop_event, self.mp_config_changed_condition),
+        stream_loader_proc = StreamLoader(
+            frame_queue=self.frame_queue,
+            stop_event=self.mp_stop_event,
+            config_changed_condition=self.mp_config_changed_condition,
+            logger_=logger.bind(worker=StreamLoader.__name__),
         )
         stream_loader_proc.daemon = True
 
@@ -130,17 +126,17 @@ class Scheduler(metaclass=Singleton):
                 logger.debug(f"Joining process: {process.name}")
                 process.join(timeout=10)
                 if process.is_alive():
-                    logger.warning("Force terminating process: %s", process.name)
+                    logger.warning(f"Force terminating process: {process.name}")
                     process.terminate()
                     process.join(timeout=2)
                     if process.is_alive():
-                        logger.error("Force killing process %s", process.name)
+                        logger.error(f"Force killing process {process.name}")
                         process.kill()
                 # Explicitly close the process' resources
                 try:
                     process.close()
                 except Exception as e:
-                    logger.warning("Error closing process %s: %s", process.name, e)
+                    logger.warning(f"Error closing process {process.name}: {e}")
 
         logger.info("All workers shut down gracefully")
 
@@ -159,9 +155,9 @@ class Scheduler(metaclass=Singleton):
                     # https://runebook.dev/en/articles/python/library/multiprocessing/multiprocessing.Queue.close
                     q.close()
                     q.join_thread()
-                    logger.debug("Successfully cleaned up %s", name)
+                    logger.debug(f"Successfully cleaned up {name}")
                 except Exception as e:
-                    logger.warning("Error cleaning up %s: %s", name, e)
+                    logger.warning(f"Error cleaning up {name}: {e}")
 
     def _cleanup_shared_memory(self) -> None:
         """Clean up shared memory objects"""
@@ -173,4 +169,4 @@ class Scheduler(metaclass=Singleton):
                 self.shm_metrics = None
                 logger.debug("Successfully cleaned up shared memory")
             except Exception as e:
-                logger.warning("Error cleaning up shared memory: %s", e)
+                logger.warning(f"Error cleaning up shared memory: {e}")

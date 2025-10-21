@@ -21,6 +21,8 @@ dependencies = [
     "opencv-python-headless~=4.12",
     "watchdog==6.0.0",
     "uvloop==0.21.0",
+    "loguru==0.7.3",
+    "trackio~=0.6.0",
 ]
 
 [dependency-groups]
@@ -36,6 +38,7 @@ lint = [
     "ruff~=0.11.2",
     "mypy~=1.17",
     "types-requests~=2.32.4",
+    "types-PyYAML~=6.0.12",
 ]
 
 [project.optional-dependencies]
@@ -69,6 +72,12 @@ filterwarnings = [
     # Suppress AsyncMock coroutine warnings - these are test artifacts from unittest.mock
     # framework internals during garbage collection, not actual code issues
     "ignore:coroutine.*was never awaited:RuntimeWarning:unittest.mock",
+    # Suppress websockets deprecation warnings from uvicorn (third-party dependency issue)
+    "ignore:.*websockets.legacy is deprecated.*:DeprecationWarning",
+    "ignore:.*WebSocketServerProtocol is deprecated.*:DeprecationWarning",
+    # Suppress third-party library deprecation warnings
+    "ignore:Jupyter is migrating its paths.*:DeprecationWarning:jupyter_client",
+    "ignore:.*sentry_sdk.Hub.*is deprecated.*:DeprecationWarning",
 ]
 
 [tool.ruff.lint.per-file-ignores]

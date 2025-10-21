@@ -34,3 +34,35 @@ def test_get_jobs_empty(fxt_client, fxt_job_service, fxt_job):
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["jobs"]) == 0
     fxt_job_service.get_job_list.assert_called_once()
+
+
+def test_get_job_logs_success(fxt_client, fxt_job_service, fxt_job):
+    """Test successful log streaming endpoint."""
+
+    # Mock the stream_logs generator
+    async def mock_stream():
+        yield '{"level": "INFO", "message": "Line 1"}\n'
+        yield '{"level": "INFO", "message": "Line 2"}\n'
+
+    fxt_job_service.stream_logs.return_value = mock_stream()
+
+    response = fxt_client.get(f"/api/jobs/{fxt_job.id}/logs")
+    assert response.status_code == status.HTTP_200_OK
+    # Check content-type without charset (may vary by implementation)
+    assert "application/x-ndjson" in response.headers["content-type"]
+
+    # Verify the streamed content
+    content = response.content.decode("utf-8")
+    lines = [line for line in content.split("\n") if line]
+    assert len(lines) == 2
+    assert '"level": "INFO"' in lines[0]
+    assert '"message": "Line 1"' in lines[0]
+
+    fxt_job_service.stream_logs.assert_called_once_with(job_id=fxt_job.id)
+
+
+def test_get_job_logs_invalid_uuid(fxt_client, fxt_job_service):
+    """Test log streaming with invalid job ID."""
+    response = fxt_client.get("/api/jobs/invalid-uuid/logs")
+    # FastAPI returns 400 for invalid UUID in path parameter
+    assert response.status_code == status.HTTP_400_BAD_REQUEST

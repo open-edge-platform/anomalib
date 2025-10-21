@@ -149,8 +149,8 @@ class TestJobService:
     @pytest.mark.parametrize(
         "has_message,message,expected_updates",
         [
-            (True, "Test message", {"status": JobStatus.COMPLETED, "message": "Test message"}),
-            (False, None, {"status": JobStatus.COMPLETED}),
+            (True, "Test message", {"status": JobStatus.COMPLETED, "message": "Test message", "progress": 100}),
+            (False, None, {"status": JobStatus.COMPLETED, "progress": 100}),
         ],
     )
     def test_update_job_status_success(self, fxt_job_repository, fxt_job, has_message, message, expected_updates):
@@ -185,3 +185,65 @@ class TestJobService:
         assert "non-existent-id" in str(exc_info.value)
         assert "job" in str(exc_info.value)
         fxt_job_repository.get_by_id.assert_called_once_with("non-existent-id")
+
+    def test_stream_logs_file_not_found(self, fxt_job):
+        """Test streaming logs when log file doesn't exist."""
+        with (
+            patch("core.logging.get_job_logs_path") as mock_get_path,
+            patch("services.job_service.os.path.exists") as mock_exists,
+        ):
+            mock_get_path.return_value = "/fake/path/job.log"
+            mock_exists.return_value = False
+
+            with pytest.raises(ResourceNotFoundException) as exc_info:
+                async def consume_stream():
+                    async for _ in JobService.stream_logs(fxt_job.id):
+                        pass
+
+                asyncio.run(consume_stream())
+
+            assert "job_logs" in str(exc_info.value)
+
+    def test_stream_logs_success(self, fxt_job_repository, fxt_job):
+        """Test streaming logs successfully from a completed job."""
+        log_lines = ['{"level": "INFO", "message": "Line 1"}\n', '{"level": "INFO", "message": "Line 2"}\n']
+
+        # Mock job as completed
+        completed_job = fxt_job.model_copy(update={"status": JobStatus.COMPLETED})
+        fxt_job_repository.get_by_id.return_value = completed_job
+
+        with (
+            patch("core.logging.get_job_logs_path") as mock_get_path,
+            patch("services.job_service.os.path.exists") as mock_exists,
+            patch("services.job_service.anyio.open_file") as mock_open_file,
+            patch("services.job_service.JobRepository") as mock_repo_class,
+        ):
+            mock_get_path.return_value = "/fake/path/job.log"
+            mock_exists.return_value = True
+            mock_repo_class.return_value = fxt_job_repository
+
+            # Mock file with async readline method
+            mock_file = MagicMock()
+            mock_file.readline = AsyncMock(side_effect=[*log_lines, ""])  # Empty string signals EOF
+            
+            # Create an async context manager
+            async_cm = MagicMock()
+            async_cm.__aenter__ = AsyncMock(return_value=mock_file)
+            async_cm.__aexit__ = AsyncMock(return_value=None)
+            
+            # anyio.open_file() is a coroutine that returns an async context manager when awaited
+            async def mock_anyio_open_file(*args, **kwargs):
+                return async_cm
+            
+            mock_open_file.side_effect = mock_anyio_open_file
+
+            async def consume_stream():
+                result = []
+                async for line in JobService.stream_logs(fxt_job.id):
+                    result.append(line)
+                return result
+
+            result = asyncio.run(consume_stream())
+
+            assert len(result) == 2
+            assert result == log_lines

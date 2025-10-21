@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import time
 from datetime import UTC, datetime
 from multiprocessing.shared_memory import SharedMemory
@@ -10,8 +9,7 @@ from typing import NamedTuple
 from uuid import UUID
 
 import numpy as np
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 MAX_MEASUREMENTS = 1024  # max number of measurements to keep
 DTYPE = np.dtype(
@@ -67,7 +65,7 @@ class MetricsService:
             idx = self._head % MAX_MEASUREMENTS
             self._array[idx] = (measurement.model_id, measurement.latency_ms, measurement.timestamp)
             self._head += 1
-            logger.debug(f"Latency measurement recorded for model {model_id}: {latency_ms:.2f} ms")
+            logger.trace(f"Latency measurement recorded for model {model_id}: {latency_ms:.2f} ms")
 
     def get_latency_measurements(self, model_id: UUID, time_window: int = 60) -> list[float]:
         """

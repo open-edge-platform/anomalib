@@ -1,15 +1,13 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import base64
-import logging
 from collections.abc import Callable
 
 import cv2
 import numpy as np
+from loguru import logger
 
 from pydantic_models import PredictionResponse
-
-logger = logging.getLogger(__name__)
 
 
 class Visualizer:
@@ -37,11 +35,11 @@ class Visualizer:
                 try:
                     visualization = overlay(visualization, prediction, **kwargs)
                 except Exception as e:  # continue other overlays even if one fails
-                    logger.debug("Overlay step failed: %s", e)
+                    logger.debug(f"Overlay step failed: {e}")
 
             return visualization
         except Exception as e:
-            logger.debug("Failed to create visualization: %s", e)
+            logger.debug(f"Failed to create visualization: {e}")
             return original_image
 
     @staticmethod
@@ -91,14 +89,14 @@ class Visualizer:
                 try:
                     masked_heatmap[mask_bool] = heatmap_resized[mask_bool]
                 except Exception as e:
-                    logger.debug("Failed to apply heatmap mask: %s", e)
+                    logger.debug(f"Failed to apply heatmap mask: {e}")
 
                 result = cv2.addWeighted(result, 1.0, masked_heatmap, alpha, 0)
             except Exception as e:
-                logger.debug("Failed to overlay heatmap: %s", e)
+                logger.debug(f"Failed to overlay heatmap: {e}")
             return result
         except Exception as e:
-            logger.debug("Failed in overlay_anomaly_heatmap: %s", e)
+            logger.debug(f"Failed in overlay_anomaly_heatmap: {e}")
             return base_image
 
     @staticmethod
@@ -123,5 +121,5 @@ class Visualizer:
             cv2.putText(result, label_text, (x, y), font, font_scale, text_color, thickness, cv2.LINE_AA)
             return result
         except Exception as e:
-            logger.debug("Failed to draw label: %s", e)
+            logger.debug(f"Failed to draw label: {e}")
             return base_image

@@ -5,14 +5,14 @@ from collections.abc import Callable
 from typing import Any, Generic, TypeVar
 from uuid import UUID
 
-from pydantic import BaseModel
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy.sql import expression
 from sqlalchemy.sql.selectable import Select, and_
 
 from db.schema import Base
+from pydantic_models.base import BaseIDModel
 
-ModelType = TypeVar("ModelType", bound=BaseModel)
+ModelType = TypeVar("ModelType", bound=BaseIDModel)
 SchemaType = TypeVar("SchemaType", bound=Base)
 
 
@@ -88,8 +88,8 @@ class BaseRepository(Generic[ModelType, SchemaType], metaclass=abc.ABCMeta):
 
     async def update(self, item: ModelType, partial_update: dict) -> ModelType:
         # note: model_copy does not validate the model, so we need to validate explicitly
-        to_update = item.model_copy(update=partial_update, deep=True)  # type: ignore[attr-defined]
-        item.__class__.model_validate(to_update.model_dump())  # type: ignore[attr-defined]
+        to_update = item.model_copy(update=partial_update, deep=True)
+        item.__class__.model_validate(to_update.model_dump())
         schema_item: SchemaType = self.to_schema(to_update)
         await self.db.merge(schema_item)
         await self.db.commit()
@@ -104,10 +104,10 @@ class BaseRepository(Generic[ModelType, SchemaType], metaclass=abc.ABCMeta):
 
         obj_id = self._id_to_str(obj_id)
         where_expression = [
-            self.schema.id == obj_id,  # type: ignore[attr-defined]
-            *[self.schema.__table__.c[k] == v for k, v in self.base_filters.items()],  # type: ignore[attr-defined]
+            self.schema.id == obj_id, # type: ignore[attr-defined]
+            *[self.schema.__table__.c[k] == v for k, v in self.base_filters.items()],
         ]
-        query = expression.delete(self.schema).where(*where_expression)  # type: ignore[attr-defined]
+        query = expression.delete(self.schema).where(*where_expression)
         await self.db.execute(query)
 
     @staticmethod

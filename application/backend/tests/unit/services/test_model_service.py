@@ -4,9 +4,9 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import numpy as np
+import openvino.properties.hint as ov_hints
 import pytest
 from anomalib.deploy import ExportType, OpenVINOInferencer
-import openvino.properties.hint as ov_hints
 
 from pydantic_models import PredictionLabel
 from repositories import ModelRepository
@@ -268,7 +268,7 @@ class TestModelService:
             [[[100, 100, 100], [200, 200, 200]], [[150, 150, 150], [250, 250, 250]]], dtype=np.uint8
         )
         mock_cvt_color.return_value = np.array(
-            [[[100, 100, 100], [200, 200, 200]], [[150, 150, 150], [250, 250, 250]]], dtype=np.uint8
+            [[[100, 100, 100, 255], [200, 200, 200, 255]], [[150, 150, 150, 255], [250, 250, 250, 255]]], dtype=np.uint8
         )
 
         # Create a test anomaly map
@@ -295,7 +295,7 @@ class TestModelService:
             [[[100, 100, 100], [200, 200, 200]], [[150, 150, 150], [250, 250, 250]]], dtype=np.uint8
         )
         mock_cvt_color.return_value = np.array(
-            [[[100, 100, 100], [200, 200, 200]], [[150, 150, 150], [250, 250, 250]]], dtype=np.uint8
+            [[[100, 100, 100, 255], [200, 200, 200, 255]], [[150, 150, 150, 255], [250, 250, 250, 255]]], dtype=np.uint8
         )
 
         # Create a test anomaly map
@@ -321,7 +321,7 @@ class TestModelService:
         mock_cvt_color.return_value = None
 
         # This should handle the case where imdecode returns None
-        with pytest.raises((AttributeError, TypeError)):
+        with pytest.raises(ValueError, match="Failed to decode image"):
             ModelService._run_prediction_pipeline(fxt_openvino_inferencer, empty_bytes)
 
     @patch("services.model_service.cv2.imdecode")
@@ -333,7 +333,7 @@ class TestModelService:
             [[[100, 100, 100], [200, 200, 200]], [[150, 150, 150], [250, 250, 250]]], dtype=np.uint8
         )
         mock_cvt_color.return_value = np.array(
-            [[[100, 100, 100], [200, 200, 200]], [[150, 150, 150], [250, 250, 250]]], dtype=np.uint8
+            [[[100, 100, 100, 255], [200, 200, 200, 255]], [[150, 150, 150, 255], [250, 250, 250, 255]]], dtype=np.uint8
         )
 
         # Test with 4D anomaly map (should be squeezed to 2D)

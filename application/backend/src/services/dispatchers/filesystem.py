@@ -1,18 +1,16 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import os
 from datetime import datetime
 
 import cv2
 import numpy as np
 from anomalib.data import NumpyImageBatch as PredictionResult
+from loguru import logger
 
 from pydantic_models.sink import FolderSinkConfig, OutputFormat
 from services.dispatchers.base import BaseDispatcher
-
-logger = logging.getLogger(__name__)
 
 
 class FolderDispatcher(BaseDispatcher):
@@ -54,7 +52,7 @@ class FolderDispatcher(BaseDispatcher):
         image_viz_file = os.path.join(self.output_folder, f"{timestamp}-pred.jpg")
         pred_txt_file = os.path.join(self.output_folder, f"{timestamp}-pred.txt")
 
-        logger.debug(f"Saving results to folder for timestamp '{timestamp}' to folder '{self.output_folder}'")
+        logger.trace(f"Saving results to folder for timestamp '{timestamp}' to folder '{self.output_folder}'")
 
         if OutputFormat.IMAGE_ORIGINAL in self.output_formats:
             self._write_image_to_file(original_image, image_orig_file)

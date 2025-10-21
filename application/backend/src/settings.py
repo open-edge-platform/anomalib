@@ -27,7 +27,7 @@ class Settings(BaseSettings):
 
     # Server
     host: str = Field(default="0.0.0.0", alias="HOST")  # noqa: S104
-    port: int = Field(default=7860, alias="PORT")
+    port: int = Field(default=8000, alias="PORT")
 
     # Database
     database_url: str = Field(

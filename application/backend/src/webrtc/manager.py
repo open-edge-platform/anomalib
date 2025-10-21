@@ -2,17 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-import logging
 import queue
 from typing import Any
 
 from aiortc import RTCPeerConnection, RTCSessionDescription
 from aiortc.rtcconfiguration import RTCConfiguration, RTCIceServer
+from loguru import logger
 
 from pydantic_models.webrtc import Answer, InputData, Offer
 from webrtc.stream import InferenceVideoStreamTrack
-
-logger = logging.getLogger(__name__)
 
 
 class WebRTCManager:
@@ -53,7 +51,7 @@ class WebRTCManager:
             try:
                 await pc.setLocalDescription(answer)
             except Exception as e:
-                logger.error("Failed to set local description: %s", e)
+                logger.error(f"Failed to set local description: {e}")
                 # Try with a simpler answer configuration
                 answer = await pc.createAnswer()
                 await pc.setLocalDescription(answer)
@@ -64,7 +62,7 @@ class WebRTCManager:
 
             return Answer(sdp=pc.localDescription.sdp, type=pc.localDescription.type)
         except Exception as e:
-            logger.error("Error in handle_offer: %s", e, exc_info=True)
+            logger.error(f"Error in handle_offer: {e}", exc_info=True)
             # Clean up on error
             if offer.webrtc_id in self._peer_connections:
                 await self.cleanup_connection(offer.webrtc_id)
@@ -80,10 +78,10 @@ class WebRTCManager:
     async def cleanup_connection(self, webrtc_id: str) -> None:
         """Clean up a specific WebRTC connection by its ID."""
         if webrtc_id in self._peer_connections:
-            logger.debug("Cleaning up connection: %s", webrtc_id)
+            logger.debug(f"Cleaning up connection: {webrtc_id}")
             pc = self._peer_connections.pop(webrtc_id)
             await pc.close()
-            logger.debug("Connection %s successfully closed.", webrtc_id)
+            logger.debug(f"Connection {webrtc_id} successfully closed.")
             self._input_data.pop(webrtc_id, None)
 
     async def cleanup(self) -> None:

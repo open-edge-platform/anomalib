@@ -2,13 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import json
-import logging
 import threading
 import time
 from typing import Any
 
 import numpy as np
 from anomalib.data import NumpyImageBatch as PredictionResult
+from loguru import logger
 
 from pydantic_models.sink import MqttSinkConfig
 from services.dispatchers.base import BaseDispatcher
@@ -19,7 +19,6 @@ except ImportError:
     mqtt = None  # type: ignore[assignment]
 
 
-logger = logging.getLogger(__name__)
 MAX_RETRIES = 3
 RETRY_DELAY = 1
 CONNECT_TIMEOUT = 10
@@ -81,7 +80,7 @@ class MqttDispatcher(BaseDispatcher):
                 self.client.loop_start()
                 if self._connection_event.wait(CONNECT_TIMEOUT):
                     return
-                logger.warning("Connection timeout after %s seconds", CONNECT_TIMEOUT)
+                logger.warning(f"Connection timeout after {CONNECT_TIMEOUT} seconds")
             except Exception as e:
                 logger.exception("Connection failed %s", e)
                 time.sleep(RETRY_DELAY * (attempt + 1))
@@ -93,12 +92,12 @@ class MqttDispatcher(BaseDispatcher):
             self._connection_event.set()
             logger.info("Connected to MQTT broker")
         else:
-            logger.error("MQTT connect failed with code %s", rc)
+            logger.error(f"MQTT connect failed with code {rc}")
 
     def _on_disconnect(self, _client: "mqtt.Client", _userdata: Any, rc: int):
         self._connected = False
         self._connection_event.clear()
-        logger.warning("MQTT disconnected (rc=%s)", rc)
+        logger.warning(f"MQTT disconnected (rc={rc})")
 
     @property
     def is_connected(self) -> bool:

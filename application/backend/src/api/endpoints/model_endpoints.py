@@ -1,12 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import logging
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request, UploadFile, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, status
 
-from api.dependencies import get_model_id, get_model_service, get_project_id, get_device_name
+from api.dependencies import get_device_name, get_model_id, get_model_service, get_project_id
 from api.endpoints.project_endpoints import project_api_prefix_url
 from api.media_rest_validator import MediaRestValidator
 from exceptions import ResourceNotFoundException
@@ -14,8 +13,6 @@ from pydantic_models import Model, ModelList, PredictionResponse
 from pydantic_models.model import SupportedDevices
 from services import ModelService
 from services.exceptions import DeviceNotFoundError
-
-logger = logging.getLogger(__name__)
 
 model_api_prefix_url = project_api_prefix_url + "/{project_id}/models"
 model_router = APIRouter(

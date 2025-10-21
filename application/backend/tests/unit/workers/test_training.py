@@ -1,22 +1,21 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
+import multiprocessing as mp
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from workers.training import _train_loop
+from workers.training import TrainingWorker
 
 
-class TestTrainLoop:
-    """Test cases for the _train_loop async function."""
+class TestTrainingWorker:
+    """Test cases for the TrainingWorker class."""
 
     @pytest.fixture
     def mock_stop_event(self):
         """Fixture for a mock stop event."""
-        event = MagicMock()
-        event.is_set.return_value = False
-        return event
+        return mp.Event()
 
     @pytest.fixture
     def mock_training_service(self):
@@ -30,16 +29,18 @@ class TestTrainLoop:
 
         async def run_test():
             with patch("workers.training.TrainingService", return_value=mock_training_service):
+                worker = TrainingWorker(stop_event=mock_stop_event)
+                
                 # Set up stop event to trigger after a short time
                 async def set_stop_event():
                     await asyncio.sleep(0.1)
-                    mock_stop_event.is_set.return_value = True
+                    mock_stop_event.set()
 
                 # Start the stop event task
                 stop_task = asyncio.create_task(set_stop_event())
 
                 # Run the train loop
-                await _train_loop(mock_stop_event)
+                await worker.run_loop()
 
                 # Wait for stop task to complete
                 await stop_task
@@ -57,16 +58,18 @@ class TestTrainLoop:
             mock_training_service.train_pending_job.side_effect = Exception("Training failed")
 
             with patch("workers.training.TrainingService", return_value=mock_training_service):
+                worker = TrainingWorker(stop_event=mock_stop_event)
+                
                 # Set up stop event to trigger after a short time
                 async def set_stop_event():
                     await asyncio.sleep(0.1)
-                    mock_stop_event.is_set.return_value = True
+                    mock_stop_event.set()
 
                 # Start the stop event task
                 stop_task = asyncio.create_task(set_stop_event())
 
                 # Run the train loop - should not raise exception
-                await _train_loop(mock_stop_event)
+                await worker.run_loop()
 
                 # Wait for stop task to complete
                 await stop_task
@@ -81,11 +84,13 @@ class TestTrainLoop:
 
         async def run_test():
             # Set stop event immediately
-            mock_stop_event.is_set.return_value = True
+            mock_stop_event.set()
 
             with patch("workers.training.TrainingService", return_value=mock_training_service):
+                worker = TrainingWorker(stop_event=mock_stop_event)
+                
                 # Run the train loop
-                await _train_loop(mock_stop_event)
+                await worker.run_loop()
 
                 # Verify training service was never called (loop exited immediately)
                 mock_training_service.train_pending_job.assert_not_called()

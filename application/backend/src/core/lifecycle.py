@@ -3,26 +3,27 @@
 
 """Application lifecycle management"""
 
-import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from loguru import logger
 
+from core.logging import setup_logging
 from core.scheduler import Scheduler
 from db import init_models
 from settings import get_settings
 from webrtc.manager import WebRTCManager
-
-logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """FastAPI lifespan context manager"""
     # Startup
+    setup_logging()
+
     settings = get_settings()
-    logger.info("Starting %s application...", settings.app_name)
+    logger.info(f"Starting {settings.app_name} application...")
 
     # Initialize database
     # TODO add migration
@@ -44,7 +45,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     yield
 
     # Shutdown
-    logger.info("Shutting down %s application...", settings.app_name)
+    logger.info(f"Shutting down {settings.app_name} application...")
     await webrtc_manager.cleanup()
     app_scheduler.shutdown()
     logger.info("Application shutdown completed")

@@ -2,14 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-import logging
 import queue
 
 import numpy as np
 from aiortc import VideoStreamTrack
 from av import VideoFrame
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 FALLBACK_FRAME = np.full((64, 64, 3), 16, dtype=np.uint8)
 
@@ -61,17 +59,17 @@ class InferenceVideoStreamTrack(VideoStreamTrack):
 
         try:
             try:
-                logger.debug("Getting the frame from the stream_queue...")
+                logger.trace("Getting the frame from the stream_queue...")
                 frame_data = await asyncio.to_thread(self._stream_queue.get, True, 0.5)  # wait for 500ms
                 self._last_frame = frame_data  # cache the successful frame
             except queue.Empty:
-                logger.debug("Empty queue. Using the last frame...")
+                logger.trace("Empty queue. Using the last frame...")
                 if self._last_frame is None:
                     frame_data = FALLBACK_FRAME
                 else:
                     frame_data = self._last_frame
 
-            logger.debug("Received the frame from the stream_queue.")
+            logger.trace("Received the frame from the stream_queue.")
 
             # Convert numpy array to VideoFrame
             frame = VideoFrame.from_ndarray(frame_data, format="bgr24")
@@ -79,5 +77,5 @@ class InferenceVideoStreamTrack(VideoStreamTrack):
             frame.time_base = time_base
             return frame
         except Exception as e:
-            logger.error("Error in recv: %s", e)
+            logger.error(f"Error in recv: {e}")
             raise

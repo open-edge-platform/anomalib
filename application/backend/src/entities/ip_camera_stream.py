@@ -1,16 +1,14 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import time
 
 import cv2
 import numpy as np
+from loguru import logger
 
 from entities.base_opencv_stream import BaseOpenCVStream
 from pydantic_models.source import IPCameraSourceConfig, SourceType
-
-logger = logging.getLogger(__name__)
 
 
 class IPCameraStream(BaseOpenCVStream):

@@ -3,7 +3,6 @@
 
 """Endpoints for managing pipeline sources"""
 
-import logging
 from typing import Annotated
 from uuid import UUID
 
@@ -18,7 +17,6 @@ from pydantic_models import Source, SourceType
 from pydantic_models.source import SourceAdapter
 from services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
-logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/sources", tags=["Sources"])
 
 CREATE_SOURCE_BODY_DESCRIPTION = """

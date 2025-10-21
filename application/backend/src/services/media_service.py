@@ -1,20 +1,18 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
-import logging
 import os
 from io import BytesIO
 from uuid import UUID, uuid4
 
 from fastapi import UploadFile
+from loguru import logger
 from PIL import Image
 
 from db import get_async_db_session_ctx
 from pydantic_models import Media, MediaList
 from repositories import MediaRepository
 from repositories.binary_repo import ImageBinaryRepository
-
-logger = logging.getLogger(__name__)
 
 THUMBNAIL_SIZE = 256  # Max width/height for thumbnails in pixels
 
@@ -59,6 +57,10 @@ class MediaService:
     async def upload_image(cls, project_id: UUID, file: UploadFile, image_bytes: bytes, is_anomalous: bool) -> Media:
         # Generate unique filename and media ID
         media_id = uuid4()
+        
+        if file.filename is None or file.size is None:
+            raise ValueError("File must have a filename and size")
+
         extension = list(os.path.splitext(file.filename)).pop().lower()
         filename = f"{media_id}{extension}"
         bin_repo = ImageBinaryRepository(project_id=project_id)

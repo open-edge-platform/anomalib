@@ -3,19 +3,17 @@
 
 """This module contains the WebhookDispatcher class for dispatching images and predictions to a webhook endpoint."""
 
-import logging
 from typing import Any
 
 import numpy as np
 import requests
 from anomalib.data import NumpyImageBatch as PredictionResult
+from loguru import logger
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from pydantic_models.sink import WebhookSinkConfig
 from services.dispatchers.base import BaseDispatcher
-
-logger = logging.getLogger(__name__)
 
 MAX_RETRIES = 3
 BACKOFF_FACTOR = 0.3
@@ -46,12 +44,12 @@ class WebhookDispatcher(BaseDispatcher):
         self.session.mount("https://", adapter)
 
     def __send_to_webhook(self, payload: dict[str, Any]) -> None:
-        logger.debug("Sending payload to webhook at %s", self.webhook_url)
+        logger.debug(f"Sending payload to webhook at {self.webhook_url}")
         response = self.session.request(
             self.http_method, self.webhook_url, headers=self.headers, json=payload, timeout=self.timeout
         )
         response.raise_for_status()
-        logger.debug("Response from webhook: %s", response.text)
+        logger.debug(f"Response from webhook: {response.text}")
 
     def _dispatch(
         self,
