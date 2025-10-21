@@ -29,8 +29,9 @@ Example:
 
 import numpy as np
 import torch
+from lightning import LightningModule, Trainer
 
-from anomalib.data import InferenceBatch
+from anomalib.data import Batch, InferenceBatch
 from anomalib.metrics import MEBin
 
 from .post_processor import PostProcessor
@@ -110,14 +111,12 @@ class MEBinPostProcessor(PostProcessor):
         if anomaly_maps.ndim == 4:
             anomaly_maps = anomaly_maps[:, 0, :, :]  # Remove channel dimension
 
-        # Normalize to 0-255 and convert to uint8
-        norm_maps = []
-        for amap in anomaly_maps:
-            amap_norm = (amap - amap.min()) / (amap.max() - amap.min() + 1e-8) * 255
-            norm_maps.append(amap_norm.astype(np.uint8))
+        # Convert to proper format for MEBin (don't normalize individually)
+        # MEBin will handle normalization after determining the global min/max range
+        anomaly_maps_list = [amap.astype(np.float32) for amap in anomaly_maps]
 
         mebin = MEBin(
-            anomaly_map_list=norm_maps,
+            anomaly_map_list=anomaly_maps_list,
             sample_rate=self.sample_rate,
             min_interval_len=self.min_interval_len,
             erode=self.erode,
@@ -128,9 +127,108 @@ class MEBinPostProcessor(PostProcessor):
         pred_masks = torch.stack([torch.from_numpy(bm).to(original_anomaly_map.device) for bm in binarized_maps])
         pred_masks = (pred_masks > 0).to(original_anomaly_map.dtype)
 
-        return InferenceBatch(
+        # Create result with MEBin pred_mask
+        result = InferenceBatch(
             pred_label=predictions.pred_label,
             pred_score=predictions.pred_score,
             pred_mask=pred_masks,
             anomaly_map=predictions.anomaly_map,
         )
+
+        # Apply parent class post-processing for normalization and thresholding
+        # This will compute pred_label from pred_score if needed
+        return super().forward(result)
+
+    def on_test_batch_end(
+        self,
+        trainer: Trainer,
+        pl_module: LightningModule,
+        outputs: Batch,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Apply MEBin post-processing to test batch predictions.
+
+        Args:
+            trainer (Trainer): PyTorch Lightning trainer instance.
+            pl_module (LightningModule): PyTorch Lightning module instance.
+            outputs (Batch): Batch containing model predictions.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
+        del trainer, pl_module, args, kwargs  # Unused arguments
+        self.post_process_batch(outputs)
+
+    def on_predict_batch_end(
+        self,
+        trainer: Trainer,
+        pl_module: LightningModule,
+        outputs: Batch,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Apply MEBin post-processing to prediction batch.
+
+        Args:
+            trainer (Trainer): PyTorch Lightning trainer instance.
+            pl_module (LightningModule): PyTorch Lightning module instance.
+            outputs (Batch): Batch containing model predictions.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
+        del trainer, pl_module, args, kwargs  # Unused arguments
+        self.post_process_batch(outputs)
+
+    def post_process_batch(self, batch: Batch) -> None:
+        """Post-process a batch of predictions using MEBin algorithm.
+
+        This method applies MEBin binarization to anomaly maps in the batch and
+        updates the pred_mask field with the binarized results.
+
+        Args:
+            batch (Batch): Batch containing model predictions to be processed.
+        """
+        if batch.anomaly_map is None:
+            return
+
+        # Store the original tensor for device and dtype info
+        original_anomaly_map = batch.anomaly_map
+        anomaly_maps = original_anomaly_map.detach().cpu().numpy()
+
+        # Handle different tensor shapes
+        if anomaly_maps.ndim == 4:
+            anomaly_maps = anomaly_maps[:, 0, :, :]  # Remove channel dimension if present
+        elif anomaly_maps.ndim == 3:
+            # Already in correct format (batch, height, width)
+            pass
+        else:
+            msg = f"Unsupported anomaly map shape: {anomaly_maps.shape}"
+            raise ValueError(msg)
+
+        # Convert to proper format for MEBin (don't normalize individually)
+        # MEBin will handle normalization after determining the global min/max range
+        anomaly_maps_list = [amap.astype(np.float32) for amap in anomaly_maps]
+
+        # Apply MEBin binarization
+        mebin = MEBin(
+            anomaly_map_list=anomaly_maps_list,
+            sample_rate=self.sample_rate,
+            min_interval_len=self.min_interval_len,
+            erode=self.erode,
+        )
+        binarized_maps, _ = mebin.binarize_anomaly_maps()
+
+        # Convert back to torch.Tensor and normalize to 0/1
+        pred_masks = torch.stack([torch.from_numpy(bm).to(original_anomaly_map.device) for bm in binarized_maps])
+        pred_masks = (pred_masks > 0).to(original_anomaly_map.dtype)
+
+        # Add channel dimension if original had one
+        if original_anomaly_map.ndim == 4:
+            pred_masks = pred_masks.unsqueeze(1)
+
+        # Update the batch with binarized masks
+        batch.pred_mask = pred_masks
+
+        # Apply parent class post-processing for normalization and thresholding
+        # This will compute pred_label from pred_score if needed
+        super().post_process_batch(batch)
