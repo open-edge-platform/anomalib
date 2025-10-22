@@ -148,6 +148,7 @@ class TrainingService:
             if threshold := getattr(callback, "normalized_pixel_threshold", None):
                 logger.debug(f"Found pixel threshold set to: {threshold}")
                 model.threshold = threshold.item()
+                break
         export_path = engine.export(
             model=anomalib_model,
             export_type=export_format,
