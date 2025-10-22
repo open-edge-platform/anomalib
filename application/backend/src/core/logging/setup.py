@@ -44,6 +44,8 @@ def setup_logging(config: LogConfig | None = None) -> None:
         >>> custom_config = LogConfig(rotation="50 MB", level="INFO")
         >>> setup_logging(custom_config)
     """
+    global global_log_config  # noqa: PLW0603
+    
     if config is None:
         config = LogConfig()
 
