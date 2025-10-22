@@ -103,7 +103,6 @@ def setup_uvicorn_logging() -> None:
     uvicorn_logger.handlers = [InterceptHandler()]
     uvicorn_logger.setLevel(logging.INFO)
     uvicorn_logger.propagate = False  # Don't propagate to root to avoid duplicate logs
-    
     # Clear handlers from child loggers and let them propagate to parent uvicorn logger
     for logger_name in ("uvicorn.access", "uvicorn.error"):
         child_logger = logging.getLogger(logger_name)
