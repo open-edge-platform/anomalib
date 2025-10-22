@@ -5,7 +5,7 @@ import { Button, Heading, IllustratedMessage, View } from '@geti/ui';
 import { NotFound } from '@geti/ui/icons';
 import { isRouteErrorResponse, useRouteError } from 'react-router';
 
-import { paths } from '../../router';
+import { paths } from '../../routes/paths';
 import { redirectTo } from '../../routes/utils';
 
 const useErrorMessage = () => {

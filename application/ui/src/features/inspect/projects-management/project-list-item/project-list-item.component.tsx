@@ -9,7 +9,7 @@ import { SchemaProjectList } from '@geti-inspect/api/spec';
 import { Flex, PhotoPlaceholder, Text, TextField, type TextFieldRef } from '@geti/ui';
 import { useNavigate } from 'react-router';
 
-import { paths } from '../../../../router';
+import { paths } from '../../../../routes/paths';
 
 import styles from './project-list-item.module.scss';
 

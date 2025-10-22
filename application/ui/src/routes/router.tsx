@@ -1,30 +1,24 @@
 import { Suspense } from 'react';
 
-import { IntelBrandedLoading } from '@geti/ui';
+import { IntelBrandedLoading, Toast } from '@geti/ui';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
-import { path } from 'static-path';
 
-import { $api } from './api/client';
-import { ErrorPage } from './components/error-page/error-page';
+import { $api } from './../api/client';
+import { ErrorPage } from './../components/error-page/error-page';
+import { Inspect } from './inspect/inspect';
 import { Layout } from './layout';
-import { Inspect } from './routes/inspect/inspect';
-import { OpenApi } from './routes/openapi/openapi';
+import { OpenApi } from './openapi/openapi';
+import { paths } from './paths';
+import { Welcome } from './welcome';
 
-const root = path('/');
-const projects = root.path('/projects');
-const project = projects.path('/:projectId');
-
-export const paths = {
-    root,
-    openapi: root.path('/openapi'),
-    project,
-};
-
-const RedirectToProject = () => {
+const Redirect = () => {
     const { data } = $api.useSuspenseQuery('get', '/api/projects');
 
-    const projectId = data.projects.at(0)?.id ?? '1';
+    if (data.projects.length === 0) {
+        return <Navigate to={paths.welcome({})} replace />;
+    }
 
+    const projectId = data.projects.at(0)?.id ?? '1';
     return <Navigate to={paths.project({ projectId })} replace />;
 };
 
@@ -34,13 +28,19 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
         element: (
             <Suspense fallback={<IntelBrandedLoading />}>
+                <Toast />
+
                 <Outlet />
             </Suspense>
         ),
         children: [
             {
                 index: true,
-                element: <RedirectToProject />,
+                element: <Redirect />,
+            },
+            {
+                path: paths.welcome.pattern,
+                element: <Welcome />,
             },
             {
                 path: paths.project.pattern,
@@ -58,7 +58,7 @@ export const router = createBrowserRouter([
             },
             {
                 path: '*',
-                element: <RedirectToProject />,
+                element: <Redirect />,
             },
         ],
     },

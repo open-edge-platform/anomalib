@@ -80,3 +80,7 @@ a {
 svg {
     fill: currentColor;
 }
+
+[data-sonner-toaster] {
+    font-family: var(--spectrum-global-font-family-base) !important;
+}

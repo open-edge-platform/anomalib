@@ -2,11 +2,11 @@ import { Flex, Header as SpectrumHeader, View } from '@geti/ui';
 import { ApiReferenceReact } from '@scalar/api-reference-react';
 import { Link } from 'react-router-dom';
 
-import { paths } from '../../router';
-
 import classes from './openapi.module.scss';
 
 import '@scalar/api-reference-react/style.css';
+
+import { paths } from '../paths';
 
 const Header = () => {
     return (
