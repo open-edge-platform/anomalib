@@ -28,6 +28,7 @@ class Model(BaseIDNameModel):
     threshold: float = Field(default=0.5, gt=0.0, lt=1.0, description="Confidence threshold for the model")
     is_ready: bool = Field(default=False, description="Indicates if the model is ready for use")
     export_path: str | None = None
+    train_job_id: UUID = Field(description="ID of the training job for this model")
 
     @property
     def weights_path(self) -> str:
@@ -39,8 +40,15 @@ class Model(BaseIDNameModel):
         "json_schema_extra": {
             "example": {
                 "id": "76e07d18-196e-4e33-bf98-ac1d35dca4cb",
+                "project_id": "16e07d18-196e-4e33-bf98-ac1d35dcaaaa",
                 "name": "PatchCore",
                 "format": "openvino",
+                "is_ready": True,
+                "export_path": (
+                    "/data/projects/16e07d18-196e-4e33-bf98-ac1d35dcaaaa/models/76e07d18-196e-4e33-bf98-ac1d35dca4cb"
+                ),
+                "threshold": 0.5,
+                "train_job_id": "0db0c16d-0d3c-4e0e-bc5a-ca710579e549",
             }
         }
     }

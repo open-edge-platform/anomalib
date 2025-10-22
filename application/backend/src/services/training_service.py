@@ -48,7 +48,7 @@ class TrainingService:
             return None
 
         # Run the training job with logging context
-        from core.logging import job_logging_ctx
+        from core.logging.utils import job_logging_ctx
 
         with job_logging_ctx(job_id=str(job.id)):
             return await cls._run_training_job(job, job_service)
@@ -66,6 +66,7 @@ class TrainingService:
         model = Model(
             project_id=project_id,
             name=str(model_name),
+            train_job_id=job.id,
         )
         logger.info(f"Training model `{model_name}` for job `{job.id}`")
 
@@ -107,7 +108,8 @@ class TrainingService:
         Returns:
             Model: Trained model with updated export_path and is_ready=True
         """
-        from core.logging import LoggerStdoutWriter, log_config
+        from core.logging import global_log_config
+        from core.logging.handlers import LoggerStdoutWriter
 
         model_binary_repo = ModelBinaryRepository(project_id=model.project_id, model_id=model.id)
         image_binary_repo = ImageBinaryRepository(project_id=model.project_id)
@@ -127,7 +129,7 @@ class TrainingService:
         anomalib_model = get_model(model=model.name)
 
         trackio = TrackioLogger(project=str(model.project_id), name=model.name)
-        tensorboard = AnomalibTensorBoardLogger(save_dir=log_config.tensorboard_log_path, name=name)
+        tensorboard = AnomalibTensorBoardLogger(save_dir=global_log_config.tensorboard_log_path, name=name)
         engine = Engine(
             default_root_dir=model.export_path,
             logger=[trackio, tensorboard],
@@ -140,6 +142,13 @@ class TrainingService:
         # Capture pytorch stdout logs into logger
         with redirect_stdout(LoggerStdoutWriter()):  # type: ignore[type-var]
             engine.train(model=anomalib_model, datamodule=datamodule)
+
+        # Find and set threshold metric
+        for callback in engine.trainer.callbacks:  # type: ignore[attr-defined]
+            if threshold := getattr(callback, "normalized_pixel_threshold", None):
+                logger.debug(f"Found pixel threshold set to: {threshold}")
+                model.threshold = threshold.item()
+                break
         export_path = engine.export(
             model=anomalib_model,
             export_type=export_format,
