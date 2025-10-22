@@ -28,7 +28,7 @@ class Model(BaseIDNameModel):
     threshold: float = Field(default=0.5, gt=0.0, lt=1.0, description="Confidence threshold for the model")
     is_ready: bool = Field(default=False, description="Indicates if the model is ready for use")
     export_path: str | None = None
-    train_job_id: UUID | None = Field(default=None, description="ID of the training job for this model")
+    train_job_id: UUID = Field(description="ID of the training job for this model")
 
     @property
     def weights_path(self) -> str:
