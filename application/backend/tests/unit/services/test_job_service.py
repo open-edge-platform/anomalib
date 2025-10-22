@@ -189,7 +189,7 @@ class TestJobService:
     def test_stream_logs_file_not_found(self, fxt_job):
         """Test streaming logs when log file doesn't exist."""
         with (
-            patch("core.logging.get_job_logs_path") as mock_get_path,
+            patch("core.logging.utils.get_job_logs_path") as mock_get_path,
             patch("services.job_service.os.path.exists") as mock_exists,
         ):
             mock_get_path.return_value = "/fake/path/job.log"
@@ -213,7 +213,7 @@ class TestJobService:
         fxt_job_repository.get_by_id.return_value = completed_job
 
         with (
-            patch("core.logging.get_job_logs_path") as mock_get_path,
+            patch("core.logging.utils.get_job_logs_path") as mock_get_path,
             patch("services.job_service.os.path.exists") as mock_exists,
             patch("services.job_service.anyio.open_file") as mock_open_file,
             patch("services.job_service.JobRepository") as mock_repo_class,

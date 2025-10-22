@@ -161,12 +161,12 @@ class Scheduler(metaclass=Singleton):
 
     def _cleanup_shared_memory(self) -> None:
         """Clean up shared memory objects"""
-        if hasattr(self, "shm_metrics") and self.shm_metrics is not None:
+        if hasattr(self, "shm_metrics"):
             try:
                 self.shm_metrics.close()
                 self.shm_metrics.unlink()  # Remove the shared memory segment
-                # Clear the Python handle to make shutdown idempotent and prevent accidental reuse
-                self.shm_metrics = None
+                # Delete the attribute to make shutdown idempotent and prevent accidental reuse
+                del self.shm_metrics
                 logger.debug("Successfully cleaned up shared memory")
             except Exception as e:
                 logger.warning(f"Error cleaning up shared memory: {e}")

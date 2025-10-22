@@ -71,7 +71,7 @@ class JobService:
 
     @classmethod
     async def stream_logs(cls, job_id: UUID | str):
-        from core.logging import get_job_logs_path
+        from core.logging.utils import get_job_logs_path
 
         log_file = get_job_logs_path(job_id=job_id)
         if not os.path.exists(log_file):

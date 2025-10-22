@@ -174,4 +174,4 @@ async def pydantic_validation_exception_handler(request: Request, exc: pydantic.
 if __name__ == "__main__":
     settings = get_settings()
     uvicorn_port = int(os.environ.get("HTTP_SERVER_PORT", settings.port))
-    uvicorn.run("main:app", loop="uvloop", host="0.0.0.0", port=uvicorn_port, log_level="info")  # noqa: S104
+    uvicorn.run("main:app", loop="uvloop", host=settings.host, port=uvicorn_port, log_config=None)

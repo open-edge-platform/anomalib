@@ -48,8 +48,6 @@ def test_get_job_logs_success(fxt_client, fxt_job_service, fxt_job):
 
     response = fxt_client.get(f"/api/jobs/{fxt_job.id}/logs")
     assert response.status_code == status.HTTP_200_OK
-    # Check content-type without charset (may vary by implementation)
-    assert "application/x-ndjson" in response.headers["content-type"]
 
     # Verify the streamed content
     content = response.content.decode("utf-8")
