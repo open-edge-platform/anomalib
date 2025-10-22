@@ -11,9 +11,9 @@ the maintainers listed below.
   - GitHub: [@samet-akcay](https://github.com/samet-akcay)
   - Email: samet.akcay@intel.com
 
-- **Dick Ameln**
-  - GitHub: [@djdameln](https://github.com/djdameln)
-  - Email: dick.ameln@intel.com
+- **Rajesh Gangireddy**
+  - GitHub: [@rajeshgangireddy](https://github.com/rajeshgangireddy)
+  - Email: rajesh.gangireddy@intel.com
 
 - **Ashwin Vaidya**
   - GitHub: [@ashwinvaidya17](https://github.com/ashwinvaidya17)
