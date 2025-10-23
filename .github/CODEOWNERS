@@ -3,81 +3,65 @@
 
 # These owners will be the default owners for everything in
 # the repo.
-* @samet-akcay
+* @samet-akcay @ashwinvaidya17 @rajeshgangireddy
 
 # CI/CD
-/.ci/                                                       @ashwinvaidya17
+/.ci/                                                       @ashwinvaidya17 @samet-akcay @AlexanderBarabanov
 /.devcontainer                                              @ashwinvaidya17
 /.github                                                    @ashwinvaidya17
 /.dockerignore                                              @ashwinvaidya17
+/.github/workflows/                                         @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
+/SECURITY.md                                                @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
 
 # Docs
 /docs                                                       @samet-akcay
+/examples                                                   @samet-akcay @ashwinvaidya17 @rajeshgangireddy
 
 # Notebooks
-/examples/notebooks/000_getting_started                              @samet-akcay
-/examples/notebooks/100_datamodules                                  @djdameln
-/examples/notebooks/200_models                                       @samet-akcay
-/examples/notebooks/300_benchmarking                                 @ashwinvaidya17
-/examples/notebooks/400_openvino                                     @samet-akcay
-/examples/notebooks/README.md                                        @samet-akcay
+/examples/notebooks/01_getting_started                     @samet-akcay
+/examples/notebooks/02_data                                @ashwinvaidya17 @rajeshgangireddy
+/examples/notebooks/03_models                              @samet-akcay
+/examples/notebooks/04_metrics                             @ashwinvaidya17 @rajeshgangireddy
+/examples/notebooks/05_loggers                             @samet-akcay @ashwinvaidya17
+/examples/notebooks/06_visualization                       @samet-akcay @ashwinvaidya17
+/examples/notebooks/07_deployment                          @ashwinvaidya17 @rajeshgangireddy
+/examples/notebooks/README.md                              @samet-akcay
 
 # Requirements
-/requirements/                                              @samet-akcay @ashwinvaidya17 @djdameln
+/requirements/                                              @samet-akcay @ashwinvaidya17  @rajeshgangireddy
 
 # Anomalib
-/src/anomalib/config                                        @ashwinvaidya17
-/src/anomalib/data                                          @djdameln
-/src/anomalib/deploy                                        @samet-akcay @ashwinvaidya17 @djdameln
-/src/anomalib/models/cfa                                    @samet-akcay
-/src/anomalib/models/cflow                                  @ashwinvaidya17
-/src/anomalib/models/csflow                                 @ashwinvaidya17
-/src/anomalib/models/dfkde                                  @djdameln
-/src/anomalib/models/dfm                                    @djdameln
-/src/anomalib/models/draem                                  @djdameln
-/src/anomalib/models/fastflow                               @samet-akcay
-/src/anomalib/models/ganomaly                               @ashwinvaidya17
-/src/anomalib/models/padim                                  @samet-akcay
-/src/anomalib/models/patchcore                              @djdameln
-/src/anomalib/models/reverse_distillation                   @ashwinvaidya17
-/src/anomalib/models/stfpm                                  @samet-akcay
-
-/src/anomalib/post_processing                               @ashwinvaidya17 @djdameln
-/src/anomalib/pre_processing/tiler.py                       @djdameln
-/src/anomalib/pre_processing/transforms                     @djdameln
-
-/src/anomalib/utils/callbacks                               @ashwinvaidya17
+/src/anomalib/callbacks                                     @ashwinvaidya17 @rajeshgangireddy
 /src/anomalib/cli                                           @ashwinvaidya17
-/src/anomalib/cv                                            @djdameln
-/src/anomalib/hpo                                           @ashwinvaidya17
+/src/anomalib/data                                          @ashwinvaidya17 @rajeshgangireddy
+/src/anomalib/deploy                                        @ashwinvaidya17  @rajeshgangireddy
+/src/anomalib/engine                                        @ashwinvaidya17  @rajeshgangireddy
 /src/anomalib/loggers                                       @ashwinvaidya17
-/src/anomalib/metrics                                       @djdameln
-/src/anomalib/sweep                                         @ashwinvaidya17
+/src/anomalib/metrics                                       @ashwinvaidya17 @rajeshgangireddy
+/src/anomalib/models                                        @samet-akcay @ashwinvaidya17 @rajeshgangireddy
+/src/anomalib/pipelines                                     @ashwinvaidya17
+/src/anomalib/post_processing                               @ashwinvaidya17 @rajeshgangireddy
+/src/anomalib/pre_processing                                @ashwinvaidya17 @rajeshgangireddy
+/src/anomalib/utils                                         @ashwinvaidya17 @rajeshgangireddy @samet-akcay
+/src/anomalib/visualization                                 @samet-akcay @ashwinvaidya17
 
-# Anomalib Model Components
-/src/anomalib/models/components/base                        @samet-akcay @ashwinvaidya17 @djdameln
-/src/anomalib/models/components/classification              @djdameln
-/src/anomalib/models/components/dimensionality_reduction    @djdameln @samet-akcay
-/src/anomalib/models/components/feature_extractors          @ashwinvaidya17
-/src/anomalib/models/components/filters                     @samet-akcay
-/src/anomalib/models/components/flow                        @samet-akcay
-/src/anomalib/models/components/layers                      @djdameln
-/src/anomalib/models/components/sampling                    @samet-akcay
-/src/anomalib/models/components/stats                       @djdameln @samet-akcay
+
+# Geti Inspect
+/application/ui                                             @MarkRedeman
+/application/backend                                        @maxxgx
 
 # Tests
-/tests/                                                     @samet-akcay @ashwinvaidya17
+/tests/                                                     @samet-akcay @ashwinvaidya17 @rajeshgangireddy
 
 # Misc
-/pyproject.toml                                             @samet-akcay
-/README.md                                                  @samet-akcay @ashwinvaidya17 @djdameln
-/setup.py                                                   @samet-akcay
-/third-party-programs.txt                                   @samet-akcay @ashwinvaidya17 @djdameln
-/tox.ini                                                    @samet-akcay
+/CHANGELOG.md                                               @samet-akcay @ashwinvaidya17 @rajeshgangireddy
+/pyproject.toml                                             @samet-akcay @ashwinvaidya17 @rajeshgangireddy
+/README.md                                                  @samet-akcay @ashwinvaidya17 @rajeshgangireddy
+/setup.py                                                   @samet-akcay @ashwinvaidya17 @rajeshgangireddy
+/third-party-programs.txt                                   @samet-akcay @ashwinvaidya17 @rajeshgangireddy
+/tox.ini                                                    @samet-akcay @ashwinvaidya17 @rajeshgangireddy
 
 # Tools
-/tools/benchmarking                                         @ashwinvaidya17
-/tools/hpo                                                  @ashwinvaidya17
-/tools/inference                                            @samet-akcay @djdameln
-/tools/test.py                                              @samet-akcay @djdameln
-/tools/train.py                                             @samet-akcay @djdameln
+/tools/experimental                                         @ashwinvaidya17
+/tools/tiled_ensemble                                       @samet-akcay @ashwinvaidya17 @rajeshgangireddy
+/tools/inference                                            @samet-akcay @ashwinvaidya17 @rajeshgangireddy
