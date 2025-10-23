@@ -56,7 +56,7 @@ from lightning.pytorch.utilities.types import STEP_OUTPUT
 from torch import nn
 from torchvision.transforms.v2 import CenterCrop, Compose, Normalize, Resize
 
-from anomalib import LearningType
+from anomalib import LearningType, PrecisionType
 from anomalib.data import Batch
 from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule, MemoryBankMixin
@@ -93,6 +93,9 @@ class Patchcore(MemoryBankMixin, AnomalibModule):
             subsample embeddings. Defaults to ``0.1``.
         num_neighbors (int, optional): Number of nearest neighbors to use.
             Defaults to ``9``.
+        precision (str, optional): Precision type for model computations.
+            Supported values are defined in :class:`PrecisionType`.
+            Defaults to ``PrecisionType.FLOAT32``.
         pre_processor (PreProcessor | bool, optional): Pre-processor instance or
             bool flag. Defaults to ``True``.
         post_processor (PostProcessor | bool, optional): Post-processor instance or
@@ -101,6 +104,7 @@ class Patchcore(MemoryBankMixin, AnomalibModule):
             Defaults to ``True``.
         visualizer (Visualizer | bool, optional): Visualizer instance or bool flag.
             Defaults to ``True``.
+
 
     Example:
         >>> from anomalib.data import MVTecAD
@@ -112,7 +116,8 @@ class Patchcore(MemoryBankMixin, AnomalibModule):
         >>> model = Patchcore(
         ...     backbone="wide_resnet50_2",
         ...     layers=["layer2", "layer3"],
-        ...     coreset_sampling_ratio=0.1
+        ...     coreset_sampling_ratio=0.1,
+        ...     precision="float32",
         ... )
 
         >>> # Train using the Engine
@@ -140,6 +145,7 @@ class Patchcore(MemoryBankMixin, AnomalibModule):
         pre_trained: bool = True,
         coreset_sampling_ratio: float = 0.1,
         num_neighbors: int = 9,
+        precision: str = PrecisionType.FLOAT32,
         pre_processor: nn.Module | bool = True,
         post_processor: nn.Module | bool = True,
         evaluator: Evaluator | bool = True,
@@ -159,6 +165,15 @@ class Patchcore(MemoryBankMixin, AnomalibModule):
             num_neighbors=num_neighbors,
         )
         self.coreset_sampling_ratio = coreset_sampling_ratio
+
+        if precision == PrecisionType.FLOAT16:
+            self.model = self.model.half()
+        elif precision == PrecisionType.FLOAT32:
+            self.model = self.model.float()
+        else:
+            msg = f"""Unsupported precision type: {precision}.
+            Supported types are: {PrecisionType.FLOAT16}, {PrecisionType.FLOAT32}."""
+            raise ValueError(msg)
 
     @classmethod
     def configure_pre_processor(
