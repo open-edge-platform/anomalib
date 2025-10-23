@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 from contextlib import redirect_stdout
+from uuid import UUID
 
 from anomalib.data import Folder
 from anomalib.data.utils import TestSplitMode
@@ -15,6 +16,7 @@ from pydantic_models import Job, JobStatus, JobType, Model
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import ModelService
 from services.job_service import JobService
+from utils.callbacks import GetiInspectProgressCallback, ProgressSyncParams
 from utils.experiment_loggers import TrackioLogger
 
 
@@ -61,30 +63,40 @@ class TrainingService:
         model_name = job.payload.get("model_name")
         if model_name is None:
             raise ValueError(f"Job {job.id} payload must contain 'model_name'")
-        
+
         model_service = ModelService()
         model = Model(
             project_id=project_id,
             name=str(model_name),
         )
+        synchronization_parameters = ProgressSyncParams()
         logger.info(f"Training model `{model_name}` for job `{job.id}`")
 
         try:
+            synchronization_task = asyncio.create_task(
+                cls._sync_progress_with_db(
+                    job_service=job_service, job_id=job.id, synchronization_parameters=synchronization_parameters
+                )
+            )
             # Use asyncio.to_thread to keep event loop responsive
             # TODO: Consider ProcessPoolExecutor for true parallelism with multiple jobs
-            trained_model = await asyncio.to_thread(cls._train_model, model)
+            trained_model = await asyncio.to_thread(cls._train_model, model, synchronization_parameters)
             if trained_model is None:
                 raise ValueError("Training failed - model is None")
 
             await job_service.update_job_status(
                 job_id=job.id, status=JobStatus.COMPLETED, message="Training completed successfully"
             )
+            logger.info("Syncing progress with db stopped")
+            synchronization_task.cancel()
             return await model_service.create_model(trained_model)
         except Exception as e:
             logger.exception("Failed to train pending training job: %s", e)
             await job_service.update_job_status(
                 job_id=job.id, status=JobStatus.FAILED, message=f"Failed with exception: {str(e)}"
             )
+            logger.info("Syncing progress with db stopped")
+            synchronization_task.cancel()
             if model.export_path:
                 logger.warning(f"Deleting partially created model with id: {model.id}")
                 model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model.id)
@@ -93,7 +105,7 @@ class TrainingService:
             raise e
 
     @staticmethod
-    def _train_model(model: Model) -> Model | None:
+    def _train_model(model: Model, synchronization_parameters: ProgressSyncParams) -> Model | None:
         """
         Execute CPU-intensive model training using anomalib.
 
@@ -103,6 +115,7 @@ class TrainingService:
 
         Args:
             model: Model object with training configuration
+            synchronization_parameters: Parameters for synchronization between the main process and the training process
 
         Returns:
             Model: Trained model with updated export_path and is_ready=True
@@ -131,7 +144,9 @@ class TrainingService:
         engine = Engine(
             default_root_dir=model.export_path,
             logger=[trackio, tensorboard],
+            devices=[0],
             max_epochs=10,
+            callbacks=[GetiInspectProgressCallback(synchronization_parameters)],
         )
 
         # Execute training and export
@@ -139,7 +154,7 @@ class TrainingService:
 
         # Capture pytorch stdout logs into logger
         with redirect_stdout(LoggerStdoutWriter()):  # type: ignore[type-var]
-            engine.train(model=anomalib_model, datamodule=datamodule)
+            engine.fit(model=anomalib_model, datamodule=datamodule)
         export_path = engine.export(
             model=anomalib_model,
             export_type=export_format,
@@ -149,6 +164,24 @@ class TrainingService:
 
         model.is_ready = True
         return model
+
+    @classmethod
+    async def _sync_progress_with_db(
+        cls,
+        job_service: JobService,
+        job_id: UUID,
+        synchronization_parameters: ProgressSyncParams,
+    ) -> None:
+        while True:
+            progress = synchronization_parameters.get_progress()
+            stage = synchronization_parameters.get_stage()
+            if not await job_service.is_job_still_running(job_id=job_id):
+                logger.info("Job cancelled, stopping progress sync")
+                synchronization_parameters.set_cancel_training_event()
+                break
+            logger.info(f"Syncing progress with db: {progress}% - {stage}")
+            await job_service.update_job_status(job_id=job_id, status=JobStatus.RUNNING, progress=progress, stage=stage)
+            await asyncio.sleep(0.1)
 
     @staticmethod
     async def abort_orphan_jobs() -> None:

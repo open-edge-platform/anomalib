@@ -1,16 +1,20 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
+import json
 import os
+from collections.abc import Coroutine
+from typing import Any
 from uuid import UUID
 
 import anyio
 from sqlalchemy.exc import IntegrityError
+from starlette.responses import AsyncContentStream
 
 from db import get_async_db_session_ctx
 from exceptions import DuplicateJobException, ResourceNotFoundException
 from pydantic_models import Job, JobList, JobType
-from pydantic_models.job import JobStatus, JobSubmitted, TrainJobPayload
+from pydantic_models.job import JobCancelled, JobStatus, JobSubmitted, TrainJobPayload
 from repositories import JobRepository
 
 
@@ -54,7 +58,11 @@ class JobService:
 
     @staticmethod
     async def update_job_status(
-        job_id: UUID, status: JobStatus, message: str | None = None, progress: int | None = None
+        job_id: UUID,
+        status: JobStatus,
+        message: str | None = None,
+        progress: int | None = None,
+        stage: str | None = None,
     ) -> None:
         async with get_async_db_session_ctx() as session:
             repo = JobRepository(session)
@@ -67,7 +75,16 @@ class JobService:
             progress_ = 100 if status is JobStatus.COMPLETED else progress
             if progress_ is not None:
                 updates["progress"] = progress_
+            if stage is not None:
+                updates["stage"] = stage
             await repo.update(job, updates)
+
+    @classmethod
+    async def is_job_still_running(cls, job_id: UUID | str) -> bool:
+        job = await cls.get_job_by_id(job_id=job_id)
+        if job is None:
+            raise ResourceNotFoundException(resource_id=job_id, resource_name="job")
+        return job.status == JobStatus.RUNNING
 
     @classmethod
     async def stream_logs(cls, job_id: UUID | str):
@@ -76,12 +93,6 @@ class JobService:
         log_file = get_job_logs_path(job_id=job_id)
         if not os.path.exists(log_file):
             raise ResourceNotFoundException(resource_id=job_id, resource_name="job_logs")
-
-        async def is_job_still_running():
-            job = await cls.get_job_by_id(job_id=job_id)
-            if job is None:
-                raise ResourceNotFoundException(resource_id=job_id, resource_name="job")
-            return job.status == JobStatus.RUNNING
 
         # Cache job status and only check every 2 seconds
         status_check_interval = 2.0  # seconds
@@ -95,7 +106,7 @@ class JobService:
                 now = loop.time()
                 # Only check job status every status_check_interval seconds
                 if now - last_status_check > status_check_interval:
-                    cached_still_running = await is_job_still_running()
+                    cached_still_running = await cls.is_job_still_running(job_id=job_id)
                     last_status_check = now
                 still_running = cached_still_running
                 if not line:
@@ -107,3 +118,37 @@ class JobService:
                     else:
                         break
                 yield line
+
+    @classmethod
+    async def stream_progress(cls, job_id: UUID | str) -> Coroutine[Any, Any, AsyncContentStream]:
+        """Stream the progress of a job by its ID"""
+        loop = asyncio.get_running_loop()
+        status_check_interval = 2.0  # seconds
+        last_status_check = 0.0
+        cached_still_running = True
+        still_running = True
+        async with get_async_db_session_ctx() as session:
+            repo = JobRepository(session)
+            job = await repo.get_by_id(job_id)
+            if job is None:
+                raise ResourceNotFoundException(resource_id=job_id, resource_name="job")
+            while still_running:
+                now = loop.time()
+                if now - last_status_check > status_check_interval:
+                    cached_still_running = await cls.is_job_still_running(job_id=job_id)
+                    last_status_check = now
+                still_running = cached_still_running
+                yield json.dumps({"progress": job.progress, "stage": job.stage})
+                await asyncio.sleep(0.5)
+
+    @classmethod
+    async def cancel_job(cls, job_id: UUID | str) -> JobCancelled:
+        """Cancel a job by its ID"""
+        async with get_async_db_session_ctx() as session:
+            repo = JobRepository(session)
+            job = await repo.get_by_id(job_id)
+            if job is None:
+                raise ResourceNotFoundException(resource_id=job_id, resource_name="job")
+
+            await repo.update(job, {"status": JobStatus.CANCELED})
+            return JobCancelled(job_id=job.id)
