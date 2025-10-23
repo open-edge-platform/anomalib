@@ -193,4 +193,4 @@ class SparseRandomProjection:
             msg = "`fit()` has not been called on SparseRandomProjection yet."
             raise NotFittedError(msg)
 
-        return embedding @ self.sparse_random_matrix.T.float()
+        return embedding @ self.sparse_random_matrix.T.type(embedding.dtype)
