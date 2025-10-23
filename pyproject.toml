@@ -100,32 +100,32 @@ test = [
 ]
 # PyTorch dependency groups
 cpu = [
-    "torch>=2.4.0",
+    "torch>=2.4.0,<=2.8.0",
     "torchvision>=0.19.0",
 ]
 cu118 = [
-    "torch>=2.4.0",
+    "torch>=2.4.0,<=2.8.0",
     "torchvision>=0.19.0",
 ]
 cu121 = [
-    "torch>=2.4.0",
+    "torch>=2.4.0,<=2.8.0",
     "torchvision>=0.19.0",
 ]
 cu124 = [
-    "torch>=2.4.0",
+    "torch>=2.4.0,<=2.8.0",
     "torchvision>=0.19.0",
 ]
 cu130 = [
-    "torch>=2.4.0",
+    "torch>=2.4.0", # Note: onnx export fails with torch>=2.9.0 and cuda 13 isn't supported by <=2.8.0
     "torchvision>=0.19.0",
 ]
 rocm = [
-    "torch>=2.4.0",
+    "torch>=2.4.0,<=2.8.0",
     "torchvision>=0.19.0",
     "pytorch-triton-rocm ; sys_platform == 'linux'",
 ]
 xpu = [
-    "torch>=2.4.0",
+    "torch>=2.4.0,<=2.8.0",
     "torchvision>=0.19.0",
     "pytorch-triton-xpu ; sys_platform == 'linux' or sys_platform == 'win32'",
 ]
