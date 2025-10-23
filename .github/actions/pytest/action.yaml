@@ -112,7 +112,7 @@ runs:
         uv venv --python "$(command -v python)" .venv
         source .venv/bin/activate
         # Install dependencies with dev extras into the uv-managed environment
-        uv pip install ".[dev]"
+        uv pip install ".[dev,cu124]" # TODO(ashwinvaidya17): See issue #3050
         uv pip install codecov
 
     # Determine which tests to run based on input
