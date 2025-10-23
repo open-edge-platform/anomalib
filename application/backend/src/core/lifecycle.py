@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from loguru import logger
 
-from core.logging import setup_logging
+from core.logging import setup_logging, setup_uvicorn_logging
 from core.scheduler import Scheduler
 from db import init_models
 from settings import get_settings
@@ -21,6 +21,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """FastAPI lifespan context manager"""
     # Startup
     setup_logging()
+    setup_uvicorn_logging()
 
     settings = get_settings()
     logger.info(f"Starting {settings.app_name} application...")

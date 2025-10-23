@@ -50,6 +50,7 @@ class ModelDB(Base):
     export_path: Mapped[str] = mapped_column(Text, nullable=False)
     is_ready: Mapped[bool] = mapped_column(Boolean, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+    train_job_id: Mapped[str] = mapped_column(ForeignKey("jobs.id", ondelete="RESTRICT"))
 
 
 class JobDB(Base):
