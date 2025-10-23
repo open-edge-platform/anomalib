@@ -47,25 +47,25 @@ For ICPR this is set to True (i.e. the features for classification head are adap
 
 ## MVTecAD AD results
 
-The following results were obtained using this Anomalib implementation (ICPR version) trained for 300 epochs with seed 0, default params, and batch size 32.
+The following results were obtained using this Anomalib implementation trained for 300 epochs with seed 0, default params, and batch size 32.
 
-|            | **Image AUROC** | **Pixel AUPRO** |
-| ---------- | :-------------: | :-------------: |
-| Bottle     |      1.000      |      0.903      |
-| Cable      |      0.981      |      0.901      |
-| Capsule    |      0.989      |      0.931      |
-| Carpet     |      0.985      |      0.929      |
-| Grid       |      0.994      |      0.930      |
-| Hazelnut   |      0.994      |      0.943      |
-| Leather    |      1.000      |      0.970      |
-| Metal_nut  |      0.995      |      0.920      |
-| Pill       |      0.962      |      0.936      |
-| Screw      |      0.912      |      0.947      |
-| Tile       |      0.994      |      0.854      |
-| Toothbrush |      0.908      |      0.860      |
-| Transistor |      1.000      |      0.907      |
-| Wood       |      0.987      |      0.858      |
-| Zipper     |      0.995      |      0.928      |
-| Average    |      0.980      |      0.914      |
+| Category    | AUROC (ICPR) | AUROC (JIMS) | AUPRO (ICPR) | AUPRO (JIMS) |
+| ----------- | :----------: | :----------: | :----------: | :----------: |
+| Bottle      |    1.000     |    1.000     |    0.903     |    0.911     |
+| Cable       |    0.981     |    0.951     |    0.901     |    0.893     |
+| Capsule     |    0.989     |    0.992     |    0.931     |    0.919     |
+| Carpet      |    0.985     |    0.974     |    0.929     |    0.935     |
+| Grid        |    0.994     |    0.998     |    0.930     |    0.938     |
+| Hazelnut    |    0.994     |    0.999     |    0.943     |    0.939     |
+| Leather     |    1.000     |    1.000     |    0.970     |    0.974     |
+| Metal_nut   |    0.995     |    0.993     |    0.920     |    0.925     |
+| Pill        |    0.962     |    0.980     |    0.936     |    0.943     |
+| Screw       |    0.912     |    0.854     |    0.947     |    0.946     |
+| Tile        |    0.994     |    0.992     |    0.854     |    0.825     |
+| Toothbrush  |    0.908     |    0.908     |    0.860     |    0.854     |
+| Transistor  |    1.000     |    1.000     |    0.907     |    0.916     |
+| Wood        |    0.987     |    0.991     |    0.858     |    0.872     |
+| Zipper      |    0.995     |    0.999     |    0.928     |    0.944     |
+| **Average** |  **0.980**   |  **0.975**   |  **0.914**   |  **0.916**   |
 
 For other results on VisA, SensumSODF, and KSDD2, refer to the [paper](https://link.springer.com/article/10.1007/s10845-025-02680-8).

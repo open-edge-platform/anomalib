@@ -88,8 +88,8 @@ class AnomalyGenerator(nn.Module):
 
     def forward(
         self,
-        features: torch.Tensor | None,
-        adapted: torch.Tensor,
+        input_features: torch.Tensor | None,
+        adapted_features: torch.Tensor,
         masks: torch.Tensor,
         labels: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -98,8 +98,8 @@ class AnomalyGenerator(nn.Module):
         Also update GT masks and labels with new anomaly information.
 
         Args:
-            features (torch.Tensor): input features. Set to None if we only need adapted.
-            adapted (torch.Tensor): adapted input features.
+            input_features  (torch.Tensor): input features. Set to None if we only need adapted.
+            adapted_features (torch.Tensor): adapted input features.
             masks (torch.Tensor): GT masks.
             labels (torch.Tensor): GT labels.
 
@@ -109,18 +109,18 @@ class AnomalyGenerator(nn.Module):
         b, _, h, w = masks.shape
 
         # duplicate
-        adapted = torch.cat((adapted, adapted))
+        adapted_features = torch.cat((adapted_features, adapted_features))
         mask = torch.cat((masks, masks))
         labels = torch.cat((labels, labels))
         # extended ssn case where cls gets non-adapted
-        if features is not None:
-            features = torch.cat((features, features))
+        if input_features is not None:
+            input_features = torch.cat((input_features, input_features))
 
         noise = torch.normal(
             mean=self.noise_mean,
             std=self.noise_std,
-            size=adapted.shape,
-            device=adapted.device,
+            size=adapted_features.shape,
+            device=adapted_features.device,
             requires_grad=False,
         )
 
@@ -131,7 +131,7 @@ class AnomalyGenerator(nn.Module):
             1,
             h,
             w,
-            device=adapted.device,
+            device=adapted_features.device,
             requires_grad=False,
         )
 
@@ -139,7 +139,7 @@ class AnomalyGenerator(nn.Module):
         noise_mask = noise_mask * (1 - mask)
 
         # shape of noise is [B * 2, 1, H, W]
-        perlin_mask = self.generate_perlin(b * 2, h, w).to(adapted.device)
+        perlin_mask = self.generate_perlin(b * 2, h, w).to(adapted_features.device)
         # only apply where perlin mask is 1
         noise_mask = noise_mask * perlin_mask
 
@@ -155,7 +155,7 @@ class AnomalyGenerator(nn.Module):
         labels = torch.where(labels > 0, torch.ones_like(labels), torch.zeros_like(labels))
 
         # apply masked noise
-        perturbed_adapt = adapted + noise * noise_mask
-        perturbed_feat = features + noise * noise_mask if features is not None else None
+        perturbed_adapt = adapted_features + noise * noise_mask
+        perturbed_feat = input_features + noise * noise_mask if input_features is not None else None
 
         return perturbed_feat, perturbed_adapt, mask, labels

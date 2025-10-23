@@ -97,8 +97,8 @@ class SupersimplenetModel(nn.Module):
             if self.adapt_cls_features:
                 # ICPR SuperSimpleNet - add noise to adapted only (since non-adapted are not used)
                 _, noised_adapt, masks, labels = self.anomaly_generator(
-                    features=None,
-                    adapted=adapted,
+                    input_features=None,
+                    adapted_features=adapted,
                     masks=masks,
                     labels=labels,
                 )
@@ -107,8 +107,8 @@ class SupersimplenetModel(nn.Module):
             else:
                 # extension of SuperSimpleNet - add (same) noise to adapted and features
                 noised_feat, noised_adapt, masks, labels = self.anomaly_generator(
-                    features=features,
-                    adapted=adapted,
+                    input_features=features,
+                    adapted_features=adapted,
                     masks=masks,
                     labels=labels,
                 )
@@ -124,6 +124,9 @@ class SupersimplenetModel(nn.Module):
 
         anomaly_map, anomaly_score = self.segdec(seg_features=seg_feats, cls_features=cls_feats)
         anomaly_map = self.anomaly_map_generator(anomaly_map, final_size=output_size)
+
+        anomaly_score = anomaly_score.sigmoid()
+        anomaly_map = anomaly_map.sigmoid()
 
         return InferenceBatch(anomaly_map=anomaly_map, pred_score=anomaly_score)
 
