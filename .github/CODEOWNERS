@@ -10,6 +10,8 @@
 /.devcontainer                                              @ashwinvaidya17
 /.github                                                    @ashwinvaidya17
 /.dockerignore                                              @ashwinvaidya17
+/.github/workflows/                                         @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
+/SECURITY.md                                                @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
 
 # Docs
 /docs                                                       @samet-akcay
