@@ -155,7 +155,7 @@ runs:
         fi
 
         # Run pytest
-        PYTHONPATH=src uv run pytest "$STEPS_TEST_SCOPE_OUTPUTS_PATH" \
+        PYTHONPATH=src pytest "$STEPS_TEST_SCOPE_OUTPUTS_PATH" \
           --numprocesses=0 \
           --durations=10 \
           --durations-min=1.0 \
