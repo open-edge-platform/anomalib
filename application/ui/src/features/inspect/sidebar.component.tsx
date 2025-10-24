@@ -3,26 +3,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Dataset as DatasetIcon, Models, Stats } from '@geti-inspect/icons';
+import { Dataset as DatasetIcon, Models as ModelsIcon, Stats } from '@geti-inspect/icons';
 import { Flex, Grid, ToggleButton, View } from '@geti/ui';
 import { useSearchParams } from 'react-router-dom';
 
 import { Dataset } from './dataset/dataset.component';
+import { Models } from './models/models.component';
 
 import styles from './sidebar.module.scss';
 
 const TABS = [
     { label: 'Dataset', icon: <DatasetIcon />, content: <Dataset /> },
-    { label: 'Models', icon: <Models />, content: <>Models</> },
+    { label: 'Models', icon: <ModelsIcon />, content: <Models /> },
     { label: 'Stats', icon: <Stats />, content: <>Stats</> },
 ];
 
 interface TabProps {
     tabs: (typeof TABS)[number][];
-    selectedTab: string;
 }
 
-const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
+const SidebarTabs = ({ tabs }: TabProps) => {
     const [searchParams, setSearchParams] = useSearchParams();
     const selectTab = (tab: string | null) => {
         if (tab === null) {
@@ -76,5 +76,5 @@ const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
 };
 
 export const Sidebar = () => {
-    return <SidebarTabs tabs={TABS} selectedTab={TABS[0].label} />;
+    return <SidebarTabs tabs={TABS} />;
 };
