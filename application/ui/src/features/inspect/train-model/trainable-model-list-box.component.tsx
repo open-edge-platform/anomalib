@@ -1,7 +1,5 @@
-import { CSSProperties, ReactNode } from 'react';
-
 import { $api } from '@geti-inspect/api';
-import { Content, ContextualHelp, Flex, Grid, Heading, minmax, Radio, repeat, Text, View } from '@geti/ui';
+import { Flex, Grid, Heading, minmax, Radio, repeat, View } from '@geti/ui';
 import { clsx } from 'clsx';
 import { capitalize } from 'lodash-es';
 
@@ -98,25 +96,6 @@ const TemplateRating = ({ ratings }: TemplateRatingProps) => {
     );
 };
 
-interface InfoTooltipProps {
-    id?: string;
-    tooltipText: ReactNode;
-    iconColor?: string | undefined;
-    className?: string;
-}
-
-const InfoTooltip = ({ tooltipText, id, iconColor, className }: InfoTooltipProps) => {
-    const style = iconColor ? ({ '--spectrum-alias-icon-color': iconColor } as CSSProperties) : {};
-
-    return (
-        <ContextualHelp variant='info' id={id} data-testid={id} UNSAFE_className={className} UNSAFE_style={style}>
-            <Content marginTop='0'>
-                <Text>{tooltipText}</Text>
-            </Content>
-        </ContextualHelp>
-    );
-};
-
 type PerformanceRating = SupportedAlgorithm['performanceRatings'][keyof SupportedAlgorithm['performanceRatings']];
 
 const RATING_MAP: Record<PerformanceRating, Ratings> = {
@@ -154,14 +133,6 @@ const Model = ({ algorithm, isSelected = false }: ModelProps) => {
                     <Radio value={modelTemplateId} aria-label={name} id={`select-model-${algorithm.modelTemplateId}`}>
                         <Heading UNSAFE_className={clsx({ [classes.selected]: isSelected })}>{name}</Heading>
                     </Radio>
-                    <InfoTooltip
-                        id={`${name.toLocaleLowerCase()}-summary-id`}
-                        tooltipText={
-                            //<ModelArchitectureTooltipText description={description} isDeprecated={isDeprecated} />
-                            'test'
-                        }
-                        iconColor={isSelected ? 'var(--energy-blue)' : undefined}
-                    />
                 </Flex>
             </View>
             <View

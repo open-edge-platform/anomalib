@@ -56,7 +56,7 @@ function fetchSSE(url: string) {
                             yield data['text'];
                         }
                     } catch {
-                        console.error('Could not parse message');
+                        console.error('Could not parse message:', message);
                     }
 
                     ({ promise, resolve, reject } = Promise.withResolvers<string>());

@@ -41,7 +41,7 @@ interface ModelData {
     name: string;
     timestamp: string;
     startTime: number;
-    duration: number; // seconds
+    duration: number | null; // seconds
     status: 'Training' | 'Completed' | 'Failed';
     architecture: string;
     progress: number;
@@ -100,7 +100,7 @@ export const ModelsView = () => {
                 timestamp,
                 startTime: start.getTime(),
                 progress: 1.0,
-                duration: Infinity,
+                duration: null,
                 job,
             };
         });
