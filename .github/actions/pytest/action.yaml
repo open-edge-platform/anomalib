@@ -112,7 +112,7 @@ runs:
         uv venv --python "$(command -v python)" .venv
         source .venv/bin/activate
         # Install dependencies with dev extras into the uv-managed environment
-        uv pip install ".[dev]"
+        uv pip install ".[dev,cu124]" # TODO(ashwinvaidya17): See issue #3050
         uv pip install codecov
 
     # Determine which tests to run based on input
@@ -144,6 +144,7 @@ runs:
         INPUTS_MAX_TEST_TIME: ${{ inputs.max-test-time }}
         STEPS_TEST_SCOPE_OUTPUTS_PATH: ${{ steps.test-scope.outputs.path }}
       run: |
+        source .venv/bin/activate
         start_time=$(date +%s)
         set -o pipefail
 
@@ -155,7 +156,7 @@ runs:
         fi
 
         # Run pytest
-        PYTHONPATH=src uv run pytest "$STEPS_TEST_SCOPE_OUTPUTS_PATH" \
+        PYTHONPATH=src pytest "$STEPS_TEST_SCOPE_OUTPUTS_PATH" \
           --numprocesses=0 \
           --durations=10 \
           --durations-min=1.0 \
@@ -225,6 +226,7 @@ runs:
         INPUTS_PYTHON_VERSION: ${{ inputs.python-version }}
 
       run: |
+        source .venv/bin/activate
         uv run codecov --token "$INPUTS_CODECOV_TOKEN" \
                 --file coverage.xml \
                 --flags "$INPUTS_TEST_TYPE_py$INPUTS_PYTHON_VERSION" \
