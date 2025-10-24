@@ -67,7 +67,7 @@ class JobService:
                 updates["message"] = message
             progress_ = 100 if status is JobStatus.COMPLETED else progress
 
-            if status == JobStatus.COMPLETED or status == JobStatus.FAILED or status == JobStatus.CANCELED:
+            if status in {JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELED}:
                 updates["end_time"] = datetime.datetime.now(tz=datetime.timezone.utc)
 
             if progress_ is not None:
