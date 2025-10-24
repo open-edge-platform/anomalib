@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: MIT
 #
 # Modified
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """PyTorch model for the SuperSimpleNet model implementation.
@@ -19,7 +19,6 @@ import math
 import torch
 import torch.nn.functional as F  # noqa: N812
 from torch import nn
-from torch.nn import Parameter
 
 from anomalib.data import InferenceBatch
 from anomalib.models.components import GaussianBlur2d, TimmFeatureExtractor
@@ -36,6 +35,7 @@ class SupersimplenetModel(nn.Module):
         backbone (str): backbone name. IMPORTANT! use only backbones with torchvision V1 weights ending on ".tv".
         layers (list[str]): backbone layers utilised
         stop_grad (bool): whether to stop gradient from class. to seg. head.
+        adapt_cls_features (bool): whether to adapt classification features (ICPR - True, JIMS - False (default)).
     """
 
     def __init__(
@@ -44,11 +44,13 @@ class SupersimplenetModel(nn.Module):
         backbone: str = "wide_resnet50_2.tv_in1k",  # IMPORTANT: use .tv weights, not tv2
         layers: list[str] = ["layer2", "layer3"],  # noqa: B006
         stop_grad: bool = True,
+        adapt_cls_features: bool = False,
     ) -> None:
         super().__init__()
         self.feature_extractor = UpscalingFeatureExtractor(backbone=backbone, layers=layers)
 
         channels = self.feature_extractor.get_channels_dim()
+        self.adapt_cls_features = adapt_cls_features
         self.adaptor = FeatureAdapter(channels)
         self.segdec = SegmentationDetectionModule(channel_dim=channels, stop_grad=stop_grad)
         self.anomaly_generator = AnomalyGenerator(noise_mean=0, noise_std=0.015, threshold=perlin_threshold)
@@ -80,22 +82,51 @@ class SupersimplenetModel(nn.Module):
         adapted = self.adaptor(features)
 
         if self.training:
-            masks = self.downsample_mask(masks, *features.shape[-2:])
+            if masks is None:
+                if labels is not None and labels.any():
+                    msg = "Training with anomalous samples without GT masks is currently not supported!"
+                    raise RuntimeError(msg)
+                b, _, h, w = features.shape
+                masks = torch.zeros((b, 1, h, w), dtype=torch.float32, device=features.device)
+            else:
+                masks = self.downsample_mask(masks, *features.shape[-2:])
             # make linter happy :)
             if labels is not None:
                 labels = labels.type(torch.float32)
 
-            features, masks, labels = self.anomaly_generator(
-                adapted,
-                masks,
-                labels,
-            )
+            if self.adapt_cls_features:
+                # ICPR SuperSimpleNet - add noise to adapted only (since non-adapted are not used)
+                _, noised_adapt, masks, labels = self.anomaly_generator(
+                    input_features=None,
+                    adapted_features=adapted,
+                    masks=masks,
+                    labels=labels,
+                )
+                seg_feats = noised_adapt
+                cls_feats = noised_adapt
+            else:
+                # extension of SuperSimpleNet - add (same) noise to adapted and features
+                noised_feat, noised_adapt, masks, labels = self.anomaly_generator(
+                    input_features=features,
+                    adapted_features=adapted,
+                    masks=masks,
+                    labels=labels,
+                )
+                seg_feats = noised_adapt
+                cls_feats = noised_feat
 
-            anomaly_map, anomaly_score = self.segdec(features)
+            anomaly_map, anomaly_score = self.segdec(seg_features=seg_feats, cls_features=cls_feats)
             return anomaly_map, anomaly_score, masks, labels
 
-        anomaly_map, anomaly_score = self.segdec(adapted)
+        seg_feats = adapted
+        # ICPR SuperSimpleNet - cls and seg both use adapted feat, JIMS extension SuperSimpleNet - adapt only seg feats
+        cls_feats = adapted if self.adapt_cls_features else features
+
+        anomaly_map, anomaly_score = self.segdec(seg_features=seg_feats, cls_features=cls_feats)
         anomaly_map = self.anomaly_map_generator(anomaly_map, final_size=output_size)
+
+        anomaly_score = anomaly_score.sigmoid()
+        anomaly_map = anomaly_map.sigmoid()
 
         return InferenceBatch(anomaly_map=anomaly_map, pred_score=anomaly_score)
 
@@ -296,33 +327,24 @@ class SegmentationDetectionModule(nn.Module):
 
         self.apply(init_weights)
 
-    def get_params(self) -> tuple[list[Parameter], list[Parameter]]:
-        """Get segmentation and classification head parameters.
-
-        Returns:
-            seg. head parameters and class. head parameters.
-        """
-        seg_params = list(self.seg_head.parameters())
-        dec_params = list(self.cls_conv.parameters()) + list(self.cls_fc.parameters())
-        return seg_params, dec_params
-
-    def forward(self, features: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, seg_features: torch.Tensor, cls_features: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Predict anomaly map and anomaly score.
 
         Args:
-            features: adapted features.
+            seg_features: segmentation head features.
+            cls_features: classification head features.
 
         Returns:
             predicted anomaly map and score.
         """
         # get anomaly map from seg head
-        ano_map = self.seg_head(features)
+        ano_map = self.seg_head(seg_features)
 
         map_dec_copy = ano_map
         if self.stop_grad:
             map_dec_copy = map_dec_copy.detach()
         # dec conv layer takes feat + map
-        mask_cat = torch.cat((features, map_dec_copy), dim=1)
+        mask_cat = torch.cat((cls_features, map_dec_copy), dim=1)
         dec_out = self.cls_conv(mask_cat)
 
         # conv block result pooling
@@ -340,7 +362,7 @@ class SegmentationDetectionModule(nn.Module):
 
         # final dec layer: conv channel max and avg and map max and avg
         dec_cat = torch.cat((dec_max, dec_avg, map_max, map_avg), dim=1).squeeze()
-        ano_score = self.cls_fc(dec_cat).squeeze()
+        ano_score = self.cls_fc(dec_cat).reshape(-1)
 
         return ano_map, ano_score
 
