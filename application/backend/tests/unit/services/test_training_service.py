@@ -191,7 +191,7 @@ class TestTrainingService:
 
         with patch("services.training_service.asyncio.to_thread") as mock_to_thread:
             # Mock the training to succeed first, setting export_path, then fail
-            def mock_train_model(cls, model):
+            def mock_train_model(cls, model, device=None):
                 model.export_path = "/path/to/model"
                 raise Exception("Training failed")
 

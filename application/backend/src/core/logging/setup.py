@@ -50,7 +50,6 @@ def setup_logging(config: LogConfig | None = None) -> None:
         config = LogConfig()
 
     # overwrite global log_config
-    global global_log_config
     global_log_config = config
 
     for worker_name, log_file in global_log_config.worker_log_info.items():

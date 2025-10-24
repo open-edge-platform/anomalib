@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from starlette.responses import JSONResponse, Response
 
+from api.endpoints.devices_endpoints import device_router
 from api.endpoints.job_endpoints import job_router
 from api.endpoints.media_endpoints import media_router
 from api.endpoints.model_endpoints import model_router
@@ -57,6 +58,7 @@ app.include_router(source_router)
 app.include_router(sink_router)
 app.include_router(webrtc_router)
 app.include_router(trainable_model_router)
+app.include_router(device_router)
 
 
 @app.exception_handler(GetiBaseException)
