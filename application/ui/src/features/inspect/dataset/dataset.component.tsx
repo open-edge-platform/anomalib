@@ -2,11 +2,11 @@ import { Suspense } from 'react';
 
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
-import { Button, Divider, FileTrigger, Flex, Heading, Loading, toast, View } from '@geti/ui';
+import { Button, FileTrigger, Flex, Heading, Loading, toast, View } from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
 
+import { TrainModelButton } from '../train-model/train-model-button.component';
 import { DatasetList } from './dataset-list.component';
-import { DatasetStatusPanel } from './dataset-status-panel.component';
 
 const useMediaItems = () => {
     const { projectId } = useProjectIdentifier();
@@ -47,9 +47,23 @@ const UploadImages = () => {
         const succeeded = promises.filter((result) => result.status === 'fulfilled').length;
         const failed = promises.filter((result) => result.status === 'rejected').length;
 
-        await queryClient.invalidateQueries({
-            queryKey: ['get', '/api/projects/{project_id}/images'],
+        const imagesOptions = $api.queryOptions('get', '/api/projects/{project_id}/images', {
+            params: { path: { project_id: projectId } },
         });
+        await queryClient.invalidateQueries({ queryKey: imagesOptions.queryKey });
+        const images = await queryClient.ensureQueryData(imagesOptions);
+
+        if (images.media.length >= 20) {
+            toast({
+                title: 'Train',
+                type: 'info',
+                message: `You can start model training now with your collected dataset.`,
+                duration: Infinity,
+                actionButtons: [<TrainModelButton key='train' />],
+                position: 'bottom-left',
+            });
+            return;
+        }
 
         if (failed === 0) {
             toast({ type: 'success', message: `Uploaded ${succeeded} item(s)` });
@@ -71,7 +85,7 @@ const UploadImages = () => {
 
     return (
         <FileTrigger allowsMultiple onSelect={captureImages}>
-            <Button>Upload images</Button>
+            <Button variant='secondary'>Upload images</Button>
         </FileTrigger>
     );
 };
@@ -79,15 +93,7 @@ const UploadImages = () => {
 const DatasetContent = () => {
     const { mediaItems } = useMediaItems();
 
-    return (
-        <>
-            <DatasetStatusPanel mediaItemsCount={mediaItems.length} />
-
-            <Divider size={'S'} />
-
-            <DatasetList mediaItems={mediaItems} />
-        </>
-    );
+    return <DatasetList mediaItems={mediaItems} />;
 };
 
 export const Dataset = () => {
@@ -95,7 +101,11 @@ export const Dataset = () => {
         <Flex direction={'column'} height={'100%'}>
             <Heading margin={0}>
                 <Flex justifyContent={'space-between'}>
-                    Dataset <UploadImages />
+                    Dataset
+                    <Flex gap='size-200'>
+                        <UploadImages />
+                        <TrainModelButton />
+                    </Flex>
                 </Flex>
             </Heading>
             <Suspense fallback={<Loading mode={'inline'} />}>
