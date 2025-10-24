@@ -7,6 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { TrainModelButton } from '../train-model/train-model-button.component';
 import { DatasetList } from './dataset-list.component';
+import { REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING } from './utils';
 
 const useMediaItems = () => {
     const { projectId } = useProjectIdentifier();
@@ -53,7 +54,7 @@ const UploadImages = () => {
         await queryClient.invalidateQueries({ queryKey: imagesOptions.queryKey });
         const images = await queryClient.ensureQueryData(imagesOptions);
 
-        if (images.media.length >= 20) {
+        if (images.media.length >= REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING) {
             toast({
                 title: 'Train',
                 type: 'info',

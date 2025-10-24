@@ -41,7 +41,7 @@ interface ModelData {
     name: string;
     timestamp: string;
     startTime: number;
-    duration: number | null; // seconds
+    durationInSeconds: number | null;
     status: 'Training' | 'Completed' | 'Failed';
     architecture: string;
     progress: number;
@@ -62,12 +62,11 @@ export const ModelsView = () => {
             }
 
             let timestamp = '';
-            let duration = 0;
+            let durationInSeconds = 0;
             const start = job.start_time ? new Date(job.start_time) : new Date();
             if (job) {
                 const end = job.end_time ? new Date(job.end_time) : new Date();
-                // Job duration in seconds
-                duration = Math.floor((end.getTime() - start.getTime()) / 1000);
+                durationInSeconds = Math.floor((end.getTime() - start.getTime()) / 1000);
                 timestamp = dateFormatter.format(start);
             }
 
@@ -78,7 +77,7 @@ export const ModelsView = () => {
                 architecture: model.name!,
                 startTime: start.getTime(),
                 timestamp,
-                duration,
+                durationInSeconds,
                 progress: 1.0,
                 job,
             };
@@ -100,7 +99,7 @@ export const ModelsView = () => {
                 timestamp,
                 startTime: start.getTime(),
                 progress: 1.0,
-                duration: null,
+                durationInSeconds: null,
                 job,
             };
         });

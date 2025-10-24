@@ -28,6 +28,7 @@ const RateColors = {
     MEDIUM: [RateColorPalette.LOW, RateColorPalette.MEDIUM, RateColorPalette.EMPTY],
     HIGH: [RateColorPalette.LOW, RateColorPalette.MEDIUM, RateColorPalette.HIGH],
 };
+const RATE_LABELS = Object.keys(RateColors);
 
 interface AttributeRatingProps {
     name: string;
@@ -44,7 +45,7 @@ const AttributeRating = ({ name, rating }: AttributeRatingProps) => {
                 <Flex alignItems={'center'} gap={'size-100'}>
                     {RateColors[rating].map((color, idx) => (
                         <View
-                            key={idx}
+                            key={`rate-${RATE_LABELS[idx]}`}
                             UNSAFE_className={classes.rate}
                             UNSAFE_style={{
                                 backgroundColor: color,

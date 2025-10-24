@@ -96,7 +96,7 @@ const JobLogsDialog = ({ close, jobId }: { close: () => void; jobId: string }) =
                     padding='size-200'
                     backgroundColor={'gray-50'}
                     UNSAFE_style={{
-                        fontSize: '11px',
+                        fontSize: 'var(--spectrum-global-dimension-static-size-130)',
                     }}
                 >
                     <Suspense fallback={<Loading mode='inline' />}>

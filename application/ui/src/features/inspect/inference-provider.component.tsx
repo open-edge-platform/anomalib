@@ -70,10 +70,8 @@ export const InferenceProvider = ({ children }: InferenceProviderProps) => {
     const onSetSelectedModelId = (modelId: string | undefined) => {
         setSelectedModelId(modelId);
 
-        if (modelId) {
-            if (selectedMediaItem) {
-                onInference(selectedMediaItem, modelId);
-            }
+        if (modelId && selectedMediaItem) {
+            onInference(selectedMediaItem, modelId);
         }
     };
     return (
