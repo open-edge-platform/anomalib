@@ -1,12 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from typing import Annotated
 
 from fastapi import APIRouter
 
 from api.endpoints import API_PREFIX
 from pydantic_models.devices import DeviceList
-from utils.devices import training_devices, inference_devices
+from utils.devices import inference_devices, training_devices
 
 device_router = APIRouter(
     prefix=API_PREFIX,

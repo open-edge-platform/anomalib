@@ -1,8 +1,9 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from functools import lru_cache
-from lightning.pytorch.accelerators import AcceleratorRegistry
+
 import openvino as ov
+from lightning.pytorch.accelerators import AcceleratorRegistry
 
 
 @lru_cache
