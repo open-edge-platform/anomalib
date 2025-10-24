@@ -25,7 +25,7 @@ const useCreateProject = () => {
             },
             {
                 onSuccess: () => {
-                    navigate(paths.project({ projectId }));
+                    navigate(`${paths.project({ projectId })}?mode=Dataset`);
                 },
             }
         );
