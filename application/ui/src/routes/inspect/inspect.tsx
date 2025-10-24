@@ -25,13 +25,13 @@ export const Inspect = () => {
             }}
             key={projectId}
         >
-            <InferenceProvider>
-                <SelectedMediaItemProvider>
+            <SelectedMediaItemProvider>
+                <InferenceProvider>
                     <Toolbar />
                     <InferenceResult />
                     <Sidebar />
-                </SelectedMediaItemProvider>
-            </InferenceProvider>
+                </InferenceProvider>
+            </SelectedMediaItemProvider>
         </Grid>
     );
 };
