@@ -78,7 +78,7 @@ export const ProjectListItem = ({ project, isInEditMode, onBlur }: ProjectListIt
             return;
         }
 
-        navigate(paths.project({ projectId: project.id }));
+        navigate(`${paths.project({ projectId: project.id })}?mode=Dataset`);
     };
 
     return (

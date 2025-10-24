@@ -1,24 +1,13 @@
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { ComponentProps, Suspense, useEffect, useRef } from 'react';
 
 import { $api } from '@geti-inspect/api';
-import { SchemaJob as Job } from '@geti-inspect/api/spec';
+import { SchemaJob as Job, SchemaJob, SchemaJobStatus } from '@geti-inspect/api/spec';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
-import {
-    Button,
-    Content,
-    Divider,
-    Flex,
-    Heading,
-    InlineAlert,
-    IntelBrandedLoading,
-    Item,
-    Picker,
-    ProgressBar,
-    Text,
-} from '@geti/ui';
+import { Content, Flex, Heading, InlineAlert, IntelBrandedLoading, ProgressBar, Text } from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { differenceBy, isEqual } from 'lodash-es';
+import { isEqual } from 'lodash-es';
 
+import { ShowJobLogs } from '../jobs/show-job-logs.component';
 import { REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING } from './utils';
 
 interface NotEnoughNormalImagesToTrainProps {
@@ -39,58 +28,38 @@ const NotEnoughNormalImagesToTrain = ({ mediaItemsCount }: NotEnoughNormalImages
     );
 };
 
-const useAvailableModels = () => {
-    const { data } = $api.useSuspenseQuery('get', '/api/trainable-models', undefined, {
-        staleTime: Infinity,
-        gcTime: Infinity,
-    });
-
-    return data.trainable_models.map((model) => ({ id: model, name: model }));
-};
-
-const ReadyToTrain = () => {
-    const startTrainingMutation = $api.useMutation('post', '/api/jobs:train');
-
-    const availableModels = useAvailableModels();
-    const { projectId } = useProjectIdentifier();
-    const [selectedModel, setSelectedModel] = useState<string>(availableModels[0].id);
-
-    const startTraining = () => {
-        startTrainingMutation.mutate({
-            body: { project_id: projectId, model_name: selectedModel },
-        });
-    };
-
-    return (
-        <InlineAlert variant='positive'>
-            <Heading>Ready to train</Heading>
-            <Content>
-                <Flex direction={'column'} gap={'size-200'}>
-                    <Text>You have enough normal images to train a model.</Text>
-
-                    <Flex direction={'row'} alignItems={'end'} width={'100%'} gap={'size-200'} wrap={'wrap'}>
-                        <Picker
-                            label={'Model'}
-                            selectedKey={selectedModel}
-                            onSelectionChange={(key) => key !== null && setSelectedModel(String(key))}
-                        >
-                            {availableModels.map((model) => (
-                                <Item key={model.id}>{model.name}</Item>
-                            ))}
-                        </Picker>
-
-                        <Button isPending={startTrainingMutation.isPending} onPress={startTraining}>
-                            Start training
-                        </Button>
-                    </Flex>
-                </Flex>
-            </Content>
-        </InlineAlert>
-    );
-};
-
 interface TrainingInProgressProps {
     job: Job;
+}
+
+const statusToVariant: Record<SchemaJobStatus, ComponentProps<typeof InlineAlert>['variant']> = {
+    pending: 'info',
+    running: 'info',
+    completed: 'positive',
+    canceled: 'negative',
+    failed: 'negative',
+};
+
+function getHeading(job: SchemaJob) {
+    if (job.status === 'pending') {
+        return `Training will start soon - ${job.payload.model_name}`;
+    }
+    if (job.status === 'running') {
+        return `Training in progress - ${job.payload.model_name}`;
+    }
+
+    if (job.status === 'failed') {
+        return `Training failed - ${job.payload.model_name}`;
+    }
+
+    if (job.status === 'canceled') {
+        return `Training canceled - ${job.payload.model_name}`;
+    }
+
+    if (job.status === 'completed') {
+        return `Training completed - ${job.payload.model_name}`;
+    }
+    return null;
 }
 
 const TrainingInProgress = ({ job }: TrainingInProgressProps) => {
@@ -98,83 +67,30 @@ const TrainingInProgress = ({ job }: TrainingInProgressProps) => {
         return null;
     }
 
-    if (job.status === 'pending') {
-        const heading = `Training will start soon - ${job.payload.model_name}`;
+    const variant = statusToVariant[job.status];
+    const heading = getHeading(job);
 
-        return (
-            <InlineAlert variant='info'>
-                <Heading>{heading}</Heading>
-                <Content>
-                    <Flex direction={'column'} gap={'size-100'}>
-                        <Text>{job.message}</Text>
-                        <ProgressBar aria-label='Training progress' isIndeterminate />
-                    </Flex>
-                </Content>
-            </InlineAlert>
-        );
-    }
-
-    if (job.status === 'running') {
-        const heading = `Training in progress - ${job.payload.model_name}`;
-
-        return (
-            <InlineAlert variant='info'>
-                <Heading>{heading}</Heading>
-                <Content>
-                    <Flex direction={'column'} gap={'size-100'}>
-                        <Text>{job.message}</Text>
-                        <ProgressBar value={job.progress} aria-label='Training progress' />
-                    </Flex>
-                </Content>
-            </InlineAlert>
-        );
-    }
-
-    if (job.status === 'failed') {
-        const heading = `Training failed - ${job.payload.model_name}`;
-
-        return (
-            <InlineAlert variant='negative'>
-                <Heading>{heading}</Heading>
-                <Content>
+    return (
+        <InlineAlert variant={variant}>
+            <Heading>
+                <Flex gap='size-100' alignItems={'center'} justifyContent={'space-between'}>
+                    {heading}
+                    {job.id && <ShowJobLogs jobId={job.id} />}
+                </Flex>
+            </Heading>
+            <Content>
+                <Flex direction={'column'} gap={'size-100'}>
                     <Text>{job.message}</Text>
-                </Content>
-            </InlineAlert>
-        );
-    }
-
-    if (job.status === 'canceled') {
-        const heading = `Training canceled - ${job.payload.model_name}`;
-
-        return (
-            <InlineAlert variant='negative'>
-                <Heading>{heading}</Heading>
-                <Content>
-                    <Text>{job.message}</Text>
-                </Content>
-            </InlineAlert>
-        );
-    }
-
-    if (job.status === 'completed') {
-        const heading = `Training completed - ${job.payload.model_name}`;
-
-        return (
-            <InlineAlert variant='positive'>
-                <Heading>{heading}</Heading>
-                <Content>
-                    <Text>{job.message}</Text>
-                </Content>
-            </InlineAlert>
-        );
-    }
-
-    return null;
+                    {job.status === 'pending' && <ProgressBar aria-label='Training progress' isIndeterminate />}
+                </Flex>
+            </Content>
+        </InlineAlert>
+    );
 };
 
 const REFETCH_INTERVAL_WITH_TRAINING = 1_000;
 
-const useProjectTrainingJobs = () => {
+export const useProjectTrainingJobs = () => {
     const { projectId } = useProjectIdentifier();
 
     const { data } = $api.useQuery('get', '/api/jobs', undefined, {
@@ -191,7 +107,7 @@ const useProjectTrainingJobs = () => {
     return { jobs: data?.jobs.filter((job) => job.project_id === projectId) };
 };
 
-const useRefreshModelsOnJobUpdates = (jobs: Job[] | undefined) => {
+export const useRefreshModelsOnJobUpdates = (jobs: Job[] | undefined) => {
     const queryClient = useQueryClient();
     const { projectId } = useProjectIdentifier();
     const prevJobsRef = useRef<Job[]>([]);
@@ -202,8 +118,10 @@ const useRefreshModelsOnJobUpdates = (jobs: Job[] | undefined) => {
         }
 
         if (!isEqual(prevJobsRef.current, jobs)) {
-            const differenceInJobsBasedOnStatus = differenceBy(prevJobsRef.current, jobs, (job) => job.status);
-            const shouldRefetchModels = differenceInJobsBasedOnStatus.some((job) => job.status === 'completed');
+            const shouldRefetchModels = jobs.some((job, idx) => {
+                // NOTE: assuming index stays the same
+                return job.status === 'completed' && job.status !== prevJobsRef.current.at(idx)?.status;
+            });
 
             if (shouldRefetchModels) {
                 queryClient.invalidateQueries({
@@ -229,12 +147,9 @@ const TrainingInProgressList = () => {
     }
 
     return (
-        <>
-            <Flex direction={'column'} gap={'size-50'} height={'size-2000'} UNSAFE_style={{ overflowY: 'auto' }}>
-                {jobs?.map((job) => <TrainingInProgress job={job} key={job.id} />)}
-            </Flex>
-            <Divider size={'S'} />
-        </>
+        <Flex direction={'column'} gap={'size-50'} UNSAFE_style={{ overflowY: 'auto' }}>
+            {jobs?.map((job) => <TrainingInProgress job={job} key={job.id} />)}
+        </Flex>
     );
 };
 
@@ -250,7 +165,6 @@ export const DatasetStatusPanel = ({ mediaItemsCount }: DatasetStatusPanelProps)
     return (
         <Suspense fallback={<IntelBrandedLoading />}>
             <TrainingInProgressList />
-            <ReadyToTrain />
         </Suspense>
     );
 };

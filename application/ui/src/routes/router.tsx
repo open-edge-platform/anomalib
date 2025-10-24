@@ -19,7 +19,7 @@ const Redirect = () => {
     }
 
     const projectId = data.projects.at(0)?.id ?? '1';
-    return <Navigate to={paths.project({ projectId })} replace />;
+    return <Navigate to={`${paths.project({ projectId })}?mode=Dataset`} replace />;
 };
 
 export const router = createBrowserRouter([

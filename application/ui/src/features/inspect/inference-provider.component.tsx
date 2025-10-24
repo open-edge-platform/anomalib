@@ -4,6 +4,7 @@ import { $api } from '@geti-inspect/api';
 import { components } from '@geti-inspect/api/spec';
 
 import { MediaItem } from './dataset/types';
+import { useSelectedMediaItem } from './selected-media-item-provider.component';
 
 type InferenceResult = components['schemas']['PredictionResponse'] | undefined;
 
@@ -64,6 +65,15 @@ export const InferenceProvider = ({ children }: InferenceProviderProps) => {
     const [selectedModelId, setSelectedModelId] = useState<string | undefined>(undefined);
     const [inferenceOpacity, setInferenceOpacity] = useState<number>(0.75);
 
+    const { selectedMediaItem } = useSelectedMediaItem();
+
+    const onSetSelectedModelId = (modelId: string | undefined) => {
+        setSelectedModelId(modelId);
+
+        if (modelId && selectedMediaItem) {
+            onInference(selectedMediaItem, modelId);
+        }
+    };
     return (
         <InferenceContext
             value={{
@@ -71,7 +81,7 @@ export const InferenceProvider = ({ children }: InferenceProviderProps) => {
                 isPending,
                 inferenceResult,
                 selectedModelId,
-                onSetSelectedModelId: setSelectedModelId,
+                onSetSelectedModelId,
                 inferenceOpacity,
                 onInferenceOpacityChange: setInferenceOpacity,
             }}

@@ -32,7 +32,7 @@ const DatasetItem = ({ mediaItem }: DatasetItemProps) => {
 
     const isSelected = selectedMediaItem?.id === mediaItem.id;
 
-    const mediaUrl = `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/full`;
+    const mediaUrl = `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail`;
 
     const handleClick = async () => {
         onSetSelectedMediaItem(mediaItem);

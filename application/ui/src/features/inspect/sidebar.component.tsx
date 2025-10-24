@@ -3,28 +3,36 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
-
-import { Dataset as DatasetIcon, Models, Stats } from '@geti-inspect/icons';
+import { Dataset as DatasetIcon, Models as ModelsIcon, Stats } from '@geti-inspect/icons';
 import { Flex, Grid, ToggleButton, View } from '@geti/ui';
+import { useSearchParams } from 'react-router-dom';
 
 import { Dataset } from './dataset/dataset.component';
+import { Models } from './models/models.component';
 
 import styles from './sidebar.module.scss';
 
 const TABS = [
     { label: 'Dataset', icon: <DatasetIcon />, content: <Dataset /> },
-    { label: 'Models', icon: <Models />, content: <>Models</> },
+    { label: 'Models', icon: <ModelsIcon />, content: <Models /> },
     { label: 'Stats', icon: <Stats />, content: <>Stats</> },
 ];
 
 interface TabProps {
     tabs: (typeof TABS)[number][];
-    selectedTab: string;
 }
 
-const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
-    const [tab, setTab] = useState<string | null>(selectedTab);
+const SidebarTabs = ({ tabs }: TabProps) => {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const selectTab = (tab: string | null) => {
+        if (tab === null) {
+            searchParams.delete('mode');
+        } else {
+            searchParams.set('mode', tab);
+        }
+        setSearchParams(searchParams);
+    };
+    const tab = searchParams.get('mode');
 
     const gridTemplateColumns = tab !== null ? ['clamp(size-4600, 35vw, 40rem)', 'size-600'] : ['0px', 'size-600'];
 
@@ -54,7 +62,7 @@ const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
                             key={label}
                             isQuiet
                             isSelected={label === tab}
-                            onChange={() => setTab(label === tab ? null : label)}
+                            onChange={() => selectTab(label === tab ? null : label)}
                             UNSAFE_className={styles.toggleButton}
                             aria-label={`Toggle ${label} tab`}
                         >
@@ -68,5 +76,5 @@ const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
 };
 
 export const Sidebar = () => {
-    return <SidebarTabs tabs={TABS} selectedTab={TABS[0].label} />;
+    return <SidebarTabs tabs={TABS} />;
 };
