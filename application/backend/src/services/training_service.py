@@ -59,6 +59,7 @@ class TrainingService:
         await job_service.update_job_status(job_id=job.id, status=JobStatus.RUNNING, message="Training started")
         project_id = job.project_id
         model_name = job.payload.get("model_name")
+        device = job.payload.get("device")
         if model_name is None:
             raise ValueError(f"Job {job.id} payload must contain 'model_name'")
         
@@ -73,7 +74,7 @@ class TrainingService:
         try:
             # Use asyncio.to_thread to keep event loop responsive
             # TODO: Consider ProcessPoolExecutor for true parallelism with multiple jobs
-            trained_model = await asyncio.to_thread(cls._train_model, model)
+            trained_model = await asyncio.to_thread(cls._train_model, model=model, device=device)
             if trained_model is None:
                 raise ValueError("Training failed - model is None")
 
@@ -94,7 +95,7 @@ class TrainingService:
             raise e
 
     @staticmethod
-    def _train_model(model: Model) -> Model | None:
+    def _train_model(model: Model, device: str | None = None) -> Model | None:
         """
         Execute CPU-intensive model training using anomalib.
 
@@ -104,12 +105,16 @@ class TrainingService:
 
         Args:
             model: Model object with training configuration
+            device: Device to train on
 
         Returns:
             Model: Trained model with updated export_path and is_ready=True
         """
         from core.logging import global_log_config
         from core.logging.handlers import LoggerStdoutWriter
+
+        if device is not None:
+            logger.info(f"Training running on device `{device}`")
 
         model_binary_repo = ModelBinaryRepository(project_id=model.project_id, model_id=model.id)
         image_binary_repo = ImageBinaryRepository(project_id=model.project_id)
@@ -134,6 +139,7 @@ class TrainingService:
             default_root_dir=model.export_path,
             logger=[trackio, tensorboard],
             max_epochs=10,
+            accelerator=device,
         )
 
         # Execute training and export

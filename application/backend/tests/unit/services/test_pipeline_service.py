@@ -264,7 +264,13 @@ class TestPipelineService:
         self, fxt_pipeline_service, fxt_pipeline, fxt_pipeline_repository, fxt_model_service
     ):
         """Test updating running pipeline with model change."""
-        new_model = Model(id=uuid.uuid4(), project_id=fxt_pipeline.project_id, name="new_model", format="openvino")
+        new_model = Model(
+            id=uuid.uuid4(),
+            project_id=fxt_pipeline.project_id,
+            name="new_model",
+            format="openvino",
+            train_job_id=uuid.uuid4(),
+        )
         updated_pipeline = fxt_pipeline.model_copy(update={"model": new_model, "model_id": new_model.id})
         fxt_pipeline_repository.get_by_id.return_value = fxt_pipeline
         fxt_pipeline_repository.update.return_value = updated_pipeline

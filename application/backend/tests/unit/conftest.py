@@ -51,6 +51,7 @@ def fxt_job_payload(fxt_project):
     return TrainJobPayload(
         project_id=fxt_project.id,
         model_name="padim",
+        device=None,
     )
 
 
@@ -76,6 +77,7 @@ def fxt_model(fxt_project):
         format="openvino",
         is_ready=True,
         export_path="/path/to/model",
+        train_job_id=uuid.uuid4(),
     )
 
 

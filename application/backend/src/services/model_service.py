@@ -4,21 +4,19 @@ import asyncio
 import base64
 import io
 from dataclasses import dataclass
-from functools import lru_cache
 from multiprocessing.synchronize import Event as EventClass
 from uuid import UUID
 
 import cv2
 import numpy as np
-import openvino as ov
 import openvino.properties.hint as ov_hints
+
 from anomalib.deploy import ExportType, OpenVINOInferencer
 from loguru import logger
 from PIL import Image
 
 from db import get_async_db_session_ctx
 from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
-from pydantic_models.model import SupportedDevices
 from repositories import ModelRepository
 from repositories.binary_repo import ModelBinaryRepository
 from services.exceptions import DeviceNotFoundError
@@ -195,10 +193,3 @@ class ModelService:
         score = float(pred.pred_score.item())
 
         return {"anomaly_map": im_base64, "label": label, "score": score}
-
-    @staticmethod
-    @lru_cache
-    def get_supported_devices() -> SupportedDevices:
-        """Get list of supported devices for inference."""
-        core = ov.Core()
-        return SupportedDevices(devices=core.available_devices)
