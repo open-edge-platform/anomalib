@@ -103,6 +103,9 @@ def _prepare_files_labels(
     if extensions is None:
         extensions = IMG_EXTENSIONS
 
+    # convert extensions to lowercase for case-insensitive matching
+    extensions = tuple(ext.lower() for ext in extensions)
+
     if isinstance(extensions, str):
         extensions = (extensions,)
 
