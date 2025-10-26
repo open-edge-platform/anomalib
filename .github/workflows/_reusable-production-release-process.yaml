@@ -30,8 +30,12 @@
 # - version: Release version
 # - artifact-name: Name of validated artifact
 #
-# Required Secrets:
-# - pypi-token: Production PyPI token
+# Note: PyPI publishing uses OIDC (OpenID Connect) authentication.
+# Configure trusted publisher in PyPI project settings:
+# - Owner: <your-org>
+# - Repository name: anomalib
+# - Workflow name: release.yaml
+# - Environment name: production
 #
 # Example Usage:
 # 1. Production Release:
@@ -57,12 +61,10 @@ on:
       artifact-name:
         required: true
         type: string
-    secrets:
-      pypi-token:
-        required: true
 
 permissions:
   contents: read
+  id-token: write # Required for OIDC authentication with PyPI
 
 jobs:
   validate-release-readiness:
@@ -107,9 +109,8 @@ jobs:
     uses: ./.github/workflows/_reusable-release-publisher.yaml
     permissions:
       contents: write # is required by action-gh-release (nested)
+      id-token: write # Required for OIDC authentication with PyPI
     with:
       version: ${{ inputs.version }}
       artifact-name: production-release-artifacts
       is-prerelease: false
-    secrets:
-      pypi-token: ${{ secrets.pypi-token }}
