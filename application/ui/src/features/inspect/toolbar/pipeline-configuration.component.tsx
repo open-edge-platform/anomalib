@@ -19,6 +19,7 @@ import {
 } from '@geti/ui';
 
 import { ReactComponent as Camera } from '../../../assets/icons/pipeline-link.svg';
+import { SourceOptions } from './sources/source-options';
 
 export const InputOutputSetup = () => {
     return (
@@ -41,7 +42,9 @@ export const InputOutputSetup = () => {
                         <TabPanels>
                             <Item key='sources'>
                                 <View marginTop={'size-200'}>
-                                    <Suspense fallback={<Loading size='M' />}>SourceOptions</Suspense>
+                                    <Suspense fallback={<Loading size='M' />}>
+                                        <SourceOptions />
+                                    </Suspense>
                                 </View>
                             </Item>
                             <Item key='sinks'>
