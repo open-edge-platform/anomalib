@@ -21,8 +21,8 @@ export const useSourceAction = <T extends SourceConfig>({
     isNewSource,
     bodyFormatter,
 }: useSourceActionProps<T>) => {
-    const pipeline = usePatchPipeline();
     const { projectId } = useProjectIdentifier();
+    const pipeline = usePatchPipeline(projectId);
     const addOrUpdateSource = useSourceMutation(isNewSource);
 
     return useActionState<T, FormData>(async (_prevState: T, formData: FormData) => {

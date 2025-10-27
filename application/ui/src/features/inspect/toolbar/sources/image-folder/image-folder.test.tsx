@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { TestProviders } from 'src/providers';
 
 import { useSourceAction } from '../hooks/use-source-action.hook';
 import { ImagesFolderSourceConfig } from '../util';
 import { ImageFolder } from './image-folder.component';
 
-vi.mock('react-router', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('react-router')>();
+vi.mock('react-router-dom', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('react-router-dom')>();
     return {
         ...actual,
         useParams: vi.fn(() => ({ projectId: '123' })),
@@ -29,7 +30,11 @@ describe('ImageFolder', () => {
     it('disables the Apply button when loading', () => {
         vi.mocked(useSourceAction).mockReturnValue([mockedConfig, vi.fn(), true]);
 
-        render(<ImageFolder />);
+        render(
+            <TestProviders>
+                <ImageFolder />
+            </TestProviders>
+        );
 
         expect(screen.getByRole('button', { name: 'Apply' })).toBeDisabled();
     });
@@ -38,7 +43,11 @@ describe('ImageFolder', () => {
         const mockedSubmitAction = vi.fn();
         vi.mocked(useSourceAction).mockReturnValue([mockedConfig, mockedSubmitAction, false]);
 
-        render(<ImageFolder config={mockedConfig} />);
+        render(
+            <TestProviders>
+                <ImageFolder config={mockedConfig} />
+            </TestProviders>
+        );
 
         fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
 
@@ -49,7 +58,11 @@ describe('ImageFolder', () => {
         const mockedSubmitAction = vi.fn();
         vi.mocked(useSourceAction).mockReturnValue([mockedConfig, mockedSubmitAction, false]);
 
-        render(<ImageFolder config={mockedConfig} />);
+        render(
+            <TestProviders>
+                <ImageFolder config={mockedConfig} />
+            </TestProviders>
+        );
 
         expect(useSourceAction).toHaveBeenCalledWith({
             config: mockedConfig,

@@ -3,13 +3,14 @@
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { TestProviders } from 'src/providers';
 
 import { useSourceAction } from '../hooks/use-source-action.hook';
 import { WebcamSourceConfig } from '../util';
 import { Webcam } from './webcam.component';
 
-vi.mock('react-router', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('react-router')>();
+vi.mock('react-router-dom', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('react-router-dom')>();
     return {
         ...actual,
         useParams: vi.fn(() => ({ projectId: '123' })),
@@ -29,7 +30,11 @@ describe('Webcam', () => {
     it('disables the Apply button when loading', () => {
         vi.mocked(useSourceAction).mockReturnValue([mockedConfig, vi.fn(), true]);
 
-        render(<Webcam />);
+        render(
+            <TestProviders>
+                <Webcam />
+            </TestProviders>
+        );
 
         expect(screen.getByRole('button', { name: 'Apply' })).toBeDisabled();
     });
@@ -38,7 +43,11 @@ describe('Webcam', () => {
         const mockedSubmitAction = vi.fn();
         vi.mocked(useSourceAction).mockReturnValue([mockedConfig, mockedSubmitAction, false]);
 
-        render(<Webcam config={mockedConfig} />);
+        render(
+            <TestProviders>
+                <Webcam config={mockedConfig} />
+            </TestProviders>
+        );
 
         userEvent.click(screen.getByRole('button', { name: 'Apply' }));
 
@@ -49,7 +58,11 @@ describe('Webcam', () => {
         const mockedSubmitAction = vi.fn();
         vi.mocked(useSourceAction).mockReturnValue([mockedConfig, mockedSubmitAction, false]);
 
-        render(<Webcam config={mockedConfig} />);
+        render(
+            <TestProviders>
+                <Webcam config={mockedConfig} />
+            </TestProviders>
+        );
 
         expect(useSourceAction).toHaveBeenCalledWith({
             config: mockedConfig,
