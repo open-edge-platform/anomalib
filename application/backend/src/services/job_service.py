@@ -3,10 +3,12 @@
 import asyncio
 import datetime
 import os
+from collections.abc import AsyncGenerator
 from uuid import UUID
 
 import anyio
 from sqlalchemy.exc import IntegrityError
+from sse_starlette import ServerSentEvent
 
 from db import get_async_db_session_ctx
 from exceptions import DuplicateJobException, ResourceNotFoundException
@@ -75,7 +77,7 @@ class JobService:
             await repo.update(job, updates)
 
     @classmethod
-    async def stream_logs(cls, job_id: UUID | str):
+    async def stream_logs(cls, job_id: UUID | str) -> AsyncGenerator[ServerSentEvent, None]:
         from core.logging.utils import get_job_logs_path
 
         log_file = get_job_logs_path(job_id=job_id)
@@ -110,8 +112,5 @@ class JobService:
                         continue
                     # No more lines are expected
                     else:
-                        yield "data: DONE\n\n"
                         break
-
-                # Format as an SSE message
-                yield f"data: {line.rstrip()}\n\n"
+                yield ServerSentEvent(data=line.rstrip())

@@ -206,7 +206,7 @@ class TestJobService:
 
     def test_stream_logs_success(self, fxt_job_repository, fxt_job):
         """Test streaming logs successfully from a completed job."""
-        log_lines = ['{"level": "INFO", "message": "Line 1"}\n', '{"level": "INFO", "message": "Line 2"}\n']
+        log_lines = ['{"level": "INFO", "message": "Line 1"}', '{"level": "INFO", "message": "Line 2"}']
 
         # Mock job as completed
         completed_job = fxt_job.model_copy(update={"status": JobStatus.COMPLETED})
@@ -240,7 +240,7 @@ class TestJobService:
             async def consume_stream():
                 result = []
                 async for line in JobService.stream_logs(fxt_job.id):
-                    result.append(line)
+                    result.append(line.data)
                 return result
 
             result = asyncio.run(consume_stream())
