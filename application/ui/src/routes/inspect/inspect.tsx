@@ -8,7 +8,7 @@ import { InferenceProvider } from '../../features/inspect/inference-provider.com
 import { InferenceResult } from '../../features/inspect/inference-result.component';
 import { SelectedMediaItemProvider } from '../../features/inspect/selected-media-item-provider.component';
 import { Sidebar } from '../../features/inspect/sidebar.component';
-import { Toolbar } from '../../features/inspect/toolbar';
+import { Toolbar } from '../../features/inspect/toolbar/toolbar';
 
 export const Inspect = () => {
     const { projectId } = useProjectIdentifier();
