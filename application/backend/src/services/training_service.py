@@ -15,7 +15,7 @@ from pydantic_models import Job, JobStatus, JobType, Model
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import ModelService
 from services.job_service import JobService
-from utils.devices import training_devices
+from utils.devices import Devices
 from utils.experiment_loggers import TrackioLogger
 
 
@@ -114,10 +114,10 @@ class TrainingService:
         from core.logging import global_log_config
         from core.logging.handlers import LoggerStdoutWriter
 
-        if device and device.lower() not in training_devices():
+        if device and not Devices.is_device_supported_for_training(device):
             raise ValueError(
                 f"Device '{device}' is not supported for training. "
-                f"Supported devices: {', '.join(training_devices())}"
+                f"Supported devices: {', '.join(Devices.training_devices())}"
             )
 
         logger.info(f"Training on device: {device or 'auto'}")

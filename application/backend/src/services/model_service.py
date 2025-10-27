@@ -19,6 +19,7 @@ from pydantic_models import Model, ModelList, PredictionLabel, PredictionRespons
 from repositories import ModelRepository
 from repositories.binary_repo import ModelBinaryRepository
 from services.exceptions import DeviceNotFoundError
+from utils.devices import Devices
 
 DEFAULT_DEVICE = "AUTO"
 
@@ -100,11 +101,11 @@ class ModelService:
             return await asyncio.to_thread(
                 OpenVINOInferencer,
                 path=model_path,
-                device=_device,
+                device=_device.upper(), # OV always expects uppercase device names
                 config={ov_hints.performance_mode: ov_hints.PerformanceMode.LATENCY},
             )
         except Exception as e:
-            if _device not in cls.get_supported_devices().devices:
+            if device and not Devices.is_device_supported_for_inference(device):
                 raise DeviceNotFoundError(device_name=_device) from e
             raise e
 
