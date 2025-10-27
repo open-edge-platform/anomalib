@@ -134,7 +134,7 @@ class InferenceWorker(BaseProcessWorker):
             # Refresh loaded model reference if changed
             if self._loaded_model is None or self._loaded_model.id != active_model.id:
                 self._loaded_model = active_model
-                logger.info("Using model '%s' (%s) for inference", self._loaded_model.name, self._loaded_model.id)
+                logger.info(f"Using model '{self._loaded_model.name}' ({self._loaded_model.id}) for inference")
 
             await self._handle_model_reload()
 
