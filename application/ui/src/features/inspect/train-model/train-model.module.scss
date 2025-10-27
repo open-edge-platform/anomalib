@@ -1,0 +1,62 @@
+/// train model dialog
+.radioGroup {
+    & label {
+        margin: 0;
+
+        & span[class*='spectrum-Radio-label'] {
+            min-width: 0;
+        }
+    }
+}
+
+/// model list box
+// Ratings
+.rate {
+    width: var(--spectrum-global-dimension-size-100);
+    height: var(--spectrum-global-dimension-size-100);
+    border-radius: 50%;
+}
+
+.attributeRatingTitle {
+    font-weight: 400;
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--spectrum-global-dimension-font-size-50);
+}
+
+// Selectable card
+.selectableCard {
+    width: 100%;
+    cursor: pointer;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+
+    border: var(--spectrum-global-dimension-size-25) solid transparent;
+
+    transition: border 0.3s ease-in-out;
+
+    &:hover .selectableCardDescription {
+        background-color: var(--spectrum-global-color-gray-100);
+    }
+}
+
+.selectableCardSelected {
+    border: var(--spectrum-global-dimension-size-25) solid var(--energy-blue);
+    border-radius: var(--spectrum-alias-border-radius-regular);
+}
+
+.selectableCardDescription {
+    background-color: var(--spectrum-global-color-gray-75);
+}
+
+.selectedHeader {
+    background: var(--mixed-gray-800-and-energy-blue) !important;
+}
+
+.selectedDescription {
+    background: var(--mixed-gray-75-and-energy-blue) !important;
+}
+
+.selected {
+    color: var(--energy-blue);
+}

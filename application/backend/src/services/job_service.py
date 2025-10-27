@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
+import datetime
 import os
 from uuid import UUID
 
@@ -65,6 +66,10 @@ class JobService:
             if message is not None:
                 updates["message"] = message
             progress_ = 100 if status is JobStatus.COMPLETED else progress
+
+            if status in {JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELED}:
+                updates["end_time"] = datetime.datetime.now(tz=datetime.timezone.utc)
+
             if progress_ is not None:
                 updates["progress"] = progress_
             await repo.update(job, updates)
@@ -105,5 +110,8 @@ class JobService:
                         continue
                     # No more lines are expected
                     else:
+                        yield "data: DONE\n\n"
                         break
-                yield line
+
+                # Format as an SSE message
+                yield f"data: {line.rstrip()}\n\n"
