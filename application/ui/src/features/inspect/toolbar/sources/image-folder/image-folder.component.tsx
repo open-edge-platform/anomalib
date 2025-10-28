@@ -1,8 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { ReactNode } from 'react';
+
 import { Button, Flex, Form, Switch, TextField } from '@geti/ui';
-import { isEmpty } from 'lodash-es';
+import { isEmpty, isFunction } from 'lodash-es';
 
 import { ReactComponent as Folder } from '../../../../../assets/icons/folder.svg';
 import { useSourceAction } from '../hooks/use-source-action.hook';
@@ -12,6 +14,7 @@ import classes from './image-folder.module.scss';
 
 type ImageFolderProps = {
     config?: ImagesFolderSourceConfig;
+    renderButtons?: (isPending: boolean) => ReactNode;
 };
 const iniConfig: ImagesFolderSourceConfig = {
     id: '',
@@ -21,7 +24,7 @@ const iniConfig: ImagesFolderSourceConfig = {
     ignore_existing_images: false,
 };
 
-export const ImageFolder = ({ config = iniConfig }: ImageFolderProps) => {
+export const ImageFolder = ({ config = iniConfig, renderButtons }: ImageFolderProps) => {
     const [state, submitAction, isPending] = useSourceAction({
         config,
         isNewSource: isEmpty(config?.id),
@@ -68,9 +71,13 @@ export const ImageFolder = ({ config = iniConfig }: ImageFolderProps) => {
                     Ignore existing images
                 </Switch>
 
-                <Button type='submit' maxWidth='size-1000' isDisabled={isPending}>
-                    Apply
-                </Button>
+                {isFunction(renderButtons) ? (
+                    renderButtons(isPending)
+                ) : (
+                    <Button type='submit' isDisabled={isPending} UNSAFE_style={{ maxWidth: 'fit-content' }}>
+                        Add & Connect
+                    </Button>
+                )}
             </Flex>
         </Form>
     );

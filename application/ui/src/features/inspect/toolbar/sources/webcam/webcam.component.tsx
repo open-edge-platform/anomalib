@@ -1,14 +1,17 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { ReactNode } from 'react';
+
 import { Button, Flex, Form, TextField } from '@geti/ui';
-import { isEmpty } from 'lodash-es';
+import { isEmpty, isFunction } from 'lodash-es';
 
 import { useSourceAction } from '../hooks/use-source-action.hook';
 import { isOnlyDigits, WebcamSourceConfig } from '../util';
 
 type WebcamProps = {
     config?: WebcamSourceConfig;
+    renderButtons?: (isPending: boolean) => ReactNode;
 };
 
 const initConfig: WebcamSourceConfig = {
@@ -18,7 +21,7 @@ const initConfig: WebcamSourceConfig = {
     device_id: 0,
 };
 
-export const Webcam = ({ config = initConfig }: WebcamProps) => {
+export const Webcam = ({ config = initConfig, renderButtons }: WebcamProps) => {
     const [state, submitAction, isPending] = useSourceAction({
         config,
         isNewSource: isEmpty(config?.id),
@@ -44,9 +47,13 @@ export const Webcam = ({ config = initConfig }: WebcamProps) => {
                     validate={(value) => (isOnlyDigits(value) ? '' : 'Only digits are allowed')}
                 />
 
-                <Button type='submit' maxWidth='size-1000' isDisabled={isPending}>
-                    Apply
-                </Button>
+                {isFunction(renderButtons) ? (
+                    renderButtons(isPending)
+                ) : (
+                    <Button type='submit' isDisabled={isPending} UNSAFE_style={{ maxWidth: 'fit-content' }}>
+                        Add & Connect
+                    </Button>
+                )}
             </Flex>
         </Form>
     );

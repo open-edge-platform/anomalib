@@ -19,7 +19,7 @@ import {
 } from '@geti/ui';
 
 import { ReactComponent as Camera } from '../../../assets/icons/pipeline-link.svg';
-import { SourceFactory } from './sources/source-factory.compnent';
+import { SourceFactory } from './sources/source-factory.component';
 
 export const InputOutputSetup = () => {
     return (

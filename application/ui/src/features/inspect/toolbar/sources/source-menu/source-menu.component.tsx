@@ -7,9 +7,10 @@ interface SourceMenuProps {
     id: string;
     name: string;
     isConnected: boolean;
+    onEdit: () => void;
 }
 
-export const SourceMenu = ({ id, name, isConnected }: SourceMenuProps) => {
+export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) => {
     const { projectId } = useProjectIdentifier();
 
     const updatePipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
@@ -36,7 +37,7 @@ export const SourceMenu = ({ id, name, isConnected }: SourceMenuProps) => {
                 handleDelete();
                 break;
             default:
-                console.log('edit');
+                onEdit();
                 break;
         }
     };

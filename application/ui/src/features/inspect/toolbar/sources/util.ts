@@ -16,6 +16,8 @@ export type SourceConfig =
     | VideoFileSourceConfig
     | DisconnectedSourceConfig;
 
+export type SourceTypes = SourceConfig['source_type'];
+
 export const isOnlyDigits = (str: string): boolean => {
     return /^\d+$/.test(str);
 };

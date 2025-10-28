@@ -13,24 +13,23 @@ import classes from './source-list.module.scss';
 
 type SourcesListProps = {
     sources: SourceConfig[];
+    onAddSource: () => void;
+    onEditSource: (config: SourceConfig) => void;
 };
 
-export const SourcesList = ({ sources }: SourcesListProps) => {
+export const SourcesList = ({ sources, onAddSource, onEditSource }: SourcesListProps) => {
     const pipeline = usePipeline();
     const currentSource = pipeline.data.source?.id;
 
-    console.log('pipeline', pipeline.data);
-    console.log('sources', sources);
-
     return (
         <Flex gap={'size-200'} direction={'column'}>
-            <Button variant='secondary' UNSAFE_className={classes.addSource}>
+            <Button variant='secondary' UNSAFE_className={classes.addSource} onPress={onAddSource}>
                 <AddIcon /> Add new source
             </Button>
 
-            {sources.map(({ id, name, source_type }) => (
+            {sources.map((source) => (
                 <Flex
-                    key={id}
+                    key={source.id}
                     gap='size-200'
                     direction='column'
                     UNSAFE_className={clsx(classes.card, classes.activeCard)}
@@ -39,10 +38,10 @@ export const SourcesList = ({ sources }: SourcesListProps) => {
                         <IpCameraIcon />
 
                         <Flex direction={'column'} gap={'size-100'}>
-                            <Text UNSAFE_className={classes.title}>{name}</Text>
+                            <Text UNSAFE_className={classes.title}>{source.name}</Text>
                             <Flex gap={'size-100'} alignItems={'center'}>
-                                <Text>{source_type}</Text>
-                                <StatusTag isConnected={isEqual(currentSource, id)} />
+                                <Text>{source.source_type}</Text>
+                                <StatusTag isConnected={isEqual(currentSource, source.id)} />
                             </Flex>
                         </Flex>
                     </Flex>
@@ -52,7 +51,12 @@ export const SourcesList = ({ sources }: SourcesListProps) => {
                             <li>device_id: 123</li>
                         </ul>
 
-                        <SourceMenu id={String(id)} name={name} isConnected={isEqual(currentSource, id)} />
+                        <SourceMenu
+                            id={String(source.id)}
+                            name={source.name}
+                            isConnected={isEqual(currentSource, source.id)}
+                            onEdit={() => onEditSource(source)}
+                        />
                     </Flex>
                 </Flex>
             ))}
