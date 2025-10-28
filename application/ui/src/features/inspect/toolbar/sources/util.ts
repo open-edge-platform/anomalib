@@ -7,8 +7,14 @@ export type ImagesFolderSourceConfig = components['schemas']['ImagesFolderSource
 export type IPCameraSourceConfig = components['schemas']['IPCameraSourceConfig-Input'];
 export type WebcamSourceConfig = components['schemas']['WebcamSourceConfig-Input'];
 export type VideoFileSourceConfig = components['schemas']['VideoFileSourceConfig-Input'];
+export type DisconnectedSourceConfig = components['schemas']['DisconnectedSourceConfig-Input'];
 
-export type SourceConfig = ImagesFolderSourceConfig | IPCameraSourceConfig | WebcamSourceConfig | VideoFileSourceConfig;
+export type SourceConfig =
+    | ImagesFolderSourceConfig
+    | IPCameraSourceConfig
+    | WebcamSourceConfig
+    | VideoFileSourceConfig
+    | DisconnectedSourceConfig;
 
 export const isOnlyDigits = (str: string): boolean => {
     return /^\d+$/.test(str);
