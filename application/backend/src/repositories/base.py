@@ -109,6 +109,7 @@ class BaseRepository(Generic[ModelType, SchemaType], metaclass=abc.ABCMeta):
         ]
         query = expression.delete(self.schema).where(*where_expression)
         await self.db.execute(query)
+        await self.db.commit()
 
     @staticmethod
     def _id_to_str(obj_id: str | UUID) -> str:
