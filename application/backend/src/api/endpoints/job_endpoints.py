@@ -5,7 +5,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends
-from fastapi.responses import StreamingResponse
+from sse_starlette import EventSourceResponse
 
 from api.dependencies import get_job_id, get_job_service
 from api.endpoints import API_PREFIX
@@ -39,6 +39,6 @@ async def submit_train_job(
 async def get_job_logs(
     job_id: Annotated[UUID, Depends(get_job_id)],
     job_service: Annotated[JobService, Depends(get_job_service)],
-) -> StreamingResponse:
+) -> EventSourceResponse:
     """Endpoint to get the logs of a job by its ID"""
-    return StreamingResponse(job_service.stream_logs(job_id=job_id), media_type="text/event-stream")
+    return EventSourceResponse(job_service.stream_logs(job_id=job_id))

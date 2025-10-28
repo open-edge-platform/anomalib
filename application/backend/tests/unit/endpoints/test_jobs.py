@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from fastapi import status
+from sse_starlette import ServerSentEvent
 
 from api.dependencies import get_job_service
 from main import app
@@ -41,8 +42,8 @@ def test_get_job_logs_success(fxt_client, fxt_job_service, fxt_job):
 
     # Mock the stream_logs generator
     async def mock_stream():
-        yield '{"level": "INFO", "message": "Line 1"}\n'
-        yield '{"level": "INFO", "message": "Line 2"}\n'
+        yield ServerSentEvent(data='{"level": "INFO", "message": "Line 1"}')
+        yield ServerSentEvent(data='{"level": "INFO", "message": "Line 2"}')
 
     fxt_job_service.stream_logs.return_value = mock_stream()
 
@@ -52,7 +53,7 @@ def test_get_job_logs_success(fxt_client, fxt_job_service, fxt_job):
     # Verify the streamed content
     content = response.content.decode("utf-8")
     lines = [line for line in content.split("\n") if line]
-    assert len(lines) == 2
+    assert len(lines) == 4  # 2 events + 2 newlines
     assert '"level": "INFO"' in lines[0]
     assert '"message": "Line 1"' in lines[0]
 

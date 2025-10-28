@@ -33,6 +33,7 @@ dev = [
     "flaky~=3.8",
     "testfixtures~=8.2",
     "httpx~=0.24",
+    "freezegun~=1.5",
 ]
 lint = [
     "ruff~=0.11.2",
