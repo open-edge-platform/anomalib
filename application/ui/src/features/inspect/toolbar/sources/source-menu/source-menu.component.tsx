@@ -3,7 +3,7 @@ import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { MoreMenu } from '@geti/ui/icons';
 import { ActionButton, Item, Key, Menu, MenuTrigger, toast } from 'packages/ui';
 
-interface SourceMenuProps {
+export interface SourceMenuProps {
     id: string;
     name: string;
     isConnected: boolean;
@@ -23,9 +23,7 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
     });
 
     const removeSource = $api.useMutation('delete', '/api/sources/{source_id}', {
-        meta: {
-            invalidates: [['get', '/api/sources']],
-        },
+        meta: { invalidates: [['get', '/api/sources']] },
     });
 
     const handleOnAction = (option: Key) => {
@@ -43,36 +41,50 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
     };
 
     const handleConnect = async () => {
-        await updatePipeline.mutateAsync({
-            params: { path: { project_id: projectId } },
-            body: { source_id: id },
-        });
+        try {
+            await updatePipeline.mutateAsync({
+                params: { path: { project_id: projectId } },
+                body: { source_id: id },
+            });
 
-        toast({
-            type: 'success',
-            message: `Successfully connected to "${name}"`,
-        });
+            toast({
+                type: 'success',
+                message: `Successfully connected to "${name}"`,
+            });
+        } catch (_error) {
+            toast({
+                type: 'error',
+                message: `Failed to connect to "${name}".`,
+            });
+        }
     };
 
     const handleDelete = async () => {
-        if (isConnected) {
-            await updatePipeline.mutateAsync({
-                params: { path: { project_id: projectId } },
-                body: { source_id: null },
+        try {
+            if (isConnected) {
+                await updatePipeline.mutateAsync({
+                    params: { path: { project_id: projectId } },
+                    body: { source_id: null },
+                });
+            }
+
+            await removeSource.mutateAsync({ params: { path: { source_id: id } } });
+
+            toast({
+                type: 'success',
+                message: `${name} has been removed successfully!`,
+            });
+        } catch (_error) {
+            toast({
+                type: 'error',
+                message: `Failed to remove "${name}".`,
             });
         }
-
-        await removeSource.mutateAsync({ params: { path: { source_id: id } } });
-
-        toast({
-            type: 'success',
-            message: `${name} has been removed successfully!`,
-        });
     };
 
     return (
         <MenuTrigger>
-            <ActionButton isQuiet>
+            <ActionButton isQuiet aria-label='source menu'>
                 <MoreMenu />
             </ActionButton>
             <Menu onAction={handleOnAction}>

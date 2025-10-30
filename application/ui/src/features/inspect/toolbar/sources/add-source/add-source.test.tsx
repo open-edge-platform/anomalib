@@ -30,7 +30,7 @@ describe('add-source', () => {
 
     it('calls connectToPipelineMutation after successful submit', async () => {
         const mockOnSaved = vi.fn();
-        const mockSourceMutation = vi.fn().mockResolvedValue(newConfig);
+        const mockSourceMutation = vi.fn().mockResolvedValue(newConfig.id);
         const mockConnectToPipeline = vi.fn().mockResolvedValue(undefined);
 
         vi.mocked(useConnectSourceToPipeline).mockReturnValue(mockConnectToPipeline);
@@ -58,7 +58,7 @@ describe('add-source', () => {
 
         await waitFor(() => {
             expect(mockSourceMutation).toHaveBeenCalledWith(expect.objectContaining({ ...newConfig, id: '' }));
-            expect(mockConnectToPipeline).toHaveBeenCalledWith(newConfig);
+            expect(mockConnectToPipeline).toHaveBeenCalledWith(newConfig.id);
             expect(mockOnSaved).toHaveBeenCalled();
         });
     });

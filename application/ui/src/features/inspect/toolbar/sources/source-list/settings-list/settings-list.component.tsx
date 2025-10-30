@@ -2,11 +2,11 @@ import { SourceConfig } from '../../util';
 
 import classes from './settings-list.module.scss';
 
-interface SettingsListPops {
+interface SettingsListProps {
     source: SourceConfig;
 }
 
-export const SettingsList = ({ source }: SettingsListPops) => {
+export const SettingsList = ({ source }: SettingsListProps) => {
     if (source.source_type === 'images_folder') {
         return (
             <ul className={classes.list}>
