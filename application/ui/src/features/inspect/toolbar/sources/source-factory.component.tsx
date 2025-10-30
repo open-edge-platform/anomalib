@@ -27,12 +27,12 @@ export const SourceFactory = () => {
     };
 
     if (view === 'edit' && !isEmpty(currentSource)) {
-        return <EditSource config={currentSource} />;
+        return <EditSource config={currentSource} onSaved={() => setView('list')} />;
     }
 
     if (view === 'list') {
         return <SourcesList sources={sources} onAddSource={handleAddSource} onEditSource={handleEditSource} />;
     }
 
-    return <SourceOptions />;
+    return <SourceOptions onSaved={() => setView('list')} />;
 };

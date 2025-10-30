@@ -4,8 +4,7 @@
 import { useActionState } from 'react';
 
 import { toast } from '@geti/ui';
-import { usePatchPipeline } from 'src/hooks/use-pipeline.hook';
-import { useProjectIdentifier } from 'src/hooks/use-project-identifier.hook';
+import { isFunction } from 'lodash-es';
 
 import { SourceConfig } from '../util';
 import { useSourceMutation } from './use-source-mutation.hook';
@@ -13,16 +12,16 @@ import { useSourceMutation } from './use-source-mutation.hook';
 interface useSourceActionProps<T> {
     config: Awaited<T>;
     isNewSource: boolean;
+    onSaved?: (source_id: string) => void;
     bodyFormatter: (formData: FormData) => T;
 }
 
 export const useSourceAction = <T extends SourceConfig>({
     config,
     isNewSource,
+    onSaved,
     bodyFormatter,
 }: useSourceActionProps<T>) => {
-    const { projectId } = useProjectIdentifier();
-    const pipeline = usePatchPipeline(projectId);
     const addOrUpdateSource = useSourceMutation(isNewSource);
 
     return useActionState<T, FormData>(async (_prevState: T, formData: FormData) => {
@@ -31,16 +30,12 @@ export const useSourceAction = <T extends SourceConfig>({
         try {
             const source_id = await addOrUpdateSource(body);
 
-            await pipeline.mutateAsync({
-                params: { path: { project_id: projectId } },
-                body: { source_id },
-            });
-
             toast({
                 type: 'success',
                 message: `Source configuration ${isNewSource ? 'created' : 'updated'} successfully.`,
             });
 
+            isFunction(onSaved) && onSaved(source_id);
             return { ...body, id: source_id };
         } catch (error: unknown) {
             const details = (error as { detail?: string })?.detail;

@@ -5,11 +5,15 @@ import { ReactComponent as IpCameraIcon } from '../../../../assets/icons/ip-came
 import { ReactComponent as Video } from '../../../../assets/icons/video-file.svg';
 import { ReactComponent as WebcamIcon } from '../../../../assets/icons/webcam.svg';
 import { ImageFolder } from './image-folder/image-folder.component';
-import { IpCamera } from './ip-camera/ip-camera.component';
+import { AddIpCamera } from './ip-camera/add-ip-camera.component';
 import { VideoFile } from './video-file/video-file.component';
 import { Webcam } from './webcam/webcam.component';
 
-export const SourceOptions = () => {
+interface SourceOptionsProps {
+    onSaved: () => void;
+}
+
+export const SourceOptions = ({ onSaved }: SourceOptionsProps) => {
     return (
         <DisclosureGroup
             defaultActiveInput={null}
@@ -24,7 +28,7 @@ export const SourceOptions = () => {
                     label: 'IP Camera',
                     value: 'ip_camera',
                     icon: <IpCameraIcon width={'24px'} />,
-                    content: <IpCamera />,
+                    content: <AddIpCamera onSaved={onSaved} />,
                 },
                 {
                     label: 'Video file',

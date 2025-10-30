@@ -53,3 +53,11 @@ export const useDisablePipeline = (project_id: string) => {
         },
     });
 };
+
+export const useConnectSourceToPipeline = () => {
+    const { projectId } = useProjectIdentifier();
+    const pipeline = usePatchPipeline(projectId);
+
+    return (source_id: string) =>
+        pipeline.mutateAsync({ params: { path: { project_id: projectId } }, body: { source_id } });
+};
