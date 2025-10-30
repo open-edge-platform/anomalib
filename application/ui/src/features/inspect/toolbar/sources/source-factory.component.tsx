@@ -7,7 +7,7 @@ import { isEmpty } from 'lodash-es';
 
 import { $api } from '../../../../api/client';
 import { EditSourceFactory } from './edit-source-factory.component';
-import { SourcesList } from './source-list.component';
+import { SourcesList } from './source-list/source-list.component';
 import { SourceOptions } from './source-options.component';
 import { SourceConfig } from './util';
 

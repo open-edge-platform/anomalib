@@ -10,7 +10,7 @@
 .card {
     padding: var(--spectrum-global-dimension-size-250);
     background: var(--spectrum-global-color-gray-200);
-    border-radius: var(--spectrum-global-dimension-size-200);
+    border-radius: var(--spectrum-global-dimension-size-65);
 }
 
 .activeCard {
@@ -23,7 +23,6 @@
     font-size: var(--spectrum-global-dimension-font-size-200);
 }
 
-.list {
-    margin-left: var(--spectrum-global-dimension-font-size-200);
-    list-style-type: disc;
+.type {
+    text-transform: capitalize;
 }

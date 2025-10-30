@@ -1,6 +1,6 @@
 import { DisclosureGroup } from 'src/components/disclosure-group/disclosure-group.component';
 
-import { ReactComponent as Image } from '../../../../assets/icons/images-folder.svg';
+import { ReactComponent as ImageIcon } from '../../../../assets/icons/images-folder.svg';
 import { ReactComponent as IpCameraIcon } from '../../../../assets/icons/ip-camera.svg';
 import { ReactComponent as Video } from '../../../../assets/icons/video-file.svg';
 import { ReactComponent as WebcamIcon } from '../../../../assets/icons/webcam.svg';
@@ -66,7 +66,7 @@ export const SourceOptions = ({ onSaved }: SourceOptionsProps) => {
                 {
                     label: 'Images folder',
                     value: 'images_folder',
-                    icon: <Image width={'24px'} />,
+                    icon: <ImageIcon width={'24px'} />,
                     content: (
                         <AddSource
                             onSaved={onSaved}
