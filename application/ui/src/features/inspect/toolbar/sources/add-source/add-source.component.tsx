@@ -1,47 +1,42 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { ReactNode } from 'react';
+
 import { Button, Form } from '@geti/ui';
 import { useConnectSourceToPipeline } from 'src/hooks/use-pipeline.hook';
 
 import { useSourceAction } from '../hooks/use-source-action.hook';
-import { IPCameraSourceConfig } from '../util';
-import { IpCameraFields } from './ip-camera-fileds.component';
+import { SourceConfig } from '../util';
 
-type AddIpCameraProps = {
+interface AddSourceProps<T> {
+    config: Awaited<T>;
     onSaved: () => void;
-};
+    componentFields: (state: Awaited<T>) => ReactNode;
+    bodyFormatter: (formData: FormData) => T;
+}
 
-const initConfig: IPCameraSourceConfig = {
-    id: '',
-    name: '',
-    source_type: 'ip_camera',
-    stream_url: '',
-    auth_required: false,
-};
-
-export const AddIpCamera = ({ onSaved }: AddIpCameraProps) => {
+export const AddSource = <T extends SourceConfig>({
+    config,
+    onSaved,
+    bodyFormatter,
+    componentFields,
+}: AddSourceProps<T>) => {
     const connectToPipelineMutation = useConnectSourceToPipeline();
 
     const [state, submitAction, isPending] = useSourceAction({
-        config: initConfig,
+        config,
         isNewSource: true,
         onSaved: async (sourceId) => {
             await connectToPipelineMutation(sourceId);
             onSaved();
         },
-        bodyFormatter: (formData: FormData) => ({
-            id: String(formData.get('id')),
-            name: String(formData.get('name')),
-            source_type: 'ip_camera',
-            stream_url: String(formData.get('stream_url')),
-            auth_required: String(formData.get('auth_required')) === 'on' ? true : false,
-        }),
+        bodyFormatter,
     });
 
     return (
         <Form action={submitAction}>
-            <IpCameraFields state={state} />
+            <>{componentFields(state)}</>
 
             <Button type='submit' isDisabled={isPending} UNSAFE_style={{ maxWidth: 'fit-content' }}>
                 Add & Connect

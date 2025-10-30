@@ -7,8 +7,10 @@ import { useConnectSourceToPipeline } from 'src/hooks/use-pipeline.hook';
 import { TestProviders } from 'src/providers';
 
 import { useSourceMutation } from '../hooks/use-source-mutation.hook';
+import { IpCameraFields } from '../ip-camera/ip-camera-fields.component';
+import { ipCameraBodyFormatter, ipCameraInitialConfig } from '../ip-camera/utils';
 import { IPCameraSourceConfig } from '../util';
-import { EditIpCamera } from './edit-ip-camera.component';
+import { EditSource } from './edit-source.component';
 
 vi.mock('../hooks/use-source-mutation.hook');
 vi.mock('src/hooks/use-pipeline.hook');
@@ -18,20 +20,25 @@ describe('EditIpCamera', () => {
         vi.clearAllMocks();
     });
 
-    const existingConfig: IPCameraSourceConfig = {
-        id: 'existing-source-id',
-        name: 'Existing Camera',
-        stream_url: 'rtsp://192.168.1.200:554/stream',
-        source_type: 'ip_camera',
-        auth_required: false,
-    };
-
     const updatedConfig: IPCameraSourceConfig = {
         id: 'existing-source-id',
         name: 'Updated Camera',
         stream_url: 'rtsp://192.168.1.201:554/stream',
         source_type: 'ip_camera',
         auth_required: true,
+    };
+
+    const renderApp = (mockOnSaved = vi.fn()) => {
+        render(
+            <TestProviders>
+                <EditSource
+                    config={ipCameraInitialConfig}
+                    onSaved={mockOnSaved}
+                    componentFields={(state: IPCameraSourceConfig) => <IpCameraFields state={state} />}
+                    bodyFormatter={ipCameraBodyFormatter}
+                />
+            </TestProviders>
+        );
     };
 
     it('calls connectToPipelineMutation after successful "Save & Connect" submit', async () => {
@@ -42,11 +49,7 @@ describe('EditIpCamera', () => {
         vi.mocked(useConnectSourceToPipeline).mockReturnValue(mockConnectToPipeline);
         vi.mocked(useSourceMutation).mockReturnValue(mockSourceMutation);
 
-        render(
-            <TestProviders>
-                <EditIpCamera config={existingConfig} onSaved={mockOnSaved} />
-            </TestProviders>
-        );
+        renderApp(mockOnSaved);
 
         const nameInput = screen.getByRole('textbox', { name: /Name/i });
         const streamUrlInput = screen.getByRole('textbox', { name: /Stream Url/i });
@@ -72,11 +75,7 @@ describe('EditIpCamera', () => {
         vi.mocked(useConnectSourceToPipeline).mockReturnValue(mockConnectToPipeline);
         vi.mocked(useSourceMutation).mockReturnValue(mockSourceMutation);
 
-        render(
-            <TestProviders>
-                <EditIpCamera config={existingConfig} onSaved={mockOnSaved} />
-            </TestProviders>
-        );
+        renderApp(mockOnSaved);
 
         const nameInput = screen.getByRole('textbox', { name: /Name/i });
         const streamUrlInput = screen.getByRole('textbox', { name: /Stream Url/i });

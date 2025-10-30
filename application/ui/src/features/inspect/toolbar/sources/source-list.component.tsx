@@ -14,10 +14,10 @@ import classes from './source-list.module.scss';
 type SourcesListProps = {
     sources: SourceConfig[];
     onAddSource: () => void;
-    onEditSource: (config: SourceConfig) => void;
+    onEditSourceFactory: (config: SourceConfig) => void;
 };
 
-export const SourcesList = ({ sources, onAddSource, onEditSource }: SourcesListProps) => {
+export const SourcesList = ({ sources, onAddSource, onEditSourceFactory }: SourcesListProps) => {
     const pipeline = usePipeline();
     const currentSource = pipeline.data.source?.id;
 
@@ -55,7 +55,7 @@ export const SourcesList = ({ sources, onAddSource, onEditSource }: SourcesListP
                             id={String(source.id)}
                             name={source.name}
                             isConnected={isEqual(currentSource, source.id)}
-                            onEdit={() => onEditSource(source)}
+                            onEdit={() => onEditSourceFactory(source)}
                         />
                     </Flex>
                 </Flex>

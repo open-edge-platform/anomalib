@@ -7,12 +7,15 @@ import { useConnectSourceToPipeline } from 'src/hooks/use-pipeline.hook';
 import { TestProviders } from 'src/providers';
 
 import { useSourceMutation } from '../hooks/use-source-mutation.hook';
-import { AddIpCamera } from './add-ip-camera.component';
+import { IpCameraFields } from '../ip-camera/ip-camera-fields.component';
+import { ipCameraBodyFormatter, ipCameraInitialConfig } from '../ip-camera/utils';
+import { IPCameraSourceConfig } from '../util';
+import { AddSource } from './add-source.component';
 
 vi.mock('../hooks/use-source-mutation.hook');
 vi.mock('src/hooks/use-pipeline.hook');
 
-describe('IpCamera', () => {
+describe('add-source', () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
@@ -35,7 +38,12 @@ describe('IpCamera', () => {
 
         render(
             <TestProviders>
-                <AddIpCamera onSaved={mockOnSaved} />
+                <AddSource
+                    onSaved={mockOnSaved}
+                    config={ipCameraInitialConfig}
+                    componentFields={(state: IPCameraSourceConfig) => <IpCameraFields state={state} />}
+                    bodyFormatter={ipCameraBodyFormatter}
+                />
             </TestProviders>
         );
 

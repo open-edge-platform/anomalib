@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { isEmpty } from 'lodash-es';
 
 import { $api } from '../../../../api/client';
-import { EditSource } from './edit-source/edit-source.component';
+import { EditSourceFactory } from './edit-source-factory.component';
 import { SourcesList } from './source-list.component';
 import { SourceOptions } from './source-options.component';
 import { SourceConfig } from './util';
@@ -21,17 +21,23 @@ export const SourceFactory = () => {
         setView('options');
     };
 
-    const handleEditSource = (source: SourceConfig) => {
+    const handleEditSourceFactory = (source: SourceConfig) => {
         setView('edit');
         setCurrentSource(source);
     };
 
     if (view === 'edit' && !isEmpty(currentSource)) {
-        return <EditSource config={currentSource} onSaved={() => setView('list')} />;
+        return <EditSourceFactory config={currentSource} onSaved={() => setView('list')} />;
     }
 
     if (view === 'list') {
-        return <SourcesList sources={sources} onAddSource={handleAddSource} onEditSource={handleEditSource} />;
+        return (
+            <SourcesList
+                sources={sources}
+                onAddSource={handleAddSource}
+                onEditSourceFactory={handleEditSourceFactory}
+            />
+        );
     }
 
     return <SourceOptions onSaved={() => setView('list')} />;

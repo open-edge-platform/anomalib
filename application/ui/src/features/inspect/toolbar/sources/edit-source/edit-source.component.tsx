@@ -1,63 +1,69 @@
-import { Button, View } from 'packages/ui';
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
-import { ImageFolder } from '../image-folder/image-folder.component';
-import { EditIpCamera } from '../ip-camera/edit-ip-camera.component';
-import { getImageFolderData, getIpCameraData, getVideoFileData, getWebcamData, SourceConfig } from '../util';
-import { VideoFile } from '../video-file/video-file.component';
-import { Webcam } from '../webcam/webcam.component';
+import { ReactNode, useRef } from 'react';
+
+import { Button, ButtonGroup, Divider, Form, View } from '@geti/ui';
+import { useConnectSourceToPipeline } from 'src/hooks/use-pipeline.hook';
+
+import { useSourceAction } from '../hooks/use-source-action.hook';
+import { SourceConfig } from '../util';
 
 import classes from './edit-source.module.scss';
 
-interface EditSourceProps {
-    config: SourceConfig;
+interface EditSourceProps<T> {
+    config: Awaited<T>;
     onSaved: () => void;
+    componentFields: (state: Awaited<T>) => ReactNode;
+    bodyFormatter: (formData: FormData) => T;
 }
 
-export const EditSource = ({ config, onSaved }: EditSourceProps) => {
-    if (config.source_type === 'webcam') {
-        return (
-            <View UNSAFE_className={classes.container}>
-                <Webcam
-                    config={getWebcamData([config])}
-                    renderButtons={(isPending) => (
-                        <Button type='submit' maxWidth='size-1000' isDisabled={isPending}>
-                            update
-                        </Button>
-                    )}
-                />
-            </View>
-        );
-    }
+export const EditSource = <T extends SourceConfig>({
+    config,
+    onSaved,
+    bodyFormatter,
+    componentFields,
+}: EditSourceProps<T>) => {
+    const connectToPipeline = useRef(false);
+    const connectToPipelineMutation = useConnectSourceToPipeline();
 
-    if (config.source_type === 'ip_camera') {
-        return <EditIpCamera config={getIpCameraData([config])} onSaved={onSaved} />;
-    }
-
-    if (config.source_type === 'video_file') {
-        return (
-            <View UNSAFE_className={classes.container}>
-                <VideoFile
-                    config={getVideoFileData([config])}
-                    renderButtons={(isPending) => (
-                        <Button type='submit' maxWidth='size-1000' isDisabled={isPending}>
-                            update
-                        </Button>
-                    )}
-                />
-            </View>
-        );
-    }
+    const [state, submitAction, isPending] = useSourceAction({
+        config,
+        isNewSource: false,
+        onSaved: async (sourceId) => {
+            connectToPipeline.current && (await connectToPipelineMutation(sourceId));
+            connectToPipeline.current = false;
+            onSaved();
+        },
+        bodyFormatter,
+    });
 
     return (
-        <View UNSAFE_className={classes.container}>
-            <ImageFolder
-                config={getImageFolderData([config])}
-                renderButtons={(isPending) => (
-                    <Button type='submit' maxWidth='size-1000' isDisabled={isPending}>
-                        update
-                    </Button>
-                )}
-            />
-        </View>
+        <Form action={submitAction}>
+            <View UNSAFE_className={classes.container}>
+                <>{componentFields(state)}</>
+            </View>
+            <Divider size='S' marginY={'size-200'} />
+
+            <ButtonGroup marginTop={'0px'}>
+                <Button
+                    type='submit'
+                    isDisabled={isPending}
+                    UNSAFE_style={{ maxWidth: 'fit-content' }}
+                    onPress={() => (connectToPipeline.current = false)}
+                >
+                    Save
+                </Button>
+
+                <Button
+                    type='submit'
+                    isDisabled={isPending}
+                    UNSAFE_style={{ maxWidth: 'fit-content' }}
+                    onPress={() => (connectToPipeline.current = true)}
+                >
+                    Save & Connect
+                </Button>
+            </ButtonGroup>
+        </Form>
     );
 };
