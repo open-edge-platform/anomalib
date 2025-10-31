@@ -129,7 +129,7 @@ class JobService:
                 yield ServerSentEvent(data=line.rstrip())
 
     @classmethod
-    async def stream_progress(cls, job_id: UUID | str) -> Coroutine[Any, Any, AsyncContentStream]:
+    async def stream_progress(cls, job_id: UUID | str) -> AsyncGenerator[ServerSentEvent, None]:
         """Stream the progress of a job by its ID"""
         still_running = True
         while still_running:
