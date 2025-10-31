@@ -55,35 +55,35 @@ class ConfigurationService:
         if active_pipeline and str(getattr(active_pipeline, field)) == str(config_id):
             notify_fn()
 
-    async def list_sources(self) -> list[Source]:
+    async def list_sources(self, project_id: UUID) -> list[Source]:
         async with get_async_db_session_ctx() as db:
-            source_repo = SourceRepository(db)
+            source_repo = SourceRepository(db, project_id=project_id)
             return await source_repo.get_all()
 
-    async def list_sinks(self) -> list[Sink]:
+    async def list_sinks(self, project_id: UUID) -> list[Sink]:
         async with get_async_db_session_ctx() as db:
-            sink_repo = SinkRepository(db)
+            sink_repo = SinkRepository(db, project_id=project_id)
             return await sink_repo.get_all()
 
-    async def get_source_by_id(self, source_id: UUID, db: AsyncSession | None = None) -> Source:
+    async def get_source_by_id(self, source_id: UUID, project_id: UUID, db: AsyncSession | None = None) -> Source:
         if db is None:
             async with get_async_db_session_ctx() as db_session:
-                source_repo = SourceRepository(db_session)
+                source_repo = SourceRepository(db_session, project_id=project_id)
                 source = await source_repo.get_by_id(source_id)
         else:
-            source_repo = SourceRepository(db)
+            source_repo = SourceRepository(db, project_id=project_id)
             source = await source_repo.get_by_id(source_id)
         if not source:
             raise ResourceNotFoundError(ResourceType.SOURCE, str(source_id))
         return source
 
-    async def get_sink_by_id(self, sink_id: UUID, db: AsyncSession | None = None) -> Sink:
+    async def get_sink_by_id(self, sink_id: UUID, project_id: UUID, db: AsyncSession | None = None) -> Sink:
         if db is None:
             async with get_async_db_session_ctx() as db_session:
-                sink_repo = SinkRepository(db_session)
+                sink_repo = SinkRepository(db_session, project_id=project_id)
                 sink = await sink_repo.get_by_id(sink_id)
         else:
-            sink_repo = SinkRepository(db)
+            sink_repo = SinkRepository(db, project_id=project_id)
             sink = await sink_repo.get_by_id(sink_id)
         if not sink:
             raise ResourceNotFoundError(ResourceType.SINK, str(sink_id))
@@ -91,38 +91,38 @@ class ConfigurationService:
 
     async def create_source(self, source: Source) -> Source:
         async with get_async_db_session_ctx() as db:
-            source_repo = SourceRepository(db)
+            source_repo = SourceRepository(db, project_id=source.project_id)
             return await source_repo.save(source)
 
     async def create_sink(self, sink: Sink) -> Sink:
         async with get_async_db_session_ctx() as db:
-            sink_repo = SinkRepository(db)
+            sink_repo = SinkRepository(db, project_id=sink.project_id)
             return await sink_repo.save(sink)
 
-    async def update_source(self, source_id: UUID, partial_config: dict) -> Source:
+    async def update_source(self, source_id: UUID, project_id: UUID, partial_config: dict) -> Source:
         async with get_async_db_session_ctx() as db:
-            source = await self.get_source_by_id(source_id, db)
-            source_repo = SourceRepository(db)
+            source = await self.get_source_by_id(source_id, project_id, db)
+            source_repo = SourceRepository(db, project_id=project_id)
             updated = await source_repo.update(source, partial_config)
             await self._on_config_changed(updated.id, PipelineField.SOURCE_ID, db, self._notify_source_changed)
             return updated
 
-    async def update_sink(self, sink_id: UUID, partial_config: dict) -> Sink:
+    async def update_sink(self, sink_id: UUID, project_id: UUID, partial_config: dict) -> Sink:
         async with get_async_db_session_ctx() as db:
-            sink = await self.get_sink_by_id(sink_id, db)
-            sink_repo = SinkRepository(db)
+            sink = await self.get_sink_by_id(sink_id, project_id, db)
+            sink_repo = SinkRepository(db, project_id=project_id)
             updated = await sink_repo.update(sink, partial_config)
             await self._on_config_changed(updated.id, PipelineField.SINK_ID, db, self._notify_sink_changed)
             return updated
 
-    async def delete_source_by_id(self, source_id: UUID) -> None:
+    async def delete_source_by_id(self, source_id: UUID, project_id: UUID) -> None:
         async with get_async_db_session_ctx() as db:
-            source = await self.get_source_by_id(source_id, db)
-            source_repo = SourceRepository(db)
+            source = await self.get_source_by_id(source_id, project_id, db)
+            source_repo = SourceRepository(db, project_id=project_id)
             await source_repo.delete_by_id(source.id)
 
-    async def delete_sink_by_id(self, sink_id: UUID) -> None:
+    async def delete_sink_by_id(self, sink_id: UUID, project_id: UUID) -> None:
         async with get_async_db_session_ctx() as db:
-            sink = await self.get_sink_by_id(sink_id, db)
-            sink_repo = SinkRepository(db)
+            sink = await self.get_sink_by_id(sink_id, project_id, db)
+            sink_repo = SinkRepository(db, project_id=project_id)
             await sink_repo.delete_by_id(sink.id)

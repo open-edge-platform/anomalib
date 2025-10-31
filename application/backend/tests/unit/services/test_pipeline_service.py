@@ -24,10 +24,15 @@ from services.pipeline_service import PipelineService
 def fxt_pipeline(fxt_project, fxt_model):
     """Fixture for a test pipeline."""
     source = VideoFileSourceConfig(
-        id=uuid.uuid4(), source_type="video_file", name="Test Source", video_path="/path/to/video.mp4"
+        id=uuid.uuid4(),
+        project_id=fxt_project.id,
+        source_type="video_file",
+        name="Test Source",
+        video_path="/path/to/video.mp4",
     )
     sink = FolderSinkConfig(
         id=uuid.uuid4(),
+        project_id=fxt_project.id,
         sink_type="folder",
         name="Test Sink",
         folder_path="/path/to/output",
@@ -211,7 +216,13 @@ class TestPipelineService:
         self, fxt_pipeline_service, fxt_pipeline, fxt_pipeline_repository, fxt_condition
     ):
         """Test updating running pipeline with source change."""
-        new_source = WebcamSourceConfig(id=uuid.uuid4(), source_type="webcam", name="New Source", device_id=0)
+        new_source = WebcamSourceConfig(
+            id=uuid.uuid4(),
+            project_id=fxt_pipeline.project_id,
+            source_type="webcam",
+            name="New Source",
+            device_id=0,
+        )
         updated_pipeline = fxt_pipeline.model_copy(update={"source": new_source, "source_id": new_source.id})
         fxt_pipeline_repository.get_by_id.return_value = fxt_pipeline
         fxt_pipeline_repository.update.return_value = updated_pipeline
@@ -236,6 +247,7 @@ class TestPipelineService:
         """Test updating running pipeline with sink change."""
         new_sink = MqttSinkConfig(
             id=uuid.uuid4(),
+            project_id=fxt_pipeline.project_id,
             sink_type="mqtt",
             name="New Sink",
             broker_host="localhost",

@@ -12,12 +12,12 @@ from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse, Response
 
-from api.dependencies import get_configuration_service, get_source_id
+from api.dependencies import get_configuration_service, get_project_id, get_source_id
 from pydantic_models import Source, SourceType
 from pydantic_models.source import SourceAdapter
 from services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
-router = APIRouter(prefix="/api/sources", tags=["Sources"])
+router = APIRouter(prefix="/api/projects/{project_id}/sources", tags=["Sources"])
 
 CREATE_SOURCE_BODY_DESCRIPTION = """
 Configuration for the new source. The exact list of fields that can be configured depends on the source type.
@@ -96,19 +96,26 @@ UPDATE_SOURCE_BODY_EXAMPLES = {
     },
 )
 async def create_source(
+    project_id: Annotated[UUID, Depends(get_project_id)],
     source_config: Annotated[
-        Source, Body(description=CREATE_SOURCE_BODY_DESCRIPTION, openapi_examples=CREATE_SOURCE_BODY_EXAMPLES)
+        dict, Body(description=CREATE_SOURCE_BODY_DESCRIPTION, openapi_examples=CREATE_SOURCE_BODY_EXAMPLES)
     ],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Source:
     """Create and configure a new source"""
-    if source_config.source_type == SourceType.DISCONNECTED:
+    # Inject project_id from URL path into the config
+    source_config["project_id"] = str(project_id)
+    
+    # Validate the complete config
+    validated_source = SourceAdapter.validate_python(source_config)
+    
+    if validated_source.source_type == SourceType.DISCONNECTED:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="The source with source_type=DISCONNECTED cannot be created"
         )
 
     try:
-        return await configuration_service.create_source(source_config)
+        return await configuration_service.create_source(validated_source)
     except ResourceAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -120,10 +127,11 @@ async def create_source(
     },
 )
 async def list_sources(
+    project_id: Annotated[UUID, Depends(get_project_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> list[Source]:
     """List the available sources"""
-    return await configuration_service.list_sources()
+    return await configuration_service.list_sources(project_id)
 
 
 @router.get(
@@ -135,12 +143,13 @@ async def list_sources(
     },
 )
 async def get_source(
+    project_id: Annotated[UUID, Depends(get_project_id)],
     source_id: Annotated[UUID, Depends(get_source_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Source:
     """Get info about a source"""
     try:
-        return await configuration_service.get_source_by_id(source_id)
+        return await configuration_service.get_source_by_id(source_id, project_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -154,6 +163,7 @@ async def get_source(
     },
 )
 async def update_source(
+    project_id: Annotated[UUID, Depends(get_project_id)],
     source_id: Annotated[UUID, Depends(get_source_id)],
     source_config: Annotated[
         dict,
@@ -168,7 +178,7 @@ async def update_source(
     if "source_type" in source_config:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'source_type' field cannot be changed")
     try:
-        return await configuration_service.update_source(source_id, source_config)
+        return await configuration_service.update_source(source_id, project_id, source_config)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -188,15 +198,16 @@ async def update_source(
     },
 )
 async def export_source(
+    project_id: Annotated[UUID, Depends(get_project_id)],
     source_id: Annotated[UUID, Depends(get_source_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Response:
     """Export a source to file"""
-    source = await configuration_service.get_source_by_id(source_id)
+    source = await configuration_service.get_source_by_id(source_id, project_id)
     if not source:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Source with ID {source_id} not found")
 
-    yaml_content = yaml.safe_dump(source.model_dump(mode="json", exclude={"id"}))
+    yaml_content = yaml.safe_dump(source.model_dump(mode="json", exclude={"id", "project_id"}))
 
     return Response(
         content=yaml_content.encode("utf8"),
@@ -214,6 +225,7 @@ async def export_source(
     },
 )
 async def import_source(
+    project_id: Annotated[UUID, Depends(get_project_id)],
     yaml_file: Annotated[UploadFile, File(description="YAML file containing the source configuration")],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Source:
@@ -221,6 +233,9 @@ async def import_source(
     try:
         yaml_content = await yaml_file.read()
         source_data = yaml.safe_load(yaml_content)
+        
+        # Inject project_id from URL path
+        source_data["project_id"] = str(project_id)
 
         source_config = SourceAdapter.validate_python(source_data)
         if source_config.source_type == SourceType.DISCONNECTED:
@@ -246,12 +261,13 @@ async def import_source(
     },
 )
 async def delete_source(
+    project_id: Annotated[UUID, Depends(get_project_id)],
     source_id: Annotated[UUID, Depends(get_source_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> None:
     """Remove a source"""
     try:
-        await configuration_service.delete_source_by_id(source_id)
+        await configuration_service.delete_source_by_id(source_id, project_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:

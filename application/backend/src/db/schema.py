@@ -91,6 +91,7 @@ class SourceDB(Base):
     __tablename__ = "sources"
 
     id: Mapped[str] = mapped_column(Text, primary_key=True, default=lambda: str(uuid4()))
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"))
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     source_type: Mapped[str] = mapped_column(String(50), nullable=False)
     config_data: Mapped[dict] = mapped_column(JSON, nullable=False)
@@ -102,6 +103,7 @@ class SinkDB(Base):
     __tablename__ = "sinks"
 
     id: Mapped[str] = mapped_column(Text, primary_key=True, default=lambda: str(uuid4()))
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"))
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     sink_type: Mapped[str] = mapped_column(String(50), nullable=False)
     rate_limit: Mapped[float | None] = mapped_column(Float, nullable=True)

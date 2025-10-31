@@ -10,7 +10,7 @@ class SourceMapper(IBaseMapper):
     """Mapper for Source model <-> Source schema conversions."""
 
     # Define fields to exclude from config_data (common fields)
-    _COMMON_FIELDS: set[str] = {"id", "name", "source_type", "created_at", "updated_at"}
+    _COMMON_FIELDS: set[str] = {"id", "project_id", "name", "source_type", "created_at", "updated_at"}
 
     @staticmethod
     def from_schema(source_db: SourceDB) -> Source:
@@ -20,6 +20,7 @@ class SourceMapper(IBaseMapper):
         return SourceAdapter.validate_python(
             {
                 "id": source_db.id,
+                "project_id": source_db.project_id,
                 "name": source_db.name,
                 "source_type": SourceType(source_db.source_type),
                 **config_data,
@@ -36,6 +37,7 @@ class SourceMapper(IBaseMapper):
 
         return SourceDB(
             id=str(source.id),
+            project_id=str(source.project_id),
             name=source.name,
             source_type=source.source_type.value,
             config_data=source_dict,

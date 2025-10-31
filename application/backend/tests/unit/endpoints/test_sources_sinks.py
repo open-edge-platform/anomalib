@@ -24,9 +24,10 @@ class ConfigApiPath(StrEnum):
 
 
 @pytest.fixture
-def fxt_folder_sink() -> FolderSinkConfig:
+def fxt_folder_sink(fxt_project) -> FolderSinkConfig:
     return FolderSinkConfig(
         id=uuid4(),
+        project_id=fxt_project.id,
         sink_type=SinkType.FOLDER,
         name="Test Folder Sink",
         rate_limit=0.1,
@@ -36,14 +37,21 @@ def fxt_folder_sink() -> FolderSinkConfig:
 
 
 @pytest.fixture
-def fxt_webcam_source() -> WebcamSourceConfig:
-    return WebcamSourceConfig(id=uuid4(), source_type=SourceType.WEBCAM, name="Test Webcam Source", device_id=1)
+def fxt_webcam_source(fxt_project) -> WebcamSourceConfig:
+    return WebcamSourceConfig(
+        id=uuid4(),
+        project_id=fxt_project.id,
+        source_type=SourceType.WEBCAM,
+        name="Test Webcam Source",
+        device_id=1,
+    )
 
 
 @pytest.fixture
-def fxt_video_source() -> VideoFileSourceConfig:
+def fxt_video_source(fxt_project) -> VideoFileSourceConfig:
     return VideoFileSourceConfig(
         id=uuid4(),
+        project_id=fxt_project.id,
         source_type=SourceType.VIDEO_FILE,
         name="Test Folder Source",
         video_path="/test/video/path.mp4",
@@ -51,9 +59,10 @@ def fxt_video_source() -> VideoFileSourceConfig:
 
 
 @pytest.fixture
-def fxt_mqtt_sink() -> MqttSinkConfig:
+def fxt_mqtt_sink(fxt_project) -> MqttSinkConfig:
     return MqttSinkConfig(
         id=uuid4(),
+        project_id=fxt_project.id,
         sink_type=SinkType.MQTT,
         name="Test MQTT Sink",
         rate_limit=0.2,
@@ -80,13 +89,15 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_create_config_success(
-        self, fixture_name, api_path, create_method, fxt_config_service, fxt_client, request
+        self, fixture_name, api_path, create_method, fxt_config_service, fxt_client, fxt_project, request
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
         getattr(fxt_config_service, create_method).return_value = fxt_config
 
-        response = fxt_client.post(f"/api/{api_path}", json=fxt_config.model_dump(exclude={"id"}))
+        response = fxt_client.post(
+            f"/api/projects/{fxt_project.id}/{api_path}", json=fxt_config.model_dump(exclude={"id", "project_id"})
+        )
 
         assert response.status_code == status.HTTP_201_CREATED
         assert response.json()["id"] == config_id
@@ -105,9 +116,9 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_create_config_disconnected_fails(
-        self, api_path, create_method, config_data, fxt_config_service, fxt_client
+        self, api_path, create_method, config_data, fxt_config_service, fxt_client, fxt_project
     ):
-        response = fxt_client.post(f"/api/{api_path}", json=config_data)
+        response = fxt_client.post(f"/api/projects/{fxt_project.id}/{api_path}", json=config_data)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "DISCONNECTED cannot be created" in response.json()["detail"]
@@ -120,8 +131,8 @@ class TestSourceAndSinkEndpoints:
             (ConfigApiPath.SINKS, "create_sink"),
         ],
     )
-    def test_create_sink_validation_error(self, api_path, create_method, fxt_config_service, fxt_client):
-        response = fxt_client.post(f"/api/{api_path}", json={"name": ""})
+    def test_create_sink_validation_error(self, api_path, create_method, fxt_config_service, fxt_client, fxt_project):
+        response = fxt_client.post(f"/api/projects/{fxt_project.id}/{api_path}", json={"name": ""})
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         getattr(fxt_config_service, create_method).assert_not_called()
@@ -134,13 +145,15 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_create_config_exists(
-        self, resource_type, api_path, fixture_name, create_method, fxt_config_service, fxt_client, request
+        self, resource_type, api_path, fixture_name, create_method, fxt_config_service, fxt_client, fxt_project, request
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         getattr(fxt_config_service, create_method).side_effect = ResourceAlreadyExistsError(
             resource_type=resource_type, resource_name="New Config"
         )
-        response = fxt_client.post(f"/api/{api_path}", json=fxt_config.model_dump(exclude={"id"}))
+        response = fxt_client.post(
+            f"/api/projects/{fxt_project.id}/{api_path}", json=fxt_config.model_dump(exclude={"id", "project_id"})
+        )
 
         assert response.status_code == status.HTTP_409_CONFLICT
         getattr(fxt_config_service, create_method).assert_called_once()
@@ -152,11 +165,11 @@ class TestSourceAndSinkEndpoints:
             (["fxt_folder_sink", "fxt_mqtt_sink"], ConfigApiPath.SINKS, "list_sinks"),
         ],
     )
-    def test_list_configs(self, fixtures, api_path, list_method, fxt_config_service, fxt_client, request):
+    def test_list_configs(self, fixtures, api_path, list_method, fxt_config_service, fxt_client, fxt_project, request):
         fxt_configs = [request.getfixturevalue(fixture) for fixture in fixtures]
         getattr(fxt_config_service, list_method).return_value = fxt_configs
 
-        response = fxt_client.get(f"/api/{api_path}")
+        response = fxt_client.get(f"/api/projects/{fxt_project.id}/{api_path}")
 
         assert response.status_code == status.HTTP_200_OK
         assert len(response.json()) == 2
@@ -169,16 +182,18 @@ class TestSourceAndSinkEndpoints:
             ("fxt_folder_sink", ConfigApiPath.SINKS, "get_sink_by_id"),
         ],
     )
-    def test_get_config_success(self, fixture_name, api_path, get_method, fxt_config_service, fxt_client, request):
+    def test_get_config_success(
+        self, fixture_name, api_path, get_method, fxt_config_service, fxt_client, fxt_project, request
+    ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
         getattr(fxt_config_service, get_method).return_value = fxt_config
 
-        response = fxt_client.get(f"/api/{api_path}/{config_id}")
+        response = fxt_client.get(f"/api/projects/{fxt_project.id}/{api_path}/{config_id}")
 
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["id"] == config_id
-        getattr(fxt_config_service, get_method).assert_called_once_with(fxt_config.id)
+        getattr(fxt_config_service, get_method).assert_called_once_with(fxt_config.id, fxt_project.id)
 
     @pytest.mark.parametrize(
         "resource_type, api_path, get_method",
@@ -187,18 +202,20 @@ class TestSourceAndSinkEndpoints:
             (ResourceType.SINK, ConfigApiPath.SINKS, "get_sink_by_id"),
         ],
     )
-    def test_get_config_not_found(self, resource_type, api_path, get_method, fxt_config_service, fxt_client):
+    def test_get_config_not_found(
+        self, resource_type, api_path, get_method, fxt_config_service, fxt_client, fxt_project
+    ):
         config_id = uuid4()
         getattr(fxt_config_service, get_method).side_effect = ResourceNotFoundError(resource_type, str(config_id))
 
-        response = fxt_client.get(f"/api/{api_path}/{str(config_id)}")
+        response = fxt_client.get(f"/api/projects/{fxt_project.id}/{api_path}/{str(config_id)}")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        getattr(fxt_config_service, get_method).assert_called_once_with(config_id)
+        getattr(fxt_config_service, get_method).assert_called_once_with(config_id, fxt_project.id)
 
     @pytest.mark.parametrize("api_path", [ConfigApiPath.SOURCES, ConfigApiPath.SINKS])
-    def test_get_config_invalid_uuid(self, api_path, fxt_client):
-        response = fxt_client.get(f"/api/{api_path}/invalid-uuid")
+    def test_get_config_invalid_uuid(self, api_path, fxt_client, fxt_project):
+        response = fxt_client.get(f"/api/projects/{fxt_project.id}/{api_path}/invalid-uuid")
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     @pytest.mark.parametrize(
@@ -209,19 +226,19 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_update_sink_success(
-        self, fixture_name, api_path, update_method, update_data, fxt_config_service, fxt_client, request
+        self, fixture_name, api_path, update_method, update_data, fxt_config_service, fxt_client, fxt_project, request
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
         updated_config = fxt_config.model_copy(update=update_data)
         getattr(fxt_config_service, update_method).return_value = updated_config
 
-        response = fxt_client.patch(f"/api/{api_path}/{config_id}", json=update_data)
+        response = fxt_client.patch(f"/api/projects/{fxt_project.id}/{api_path}/{config_id}", json=update_data)
 
         assert response.status_code == status.HTTP_200_OK
         key, value = next(iter(update_data.items()))
         assert response.json()[key] == value
-        getattr(fxt_config_service, update_method).assert_called_once_with(fxt_config.id, update_data)
+        getattr(fxt_config_service, update_method).assert_called_once_with(fxt_config.id, fxt_project.id, update_data)
 
     @pytest.mark.parametrize(
         "api_path, update_method, resource_type",
@@ -230,11 +247,13 @@ class TestSourceAndSinkEndpoints:
             (ConfigApiPath.SINKS, "update_sink", ResourceType.SINK),
         ],
     )
-    def test_update_config_not_found(self, api_path, update_method, resource_type, fxt_config_service, fxt_client):
+    def test_update_config_not_found(
+        self, api_path, update_method, resource_type, fxt_config_service, fxt_client, fxt_project
+    ):
         config_id = str(uuid4())
         getattr(fxt_config_service, update_method).side_effect = ResourceNotFoundError(resource_type, config_id)
 
-        response = fxt_client.patch(f"/api/{api_path}/{config_id}", json={"name": "Updated"})
+        response = fxt_client.patch(f"/api/projects/{fxt_project.id}/{api_path}/{config_id}", json={"name": "Updated"})
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -246,12 +265,12 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_update_config_type_forbidden(
-        self, fixture_name, api_path, update_method, update_data, fxt_config_service, fxt_client, request
+        self, fixture_name, api_path, update_method, update_data, fxt_config_service, fxt_client, fxt_project, request
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
 
-        response = fxt_client.patch(f"/api/{api_path}/{config_id}", json=update_data)
+        response = fxt_client.patch(f"/api/projects/{fxt_project.id}/{api_path}/{config_id}", json=update_data)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "_type" in response.json()["detail"]
@@ -265,16 +284,16 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_delete_config_success(
-        self, fixture_name, api_path, delete_method, fxt_config_service, fxt_client, request
+        self, fixture_name, api_path, delete_method, fxt_config_service, fxt_client, fxt_project, request
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
         getattr(fxt_config_service, delete_method).side_effect = None
 
-        response = fxt_client.delete(f"/api/{api_path}/{config_id}")
+        response = fxt_client.delete(f"/api/projects/{fxt_project.id}/{api_path}/{config_id}")
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
-        getattr(fxt_config_service, delete_method).assert_called_once_with(fxt_config.id)
+        getattr(fxt_config_service, delete_method).assert_called_once_with(fxt_config.id, fxt_project.id)
 
     @pytest.mark.parametrize(
         "api_path, delete_method",
@@ -283,10 +302,10 @@ class TestSourceAndSinkEndpoints:
             (ConfigApiPath.SINKS, "delete_sink_by_id"),
         ],
     )
-    def test_delete_config_invalid_id(self, api_path, delete_method, fxt_config_service, fxt_client):
+    def test_delete_config_invalid_id(self, api_path, delete_method, fxt_config_service, fxt_client, fxt_project):
         getattr(fxt_config_service, delete_method).side_effect = None
 
-        response = fxt_client.delete(f"/api/{api_path}/invalid-id")
+        response = fxt_client.delete(f"/api/projects/{fxt_project.id}/{api_path}/invalid-id")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         getattr(fxt_config_service, delete_method).assert_not_called()
@@ -298,11 +317,13 @@ class TestSourceAndSinkEndpoints:
             (ConfigApiPath.SINKS, "delete_sink_by_id", ResourceType.SINK),
         ],
     )
-    def test_delete_config_not_found(self, api_path, delete_method, resource_type, fxt_config_service, fxt_client):
+    def test_delete_config_not_found(
+        self, api_path, delete_method, resource_type, fxt_config_service, fxt_client, fxt_project
+    ):
         config_id = str(uuid4())
         getattr(fxt_config_service, delete_method).side_effect = ResourceNotFoundError(resource_type, config_id)
 
-        response = fxt_client.delete(f"/api/{api_path}/{config_id}")
+        response = fxt_client.delete(f"/api/projects/{fxt_project.id}/{api_path}/{config_id}")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -314,14 +335,14 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_delete_config_in_use(
-        self, fixture_name, api_path, delete_method, resource_type, fxt_config_service, fxt_client, request
+        self, fixture_name, api_path, delete_method, resource_type, fxt_config_service, fxt_client, fxt_project, request
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
         err = ResourceInUseError(resource_type, config_id)
         getattr(fxt_config_service, delete_method).side_effect = err
 
-        response = fxt_client.delete(f"/api/{api_path}/{config_id}")
+        response = fxt_client.delete(f"/api/projects/{fxt_project.id}/{api_path}/{config_id}")
 
         assert response.status_code == status.HTTP_409_CONFLICT
         assert str(err) == response.json()["detail"]
@@ -345,19 +366,19 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_export_config_success(
-        self, fixture_name, api_path, get_method, expected_yaml, fxt_config_service, fxt_client, request
+        self, fixture_name, api_path, get_method, expected_yaml, fxt_config_service, fxt_client, fxt_project, request
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
         getattr(fxt_config_service, get_method).return_value = fxt_config
 
-        response = fxt_client.post(f"/api/{api_path}/{config_id}:export")
+        response = fxt_client.post(f"/api/projects/{fxt_project.id}/{api_path}/{config_id}:export")
 
         assert response.status_code == status.HTTP_200_OK
         assert response.headers["content-type"] == "application/x-yaml"
         assert f"{api_path[:-1]}_{config_id}.yaml" in response.headers["content-disposition"]
         assert response.text == expected_yaml
-        getattr(fxt_config_service, get_method).assert_called_once_with(fxt_config.id)
+        getattr(fxt_config_service, get_method).assert_called_once_with(fxt_config.id, fxt_project.id)
 
     @pytest.mark.parametrize(
         "fixture_name,api_path, create_method",
@@ -367,15 +388,15 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_import_config_success(
-        self, fixture_name, api_path, create_method, fxt_config_service, fxt_client, request
+        self, fixture_name, api_path, create_method, fxt_config_service, fxt_client, fxt_project, request
     ):
         fxt_config = request.getfixturevalue(fixture_name)
-        sink_data = fxt_config.model_dump(exclude={"id"}, mode="json")
+        sink_data = fxt_config.model_dump(exclude={"id", "project_id"}, mode="json")
         yaml_content = yaml.safe_dump(sink_data)
         getattr(fxt_config_service, create_method).return_value = fxt_config
 
         files = {"yaml_file": ("test.yaml", io.BytesIO(yaml_content.encode()), "application/x-yaml")}
-        response = fxt_client.post(f"/api/{api_path}:import", files=files)
+        response = fxt_client.post(f"/api/projects/{fxt_project.id}/{api_path}:import", files=files)
 
         assert response.status_code == status.HTTP_201_CREATED
         assert response.json()["id"] == str(fxt_config.id)
@@ -385,11 +406,11 @@ class TestSourceAndSinkEndpoints:
         "api_path",
         [ConfigApiPath.SOURCES, ConfigApiPath.SINKS],
     )
-    def test_import_config_invalid_yaml(self, api_path, fxt_client):
+    def test_import_config_invalid_yaml(self, api_path, fxt_client, fxt_project):
         invalid_yaml = "invalid: yaml: content: ["
         files = {"yaml_file": ("test.yaml", io.BytesIO(invalid_yaml.encode()), "application/x-yaml")}
 
-        response = fxt_client.post(f"/api/{api_path}:import", files=files)
+        response = fxt_client.post(f"/api/projects/{fxt_project.id}/{api_path}:import", files=files)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Invalid YAML format" in response.json()["detail"]
@@ -401,12 +422,12 @@ class TestSourceAndSinkEndpoints:
             (ConfigApiPath.SINKS, "sink_type"),
         ],
     )
-    def test_import_disconnected_config_fails(self, api_path, config_type, fxt_client):
+    def test_import_disconnected_config_fails(self, api_path, config_type, fxt_client, fxt_project):
         config_data = {config_type: "disconnected", "name": "Test"}
         yaml_content = yaml.safe_dump(config_data)
         files = {"yaml_file": ("test.yaml", io.BytesIO(yaml_content.encode()), "application/x-yaml")}
 
-        response = fxt_client.post(f"/api/{api_path}:import", files=files)
+        response = fxt_client.post(f"/api/projects/{fxt_project.id}/{api_path}:import", files=files)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "DISCONNECTED cannot be imported" in response.json()["detail"]

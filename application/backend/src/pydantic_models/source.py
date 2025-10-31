@@ -5,6 +5,7 @@ from enum import StrEnum
 from os import getenv
 from typing import Annotated, Literal
 from urllib.parse import urlparse, urlunparse
+from uuid import UUID
 
 from pydantic import Field, TypeAdapter
 
@@ -23,12 +24,18 @@ class SourceType(StrEnum):
     IMAGES_FOLDER = "images_folder"
 
 
-class DisconnectedSourceConfig(BaseIDNameModel):
+class BaseSourceConfig(BaseIDNameModel):
+    project_id: UUID
+    source_type: str
+
+
+class DisconnectedSourceConfig(BaseSourceConfig):
     source_type: Literal[SourceType.DISCONNECTED] = SourceType.DISCONNECTED
+    project_id: UUID = UUID("00000000-0000-0000-0000-000000000000")
     name: str = "No Source"
 
 
-class WebcamSourceConfig(BaseIDNameModel):
+class WebcamSourceConfig(BaseSourceConfig):
     source_type: Literal[SourceType.WEBCAM]
     device_id: int
 
@@ -44,7 +51,7 @@ class WebcamSourceConfig(BaseIDNameModel):
     }
 
 
-class IPCameraSourceConfig(BaseIDNameModel):
+class IPCameraSourceConfig(BaseSourceConfig):
     source_type: Literal[SourceType.IP_CAMERA]
     stream_url: str
     auth_required: bool = False
@@ -78,7 +85,7 @@ class IPCameraSourceConfig(BaseIDNameModel):
         return urlunparse((uri.scheme, netloc, uri.path, uri.params, uri.query, uri.fragment))
 
 
-class VideoFileSourceConfig(BaseIDNameModel):
+class VideoFileSourceConfig(BaseSourceConfig):
     source_type: Literal[SourceType.VIDEO_FILE]
     video_path: str
 
@@ -94,7 +101,7 @@ class VideoFileSourceConfig(BaseIDNameModel):
     }
 
 
-class ImagesFolderSourceConfig(BaseIDNameModel):
+class ImagesFolderSourceConfig(BaseSourceConfig):
     source_type: Literal[SourceType.IMAGES_FOLDER]
     images_folder_path: str
     ignore_existing_images: bool

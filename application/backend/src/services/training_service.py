@@ -120,7 +120,8 @@ class TrainingService:
                 f"Supported devices: {', '.join(Devices.training_devices())}"
             )
 
-        logger.info(f"Training on device: {device or 'auto'}")
+        training_device = device or "auto"
+        logger.info(f"Training on device: {training_device}")
 
         model_binary_repo = ModelBinaryRepository(project_id=model.project_id, model_id=model.id)
         image_binary_repo = ImageBinaryRepository(project_id=model.project_id)
@@ -145,7 +146,7 @@ class TrainingService:
             default_root_dir=model.export_path,
             logger=[trackio, tensorboard],
             max_epochs=10,
-            accelerator=device,
+            accelerator=training_device,
         )
 
         # Execute training and export
