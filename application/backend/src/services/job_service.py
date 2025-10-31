@@ -3,6 +3,7 @@
 import asyncio
 import datetime
 import json
+import logging
 import os
 from collections.abc import AsyncGenerator, Coroutine
 from typing import Any
@@ -16,8 +17,10 @@ from starlette.responses import AsyncContentStream
 from db import get_async_db_session_ctx
 from exceptions import DuplicateJobException, ResourceNotFoundException
 from pydantic_models import Job, JobList, JobType
-from pydantic_models.job import JobCancelled, JobStatus, JobSubmitted, TrainJobPayload
+from pydantic_models.job import JobCancelled, JobStage, JobStatus, JobSubmitted, TrainJobPayload
 from repositories import JobRepository
+
+logger = logging.getLogger(__name__)
 
 
 class JobService:
@@ -64,7 +67,7 @@ class JobService:
         status: JobStatus,
         message: str | None = None,
         progress: int | None = None,
-        stage: str | None = None,
+        stage: JobStage | None = None,
     ) -> None:
         async with get_async_db_session_ctx() as session:
             repo = JobRepository(session)
@@ -128,24 +131,14 @@ class JobService:
     @classmethod
     async def stream_progress(cls, job_id: UUID | str) -> Coroutine[Any, Any, AsyncContentStream]:
         """Stream the progress of a job by its ID"""
-        loop = asyncio.get_running_loop()
-        status_check_interval = 2.0  # seconds
-        last_status_check = 0.0
-        cached_still_running = True
         still_running = True
-        async with get_async_db_session_ctx() as session:
-            repo = JobRepository(session)
-            job = await repo.get_by_id(job_id)
+        while still_running:
+            job = await cls.get_job_by_id(job_id=job_id)
             if job is None:
                 raise ResourceNotFoundException(resource_id=job_id, resource_name="job")
-            while still_running:
-                now = loop.time()
-                if now - last_status_check > status_check_interval:
-                    cached_still_running = await cls.is_job_still_running(job_id=job_id)
-                    last_status_check = now
-                still_running = cached_still_running
-                yield json.dumps({"progress": job.progress, "stage": job.stage})
-                await asyncio.sleep(0.5)
+            yield ServerSentEvent(data=json.dumps({"progress": job.progress, "stage": job.stage}))
+            still_running = job.status in {JobStatus.RUNNING, JobStatus.PENDING}
+            await asyncio.sleep(0.5)
 
     @classmethod
     async def cancel_job(cls, job_id: UUID | str) -> JobCancelled:

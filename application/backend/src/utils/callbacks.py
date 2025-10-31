@@ -6,44 +6,52 @@
 from __future__ import annotations
 
 import logging
-from ctypes import c_char_p
-from multiprocessing import Event, Value
+import threading
 from typing import TYPE_CHECKING, Any
 
 from lightning.pytorch.callbacks import Callback
 
+from pydantic_models.job import JobStage
+
 if TYPE_CHECKING:
     from lightning.pytorch import LightningModule, Trainer
-    from lightning.pytorch.trainer.states import RunningStage
 
 logger = logging.getLogger(__name__)
 
 
 class ProgressSyncParams:
     def __init__(self) -> None:
-        self.progress = Value("f", 0.0)
-        self.stage = Value(c_char_p, b"idle")
-        self.cancel_training_event = Event()
+        self._progress = 0
+        self._stage = JobStage.IDLE
+        self._lock = threading.Lock()
+        self.cancel_training_event = threading.Event()
 
-    def set_stage(self, stage: str) -> None:
-        with self.stage.get_lock():
-            self.stage.value = stage.encode("utf-8")
-        logger.info("Set stage: %s", stage)
+    @property
+    def stage(self) -> JobStage:
+        with self._lock:
+            return self._stage
 
-    def get_stage(self) -> str:
-        return self.stage.value.decode("utf-8")
+    @stage.setter
+    def stage(self, stage: JobStage) -> None:
+        with self._lock:
+            self._stage = stage
+        logger.debug("Stage updated: %s", stage)
 
-    def set_progress(self, progress: float) -> None:
-        with self.progress.get_lock():
-            self.progress.value = progress
-        logger.info("Set progress: %s", progress)
+    @property
+    def progress(self) -> int:
+        with self._lock:
+            return self._progress
 
-    def get_progress(self) -> float:
-        return self.progress.value
+    @progress.setter
+    def progress(self, progress: int) -> None:
+        with self._lock:
+            self._progress = progress
+        logger.debug("Progress updated: %s", progress)
 
     def set_cancel_training_event(self) -> None:
-        self.cancel_training_event.set()
-        logger.info("Set cancel training event")
+        with self._lock:
+            self.cancel_training_event.set()
+        logger.debug("Set cancel training event")
 
 
 class GetiInspectProgressCallback(Callback):
@@ -71,7 +79,7 @@ class GetiInspectProgressCallback(Callback):
         if self.synchronization_parameters.cancel_training_event.is_set():
             trainer.should_stop = True
 
-    def _send_progress(self, progress: float, stage: RunningStage) -> None:
+    def _send_progress(self, progress: float, stage: JobStage) -> None:
         """Send progress update to frontend via event queue.
         Puts a generic event message into the multiprocessing queue which will
         be picked up by the main process and broadcast via WebSocket.
@@ -83,22 +91,16 @@ class GetiInspectProgressCallback(Callback):
         progress_percent = int(progress * 100)
 
         try:
-            logger.info("Sent progress: %s - %d%%", stage.name, progress_percent)
-            self.synchronization_parameters.set_progress(progress_percent)
-            self.synchronization_parameters.set_stage(stage.name)
+            logger.debug("Sent progress: %s - %d%%", stage, progress_percent)
+            self.synchronization_parameters.progress = progress_percent
+            self.synchronization_parameters.stage = stage
         except Exception as e:
             logger.warning("Failed to send progress to event queue: %s", e)
-
-    def setup(self, trainer: Trainer, pl_module: LightningModule, stage: str) -> None:
-        self._send_progress(0, stage)
-
-    def teardown(self, trainer: Trainer, pl_module: LightningModule, stage: RunningStage) -> None:
-        self._send_progress(1.0, stage)
 
     # Training callbacks
     def on_train_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when training starts."""
-        self._send_progress(0, trainer.state.stage)
+        self._send_progress(0, JobStage.TRAINING)
         self._check_cancel_training(trainer)
 
     def on_train_batch_start(self, trainer: Trainer, pl_module: LightningModule, batch: Any, batch_idx: int) -> None:
@@ -108,12 +110,12 @@ class GetiInspectProgressCallback(Callback):
     def on_train_epoch_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when a training epoch ends."""
         progress = (trainer.current_epoch + 1) / trainer.max_epochs
-        self._send_progress(progress, trainer.state.stage)
+        self._send_progress(progress, JobStage.TRAINING)
         self._check_cancel_training(trainer)
 
     def on_train_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when training ends."""
-        self._send_progress(1.0, trainer.state.stage)
+        self._send_progress(1.0, JobStage.TRAINING)
         self._check_cancel_training(trainer)
 
     # Validation callbacks
@@ -138,7 +140,7 @@ class GetiInspectProgressCallback(Callback):
     # Test callbacks
     def on_test_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when testing starts."""
-        self._send_progress(0, trainer.state.stage)
+        self._send_progress(0, JobStage.TESTING)
         self._check_cancel_training(trainer)
 
     def on_test_batch_start(
@@ -150,18 +152,18 @@ class GetiInspectProgressCallback(Callback):
     def on_test_epoch_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when a test epoch ends."""
         progress = (trainer.current_epoch + 1) / trainer.max_epochs if trainer.max_epochs else 0.5
-        self._send_progress(progress, trainer.state.stage)
+        self._send_progress(progress, JobStage.TESTING)
         self._check_cancel_training(trainer)
 
     def on_test_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when testing ends."""
-        self._send_progress(1.0, trainer.state.stage)
+        self._send_progress(1.0, JobStage.TESTING)
         self._check_cancel_training(trainer)
 
     # Predict callbacks
     def on_predict_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when prediction starts."""
-        self._send_progress(0, trainer.state.stage)
+        self._send_progress(0, JobStage.PREDICTING)
         self._check_cancel_training(trainer)
 
     def on_predict_batch_start(
@@ -173,10 +175,10 @@ class GetiInspectProgressCallback(Callback):
     def on_predict_epoch_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when a prediction epoch ends."""
         progress = (trainer.current_epoch + 1) / trainer.max_epochs if trainer.max_epochs else 0.5
-        self._send_progress(progress, trainer.state.stage)
+        self._send_progress(progress, JobStage.PREDICTING)
         self._check_cancel_training(trainer)
 
     def on_predict_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when prediction ends."""
-        self._send_progress(1.0, trainer.state.stage)
+        self._send_progress(1.0, JobStage.PREDICTING)
         self._check_cancel_training(trainer)

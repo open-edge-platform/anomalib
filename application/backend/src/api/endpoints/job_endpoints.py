@@ -6,7 +6,6 @@ from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, status
 from sse_starlette import EventSourceResponse
-from starlette.responses import StreamingResponse
 
 from api.dependencies import get_job_id, get_job_service
 from api.endpoints import API_PREFIX
@@ -49,9 +48,9 @@ async def get_job_logs(
 async def get_job_progress(
     job_id: Annotated[UUID, Depends(get_job_id)],
     job_service: Annotated[JobService, Depends(get_job_service)],
-) -> StreamingResponse:
+) -> EventSourceResponse:
     """Endpoint to get the progress of a job by its ID"""
-    return StreamingResponse(job_service.stream_progress(job_id=job_id), media_type="text/event-stream")
+    return EventSourceResponse(job_service.stream_progress(job_id=job_id))
 
 
 @job_router.post("/{job_id}:cancel", status_code=status.HTTP_202_ACCEPTED)

@@ -52,7 +52,7 @@ function TrainingStatusItem(progress: number, stage: string, onCancel?: () => vo
             <Flex direction='row' alignItems='center' width='100px' justifyContent='space-between'>
                 <button
                     onClick={() => {
-                        console.log('Cancel training');
+                        console.info('Cancel training');
                         if (onCancel) {
                             onCancel();
                         }
@@ -95,13 +95,14 @@ export const ProgressBarItem = () => {
     const [stage, setStage] = useState('');
     const [jobStatus, setJobStatus] = useState<string>('idle');
     const [currentJobId, setCurrentJobId] = useState<string | null>(null);
+    const [sseConnected, setSSEConnected] = useState(false);
 
     // Fetch the current running job for the project
     const { data: jobsData } = $api.useQuery('get', '/api/jobs', undefined, {
-        refetchInterval: 2000, // Refetch every 2 seconds to check for new jobs
+        refetchInterval: 5000, // Refetch every 5 seconds to check for new jobs
     });
 
-    const cancelJobMutation = $api.useMutation('post', '/api/jobs/{job_id}/cancel');
+    const cancelJobMutation = $api.useMutation('post', '/api/jobs/{job_id}:cancel');
 
     // Find the running or pending job for this project
     useEffect(() => {
@@ -116,28 +117,40 @@ export const ProgressBarItem = () => {
         if (runningJob) {
             setCurrentJobId(runningJob.id ?? null);
             setJobStatus(runningJob.status);
-            setProgress(runningJob.progress);
-            // Use stage from job if available, otherwise fallback to status
-            setStage(runningJob.stage || runningJob.status);
+
+            // Only use polling data if SSE is not connected (fallback)
+            if (!sseConnected) {
+                setProgress(runningJob.progress);
+                setStage(runningJob.stage || runningJob.status);
+            }
         } else {
+            // No running job found - reset everything
             setCurrentJobId(null);
             setJobStatus('idle');
             setProgress(0);
             setStage('');
+            setSSEConnected(false);
         }
-    }, [jobsData, projectId]);
+    }, [jobsData, projectId, sseConnected]);
 
     // Connect to SSE for progress updates when there's a running job
     useEffect(() => {
         if (!currentJobId || jobStatus !== 'running') {
+            setSSEConnected(false);
             return;
         }
 
         const eventSource = new EventSource(`${API_BASE_URL}/api/jobs/${currentJobId}/progress`);
 
+        eventSource.onopen = () => {
+            setSSEConnected(true);
+            console.debug('SSE connected');
+        };
+
         eventSource.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
+                console.debug('SSE data:', data);
                 if (data.progress !== undefined) {
                     setProgress(data.progress);
                 }
@@ -150,11 +163,12 @@ export const ProgressBarItem = () => {
         };
 
         eventSource.onerror = (error) => {
-            console.error('EventSource error:', error);
+            setSSEConnected(false);
             eventSource.close();
         };
 
         return () => {
+            setSSEConnected(false);
             eventSource.close();
         };
     }, [currentJobId, jobStatus]);
@@ -172,7 +186,7 @@ export const ProgressBarItem = () => {
                     },
                 },
             });
-            console.log('Job cancelled successfully');
+            console.info('Job cancelled successfully');
         } catch (error) {
             console.error('Failed to cancel job:', error);
         }
