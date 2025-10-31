@@ -54,3 +54,4 @@ class JobCancelled(BaseModel):
 class TrainJobPayload(BaseModel):
     project_id: UUID = Field(exclude=True)
     model_name: str
+    device: str | None

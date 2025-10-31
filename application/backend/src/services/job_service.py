@@ -1,14 +1,16 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
+import datetime
 import json
 import os
-from collections.abc import Coroutine
+from collections.abc import AsyncGenerator, Coroutine
 from typing import Any
 from uuid import UUID
 
 import anyio
 from sqlalchemy.exc import IntegrityError
+from sse_starlette import ServerSentEvent
 from starlette.responses import AsyncContentStream
 
 from db import get_async_db_session_ctx
@@ -73,6 +75,10 @@ class JobService:
             if message is not None:
                 updates["message"] = message
             progress_ = 100 if status is JobStatus.COMPLETED else progress
+
+            if status in {JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELED}:
+                updates["end_time"] = datetime.datetime.now(tz=datetime.timezone.utc)
+
             if progress_ is not None:
                 updates["progress"] = progress_
             if stage is not None:
@@ -87,7 +93,7 @@ class JobService:
         return job.status == JobStatus.RUNNING
 
     @classmethod
-    async def stream_logs(cls, job_id: UUID | str):
+    async def stream_logs(cls, job_id: UUID | str) -> AsyncGenerator[ServerSentEvent, None]:
         from core.logging.utils import get_job_logs_path
 
         log_file = get_job_logs_path(job_id=job_id)
@@ -117,7 +123,7 @@ class JobService:
                     # No more lines are expected
                     else:
                         break
-                yield line
+                yield ServerSentEvent(data=line.rstrip())
 
     @classmethod
     async def stream_progress(cls, job_id: UUID | str) -> Coroutine[Any, Any, AsyncContentStream]:

@@ -90,6 +90,7 @@ class BaseProcessWorker(mp.Process, StoppableMixin, ABC):
     def setup(self) -> None:
         """Allocate resources and initialize settings. Called once in the child process."""
         # Logging needs to be re-setup in child processes because settings are non-pickable.
+        # Only required when multiprocessing uses "spawn" mode (Windows/MacOS)
         from core.logging import setup_logging
 
         setup_logging()

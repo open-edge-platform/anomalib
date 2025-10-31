@@ -10,7 +10,6 @@ from api.endpoints.project_endpoints import project_api_prefix_url
 from api.media_rest_validator import MediaRestValidator
 from exceptions import ResourceNotFoundException
 from pydantic_models import Model, ModelList, PredictionResponse
-from pydantic_models.model import SupportedDevices
 from services import ModelService
 from services.exceptions import DeviceNotFoundError
 
@@ -69,11 +68,3 @@ async def predict(
         return await model_service.predict_image(model, image_bytes, request.app.state.active_models, device=device)
     except DeviceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
-
-@model_router.post(":supported-devices")
-async def get_supported_devices(
-    model_service: Annotated[ModelService, Depends(get_model_service)],
-) -> SupportedDevices:
-    """Endpoint to get list of supported devices for inference"""
-    return model_service.get_supported_devices()

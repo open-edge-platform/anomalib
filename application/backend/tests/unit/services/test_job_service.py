@@ -1,9 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from freezegun import freeze_time
 from sqlalchemy.exc import IntegrityError
 
 from exceptions import DuplicateJobException, ResourceNotFoundException
@@ -147,14 +149,25 @@ class TestJobService:
         fxt_job_repository.get_pending_job_by_type.assert_called_once_with(JobType.TRAINING)
 
     @pytest.mark.parametrize(
-        "has_message,message,expected_updates",
+        "has_message,message",
         [
-            (True, "Test message", {"status": JobStatus.COMPLETED, "message": "Test message", "progress": 100}),
-            (False, None, {"status": JobStatus.COMPLETED, "progress": 100}),
+            (True, "Test message"),
+            (False, None),
         ],
     )
-    def test_update_job_status_success(self, fxt_job_repository, fxt_job, has_message, message, expected_updates):
+    @freeze_time("2025-01-01 00:00:00")
+    def test_update_job_status_success(self, fxt_job_repository, fxt_job, has_message, message):
         """Test updating job status successfully with and without message."""
+        # Expected updates include end_time since status is COMPLETED
+        frozen_time = datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        expected_updates = {
+            "status": JobStatus.COMPLETED,
+            "end_time": frozen_time,
+            "progress": 100,
+        }
+        if has_message:
+            expected_updates["message"] = message
+        
         # Create an updated job object that the repository would return
         updated_job = fxt_job.model_copy(update=expected_updates)
         fxt_job_repository.get_by_id.return_value = fxt_job
@@ -206,7 +219,7 @@ class TestJobService:
 
     def test_stream_logs_success(self, fxt_job_repository, fxt_job):
         """Test streaming logs successfully from a completed job."""
-        log_lines = ['{"level": "INFO", "message": "Line 1"}\n', '{"level": "INFO", "message": "Line 2"}\n']
+        log_lines = ['{"level": "INFO", "message": "Line 1"}', '{"level": "INFO", "message": "Line 2"}']
 
         # Mock job as completed
         completed_job = fxt_job.model_copy(update={"status": JobStatus.COMPLETED})
@@ -240,7 +253,7 @@ class TestJobService:
             async def consume_stream():
                 result = []
                 async for line in JobService.stream_logs(fxt_job.id):
-                    result.append(line)
+                    result.append(line.data)
                 return result
 
             result = asyncio.run(consume_stream())

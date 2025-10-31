@@ -4,13 +4,11 @@ import asyncio
 import base64
 import io
 from dataclasses import dataclass
-from functools import lru_cache
 from multiprocessing.synchronize import Event as EventClass
 from uuid import UUID
 
 import cv2
 import numpy as np
-import openvino as ov
 import openvino.properties.hint as ov_hints
 from anomalib.deploy import ExportType, OpenVINOInferencer
 from loguru import logger
@@ -18,10 +16,10 @@ from PIL import Image
 
 from db import get_async_db_session_ctx
 from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
-from pydantic_models.model import SupportedDevices
 from repositories import ModelRepository
 from repositories.binary_repo import ModelBinaryRepository
 from services.exceptions import DeviceNotFoundError
+from utils.devices import Devices
 
 DEFAULT_DEVICE = "AUTO"
 
@@ -103,11 +101,11 @@ class ModelService:
             return await asyncio.to_thread(
                 OpenVINOInferencer,
                 path=model_path,
-                device=_device,
+                device=_device.upper(), # OV always expects uppercase device names
                 config={ov_hints.performance_mode: ov_hints.PerformanceMode.LATENCY},
             )
         except Exception as e:
-            if _device not in cls.get_supported_devices().devices:
+            if device and not Devices.is_device_supported_for_inference(device):
                 raise DeviceNotFoundError(device_name=_device) from e
             raise e
 
@@ -195,10 +193,3 @@ class ModelService:
         score = float(pred.pred_score.item())
 
         return {"anomaly_map": im_base64, "label": label, "score": score}
-
-    @staticmethod
-    @lru_cache
-    def get_supported_devices() -> SupportedDevices:
-        """Get list of supported devices for inference."""
-        core = ov.Core()
-        return SupportedDevices(devices=core.available_devices)

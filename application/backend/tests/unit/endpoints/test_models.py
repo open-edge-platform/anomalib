@@ -20,6 +20,7 @@ def fxt_model(fxt_project):
         name="test_model",
         project_id=fxt_project.id,
         export_path="/path/to/model",
+        train_job_id=uuid4(),
     )
 
 

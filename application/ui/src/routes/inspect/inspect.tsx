@@ -16,26 +16,26 @@ export const Inspect = () => {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <Grid
-                areas={['toolbar sidebar', 'canvas sidebar']}
-                rows={['size-800', 'minmax(0, 1fr)']}
-                columns={['1fr', 'min-content']}
-                height={'100%'}
-                gap={'size-10'}
-                UNSAFE_style={{
-                    overflow: 'hidden',
-                }}
-                key={projectId}
-            >
-                <InferenceProvider>
-                    <SelectedMediaItemProvider>
-                        <Toolbar />
-                        <InferenceResult />
-                        <Sidebar />
-                    </SelectedMediaItemProvider>
-                </InferenceProvider>
-            </Grid>
-            <StatusBar />
+        <Grid
+            areas={['toolbar sidebar', 'canvas sidebar']}
+            rows={['size-800', 'minmax(0, 1fr)']}
+            columns={['1fr', 'min-content']}
+            height={'100%'}
+            gap={'size-10'}
+            UNSAFE_style={{
+                overflow: 'hidden',
+            }}
+            key={projectId}
+        >
+                <SelectedMediaItemProvider>
+            <InferenceProvider>
+                    <Toolbar />
+                    <InferenceResult />
+                    <Sidebar />
+                </SelectedMediaItemProvider>
+            </InferenceProvider>
+        </Grid>
+        <StatusBar />
         </div>
     );
 };
