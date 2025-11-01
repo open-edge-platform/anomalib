@@ -19,6 +19,7 @@ import {
     View,
 } from '@geti/ui';
 
+import { SinkFactory } from './sinks/sink-factory.component';
 import { SourceActions } from './sources/source-actions.component';
 
 const paddingStyle = {
@@ -54,7 +55,9 @@ export const InputOutputSetup = () => {
                             </Item>
                             <Item key='sinks'>
                                 <View marginTop={'size-200'}>
-                                    <Suspense fallback={<Loading size='M' />}>SinkOptions</Suspense>
+                                    <Suspense fallback={<Loading size='M' />}>
+                                        <SinkFactory />
+                                    </Suspense>
                                 </View>
                             </Item>
                         </TabPanels>

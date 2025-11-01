@@ -1,0 +1,41 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import { ReactNode } from 'react';
+
+import { Button, Form } from '@geti/ui';
+import { useConnectSourceToPipeline } from 'src/hooks/use-pipeline.hook';
+
+import { useSinkAction } from '../hooks/use-sink-action.hook';
+import { SinkConfig } from '../utils';
+
+interface AddSinkProps<T> {
+    config: Awaited<T>;
+    onSaved: () => void;
+    componentFields: (state: Awaited<T>) => ReactNode;
+    bodyFormatter: (formData: FormData) => T;
+}
+
+export const AddSink = <T extends SinkConfig>({ config, onSaved, bodyFormatter, componentFields }: AddSinkProps<T>) => {
+    const connectToPipelineMutation = useConnectSourceToPipeline();
+
+    const [state, submitAction, isPending] = useSinkAction({
+        config,
+        isNewSink: true,
+        onSaved: async (sourceId) => {
+            await connectToPipelineMutation(sourceId);
+            onSaved();
+        },
+        bodyFormatter,
+    });
+
+    return (
+        <Form action={submitAction}>
+            <>{componentFields(state)}</>
+
+            <Button type='submit' isDisabled={isPending} UNSAFE_style={{ maxWidth: 'fit-content' }}>
+                Add & Connect
+            </Button>
+        </Form>
+    );
+};
