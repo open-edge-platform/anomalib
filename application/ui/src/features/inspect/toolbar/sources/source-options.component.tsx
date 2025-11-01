@@ -1,3 +1,5 @@
+import { ReactNode } from 'react';
+
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { DisclosureGroup } from 'src/components/disclosure-group/disclosure-group.component';
 
@@ -18,70 +20,80 @@ import { WebcamFields } from './webcam/webcam-fields.component';
 
 interface SourceOptionsProps {
     onSaved: () => void;
+    hasHeader: boolean;
+    children: ReactNode;
 }
 
-export const SourceOptions = ({ onSaved }: SourceOptionsProps) => {
+export const SourceOptions = ({ hasHeader, children, onSaved }: SourceOptionsProps) => {
     const { projectId } = useProjectIdentifier();
 
     return (
-        <DisclosureGroup
-            defaultActiveInput={null}
-            items={[
-                {
-                    label: 'Webcam',
-                    value: 'webcam',
-                    icon: <WebcamIcon width={'24px'} />,
-                    content: (
-                        <AddSource
-                            onSaved={onSaved}
-                            config={getWebcamInitialConfig(projectId)}
-                            componentFields={(state: WebcamSourceConfig) => <WebcamFields defaultState={state} />}
-                            bodyFormatter={webcamBodyFormatter}
-                        />
-                    ),
-                },
-                {
-                    label: 'IP Camera',
-                    value: 'ip_camera',
-                    icon: <IpCameraIcon width={'24px'} />,
-                    content: (
-                        <AddSource
-                            onSaved={onSaved}
-                            config={getIpCameraInitialConfig(projectId)}
-                            componentFields={(state: IPCameraSourceConfig) => <IpCameraFields defaultState={state} />}
-                            bodyFormatter={ipCameraBodyFormatter}
-                        />
-                    ),
-                },
-                {
-                    label: 'Video file',
-                    value: 'video_file',
-                    icon: <Video width={'24px'} />,
-                    content: (
-                        <AddSource
-                            onSaved={onSaved}
-                            config={getVideoFileInitialConfig(projectId)}
-                            componentFields={(state: VideoFileSourceConfig) => <VideoFileFields defaultState={state} />}
-                            bodyFormatter={videoFileBodyFormatter}
-                        />
-                    ),
-                },
-                {
-                    label: 'Images folder',
-                    value: 'images_folder',
-                    icon: <ImageIcon width={'24px'} />,
-                    content: (
-                        <AddSource
-                            onSaved={onSaved}
-                            config={getImageFolderInitialConfig(projectId)}
-                            componentFields={(state: ImagesFolderSourceConfig) => (
-                                <ImageFolderFields defaultState={state} />
-                            )}
-                            bodyFormatter={imageFolderBodyFormatter}
-                        />
-                    ),
-                },
-            ]}
-        />
+        <>
+            {hasHeader && children}
+
+            <DisclosureGroup
+                defaultActiveInput={null}
+                items={[
+                    {
+                        label: 'Webcam',
+                        value: 'webcam',
+                        icon: <WebcamIcon width={'24px'} />,
+                        content: (
+                            <AddSource
+                                onSaved={onSaved}
+                                config={getWebcamInitialConfig(projectId)}
+                                componentFields={(state: WebcamSourceConfig) => <WebcamFields defaultState={state} />}
+                                bodyFormatter={webcamBodyFormatter}
+                            />
+                        ),
+                    },
+                    {
+                        label: 'IP Camera',
+                        value: 'ip_camera',
+                        icon: <IpCameraIcon width={'24px'} />,
+                        content: (
+                            <AddSource
+                                onSaved={onSaved}
+                                config={getIpCameraInitialConfig(projectId)}
+                                componentFields={(state: IPCameraSourceConfig) => (
+                                    <IpCameraFields defaultState={state} />
+                                )}
+                                bodyFormatter={ipCameraBodyFormatter}
+                            />
+                        ),
+                    },
+                    {
+                        label: 'Video file',
+                        value: 'video_file',
+                        icon: <Video width={'24px'} />,
+                        content: (
+                            <AddSource
+                                onSaved={onSaved}
+                                config={getVideoFileInitialConfig(projectId)}
+                                componentFields={(state: VideoFileSourceConfig) => (
+                                    <VideoFileFields defaultState={state} />
+                                )}
+                                bodyFormatter={videoFileBodyFormatter}
+                            />
+                        ),
+                    },
+                    {
+                        label: 'Images folder',
+                        value: 'images_folder',
+                        icon: <ImageIcon width={'24px'} />,
+                        content: (
+                            <AddSource
+                                onSaved={onSaved}
+                                config={getImageFolderInitialConfig(projectId)}
+                                componentFields={(state: ImagesFolderSourceConfig) => (
+                                    <ImageFolderFields defaultState={state} />
+                                )}
+                                bodyFormatter={imageFolderBodyFormatter}
+                            />
+                        ),
+                    },
+                ]}
+            />
+        </>
     );
 };
