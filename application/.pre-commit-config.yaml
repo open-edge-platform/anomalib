@@ -1,0 +1,56 @@
+# Pre-commit configuration for geti-inspect application (backend + UI)
+# This config uses Python 3.13+ and Node.js 24.2.0+ with tool versions matching application dependencies
+# Install from application/ directory with: pre-commit install --config .pre-commit-config.yaml
+#
+# IMPORTANT: This config is scoped to only check files in application/
+# to avoid conflicts with the root anomalib pre-commit config.
+
+default_language_version:
+  node: 24.2.0
+
+repos:
+  # Backend: Ruff version matching application dependencies (v0.11.2)
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: "v0.11.2"
+    hooks:
+      # Run the linter.
+      - id: ruff
+        args: ["--fix"]
+      # Run the formatter
+      - id: ruff-format
+
+  # Backend: python static type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: "v1.17.0"
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-PyYAML, types-setuptools, types-requests]
+
+  # UI: Prettier formatting (uses UI's .prettierrc config)
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        files: ^application/ui/
+        # Prettier will automatically find .prettierrc in application/ui/
+        # Additional dependencies match UI's package.json
+        additional_dependencies: ['prettier@^3.5.3', '@ianvs/prettier-plugin-sort-imports@^4.4.2']
+
+  # UI: ESLint linting
+  - repo: local
+    hooks:
+      - id: eslint-ui
+        name: ESLint (UI)
+        entry: bash -c 'cd application/ui && npm run lint'
+        language: system
+        files: ^application/ui/.*\.(ts|tsx|js|jsx)$
+        pass_filenames: false
+        # Run ESLint when UI files are staged
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.45.0
+    hooks:
+      - id: markdownlint
+        files: ^application/
+        args: [--config=.markdownlint.yaml]
