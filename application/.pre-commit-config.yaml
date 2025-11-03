@@ -1,9 +1,6 @@
 # Pre-commit configuration for geti-inspect application (backend + UI)
 # This config uses Python 3.13+ and Node.js 24.2.0+ with tool versions matching application dependencies
 # Install from application/ directory with: pre-commit install --config .pre-commit-config.yaml
-#
-# IMPORTANT: This config is scoped to only check files in application/
-# to avoid conflicts with the root anomalib pre-commit config.
 
 default_language_version:
   node: 24.2.0
