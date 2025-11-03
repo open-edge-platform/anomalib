@@ -1,10 +1,12 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import uuid
+from io import BytesIO
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi import UploadFile
+from PIL import Image
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from pydantic_models import (
@@ -64,6 +66,8 @@ def fxt_media(fxt_project):
         filename="test_image.jpg",
         size=1024,
         is_anomalous=False,
+        width=800,
+        height=600,
     )
 
 
@@ -135,7 +139,11 @@ def fxt_model_list(fxt_model):
 @pytest.fixture
 def fxt_image_bytes():
     """Fixture for test image bytes."""
-    return b"fake image content for testing"
+    # Create a valid image for testing
+    img = Image.new("RGB", (800, 600), color="blue")
+    with BytesIO() as buf:
+        img.save(buf, format="JPEG")
+        return buf.getvalue()
 
 
 @pytest.fixture

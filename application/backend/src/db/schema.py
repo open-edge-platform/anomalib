@@ -31,10 +31,9 @@ class MediaDB(Base):
     project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"))
     filename: Mapped[str] = mapped_column(Text, nullable=False)
     size: Mapped[int] = mapped_column(nullable=False)
-    width: Mapped[int] = mapped_column(nullable=True)
-    height: Mapped[int] = mapped_column(nullable=True)
+    width: Mapped[int] = mapped_column(nullable=False)
+    height: Mapped[int] = mapped_column(nullable=False)
     is_anomalous: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    subset: Mapped[str] = mapped_column(String(10), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.current_timestamp())
 

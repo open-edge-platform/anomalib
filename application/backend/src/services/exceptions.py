@@ -13,6 +13,7 @@ class ResourceType(StrEnum):
     PROJECT = "Project"
     DATASET_ITEM = "DatasetItem"
     LABEL = "Label"
+    MEDIA = "Media"
 
 
 class ResourceError(Exception):

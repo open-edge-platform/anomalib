@@ -90,19 +90,6 @@ async def handle_error(request, exception) -> JSONResponse:  # noqa: ANN001, ARG
     )
 
 
-@app.exception_handler(404)
-async def handle_not_found(request, exception) -> JSONResponse:  # noqa: ANN001, ARG001
-    """Handler for 'endpoint not found' errors"""
-    message = f"Endpoint {request.url} is not found"
-    logger.info(message)
-    headers = {"Cache-Control": "no-cache"}  # always revalidate
-    return JSONResponse(
-        {"endpoint_not_found_response": message},
-        status_code=status.HTTP_404_NOT_FOUND,
-        headers=headers,
-    )
-
-
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:  # noqa: ARG001
     """
