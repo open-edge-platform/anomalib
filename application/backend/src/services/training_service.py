@@ -103,6 +103,7 @@ class TrainingService:
             await job_service.update_job_status(
                 job_id=job.id, status=JobStatus.FAILED, message=f"Failed with exception: {str(e)}"
             )
+        finally:
             logger.debug("Syncing progress with db stopped")
             synchronization_task.cancel()
             if model.export_path:
