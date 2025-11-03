@@ -12,12 +12,12 @@ from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse, Response
 
-from api.dependencies import get_configuration_service, get_sink_id
+from api.dependencies import get_configuration_service, get_project_id, get_sink_id
 from pydantic_models import Sink, SinkType
 from pydantic_models.sink import SinkAdapter
 from services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
-router = APIRouter(prefix="/api/sinks", tags=["Sinks"])
+router = APIRouter(prefix="/api/projects/{project_id}/sinks", tags=["Sinks"])
 
 CREATE_SINK_BODY_DESCRIPTION = """
 Configuration for the new sink. The exact list of fields that can be configured depends on the sink type.
@@ -81,20 +81,27 @@ UPDATE_SINK_BODY_EXAMPLES = {
     },
 )
 async def create_sink(
+    project_id: Annotated[UUID, Depends(get_project_id)],
     sink_config: Annotated[
-        Sink, Body(description=CREATE_SINK_BODY_DESCRIPTION, openapi_examples=CREATE_SINK_BODY_EXAMPLES)
+        dict, Body(description=CREATE_SINK_BODY_DESCRIPTION, openapi_examples=CREATE_SINK_BODY_EXAMPLES)
     ],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Sink:
     """Create and configure a new sink"""
-    if sink_config.sink_type == SinkType.DISCONNECTED:
+    # Inject project_id from URL path into the config
+    sink_config["project_id"] = str(project_id)
+    
+    # Validate the complete config
+    validated_sink = SinkAdapter.validate_python(sink_config)
+    
+    if validated_sink.sink_type == SinkType.DISCONNECTED:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="The sink with sink_type=DISCONNECTED cannot be created",
         )
 
     try:
-        return await configuration_service.create_sink(sink_config)
+        return await configuration_service.create_sink(validated_sink)
     except ResourceAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -106,10 +113,11 @@ async def create_sink(
     },
 )
 async def list_sinks(
+    project_id: Annotated[UUID, Depends(get_project_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> list[Sink]:
     """List the available sinks"""
-    return await configuration_service.list_sinks()
+    return await configuration_service.list_sinks(project_id)
 
 
 @router.get(
@@ -121,12 +129,13 @@ async def list_sinks(
     },
 )
 async def get_sink(
+    project_id: Annotated[UUID, Depends(get_project_id)],
     sink_id: Annotated[UUID, Depends(get_sink_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Sink:
     """Get info about a sink"""
     try:
-        return await configuration_service.get_sink_by_id(sink_id)
+        return await configuration_service.get_sink_by_id(sink_id, project_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -140,6 +149,7 @@ async def get_sink(
     },
 )
 async def update_sink(
+    project_id: Annotated[UUID, Depends(get_project_id)],
     sink_id: Annotated[UUID, Depends(get_sink_id)],
     sink_config: Annotated[
         dict,
@@ -154,7 +164,7 @@ async def update_sink(
     if "sink_type" in sink_config:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'sink_type' field cannot be changed")
     try:
-        return await configuration_service.update_sink(sink_id, sink_config)
+        return await configuration_service.update_sink(sink_id, project_id, sink_config)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -174,18 +184,19 @@ async def update_sink(
     },
 )
 async def export_sink(
+    project_id: Annotated[UUID, Depends(get_project_id)],
     sink_id: Annotated[UUID, Depends(get_sink_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Response:
     """Export a sink to file"""
-    sink = await configuration_service.get_sink_by_id(sink_id)
+    sink = await configuration_service.get_sink_by_id(sink_id, project_id)
     if not sink:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Sink with ID {sink_id} not found",
         )
 
-    yaml_content = yaml.safe_dump(sink.model_dump(mode="json", exclude={"id"}))
+    yaml_content = yaml.safe_dump(sink.model_dump(mode="json", exclude={"id", "project_id"}))
 
     return Response(
         content=yaml_content.encode("utf-8"),
@@ -203,6 +214,7 @@ async def export_sink(
     },
 )
 async def import_sink(
+    project_id: Annotated[UUID, Depends(get_project_id)],
     yaml_file: Annotated[UploadFile, File(description="YAML file containing the sink configuration")],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Sink:
@@ -210,6 +222,9 @@ async def import_sink(
     try:
         yaml_content = await yaml_file.read()
         sink_data = yaml.safe_load(yaml_content)
+        
+        # Inject project_id from URL path
+        sink_data["project_id"] = str(project_id)
 
         sink_config = SinkAdapter.validate_python(sink_data)
         if sink_config.sink_type == SinkType.DISCONNECTED:
@@ -235,12 +250,13 @@ async def import_sink(
     },
 )
 async def delete_sink(
+    project_id: Annotated[UUID, Depends(get_project_id)],
     sink_id: Annotated[UUID, Depends(get_sink_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> None:
     """Remove a sink"""
     try:
-        await configuration_service.delete_sink_by_id(sink_id)
+        await configuration_service.delete_sink_by_id(sink_id, project_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:
