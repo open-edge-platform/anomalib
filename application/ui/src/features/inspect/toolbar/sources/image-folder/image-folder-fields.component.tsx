@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { Folder } from '@geti-inspect/icons';
 import { Flex, Switch, TextField } from '@geti/ui';
 
-import { ReactComponent as Folder } from '../../../../../assets/icons/folder.svg';
 import { ImagesFolderSourceConfig } from '../util';
 
 import classes from './image-folder-fields.module.scss';
@@ -16,6 +16,7 @@ export const ImageFolderFields = ({ state }: ImageFolderFieldsProps) => {
     return (
         <Flex direction='column' gap='size-200'>
             <TextField isHidden label='id' name='id' defaultValue={state.id} />
+            <TextField isHidden label='project_id' name='project_id' defaultValue={state.project_id} />
             <TextField width={'100%'} label='Name' name='name' defaultValue={state.name} />
 
             <Flex direction='row' gap='size-200'>

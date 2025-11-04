@@ -3,15 +3,7 @@ import { ImageFolderFields } from './image-folder/image-folder-fields.component'
 import { imageFolderBodyFormatter } from './image-folder/utils';
 import { IpCameraFields } from './ip-camera/ip-camera-fields.component';
 import { ipCameraBodyFormatter } from './ip-camera/utils';
-import {
-    getImageFolderData,
-    getIpCameraData,
-    getVideoFileData,
-    getWebcamData,
-    ImagesFolderSourceConfig,
-    SourceConfig,
-    VideoFileSourceConfig,
-} from './util';
+import { ImagesFolderSourceConfig, SourceConfig, VideoFileSourceConfig } from './util';
 import { videoFileBodyFormatter } from './video-file/utils';
 import { VideoFileFields } from './video-file/video-file-fields.component';
 import { webcamBodyFormatter } from './webcam/utils';
@@ -27,7 +19,7 @@ export const EditSourceFactory = ({ config, onSaved }: EditSourceFactoryProps) =
         return (
             <EditSource
                 onSaved={onSaved}
-                config={getWebcamData([config])}
+                config={config}
                 componentFields={(state) => <WebcamFields state={state} />}
                 bodyFormatter={webcamBodyFormatter}
             />
@@ -38,7 +30,7 @@ export const EditSourceFactory = ({ config, onSaved }: EditSourceFactoryProps) =
         return (
             <EditSource
                 onSaved={onSaved}
-                config={getIpCameraData([config])}
+                config={config}
                 componentFields={(state) => <IpCameraFields state={state} />}
                 bodyFormatter={ipCameraBodyFormatter}
             />
@@ -49,7 +41,7 @@ export const EditSourceFactory = ({ config, onSaved }: EditSourceFactoryProps) =
         return (
             <EditSource
                 onSaved={onSaved}
-                config={getVideoFileData([config])}
+                config={config}
                 componentFields={(state: VideoFileSourceConfig) => <VideoFileFields state={state} />}
                 bodyFormatter={videoFileBodyFormatter}
             />
@@ -59,7 +51,7 @@ export const EditSourceFactory = ({ config, onSaved }: EditSourceFactoryProps) =
     return (
         <EditSource
             onSaved={onSaved}
-            config={getImageFolderData([config])}
+            config={config as ImagesFolderSourceConfig}
             componentFields={(state: ImagesFolderSourceConfig) => <ImageFolderFields state={state} />}
             bodyFormatter={imageFolderBodyFormatter}
         />

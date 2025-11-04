@@ -1,3 +1,4 @@
+import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { DisclosureGroup } from 'src/components/disclosure-group/disclosure-group.component';
 
 import { ReactComponent as ImageIcon } from '../../../../assets/icons/images-folder.svg';
@@ -6,13 +7,13 @@ import { ReactComponent as Video } from '../../../../assets/icons/video-file.svg
 import { ReactComponent as WebcamIcon } from '../../../../assets/icons/webcam.svg';
 import { AddSource } from './add-source/add-source.component';
 import { ImageFolderFields } from './image-folder/image-folder-fields.component';
-import { imageFolderBodyFormatter, imageFolderInitialConfig } from './image-folder/utils';
+import { getImageFolderInitialConfig, imageFolderBodyFormatter } from './image-folder/utils';
 import { IpCameraFields } from './ip-camera/ip-camera-fields.component';
-import { ipCameraBodyFormatter, ipCameraInitialConfig } from './ip-camera/utils';
+import { getIpCameraInitialConfig, ipCameraBodyFormatter } from './ip-camera/utils';
 import { ImagesFolderSourceConfig, IPCameraSourceConfig, VideoFileSourceConfig, WebcamSourceConfig } from './util';
-import { videoFileBodyFormatter, videoFileInitialConfig } from './video-file/utils';
+import { getVideoFileInitialConfig, videoFileBodyFormatter } from './video-file/utils';
 import { VideoFileFields } from './video-file/video-file-fields.component';
-import { webcamBodyFormatter, webcamInitialConfig } from './webcam/utils';
+import { getWebcamInitialConfig, webcamBodyFormatter } from './webcam/utils';
 import { WebcamFields } from './webcam/webcam-fields.component';
 
 interface SourceOptionsProps {
@@ -20,6 +21,8 @@ interface SourceOptionsProps {
 }
 
 export const SourceOptions = ({ onSaved }: SourceOptionsProps) => {
+    const { projectId } = useProjectIdentifier();
+
     return (
         <DisclosureGroup
             defaultActiveInput={null}
@@ -31,7 +34,7 @@ export const SourceOptions = ({ onSaved }: SourceOptionsProps) => {
                     content: (
                         <AddSource
                             onSaved={onSaved}
-                            config={webcamInitialConfig}
+                            config={getWebcamInitialConfig(projectId)}
                             componentFields={(state: WebcamSourceConfig) => <WebcamFields state={state} />}
                             bodyFormatter={webcamBodyFormatter}
                         />
@@ -44,7 +47,7 @@ export const SourceOptions = ({ onSaved }: SourceOptionsProps) => {
                     content: (
                         <AddSource
                             onSaved={onSaved}
-                            config={ipCameraInitialConfig}
+                            config={getIpCameraInitialConfig(projectId)}
                             componentFields={(state: IPCameraSourceConfig) => <IpCameraFields state={state} />}
                             bodyFormatter={ipCameraBodyFormatter}
                         />
@@ -57,7 +60,7 @@ export const SourceOptions = ({ onSaved }: SourceOptionsProps) => {
                     content: (
                         <AddSource
                             onSaved={onSaved}
-                            config={videoFileInitialConfig}
+                            config={getVideoFileInitialConfig(projectId)}
                             componentFields={(state: VideoFileSourceConfig) => <VideoFileFields state={state} />}
                             bodyFormatter={videoFileBodyFormatter}
                         />
@@ -70,7 +73,7 @@ export const SourceOptions = ({ onSaved }: SourceOptionsProps) => {
                     content: (
                         <AddSource
                             onSaved={onSaved}
-                            config={imageFolderInitialConfig}
+                            config={getImageFolderInitialConfig(projectId)}
                             componentFields={(state: ImagesFolderSourceConfig) => <ImageFolderFields state={state} />}
                             bodyFormatter={imageFolderBodyFormatter}
                         />

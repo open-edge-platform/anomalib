@@ -13,6 +13,7 @@ export const IpCameraFields = ({ state }: IpCameraFieldsProps) => {
     return (
         <Flex direction='column' gap='size-200'>
             <TextField isHidden label='id' name='id' defaultValue={state.id} />
+            <TextField isHidden label='project_id' name='project_id' defaultValue={state.project_id} />
             <TextField width={'100%'} label='Name' name='name' defaultValue={state.name} />
             <TextField width={'100%'} label='Stream Url:' name='stream_url' defaultValue={state.stream_url} />
             <Switch
