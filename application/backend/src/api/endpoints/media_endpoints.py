@@ -11,7 +11,6 @@ from api.dependencies import get_media_id, get_media_service, get_project_id
 from api.endpoints import API_PREFIX
 from api.media_rest_validator import MediaRestValidator
 from pydantic_models import Media, MediaList
-from services import ResourceNotFoundError
 from services.media_service import MediaService
 
 media_api_prefix_url = API_PREFIX + "/projects/{project_id}"
@@ -99,13 +98,7 @@ async def delete_media(
     media_id: Annotated[UUID, Depends(get_media_id)],
 ) -> None:
     """Remove an image"""
-    try:
-        await media_service.delete_media(media_id=media_id, project_id=project_id)
-    except ResourceNotFoundError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Media with ID {media_id} not found",
-        ) from e
+    await media_service.delete_media(media_id=media_id, project_id=project_id)
 
 
 @media_router.post(

@@ -110,7 +110,7 @@ def test_delete_media_not_found(fxt_client, fxt_media_service):
     response = fxt_client.delete(f"/api/projects/{project_id}/images/{media_id}")
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
-    assert response.json()["detail"] == f"Media with ID {media_id} not found"
+    assert response.json()["detail"] == f"Media with ID {media_id} not found."
     fxt_media_service.delete_media.assert_called_once_with(media_id=media_id, project_id=project_id)
 
 

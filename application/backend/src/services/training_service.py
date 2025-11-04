@@ -84,7 +84,7 @@ class TrainingService:
             )
             return await model_service.create_model(trained_model)
         except Exception as e:
-            logger.exception("Failed to train pending training job: %s", e)
+            logger.error("Failed to train pending training job: %s", e)
             await job_service.update_job_status(
                 job_id=job.id, status=JobStatus.FAILED, message=f"Failed with exception: {str(e)}"
             )

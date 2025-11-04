@@ -82,7 +82,7 @@ class MqttDispatcher(BaseDispatcher):
                     return
                 logger.warning(f"Connection timeout after {CONNECT_TIMEOUT} seconds")
             except Exception as e:
-                logger.exception("Connection failed %s", e)
+                logger.error("Connection failed %s", e)
                 time.sleep(RETRY_DELAY * (attempt + 1))
         raise ConnectionError("Failed to connect to MQTT broker")
 
@@ -109,7 +109,7 @@ class MqttDispatcher(BaseDispatcher):
             try:
                 self._connect()
             except ConnectionError:
-                logger.exception("Reconnect failed")
+                logger.error("Reconnect failed")
 
         try:
             PredictionResult = self.client.publish(topic, json.dumps(payload))
@@ -117,7 +117,7 @@ class MqttDispatcher(BaseDispatcher):
                 self._published_messages.append({"topic": topic, "payload": payload})
             logger.error(f"Publish failed: {mqtt.error_string(PredictionResult.rc)}")
         except ValueError:
-            logger.exception("Invalid payload for MQTT publish")
+            logger.error("Invalid payload for MQTT publish")
 
     def _dispatch(
         self,
