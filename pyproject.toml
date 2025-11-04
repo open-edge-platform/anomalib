@@ -131,6 +131,10 @@ xpu = [
 ]
 full = ["anomalib[clip,openvino,loggers,notebooks,vlm,video]"]
 dev = ["anomalib[full,docs,test]"]
+# Geti Inspect application requires python>=3.13
+application = [
+    "geti-inspect ; python_version >= '3.13'"
+]
 
 [project.scripts]
 anomalib = "anomalib.cli.cli:main"
@@ -230,6 +234,7 @@ pytorch-triton-rocm = [
 pytorch-triton-xpu = [
     { index = "pytorch-xpu", extra = "xpu" },
 ]
+geti-inspect = { path = "./application/backend", editable = true }
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
