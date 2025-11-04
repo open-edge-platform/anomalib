@@ -4,38 +4,36 @@
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Grid } from '@geti/ui';
 
+import { Footer } from '../../features/inspect/footer/footer.component';
 import { InferenceProvider } from '../../features/inspect/inference-provider.component';
 import { InferenceResult } from '../../features/inspect/inference-result.component';
 import { SelectedMediaItemProvider } from '../../features/inspect/selected-media-item-provider.component';
 import { Sidebar } from '../../features/inspect/sidebar.component';
-import { StatusBar } from '../../features/inspect/statusbar/statusbar.component';
 import { Toolbar } from '../../features/inspect/toolbar';
 
 export const Inspect = () => {
     const { projectId } = useProjectIdentifier();
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <Grid
-                areas={['toolbar sidebar', 'canvas sidebar']}
-                rows={['size-800', 'minmax(0, 1fr)']}
-                columns={['1fr', 'min-content']}
-                height={'100%'}
-                gap={'size-10'}
-                UNSAFE_style={{
-                    overflow: 'hidden',
-                }}
-                key={projectId}
-            >
-                <SelectedMediaItemProvider>
-                    <InferenceProvider>
-                        <Toolbar />
-                        <InferenceResult />
-                        <Sidebar />
-                    </InferenceProvider>
-                </SelectedMediaItemProvider>
-            </Grid>
-            <StatusBar />
-        </div>
+        <Grid
+            areas={['toolbar sidebar', 'canvas sidebar', 'footer sidebar']}
+            rows={['size-800', 'minmax(0, 1fr)', 'auto']}
+            columns={['1fr', 'min-content']}
+            height={'100%'}
+            gap={'size-10'}
+            UNSAFE_style={{
+                overflow: 'hidden',
+            }}
+            key={projectId}
+        >
+            <SelectedMediaItemProvider>
+                <InferenceProvider>
+                    <Toolbar />
+                    <InferenceResult />
+                    <Sidebar />
+                    <Footer />
+                </InferenceProvider>
+            </SelectedMediaItemProvider>
+        </Grid>
     );
 };
