@@ -104,7 +104,7 @@ class BaseRepository(Generic[ModelType, SchemaType], metaclass=abc.ABCMeta):
 
         obj_id = self._id_to_str(obj_id)
         where_expression = [
-            self.schema.id == obj_id, # type: ignore[attr-defined]
+            self.schema.id == obj_id,  # type: ignore[attr-defined]
             *[self.schema.__table__.c[k] == v for k, v in self.base_filters.items()],
         ]
         query = expression.delete(self.schema).where(*where_expression)

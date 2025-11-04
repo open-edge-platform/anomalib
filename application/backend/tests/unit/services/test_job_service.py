@@ -167,7 +167,7 @@ class TestJobService:
         }
         if has_message:
             expected_updates["message"] = message
-        
+
         # Create an updated job object that the repository would return
         updated_job = fxt_job.model_copy(update=expected_updates)
         fxt_job_repository.get_by_id.return_value = fxt_job
@@ -209,6 +209,7 @@ class TestJobService:
             mock_exists.return_value = False
 
             with pytest.raises(ResourceNotFoundException) as exc_info:
+
                 async def consume_stream():
                     async for _ in JobService.stream_logs(fxt_job.id):
                         pass
@@ -238,16 +239,16 @@ class TestJobService:
             # Mock file with async readline method
             mock_file = MagicMock()
             mock_file.readline = AsyncMock(side_effect=[*log_lines, ""])  # Empty string signals EOF
-            
+
             # Create an async context manager
             async_cm = MagicMock()
             async_cm.__aenter__ = AsyncMock(return_value=mock_file)
             async_cm.__aexit__ = AsyncMock(return_value=None)
-            
+
             # anyio.open_file() is a coroutine that returns an async context manager when awaited
             async def mock_anyio_open_file(*args, **kwargs):
                 return async_cm
-            
+
             mock_open_file.side_effect = mock_anyio_open_file
 
             async def consume_stream():

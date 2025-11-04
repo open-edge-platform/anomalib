@@ -101,7 +101,7 @@ class ModelService:
             return await asyncio.to_thread(
                 OpenVINOInferencer,
                 path=model_path,
-                device=_device.upper(), # OV always expects uppercase device names
+                device=_device.upper(),  # OV always expects uppercase device names
                 config={ov_hints.performance_mode: ov_hints.PerformanceMode.LATENCY},
             )
         except Exception as e:

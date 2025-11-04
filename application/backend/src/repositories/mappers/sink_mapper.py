@@ -11,7 +11,14 @@ class SinkMapper(IBaseMapper):
 
     # Define fields to exclude from config_data (common fields)
     _COMMON_FIELDS: set[str] = {
-        "id", "project_id", "name", "sink_type", "output_formats", "rate_limit", "created_at", "updated_at"
+        "id",
+        "project_id",
+        "name",
+        "sink_type",
+        "output_formats",
+        "rate_limit",
+        "created_at",
+        "updated_at",
     }
 
     @staticmethod

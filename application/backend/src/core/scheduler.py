@@ -60,7 +60,7 @@ class Scheduler(metaclass=Singleton):
         training_proc.daemon = False
 
         # Inference worker consumes frames and produces predictions
-        
+
         inference_proc = InferenceWorker(
             frame_queue=self.frame_queue,
             pred_queue=self.pred_queue,

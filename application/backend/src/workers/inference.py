@@ -168,7 +168,9 @@ class InferenceWorker(BaseProcessWorker):
             start_t = MetricsService.record_inference_start()
             try:
                 prediction_response = await ModelService.predict_image(
-                    self._loaded_model.model, image_bytes, self._cached_models  # type: ignore[arg-type]
+                    self._loaded_model.model,
+                    image_bytes,
+                    self._cached_models,  # type: ignore[arg-type]
                 )
             except Exception as e:
                 logger.error(f"Inference failed: {e}", exc_info=True)

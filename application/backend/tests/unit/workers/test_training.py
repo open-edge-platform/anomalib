@@ -30,7 +30,7 @@ class TestTrainingWorker:
         async def run_test():
             with patch("workers.training.TrainingService", return_value=mock_training_service):
                 worker = TrainingWorker(stop_event=mock_stop_event)
-                
+
                 # Set up stop event to trigger after a short time
                 async def set_stop_event():
                     await asyncio.sleep(0.1)
@@ -59,7 +59,7 @@ class TestTrainingWorker:
 
             with patch("workers.training.TrainingService", return_value=mock_training_service):
                 worker = TrainingWorker(stop_event=mock_stop_event)
-                
+
                 # Set up stop event to trigger after a short time
                 async def set_stop_event():
                     await asyncio.sleep(0.1)
@@ -88,7 +88,7 @@ class TestTrainingWorker:
 
             with patch("workers.training.TrainingService", return_value=mock_training_service):
                 worker = TrainingWorker(stop_event=mock_stop_event)
-                
+
                 # Run the train loop
                 await worker.run_loop()
 
