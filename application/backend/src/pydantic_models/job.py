@@ -23,26 +23,11 @@ class JobStatus(StrEnum):
     CANCELED = "canceled"
 
 
-class JobStage(StrEnum):
-    """Job stages follow PyTorch Lightning stages with the addition of idle stage.
-
-    See ``lightning.pytorch.trainer.states.RunningStage`` for more details.
-    """
-
-    IDLE = "idle"
-    TRAINING = "train"
-    SANITY_CHECKING = "sanity_check"
-    VALIDATING = "validate"
-    TESTING = "test"
-    PREDICTING = "predict"
-
-
 class Job(BaseIDModel):
     project_id: UUID
     type: JobType = JobType.TRAINING
     progress: int = Field(default=0, ge=0, le=100, description="Progress percentage from 0 to 100")
     status: JobStatus = JobStatus.PENDING
-    stage: JobStage = JobStage.IDLE
     payload: dict
     message: str = "Job created"
     start_time: datetime | None = None

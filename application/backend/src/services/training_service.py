@@ -103,6 +103,7 @@ class TrainingService:
             await job_service.update_job_status(
                 job_id=job.id, status=JobStatus.FAILED, message=f"Failed with exception: {str(e)}"
             )
+            raise e
         finally:
             logger.debug("Syncing progress with db stopped")
             synchronization_task.cancel()
@@ -111,7 +112,6 @@ class TrainingService:
                 model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model.id)
                 await model_binary_repo.delete_model_folder()
                 await model_service.delete_model(project_id=project_id, model_id=model.id)
-            raise e
 
     @staticmethod
     def _train_model(
@@ -205,14 +205,14 @@ class TrainingService:
         try:
             while True:
                 progress: int = synchronization_parameters.progress
-                stage = synchronization_parameters.stage
+                message = synchronization_parameters.message
                 if not await job_service.is_job_still_running(job_id=job_id):
                     logger.debug("Job cancelled, stopping progress sync")
                     synchronization_parameters.set_cancel_training_event()
                     break
-                logger.debug(f"Syncing progress with db: {progress}% - {stage}")
+                logger.debug(f"Syncing progress with db: {progress}% - {message}")
                 await job_service.update_job_status(
-                    job_id=job_id, status=JobStatus.RUNNING, progress=progress, stage=stage
+                    job_id=job_id, status=JobStatus.RUNNING, progress=progress, message=message
                 )
                 await asyncio.sleep(0.5)
         except Exception as e:

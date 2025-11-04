@@ -4,11 +4,9 @@
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy import JSON, Boolean, DateTime, Enum, Float, ForeignKey, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
-
-from pydantic_models.job import JobStage
 
 
 class Base(DeclarativeBase):
@@ -61,7 +59,6 @@ class JobDB(Base):
     id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid4()))
     project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"))
     type: Mapped[str] = mapped_column(String(64), nullable=False)
-    stage: Mapped[JobStage] = mapped_column(Enum(JobStage), nullable=False)
     progress: Mapped[int] = mapped_column(nullable=False)
     status: Mapped[str] = mapped_column(String(64), nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)

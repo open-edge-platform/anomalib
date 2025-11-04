@@ -4,7 +4,7 @@
 import { Suspense } from 'react';
 
 import { $api } from '@geti-inspect/api';
-import { SchemaJob as Job, SchemaJob, SchemaJobStage } from '@geti-inspect/api/spec';
+import { SchemaJob as Job, SchemaJob } from '@geti-inspect/api/spec';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Flex, ProgressBar, Text, View } from '@geti/ui';
 import { CanceledIcon, WaitingIcon } from '@geti/ui/icons';
@@ -31,18 +31,18 @@ const IdleItem = () => {
     );
 };
 
-const getStyleForStage = (stage: SchemaJobStage) => {
-    if (stage.toLowerCase().includes('valid')) {
+const getStyleForMessage = (message: string) => {
+    if (message.toLowerCase().includes('valid')) {
         return {
             backgroundColor: 'var(--spectrum-global-color-yellow-600)',
             color: '#000',
         };
-    } else if (stage.toLowerCase().includes('test')) {
+    } else if (message.toLowerCase().includes('test')) {
         return {
             backgroundColor: 'var(--spectrum-global-color-green-600)',
             color: '#fff',
         };
-    } else if (stage.toLowerCase().includes('train') || stage.toLowerCase().includes('fit')) {
+    } else if (message.toLowerCase().includes('train') || message.toLowerCase().includes('fit')) {
         return {
             backgroundColor: 'var(--spectrum-global-color-blue-600)',
             color: '#fff',
@@ -89,12 +89,12 @@ const TrainingStatusItem = ({ trainingJob }: { trainingJob: SchemaJob }) => {
         })
     );
 
-    // Get the job progress and stage from the last SSE message, or fallback
+    // Get the job progress and message from the last SSE message, or fallback
     const lastJobProgress = progressQuery.data?.at(-1);
     const progress = lastJobProgress?.progress ?? trainingJob.progress;
-    const stage = lastJobProgress?.stage ?? trainingJob.stage;
+    const message = lastJobProgress?.message ?? trainingJob.message;
 
-    const { backgroundColor, color } = getStyleForStage(stage);
+    const { backgroundColor, color } = getStyleForMessage(message);
 
     return (
         <div
@@ -127,12 +127,15 @@ const TrainingStatusItem = ({ trainingJob }: { trainingJob: SchemaJob }) => {
                         marginRight: '4px',
                         textAlign: 'center',
                         color,
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
                     }}
                 >
-                    {stage}
+                    {message}
                 </Text>
             </Flex>
-            <ProgressBar value={progress} aria-label={stage} width='100px' showValueLabel={false} />
+            <ProgressBar value={progress} aria-label={message} width='100px' showValueLabel={false} />
         </div>
     );
 };

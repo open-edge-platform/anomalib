@@ -5,19 +5,17 @@ import datetime
 import json
 import logging
 import os
-from collections.abc import AsyncGenerator, Coroutine
-from typing import Any
+from collections.abc import AsyncGenerator
 from uuid import UUID
 
 import anyio
 from sqlalchemy.exc import IntegrityError
 from sse_starlette import ServerSentEvent
-from starlette.responses import AsyncContentStream
 
 from db import get_async_db_session_ctx
 from exceptions import DuplicateJobException, ResourceNotFoundException
 from pydantic_models import Job, JobList, JobType
-from pydantic_models.job import JobCancelled, JobStage, JobStatus, JobSubmitted, TrainJobPayload
+from pydantic_models.job import JobCancelled, JobStatus, JobSubmitted, TrainJobPayload
 from repositories import JobRepository
 
 logger = logging.getLogger(__name__)
@@ -67,7 +65,6 @@ class JobService:
         status: JobStatus,
         message: str | None = None,
         progress: int | None = None,
-        stage: JobStage | None = None,
     ) -> None:
         async with get_async_db_session_ctx() as session:
             repo = JobRepository(session)
@@ -84,8 +81,6 @@ class JobService:
 
             if progress_ is not None:
                 updates["progress"] = progress_
-            if stage is not None:
-                updates["stage"] = stage
             await repo.update(job, updates)
 
     @classmethod
@@ -136,7 +131,7 @@ class JobService:
             job = await cls.get_job_by_id(job_id=job_id)
             if job is None:
                 raise ResourceNotFoundException(resource_id=job_id, resource_name="job")
-            yield ServerSentEvent(data=json.dumps({"progress": job.progress, "stage": job.stage}))
+            yield ServerSentEvent(data=json.dumps({"progress": job.progress, "message": job.message}))
             still_running = job.status in {JobStatus.RUNNING, JobStatus.PENDING}
             await asyncio.sleep(0.5)
 
