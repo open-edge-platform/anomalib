@@ -44,7 +44,9 @@ describe('SourceMenu', () => {
                     pipelinePatchSpy();
                     return HttpResponse.json({}, { status });
                 }),
-                http.delete('/api/sources/{source_id}', () => HttpResponse.json(null, { status: 204 }))
+                http.delete('/api/projects/{project_id}/sources/{source_id}', () =>
+                    HttpResponse.json(null, { status: 204 })
+                )
             );
 
             return pipelinePatchSpy;

@@ -17,6 +17,8 @@ const mockedSource: WebcamSourceConfig = {
     device_id: 0,
 };
 
+vi.mock('@geti-inspect/hooks', () => ({ useProjectIdentifier: () => ({ projectId: 'project-id-123' }) }));
+
 describe('useSourceMutation', () => {
     it('creates a new source and return its resource id', async () => {
         const newResourceId = 'resource-id-123';
@@ -25,8 +27,10 @@ describe('useSourceMutation', () => {
         });
 
         server.use(
-            http.post('/api/sources', () => HttpResponse.json({ ...mockedSource, id: newResourceId })),
-            http.patch('/api/sources/{source_id}', () => HttpResponse.error())
+            http.post('/api/projects/{project_id}/sources', () =>
+                HttpResponse.json({ ...mockedSource, id: newResourceId })
+            ),
+            http.patch('/api/projects/{project_id}/sources/{source_id}', () => HttpResponse.error())
         );
 
         await act(async () => {
@@ -41,8 +45,8 @@ describe('useSourceMutation', () => {
         });
 
         server.use(
-            http.post('/api/sources', () => HttpResponse.error()),
-            http.patch('/api/sources/{source_id}', () => HttpResponse.json(mockedSource))
+            http.post('/api/projects/{project_id}/sources', () => HttpResponse.error()),
+            http.patch('/api/projects/{project_id}/sources/{source_id}', () => HttpResponse.json(mockedSource))
         );
 
         await act(async () => {

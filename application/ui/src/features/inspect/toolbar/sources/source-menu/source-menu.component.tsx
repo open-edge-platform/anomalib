@@ -16,14 +16,18 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
     const updatePipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
         meta: {
             invalidates: [
-                ['get', '/api/sources'],
+                ['get', '/api/projects/{project_id}/sources', { params: { path: { project_id: projectId } } }],
                 ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id: projectId } } }],
             ],
         },
     });
 
-    const removeSource = $api.useMutation('delete', '/api/sources/{source_id}', {
-        meta: { invalidates: [['get', '/api/sources']] },
+    const removeSource = $api.useMutation('delete', '/api/projects/{project_id}/sources/{source_id}', {
+        meta: {
+            invalidates: [
+                ['get', '/api/projects/{project_id}/sources', { params: { path: { project_id: projectId } } }],
+            ],
+        },
     });
 
     const handleOnAction = (option: Key) => {
@@ -68,7 +72,7 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
                 });
             }
 
-            await removeSource.mutateAsync({ params: { path: { source_id: id } } });
+            await removeSource.mutateAsync({ params: { path: { project_id: projectId, source_id: id } } });
 
             toast({
                 type: 'success',

@@ -2,20 +2,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { $api } from '@geti-inspect/api';
+import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { omit } from 'lodash-es';
 import { v4 as uuid } from 'uuid';
 
 import { SourceConfig } from '../util';
 
 export const useSourceMutation = (isNewSource: boolean) => {
-    const addSource = $api.useMutation('post', '/api/sources', {
+    const { projectId } = useProjectIdentifier();
+    const addSource = $api.useMutation('post', '/api/projects/{project_id}/sources', {
         meta: {
-            invalidates: [['get', '/api/sources']],
+            invalidates: [
+                ['get', '/api/projects/{project_id}/sources', { params: { path: { project_id: projectId } } }],
+            ],
         },
     });
-    const updateSource = $api.useMutation('patch', '/api/sources/{source_id}', {
+    const updateSource = $api.useMutation('patch', '/api/projects/{project_id}/sources/{source_id}', {
         meta: {
-            invalidates: [['get', '/api/sources']],
+            invalidates: [
+                ['get', '/api/projects/{project_id}/sources', { params: { path: { project_id: projectId } } }],
+            ],
         },
     });
 
@@ -26,13 +32,16 @@ export const useSourceMutation = (isNewSource: boolean) => {
                 id: uuid(),
             };
 
-            const response = await addSource.mutateAsync({ body: sourcePayload });
+            const response = await addSource.mutateAsync({
+                body: sourcePayload,
+                params: { path: { project_id: projectId } },
+            });
 
             return String(response.id);
         }
 
         const response = await updateSource.mutateAsync({
-            params: { path: { source_id: String(body.id) } },
+            params: { path: { project_id: projectId, source_id: String(body.id) } },
             body: omit(body, 'source_type'),
         });
 
