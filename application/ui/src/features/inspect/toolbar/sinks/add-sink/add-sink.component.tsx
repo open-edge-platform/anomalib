@@ -4,7 +4,7 @@
 import { ReactNode } from 'react';
 
 import { Button, Form } from '@geti/ui';
-import { useConnectSourceToPipeline } from 'src/hooks/use-pipeline.hook';
+import { useConnectSinkToPipeline } from 'src/hooks/use-pipeline.hook';
 
 import { useSinkAction } from '../hooks/use-sink-action.hook';
 import { SinkConfig } from '../utils';
@@ -17,7 +17,7 @@ interface AddSinkProps<T> {
 }
 
 export const AddSink = <T extends SinkConfig>({ config, onSaved, bodyFormatter, componentFields }: AddSinkProps<T>) => {
-    const connectToPipelineMutation = useConnectSourceToPipeline();
+    const connectToPipelineMutation = useConnectSinkToPipeline();
 
     const [state, submitAction, isPending] = useSinkAction({
         config,

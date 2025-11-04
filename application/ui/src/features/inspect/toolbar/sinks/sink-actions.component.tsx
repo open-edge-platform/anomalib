@@ -4,51 +4,63 @@
 import { useState } from 'react';
 
 import { $api } from '@geti-inspect/api';
+import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { ActionButton, Flex, Text } from '@geti/ui';
 import { Back } from '@geti/ui/icons';
 import { isEmpty } from 'lodash-es';
 
+import { SinkList } from './sink-list/sink-list.component';
 import { SinkOptions } from './sink-options.component';
 import { SinkConfig } from './utils';
 
-export const SinkFactory = () => {
-    const sinksQuery = $api.useSuspenseQuery('get', '/api/sinks');
-    const sources = sinksQuery.data ?? [];
+export const SinkActions = () => {
+    const { projectId } = useProjectIdentifier();
+    const sinksQuery = $api.useSuspenseQuery('get', '/api/projects/{project_id}/sinks', {
+        params: { path: { project_id: projectId } },
+    });
 
-    const [view, setView] = useState<'newItemsOptions' | 'list' | 'options' | 'edit'>(
-        isEmpty(sources) ? 'options' : 'list'
-    );
+    const sinks = sinksQuery.data ?? [];
+
+    const [view, setView] = useState<'list' | 'options' | 'edit'>(isEmpty(sinks) ? 'options' : 'list');
     const [currentSource, setCurrentSource] = useState<SinkConfig | null>(null);
 
     const handleShowList = () => {
         setView('list');
     };
 
-    /* const handleAddSource = () => {
-        setView('newItemsOptions');
+    const handleAddSinks = () => {
+        setView('options');
     };
 
     const handleEditSourceFactory = (source: SinkConfig) => {
         setView('edit');
         setCurrentSource(source);
-    }; */
+    };
+
+    console.log('view', view);
 
     if (view === 'edit' && !isEmpty(currentSource)) {
         return <p>edith</p>;
     }
 
     if (view === 'list') {
-        return <p>list</p>;
+        return (
+            <SinkList
+                sinks={sinks as SinkConfig[]}
+                onAddSink={handleAddSinks}
+                onEditSourceFactory={handleEditSourceFactory}
+            />
+        );
     }
 
     return (
-        <SinkOptions onSaved={handleShowList} hasHeader={sources.length > 0}>
+        <SinkOptions onSaved={handleShowList} hasHeader={sinks.length > 0}>
             <Flex gap={'size-100'} marginBottom={'size-100'} alignItems={'center'} justifyContent={'space-between'}>
                 <ActionButton isQuiet onPress={handleShowList}>
                     <Back />
                 </ActionButton>
 
-                <Text>Add new input source</Text>
+                <Text>Add new sink</Text>
             </Flex>
         </SinkOptions>
     );

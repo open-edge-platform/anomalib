@@ -2,6 +2,7 @@ import { Add as AddIcon } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 import { isEqual } from 'lodash-es';
 import { Button, Flex, Text } from 'packages/ui';
+import { removeUnderscore } from 'src/features/utils';
 
 import { usePipeline } from '../../../../../hooks/use-pipeline.hook';
 import { SourceMenu } from '../source-menu/source-menu.component';
@@ -9,7 +10,6 @@ import { SourceConfig } from '../util';
 import { SettingsList } from './settings-list/settings-list.component';
 import { SourceIcon } from './source-icon/source-icon.component';
 import { StatusTag } from './status-tag/status-tag.component';
-import { removeUnderscore } from './utils';
 
 import classes from './source-list.module.scss';
 

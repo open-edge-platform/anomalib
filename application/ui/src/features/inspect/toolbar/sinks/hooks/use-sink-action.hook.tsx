@@ -12,7 +12,7 @@ import { useSinkMutation } from './use-sink-mutation.hook';
 interface useSinkActionProps<T> {
     config: Awaited<T>;
     isNewSink: boolean;
-    onSaved?: (source_id: string) => void;
+    onSaved?: (sink_id: string) => void;
     bodyFormatter: (formData: FormData) => T;
 }
 
