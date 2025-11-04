@@ -73,7 +73,7 @@ jobs:
           private-key: ${{ secrets.RENOVATE_APP_PEM }}
 
       - name: Self-hosted Renovate
-        uses: renovatebot/github-action@53bdcc4ec92f28e5023ac92356ea8bb45f8b807d # v43.0.15
+        uses: renovatebot/github-action@ea850436a5fe75c0925d583c7a02c60a5865461d # v43.0.20
         with:
           configurationFile: .github/renovate.json5
           token: "${{ steps.get-github-app-token.outputs.token }}"

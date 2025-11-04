@@ -94,7 +94,7 @@ jobs:
     if: contains(inputs.tools, 'semgrep')
     runs-on: ubuntu-latest
     container:
-      image: returntocorp/semgrep@sha256:ee3c01c9d33a975209d6bcda050520a45366d79e2919c15baca4014e8634a9ac # v1.124.0
+      image: returntocorp/semgrep@sha256:e2a7ca874b5ef7dd47b3f613a429bc75050e6a1abfb2b42496d7ce2414d286cb # v1.124.0
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
@@ -177,7 +177,7 @@ jobs:
 
       # Download artifacts with error handling
       - name: Download all results
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         continue-on-error: true # Don't fail if some tools didn't generate results
         with:
           pattern: "*-results"
@@ -187,7 +187,7 @@ jobs:
       # Only upload if there are files
       - name: Upload combined results
         if: hashFiles('all-results/**/*') != ''
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: security-scan-results
           path: all-results

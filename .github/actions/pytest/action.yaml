@@ -101,7 +101,7 @@ runs:
         cache-dependency-path: ${{ inputs.enable-cache == 'true' && 'pyproject.toml' || '' }}
 
     - name: Set up uv
-      uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+      uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7.1.2
 
     # Create and configure virtual environment
     - name: Configure virtual environment
@@ -189,7 +189,7 @@ runs:
 
     - name: Upload test results
       if: always() && steps.test-execution.outcome == 'failure'
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: pytest-results-${{ inputs.test-type }}
         path: pytest_output.log
