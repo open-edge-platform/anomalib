@@ -10,7 +10,8 @@ from fastapi import status
 from api.dependencies import get_media_service
 from main import app
 from pydantic_models import Media, MediaList
-from services import MediaService
+from services import MediaService, ResourceNotFoundError
+from services.exceptions import ResourceType
 
 
 @pytest.fixture
@@ -21,6 +22,8 @@ def fxt_media(fxt_project):
         filename="test_image.jpg",
         size=64,
         is_anomalous=False,
+        width=800,
+        height=600,
     )
 
 
@@ -74,6 +77,48 @@ def test_get_media_thumbnail_not_found(fxt_client, fxt_media_service):
 
     fxt_media_service.get_thumbnail_file_path.side_effect = FileNotFoundError("Media not found")
 
-    # Create client that doesn't raise server exceptions immediately
     response = fxt_client.get(f"/api/projects/{project_id}/images/{media_id}/thumbnail")
-    assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+    
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == f"Media with ID {media_id} not found"
+    fxt_media_service.get_thumbnail_file_path.assert_called_once_with(project_id=project_id, media_id=media_id)
+
+
+def test_delete_media_success(fxt_client, fxt_media_service, fxt_media):
+    """Test successful media deletion."""
+    project_id = fxt_media.project_id
+    media_id = fxt_media.id
+    
+    fxt_media_service.delete_media.return_value = None
+
+    response = fxt_client.delete(f"/api/projects/{project_id}/images/{media_id}")
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert response.content == b""
+    fxt_media_service.delete_media.assert_called_once_with(media_id=media_id, project_id=project_id)
+
+
+def test_delete_media_not_found(fxt_client, fxt_media_service):
+    """Test media deletion when media not found."""
+    project_id = uuid4()
+    media_id = uuid4()
+
+    fxt_media_service.delete_media.side_effect = ResourceNotFoundError(
+        resource_type=ResourceType.MEDIA, resource_id=str(media_id)
+    )
+
+    response = fxt_client.delete(f"/api/projects/{project_id}/images/{media_id}")
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == f"Media with ID {media_id} not found."
+    fxt_media_service.delete_media.assert_called_once_with(media_id=media_id, project_id=project_id)
+
+
+def test_delete_media_invalid_id(fxt_client, fxt_media_service):
+    """Test media deletion with invalid media ID format."""
+    project_id = uuid4()
+
+    response = fxt_client.delete(f"/api/projects/{project_id}/images/invalid-id")
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    fxt_media_service.delete_media.assert_not_called()

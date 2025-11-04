@@ -180,7 +180,7 @@ class BaseThreadWorker(threading.Thread, StoppableMixin, abc.ABC):
                 self.setup()
                 asyncio.run(self.run_loop())
             except Exception:
-                logger.exception(f"Unhandled exception in {self.name}")
+                logger.error(f"Unhandled exception in {self.name}")
             finally:
                 try:
                     self.teardown()

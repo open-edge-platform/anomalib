@@ -10,7 +10,8 @@ from PIL import Image
 
 from repositories import MediaRepository
 from repositories.binary_repo import ImageBinaryRepository
-from services import MediaService
+from services import MediaService, ResourceNotFoundError
+from services.exceptions import ResourceType
 
 
 @pytest.fixture
@@ -169,6 +170,7 @@ class TestMediaService:
 
         mock_media_repo = MagicMock()
         mock_media_repo.get_by_id = AsyncMock(return_value=fxt_media)
+        mock_media_repo.delete_by_id = AsyncMock()
 
         with (
             patch("services.media_service.ImageBinaryRepository", return_value=mock_bin_repo),
@@ -181,6 +183,7 @@ class TestMediaService:
         calls = mock_bin_repo.delete_file.call_args_list
         assert calls[0][1]["filename"] == fxt_media.filename
         assert calls[1][1]["filename"] == f"thumb_{fxt_media.id}.png"
+        mock_media_repo.delete_by_id.assert_called_once_with(fxt_media.id)
 
     def test_delete_media_not_found(self, fxt_media_service, fxt_project):
         """Test media deletion when media not found."""
@@ -191,10 +194,12 @@ class TestMediaService:
         with patch("services.media_service.MediaRepository") as mock_repo_class:
             mock_repo_class.return_value = mock_media_repo
 
-            # Should not raise an exception, just return
-            asyncio.run(fxt_media_service.delete_media("non-existent-id", fxt_project.id))
+            with pytest.raises(ResourceNotFoundError) as exc_info:
+                asyncio.run(fxt_media_service.delete_media(uuid4(), fxt_project.id))
 
-        mock_media_repo.get_by_id.assert_called_once_with("non-existent-id")
+            assert exc_info.value.resource_type == ResourceType.MEDIA
+
+        mock_media_repo.get_by_id.assert_called_once()
 
     def test_delete_media_file_not_found(self, fxt_media_service, fxt_media, fxt_project):
         """Test media deletion when file not found."""
@@ -203,6 +208,7 @@ class TestMediaService:
 
         mock_media_repo = MagicMock()
         mock_media_repo.get_by_id = AsyncMock(return_value=fxt_media)
+        mock_media_repo.delete_by_id = AsyncMock()
 
         with (
             patch("services.media_service.ImageBinaryRepository", return_value=mock_bin_repo),
@@ -224,6 +230,7 @@ class TestMediaService:
             # Mock the repository method
             mock_media_repo = MagicMock()
             mock_media_repo.get_by_id = AsyncMock(return_value=fxt_media)
+            mock_media_repo.delete_by_id = AsyncMock()
 
             with patch("services.media_service.MediaRepository") as mock_repo_class:
                 mock_repo_class.return_value = mock_media_repo
@@ -270,6 +277,7 @@ class TestMediaService:
         saved_media = MagicMock(id=uuid4(), filename="test.jpg")
         mock_media_repo.save = AsyncMock(return_value=saved_media)
         mock_media_repo.get_by_id = AsyncMock(return_value=saved_media)
+        mock_media_repo.delete_by_id = AsyncMock()
 
         # Valid image bytes for thumbnail generation
         img = Image.new("RGB", (512, 512), color="blue")

@@ -13,6 +13,7 @@ class ResourceType(StrEnum):
     PROJECT = "Project"
     DATASET_ITEM = "DatasetItem"
     LABEL = "Label"
+    MEDIA = "Media"
 
 
 class ResourceError(Exception):
@@ -20,6 +21,7 @@ class ResourceError(Exception):
 
     def __init__(self, resource_type: ResourceType, resource_id: str, message: str):
         super().__init__(message)
+        self.message: str = message
         self.resource_type = resource_type
         self.resource_id = resource_id
 
