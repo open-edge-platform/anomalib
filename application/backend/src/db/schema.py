@@ -31,10 +31,9 @@ class MediaDB(Base):
     project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"))
     filename: Mapped[str] = mapped_column(Text, nullable=False)
     size: Mapped[int] = mapped_column(nullable=False)
-    width: Mapped[int] = mapped_column(nullable=True)
-    height: Mapped[int] = mapped_column(nullable=True)
+    width: Mapped[int] = mapped_column(nullable=False)
+    height: Mapped[int] = mapped_column(nullable=False)
     is_anomalous: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    subset: Mapped[str] = mapped_column(String(10), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.current_timestamp())
 
@@ -91,6 +90,7 @@ class SourceDB(Base):
     __tablename__ = "sources"
 
     id: Mapped[str] = mapped_column(Text, primary_key=True, default=lambda: str(uuid4()))
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"))
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     source_type: Mapped[str] = mapped_column(String(50), nullable=False)
     config_data: Mapped[dict] = mapped_column(JSON, nullable=False)
@@ -102,6 +102,7 @@ class SinkDB(Base):
     __tablename__ = "sinks"
 
     id: Mapped[str] = mapped_column(Text, primary_key=True, default=lambda: str(uuid4()))
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"))
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     sink_type: Mapped[str] = mapped_column(String(50), nullable=False)
     rate_limit: Mapped[float | None] = mapped_column(Float, nullable=True)

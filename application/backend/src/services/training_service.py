@@ -16,7 +16,7 @@ from pydantic_models import Job, JobStatus, JobType, Model
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import ModelService
 from services.job_service import JobService
-from utils.callbacks import GetiInspectProgressCallback, ProgressSyncParams
+from utils.callbacks import ProgressSyncParams
 from utils.devices import Devices
 from utils.experiment_loggers import TrackioLogger
 
@@ -99,7 +99,7 @@ class TrainingService:
             synchronization_task.cancel()
             return await model_service.create_model(trained_model)
         except Exception as e:
-            logger.exception("Failed to train pending training job: %s", e)
+            logger.error("Failed to train pending training job: %s", e)
             await job_service.update_job_status(
                 job_id=job.id, status=JobStatus.FAILED, message=f"Failed with exception: {str(e)}"
             )
@@ -140,9 +140,9 @@ class TrainingService:
                 f"Device '{device}' is not supported for training. "
                 f"Supported devices: {', '.join(Devices.training_devices())}"
             )
-        device = device or "auto"
 
-        logger.info(f"Training on device: {device}")
+        training_device = device or "auto"
+        logger.info(f"Training on device: {training_device}")
 
         model_binary_repo = ModelBinaryRepository(project_id=model.project_id, model_id=model.id)
         image_binary_repo = ImageBinaryRepository(project_id=model.project_id)
@@ -168,8 +168,7 @@ class TrainingService:
             logger=[trackio, tensorboard],
             devices=[0],  # Only single GPU training is supported for now
             max_epochs=10,
-            callbacks=[GetiInspectProgressCallback(synchronization_parameters)],
-            accelerator=device,
+            accelerator=training_device,
         )
 
         # Execute training and export

@@ -13,6 +13,8 @@ from db import get_async_db_session_ctx
 from pydantic_models import Media, MediaList
 from repositories import MediaRepository
 from repositories.binary_repo import ImageBinaryRepository
+from services import ResourceNotFoundError
+from services.exceptions import ResourceType
 
 THUMBNAIL_SIZE = 256  # Max width/height for thumbnails in pixels
 
@@ -66,6 +68,13 @@ class MediaService:
         bin_repo = ImageBinaryRepository(project_id=project_id)
         saved_media: Media | None = None
 
+        # Extract image dimensions
+        def _get_image_size() -> tuple[int, int]:
+            with Image.open(BytesIO(image_bytes)) as img:
+                return img.size  # Returns (width, height)
+
+        width, height = await asyncio.to_thread(_get_image_size)
+
         async with get_async_db_session_ctx() as session:
             media_repo = MediaRepository(session, project_id=project_id)
             try:
@@ -83,6 +92,8 @@ class MediaService:
                     filename=filename,
                     size=file.size,
                     is_anomalous=is_anomalous,
+                    width=width,
+                    height=height,
                 )
                 saved_media = await media_repo.save(media)
             except Exception as e:
@@ -103,8 +114,8 @@ class MediaService:
             media_repo = MediaRepository(session, project_id=project_id)
             media = await media_repo.get_by_id(media_id)
             if media is None:
-                logger.warning(f"Media with ID {media_id} not found for deletion.")
-                return
+                raise ResourceNotFoundError(resource_type=ResourceType.MEDIA, resource_id=str(media_id))
+            await media_repo.delete_by_id(media_id)
             thumbnail_filename = cls._get_thumbnail_filename(media_id)
             await cls._delete_media_file(project_id=project_id, filename=media.filename)
             await cls._delete_media_file(project_id=project_id, filename=thumbnail_filename)

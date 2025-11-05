@@ -10,7 +10,9 @@ class SinkMapper(IBaseMapper):
     """Mapper for Sink model <-> Sink schema conversions."""
 
     # Define fields to exclude from config_data (common fields)
-    _COMMON_FIELDS: set[str] = {"id", "name", "sink_type", "output_formats", "rate_limit", "created_at", "updated_at"}
+    _COMMON_FIELDS: set[str] = {
+        "id", "project_id", "name", "sink_type", "output_formats", "rate_limit", "created_at", "updated_at"
+    }
 
     @staticmethod
     def from_schema(sink_db: SinkDB) -> Sink:
@@ -20,6 +22,7 @@ class SinkMapper(IBaseMapper):
         return SinkAdapter.validate_python(
             {
                 "id": sink_db.id,
+                "project_id": sink_db.project_id,
                 "name": sink_db.name,
                 "sink_type": SinkType(sink_db.sink_type),
                 "output_formats": sink_db.output_formats,
@@ -39,6 +42,7 @@ class SinkMapper(IBaseMapper):
 
         return SinkDB(
             id=str(sink.id),
+            project_id=str(sink.project_id),
             name=sink.name,
             sink_type=sink.sink_type,
             output_formats=sink.output_formats,

@@ -17,18 +17,23 @@ from services.exceptions import ResourceNotFoundError, ResourceType
 
 
 @pytest.fixture
-def fxt_source():
+def fxt_source(fxt_project):
     """Fixture for a test source."""
     return VideoFileSourceConfig(
-        id=uuid.uuid4(), source_type="video_file", name="Test Source", video_path="/path/to/video.mp4"
+        id=uuid.uuid4(),
+        project_id=fxt_project.id,
+        source_type="video_file",
+        name="Test Source",
+        video_path="/path/to/video.mp4",
     )
 
 
 @pytest.fixture
-def fxt_sink():
+def fxt_sink(fxt_project):
     """Fixture for a test sink."""
     return FolderSinkConfig(
         id=uuid.uuid4(),
+        project_id=fxt_project.id,
         sink_type="folder",
         name="Test Sink",
         folder_path="/path/to/output",
@@ -237,44 +242,46 @@ class TestConfigurationService:
 
         asyncio.run(run_test())
 
-    def test_list_sources(self, fxt_configuration_service, fxt_source_repository, fxt_source):
+    def test_list_sources(self, fxt_configuration_service, fxt_source_repository, fxt_source, fxt_project):
         """Test listing sources."""
         fxt_source_repository.get_all.return_value = [fxt_source]
 
         with patch("services.configuration_service.SourceRepository") as mock_repo_class:
             mock_repo_class.return_value = fxt_source_repository
 
-            result = asyncio.run(fxt_configuration_service.list_sources())
+            result = asyncio.run(fxt_configuration_service.list_sources(fxt_project.id))
 
         assert result == [fxt_source]
         fxt_source_repository.get_all.assert_called_once()
 
-    def test_list_sinks(self, fxt_configuration_service, fxt_sink_repository, fxt_sink):
+    def test_list_sinks(self, fxt_configuration_service, fxt_sink_repository, fxt_sink, fxt_project):
         """Test listing sinks."""
         fxt_sink_repository.get_all.return_value = [fxt_sink]
 
         with patch("services.configuration_service.SinkRepository") as mock_repo_class:
             mock_repo_class.return_value = fxt_sink_repository
 
-            result = asyncio.run(fxt_configuration_service.list_sinks())
+            result = asyncio.run(fxt_configuration_service.list_sinks(fxt_project.id))
 
         assert result == [fxt_sink]
         fxt_sink_repository.get_all.assert_called_once()
 
-    def test_get_source_by_id_success(self, fxt_configuration_service, fxt_source_repository, fxt_source):
+    def test_get_source_by_id_success(
+        self, fxt_configuration_service, fxt_source_repository, fxt_source, fxt_project
+    ):
         """Test getting source by ID successfully."""
         fxt_source_repository.get_by_id.return_value = fxt_source
 
         with patch("services.configuration_service.SourceRepository") as mock_repo_class:
             mock_repo_class.return_value = fxt_source_repository
 
-            result = asyncio.run(fxt_configuration_service.get_source_by_id(fxt_source.id))
+            result = asyncio.run(fxt_configuration_service.get_source_by_id(fxt_source.id, fxt_project.id))
 
         assert result == fxt_source
         fxt_source_repository.get_by_id.assert_called_once_with(fxt_source.id)
 
     def test_get_source_by_id_with_session(
-        self, fxt_configuration_service, fxt_source_repository, fxt_source, fxt_db_session
+        self, fxt_configuration_service, fxt_source_repository, fxt_source, fxt_db_session, fxt_project
     ):
         """Test getting source by ID with provided session."""
         fxt_source_repository.get_by_id.return_value = fxt_source
@@ -282,12 +289,14 @@ class TestConfigurationService:
         with patch("services.configuration_service.SourceRepository") as mock_repo_class:
             mock_repo_class.return_value = fxt_source_repository
 
-            result = asyncio.run(fxt_configuration_service.get_source_by_id(fxt_source.id, fxt_db_session))
+            result = asyncio.run(
+                fxt_configuration_service.get_source_by_id(fxt_source.id, fxt_project.id, fxt_db_session)
+            )
 
         assert result == fxt_source
         fxt_source_repository.get_by_id.assert_called_once_with(fxt_source.id)
 
-    def test_get_source_by_id_not_found(self, fxt_configuration_service, fxt_source_repository):
+    def test_get_source_by_id_not_found(self, fxt_configuration_service, fxt_source_repository, fxt_project):
         """Test getting source by ID when not found."""
         fxt_source_repository.get_by_id.return_value = None
         source_id = uuid.uuid4()
@@ -296,25 +305,25 @@ class TestConfigurationService:
             mock_repo_class.return_value = fxt_source_repository
 
             with pytest.raises(ResourceNotFoundError) as exc_info:
-                asyncio.run(fxt_configuration_service.get_source_by_id(source_id))
+                asyncio.run(fxt_configuration_service.get_source_by_id(source_id, fxt_project.id))
 
         assert exc_info.value.resource_type == ResourceType.SOURCE
         assert str(source_id) in str(exc_info.value)
 
-    def test_get_sink_by_id_success(self, fxt_configuration_service, fxt_sink_repository, fxt_sink):
+    def test_get_sink_by_id_success(self, fxt_configuration_service, fxt_sink_repository, fxt_sink, fxt_project):
         """Test getting sink by ID successfully."""
         fxt_sink_repository.get_by_id.return_value = fxt_sink
 
         with patch("services.configuration_service.SinkRepository") as mock_repo_class:
             mock_repo_class.return_value = fxt_sink_repository
 
-            result = asyncio.run(fxt_configuration_service.get_sink_by_id(fxt_sink.id))
+            result = asyncio.run(fxt_configuration_service.get_sink_by_id(fxt_sink.id, fxt_project.id))
 
         assert result == fxt_sink
         fxt_sink_repository.get_by_id.assert_called_once_with(fxt_sink.id)
 
     def test_get_sink_by_id_with_session(
-        self, fxt_configuration_service, fxt_sink_repository, fxt_sink, fxt_db_session
+        self, fxt_configuration_service, fxt_sink_repository, fxt_sink, fxt_db_session, fxt_project
     ):
         """Test getting sink by ID with provided session."""
         fxt_sink_repository.get_by_id.return_value = fxt_sink
@@ -322,12 +331,12 @@ class TestConfigurationService:
         with patch("services.configuration_service.SinkRepository") as mock_repo_class:
             mock_repo_class.return_value = fxt_sink_repository
 
-            result = asyncio.run(fxt_configuration_service.get_sink_by_id(fxt_sink.id, fxt_db_session))
+            result = asyncio.run(fxt_configuration_service.get_sink_by_id(fxt_sink.id, fxt_project.id, fxt_db_session))
 
         assert result == fxt_sink
         fxt_sink_repository.get_by_id.assert_called_once_with(fxt_sink.id)
 
-    def test_get_sink_by_id_not_found(self, fxt_configuration_service, fxt_sink_repository):
+    def test_get_sink_by_id_not_found(self, fxt_configuration_service, fxt_sink_repository, fxt_project):
         """Test getting sink by ID when not found."""
         fxt_sink_repository.get_by_id.return_value = None
         sink_id = uuid.uuid4()
@@ -336,7 +345,7 @@ class TestConfigurationService:
             mock_repo_class.return_value = fxt_sink_repository
 
             with pytest.raises(ResourceNotFoundError) as exc_info:
-                asyncio.run(fxt_configuration_service.get_sink_by_id(sink_id))
+                asyncio.run(fxt_configuration_service.get_sink_by_id(sink_id, fxt_project.id))
 
         assert exc_info.value.resource_type == ResourceType.SINK
         assert str(sink_id) in str(exc_info.value)
@@ -381,7 +390,11 @@ class TestConfigurationService:
             mock_source_repo_class.return_value = fxt_source_repository
             mock_pipeline_repo_class.return_value = fxt_pipeline_repository
 
-            result = asyncio.run(fxt_configuration_service.update_source(fxt_source.id, {"name": "Updated Source"}))
+            result = asyncio.run(
+                fxt_configuration_service.update_source(
+                    fxt_source.id, fxt_source.project_id, {"name": "Updated Source"}
+                )
+            )
 
         assert result == updated_source
         fxt_source_repository.get_by_id.assert_called_once_with(fxt_source.id)
@@ -408,7 +421,11 @@ class TestConfigurationService:
             mock_sink_repo_class.return_value = fxt_sink_repository
             mock_pipeline_repo_class.return_value = fxt_pipeline_repository
 
-            result = asyncio.run(fxt_configuration_service.update_sink(fxt_sink.id, {"name": "Updated Sink"}))
+            result = asyncio.run(
+                fxt_configuration_service.update_sink(
+                    fxt_sink.id, fxt_sink.project_id, {"name": "Updated Sink"}
+                )
+            )
 
         assert result == updated_sink
         fxt_sink_repository.get_by_id.assert_called_once_with(fxt_sink.id)
@@ -422,7 +439,7 @@ class TestConfigurationService:
         with patch("services.configuration_service.SourceRepository") as mock_repo_class:
             mock_repo_class.return_value = fxt_source_repository
 
-            asyncio.run(fxt_configuration_service.delete_source_by_id(fxt_source.id))
+            asyncio.run(fxt_configuration_service.delete_source_by_id(fxt_source.id, fxt_source.project_id))
 
         fxt_source_repository.get_by_id.assert_called_once_with(fxt_source.id)
         fxt_source_repository.delete_by_id.assert_called_once_with(fxt_source.id)
@@ -435,7 +452,7 @@ class TestConfigurationService:
         with patch("services.configuration_service.SinkRepository") as mock_repo_class:
             mock_repo_class.return_value = fxt_sink_repository
 
-            asyncio.run(fxt_configuration_service.delete_sink_by_id(fxt_sink.id))
+            asyncio.run(fxt_configuration_service.delete_sink_by_id(fxt_sink.id, fxt_sink.project_id))
 
         fxt_sink_repository.get_by_id.assert_called_once_with(fxt_sink.id)
         fxt_sink_repository.delete_by_id.assert_called_once_with(fxt_sink.id)
@@ -464,7 +481,11 @@ class TestConfigurationService:
             mock_source_repo_class.return_value = fxt_source_repository
             mock_pipeline_repo_class.return_value = fxt_pipeline_repository
 
-            result = asyncio.run(fxt_configuration_service.update_source(fxt_source.id, {"name": "Updated Source"}))
+            result = asyncio.run(
+                fxt_configuration_service.update_source(
+                    fxt_source.id, fxt_source.project_id, {"name": "Updated Source"}
+                )
+            )
 
         assert result == updated_source
         # Verify the update was successful
@@ -497,7 +518,11 @@ class TestConfigurationService:
             mock_sink_repo_class.return_value = fxt_sink_repository
             mock_pipeline_repo_class.return_value = fxt_pipeline_repository
 
-            result = asyncio.run(fxt_configuration_service.update_sink(fxt_sink.id, {"name": "Updated Sink"}))
+            result = asyncio.run(
+                fxt_configuration_service.update_sink(
+                    fxt_sink.id, fxt_sink.project_id, {"name": "Updated Sink"}
+                )
+            )
 
         assert result == updated_sink
         # Verify the update was successful

@@ -27,6 +27,7 @@ from api.endpoints.trainable_models_endpoints import router as trainable_model_r
 from api.endpoints.webrtc import router as webrtc_router
 from core.lifecycle import lifespan
 from exceptions import GetiBaseException
+from services import ResourceNotFoundError
 from settings import get_settings
 
 app = FastAPI(
@@ -81,7 +82,7 @@ async def handle_error(request, exception) -> JSONResponse:  # noqa: ANN001, ARG
     """
     Handler for internal server errors
     """
-    logger.exception(f"Internal server error: {exception}")
+    logger.error(f"Internal server error: {exception}")
     headers = {"Cache-Control": "no-cache"}  # always revalidate
     return JSONResponse(
         {"internal_server_error": "An internal server error occurred."},
@@ -90,16 +91,14 @@ async def handle_error(request, exception) -> JSONResponse:  # noqa: ANN001, ARG
     )
 
 
-@app.exception_handler(404)
-async def handle_not_found(request, exception) -> JSONResponse:  # noqa: ANN001, ARG001
-    """Handler for 'endpoint not found' errors"""
-    message = f"Endpoint {request.url} is not found"
-    logger.info(message)
-    headers = {"Cache-Control": "no-cache"}  # always revalidate
+@app.exception_handler(ResourceNotFoundError)
+async def handle_resource_not_found(request: Request, exception: ResourceNotFoundError) -> JSONResponse:  # noqa: ARG001
+    """Handler for resource not found errors"""
+    logger.error(str(exception))
     return JSONResponse(
-        {"endpoint_not_found_response": message},
+        {"detail": exception.message},
         status_code=status.HTTP_404_NOT_FOUND,
-        headers=headers,
+        headers={"Cache-Control": "no-cache"},
     )
 
 

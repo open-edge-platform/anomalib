@@ -30,9 +30,8 @@ class Media(BaseIDModel):
     filename: str
     size: int = Field(..., ge=0)
     is_anomalous: bool
-    width: int | None = Field(default=None, ge=0)
-    height: int | None = Field(default=None, ge=0)
-    subset: Subset | None = None
+    width: int = Field(..., ge=0)
+    height: int = Field(..., ge=0)
     created_at: datetime | None = None
 
 

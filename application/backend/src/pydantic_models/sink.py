@@ -4,6 +4,7 @@
 from enum import StrEnum
 from os import getenv
 from typing import Annotated, Literal
+from uuid import UUID
 
 from pydantic import Field, TypeAdapter
 
@@ -28,12 +29,14 @@ class OutputFormat(StrEnum):
 
 
 class BaseSinkConfig(BaseIDNameModel):
+    project_id: UUID
     output_formats: list[OutputFormat]
     rate_limit: float | None = None  # Rate limit in Hz, None means no limit
 
 
 class DisconnectedSinkConfig(BaseSinkConfig):
     sink_type: Literal[SinkType.DISCONNECTED] = SinkType.DISCONNECTED
+    project_id: UUID = UUID("00000000-0000-0000-0000-000000000000")
     name: str = "No Sink"
     output_formats: list[OutputFormat] = []
 

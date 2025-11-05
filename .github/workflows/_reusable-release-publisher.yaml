@@ -31,9 +31,16 @@
 # - artifact-name: Name of artifact to publish
 # - is-prerelease: Whether this is a pre-release
 #
-# Required Secrets:
-# - pypi-token: Production PyPI token
-# - test-pypi-token: Test PyPI token (for pre-releases)
+# Note: PyPI publishing uses OIDC (OpenID Connect) authentication.
+# Configure trusted publisher in PyPI project settings:
+# - Owner: <your-org>
+# - Repository name: anomalib
+# - Workflow name: release.yaml
+# - Environment name: production
+#
+# Note: This workflow is used for production and beta releases only.
+# RC releases are published directly from _reusable-rc-release-process.yaml
+# using the 'technical-review' environment.
 #
 # Example Usage:
 # 1. Production Release:
@@ -66,15 +73,9 @@ on:
         description: "Whether this is a pre-release"
         type: boolean
         default: false
-    secrets:
-      pypi-token:
-        required: true
-        description: "PyPI token for package publishing"
-      test-pypi-token:
-        required: false
-        description: "Test PyPI token for pre-releases"
 
-permissions: {} # default permissions only on workflow level
+permissions:
+  id-token: write # Required for OIDC authentication with PyPI
 
 jobs:
   publish:
@@ -82,19 +83,14 @@ jobs:
     environment: ${{ inputs.is-prerelease && 'staging' || 'production' }}
     permissions:
       contents: write # is required by action-gh-release
+      id-token: write # Required for OIDC authentication with PyPI
     steps:
       - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           name: ${{ inputs.artifact-name }}
           path: dist
       - name: Publish to PyPI
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ inputs.is-prerelease && secrets.test-pypi-token || secrets.pypi-token }}
-          TWINE_REPOSITORY_URL: ${{ inputs.is-prerelease && 'https://test.pypi.org/legacy/' || '' }}
-        run: |
-          pip install --upgrade pip twine
-          twine upload dist/*
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
       - uses: softprops/action-gh-release@62c96d0c4e8a889135c1f3a25910db8dbe0e85f7 # v2.3.4
         with:
           tag_name: ${{ inputs.version }}

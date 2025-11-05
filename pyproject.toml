@@ -100,28 +100,32 @@ test = [
 ]
 # PyTorch dependency groups
 cpu = [
-    "torch>=2.4.0",
+    "torch>=2.4.0,<=2.8.0",
     "torchvision>=0.19.0",
 ]
 cu118 = [
-    "torch>=2.4.0",
+    "torch>=2.4.0,<=2.8.0",
     "torchvision>=0.19.0",
 ]
 cu121 = [
-    "torch>=2.4.0",
+    "torch>=2.4.0,<=2.8.0",
     "torchvision>=0.19.0",
 ]
 cu124 = [
-    "torch>=2.4.0",
+    "torch>=2.4.0,<=2.8.0",
+    "torchvision>=0.19.0",
+]
+cu130 = [
+    "torch>=2.4.0", # Note: onnx export fails with torch>=2.9.0 and cuda 13 isn't supported by <=2.8.0
     "torchvision>=0.19.0",
 ]
 rocm = [
-    "torch>=2.4.0",
+    "torch>=2.4.0,<=2.8.0",
     "torchvision>=0.19.0",
     "pytorch-triton-rocm ; sys_platform == 'linux'",
 ]
 xpu = [
-    "torch>=2.4.0",
+    "torch>=2.4.0,<=2.8.0",
     "torchvision>=0.19.0",
     "pytorch-triton-xpu ; sys_platform == 'linux' or sys_platform == 'win32'",
 ]
@@ -158,6 +162,7 @@ conflicts = [
         { extra = "cu118" },
         { extra = "cu121" },
         { extra = "cu124" },
+        { extra = "cu130" },
         { extra = "rocm" },
         { extra = "xpu" },
     ],
@@ -185,6 +190,11 @@ url = "https://download.pytorch.org/whl/cu124"
 explicit = true
 
 [[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[[tool.uv.index]]
 name = "pytorch-rocm61"
 url = "https://download.pytorch.org/whl/rocm6.1"
 explicit = true
@@ -201,6 +211,7 @@ torch = [
     { index = "pytorch-cu118", extra = "cu118" },
     { index = "pytorch-cu121", extra = "cu121" },
     { index = "pytorch-cu124", extra = "cu124" },
+    { index = "pytorch-cu130", extra = "cu130" },
     { index = "pytorch-rocm61", extra = "rocm" },
     { index = "pytorch-xpu", extra = "xpu" },
 ]
@@ -209,6 +220,7 @@ torchvision = [
     { index = "pytorch-cu118", extra = "cu118" },
     { index = "pytorch-cu121", extra = "cu121" },
     { index = "pytorch-cu124", extra = "cu124" },
+    { index = "pytorch-cu130", extra = "cu130" },
     { index = "pytorch-rocm61", extra = "rocm" },
     { index = "pytorch-xpu", extra = "xpu" },
 ]

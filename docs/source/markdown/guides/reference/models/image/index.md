@@ -113,7 +113,7 @@ Student-Teacher Feature Pyramid Matching for Unsupervised Anomaly Detection
 :link: ./supersimplenet
 :link-type: doc
 
-SuperSimpleNet: Unifying Unsupervised and Supervised Learning for Fast and Reliable Surface Defect Detection
+SuperSimpleNet: A Unified Surface Defect Detection Model for all Supervision Regimes
 :::
 
 :::{grid-item-card} {material-regular}`model_training;1.5em` U-Flow
