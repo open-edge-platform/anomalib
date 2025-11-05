@@ -326,17 +326,19 @@ requires-dist = [
     { name = "tensorboard", marker = "extra == 'loggers'" },
     { name = "tifffile" },
     { name = "timm" },
-    { name = "torch", marker = "extra == 'cpu'", specifier = ">=2.4.0", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "anomalib", extra = "cpu" } },
-    { name = "torch", marker = "extra == 'cu118'", specifier = ">=2.4.0", index = "https://download.pytorch.org/whl/cu118", conflict = { package = "anomalib", extra = "cu118" } },
-    { name = "torch", marker = "extra == 'cu121'", specifier = ">=2.4.0", index = "https://download.pytorch.org/whl/cu121", conflict = { package = "anomalib", extra = "cu121" } },
-    { name = "torch", marker = "extra == 'cu124'", specifier = ">=2.4.0", index = "https://download.pytorch.org/whl/cu124", conflict = { package = "anomalib", extra = "cu124" } },
-    { name = "torch", marker = "extra == 'rocm'", specifier = ">=2.4.0", index = "https://download.pytorch.org/whl/rocm6.1", conflict = { package = "anomalib", extra = "rocm" } },
-    { name = "torch", marker = "extra == 'xpu'", specifier = ">=2.4.0", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "anomalib", extra = "xpu" } },
+    { name = "torch", marker = "extra == 'cpu'", specifier = ">=2.4.0,<=2.8.0", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "anomalib", extra = "cpu" } },
+    { name = "torch", marker = "extra == 'cu118'", specifier = ">=2.4.0,<=2.8.0", index = "https://download.pytorch.org/whl/cu118", conflict = { package = "anomalib", extra = "cu118" } },
+    { name = "torch", marker = "extra == 'cu121'", specifier = ">=2.4.0,<=2.8.0", index = "https://download.pytorch.org/whl/cu121", conflict = { package = "anomalib", extra = "cu121" } },
+    { name = "torch", marker = "extra == 'cu124'", specifier = ">=2.4.0,<=2.8.0", index = "https://download.pytorch.org/whl/cu124", conflict = { package = "anomalib", extra = "cu124" } },
+    { name = "torch", marker = "extra == 'cu130'", specifier = ">=2.4.0", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "anomalib", extra = "cu130" } },
+    { name = "torch", marker = "extra == 'rocm'", specifier = ">=2.4.0,<=2.8.0", index = "https://download.pytorch.org/whl/rocm6.1", conflict = { package = "anomalib", extra = "rocm" } },
+    { name = "torch", marker = "extra == 'xpu'", specifier = ">=2.4.0,<=2.8.0", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "anomalib", extra = "xpu" } },
     { name = "torchmetrics", specifier = ">=1.8.2" },
     { name = "torchvision", marker = "extra == 'cpu'", specifier = ">=0.19.0", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "anomalib", extra = "cpu" } },
     { name = "torchvision", marker = "extra == 'cu118'", specifier = ">=0.19.0", index = "https://download.pytorch.org/whl/cu118", conflict = { package = "anomalib", extra = "cu118" } },
     { name = "torchvision", marker = "extra == 'cu121'", specifier = ">=0.19.0", index = "https://download.pytorch.org/whl/cu121", conflict = { package = "anomalib", extra = "cu121" } },
     { name = "torchvision", marker = "extra == 'cu124'", specifier = ">=0.19.0", index = "https://download.pytorch.org/whl/cu124", conflict = { package = "anomalib", extra = "cu124" } },
+    { name = "torchvision", marker = "extra == 'cu130'", specifier = ">=0.19.0", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "anomalib", extra = "cu130" } },
     { name = "torchvision", marker = "extra == 'rocm'", specifier = ">=0.19.0", index = "https://download.pytorch.org/whl/rocm6.1", conflict = { package = "anomalib", extra = "rocm" } },
     { name = "torchvision", marker = "extra == 'xpu'", specifier = ">=0.19.0", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "anomalib", extra = "xpu" } },
     { name = "tox", marker = "extra == 'dev'" },
@@ -348,7 +350,7 @@ requires-dist = [
     { name = "wandb", marker = "extra == 'full'" },
     { name = "wandb", marker = "extra == 'loggers'" },
 ]
-provides-extras = ["application", "clip", "cpu", "cu118", "cu121", "cu124", "dev", "docs", "full", "loggers", "notebooks", "openvino", "rocm", "test", "video", "vlm", "xpu"]
+provides-extras = ["application", "clip", "cpu", "cu118", "cu121", "cu124", "cu130", "dev", "docs", "full", "loggers", "notebooks", "openvino", "rocm", "test", "video", "vlm", "xpu"]
 
 [[package]]
 name = "antlr4-python3-runtime"
