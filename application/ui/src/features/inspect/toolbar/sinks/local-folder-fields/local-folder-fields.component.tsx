@@ -1,7 +1,7 @@
 import { Flex, NumberField, TextField } from '@geti/ui';
 
 import { ReactComponent as FolderIcon } from '../../../../../assets/icons/folder.svg';
-import { OutputFormats } from '../output-formats.component';
+import { OutputFormats } from '../output-formats/output-formats.component';
 import { LocalFolderSinkConfig } from '../utils';
 
 import classes from './local-folder-fields.module.scss';

@@ -1,6 +1,6 @@
 import { Flex, Item, NumberField, Picker, TextField } from '@geti/ui';
 
-import { OutputFormats } from '../output-formats.component';
+import { OutputFormats } from '../output-formats/output-formats.component';
 import { WebhookHttpMethod, WebhookSinkConfig } from '../utils';
 import { KeyValueBuilder } from './key-value-builder.component';
 

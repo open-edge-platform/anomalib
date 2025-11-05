@@ -21,7 +21,7 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
     const updatePipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
         meta: {
             invalidates: [
-                ['get', '/api/projects/{project_id}/sources', { params: { path: { project_id: projectId } } }],
+                ['get', '/api/projects/{project_id}/sinks', { params: { path: { project_id: projectId } } }],
                 ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id: projectId } } }],
             ],
         },
@@ -85,7 +85,7 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
 
     return (
         <MenuTrigger>
-            <ActionButton isQuiet aria-label='source menu'>
+            <ActionButton isQuiet aria-label='sink menu'>
                 <MoreMenu />
             </ActionButton>
             <Menu onAction={handleOnAction} disabledKeys={isConnected ? ['connect'] : []}>

@@ -5,7 +5,7 @@ import { Add, Delete } from '@geti/ui/icons';
 import { isEmpty } from 'lodash-es';
 
 import { RequiredTextField } from '../../../../../components/required-text-field/required-text-field.component';
-import { Fields, Pair } from './utils';
+import { Fields, getPairsFromObject, Pair } from './utils';
 
 type KeyValueBuilderProps = {
     title: string;
@@ -16,10 +16,6 @@ type KeyValueBuilderProps = {
 
 const updatePairAtIndex = (indexToUpdate: number, field: Fields, value: string) => (pair: Pair, index: number) =>
     index === indexToUpdate ? { ...pair, [field]: value } : pair;
-
-const getPairsFromObject = (obj: Record<string, string>): Pair[] => {
-    return Object.entries(obj).map(([key, value]) => ({ key, value }));
-};
 
 export const KeyValueBuilder = ({ title, keysName, valuesName, config = {} }: KeyValueBuilderProps) => {
     const [pairs, setPairs] = useState<Pair[]>(getPairsFromObject(config));

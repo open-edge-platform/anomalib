@@ -1,6 +1,6 @@
 import { Flex, NumberField, TextField } from '@geti/ui';
 
-import { OutputFormats } from '../output-formats.component';
+import { OutputFormats } from '../output-formats/output-formats.component';
 import { RosSinkConfig } from '../utils';
 
 interface RosFieldsProps {
