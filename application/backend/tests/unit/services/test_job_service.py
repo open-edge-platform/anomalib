@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -159,7 +159,7 @@ class TestJobService:
     def test_update_job_status_success(self, fxt_job_repository, fxt_job, has_message, message):
         """Test updating job status successfully with and without message."""
         # Expected updates include end_time since status is COMPLETED
-        frozen_time = datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        frozen_time = datetime(2025, 1, 1, 0, 0, 0, tzinfo=UTC)
         expected_updates = {
             "status": JobStatus.COMPLETED,
             "end_time": frozen_time,

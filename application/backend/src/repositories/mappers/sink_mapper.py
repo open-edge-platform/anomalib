@@ -26,17 +26,15 @@ class SinkMapper(IBaseMapper):
         """Convert Sink DB schema to Sink pydantic model."""
 
         config_data = sink_db.config_data or {}
-        return SinkAdapter.validate_python(
-            {
-                "id": sink_db.id,
-                "project_id": sink_db.project_id,
-                "name": sink_db.name,
-                "sink_type": SinkType(sink_db.sink_type),
-                "output_formats": sink_db.output_formats,
-                "rate_limit": sink_db.rate_limit,
-                **config_data,
-            }
-        )
+        return SinkAdapter.validate_python({
+            "id": sink_db.id,
+            "project_id": sink_db.project_id,
+            "name": sink_db.name,
+            "sink_type": SinkType(sink_db.sink_type),
+            "output_formats": sink_db.output_formats,
+            "rate_limit": sink_db.rate_limit,
+            **config_data,
+        })
 
     @staticmethod
     def to_schema(sink: Sink) -> SinkDB:

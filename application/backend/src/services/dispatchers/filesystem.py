@@ -38,7 +38,7 @@ class FolderDispatcher(BaseDispatcher):
 
     @staticmethod
     def _write_predictions_to_file(predictions: str, file_path: str) -> None:
-        with open(file_path, "w") as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             f.write(predictions)
 
     def _dispatch(

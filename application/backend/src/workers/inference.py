@@ -122,7 +122,7 @@ class InferenceWorker(BaseProcessWorker):
         except Exception as e:
             logger.debug(f"Error while handling model reload event: {e}")
 
-    async def run_loop(self) -> None:  # noqa: C901, PLR0912, PLR0915
+    async def run_loop(self) -> None:  # noqa: PLR0912, PLR0915
         while not self.should_stop():
             # Ensure model is loaded/selected from active pipeline
             active_model = await self._get_active_model()

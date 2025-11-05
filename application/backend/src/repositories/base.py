@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import abc
 from collections.abc import Callable
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar, cast
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio.session import AsyncSession
@@ -16,7 +16,7 @@ ModelType = TypeVar("ModelType", bound=BaseIDModel)
 SchemaType = TypeVar("SchemaType", bound=Base)
 
 
-class BaseRepository(Generic[ModelType, SchemaType], metaclass=abc.ABCMeta):
+class BaseRepository[ModelType, SchemaType](metaclass=abc.ABCMeta):
     """Base repository class for database operations."""
 
     def __init__(self, db: AsyncSession, schema: type[SchemaType]):
@@ -88,6 +88,7 @@ class BaseRepository(Generic[ModelType, SchemaType], metaclass=abc.ABCMeta):
 
     async def update(self, item: ModelType, partial_update: dict) -> ModelType:
         # note: model_copy does not validate the model, so we need to validate explicitly
+        item = cast("BaseIDModel", item)
         to_update = item.model_copy(update=partial_update, deep=True)
         item.__class__.model_validate(to_update.model_dump())
         schema_item: SchemaType = self.to_schema(to_update)
@@ -105,7 +106,7 @@ class BaseRepository(Generic[ModelType, SchemaType], metaclass=abc.ABCMeta):
         obj_id = self._id_to_str(obj_id)
         where_expression = [
             self.schema.id == obj_id,  # type: ignore[attr-defined]
-            *[self.schema.__table__.c[k] == v for k, v in self.base_filters.items()],
+            *[self.schema.__table__.c[k] == v for k, v in self.base_filters.items()],  # type: ignore[attr-defined]
         ]
         query = expression.delete(self.schema).where(*where_expression)
         await self.db.execute(query)
@@ -118,7 +119,7 @@ class BaseRepository(Generic[ModelType, SchemaType], metaclass=abc.ABCMeta):
         return obj_id
 
 
-class ProjectBaseRepository(BaseRepository, metaclass=abc.ABCMeta):
+class ProjectBaseRepository(BaseRepository[ModelType, SchemaType], metaclass=abc.ABCMeta):
     def __init__(self, db: AsyncSession, project_id: str | UUID, schema: type[SchemaType]):
         super().__init__(db, schema)
         self.project_id = self._id_to_str(project_id)

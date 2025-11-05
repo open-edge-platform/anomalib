@@ -59,7 +59,7 @@ def get_job_logs_path(job_id: str | UUID) -> str:
 
 
 @contextmanager
-def job_logging_ctx(job_id: str | UUID) -> Generator[str, None, None]:
+def job_logging_ctx(job_id: str | UUID) -> Generator[str]:
     """Add a temporary log sink for a specific job.
 
     Captures all logs emitted during the context to logs/jobs/{job_id}.log.
