@@ -16,7 +16,7 @@ from pydantic_models import Job, JobStatus, JobType, Model
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import ModelService
 from services.job_service import JobService
-from utils.callbacks import ProgressSyncParams
+from utils.callbacks import GetiInspectProgressCallback, ProgressSyncParams
 from utils.devices import Devices
 from utils.experiment_loggers import TrackioLogger
 
@@ -168,6 +168,7 @@ class TrainingService:
             logger=[trackio, tensorboard],
             devices=[0],  # Only single GPU training is supported for now
             max_epochs=10,
+            callbacks=[GetiInspectProgressCallback(synchronization_parameters)],
             accelerator=training_device,
         )
 
