@@ -80,7 +80,7 @@ class JobService:
         from core.logging.utils import get_job_logs_path  # noqa: PLC0415
 
         log_file = get_job_logs_path(job_id=job_id)
-        if not anyio.path.exists(log_file):
+        if not anyio.Path(log_file).exists():
             raise ResourceNotFoundException(resource_id=job_id, resource_name="job_logs")
 
         async def is_job_still_running():

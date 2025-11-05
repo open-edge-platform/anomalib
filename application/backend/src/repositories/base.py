@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import abc
 from collections.abc import Callable
-from typing import Any, TypeVar, cast
+from typing import Any, TypeVar
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio.session import AsyncSession
@@ -88,15 +88,14 @@ class BaseRepository[ModelType, SchemaType](metaclass=abc.ABCMeta):
 
     async def update(self, item: ModelType, partial_update: dict) -> ModelType:
         # note: model_copy does not validate the model, so we need to validate explicitly
-        item = cast("BaseIDModel", item)
-        to_update = item.model_copy(update=partial_update, deep=True)
-        item.__class__.model_validate(to_update.model_dump())
+        to_update = item.model_copy(update=partial_update, deep=True)  # type: ignore[attr-defined]
+        item.__class__.model_validate(to_update.model_dump())  # type: ignore[attr-defined]
         schema_item: SchemaType = self.to_schema(to_update)
         await self.db.merge(schema_item)
         await self.db.commit()
-        updated = await self.get_by_id(item.id)
+        updated = await self.get_by_id(item.id)  # type: ignore[attr-defined]
         if updated is None:
-            raise ValueError(f"{item.__class__} with ID `{item.id}` doesn't exist")
+            raise ValueError(f"{item.__class__} with ID `{item.id}` doesn't exist")  # type: ignore[attr-defined]
         return updated
 
     async def delete_by_id(self, obj_id: str | UUID) -> None:

@@ -97,7 +97,7 @@ jobs:
       - name: Check source code with mypy
         working-directory: application/backend
         run: |
-          uv run mypy . --config-file=pyproject.toml
+          uv run --group lint mypy . --config-file=pyproject.toml
 
   ui-build:
     name: Build UI
