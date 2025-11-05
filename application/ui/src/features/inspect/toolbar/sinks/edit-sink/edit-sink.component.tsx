@@ -1,18 +1,15 @@
-// Copyright (C) 2025 Intel Corporation
-// SPDX-License-Identifier: Apache-2.0
-
 import { ReactNode, useRef } from 'react';
 
 import { ActionButton, Button, ButtonGroup, Divider, Flex, Form, Text, View } from '@geti/ui';
 import { Back } from '@geti/ui/icons';
 
-import { useConnectSourceToPipeline } from '../../../../../hooks/use-pipeline.hook';
-import { useSourceAction } from '../hooks/use-source-action.hook';
-import { SourceConfig } from '../util';
+import { useConnectSinkToPipeline } from '../../../../../hooks/use-pipeline.hook';
+import { useSinkAction } from '../hooks/use-sink-action.hook';
+import { SinkConfig } from '../utils';
 
-import classes from './edit-source.module.scss';
+import classes from './edit-sink.module.scss';
 
-interface EditSourceProps<T> {
+interface EditSinkProps<T> {
     config: Awaited<T>;
     onSaved: () => void;
     onBackToList: () => void;
@@ -20,21 +17,21 @@ interface EditSourceProps<T> {
     bodyFormatter: (formData: FormData) => T;
 }
 
-export const EditSource = <T extends SourceConfig>({
+export const EditSink = <T extends SinkConfig>({
     config,
     onSaved,
     onBackToList,
     bodyFormatter,
     componentFields,
-}: EditSourceProps<T>) => {
+}: EditSinkProps<T>) => {
     const connectToPipeline = useRef(false);
-    const connectToPipelineMutation = useConnectSourceToPipeline();
+    const connectToPipelineMutation = useConnectSinkToPipeline();
 
-    const [state, submitAction, isPending] = useSourceAction({
+    const [state, submitAction, isPending] = useSinkAction({
         config,
-        isNewSource: false,
-        onSaved: async (sourceId) => {
-            connectToPipeline.current && (await connectToPipelineMutation(sourceId));
+        isNewSink: false,
+        onSaved: async (sinkId) => {
+            connectToPipeline.current && (await connectToPipelineMutation(sinkId));
             connectToPipeline.current = false;
             onSaved();
         },
@@ -48,7 +45,7 @@ export const EditSource = <T extends SourceConfig>({
                     <Back />
                 </ActionButton>
 
-                <Text>Edit input source</Text>
+                <Text>Edit sink</Text>
             </Flex>
 
             <View UNSAFE_className={classes.container}>

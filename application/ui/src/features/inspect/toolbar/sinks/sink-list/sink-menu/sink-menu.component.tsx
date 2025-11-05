@@ -3,15 +3,29 @@ import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { MoreMenu } from '@geti/ui/icons';
 import { ActionButton, Item, Key, Menu, MenuTrigger, toast } from 'packages/ui';
 
-export interface SourceMenuProps {
+export interface SinkMenuProps {
     id: string;
     name: string;
     isConnected: boolean;
     onEdit: () => void;
 }
 
-export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) => {
+export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
     const { projectId } = useProjectIdentifier();
+    const removeSink = $api.useMutation('delete', '/api/projects/{project_id}/sinks/{sink_id}', {
+        meta: {
+            invalidates: [['get', '/api/projects/{project_id}/sinks', { params: { path: { project_id: projectId } } }]],
+        },
+    });
+
+    const updatePipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
+        meta: {
+            invalidates: [
+                ['get', '/api/projects/{project_id}/sinks', { params: { path: { project_id: projectId } } }],
+                ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id: projectId } } }],
+            ],
+        },
+    });
 
     const handleOnAction = (option: Key) => {
         switch (option) {
@@ -27,20 +41,11 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
         }
     };
 
-    const updatePipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
-        meta: {
-            invalidates: [
-                ['get', '/api/projects/{project_id}/sources', { params: { path: { project_id: projectId } } }],
-                ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id: projectId } } }],
-            ],
-        },
-    });
-
     const handleConnect = async () => {
         try {
             await updatePipeline.mutateAsync({
                 params: { path: { project_id: projectId } },
-                body: { source_id: id },
+                body: { sink_id: id },
             });
 
             toast({
@@ -55,24 +60,16 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
         }
     };
 
-    const removeSource = $api.useMutation('delete', '/api/projects/{project_id}/sources/{source_id}', {
-        meta: {
-            invalidates: [
-                ['get', '/api/projects/{project_id}/sources', { params: { path: { project_id: projectId } } }],
-            ],
-        },
-    });
-
     const handleDelete = async () => {
         try {
             if (isConnected) {
                 await updatePipeline.mutateAsync({
                     params: { path: { project_id: projectId } },
-                    body: { source_id: null },
+                    body: { sink_id: null },
                 });
             }
 
-            await removeSource.mutateAsync({ params: { path: { project_id: projectId, source_id: id } } });
+            await removeSink.mutateAsync({ params: { path: { sink_id: id, project_id: projectId } } });
 
             toast({
                 type: 'success',
@@ -88,7 +85,7 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
 
     return (
         <MenuTrigger>
-            <ActionButton isQuiet aria-label='source menu'>
+            <ActionButton isQuiet aria-label='sink menu'>
                 <MoreMenu />
             </ActionButton>
             <Menu onAction={handleOnAction} disabledKeys={isConnected ? ['connect'] : []}>

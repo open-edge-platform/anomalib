@@ -3,13 +3,13 @@ import { clsx } from 'clsx';
 import { isEqual } from 'lodash-es';
 import { Button, Flex, Text } from 'packages/ui';
 
+import { StatusTag } from '../../../../../components/status-tag/status-tag.component';
 import { usePipeline } from '../../../../../hooks/use-pipeline.hook';
+import { removeUnderscore } from '../../../../utils';
 import { SourceMenu } from '../source-menu/source-menu.component';
 import { SourceConfig } from '../util';
 import { SettingsList } from './settings-list/settings-list.component';
 import { SourceIcon } from './source-icon/source-icon.component';
-import { StatusTag } from './status-tag/status-tag.component';
-import { removeUnderscore } from './utils';
 
 import classes from './source-list.module.scss';
 
@@ -63,7 +63,7 @@ const SourceListItem = ({ source, isConnected, onEditSource }: SourceListItemPro
 
 export const SourcesList = ({ sources, onAddSource, onEditSource }: SourcesListProps) => {
     const pipeline = usePipeline();
-    const currentSource = pipeline.data.source?.id;
+    const currentSourceId = pipeline.data.source?.id;
 
     return (
         <Flex gap={'size-200'} direction={'column'}>
@@ -75,7 +75,7 @@ export const SourcesList = ({ sources, onAddSource, onEditSource }: SourcesListP
                 <SourceListItem
                     key={source.id}
                     source={source}
-                    isConnected={isEqual(currentSource, source.id)}
+                    isConnected={isEqual(currentSourceId, source.id)}
                     onEditSource={onEditSource}
                 />
             ))}

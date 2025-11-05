@@ -4,6 +4,8 @@
 import { useState } from 'react';
 
 import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { ActionButton, Flex, Text } from '@geti/ui';
+import { Back } from '@geti/ui/icons';
 import { isEmpty } from 'lodash-es';
 
 import { $api } from '../../../../api/client';
@@ -22,6 +24,10 @@ export const SourceActions = () => {
     const [view, setView] = useState<'list' | 'options' | 'edit'>(isEmpty(sources) ? 'options' : 'list');
     const [currentSource, setCurrentSource] = useState<SourceConfig | null>(null);
 
+    const handleShowList = () => {
+        setView('list');
+    };
+
     const handleAddSource = () => {
         setView('options');
     };
@@ -32,12 +38,22 @@ export const SourceActions = () => {
     };
 
     if (view === 'edit' && !isEmpty(currentSource)) {
-        return <EditSourceForm config={currentSource} onSaved={() => setView('list')} />;
+        return <EditSourceForm config={currentSource} onSaved={handleShowList} onBackToList={handleShowList} />;
     }
 
     if (view === 'list') {
         return <SourcesList sources={sources} onAddSource={handleAddSource} onEditSource={handleEditSource} />;
     }
 
-    return <SourceOptions onSaved={() => setView('list')} />;
+    return (
+        <SourceOptions onSaved={handleShowList} hasHeader={sources.length > 0}>
+            <Flex gap={'size-100'} marginBottom={'size-100'} alignItems={'center'} justifyContent={'space-between'}>
+                <ActionButton isQuiet onPress={handleShowList}>
+                    <Back />
+                </ActionButton>
+
+                <Text>Add new input source</Text>
+            </Flex>
+        </SourceOptions>
+    );
 };

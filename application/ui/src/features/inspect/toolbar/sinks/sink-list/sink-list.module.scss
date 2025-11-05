@@ -1,0 +1,28 @@
+.addSink {
+    width: 100%;
+    cursor: pointer;
+    display: flex;
+    border-style: dashed;
+    gap: var(--spectrum-global-dimension-size-65);
+    padding: var(--spectrum-global-dimension-size-250);
+}
+
+.card {
+    padding: var(--spectrum-global-dimension-size-250);
+    background: var(--spectrum-global-color-gray-200);
+    border-radius: var(--spectrum-global-dimension-size-65);
+}
+
+.activeCard {
+    border-left: var(--spectrum-global-dimension-size-50) solid var(--aqua);
+}
+
+.title {
+    font-weight: 500;
+    text-transform: capitalize;
+    font-size: var(--spectrum-global-dimension-font-size-200);
+}
+
+.type {
+    text-transform: capitalize;
+}

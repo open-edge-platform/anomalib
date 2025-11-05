@@ -12,14 +12,16 @@ import { WebcamFields } from './webcam/webcam-fields.component';
 interface EditSourceFormProps {
     config: SourceConfig;
     onSaved: () => void;
+    onBackToList: () => void;
 }
 
-export const EditSourceForm = ({ config, onSaved }: EditSourceFormProps) => {
+export const EditSourceForm = ({ config, onSaved, onBackToList }: EditSourceFormProps) => {
     if (config.source_type === 'webcam') {
         return (
             <EditSource
                 onSaved={onSaved}
                 config={config}
+                onBackToList={onBackToList}
                 componentFields={(state) => <WebcamFields defaultState={state} />}
                 bodyFormatter={webcamBodyFormatter}
             />
@@ -31,6 +33,7 @@ export const EditSourceForm = ({ config, onSaved }: EditSourceFormProps) => {
             <EditSource
                 onSaved={onSaved}
                 config={config}
+                onBackToList={onBackToList}
                 componentFields={(state) => <IpCameraFields defaultState={state} />}
                 bodyFormatter={ipCameraBodyFormatter}
             />
@@ -42,6 +45,7 @@ export const EditSourceForm = ({ config, onSaved }: EditSourceFormProps) => {
             <EditSource
                 onSaved={onSaved}
                 config={config}
+                onBackToList={onBackToList}
                 componentFields={(state: VideoFileSourceConfig) => <VideoFileFields defaultState={state} />}
                 bodyFormatter={videoFileBodyFormatter}
             />
@@ -51,6 +55,7 @@ export const EditSourceForm = ({ config, onSaved }: EditSourceFormProps) => {
     return (
         <EditSource
             onSaved={onSaved}
+            onBackToList={onBackToList}
             config={config as ImagesFolderSourceConfig}
             componentFields={(state: ImagesFolderSourceConfig) => <ImageFolderFields defaultState={state} />}
             bodyFormatter={imageFolderBodyFormatter}
