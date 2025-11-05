@@ -51,7 +51,7 @@ class JobCancelled(BaseModel):
 
     @computed_field
     def message(self) -> str:
-        return f"Job with ID `{self.job_id}' marked as cancelled."
+        return f"Job with ID `{self.job_id}` marked as cancelled."
 
 
 class TrainJobPayload(BaseModel):
