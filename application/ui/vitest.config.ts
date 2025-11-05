@@ -1,9 +1,12 @@
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
+import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
     plugins: [
+        // TODO: Review and assess whether relative paths are necessary
+        tsconfigPaths(),
         react(),
         svgr({
             svgrOptions: {

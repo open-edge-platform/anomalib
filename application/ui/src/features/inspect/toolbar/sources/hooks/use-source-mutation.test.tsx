@@ -1,0 +1,63 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import { act, renderHook } from '@testing-library/react';
+import { HttpResponse } from 'msw';
+import { http } from 'src/api/utils';
+import { server } from 'src/msw-node-setup';
+import { TestProviders } from 'src/providers';
+import { v4 as uuid } from 'uuid';
+
+import { WebcamSourceConfig } from '../util';
+import { useSourceMutation } from './use-source-mutation.hook';
+
+const mockedSource: WebcamSourceConfig = {
+    id: 'original-id',
+    project_id: '123',
+    name: 'Mock Source',
+    source_type: 'webcam' as const,
+    device_id: 0,
+};
+
+const mockedId = 'uuid-123';
+vi.mock('@geti-inspect/hooks', () => ({ useProjectIdentifier: () => ({ projectId: 'project-id-123' }) }));
+vi.mock('uuid', () => ({ v4: vi.fn(() => mockedId) }));
+
+describe('useSourceMutation', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it('creates a new source and return its resource id', async () => {
+        const { result } = renderHook(() => useSourceMutation(true), {
+            wrapper: TestProviders,
+        });
+
+        server.use(
+            http.post('/api/projects/{project_id}/sources', () => HttpResponse.json({ ...mockedSource })),
+            http.patch('/api/projects/{project_id}/sources/{source_id}', () => HttpResponse.error())
+        );
+
+        await act(async () => {
+            const response = await result.current(mockedSource);
+            expect(uuid).toHaveBeenCalled();
+            expect(response).toBe(mockedId);
+        });
+    });
+
+    it('update a source item and returns its resource id', async () => {
+        const { result } = renderHook(() => useSourceMutation(false), {
+            wrapper: TestProviders,
+        });
+
+        server.use(
+            http.post('/api/projects/{project_id}/sources', () => HttpResponse.error()),
+            http.patch('/api/projects/{project_id}/sources/{source_id}', () => HttpResponse.json(mockedSource))
+        );
+
+        await act(async () => {
+            const response = await result.current(mockedSource);
+            expect(response).toBe(mockedSource.id);
+        });
+    });
+});

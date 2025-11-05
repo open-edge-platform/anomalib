@@ -20,3 +20,5 @@ export { ReactComponent as Webcam } from './webcam.svg';
 export { ReactComponent as Webhook } from './webhook.svg';
 export { ReactComponent as Image } from './image.svg';
 export { ReactComponent as Fireworks } from './fire-works.svg';
+export { ReactComponent as PipelineLink } from './pipeline-link.svg';
+export { ReactComponent as Folder } from './folder.svg';

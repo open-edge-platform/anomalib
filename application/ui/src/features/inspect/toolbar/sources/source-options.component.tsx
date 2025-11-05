@@ -1,0 +1,87 @@
+import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { DisclosureGroup } from 'src/components/disclosure-group/disclosure-group.component';
+
+import { ReactComponent as ImageIcon } from '../../../../assets/icons/images-folder.svg';
+import { ReactComponent as IpCameraIcon } from '../../../../assets/icons/ip-camera.svg';
+import { ReactComponent as Video } from '../../../../assets/icons/video-file.svg';
+import { ReactComponent as WebcamIcon } from '../../../../assets/icons/webcam.svg';
+import { AddSource } from './add-source/add-source.component';
+import { ImageFolderFields } from './image-folder/image-folder-fields.component';
+import { getImageFolderInitialConfig, imageFolderBodyFormatter } from './image-folder/utils';
+import { IpCameraFields } from './ip-camera/ip-camera-fields.component';
+import { getIpCameraInitialConfig, ipCameraBodyFormatter } from './ip-camera/utils';
+import { ImagesFolderSourceConfig, IPCameraSourceConfig, VideoFileSourceConfig, WebcamSourceConfig } from './util';
+import { getVideoFileInitialConfig, videoFileBodyFormatter } from './video-file/utils';
+import { VideoFileFields } from './video-file/video-file-fields.component';
+import { getWebcamInitialConfig, webcamBodyFormatter } from './webcam/utils';
+import { WebcamFields } from './webcam/webcam-fields.component';
+
+interface SourceOptionsProps {
+    onSaved: () => void;
+}
+
+export const SourceOptions = ({ onSaved }: SourceOptionsProps) => {
+    const { projectId } = useProjectIdentifier();
+
+    return (
+        <DisclosureGroup
+            defaultActiveInput={null}
+            items={[
+                {
+                    label: 'Webcam',
+                    value: 'webcam',
+                    icon: <WebcamIcon width={'24px'} />,
+                    content: (
+                        <AddSource
+                            onSaved={onSaved}
+                            config={getWebcamInitialConfig(projectId)}
+                            componentFields={(state: WebcamSourceConfig) => <WebcamFields defaultState={state} />}
+                            bodyFormatter={webcamBodyFormatter}
+                        />
+                    ),
+                },
+                {
+                    label: 'IP Camera',
+                    value: 'ip_camera',
+                    icon: <IpCameraIcon width={'24px'} />,
+                    content: (
+                        <AddSource
+                            onSaved={onSaved}
+                            config={getIpCameraInitialConfig(projectId)}
+                            componentFields={(state: IPCameraSourceConfig) => <IpCameraFields defaultState={state} />}
+                            bodyFormatter={ipCameraBodyFormatter}
+                        />
+                    ),
+                },
+                {
+                    label: 'Video file',
+                    value: 'video_file',
+                    icon: <Video width={'24px'} />,
+                    content: (
+                        <AddSource
+                            onSaved={onSaved}
+                            config={getVideoFileInitialConfig(projectId)}
+                            componentFields={(state: VideoFileSourceConfig) => <VideoFileFields defaultState={state} />}
+                            bodyFormatter={videoFileBodyFormatter}
+                        />
+                    ),
+                },
+                {
+                    label: 'Images folder',
+                    value: 'images_folder',
+                    icon: <ImageIcon width={'24px'} />,
+                    content: (
+                        <AddSource
+                            onSaved={onSaved}
+                            config={getImageFolderInitialConfig(projectId)}
+                            componentFields={(state: ImagesFolderSourceConfig) => (
+                                <ImageFolderFields defaultState={state} />
+                            )}
+                            bodyFormatter={imageFolderBodyFormatter}
+                        />
+                    ),
+                },
+            ]}
+        />
+    );
+};
