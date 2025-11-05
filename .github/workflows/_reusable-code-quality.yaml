@@ -1,25 +1,26 @@
 # Code Quality Workflow
 #
-# This reusable workflow executes code quality checks using pre-commit hooks
-# and other quality assurance tools across multiple languages.
+# This reusable workflow executes code quality checks using prek (pre-commit workspace tool)
+# with support for monorepo configurations and multiple pre-commit configs.
 #
 # Key Features:
-# - Pre-commit hook execution
-# - Multi-language support
+# - Workspace mode support (multiple .pre-commit-config.yaml files)
+# - Multi-language support (Python, Node.js, etc.)
+# - Automatic environment management
 # - Dependency caching
-# - Configurable environments
 # - Parallel check execution
 #
 # Process Stages:
-# 1. Environment Preparation:
-#    - Python setup
-#    - Cache configuration
+# 1. Checkout:
+#    - Full repository history
+#    - LFS file support
 #
-# 2. Quality Checks:
+# 2. Quality Checks (via prek):
 #    - Code linting
 #    - Style verification
 #    - Type checking
 #    - Best practices validation
+#    - Runs appropriate hooks based on file location
 #
 # 3. Results Processing:
 #    - Error reporting
@@ -42,7 +43,8 @@
 #        with:
 #          python-version: "3.11"
 #
-# Note: Requires configured pre-commit hooks in repository
+# Note: Uses prek-action (https://github.com/j178/prek-action) which supports
+# multiple pre-commit configs in workspace mode for monorepo setups
 
 name: Reusable Code Quality
 
@@ -58,15 +60,13 @@ permissions:
   contents: read
 
 jobs:
-  pre-commit:
+  prek:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           fetch-depth: 0
           lfs: true
           persist-credentials: false
-      - uses: ./.github/actions/code-quality/pre-commit
-        with:
-          python-version: ${{ inputs.python-version }}
+      - uses: j178/prek-action@ef075ff6f80a73aeb8facb7dd22f66f344b1d17a # v1

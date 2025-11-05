@@ -130,7 +130,7 @@ class TestStreamLoader:
             stop_event=stop_event,
             config_changed_condition=config_changed_condition,
         )
-        
+
         # Start the worker in a separate process
         worker.start()
 
@@ -164,7 +164,7 @@ class TestStreamLoader:
             stop_event=stop_event,
             config_changed_condition=config_changed_condition,
         )
-        
+
         worker.start()
 
         # Let it run to acquire frames
@@ -187,7 +187,7 @@ class TestStreamLoader:
             stop_event=stop_event,
             config_changed_condition=config_changed_condition,
         )
-        
+
         worker.start()
 
         # Let it run briefly
@@ -199,7 +199,7 @@ class TestStreamLoader:
 
         # Verify clean shutdown
         assert not worker.is_alive(), "Worker process should terminate cleanly"
-        
+
         # Verify the video stream was released (checked in teardown)
         # Note: We can't directly verify mock calls across process boundaries,
         # but the teardown method should have been called

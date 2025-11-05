@@ -96,17 +96,17 @@ class ModelService:
 
         model_bin_repo = ModelBinaryRepository(project_id=model.project_id, model_id=model.id)
         model_path = model_bin_repo.get_weights_file_path(format=model.format, name="model.xml")
-        _device = device or DEFAULT_DEVICE
+        device_name = device or DEFAULT_DEVICE
         try:
             return await asyncio.to_thread(
                 OpenVINOInferencer,
                 path=model_path,
-                device=_device.upper(), # OV always expects uppercase device names
+                device=device_name.upper(),  # OV always expects uppercase device names
                 config={ov_hints.performance_mode: ov_hints.PerformanceMode.LATENCY},
             )
         except Exception as e:
             if device and not Devices.is_device_supported_for_inference(device):
-                raise DeviceNotFoundError(device_name=_device) from e
+                raise DeviceNotFoundError(device_name=device_name) from e
             raise e
 
     @classmethod

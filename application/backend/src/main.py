@@ -70,9 +70,9 @@ def handle_base_exception(request: Request, e: GetiBaseException) -> Response:
     response = jsonable_encoder({"error_code": e.error_code, "message": e.message, "http_status": e.http_status})
     headers: dict[str, str] | None = None
     # 204 skipped as No Content needs to be revalidated
-    if e.http_status not in [200, 201, 202, 203, 205, 206, 207, 208, 226] and request.method == "GET":
+    if e.http_status not in {200, 201, 202, 203, 205, 206, 207, 208, 226} and request.method == "GET":
         headers = {"Cache-Control": "no-cache"}  # always revalidate
-    if e.http_status in [204, 304] or e.http_status < 200:
+    if e.http_status in {204, 304} or e.http_status < 200:
         return Response(status_code=int(e.http_status), headers=headers)
     return JSONResponse(content=response, status_code=int(e.http_status), headers=headers)
 
@@ -114,20 +114,18 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         # the second is the parameter name. Here, only the parameter name is used along
         # with a message explaining what the problem with the parameter is.
         loc, msg = pydantic_error["loc"], pydantic_error["msg"]
-        filtered_loc = loc[1:] if loc[0] in ("body", "query", "path") else loc
+        filtered_loc = loc[1:] if loc[0] in {"body", "query", "path"} else loc
         field_string = ".".join(str(filtered_loc))  # nested fields with dot-notation
         reformatted_message[field_string].append(msg)
 
     headers = {"Cache-Control": "no-cache"}  # always revalidate
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
-        content=jsonable_encoder(
-            {
-                "error_code": "bad_request",
-                "message": reformatted_message,
-                "http_status": http.HTTPStatus.BAD_REQUEST.value,
-            }
-        ),
+        content=jsonable_encoder({
+            "error_code": "bad_request",
+            "message": reformatted_message,
+            "http_status": http.HTTPStatus.BAD_REQUEST.value,
+        }),
         headers=headers,
     )
 
@@ -161,13 +159,11 @@ async def pydantic_validation_exception_handler(request: Request, exc: pydantic.
     headers = {"Cache-Control": "no-cache"}  # always revalidate
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
-        content=jsonable_encoder(
-            {
-                "error_code": "invalid_payload",
-                "errors": errors,
-                "http_status": http.HTTPStatus.BAD_REQUEST.value,
-            }
-        ),
+        content=jsonable_encoder({
+            "error_code": "invalid_payload",
+            "errors": errors,
+            "http_status": http.HTTPStatus.BAD_REQUEST.value,
+        }),
         headers=headers,
     )
 

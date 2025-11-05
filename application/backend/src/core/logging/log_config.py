@@ -3,6 +3,7 @@
 
 import os
 from dataclasses import dataclass
+from typing import ClassVar
 
 from workers import DispatchingWorker, InferenceWorker, StreamLoader, TrainingWorker
 
@@ -22,7 +23,7 @@ class LogConfig:
     log_folder: str = LOG_FOLDER
     # Mapping of worker classes to their dedicated log files
     # None key is used for application-level logs that don't belong to any specific worker
-    worker_log_info = {
+    worker_log_info: ClassVar[dict[str | None, str]] = {
         TrainingWorker.__name__: "training.log",
         InferenceWorker.__name__: "inference.log",
         DispatchingWorker.__name__: "dispatching.log",

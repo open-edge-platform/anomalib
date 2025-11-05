@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 import datetime
-import os
 from collections.abc import AsyncGenerator
 from uuid import UUID
 
@@ -70,18 +69,18 @@ class JobService:
             progress_ = 100 if status is JobStatus.COMPLETED else progress
 
             if status in {JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELED}:
-                updates["end_time"] = datetime.datetime.now(tz=datetime.timezone.utc)
+                updates["end_time"] = datetime.datetime.now(tz=datetime.UTC)
 
             if progress_ is not None:
                 updates["progress"] = progress_
             await repo.update(job, updates)
 
     @classmethod
-    async def stream_logs(cls, job_id: UUID | str) -> AsyncGenerator[ServerSentEvent, None]:
-        from core.logging.utils import get_job_logs_path
+    async def stream_logs(cls, job_id: UUID | str) -> AsyncGenerator[ServerSentEvent]:
+        from core.logging.utils import get_job_logs_path  # noqa: PLC0415
 
         log_file = get_job_logs_path(job_id=job_id)
-        if not os.path.exists(log_file):
+        if not await anyio.Path(log_file).exists():
             raise ResourceNotFoundException(resource_id=job_id, resource_name="job_logs")
 
         async def is_job_still_running():

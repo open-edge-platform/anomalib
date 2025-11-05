@@ -49,7 +49,7 @@ class TrainingService:
             return None
 
         # Run the training job with logging context
-        from core.logging.utils import job_logging_ctx
+        from core.logging.utils import job_logging_ctx  # noqa: PLC0415
 
         with job_logging_ctx(job_id=str(job.id)):
             return await cls._run_training_job(job, job_service)
@@ -63,7 +63,7 @@ class TrainingService:
         device = job.payload.get("device")
         if model_name is None:
             raise ValueError(f"Job {job.id} payload must contain 'model_name'")
-        
+
         model_service = ModelService()
         model = Model(
             project_id=project_id,
@@ -111,8 +111,8 @@ class TrainingService:
         Returns:
             Model: Trained model with updated export_path and is_ready=True
         """
-        from core.logging import global_log_config
-        from core.logging.handlers import LoggerStdoutWriter
+        from core.logging import global_log_config  # noqa: PLC0415
+        from core.logging.handlers import LoggerStdoutWriter  # noqa: PLC0415
 
         if device and not Devices.is_device_supported_for_training(device):
             raise ValueError(

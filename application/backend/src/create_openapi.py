@@ -17,7 +17,7 @@ def create_openapi(target_path: str) -> None:
     output_path = Path(target_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(output_path, "w") as file:
+    with open(output_path, "w", encoding="utf-8") as file:
         open_api = get_openapi(
             title=app.title,
             version=app.version,

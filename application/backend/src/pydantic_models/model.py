@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import os
-from enum import Enum
+from enum import StrEnum
 from uuid import UUID
 
 from anomalib.deploy import ExportType
@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, model_validator
 from pydantic_models.base import BaseIDNameModel
 
 
-class PredictionLabel(str, Enum):
+class PredictionLabel(StrEnum):
     """Enum for prediction labels."""
 
     NORMAL = "Normal"

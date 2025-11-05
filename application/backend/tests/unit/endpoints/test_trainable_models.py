@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from fastapi import status
 
-from api.endpoints.trainable_models_endpoints import _get_trainable_models
+from api.endpoints.trainable_models_endpoints import _get_trainable_models  # noqa: PLC2701
 
 
 def test_list_trainable_models(fxt_client):

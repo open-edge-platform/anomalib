@@ -44,9 +44,7 @@ class TrackioLogger(LightningLogger):
         # log them as metrics at step=0 or custom logic
         trackio.log({f"hyperparams/{k}": v for k, v in params_dict.items()}, step=0)
 
-    def log_metrics(
-        self, metrics: dict[str, float], step: int | None = None
-    ) -> None:
+    def log_metrics(self, metrics: dict[str, float], step: int | None = None) -> None:
         trackio.log(metrics, step=step)
 
     def finalize(self, _status: str) -> None:

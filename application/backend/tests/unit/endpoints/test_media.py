@@ -78,7 +78,7 @@ def test_get_media_thumbnail_not_found(fxt_client, fxt_media_service):
     fxt_media_service.get_thumbnail_file_path.side_effect = FileNotFoundError("Media not found")
 
     response = fxt_client.get(f"/api/projects/{project_id}/images/{media_id}/thumbnail")
-    
+
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == f"Media with ID {media_id} not found"
     fxt_media_service.get_thumbnail_file_path.assert_called_once_with(project_id=project_id, media_id=media_id)
@@ -88,7 +88,7 @@ def test_delete_media_success(fxt_client, fxt_media_service, fxt_media):
     """Test successful media deletion."""
     project_id = fxt_media.project_id
     media_id = fxt_media.id
-    
+
     fxt_media_service.delete_media.return_value = None
 
     response = fxt_client.delete(f"/api/projects/{project_id}/images/{media_id}")
