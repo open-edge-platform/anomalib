@@ -75,6 +75,7 @@ class TrainingService:
         synchronization_parameters = ProgressSyncParams()
         logger.info(f"Training model `{model_name}` for job `{job.id}`")
 
+        synchronization_task: asyncio.Task[None] | None = None
         try:
             synchronization_task = asyncio.create_task(
                 cls._sync_progress_with_db(
@@ -106,7 +107,8 @@ class TrainingService:
             raise e
         finally:
             logger.debug("Syncing progress with db stopped")
-            synchronization_task.cancel()
+            if synchronization_task is not None and not synchronization_task.done():
+                synchronization_task.cancel()
             if model.export_path:
                 logger.warning(f"Deleting partially created model with id: {model.id}")
                 model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model.id)
