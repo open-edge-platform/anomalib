@@ -97,7 +97,8 @@ class GetiInspectProgressCallback(Callback):
     def on_train_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when training starts."""
         del pl_module  # unused
-        self._send_progress(0, trainer.state.stage.value)
+        if trainer.state.stage is not None:
+            self._send_progress(0, trainer.state.stage.value)
         self._check_cancel_training(trainer)
 
     def on_train_batch_start(self, trainer: Trainer, pl_module: LightningModule, batch: Any, batch_idx: int) -> None:
@@ -109,14 +110,20 @@ class GetiInspectProgressCallback(Callback):
         """Called when a training epoch ends."""
         del pl_module  # unused
         # If max_epochs is not available, set progress to 0.5
-        progress = (trainer.current_epoch + 1) / trainer.max_epochs if trainer.max_epochs > 0 else 0.5
-        self._send_progress(progress, trainer.state.stage.value)
+        if trainer.state.stage is not None:
+            progress = (
+                (trainer.current_epoch + 1) / trainer.max_epochs
+                if (trainer.max_epochs is not None and trainer.max_epochs > 0)
+                else 0.5
+            )
+            self._send_progress(progress, trainer.state.stage.value)
         self._check_cancel_training(trainer)
 
     def on_train_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when training ends."""
         del pl_module  # unused
-        self._send_progress(1.0, trainer.state.stage.value)
+        if trainer.state.stage is not None:
+            self._send_progress(1.0, trainer.state.stage.value)
         self._check_cancel_training(trainer)
 
     # Validation callbacks
@@ -146,7 +153,8 @@ class GetiInspectProgressCallback(Callback):
     def on_test_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when testing starts."""
         del pl_module  # unused
-        self._send_progress(0, trainer.state.stage.value)
+        if trainer.state.stage is not None:
+            self._send_progress(0, trainer.state.stage.value)
         self._check_cancel_training(trainer)
 
     def on_test_batch_start(
@@ -160,21 +168,28 @@ class GetiInspectProgressCallback(Callback):
         """Called when a test epoch ends."""
         del pl_module  # unused
         # If max_epochs is not available, set progress to 0.5
-        progress = (trainer.current_epoch + 1) / trainer.max_epochs if trainer.max_epochs > 0 else 0.5
-        self._send_progress(progress, trainer.state.stage.value)
+        if trainer.state.stage is not None:
+            progress = (
+                (trainer.current_epoch + 1) / trainer.max_epochs
+                if (trainer.max_epochs is not None and trainer.max_epochs > 0)
+                else 0.5
+            )
+            self._send_progress(progress, trainer.state.stage.value)
         self._check_cancel_training(trainer)
 
     def on_test_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when testing ends."""
         del pl_module  # unused
-        self._send_progress(1.0, trainer.state.stage.value)
+        if trainer.state.stage is not None:
+            self._send_progress(1.0, trainer.state.stage.value)
         self._check_cancel_training(trainer)
 
     # Predict callbacks
     def on_predict_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when prediction starts."""
         del pl_module  # unused
-        self._send_progress(0, trainer.state.stage.value)
+        if trainer.state.stage is not None:
+            self._send_progress(0, trainer.state.stage.value)
         self._check_cancel_training(trainer)
 
     def on_predict_batch_start(
@@ -188,12 +203,18 @@ class GetiInspectProgressCallback(Callback):
         """Called when a prediction epoch ends."""
         del pl_module  # unused
         # If max_epochs is not available, set progress to 0.5
-        progress = (trainer.current_epoch + 1) / trainer.max_epochs if trainer.max_epochs > 0 else 0.5
-        self._send_progress(progress, trainer.state.stage.value)
+        if trainer.state.stage is not None:
+            progress = (
+                (trainer.current_epoch + 1) / trainer.max_epochs
+                if (trainer.max_epochs is not None and trainer.max_epochs > 0)
+                else 0.5
+            )
+            self._send_progress(progress, trainer.state.stage.value)
         self._check_cancel_training(trainer)
 
     def on_predict_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when prediction ends."""
         del pl_module  # unused
-        self._send_progress(1.0, trainer.state.stage.value)
+        if trainer.state.stage is not None:
+            self._send_progress(1.0, trainer.state.stage.value)
         self._check_cancel_training(trainer)
