@@ -1,5 +1,16 @@
 import { getObjectFromFormData, SinkOutputFormats, WebhookHttpMethod, WebhookSinkConfig } from '../utils';
 
+export type Pair = Record<Fields, string>;
+
+export enum Fields {
+    KEY = 'key',
+    VALUE = 'value',
+}
+
+export const getPairsFromObject = (obj: Record<string, string>): Pair[] => {
+    return Object.entries(obj).map(([key, value]) => ({ key, value }));
+};
+
 export const getWebhookInitialConfig = (project_id: string): WebhookSinkConfig => ({
     id: '',
     name: '',

@@ -1,6 +1,3 @@
-// Copyright (C) 2025 Intel Corporation
-// SPDX-License-Identifier: Apache-2.0
-
 import { Fragment, useState } from 'react';
 
 import { ActionButton, Content, ContextualHelp, dimensionValue, Flex, Grid, Text } from '@geti/ui';
@@ -8,6 +5,7 @@ import { Add, Delete } from '@geti/ui/icons';
 import { isEmpty } from 'lodash-es';
 
 import { RequiredTextField } from '../../../../../components/required-text-field/required-text-field.component';
+import { Fields, Pair } from './utils';
 
 type KeyValueBuilderProps = {
     title: string;
@@ -15,13 +13,6 @@ type KeyValueBuilderProps = {
     valuesName: string;
     config?: Record<string, string>;
 };
-
-type Pair = Record<Fields, string>;
-
-enum Fields {
-    KEY = 'key',
-    VALUE = 'value',
-}
 
 const updatePairAtIndex = (indexToUpdate: number, field: Fields, value: string) => (pair: Pair, index: number) =>
     index === indexToUpdate ? { ...pair, [field]: value } : pair;

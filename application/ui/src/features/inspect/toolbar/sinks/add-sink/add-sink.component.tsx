@@ -1,11 +1,8 @@
-// Copyright (C) 2025 Intel Corporation
-// SPDX-License-Identifier: Apache-2.0
-
 import { ReactNode } from 'react';
 
 import { Button, Form } from '@geti/ui';
-import { useConnectSinkToPipeline } from 'src/hooks/use-pipeline.hook';
 
+import { useConnectSinkToPipeline } from '../../../../../hooks/use-pipeline.hook';
 import { useSinkAction } from '../hooks/use-sink-action.hook';
 import { SinkConfig } from '../utils';
 

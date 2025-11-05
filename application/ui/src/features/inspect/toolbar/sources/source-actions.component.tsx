@@ -21,9 +21,7 @@ export const SourceActions = () => {
     });
 
     const sources = sourcesQuery.data ?? [];
-    const [view, setView] = useState<'newItemsOptions' | 'list' | 'options' | 'edit'>(
-        isEmpty(sources) ? 'options' : 'list'
-    );
+    const [view, setView] = useState<'list' | 'options' | 'edit'>(isEmpty(sources) ? 'options' : 'list');
     const [currentSource, setCurrentSource] = useState<SourceConfig | null>(null);
 
     const handleShowList = () => {
@@ -31,7 +29,7 @@ export const SourceActions = () => {
     };
 
     const handleAddSource = () => {
-        setView('newItemsOptions');
+        setView('options');
     };
 
     const handleEditSource = (source: SourceConfig) => {

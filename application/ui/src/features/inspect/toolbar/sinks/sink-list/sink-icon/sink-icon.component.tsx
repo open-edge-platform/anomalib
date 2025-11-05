@@ -1,7 +1,7 @@
 import { Folder, Mqtt, Ros, Webhook } from '@geti-inspect/icons';
 
 interface SinkIconProps {
-    type: 'folder' | 'mqtt' | 'ros' | 'webhook';
+    type: 'folder' | 'mqtt' | 'webhook' | 'ros' | 'disconnected';
 }
 
 export const SinkIcon = ({ type }: SinkIconProps) => {

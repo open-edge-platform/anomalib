@@ -2,12 +2,14 @@ import { ReactNode } from 'react';
 
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Folder as FolderIcon, Mqtt as MqttIcon, Webhook as WebhookIcon } from '@geti-inspect/icons';
-import { DisclosureGroup } from 'src/components/disclosure-group/disclosure-group.component';
 
+import { DisclosureGroup } from '../../../../components/disclosure-group/disclosure-group.component';
 import { AddSink } from './add-sink/add-sink.component';
 import { LocalFolderFields } from './local-folder-fields/local-folder-fields.component';
 import { getLocalFolderInitialConfig, localFolderBodyFormatter } from './local-folder-fields/utils';
-import { LocalFolderSinkConfig, WebhookSinkConfig } from './utils';
+import { MqttFields } from './mqtt-fields/mqtt-fields.component';
+import { getMqttInitialConfig, mqttBodyFormatter } from './mqtt-fields/utils';
+import { LocalFolderSinkConfig, MqttSinkConfig, WebhookSinkConfig } from './utils';
 import { getWebhookInitialConfig, webhookBodyFormatter } from './webhook-fields/utils';
 import { WebhookFields } from './webhook-fields/webhook-fields.component';
 
@@ -19,6 +21,7 @@ interface SinkOptionsProps {
 
 export const SinkOptions = ({ hasHeader, onSaved, children }: SinkOptionsProps) => {
     const { projectId } = useProjectIdentifier();
+
     return (
         <>
             {hasHeader && children}
@@ -57,7 +60,14 @@ export const SinkOptions = ({ hasHeader, onSaved, children }: SinkOptionsProps) 
                     {
                         label: 'MQTT',
                         value: 'mqtt',
-                        content: <p>MQTT content</p>,
+                        content: (
+                            <AddSink
+                                onSaved={onSaved}
+                                config={getMqttInitialConfig(projectId)}
+                                componentFields={(state: MqttSinkConfig) => <MqttFields defaultState={state} />}
+                                bodyFormatter={mqttBodyFormatter}
+                            />
+                        ),
                         icon: <MqttIcon width={'24px'} />,
                     },
                 ]}

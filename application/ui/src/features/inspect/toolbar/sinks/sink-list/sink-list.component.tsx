@@ -2,14 +2,14 @@ import { Add as AddIcon } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 import { isEqual } from 'lodash-es';
 import { Button, Flex, Text } from 'packages/ui';
-import { removeUnderscore } from 'src/features/utils';
-import { usePipeline } from 'src/hooks/use-pipeline.hook';
 
+import { StatusTag } from '../../../../../components/status-tag/status-tag.component';
+import { usePipeline } from '../../../../../hooks/use-pipeline.hook';
+import { removeUnderscore } from '../../../../utils';
 import { SinkConfig } from '../utils';
 import { SettingsList } from './settings-list/settings-list.component';
 import { SinkIcon } from './sink-icon/sink-icon.component';
 import { SinkMenu } from './sink-menu/sink-menu.component';
-import { StatusTag } from './status-tag/status-tag.component';
 
 import classes from './sink-list.module.scss';
 

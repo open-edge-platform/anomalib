@@ -1,12 +1,12 @@
 import { ReactNode } from 'react';
 
 import { useProjectIdentifier } from '@geti-inspect/hooks';
-import { DisclosureGroup } from 'src/components/disclosure-group/disclosure-group.component';
 
 import { ReactComponent as ImageIcon } from '../../../../assets/icons/images-folder.svg';
 import { ReactComponent as IpCameraIcon } from '../../../../assets/icons/ip-camera.svg';
 import { ReactComponent as Video } from '../../../../assets/icons/video-file.svg';
 import { ReactComponent as WebcamIcon } from '../../../../assets/icons/webcam.svg';
+import { DisclosureGroup } from '../../../../components/disclosure-group/disclosure-group.component';
 import { AddSource } from './add-source/add-source.component';
 import { ImageFolderFields } from './image-folder/image-folder-fields.component';
 import { getImageFolderInitialConfig, imageFolderBodyFormatter } from './image-folder/utils';

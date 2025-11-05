@@ -1,6 +1,3 @@
-// Copyright (C) 2025 Intel Corporation
-// SPDX-License-Identifier: Apache-2.0
-
 import { isEmpty } from 'lodash-es';
 import { components } from 'src/api/openapi-spec';
 
@@ -47,16 +44,4 @@ export const getObjectFromFormData = (keys: FormDataEntryValue[], values: FormDa
     );
 
     return Object.fromEntries(validEntries);
-};
-
-export const getLocalFolderData = <T extends { sink_type: string }>(sources: T[]) => {
-    return sources.filter(({ sink_type }) => sink_type === 'folder').at(0) as unknown as LocalFolderSinkConfig;
-};
-
-export const getMqttData = <T extends { sink_type: string }>(sources: T[]) => {
-    return sources.filter(({ sink_type }) => sink_type === 'mqtt').at(0) as unknown as MqttSinkConfig;
-};
-
-export const getWebhookData = <T extends { sink_type: string }>(sources: T[]) => {
-    return sources.filter(({ sink_type }) => sink_type === 'webhook').at(0) as unknown as WebhookSinkConfig;
 };
