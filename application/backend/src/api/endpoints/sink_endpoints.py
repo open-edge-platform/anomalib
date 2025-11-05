@@ -90,10 +90,10 @@ async def create_sink(
     """Create and configure a new sink"""
     # Inject project_id from URL path into the config
     sink_config["project_id"] = str(project_id)
-    
+
     # Validate the complete config
     validated_sink = SinkAdapter.validate_python(sink_config)
-    
+
     if validated_sink.sink_type == SinkType.DISCONNECTED:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -222,7 +222,7 @@ async def import_sink(
     try:
         yaml_content = await yaml_file.read()
         sink_data = yaml.safe_load(yaml_content)
-        
+
         # Inject project_id from URL path
         sink_data["project_id"] = str(project_id)
 

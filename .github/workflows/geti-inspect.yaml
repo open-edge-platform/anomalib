@@ -97,7 +97,12 @@ jobs:
       - name: Check source code with mypy
         working-directory: application/backend
         run: |
-          uv run mypy . --config-file=pyproject.toml
+          uv run --group lint mypy . --config-file=pyproject.toml
+
+      - name: Run unit tests
+        working-directory: application/backend
+        run: |
+          uv run pytest tests/unit
 
   ui-build:
     name: Build UI

@@ -122,7 +122,7 @@ class InferenceWorker(BaseProcessWorker):
         except Exception as e:
             logger.debug(f"Error while handling model reload event: {e}")
 
-    async def run_loop(self) -> None:  # noqa: C901, PLR0912, PLR0915
+    async def run_loop(self) -> None:  # noqa: PLR0912, PLR0915
         while not self.should_stop():
             # Ensure model is loaded/selected from active pipeline
             active_model = await self._get_active_model()
@@ -168,7 +168,9 @@ class InferenceWorker(BaseProcessWorker):
             start_t = MetricsService.record_inference_start()
             try:
                 prediction_response = await ModelService.predict_image(
-                    self._loaded_model.model, image_bytes, self._cached_models  # type: ignore[arg-type]
+                    self._loaded_model.model,
+                    image_bytes,
+                    self._cached_models,  # type: ignore[arg-type]
                 )
             except Exception as e:
                 logger.error(f"Inference failed: {e}", exc_info=True)

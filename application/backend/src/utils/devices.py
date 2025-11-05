@@ -8,6 +8,7 @@ from lightning.pytorch.accelerators import AcceleratorRegistry
 
 class Devices:
     """Utility class for device-related operations."""
+
     @staticmethod
     @lru_cache
     def training_devices() -> list[str]:

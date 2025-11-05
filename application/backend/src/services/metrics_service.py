@@ -12,13 +12,11 @@ import numpy as np
 from loguru import logger
 
 MAX_MEASUREMENTS = 1024  # max number of measurements to keep
-DTYPE = np.dtype(
-    [
-        ("model_id", "U36"),  # 36 * 4 = 144 bytes for UUID string
-        ("latency_ms", np.dtype(float)),  # 8 bytes for latency in milliseconds
-        ("timestamp", np.dtype(float)),  # 8 bytes for timestamp (epoch time in seconds)
-    ]
-)  # 144 + 8 + 8 = 160 bytes per latency measurement
+DTYPE = np.dtype([
+    ("model_id", "U36"),  # 36 * 4 = 144 bytes for UUID string
+    ("latency_ms", np.dtype(float)),  # 8 bytes for latency in milliseconds
+    ("timestamp", np.dtype(float)),  # 8 bytes for timestamp (epoch time in seconds)
+])  # 144 + 8 + 8 = 160 bytes per latency measurement
 SIZE = DTYPE.itemsize * MAX_MEASUREMENTS  # 160 * 1024 = 163840 bytes (160KB) allocated
 
 

@@ -4,6 +4,8 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 
+from loguru import logger
+
 from entities.stream_data import StreamData
 
 
@@ -40,4 +42,5 @@ class VideoStream(ABC):
                 yield self.get_data()
             except RuntimeError as exc:
                 self.release()
-                raise StopIteration from exc
+                logger.error(f"Stream error: {exc}", exc_info=True)
+                return

@@ -51,7 +51,8 @@ mqtt = [
 anomalib = { path = "../../", editable = true }
 
 [tool.ruff]
-target-version = "py310"
+extend = "../../pyproject.toml"
+target-version = "py313"
 line-length = 120
 
 exclude = [".venv*"]
@@ -61,7 +62,7 @@ src = ["src"]
 lint.select = ["ARG", "E", "F", "I", "N", "UP", "YTT", "ASYNC", "S", "COM", "C4", "FA", "PIE", "PYI", "Q", "RSE", "RET", "SIM",
     "TID", "TC", "PL", "RUF", "C90", "D103", "ANN001", "ANN201", "ANN205", "FAST"]
 lint.ignore = ["N801", "N805","N806","N807", "N818", "COM812", "RET503", "SIM108", "SIM105", "PLR2004",
-    "RUF010", "TC001",  "RUF012"]
+    "RUF010", "TC001",  "RUF012", "PLR6301", "RUF029"]
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.pytest.ini_options]
@@ -91,6 +92,6 @@ split-on-trailing-comma = false
 max-args=7
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.13"
 ignore_missing_imports = true
 show_error_codes = true

@@ -9,6 +9,7 @@ Provides centralized logging using loguru with:
 - Automatic log rotation (10MB) and retention (10 days)
 - JSON serialization and thread-safe async logging
 """
+
 import logging
 import os
 from typing import TYPE_CHECKING
@@ -45,7 +46,7 @@ def setup_logging(config: LogConfig | None = None) -> None:
         >>> setup_logging(custom_config)
     """
     global global_log_config  # noqa: PLW0603
-    
+
     if config is None:
         config = LogConfig()
 

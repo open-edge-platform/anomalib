@@ -231,7 +231,7 @@ class TestTrainingService:
         # Verify all components were called correctly
         fxt_mock_anomalib_components["folder_class"].assert_called_once()
         fxt_mock_anomalib_components["get_model"].assert_called_once_with(model=fxt_model.name)
-        
+
         # Verify Engine was called with expected parameters
         fxt_mock_anomalib_components["engine_class"].assert_called_once()
         call_args = fxt_mock_anomalib_components["engine_class"].call_args
@@ -239,7 +239,7 @@ class TestTrainingService:
         assert "logger" in call_args[1]
         assert len(call_args[1]["logger"]) == 2  # trackio and tensorboard
         assert call_args[1]["max_epochs"] == 10
-        
+
         fxt_mock_anomalib_components["engine"].train.assert_called_once_with(
             model=fxt_mock_anomalib_components["anomalib_model"], datamodule=fxt_mock_anomalib_components["folder"]
         )

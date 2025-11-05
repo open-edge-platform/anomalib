@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from abc import ABCMeta, abstractmethod
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from pydantic import BaseModel
 
@@ -11,7 +11,7 @@ DBEntity = TypeVar("DBEntity", bound=Base)
 ModelEntity = TypeVar("ModelEntity", bound=BaseModel)
 
 
-class IBaseMapper(Generic[DBEntity, ModelEntity], metaclass=ABCMeta):
+class IBaseMapper[DBEntity, ModelEntity](metaclass=ABCMeta):
     """Mapper for pydantic model entity <-> DB schema conversions."""
 
     @staticmethod

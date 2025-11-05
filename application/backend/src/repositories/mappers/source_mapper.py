@@ -17,15 +17,13 @@ class SourceMapper(IBaseMapper):
         """Convert Source schema to Source model."""
 
         config_data = source_db.config_data or {}
-        return SourceAdapter.validate_python(
-            {
-                "id": source_db.id,
-                "project_id": source_db.project_id,
-                "name": source_db.name,
-                "source_type": SourceType(source_db.source_type),
-                **config_data,
-            }
-        )
+        return SourceAdapter.validate_python({
+            "id": source_db.id,
+            "project_id": source_db.project_id,
+            "name": source_db.name,
+            "source_type": SourceType(source_db.source_type),
+            **config_data,
+        })
 
     @staticmethod
     def to_schema(source: Source) -> SourceDB:

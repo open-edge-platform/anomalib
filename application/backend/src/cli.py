@@ -109,7 +109,7 @@ def clean_db() -> None:
 def gen_api(target_path: str) -> None:
     """Generate OpenAPI specification JSON file."""
     # Importing create_openapi imports threading which is slow. Importing here to not slow down other cli commands.
-    from create_openapi import create_openapi
+    from create_openapi import create_openapi  # noqa: PLC0415
 
     try:
         create_openapi(target_path=target_path)

@@ -24,7 +24,11 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
         }
 
         await startTrainingMutation.mutateAsync({
-            body: { project_id: projectId, model_name: selectedModel },
+            body: {
+                project_id: projectId,
+                model_name: selectedModel,
+                device: null,
+            },
         });
 
         close();

@@ -34,7 +34,7 @@ class WebRTCManager:
 
             @pc.on("connectionstatechange")
             async def connection_state_change() -> None:
-                if pc.connectionState in ["failed", "closed"]:
+                if pc.connectionState in {"failed", "closed"}:
                     await self.cleanup_connection(offer.webrtc_id)
 
             # Validate offer before processing

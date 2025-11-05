@@ -4,7 +4,6 @@ import asyncio
 import datetime
 import json
 import logging
-import os
 from collections.abc import AsyncGenerator
 from uuid import UUID
 
@@ -77,25 +76,18 @@ class JobService:
             progress_ = 100 if status is JobStatus.COMPLETED else progress
 
             if status in {JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELED}:
-                updates["end_time"] = datetime.datetime.now(tz=datetime.timezone.utc)
+                updates["end_time"] = datetime.datetime.now(tz=datetime.UTC)
 
             if progress_ is not None:
                 updates["progress"] = progress_
             await repo.update(job, updates)
 
     @classmethod
-    async def is_job_still_running(cls, job_id: UUID | str) -> bool:
-        job = await cls.get_job_by_id(job_id=job_id)
-        if job is None:
-            raise ResourceNotFoundException(resource_id=job_id, resource_name="job")
-        return job.status == JobStatus.RUNNING
-
-    @classmethod
-    async def stream_logs(cls, job_id: UUID | str) -> AsyncGenerator[ServerSentEvent, None]:
-        from core.logging.utils import get_job_logs_path
+    async def stream_logs(cls, job_id: UUID | str) -> AsyncGenerator[ServerSentEvent]:
+        from core.logging.utils import get_job_logs_path  # noqa: PLC0415
 
         log_file = get_job_logs_path(job_id=job_id)
-        if not os.path.exists(log_file):
+        if not await anyio.Path(log_file).exists():
             raise ResourceNotFoundException(resource_id=job_id, resource_name="job_logs")
 
         # Cache job status and only check every 2 seconds
@@ -124,7 +116,7 @@ class JobService:
                 yield ServerSentEvent(data=line.rstrip())
 
     @classmethod
-    async def stream_progress(cls, job_id: UUID | str) -> AsyncGenerator[ServerSentEvent, None]:
+    async def stream_progress(cls, job_id: UUID | str) -> AsyncGenerator[ServerSentEvent]:
         """Stream the progress of a job by its ID"""
         still_running = True
         while still_running:

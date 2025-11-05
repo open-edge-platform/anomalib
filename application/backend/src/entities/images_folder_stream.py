@@ -69,8 +69,8 @@ class ImagesFolderStream(VideoStream):
         :param folder_path: path to the folder with images
         """
         event_handler = ImagesFolderEventHandler(
-            lambda added_file: self.file_added(added_file),
-            lambda deleted_file: self.file_deleted(deleted_file),
+            self.file_added,
+            self.file_deleted,
         )
 
         self.observer = Observer()

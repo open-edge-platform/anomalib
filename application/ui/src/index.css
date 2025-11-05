@@ -1,4 +1,5 @@
 :root {
+    --aqua: #16cfb1;
     --background: #313236;
     --background-inverse: #3c3e42;
     --coral: #ff5662;
@@ -8,6 +9,7 @@
     --daisy-shade: rgb(237, 178, 0); /* #edb200 */
     --brand-daisy: #fec91b;
     --brand-daisy-tint: #ffe17a;
+    --electric-daisy: #ffe500;
     --brand-rust: #e96115;
 
     --annotation-fill: var(--daisy-shade);

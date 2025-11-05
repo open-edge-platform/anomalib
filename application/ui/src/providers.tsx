@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 
+import { Toast } from '@geti/ui';
 import { ThemeProvider } from '@geti/ui/theme';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouterProps, RouterProvider } from 'react-router';
@@ -30,6 +31,7 @@ export const TestProviders = ({ children, routerProps }: { children: ReactNode; 
             <ThemeProvider>
                 <Router {...routerProps}>
                     <WebRTCConnectionProvider>{children}</WebRTCConnectionProvider>
+                    <Toast />
                 </Router>
             </ThemeProvider>
         </QueryClientProvider>
