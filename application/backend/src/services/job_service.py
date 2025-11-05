@@ -28,7 +28,7 @@ class JobService:
             return JobList(jobs=await repo.get_all(extra_filters=extra_filters))
 
     @staticmethod
-    async def get_job_by_id(job_id: UUID) -> Job | None:
+    async def get_job_by_id(job_id: UUID | str) -> Job | None:
         async with get_async_db_session_ctx() as session:
             repo = JobRepository(session)
             return await repo.get_by_id(job_id)

@@ -96,15 +96,18 @@ class GetiInspectProgressCallback(Callback):
     # Training callbacks
     def on_train_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when training starts."""
+        del pl_module  # unused
         self._send_progress(0, trainer.state.stage.value)
         self._check_cancel_training(trainer)
 
     def on_train_batch_start(self, trainer: Trainer, pl_module: LightningModule, batch: Any, batch_idx: int) -> None:
         """Called when a training batch starts."""
+        del pl_module, batch, batch_idx  # unused
         self._check_cancel_training(trainer)
 
     def on_train_epoch_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when a training epoch ends."""
+        del pl_module  # unused
         # If max_epochs is not available, set progress to 0.5
         progress = (trainer.current_epoch + 1) / trainer.max_epochs if trainer.max_epochs > 0 else 0.5
         self._send_progress(progress, trainer.state.stage.value)
@@ -112,31 +115,37 @@ class GetiInspectProgressCallback(Callback):
 
     def on_train_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when training ends."""
+        del pl_module  # unused
         self._send_progress(1.0, trainer.state.stage.value)
         self._check_cancel_training(trainer)
 
     # Validation callbacks
     def on_validation_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when validation starts."""
+        del pl_module  # unused
         self._check_cancel_training(trainer)
 
     def on_validation_batch_start(
         self, trainer: Trainer, pl_module: LightningModule, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """Called when a validation batch starts."""
+        del pl_module, batch, batch_idx, dataloader_idx  # unused
         self._check_cancel_training(trainer)
 
     def on_validation_epoch_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when a validation epoch ends."""
+        del pl_module  # unused
         self._check_cancel_training(trainer)
 
     def on_validation_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when validation ends."""
+        del pl_module  # unused
         self._check_cancel_training(trainer)
 
     # Test callbacks
     def on_test_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when testing starts."""
+        del pl_module  # unused
         self._send_progress(0, trainer.state.stage.value)
         self._check_cancel_training(trainer)
 
@@ -144,10 +153,12 @@ class GetiInspectProgressCallback(Callback):
         self, trainer: Trainer, pl_module: LightningModule, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """Called when a test batch starts."""
+        del pl_module, batch, batch_idx, dataloader_idx  # unused
         self._check_cancel_training(trainer)
 
     def on_test_epoch_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when a test epoch ends."""
+        del pl_module  # unused
         # If max_epochs is not available, set progress to 0.5
         progress = (trainer.current_epoch + 1) / trainer.max_epochs if trainer.max_epochs > 0 else 0.5
         self._send_progress(progress, trainer.state.stage.value)
@@ -155,12 +166,14 @@ class GetiInspectProgressCallback(Callback):
 
     def on_test_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when testing ends."""
+        del pl_module  # unused
         self._send_progress(1.0, trainer.state.stage.value)
         self._check_cancel_training(trainer)
 
     # Predict callbacks
     def on_predict_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when prediction starts."""
+        del pl_module  # unused
         self._send_progress(0, trainer.state.stage.value)
         self._check_cancel_training(trainer)
 
@@ -168,10 +181,12 @@ class GetiInspectProgressCallback(Callback):
         self, trainer: Trainer, pl_module: LightningModule, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """Called when a prediction batch starts."""
+        del pl_module, batch, batch_idx, dataloader_idx  # unused
         self._check_cancel_training(trainer)
 
     def on_predict_epoch_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when a prediction epoch ends."""
+        del pl_module  # unused
         # If max_epochs is not available, set progress to 0.5
         progress = (trainer.current_epoch + 1) / trainer.max_epochs if trainer.max_epochs > 0 else 0.5
         self._send_progress(progress, trainer.state.stage.value)
@@ -179,5 +194,6 @@ class GetiInspectProgressCallback(Callback):
 
     def on_predict_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when prediction ends."""
+        del pl_module  # unused
         self._send_progress(1.0, trainer.state.stage.value)
         self._check_cancel_training(trainer)
