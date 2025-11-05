@@ -28,7 +28,7 @@
 #    - Status updates
 #
 # Required Inputs:
-# - python-version: Python version for checks (default: "3.10", kept for compatibility but not used by prek)
+# - python-version: Python version for checks (default: "3.10")
 #
 # Example Usage:
 # 1. Default Configuration:
