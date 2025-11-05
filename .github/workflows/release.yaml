@@ -29,8 +29,19 @@
 #
 # Required Secrets:
 # - CODECOV_TOKEN: Coverage reporting
-# - TEST_PYPI_TOKEN: RC deployments
-# - PYPI_TOKEN: Production deployments
+#
+# Note: PyPI publishing uses OIDC (OpenID Connect) authentication.
+# Configure trusted publishers in PyPI project settings:
+# - For production/beta releases (PyPI):
+#   - Owner: <your-org>
+#   - Repository name: anomalib
+#   - Workflow name: release.yaml
+#   - Environment name: production
+# - For RC releases (Test PyPI):
+#   - Owner: <your-org>
+#   - Repository name: anomalib
+#   - Workflow name: release.yaml
+#   - Environment name: technical-review
 #
 # Example Usage:
 # 1. Automated (Tag Push):
@@ -85,11 +96,11 @@ jobs:
     needs: [validation]
     if: contains(needs.validation.outputs.version, '-rc')
     uses: ./.github/workflows/_reusable-rc-release-process.yaml
+    permissions:
+      id-token: write # Required for OIDC authentication with PyPI
     with:
       version: ${{ needs.validation.outputs.version }}
       artifact-name: ${{ needs.validation.outputs.artifact-name }}
-    secrets:
-      test-pypi-token: ${{ secrets.TEST_PYPI_TOKEN }}
 
   production-release-process:
     needs: [validation]
@@ -97,11 +108,10 @@ jobs:
     uses: ./.github/workflows/_reusable-production-release-process.yaml
     permissions:
       contents: write # is required by action-gh-release (nested)
+      id-token: write # Required for OIDC authentication with PyPI
     with:
       version: ${{ needs.validation.outputs.version }}
       artifact-name: ${{ needs.validation.outputs.artifact-name }}
-    secrets:
-      pypi-token: ${{ secrets.PYPI_TOKEN }}
 
   beta-release-process:
     needs: [validation]
@@ -109,11 +119,10 @@ jobs:
     uses: ./.github/workflows/_reusable-production-release-process.yaml
     permissions:
       contents: write # is required by action-gh-release (nested)
+      id-token: write # Required for OIDC authentication with PyPI
     with:
       version: ${{ needs.validation.outputs.version }}
       artifact-name: ${{ needs.validation.outputs.artifact-name }}
-    secrets:
-      pypi-token: ${{ secrets.PYPI_TOKEN }}
 
   status:
     needs:

@@ -31,23 +31,24 @@
 
 ---
 
-> 🌟 **Announcing v2.1.0 Release!** 🌟
+> 🌟 **Announcing v2.2.0 Release!** 🌟
 >
-> We're excited to announce the release of Anomalib v2.1.0!
-> This version brings several state-of-the-art models and anomaly detection datasets. Key features include:
+> We’re thrilled to announce the release of Anomalib v2.2.0, packed with new datasets, metrics, and performance improvements! Some of the highlights are:
+> New datasets
 >
-> New models :
+> - **3D-ADAM** : A comprehensive dataset for 3D anomaly detection in additive manufacturing.
+> - **BMAD** : Benchmarks for Medical Anomaly Detection, featuring six datasets across five medical domains
 >
-> - **🖼️ UniNet (CVPR 2025)**: A contrastive learning-guided unified framework with feature selection for anomaly detection.
-> - **🖼️ Dinomaly (CVPR 2025)**: A 'less is more philosophy' encoder-decoder architecture model leveraging pre-trained foundational models.
-> - **🎥 Fuvas (ICASSP 2025)**: Few-shot unsupervised video anomaly segmentation via low-rank factorization of spatio-temporal features.
+> New metrics
 >
-> New datasets:
+> - **PGn and PBn (CVPR2025)** : Presorted good/bad metrics for more insightful performance evaluation.
+> - **Histogram visualization** of anomaly scores for better interpretability.
 >
-> - **MVTec AD 2** : A new version of the MVTec AD dataset with 8 categories of industrial anomaly detection.
-> - **MVTec LOCO AD** : MVTec logical constraints anomaly detection dataset that includes both structural and logical anomalies.
-> - **Real-IAD** : A real-world multi-view dataset for benchmarking versatile industrial anomaly detection.
-> - **VAD dataset** : Valeo Anomaly Dataset (VAD) showcasing a diverse range of defects, from highly obvious to extremely subtle.
+> Other Improvements
+>
+> - Faster coreset selection for PatchCore model, resulting in ~30% quicker training.
+> - Reduced memory usage for memory bank–based models like PatchCore, PaDiM, and DfKDE.
+> - Many more code and documentation updates.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 

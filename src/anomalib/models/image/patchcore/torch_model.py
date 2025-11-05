@@ -153,6 +153,7 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
             ... else:
             ...     assert isinstance(output, InferenceBatch)
         """
+        input_tensor = input_tensor.type(self.memory_bank.dtype)
         output_size = input_tensor.shape[-2:]
         if self.tiler:
             input_tensor = self.tiler.tile(input_tensor)
