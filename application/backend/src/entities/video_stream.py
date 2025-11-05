@@ -42,5 +42,5 @@ class VideoStream(ABC):
                 yield self.get_data()
             except RuntimeError as exc:
                 self.release()
-                logger.error(exc)
+                logger.error(f"Stream error: {exc}", exc_info=True)
                 return
