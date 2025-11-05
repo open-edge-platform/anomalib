@@ -43,7 +43,7 @@ export const SinkActions = () => {
     }
 
     if (view === 'list') {
-        return <SinkList sinks={sinks as SinkConfig[]} onAddSink={handleAddSinks} onEditSink={handleEditSink} />;
+        return <SinkList sinks={sinks} onAddSink={handleAddSinks} onEditSink={handleEditSink} />;
     }
 
     return (

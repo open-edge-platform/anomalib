@@ -8,9 +8,16 @@ export type LocalFolderSinkConfig = components['schemas']['FolderSinkConfig'];
 export type MqttSinkConfig = components['schemas']['MqttSinkConfig'];
 export type WebhookSinkConfig = components['schemas']['WebhookSinkConfig'];
 export type RosSinkConfig = components['schemas']['RosSinkConfig'];
+export type DisconnectedSinkConfig = components['schemas']['DisconnectedSinkConfig'];
+
 export type SinkOutputFormats = LocalFolderSinkConfig['output_formats'];
 
-export type SinkConfig = LocalFolderSinkConfig | MqttSinkConfig | WebhookSinkConfig | RosSinkConfig;
+export type SinkConfig =
+    | LocalFolderSinkConfig
+    | MqttSinkConfig
+    | WebhookSinkConfig
+    | RosSinkConfig
+    | DisconnectedSinkConfig;
 
 export enum SinkType {
     FOLDER = 'folder',

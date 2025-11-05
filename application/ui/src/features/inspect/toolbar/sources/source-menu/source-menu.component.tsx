@@ -91,7 +91,7 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
             <ActionButton isQuiet aria-label='source menu'>
                 <MoreMenu />
             </ActionButton>
-            <Menu onAction={handleOnAction}>
+            <Menu onAction={handleOnAction} disabledKeys={isConnected ? ['connect'] : []}>
                 <Item key='connect'>Connect</Item>
                 <Item key='edit'>Edit</Item>
                 <Item key='remove'>Remove</Item>

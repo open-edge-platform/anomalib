@@ -7,7 +7,9 @@ import { DisclosureGroup } from 'src/components/disclosure-group/disclosure-grou
 import { AddSink } from './add-sink/add-sink.component';
 import { LocalFolderFields } from './local-folder-fields/local-folder-fields.component';
 import { getLocalFolderInitialConfig, localFolderBodyFormatter } from './local-folder-fields/utils';
-import { LocalFolderSinkConfig } from './utils';
+import { LocalFolderSinkConfig, WebhookSinkConfig } from './utils';
+import { getWebhookInitialConfig, webhookBodyFormatter } from './webhook-fields/utils';
+import { WebhookFields } from './webhook-fields/webhook-fields.component';
 
 interface SinkOptionsProps {
     onSaved: () => void;
@@ -42,7 +44,14 @@ export const SinkOptions = ({ hasHeader, onSaved, children }: SinkOptionsProps) 
                     {
                         label: 'Webhook',
                         value: 'webhook',
-                        content: <p>Webhook content</p>,
+                        content: (
+                            <AddSink
+                                onSaved={onSaved}
+                                config={getWebhookInitialConfig(projectId)}
+                                componentFields={(state: WebhookSinkConfig) => <WebhookFields defaultState={state} />}
+                                bodyFormatter={webhookBodyFormatter}
+                            />
+                        ),
                         icon: <WebhookIcon width={'24px'} />,
                     },
                     {

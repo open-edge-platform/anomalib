@@ -63,7 +63,7 @@ const SourceListItem = ({ source, isConnected, onEditSource }: SourceListItemPro
 
 export const SourcesList = ({ sources, onAddSource, onEditSource }: SourcesListProps) => {
     const pipeline = usePipeline();
-    const currentSource = pipeline.data.source?.id;
+    const currentSourceId = pipeline.data.source?.id;
 
     return (
         <Flex gap={'size-200'} direction={'column'}>
@@ -75,7 +75,7 @@ export const SourcesList = ({ sources, onAddSource, onEditSource }: SourcesListP
                 <SourceListItem
                     key={source.id}
                     source={source}
-                    isConnected={isEqual(currentSource, source.id)}
+                    isConnected={isEqual(currentSourceId, source.id)}
                     onEditSource={onEditSource}
                 />
             ))}

@@ -19,9 +19,51 @@ type SinksListProps = {
     onEditSink: (config: SinkConfig) => void;
 };
 
+type SinksListItemProps = {
+    sink: SinkConfig;
+    isConnected: boolean;
+    onEditSink: (config: SinkConfig) => void;
+};
+
+const SinkListItem = ({ sink, isConnected, onEditSink }: SinksListItemProps) => {
+    return (
+        <Flex
+            key={sink.id}
+            gap='size-200'
+            direction='column'
+            UNSAFE_className={clsx(classes.card, {
+                [classes.activeCard]: isConnected,
+            })}
+        >
+            <Flex alignItems={'center'} gap={'size-200'}>
+                <SinkIcon type={sink.sink_type} />
+
+                <Flex direction={'column'} gap={'size-100'}>
+                    <Text UNSAFE_className={classes.title}>{sink.name}</Text>
+                    <Flex gap={'size-100'} alignItems={'center'}>
+                        <Text UNSAFE_className={classes.type}>{removeUnderscore(sink.sink_type)}</Text>
+                        <StatusTag isConnected={isConnected} />
+                    </Flex>
+                </Flex>
+            </Flex>
+
+            <Flex justifyContent={'space-between'}>
+                <SettingsList sink={sink} />
+
+                <SinkMenu
+                    id={String(sink.id)}
+                    name={sink.name}
+                    isConnected={isConnected}
+                    onEdit={() => onEditSink(sink)}
+                />
+            </Flex>
+        </Flex>
+    );
+};
+
 export const SinkList = ({ sinks, onAddSink, onEditSink }: SinksListProps) => {
     const pipeline = usePipeline();
-    const currentSink = pipeline.data.sink?.id;
+    const currentSinkId = pipeline.data.sink?.id;
 
     return (
         <Flex gap={'size-200'} direction={'column'}>
@@ -29,38 +71,14 @@ export const SinkList = ({ sinks, onAddSink, onEditSink }: SinksListProps) => {
                 <AddIcon /> Add new sink
             </Button>
 
-            {sinks.map((sink) => {
-                const isConnected = isEqual(currentSink, sink.id);
-
-                return (
-                    <Flex
-                        key={sink.id}
-                        gap='size-200'
-                        direction='column'
-                        UNSAFE_className={clsx(classes.card, {
-                            [classes.activeCard]: isConnected,
-                        })}
-                    >
-                        <Flex alignItems={'center'} gap={'size-200'}>
-                            <SinkIcon type={sink.sink_type} />
-
-                            <Flex direction={'column'} gap={'size-100'}>
-                                <Text UNSAFE_className={classes.title}>{sink.name}</Text>
-                                <Flex gap={'size-100'} alignItems={'center'}>
-                                    <Text UNSAFE_className={classes.type}>{removeUnderscore(sink.sink_type)}</Text>
-                                    <StatusTag isConnected={isConnected} />
-                                </Flex>
-                            </Flex>
-                        </Flex>
-
-                        <Flex justifyContent={'space-between'}>
-                            <SettingsList sink={sink} />
-
-                            <SinkMenu id={String(sink.id)} name={sink.name} onEdit={() => onEditSink(sink)} />
-                        </Flex>
-                    </Flex>
-                );
-            })}
+            {sinks.map((sink) => (
+                <SinkListItem
+                    key={sink.id}
+                    sink={sink}
+                    isConnected={isEqual(currentSinkId, sink.id)}
+                    onEditSink={onEditSink}
+                />
+            ))}
         </Flex>
     );
 };

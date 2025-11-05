@@ -6,10 +6,11 @@ import { ActionButton, Item, Key, Menu, MenuTrigger, toast } from 'packages/ui';
 export interface SinkMenuProps {
     id: string;
     name: string;
+    isConnected: boolean;
     onEdit: () => void;
 }
 
-export const SinkMenu = ({ id, name, onEdit }: SinkMenuProps) => {
+export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
     const { projectId } = useProjectIdentifier();
     const removeSink = $api.useMutation('delete', '/api/projects/{project_id}/sinks/{sink_id}', {
         meta: {
@@ -61,6 +62,13 @@ export const SinkMenu = ({ id, name, onEdit }: SinkMenuProps) => {
 
     const handleDelete = async () => {
         try {
+            if (isConnected) {
+                await updatePipeline.mutateAsync({
+                    params: { path: { project_id: projectId } },
+                    body: { sink_id: null },
+                });
+            }
+
             await removeSink.mutateAsync({ params: { path: { sink_id: id, project_id: projectId } } });
 
             toast({
@@ -80,7 +88,7 @@ export const SinkMenu = ({ id, name, onEdit }: SinkMenuProps) => {
             <ActionButton isQuiet aria-label='source menu'>
                 <MoreMenu />
             </ActionButton>
-            <Menu onAction={handleOnAction}>
+            <Menu onAction={handleOnAction} disabledKeys={isConnected ? ['connect'] : []}>
                 <Item key='connect'>Connect</Item>
                 <Item key='edit'>Edit</Item>
                 <Item key='remove'>Remove</Item>
