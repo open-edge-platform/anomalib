@@ -84,7 +84,12 @@ class TestJobService:
         [
             (False, None, None, "success"),
             (True, None, DuplicateJobException, None),
-            (False, IntegrityError("", "", ""), ResourceNotFoundException, "project"),
+            (
+                False,
+                IntegrityError("", {}, ValueError("Simulated database error")),
+                ResourceNotFoundException,
+                "project",
+            ),
         ],
     )
     def test_submit_train_job(
@@ -203,7 +208,7 @@ class TestJobService:
         """Test streaming logs when log file doesn't exist."""
         with (
             patch("core.logging.utils.get_job_logs_path") as mock_get_path,
-            patch("services.job_service.os.path.exists") as mock_exists,
+            patch("services.job_service.anyio.Path.exists") as mock_exists,
         ):
             mock_get_path.return_value = "/fake/path/job.log"
             mock_exists.return_value = False
@@ -228,7 +233,7 @@ class TestJobService:
 
         with (
             patch("core.logging.utils.get_job_logs_path") as mock_get_path,
-            patch("services.job_service.os.path.exists") as mock_exists,
+            patch("services.job_service.anyio.Path.exists") as mock_exists,
             patch("services.job_service.anyio.open_file") as mock_open_file,
             patch("services.job_service.JobRepository") as mock_repo_class,
         ):
