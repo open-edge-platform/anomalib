@@ -1,10 +1,10 @@
 import { Folder, Mqtt, Ros, Webhook } from '@geti-inspect/icons';
 
-interface SourceIconProps {
+interface SinkIconProps {
     type: 'folder' | 'mqtt' | 'ros' | 'webhook';
 }
 
-export const SourceIcon = ({ type }: SourceIconProps) => {
+export const SinkIcon = ({ type }: SinkIconProps) => {
     if (type === 'folder') {
         return <Folder />;
     }

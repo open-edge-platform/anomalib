@@ -1,11 +1,12 @@
 import { ReactNode } from 'react';
 
+import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Folder as FolderIcon, Mqtt as MqttIcon, Webhook as WebhookIcon } from '@geti-inspect/icons';
 import { DisclosureGroup } from 'src/components/disclosure-group/disclosure-group.component';
 
 import { AddSink } from './add-sink/add-sink.component';
 import { LocalFolderFields } from './local-folder-fields/local-folder-fields.component';
-import { localFolderBodyFormatter, localFolderInitialConfig } from './local-folder-fields/utils';
+import { getLocalFolderInitialConfig, localFolderBodyFormatter } from './local-folder-fields/utils';
 import { LocalFolderSinkConfig } from './utils';
 
 interface SinkOptionsProps {
@@ -15,6 +16,7 @@ interface SinkOptionsProps {
 }
 
 export const SinkOptions = ({ hasHeader, onSaved, children }: SinkOptionsProps) => {
+    const { projectId } = useProjectIdentifier();
     return (
         <>
             {hasHeader && children}
@@ -28,8 +30,10 @@ export const SinkOptions = ({ hasHeader, onSaved, children }: SinkOptionsProps) 
                         content: (
                             <AddSink
                                 onSaved={onSaved}
-                                config={localFolderInitialConfig}
-                                componentFields={(state: LocalFolderSinkConfig) => <LocalFolderFields state={state} />}
+                                config={getLocalFolderInitialConfig(projectId)}
+                                componentFields={(state: LocalFolderSinkConfig) => (
+                                    <LocalFolderFields defaultState={state} />
+                                )}
                                 bodyFormatter={localFolderBodyFormatter}
                             />
                         ),

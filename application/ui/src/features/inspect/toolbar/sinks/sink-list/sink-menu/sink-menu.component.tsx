@@ -81,6 +81,7 @@ export const SinkMenu = ({ id, name, onEdit }: SinkMenuProps) => {
                 <MoreMenu />
             </ActionButton>
             <Menu onAction={handleOnAction}>
+                <Item key='connect'>Connect</Item>
                 <Item key='edit'>Edit</Item>
                 <Item key='remove'>Remove</Item>
             </Menu>

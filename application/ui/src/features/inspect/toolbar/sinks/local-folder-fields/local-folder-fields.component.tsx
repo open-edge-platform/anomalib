@@ -7,26 +7,33 @@ import { LocalFolderSinkConfig } from '../utils';
 import classes from './local-folder-fields.module.scss';
 
 interface LocalFolderFieldsProps {
-    state: LocalFolderSinkConfig;
+    defaultState: LocalFolderSinkConfig;
 }
 
-export const LocalFolderFields = ({ state }: LocalFolderFieldsProps) => {
+export const LocalFolderFields = ({ defaultState }: LocalFolderFieldsProps) => {
     return (
         <Flex direction='column' gap='size-200'>
-            <TextField isHidden label='id' name='id' defaultValue={state.id} />
+            <TextField isHidden label='id' name='id' defaultValue={defaultState.id} />
+            <TextField isHidden label='project_id' name='project_id' defaultValue={defaultState.project_id} />
+
             <Flex direction={'row'} gap='size-200'>
-                <TextField label='Name' name='name' defaultValue={state.name} />
+                <TextField label='Name' name='name' defaultValue={defaultState.name} />
                 <NumberField
                     label='Rate Limit'
                     name='rate_limit'
                     minValue={0}
                     step={0.1}
-                    defaultValue={state.rate_limit ?? undefined}
+                    defaultValue={defaultState.rate_limit ?? undefined}
                 />
             </Flex>
 
             <Flex direction='row' gap='size-200'>
-                <TextField width={'100%'} label='Folder Path' name='folder_path' defaultValue={state.folder_path} />
+                <TextField
+                    width={'100%'}
+                    label='Folder Path'
+                    name='folder_path'
+                    defaultValue={defaultState.folder_path}
+                />
 
                 <Flex
                     alignSelf={'end'}
@@ -39,7 +46,7 @@ export const LocalFolderFields = ({ state }: LocalFolderFieldsProps) => {
                 </Flex>
             </Flex>
 
-            <OutputFormats config={state.output_formats} />
+            <OutputFormats config={defaultState.output_formats} />
         </Flex>
     );
 };

@@ -7,8 +7,8 @@ import { usePipeline } from 'src/hooks/use-pipeline.hook';
 
 import { SinkConfig } from '../utils';
 import { SettingsList } from './settings-list/settings-list.component';
+import { SinkIcon } from './sink-icon/sink-icon.component';
 import { SinkMenu } from './sink-menu/sink-menu.component';
-import { SourceIcon } from './source-icon/source-icon.component';
 import { StatusTag } from './status-tag/status-tag.component';
 
 import classes from './sink-list.module.scss';
@@ -16,12 +16,12 @@ import classes from './sink-list.module.scss';
 type SinksListProps = {
     sinks: SinkConfig[];
     onAddSink: () => void;
-    onEditSourceFactory: (config: SinkConfig) => void;
+    onEditSink: (config: SinkConfig) => void;
 };
 
-export const SinkList = ({ sinks, onAddSink, onEditSourceFactory }: SinksListProps) => {
+export const SinkList = ({ sinks, onAddSink, onEditSink }: SinksListProps) => {
     const pipeline = usePipeline();
-    const currentSource = pipeline.data.source?.id;
+    const currentSink = pipeline.data.sink?.id;
 
     return (
         <Flex gap={'size-200'} direction={'column'}>
@@ -30,7 +30,7 @@ export const SinkList = ({ sinks, onAddSink, onEditSourceFactory }: SinksListPro
             </Button>
 
             {sinks.map((sink) => {
-                const isConnected = isEqual(currentSource, sink.id);
+                const isConnected = isEqual(currentSink, sink.id);
 
                 return (
                     <Flex
@@ -42,7 +42,7 @@ export const SinkList = ({ sinks, onAddSink, onEditSourceFactory }: SinksListPro
                         })}
                     >
                         <Flex alignItems={'center'} gap={'size-200'}>
-                            <SourceIcon type={sink.sink_type} />
+                            <SinkIcon type={sink.sink_type} />
 
                             <Flex direction={'column'} gap={'size-100'}>
                                 <Text UNSAFE_className={classes.title}>{sink.name}</Text>
@@ -54,9 +54,9 @@ export const SinkList = ({ sinks, onAddSink, onEditSourceFactory }: SinksListPro
                         </Flex>
 
                         <Flex justifyContent={'space-between'}>
-                            <SettingsList source={sink} />
+                            <SettingsList sink={sink} />
 
-                            <SinkMenu id={String(sink.id)} name={sink.name} onEdit={() => onEditSourceFactory(sink)} />
+                            <SinkMenu id={String(sink.id)} name={sink.name} onEdit={() => onEditSink(sink)} />
                         </Flex>
                     </Flex>
                 );

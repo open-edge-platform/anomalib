@@ -9,6 +9,7 @@ import { ActionButton, Flex, Text } from '@geti/ui';
 import { Back } from '@geti/ui/icons';
 import { isEmpty } from 'lodash-es';
 
+import { EditSinkForm } from './edit-sink-form.component';
 import { SinkList } from './sink-list/sink-list.component';
 import { SinkOptions } from './sink-options.component';
 import { SinkConfig } from './utils';
@@ -22,7 +23,7 @@ export const SinkActions = () => {
     const sinks = sinksQuery.data ?? [];
 
     const [view, setView] = useState<'list' | 'options' | 'edit'>(isEmpty(sinks) ? 'options' : 'list');
-    const [currentSource, setCurrentSource] = useState<SinkConfig | null>(null);
+    const [currentSink, setCurrentSink] = useState<SinkConfig | null>(null);
 
     const handleShowList = () => {
         setView('list');
@@ -32,25 +33,17 @@ export const SinkActions = () => {
         setView('options');
     };
 
-    const handleEditSourceFactory = (source: SinkConfig) => {
+    const handleEditSink = (sink: SinkConfig) => {
         setView('edit');
-        setCurrentSource(source);
+        setCurrentSink(sink);
     };
 
-    console.log('view', view);
-
-    if (view === 'edit' && !isEmpty(currentSource)) {
-        return <p>edith</p>;
+    if (view === 'edit' && !isEmpty(currentSink)) {
+        return <EditSinkForm config={currentSink} onSaved={handleShowList} onBackToList={handleShowList} />;
     }
 
     if (view === 'list') {
-        return (
-            <SinkList
-                sinks={sinks as SinkConfig[]}
-                onAddSink={handleAddSinks}
-                onEditSourceFactory={handleEditSourceFactory}
-            />
-        );
+        return <SinkList sinks={sinks as SinkConfig[]} onAddSink={handleAddSinks} onEditSink={handleEditSink} />;
     }
 
     return (

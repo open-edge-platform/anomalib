@@ -4,10 +4,10 @@
 import { isEmpty } from 'lodash-es';
 import { components } from 'src/api/openapi-spec';
 
-export type LocalFolderSinkConfig = components['schemas']['FolderSinkConfig-Output'];
-export type MqttSinkConfig = components['schemas']['MqttSinkConfig-Output'];
-export type WebhookSinkConfig = components['schemas']['WebhookSinkConfig-Output'];
-export type RosSinkConfig = components['schemas']['RosSinkConfig-Output'];
+export type LocalFolderSinkConfig = components['schemas']['FolderSinkConfig'];
+export type MqttSinkConfig = components['schemas']['MqttSinkConfig'];
+export type WebhookSinkConfig = components['schemas']['WebhookSinkConfig'];
+export type RosSinkConfig = components['schemas']['RosSinkConfig'];
 export type SinkOutputFormats = LocalFolderSinkConfig['output_formats'];
 
 export type SinkConfig = LocalFolderSinkConfig | MqttSinkConfig | WebhookSinkConfig | RosSinkConfig;
