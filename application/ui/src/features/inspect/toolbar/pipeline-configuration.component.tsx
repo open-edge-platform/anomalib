@@ -19,7 +19,7 @@ import {
     View,
 } from '@geti/ui';
 
-import { SourceFactory } from './sources/source-factory.component';
+import { SourceActions } from './sources/source-actions.component';
 
 const paddingStyle = {
     '--spectrum-dialog-padding-x': dimensionValue('size-300'),
@@ -37,10 +37,10 @@ export const InputOutputSetup = () => {
                 <Content>
                     <Tabs aria-label='Dataset import tabs' height={'100%'}>
                         <TabList>
-                            <Item key='sources' textValue='FoR'>
+                            <Item key='sources' textValue='Sources'>
                                 <Text>Input</Text>
                             </Item>
-                            <Item key='sinks' textValue='MaR'>
+                            <Item key='sinks' textValue='Sinks'>
                                 <Text>Output</Text>
                             </Item>
                         </TabList>
@@ -48,7 +48,7 @@ export const InputOutputSetup = () => {
                             <Item key='sources'>
                                 <View marginTop={'size-200'}>
                                     <Suspense fallback={<Loading size='M' />}>
-                                        <SourceFactory />
+                                        <SourceActions />
                                     </Suspense>
                                 </View>
                             </Item>

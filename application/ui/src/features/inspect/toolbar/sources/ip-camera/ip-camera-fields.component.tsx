@@ -6,21 +6,21 @@ import { Flex, Switch, TextField } from '@geti/ui';
 import { IPCameraSourceConfig } from '../util';
 
 type IpCameraFieldsProps = {
-    state: IPCameraSourceConfig;
+    defaultState: IPCameraSourceConfig;
 };
 
-export const IpCameraFields = ({ state }: IpCameraFieldsProps) => {
+export const IpCameraFields = ({ defaultState }: IpCameraFieldsProps) => {
     return (
         <Flex direction='column' gap='size-200'>
-            <TextField isHidden label='id' name='id' defaultValue={state.id} />
-            <TextField isHidden label='project_id' name='project_id' defaultValue={state.project_id} />
-            <TextField width={'100%'} label='Name' name='name' defaultValue={state.name} />
-            <TextField width={'100%'} label='Stream Url:' name='stream_url' defaultValue={state.stream_url} />
+            <TextField isHidden label='id' name='id' defaultValue={defaultState?.id} />
+            <TextField isHidden label='project_id' name='project_id' defaultValue={defaultState.project_id} />
+            <TextField width={'100%'} label='Name' name='name' defaultValue={defaultState.name} />
+            <TextField width={'100%'} label='Stream Url:' name='stream_url' defaultValue={defaultState.stream_url} />
             <Switch
                 name='auth_required'
                 aria-label='Require Authentication'
-                defaultSelected={state.auth_required}
-                key={state.auth_required ? 'true' : 'false'}
+                defaultSelected={defaultState.auth_required}
+                key={defaultState.auth_required ? 'true' : 'false'}
             >
                 Require Authentication
             </Switch>

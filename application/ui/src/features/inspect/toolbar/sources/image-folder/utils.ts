@@ -15,5 +15,5 @@ export const imageFolderBodyFormatter = (formData: FormData): ImagesFolderSource
     source_type: 'images_folder',
     project_id: String(formData.get('project_id')),
     images_folder_path: String(formData.get('images_folder_path')),
-    ignore_existing_images: formData.get('ignore_existing_images') === 'on' ? true : false,
+    ignore_existing_images: formData.get('ignore_existing_images') === 'on',
 });

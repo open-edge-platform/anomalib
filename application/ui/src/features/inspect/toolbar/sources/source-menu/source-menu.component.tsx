@@ -13,23 +13,6 @@ export interface SourceMenuProps {
 export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) => {
     const { projectId } = useProjectIdentifier();
 
-    const updatePipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
-        meta: {
-            invalidates: [
-                ['get', '/api/projects/{project_id}/sources', { params: { path: { project_id: projectId } } }],
-                ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id: projectId } } }],
-            ],
-        },
-    });
-
-    const removeSource = $api.useMutation('delete', '/api/projects/{project_id}/sources/{source_id}', {
-        meta: {
-            invalidates: [
-                ['get', '/api/projects/{project_id}/sources', { params: { path: { project_id: projectId } } }],
-            ],
-        },
-    });
-
     const handleOnAction = (option: Key) => {
         switch (option) {
             case 'connect':
@@ -43,6 +26,15 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
                 break;
         }
     };
+
+    const updatePipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
+        meta: {
+            invalidates: [
+                ['get', '/api/projects/{project_id}/sources', { params: { path: { project_id: projectId } } }],
+                ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id: projectId } } }],
+            ],
+        },
+    });
 
     const handleConnect = async () => {
         try {
@@ -62,6 +54,14 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
             });
         }
     };
+
+    const removeSource = $api.useMutation('delete', '/api/projects/{project_id}/sources/{source_id}', {
+        meta: {
+            invalidates: [
+                ['get', '/api/projects/{project_id}/sources', { params: { path: { project_id: projectId } } }],
+            ],
+        },
+    });
 
     const handleDelete = async () => {
         try {

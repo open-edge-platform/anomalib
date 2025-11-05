@@ -5,6 +5,7 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
     plugins: [
+        // TODO: Review and assess whether relative paths are necessary
         tsconfigPaths(),
         react(),
         svgr({

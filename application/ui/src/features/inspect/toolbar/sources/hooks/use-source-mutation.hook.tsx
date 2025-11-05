@@ -27,17 +27,15 @@ export const useSourceMutation = (isNewSource: boolean) => {
 
     return async (body: SourceConfig) => {
         if (isNewSource) {
-            const sourcePayload = {
-                ...body,
-                id: uuid(),
-            };
+            const id = uuid();
+            const sourcePayload = { ...body, id };
 
-            const response = await addSource.mutateAsync({
+            await addSource.mutateAsync({
                 body: sourcePayload,
                 params: { path: { project_id: projectId } },
             });
 
-            return String(response.id);
+            return id;
         }
 
         const response = await updateSource.mutateAsync({

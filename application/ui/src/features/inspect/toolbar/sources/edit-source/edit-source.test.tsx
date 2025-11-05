@@ -3,17 +3,17 @@
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useConnectSourceToPipeline } from 'src/hooks/use-pipeline.hook';
 import { TestProviders } from 'src/providers';
 
+import { useConnectSourceToPipeline } from '../../../../../hooks/use-pipeline.hook';
 import { useSourceMutation } from '../hooks/use-source-mutation.hook';
 import { IpCameraFields } from '../ip-camera/ip-camera-fields.component';
-import { ipCameraBodyFormatter, ipCameraInitialConfig } from '../ip-camera/utils';
+import { getIpCameraInitialConfig, ipCameraBodyFormatter } from '../ip-camera/utils';
 import { IPCameraSourceConfig } from '../util';
 import { EditSource } from './edit-source.component';
 
 vi.mock('../hooks/use-source-mutation.hook');
-vi.mock('src/hooks/use-pipeline.hook');
+vi.mock('../../../../../hooks/use-pipeline.hook');
 
 describe('EditIpCamera', () => {
     beforeEach(() => {
@@ -23,6 +23,7 @@ describe('EditIpCamera', () => {
     const updatedConfig: IPCameraSourceConfig = {
         id: 'existing-source-id',
         name: 'Updated Camera',
+        project_id: '123',
         stream_url: 'rtsp://192.168.1.201:554/stream',
         source_type: 'ip_camera',
         auth_required: true,
@@ -32,9 +33,9 @@ describe('EditIpCamera', () => {
         render(
             <TestProviders>
                 <EditSource
-                    config={ipCameraInitialConfig}
+                    config={getIpCameraInitialConfig(updatedConfig.project_id)}
                     onSaved={mockOnSaved}
-                    componentFields={(state: IPCameraSourceConfig) => <IpCameraFields state={state} />}
+                    componentFields={(state: IPCameraSourceConfig) => <IpCameraFields defaultState={state} />}
                     bodyFormatter={ipCameraBodyFormatter}
                 />
             </TestProviders>

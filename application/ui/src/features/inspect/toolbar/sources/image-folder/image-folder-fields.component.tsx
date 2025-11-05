@@ -9,22 +9,22 @@ import { ImagesFolderSourceConfig } from '../util';
 import classes from './image-folder-fields.module.scss';
 
 type ImageFolderFieldsProps = {
-    state: ImagesFolderSourceConfig;
+    defaultState: ImagesFolderSourceConfig;
 };
 
-export const ImageFolderFields = ({ state }: ImageFolderFieldsProps) => {
+export const ImageFolderFields = ({ defaultState }: ImageFolderFieldsProps) => {
     return (
         <Flex direction='column' gap='size-200'>
-            <TextField isHidden label='id' name='id' defaultValue={state.id} />
-            <TextField isHidden label='project_id' name='project_id' defaultValue={state.project_id} />
-            <TextField width={'100%'} label='Name' name='name' defaultValue={state.name} />
+            <TextField isHidden label='id' name='id' defaultValue={defaultState?.id} />
+            <TextField isHidden label='project_id' name='project_id' defaultValue={defaultState.project_id} />
+            <TextField width={'100%'} label='Name' name='name' defaultValue={defaultState.name} />
 
             <Flex direction='row' gap='size-200'>
                 <TextField
                     flex='1'
                     label='Images folder path'
                     name='images_folder_path'
-                    defaultValue={state.images_folder_path}
+                    defaultValue={defaultState.images_folder_path}
                 />
 
                 <Flex
@@ -41,8 +41,8 @@ export const ImageFolderFields = ({ state }: ImageFolderFieldsProps) => {
             <Switch
                 aria-label='ignore existing images'
                 name='ignore_existing_images'
-                defaultSelected={state.ignore_existing_images}
-                key={state.ignore_existing_images ? 'true' : 'false'}
+                defaultSelected={defaultState.ignore_existing_images}
+                key={defaultState.ignore_existing_images ? 'true' : 'false'}
             >
                 Ignore existing images
             </Switch>

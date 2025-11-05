@@ -7,12 +7,12 @@ import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { isEmpty } from 'lodash-es';
 
 import { $api } from '../../../../api/client';
-import { EditSourceFactory } from './edit-source-factory.component';
+import { EditSourceForm } from './edit-source-form.component';
 import { SourcesList } from './source-list/source-list.component';
 import { SourceOptions } from './source-options.component';
 import { SourceConfig } from './util';
 
-export const SourceFactory = () => {
+export const SourceActions = () => {
     const { projectId } = useProjectIdentifier();
     const sourcesQuery = $api.useSuspenseQuery('get', '/api/projects/{project_id}/sources', {
         params: { path: { project_id: projectId } },
@@ -26,23 +26,17 @@ export const SourceFactory = () => {
         setView('options');
     };
 
-    const handleEditSourceFactory = (source: SourceConfig) => {
+    const handleEditSource = (source: SourceConfig) => {
         setView('edit');
         setCurrentSource(source);
     };
 
     if (view === 'edit' && !isEmpty(currentSource)) {
-        return <EditSourceFactory config={currentSource} onSaved={() => setView('list')} />;
+        return <EditSourceForm config={currentSource} onSaved={() => setView('list')} />;
     }
 
     if (view === 'list') {
-        return (
-            <SourcesList
-                sources={sources}
-                onAddSource={handleAddSource}
-                onEditSourceFactory={handleEditSourceFactory}
-            />
-        );
+        return <SourcesList sources={sources} onAddSource={handleAddSource} onEditSource={handleEditSource} />;
     }
 
     return <SourceOptions onSaved={() => setView('list')} />;

@@ -17,9 +17,5 @@ export const SourceIcon = ({ type }: SourceIconProps) => {
         return <VideoFile />;
     }
 
-    if (type === 'images_folder') {
-        return <ImagesFolder />;
-    }
-
-    return <></>;
+    return <ImagesFolder />;
 };

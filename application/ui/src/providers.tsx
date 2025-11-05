@@ -31,8 +31,8 @@ export const TestProviders = ({ children, routerProps }: { children: ReactNode; 
             <ThemeProvider>
                 <Router {...routerProps}>
                     <WebRTCConnectionProvider>{children}</WebRTCConnectionProvider>
+                    <Toast />
                 </Router>
-                <Toast />
             </ThemeProvider>
         </QueryClientProvider>
     );

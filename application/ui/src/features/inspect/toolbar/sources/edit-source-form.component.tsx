@@ -9,18 +9,18 @@ import { VideoFileFields } from './video-file/video-file-fields.component';
 import { webcamBodyFormatter } from './webcam/utils';
 import { WebcamFields } from './webcam/webcam-fields.component';
 
-interface EditSourceFactoryProps {
+interface EditSourceFormProps {
     config: SourceConfig;
     onSaved: () => void;
 }
 
-export const EditSourceFactory = ({ config, onSaved }: EditSourceFactoryProps) => {
+export const EditSourceForm = ({ config, onSaved }: EditSourceFormProps) => {
     if (config.source_type === 'webcam') {
         return (
             <EditSource
                 onSaved={onSaved}
                 config={config}
-                componentFields={(state) => <WebcamFields state={state} />}
+                componentFields={(state) => <WebcamFields defaultState={state} />}
                 bodyFormatter={webcamBodyFormatter}
             />
         );
@@ -31,7 +31,7 @@ export const EditSourceFactory = ({ config, onSaved }: EditSourceFactoryProps) =
             <EditSource
                 onSaved={onSaved}
                 config={config}
-                componentFields={(state) => <IpCameraFields state={state} />}
+                componentFields={(state) => <IpCameraFields defaultState={state} />}
                 bodyFormatter={ipCameraBodyFormatter}
             />
         );
@@ -42,7 +42,7 @@ export const EditSourceFactory = ({ config, onSaved }: EditSourceFactoryProps) =
             <EditSource
                 onSaved={onSaved}
                 config={config}
-                componentFields={(state: VideoFileSourceConfig) => <VideoFileFields state={state} />}
+                componentFields={(state: VideoFileSourceConfig) => <VideoFileFields defaultState={state} />}
                 bodyFormatter={videoFileBodyFormatter}
             />
         );
@@ -52,7 +52,7 @@ export const EditSourceFactory = ({ config, onSaved }: EditSourceFactoryProps) =
         <EditSource
             onSaved={onSaved}
             config={config as ImagesFolderSourceConfig}
-            componentFields={(state: ImagesFolderSourceConfig) => <ImageFolderFields state={state} />}
+            componentFields={(state: ImagesFolderSourceConfig) => <ImageFolderFields defaultState={state} />}
             bodyFormatter={imageFolderBodyFormatter}
         />
     );

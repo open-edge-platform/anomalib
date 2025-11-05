@@ -3,17 +3,17 @@
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useConnectSourceToPipeline } from 'src/hooks/use-pipeline.hook';
 import { TestProviders } from 'src/providers';
 
+import { useConnectSourceToPipeline } from '../../../../../hooks/use-pipeline.hook';
 import { useSourceMutation } from '../hooks/use-source-mutation.hook';
 import { IpCameraFields } from '../ip-camera/ip-camera-fields.component';
-import { ipCameraBodyFormatter, ipCameraInitialConfig } from '../ip-camera/utils';
+import { getIpCameraInitialConfig, ipCameraBodyFormatter } from '../ip-camera/utils';
 import { IPCameraSourceConfig } from '../util';
 import { AddSource } from './add-source.component';
 
 vi.mock('../hooks/use-source-mutation.hook');
-vi.mock('src/hooks/use-pipeline.hook');
+vi.mock('../../../../../hooks/use-pipeline.hook');
 
 describe('add-source', () => {
     beforeEach(() => {
@@ -26,6 +26,7 @@ describe('add-source', () => {
         stream_url: 'rtsp://192.168.1.100:554/stream',
         source_type: 'ip_camera',
         auth_required: false,
+        project_id: '123',
     };
 
     it('calls connectToPipelineMutation after successful submit', async () => {
@@ -40,8 +41,8 @@ describe('add-source', () => {
             <TestProviders>
                 <AddSource
                     onSaved={mockOnSaved}
-                    config={ipCameraInitialConfig}
-                    componentFields={(state: IPCameraSourceConfig) => <IpCameraFields state={state} />}
+                    config={getIpCameraInitialConfig(newConfig.project_id)}
+                    componentFields={(state: IPCameraSourceConfig) => <IpCameraFields defaultState={state} />}
                     bodyFormatter={ipCameraBodyFormatter}
                 />
             </TestProviders>

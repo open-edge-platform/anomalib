@@ -4,8 +4,8 @@
 import { ReactNode } from 'react';
 
 import { Button, Form } from '@geti/ui';
-import { useConnectSourceToPipeline } from 'src/hooks/use-pipeline.hook';
 
+import { useConnectSourceToPipeline } from '../../../../../hooks/use-pipeline.hook';
 import { useSourceAction } from '../hooks/use-source-action.hook';
 import { SourceConfig } from '../util';
 

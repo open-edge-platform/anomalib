@@ -2,8 +2,8 @@ import { Add as AddIcon } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 import { isEqual } from 'lodash-es';
 import { Button, Flex, Text } from 'packages/ui';
-import { usePipeline } from 'src/hooks/use-pipeline.hook';
 
+import { usePipeline } from '../../../../../hooks/use-pipeline.hook';
 import { SourceMenu } from '../source-menu/source-menu.component';
 import { SourceConfig } from '../util';
 import { SettingsList } from './settings-list/settings-list.component';
@@ -16,10 +16,52 @@ import classes from './source-list.module.scss';
 type SourcesListProps = {
     sources: SourceConfig[];
     onAddSource: () => void;
-    onEditSourceFactory: (config: SourceConfig) => void;
+    onEditSource: (config: SourceConfig) => void;
 };
 
-export const SourcesList = ({ sources, onAddSource, onEditSourceFactory }: SourcesListProps) => {
+type SourceListItemProps = {
+    source: SourceConfig;
+    isConnected: boolean;
+    onEditSource: (config: SourceConfig) => void;
+};
+
+const SourceListItem = ({ source, isConnected, onEditSource }: SourceListItemProps) => {
+    return (
+        <Flex
+            key={source.id}
+            gap='size-200'
+            direction='column'
+            UNSAFE_className={clsx(classes.card, {
+                [classes.activeCard]: isConnected,
+            })}
+        >
+            <Flex alignItems={'center'} gap={'size-200'}>
+                <SourceIcon type={source.source_type} />
+
+                <Flex direction={'column'} gap={'size-100'}>
+                    <Text UNSAFE_className={classes.title}>{source.name}</Text>
+                    <Flex gap={'size-100'} alignItems={'center'}>
+                        <Text UNSAFE_className={classes.type}>{removeUnderscore(source.source_type)}</Text>
+                        <StatusTag isConnected={isConnected} />
+                    </Flex>
+                </Flex>
+            </Flex>
+
+            <Flex justifyContent={'space-between'}>
+                <SettingsList source={source} />
+
+                <SourceMenu
+                    id={String(source.id)}
+                    name={source.name}
+                    isConnected={isConnected}
+                    onEdit={() => onEditSource(source)}
+                />
+            </Flex>
+        </Flex>
+    );
+};
+
+export const SourcesList = ({ sources, onAddSource, onEditSource }: SourcesListProps) => {
     const pipeline = usePipeline();
     const currentSource = pipeline.data.source?.id;
 
@@ -29,43 +71,14 @@ export const SourcesList = ({ sources, onAddSource, onEditSourceFactory }: Sourc
                 <AddIcon /> Add new source
             </Button>
 
-            {sources.map((source) => {
-                const isConnected = isEqual(currentSource, source.id);
-
-                return (
-                    <Flex
-                        key={source.id}
-                        gap='size-200'
-                        direction='column'
-                        UNSAFE_className={clsx(classes.card, {
-                            [classes.activeCard]: isConnected,
-                        })}
-                    >
-                        <Flex alignItems={'center'} gap={'size-200'}>
-                            <SourceIcon type={source.source_type} />
-
-                            <Flex direction={'column'} gap={'size-100'}>
-                                <Text UNSAFE_className={classes.title}>{source.name}</Text>
-                                <Flex gap={'size-100'} alignItems={'center'}>
-                                    <Text UNSAFE_className={classes.type}>{removeUnderscore(source.source_type)}</Text>
-                                    <StatusTag isConnected={isConnected} />
-                                </Flex>
-                            </Flex>
-                        </Flex>
-
-                        <Flex justifyContent={'space-between'}>
-                            <SettingsList source={source} />
-
-                            <SourceMenu
-                                id={String(source.id)}
-                                name={source.name}
-                                isConnected={isConnected}
-                                onEdit={() => onEditSourceFactory(source)}
-                            />
-                        </Flex>
-                    </Flex>
-                );
-            })}
+            {sources.map((source) => (
+                <SourceListItem
+                    key={source.id}
+                    source={source}
+                    isConnected={isEqual(currentSource, source.id)}
+                    onEditSource={onEditSource}
+                />
+            ))}
         </Flex>
     );
 };

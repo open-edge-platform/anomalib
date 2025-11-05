@@ -35,7 +35,7 @@ export const SourceOptions = ({ onSaved }: SourceOptionsProps) => {
                         <AddSource
                             onSaved={onSaved}
                             config={getWebcamInitialConfig(projectId)}
-                            componentFields={(state: WebcamSourceConfig) => <WebcamFields state={state} />}
+                            componentFields={(state: WebcamSourceConfig) => <WebcamFields defaultState={state} />}
                             bodyFormatter={webcamBodyFormatter}
                         />
                     ),
@@ -48,7 +48,7 @@ export const SourceOptions = ({ onSaved }: SourceOptionsProps) => {
                         <AddSource
                             onSaved={onSaved}
                             config={getIpCameraInitialConfig(projectId)}
-                            componentFields={(state: IPCameraSourceConfig) => <IpCameraFields state={state} />}
+                            componentFields={(state: IPCameraSourceConfig) => <IpCameraFields defaultState={state} />}
                             bodyFormatter={ipCameraBodyFormatter}
                         />
                     ),
@@ -61,7 +61,7 @@ export const SourceOptions = ({ onSaved }: SourceOptionsProps) => {
                         <AddSource
                             onSaved={onSaved}
                             config={getVideoFileInitialConfig(projectId)}
-                            componentFields={(state: VideoFileSourceConfig) => <VideoFileFields state={state} />}
+                            componentFields={(state: VideoFileSourceConfig) => <VideoFileFields defaultState={state} />}
                             bodyFormatter={videoFileBodyFormatter}
                         />
                     ),
@@ -74,7 +74,9 @@ export const SourceOptions = ({ onSaved }: SourceOptionsProps) => {
                         <AddSource
                             onSaved={onSaved}
                             config={getImageFolderInitialConfig(projectId)}
-                            componentFields={(state: ImagesFolderSourceConfig) => <ImageFolderFields state={state} />}
+                            componentFields={(state: ImagesFolderSourceConfig) => (
+                                <ImageFolderFields defaultState={state} />
+                            )}
                             bodyFormatter={imageFolderBodyFormatter}
                         />
                     ),

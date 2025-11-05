@@ -15,5 +15,5 @@ export const ipCameraBodyFormatter = (formData: FormData): IPCameraSourceConfig 
     source_type: 'ip_camera',
     project_id: String(formData.get('project_id')),
     stream_url: String(formData.get('stream_url')),
-    auth_required: String(formData.get('auth_required')) === 'on' ? true : false,
+    auth_required: String(formData.get('auth_required')) === 'on',
 });
