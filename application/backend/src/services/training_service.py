@@ -104,16 +104,16 @@ class TrainingService:
             await job_service.update_job_status(
                 job_id=job.id, status=JobStatus.FAILED, message=f"Failed with exception: {str(e)}"
             )
-            raise e
-        finally:
-            logger.debug("Syncing progress with db stopped")
-            if synchronization_task is not None and not synchronization_task.done():
-                synchronization_task.cancel()
             if model.export_path:
                 logger.warning(f"Deleting partially created model with id: {model.id}")
                 model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model.id)
                 await model_binary_repo.delete_model_folder()
                 await model_service.delete_model(project_id=project_id, model_id=model.id)
+            raise e
+        finally:
+            logger.debug("Syncing progress with db stopped")
+            if synchronization_task is not None and not synchronization_task.done():
+                synchronization_task.cancel()
 
     @staticmethod
     def _train_model(

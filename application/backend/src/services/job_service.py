@@ -83,6 +83,13 @@ class JobService:
             await repo.update(job, updates)
 
     @classmethod
+    async def is_job_still_running(cls, job_id: UUID | str) -> bool:
+        job = await cls.get_job_by_id(job_id=job_id)
+        if job is None:
+            raise ResourceNotFoundException(resource_id=job_id, resource_name="job")
+        return job.status == JobStatus.RUNNING
+
+    @classmethod
     async def stream_logs(cls, job_id: UUID | str) -> AsyncGenerator[ServerSentEvent]:
         from core.logging.utils import get_job_logs_path  # noqa: PLC0415
 

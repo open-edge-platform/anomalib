@@ -5,16 +5,14 @@
 
 from __future__ import annotations
 
-import logging
 import threading
 from typing import TYPE_CHECKING, Any
 
 from lightning.pytorch.callbacks import Callback
+from loguru import logger
 
 if TYPE_CHECKING:
     from lightning.pytorch import LightningModule, Trainer
-
-logger = logging.getLogger(__name__)
 
 
 class ProgressSyncParams:
