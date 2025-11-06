@@ -4,13 +4,13 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends
+from fastapi import APIRouter, Body, Depends, status
 from sse_starlette import EventSourceResponse
 
 from api.dependencies import get_job_id, get_job_service
 from api.endpoints import API_PREFIX
 from pydantic_models import JobList
-from pydantic_models.job import JobSubmitted, TrainJobPayload
+from pydantic_models.job import JobCancelled, JobSubmitted, TrainJobPayload
 from services import JobService
 
 job_api_prefix_url = API_PREFIX + "/jobs"
@@ -42,3 +42,21 @@ async def get_job_logs(
 ) -> EventSourceResponse:
     """Endpoint to get the logs of a job by its ID"""
     return EventSourceResponse(job_service.stream_logs(job_id=job_id))
+
+
+@job_router.get("/{job_id}/progress")
+async def get_job_progress(
+    job_id: Annotated[UUID, Depends(get_job_id)],
+    job_service: Annotated[JobService, Depends(get_job_service)],
+) -> EventSourceResponse:
+    """Endpoint to get the progress of a job by its ID"""
+    return EventSourceResponse(job_service.stream_progress(job_id=job_id))
+
+
+@job_router.post("/{job_id}:cancel", status_code=status.HTTP_202_ACCEPTED)
+async def cancel_job(
+    job_id: Annotated[UUID, Depends(get_job_id)],
+    job_service: Annotated[JobService, Depends(get_job_service)],
+) -> JobCancelled:
+    """Endpoint to cancel a job by its ID"""
+    return await job_service.cancel_job(job_id=job_id)

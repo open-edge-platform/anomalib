@@ -5,7 +5,7 @@ from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, Field, computed_field, field_serializer
 
 from pydantic_models.base import BaseIDModel
 
@@ -44,6 +44,14 @@ class JobList(BaseModel):
 
 class JobSubmitted(BaseModel):
     job_id: UUID
+
+
+class JobCancelled(BaseModel):
+    job_id: UUID
+
+    @computed_field
+    def message(self) -> str:
+        return f"Job with ID `{self.job_id}` marked as cancelled."
 
 
 class TrainJobPayload(BaseModel):
