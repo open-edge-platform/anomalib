@@ -114,7 +114,6 @@ class TestPipelineEndpoints:
 
     def test_cannot_enable_pipeline(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
         # Mock get_active_pipeline to return None (no active pipeline)
-        fxt_pipeline_service.get_active_pipeline = AsyncMock(return_value=None)
         fxt_pipeline_service.update_pipeline.side_effect = ValidationError.from_exception_data(
             "Pipeline",
             [
