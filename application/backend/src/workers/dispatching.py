@@ -46,6 +46,7 @@ class DispatchingWorker(BaseThreadWorker):
             self._destinations = DispatchService.get_destinations(output_configs=[sink_config])
             self._prev_sink_config = copy.deepcopy(sink_config)
 
+    @logger.catch()
     async def run_loop(self) -> None:
         active_pipeline_service = await ActivePipelineService.create(
             self._active_config_changed_condition, start_daemon=True
