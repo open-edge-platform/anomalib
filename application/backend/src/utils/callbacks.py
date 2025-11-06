@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class ProgressSyncParams:
     def __init__(self) -> None:
         self._progress = 0
-        self._message: str = ""
+        self._message: str = "Initializing"
         self._lock = threading.Lock()
         self.cancel_training_event = threading.Event()
 
@@ -99,6 +99,8 @@ class GetiInspectProgressCallback(Callback):
         del pl_module  # unused
         if trainer.state.stage is not None:
             self._send_progress(0, trainer.state.stage.value)
+        else:
+            self._send_progress(0, "Training started")
         self._check_cancel_training(trainer)
 
     def on_train_batch_start(self, trainer: Trainer, pl_module: LightningModule, batch: Any, batch_idx: int) -> None:
@@ -155,6 +157,8 @@ class GetiInspectProgressCallback(Callback):
         del pl_module  # unused
         if trainer.state.stage is not None:
             self._send_progress(0, trainer.state.stage.value)
+        else:
+            self._send_progress(0, "Testing started")
         self._check_cancel_training(trainer)
 
     def on_test_batch_start(
@@ -190,6 +194,8 @@ class GetiInspectProgressCallback(Callback):
         del pl_module  # unused
         if trainer.state.stage is not None:
             self._send_progress(0, trainer.state.stage.value)
+        else:
+            self._send_progress(0, "Prediction started")
         self._check_cancel_training(trainer)
 
     def on_predict_batch_start(

@@ -217,6 +217,7 @@ class TrainingService:
                 await asyncio.sleep(0.5)
         except Exception as e:
             logger.exception("Failed to sync progress with db: %s", e)
+            await job_service.update_job_status(job_id=job_id, status=JobStatus.FAILED, message="Training failed")
             raise
 
     @staticmethod
