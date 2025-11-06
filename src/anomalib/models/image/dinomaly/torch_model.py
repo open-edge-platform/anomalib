@@ -17,7 +17,13 @@ from functools import partial
 
 import torch
 import torch.nn.functional as F  # noqa: N812
-from timm.layers.drop import DropPath
+
+try:
+    from timm.layers.drop import DropPath
+except ImportError:
+    # Fallback for newer timm versions
+    from timm.models.layers.drop import DropPath
+
 from torch import nn
 
 from anomalib.data import InferenceBatch

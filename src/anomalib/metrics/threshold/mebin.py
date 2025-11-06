@@ -173,9 +173,7 @@ class MEBin:
             value = anomaly_num_sequence[start]
             end = start
             # Move the 'end' pointer forward until a different connected component number is encountered.
-            while (
-                end < len(anomaly_num_sequence) - 1 and anomaly_num_sequence[end] == anomaly_num_sequence[end + 1]
-            ):
+            while end < len(anomaly_num_sequence) - 1 and anomaly_num_sequence[end] == anomaly_num_sequence[end + 1]:
                 end += 1
             # If the length of the current stable interval is greater than or equal to the given
             # threshold (min_interval_len), and the value is not zero, record this interval.

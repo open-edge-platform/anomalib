@@ -31,7 +31,7 @@ repos:
         args: ["--fix"]
       # Run the formatter
       - id: ruff-format
-        exclude: "tests/legacy"
+        exclude: "tests/legacy|examples/notebooks/.*\\.ipynb$"
 
   # python static type checking
   - repo: https://github.com/pre-commit/mirrors-mypy

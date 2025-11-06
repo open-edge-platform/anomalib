@@ -16,7 +16,13 @@ from collections.abc import Callable
 from typing import Any
 
 import torch
-from timm.layers.drop import DropPath
+
+try:
+    from timm.layers.drop import DropPath
+except ImportError:
+    # Fallback for newer timm versions
+    from timm.models.layers.drop import DropPath
+
 from timm.models.vision_transformer import Attention, LayerScale
 from torch import Tensor, nn
 from torch.nn import functional as F  # noqa: N812
