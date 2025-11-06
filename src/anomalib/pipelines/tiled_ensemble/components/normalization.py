@@ -105,7 +105,7 @@ class NormalizationJobGenerator(JobGenerator):
         self,
         args: dict | None = None,
         prev_stage_result: list[Any] | None = None,
-    ) -> Generator[NormalizationJob, None, None]:
+    ) -> Generator[NormalizationJob]:
         """Return a generator producing a single normalization job.
 
         Args:

@@ -18,7 +18,7 @@ Set up your development environment to start contributing. This involves install
 1. Create and activate a new Conda environment:
 
    ```bash
-   conda create -n anomalib_dev python=3.10
+   conda create -n anomalib_dev python=3.13
    conda activate anomalib_dev
    ```
 

@@ -31,7 +31,7 @@ See Also:
     - :class:`AnomalyMapGenerationMode`: Enum defining map generation modes
 """
 
-from enum import Enum
+from enum import StrEnum
 
 import torch
 from omegaconf import ListConfig
@@ -41,7 +41,7 @@ from torch.nn import functional as F  # noqa: N812
 from anomalib.models.components import GaussianBlur2d
 
 
-class AnomalyMapGenerationMode(str, Enum):
+class AnomalyMapGenerationMode(StrEnum):
     """Type of mode when generating anomaly imape."""
 
     ADD = "add"

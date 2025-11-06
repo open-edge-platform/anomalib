@@ -24,7 +24,7 @@ The module provides the following components:
     - :class:`VideoRegionFeatureExtractor`: Main class that handles feature extraction
 """
 
-from enum import Enum
+from enum import StrEnum
 
 import torch
 from torch import nn
@@ -36,7 +36,7 @@ from torchvision.transforms import Normalize
 from .clip import clip
 
 
-class FeatureType(str, Enum):
+class FeatureType(StrEnum):
     """Names of the different feature streams used in AI-VAD.
 
     This enum defines the available feature types that can be extracted from video

@@ -33,7 +33,7 @@ See Also:
 
 import logging
 import math
-from enum import Enum
+from enum import StrEnum
 
 import torch
 from torch import nn
@@ -105,7 +105,7 @@ def reduce_tensor_elems(tensor: torch.Tensor, m: int = 2**24) -> torch.Tensor:
     return tensor
 
 
-class EfficientAdModelSize(str, Enum):
+class EfficientAdModelSize(StrEnum):
     """Supported EfficientAd model sizes.
 
     The EfficientAd model comes in two sizes:

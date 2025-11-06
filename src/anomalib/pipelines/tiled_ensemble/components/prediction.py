@@ -165,7 +165,7 @@ class PredictJobGenerator(JobGenerator):
         self,
         args: dict | None = None,
         prev_stage_result: PREV_STAGE_RESULT = None,
-    ) -> Generator[PredictJob, None, None]:
+    ) -> Generator[PredictJob]:
         """Generate predict jobs for each tile location.
 
         Args:

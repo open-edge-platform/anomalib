@@ -25,7 +25,7 @@ Example:
 import logging
 import os
 import re
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 
 from torchvision.datasets.folder import IMG_EXTENSIONS
@@ -33,7 +33,7 @@ from torchvision.datasets.folder import IMG_EXTENSIONS
 logger = logging.getLogger(__name__)
 
 
-class DirType(str, Enum):
+class DirType(StrEnum):
     """Directory type names for organizing anomaly detection datasets.
 
     Attributes:

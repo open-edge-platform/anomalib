@@ -29,7 +29,7 @@ Example:
         ... )
 """
 
-from enum import Enum
+from enum import StrEnum
 
 from .bmad import BMAD
 from .btech import BTech
@@ -46,7 +46,7 @@ from .vad import VAD
 from .visa import Visa
 
 
-class ImageDataFormat(str, Enum):
+class ImageDataFormat(StrEnum):
     """Supported Image Dataset Types.
 
         The following dataset formats are supported:

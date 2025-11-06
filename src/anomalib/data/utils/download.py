@@ -14,7 +14,6 @@ import io
 import logging
 import os
 import re
-import sys
 import tarfile
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -194,11 +193,7 @@ def safe_extract(tar_file: TarFile, root: Path, members: list[TarInfo]) -> None:
     for member in members:
         # check if the file already exists
         if not (root / member.name).exists():
-            if sys.version_info[:3] >= (3, 11, 4):
-                # filter argument only works with python>=3.11.4
-                tar_file.extract(member, root, filter="data")
-            else:
-                tar_file.extract(member, root)
+            tar_file.extract(member, root, filter="data")
 
 
 def generate_hash(file_path: str | Path, algorithm: str = "sha256") -> str:

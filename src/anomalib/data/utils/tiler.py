@@ -28,7 +28,7 @@ Example:
 """
 
 from collections.abc import Sequence
-from enum import Enum
+from enum import StrEnum
 from itertools import product
 from math import ceil
 
@@ -37,7 +37,7 @@ import torchvision.transforms as T  # noqa: N812
 from torch.nn import functional as F  # noqa: N812
 
 
-class ImageUpscaleMode(str, Enum):
+class ImageUpscaleMode(StrEnum):
     """Mode for upscaling images.
 
     Attributes:

@@ -31,7 +31,7 @@ def export_types() -> list[ExportType]:
 
 
 @contextlib.contextmanager
-def increased_recursion_limit(limit: int = 10000) -> Generator[None, None, None]:
+def increased_recursion_limit(limit: int = 10000) -> Generator[None]:
     """Temporarily increase the recursion limit."""
     old_limit = sys.getrecursionlimit()
     try:

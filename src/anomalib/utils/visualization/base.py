@@ -28,7 +28,7 @@ different visualization implementations.
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 
 import numpy as np
@@ -48,7 +48,7 @@ class GeneratorResult:
     file_name: str | Path | None = None
 
 
-class VisualizationStep(str, Enum):
+class VisualizationStep(StrEnum):
     """Identify step on which to generate images."""
 
     BATCH = "batch"

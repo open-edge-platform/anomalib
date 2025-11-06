@@ -3,14 +3,14 @@
 
 """Anomalib Depth Data Modules."""
 
-from enum import Enum
+from enum import StrEnum
 
 from .adam_3d import ADAM3D
 from .folder_3d import Folder3D
 from .mvtec_3d import MVTec3D
 
 
-class DepthDataFormat(str, Enum):
+class DepthDataFormat(StrEnum):
     """Supported Depth Dataset Types."""
 
     MVTEC_3D = "mvtec_3d"

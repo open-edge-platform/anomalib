@@ -128,7 +128,7 @@ class MetricsCalculationJobGenerator(JobGenerator):
         self,
         args: dict | None = None,
         prev_stage_result: PREV_STAGE_RESULT = None,
-    ) -> Generator[MetricsCalculationJob, None, None]:
+    ) -> Generator[MetricsCalculationJob]:
         """Make a generator that yields a single metrics calculation job.
 
         Args:
