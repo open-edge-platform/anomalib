@@ -9,6 +9,27 @@
     }
 }
 
+.deviceSection {
+    gap: var(--spectrum-global-dimension-size-150);
+}
+
+.deviceGroup {
+    & label {
+        margin: 0;
+    }
+}
+
+.deviceOption {
+    padding: var(--spectrum-global-dimension-size-200);
+    border-radius: var(--spectrum-alias-border-radius-small);
+    background-color: var(--spectrum-global-color-gray-75);
+}
+
+.deviceDescription {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+}
+
 /// model list box
 // Ratings
 .rate {
