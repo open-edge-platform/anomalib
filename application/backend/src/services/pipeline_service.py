@@ -136,3 +136,9 @@ class PipelineService:
         # Linear interpolation
         fraction = k - floor_k
         return sorted_data[floor_k] + fraction * (sorted_data[ceil_k] - sorted_data[floor_k])
+
+    @staticmethod
+    async def get_active_pipeline() -> Pipeline | None:
+        """Retrieve the currently active (running) pipeline from the database."""
+        async with get_async_db_session_ctx() as session:
+            return await PipelineRepository(session).get_active_pipeline()

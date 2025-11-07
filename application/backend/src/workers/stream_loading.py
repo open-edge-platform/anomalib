@@ -50,6 +50,7 @@ class StreamLoader(BaseProcessWorker):
             self._video_stream = VideoStreamService.get_video_stream(input_config=source_config)
             self._prev_source_config = copy.deepcopy(source_config)
 
+    @logger.catch()
     async def run_loop(self) -> None:
         self._active_pipeline_service = await ActivePipelineService.create(
             config_changed_condition=self._config_changed_condition, start_daemon=True
@@ -81,10 +82,10 @@ class StreamLoader(BaseProcessWorker):
                     else:
                         await asyncio.sleep(0.1)
                 except Exception as e:
-                    logger.error(f"Error acquiring frame: {e}")
+                    logger.error(f"Error acquiring frame. Details: `{str(e)}`")
                     continue
             except Exception as e:
-                logger.error(f"Error acquiring frame: {e}")
+                logger.error(f"Error acquiring frame. Details: `{str(e)}`")
                 continue
 
     def teardown(self) -> None:
