@@ -32,8 +32,10 @@ export const TrainModelDevicePicker = ({ selectedDevice, onSelect }: TrainModelD
             return;
         }
 
-        if (selectedDevice === null || !devices.includes(selectedDevice)) {
+        if (selectedDevice === null) {
             onSelect(devices[0]);
+        } else if (!devices.includes(selectedDevice)) {
+            onSelect(null);
         }
     }, [devices, hasDevices, isError, isLoadingDevices, onSelect, selectedDevice]);
 
