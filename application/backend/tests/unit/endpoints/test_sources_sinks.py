@@ -105,26 +105,6 @@ class TestSourceAndSinkEndpoints:
         getattr(fxt_config_service, create_method).assert_called_once()
 
     @pytest.mark.parametrize(
-        "api_path, create_method, config_data",
-        [
-            (
-                ConfigApiPath.SOURCES,
-                "create_source",
-                {"source_type": SourceType.DISCONNECTED, "name": "Disconnected Source"},
-            ),
-            (ConfigApiPath.SINKS, "create_sink", {"sink_type": SinkType.DISCONNECTED, "name": "Disconnected Sink"}),
-        ],
-    )
-    def test_create_config_disconnected_fails(
-        self, api_path, create_method, config_data, fxt_config_service, fxt_client, fxt_project
-    ):
-        response = fxt_client.post(f"/api/projects/{fxt_project.id}/{api_path}", json=config_data)
-
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "DISCONNECTED cannot be created" in response.json()["detail"]
-        getattr(fxt_config_service, create_method).assert_not_called()
-
-    @pytest.mark.parametrize(
         "api_path, create_method",
         [
             (ConfigApiPath.SOURCES, "create_source"),

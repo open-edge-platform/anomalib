@@ -14,7 +14,7 @@ from fastapi.responses import FileResponse, Response
 
 from api.dependencies import get_configuration_service, get_project_id, get_sink_id
 from pydantic_models import Sink, SinkType
-from pydantic_models.sink import SinkAdapter
+from pydantic_models.sink import SinkAdapter, SinkCreate, SinkCreateAdapter
 from services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
 router = APIRouter(prefix="/api/projects/{project_id}/sinks", tags=["Sinks"])
@@ -83,16 +83,16 @@ UPDATE_SINK_BODY_EXAMPLES = {
 async def create_sink(
     project_id: Annotated[UUID, Depends(get_project_id)],
     sink_config: Annotated[
-        dict, Body(description=CREATE_SINK_BODY_DESCRIPTION, openapi_examples=CREATE_SINK_BODY_EXAMPLES)
+        SinkCreate, Body(description=CREATE_SINK_BODY_DESCRIPTION, openapi_examples=CREATE_SINK_BODY_EXAMPLES)
     ],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Sink:
     """Create and configure a new sink"""
     # Inject project_id from URL path into the config
-    sink_config["project_id"] = str(project_id)
+    sink_config.project_id = project_id
 
     # Validate the complete config
-    validated_sink = SinkAdapter.validate_python(sink_config)
+    validated_sink = SinkCreateAdapter.validate_python(sink_config)
 
     if validated_sink.sink_type == SinkType.DISCONNECTED:
         raise HTTPException(

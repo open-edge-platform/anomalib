@@ -9,7 +9,7 @@ from uuid import UUID
 
 from pydantic import Field, TypeAdapter
 
-from pydantic_models.base import BaseIDNameModel
+from pydantic_models.base import BaseIDNameModel, NoRequiredIDs
 
 IP_CAMERA_USERNAME = "IP_CAMERA_USERNAME"
 IP_CAMERA_PASSWORD = "IP_CAMERA_PASSWORD"  # noqa: S105
@@ -129,3 +129,37 @@ Source = Annotated[
 ]
 
 SourceAdapter: TypeAdapter[Source] = TypeAdapter(Source)
+
+
+# ---------------------------------
+# Creation Schemas (POST requests)
+# ---------------------------------
+# These schemas inherit from HasID first to override the required ID field with an auto-generated one (if absent) via
+# MRO (Method Resolution Order).
+
+
+class WebcamSourceConfigCreate(NoRequiredIDs, WebcamSourceConfig):
+    pass
+
+
+class IPCameraSourceConfigCreate(NoRequiredIDs, IPCameraSourceConfig):
+    pass
+
+
+class VideoFileSourceConfigCreate(NoRequiredIDs, VideoFileSourceConfig):
+    pass
+
+
+class ImagesFolderSourceConfigCreate(NoRequiredIDs, ImagesFolderSourceConfig):
+    pass
+
+
+SourceCreate = Annotated[
+    WebcamSourceConfigCreate
+    | IPCameraSourceConfigCreate
+    | VideoFileSourceConfigCreate
+    | ImagesFolderSourceConfigCreate,
+    Field(discriminator="source_type"),
+]
+
+SourceCreateAdapter: TypeAdapter[SourceCreate] = TypeAdapter(SourceCreate)
