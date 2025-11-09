@@ -26,7 +26,9 @@ Example:
     (224, 224)
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import ClassVar
 
 import numpy as np
 
@@ -65,6 +67,7 @@ class NumpyDepthItem(
     """
 
 
+@dataclass
 class NumpyDepthBatch(
     BatchIterateMixin[NumpyDepthItem],
     NumpyDepthBatchValidator,
@@ -87,4 +90,4 @@ class NumpyDepthBatch(
     tensor-like fields.
     """
 
-    item_class = NumpyDepthItem
+    item_class: ClassVar[Callable] = NumpyDepthItem
