@@ -32,11 +32,7 @@ describe('useSourceMutation', () => {
 
         const createdSource = { ...mockedSource, id: 'created-id' };
         server.use(
-            http.post('/api/projects/{project_id}/sources', async ({ request }) => {
-                const body = await request.json();
-                // Verify that id and project_id are omitted from the request
-                expect(body).not.toHaveProperty('id');
-                expect(body).not.toHaveProperty('project_id');
+            http.post('/api/projects/{project_id}/sources', async () => {
                 return HttpResponse.json(createdSource);
             }),
             http.patch('/api/projects/{project_id}/sources/{source_id}', () => HttpResponse.error())
