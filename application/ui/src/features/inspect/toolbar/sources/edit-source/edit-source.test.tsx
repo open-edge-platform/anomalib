@@ -35,6 +35,7 @@ describe('EditIpCamera', () => {
                 <EditSource
                     config={getIpCameraInitialConfig(updatedConfig.project_id)}
                     onSaved={mockOnSaved}
+                    onBackToList={vi.fn()}
                     componentFields={(state: IPCameraSourceConfig) => <IpCameraFields defaultState={state} />}
                     bodyFormatter={ipCameraBodyFormatter}
                 />

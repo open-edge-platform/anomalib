@@ -1,7 +1,6 @@
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { omit } from 'lodash-es';
-import { v4 as uuid } from 'uuid';
 
 import { SinkConfig } from '../utils';
 
@@ -21,15 +20,15 @@ export const useSinkMutation = (isNewSink: boolean) => {
 
     return async (body: SinkConfig) => {
         if (isNewSink) {
-            const id = uuid();
-            const sinkPayload = { ...body, id };
+            // Omit id and project_id when creating - they're auto-generated/injected from URL
+            const sinkPayload = omit(body, ['id', 'project_id']) as Parameters<typeof addSink.mutateAsync>[0]['body'];
 
-            await addSink.mutateAsync({
+            const response = await addSink.mutateAsync({
                 body: sinkPayload,
                 params: { path: { project_id: projectId } },
             });
 
-            return id;
+            return String(response.id);
         }
 
         const response = await updateSink.mutateAsync({

@@ -4,7 +4,6 @@
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { omit } from 'lodash-es';
-import { v4 as uuid } from 'uuid';
 
 import { SourceConfig } from '../util';
 
@@ -27,15 +26,17 @@ export const useSourceMutation = (isNewSource: boolean) => {
 
     return async (body: SourceConfig) => {
         if (isNewSource) {
-            const id = uuid();
-            const sourcePayload = { ...body, id };
+            // Omit id and project_id when creating - they're auto-generated/injected from URL
+            const sourcePayload = omit(body, ['id', 'project_id']) as Parameters<
+                typeof addSource.mutateAsync
+            >[0]['body'];
 
-            await addSource.mutateAsync({
+            const response = await addSource.mutateAsync({
                 body: sourcePayload,
                 params: { path: { project_id: projectId } },
             });
 
-            return id;
+            return String(response.id);
         }
 
         const response = await updateSource.mutateAsync({
