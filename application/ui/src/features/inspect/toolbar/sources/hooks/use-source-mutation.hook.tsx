@@ -27,7 +27,9 @@ export const useSourceMutation = (isNewSource: boolean) => {
     return async (body: SourceConfig) => {
         if (isNewSource) {
             // Omit id and project_id when creating - they're auto-generated/injected from URL
-            const sourcePayload = omit(body, ['id', 'project_id']);
+            const sourcePayload = omit(body, ['id', 'project_id']) as Parameters<
+                typeof addSource.mutateAsync
+            >[0]['body'];
 
             const response = await addSource.mutateAsync({
                 body: sourcePayload,
