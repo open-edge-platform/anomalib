@@ -21,9 +21,7 @@ export const useSinkMutation = (isNewSink: boolean) => {
     return async (body: SinkConfig) => {
         if (isNewSink) {
             // Omit id and project_id when creating - they're auto-generated/injected from URL
-            const sinkPayload = omit(body, ['id', 'project_id']) as Parameters<
-                typeof addSink.mutateAsync
-            >[0]['body'];
+            const sinkPayload = omit(body, ['id', 'project_id']) as Parameters<typeof addSink.mutateAsync>[0]['body'];
 
             const response = await addSink.mutateAsync({
                 body: sinkPayload,
