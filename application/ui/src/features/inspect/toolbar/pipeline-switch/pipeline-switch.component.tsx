@@ -1,14 +1,19 @@
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Switch, toast } from '@geti/ui';
+import { useWebRTCConnection } from 'src/components/stream/web-rtc-connection-provider';
 
 export const PipelineSwitch = () => {
     const { projectId } = useProjectIdentifier();
-    const { data: pipeline } = $api.useSuspenseQuery('get', '/api/projects/{project_id}/pipeline', {
+    const { status, start, stop } = useWebRTCConnection();
+    const { data: pipeline, isLoading } = $api.useSuspenseQuery('get', '/api/projects/{project_id}/pipeline', {
         params: { path: { project_id: projectId } },
     });
 
+    const isWebRtcConnecting = status === 'connecting';
+
     const enablePipeline = $api.useMutation('post', '/api/projects/{project_id}/pipeline:enable', {
+        onSuccess: () => start(),
         onError: (error) => {
             if (error) {
                 toast({ type: 'error', message: String(error.detail) });
@@ -21,6 +26,7 @@ export const PipelineSwitch = () => {
         },
     });
     const disablePipeline = $api.useMutation('post', '/api/projects/{project_id}/pipeline:disable', {
+        onSuccess: () => stop(),
         onError: (error) => {
             if (error) {
                 toast({ type: 'error', message: String(error.detail) });
@@ -39,8 +45,12 @@ export const PipelineSwitch = () => {
     };
 
     return (
-        <Switch isSelected={pipeline.status === 'running'} onChange={handleChange}>
-            Enabled
+        <Switch
+            onChange={handleChange}
+            isSelected={pipeline.status === 'running'}
+            isDisabled={isLoading || isWebRtcConnecting}
+        >
+            {isWebRtcConnecting ? 'Connecting...' : 'Enabled'}
         </Switch>
     );
 };
