@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """PyTorch model implementation for AnomalyDINO.
@@ -75,7 +75,9 @@ class AnomalyDINOModel(DynamicBufferMixin, nn.Module):
         self.sampling_ratio = sampling_ratio
 
         # Load DINOv2 backbone
-        assert encoder_name.startswith("dinov2"), f"Encoder must be dinov2, got {encoder_name}"
+        if not encoder_name.startswith("dinov2"):
+            err_str = f"Encoder must be dinov2, got {encoder_name}"
+            raise ValueError(err_str)
         self.feature_encoder = load_dinov2_model(self.encoder_name)
         self.feature_encoder.eval()
 
