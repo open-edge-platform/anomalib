@@ -251,16 +251,24 @@ class AnomalyDINOModel(DynamicBufferMixin, nn.Module):
             self.embedding_store.append(features)
             return torch.tensor(0.0, device=device, requires_grad=True)
 
+        # check bank isn't empty at inference
+        if self.memory_bank.numel() == 0:
+            msg = "Memory bank is empty. Run the model in training mode and call `fit()` before inference."
+            raise RuntimeError(msg)
+
+        # Ensure dtype consistency
+        if features.dtype != self.memory_bank.dtype:
+            features = features.to(self.memory_bank.dtype)
+
         # Inference
         # L2-normalized distances
         # memory_bank : [M, D], features : [Q, D]
 
-        # Compute pairwise distances [Q, M]
-        dists = torch.cdist(features, self.memory_bank, p=2)
-
-        # Convert L2 to cosine distance
-        # (since both vectors are normalized, divide by 2)
-        dists = dists / 2.0
+        # Compute cosine distance using matrix multiplication
+        # both features and memory_bank are already L2-normalized.
+        # cdist is not for half precision, but matmul is.
+        similarity = torch.matmul(features, self.memory_bank.T)  # [Q, M]
+        dists = (torch.ones_like(similarity) - similarity).clamp(min=0.0, max=2.0)  # cosine distance ∈ [0, 2]
 
         # Get top-k nearest neighbors
         k = max(1, self.num_neighbours)
@@ -270,7 +278,11 @@ class AnomalyDINOModel(DynamicBufferMixin, nn.Module):
         min_dists = topk_vals.mean(dim=1) if k > 1 else topk_vals.squeeze(1)
 
         # Vectorized reconstruction
-        distances_full = torch.zeros((b, grid_size[0] * grid_size[1]), device=device)
+        distances_full = torch.zeros(
+            (b, grid_size[0] * grid_size[1]),
+            device=device,
+            dtype=min_dists.dtype,
+        )
         batch_idx, patch_idx = torch.nonzero(masks, as_tuple=True)
         distances_full[batch_idx, patch_idx] = min_dists
 
