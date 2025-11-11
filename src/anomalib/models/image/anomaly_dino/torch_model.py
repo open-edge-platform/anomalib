@@ -224,7 +224,7 @@ class AnomalyDINOModel(DynamicBufferMixin, nn.Module):
         input_tensor = input_tensor.type(self.memory_bank.dtype)
 
         # work out sizing
-        b, _, w, h = input_tensor.shape
+        b, _, h, w = input_tensor.shape
         cropped_width = w - w % self.feature_encoder.patch_size
         cropped_height = h - h % self.feature_encoder.patch_size
         grid_size = (

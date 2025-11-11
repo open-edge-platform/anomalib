@@ -187,13 +187,13 @@ class AnomalyDINO(MemoryBankMixin, AnomalibModule):
     @classmethod
     def configure_pre_processor(
         cls,
-        image_size: tuple[int, int] | None = None,
+        image_size: tuple[int, int] | int | None = None,
     ) -> PreProcessor:
         """Configure the default pre-processor for AnomalyDINO.
 
         Args:
-            image_size (tuple[int, int] | None, optional): Target size for resizing
-                input images. Defaults to ``(252, 252)``.
+            image_size (tuple[int, int] | int | None, optional): Target size for resizing
+                input images. Defaults to ``(252, 252)``. Note if int, keeps aspect ratio and resizes shortest side.
 
         Returns:
             PreProcessor: Configured pre-processor instance.
@@ -243,11 +243,8 @@ class AnomalyDINO(MemoryBankMixin, AnomalibModule):
         """Optional fitting step.
 
         This method is a placeholder for potential post-training operations
-        such as coreset subsampling or feature normalization.
-
-        Note:
-            The current implementation is a no-op, as AnomalyDINO typically
-            performs inference directly after feature extraction.
+        such as coreset subsampling or feature normalization. The model
+        handles fitting (if-needed).
         """
         self.model.fit()
 
