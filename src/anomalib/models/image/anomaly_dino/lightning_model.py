@@ -53,7 +53,7 @@ from lightning.pytorch.utilities.types import STEP_OUTPUT
 from torch import nn
 from torchvision.transforms.v2 import Compose, InterpolationMode, Normalize, Resize
 
-from anomalib import LearningType
+from anomalib import LearningType, PrecisionType
 from anomalib.data import Batch
 from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule, MemoryBankMixin
@@ -91,6 +91,9 @@ class AnomalyDINO(MemoryBankMixin, AnomalibModule):
             to reduce the size of the memory bank. Defaults to ``False``.
         sampling ratio(float, optional): If coreset subsampling, by what ratio
             should we subsample. Defaults to ``0.1``
+        precision (str, optional): Precision type for model computations.
+            Supported values are defined in :class:`PrecisionType`.
+            Defaults to ``PrecisionType.FLOAT32``.
         pre_processor (PreProcessor | bool, optional): Pre-processor instance or
             bool flag to enable default preprocessing. Defaults to ``True``.
         post_processor (PostProcessor | bool, optional): Post-processor instance or
@@ -152,6 +155,7 @@ class AnomalyDINO(MemoryBankMixin, AnomalibModule):
         masking: bool = False,
         coreset_subsampling: bool = False,
         sampling_ratio: float = 0.1,
+        precision: str = PrecisionType.FLOAT32,
         pre_processor: nn.Module | bool = True,
         post_processor: nn.Module | bool = True,
         evaluator: Evaluator | bool = True,
@@ -170,6 +174,15 @@ class AnomalyDINO(MemoryBankMixin, AnomalibModule):
             coreset_subsampling=coreset_subsampling,
             sampling_ratio=sampling_ratio,
         )
+
+        if precision == PrecisionType.FLOAT16:
+            self.model = self.model.half()
+        elif precision == PrecisionType.FLOAT32:
+            self.model = self.model.float()
+        else:
+            msg = f"""Unsupported precision type: {precision}.
+            Supported types are: {PrecisionType.FLOAT16}, {PrecisionType.FLOAT32}."""
+            raise ValueError(msg)
 
     @classmethod
     def configure_pre_processor(

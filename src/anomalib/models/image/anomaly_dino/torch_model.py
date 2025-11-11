@@ -220,6 +220,10 @@ class AnomalyDINOModel(DynamicBufferMixin, nn.Module):
                     * ``pred_score``: Image-level anomaly score ``(B, 1)``
                     * ``anomaly_map``: Pixel-level anomaly heatmap ``(B, 1, H, W)``
         """
+        # set precicion
+        input_tensor = input_tensor.type(self.memory_bank.dtype)
+
+        # work out sizing
         b, _, w, h = input_tensor.shape
         cropped_width = w - w % self.feature_encoder.patch_size
         cropped_height = h - h % self.feature_encoder.patch_size
