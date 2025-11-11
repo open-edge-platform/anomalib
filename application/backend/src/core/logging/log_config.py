@@ -3,13 +3,15 @@
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import ClassVar
 
+from settings import get_settings
 from workers import DispatchingWorker, InferenceWorker, StreamLoader, TrainingWorker
 
-LOG_FOLDER = "logs"
-WORKERS_FOLDER = os.path.join(LOG_FOLDER, "workers")
-JOBS_FOLDER = os.path.join(LOG_FOLDER, "jobs")
+settings = get_settings()
+WORKERS_FOLDER = os.path.join(settings.log_dir, "workers")
+JOBS_FOLDER = os.path.join(settings.log_dir, "jobs")
 
 
 @dataclass
@@ -20,7 +22,7 @@ class LogConfig:
     retention: str = "10 days"
     level: str = "DEBUG"
     serialize: bool = True
-    log_folder: str = LOG_FOLDER
+    log_folder: Path = settings.log_dir
     # Mapping of worker classes to their dedicated log files
     # None key is used for application-level logs that don't belong to any specific worker
     worker_log_info: ClassVar[dict[str | None, str]] = {
@@ -30,4 +32,4 @@ class LogConfig:
         StreamLoader.__name__: "stream_loader.log",
         None: "app.log",
     }
-    tensorboard_log_path: str = os.path.join(LOG_FOLDER, "tensorboard")
+    tensorboard_log_path: str = os.path.join(settings.log_dir, "tensorboard")

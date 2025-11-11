@@ -11,7 +11,7 @@ from loguru import logger
 
 from core.logging import setup_logging, setup_uvicorn_logging
 from core.scheduler import Scheduler
-from db import init_models
+from db import MigrationManager
 from settings import get_settings
 from webrtc.manager import WebRTCManager
 
@@ -26,12 +26,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     settings = get_settings()
     logger.info(f"Starting {settings.app_name} application...")
 
-    # Initialize database
-    # TODO add migration
-    # if not migration_manager.initialize_database():
-    #     logger.error("Failed to initialize database. Application cannot start.")
-    #     raise RuntimeError("Database initialization failed")
-    await init_models()
+    # Initialize database with migrations
+    migration_manager = MigrationManager(settings)
+    if not migration_manager.initialize_database():
+        logger.error("Failed to initialize database. Application cannot start.")
+        raise RuntimeError("Database initialization failed")
 
     # Initialize Scheduler
     app_scheduler = Scheduler()
