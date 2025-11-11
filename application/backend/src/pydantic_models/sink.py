@@ -8,7 +8,7 @@ from uuid import UUID
 
 from pydantic import Field, TypeAdapter
 
-from pydantic_models.base import BaseIDNameModel
+from pydantic_models.base import BaseIDNameModel, NoRequiredIDs
 
 MQTT_USERNAME = "MQTT_USERNAME"
 MQTT_PASSWORD = "MQTT_PASSWORD"  # noqa: S105
@@ -154,3 +154,33 @@ Sink = Annotated[
 ]
 
 SinkAdapter: TypeAdapter[Sink] = TypeAdapter(Sink)
+
+# ---------------------------------
+# Creation Schemas (POST requests)
+# ---------------------------------
+# These schemas inherit from HasID first to override the required ID field with an auto-generated one (if absent) via
+# MRO (Method Resolution Order).
+
+
+class FolderSinkConfigCreate(NoRequiredIDs, FolderSinkConfig):
+    pass
+
+
+class MqttSinkConfigCreate(NoRequiredIDs, MqttSinkConfig):
+    pass
+
+
+class RosSinkConfigCreate(NoRequiredIDs, RosSinkConfig):
+    pass
+
+
+class WebhookSinkConfigCreate(NoRequiredIDs, WebhookSinkConfig):
+    pass
+
+
+SinkCreate = Annotated[
+    FolderSinkConfigCreate | MqttSinkConfigCreate | RosSinkConfigCreate | WebhookSinkConfigCreate,
+    Field(discriminator="sink_type"),
+]
+
+SinkCreateAdapter: TypeAdapter[SinkCreate] = TypeAdapter(SinkCreate)

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from datetime import UTC, datetime
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
@@ -12,7 +12,10 @@ from pydantic import ValidationError
 from api.dependencies import get_pipeline_service
 from main import app
 from pydantic_models.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, TimeWindow
+from pydantic_models.model import Model
 from pydantic_models.pipeline import Pipeline, PipelineStatus
+from pydantic_models.sink import FolderSinkConfig
+from pydantic_models.source import VideoFileSourceConfig
 from services import PipelineService
 
 
@@ -27,6 +30,8 @@ def fxt_pipeline() -> Pipeline:
 @pytest.fixture
 def fxt_pipeline_service() -> MagicMock:
     pipeline_service = MagicMock(spec=PipelineService)
+    # get_active_pipeline is an async static method, so we need to mock it as AsyncMock
+    pipeline_service.get_active_pipeline = AsyncMock(return_value=None)
     app.dependency_overrides[get_pipeline_service] = lambda: pipeline_service
     return pipeline_service
 
@@ -79,6 +84,9 @@ class TestPipelineEndpoints:
     )
     def test_enable_pipeline(self, operation, pipeline_status, fxt_pipeline, fxt_pipeline_service, fxt_client):
         project_id = fxt_pipeline.project_id
+        # Mock get_active_pipeline to return None (no active pipeline) for enable operation
+        if operation == "enable":
+            fxt_pipeline_service.get_active_pipeline = AsyncMock(return_value=None)
         response = fxt_client.post(f"/api/projects/{project_id}/pipeline:{operation}")
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -105,6 +113,7 @@ class TestPipelineEndpoints:
     #     fxt_pipeline_service.update_pipeline.assert_called_once_with(project_id, {"status": pipeline_status})
 
     def test_cannot_enable_pipeline(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+        # Mock get_active_pipeline to return None (no active pipeline)
         fxt_pipeline_service.update_pipeline.side_effect = ValidationError.from_exception_data(
             "Pipeline",
             [
@@ -120,6 +129,103 @@ class TestPipelineEndpoints:
         response = fxt_client.post(f"/api/projects/{fxt_pipeline.project_id}/pipeline:enable")
 
         assert response.status_code == status.HTTP_409_CONFLICT
+        fxt_pipeline_service.get_active_pipeline.assert_called_once()
+        fxt_pipeline_service.update_pipeline.assert_called_once_with(
+            fxt_pipeline.project_id, {"status": PipelineStatus.RUNNING}
+        )
+
+    def test_enable_pipeline_with_active_pipeline_different_project(
+        self, fxt_pipeline, fxt_pipeline_service, fxt_client
+    ):
+        """Test enabling a pipeline when another pipeline from a different project is already active."""
+        other_project_id = uuid4()
+        # Create a valid RUNNING pipeline with required fields
+        source = VideoFileSourceConfig(
+            id=uuid4(),
+            project_id=other_project_id,
+            source_type="video_file",
+            name="Test Source",
+            video_path="/path/to/video.mp4",
+        )
+        sink = FolderSinkConfig(
+            id=uuid4(),
+            project_id=other_project_id,
+            sink_type="folder",
+            name="Test Sink",
+            folder_path="/path/to/output",
+            output_formats=["image_original"],
+            rate_limit=0.2,
+        )
+        model = Model(
+            id=uuid4(),
+            project_id=other_project_id,
+            name="Test Model",
+            format="openvino",
+            train_job_id=uuid4(),
+        )
+        active_pipeline = Pipeline(
+            project_id=other_project_id,
+            source=source,
+            sink=sink,
+            model=model,
+            source_id=source.id,
+            sink_id=sink.id,
+            model_id=model.id,
+            status=PipelineStatus.RUNNING,
+        )
+        fxt_pipeline_service.get_active_pipeline = AsyncMock(return_value=active_pipeline)
+
+        response = fxt_client.post(f"/api/projects/{fxt_pipeline.project_id}/pipeline:enable")
+
+        assert response.status_code == status.HTTP_409_CONFLICT
+        assert "Another pipeline is already running" in response.json()["detail"]
+        assert str(active_pipeline.id) in response.json()["detail"]
+        fxt_pipeline_service.get_active_pipeline.assert_called_once()
+        fxt_pipeline_service.update_pipeline.assert_not_called()
+
+    def test_enable_pipeline_with_active_pipeline_same_project(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+        """Test enabling a pipeline when the same pipeline is already active (re-enabling)."""
+        # Create a valid RUNNING pipeline with required fields
+        source = VideoFileSourceConfig(
+            id=uuid4(),
+            project_id=fxt_pipeline.project_id,
+            source_type="video_file",
+            name="Test Source",
+            video_path="/path/to/video.mp4",
+        )
+        sink = FolderSinkConfig(
+            id=uuid4(),
+            project_id=fxt_pipeline.project_id,
+            sink_type="folder",
+            name="Test Sink",
+            folder_path="/path/to/output",
+            output_formats=["image_original"],
+            rate_limit=0.2,
+        )
+        model = Model(
+            id=uuid4(),
+            project_id=fxt_pipeline.project_id,
+            name="Test Model",
+            format="openvino",
+            train_job_id=uuid4(),
+        )
+        active_pipeline = Pipeline(
+            project_id=fxt_pipeline.project_id,
+            source=source,
+            sink=sink,
+            model=model,
+            source_id=source.id,
+            sink_id=sink.id,
+            model_id=model.id,
+            status=PipelineStatus.RUNNING,
+        )
+        fxt_pipeline_service.get_active_pipeline = AsyncMock(return_value=active_pipeline)
+        fxt_pipeline_service.update_pipeline.return_value = active_pipeline
+
+        response = fxt_client.post(f"/api/projects/{fxt_pipeline.project_id}/pipeline:enable")
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        fxt_pipeline_service.get_active_pipeline.assert_called_once()
         fxt_pipeline_service.update_pipeline.assert_called_once_with(
             fxt_pipeline.project_id, {"status": PipelineStatus.RUNNING}
         )

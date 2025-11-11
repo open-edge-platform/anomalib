@@ -6,7 +6,6 @@ import { HttpResponse } from 'msw';
 import { http } from 'src/api/utils';
 import { server } from 'src/msw-node-setup';
 import { TestProviders } from 'src/providers';
-import { v4 as uuid } from 'uuid';
 
 import { WebcamSourceConfig } from '../util';
 import { useSourceMutation } from './use-source-mutation.hook';
@@ -19,9 +18,7 @@ const mockedSource: WebcamSourceConfig = {
     device_id: 0,
 };
 
-const mockedId = 'uuid-123';
 vi.mock('@geti-inspect/hooks', () => ({ useProjectIdentifier: () => ({ projectId: 'project-id-123' }) }));
-vi.mock('uuid', () => ({ v4: vi.fn(() => mockedId) }));
 
 describe('useSourceMutation', () => {
     beforeEach(() => {
@@ -33,15 +30,17 @@ describe('useSourceMutation', () => {
             wrapper: TestProviders,
         });
 
+        const createdSource = { ...mockedSource, id: 'created-id' };
         server.use(
-            http.post('/api/projects/{project_id}/sources', () => HttpResponse.json({ ...mockedSource })),
+            http.post('/api/projects/{project_id}/sources', async () => {
+                return HttpResponse.json(createdSource);
+            }),
             http.patch('/api/projects/{project_id}/sources/{source_id}', () => HttpResponse.error())
         );
 
         await act(async () => {
             const response = await result.current(mockedSource);
-            expect(uuid).toHaveBeenCalled();
-            expect(response).toBe(mockedId);
+            expect(response).toBe(createdSource.id);
         });
     });
 

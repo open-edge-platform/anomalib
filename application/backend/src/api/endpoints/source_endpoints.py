@@ -14,7 +14,7 @@ from fastapi.responses import FileResponse, Response
 
 from api.dependencies import get_configuration_service, get_project_id, get_source_id
 from pydantic_models import Source, SourceType
-from pydantic_models.source import SourceAdapter
+from pydantic_models.source import SourceAdapter, SourceCreate, SourceCreateAdapter
 from services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
 router = APIRouter(prefix="/api/projects/{project_id}/sources", tags=["Sources"])
@@ -98,16 +98,16 @@ UPDATE_SOURCE_BODY_EXAMPLES = {
 async def create_source(
     project_id: Annotated[UUID, Depends(get_project_id)],
     source_config: Annotated[
-        dict, Body(description=CREATE_SOURCE_BODY_DESCRIPTION, openapi_examples=CREATE_SOURCE_BODY_EXAMPLES)
+        SourceCreate, Body(description=CREATE_SOURCE_BODY_DESCRIPTION, openapi_examples=CREATE_SOURCE_BODY_EXAMPLES)
     ],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Source:
     """Create and configure a new source"""
     # Inject project_id from URL path into the config
-    source_config["project_id"] = str(project_id)
+    source_config.project_id = project_id
 
     # Validate the complete config
-    validated_source = SourceAdapter.validate_python(source_config)
+    validated_source = SourceCreateAdapter.validate_python(source_config)
 
     if validated_source.source_type == SourceType.DISCONNECTED:
         raise HTTPException(

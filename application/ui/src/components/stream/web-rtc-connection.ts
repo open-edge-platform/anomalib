@@ -1,3 +1,5 @@
+import { fetchClient } from '../../api/client';
+
 export type WebRTCConnectionStatus = 'idle' | 'connecting' | 'connected' | 'disconnected' | 'failed';
 
 type WebRTCConnectionEvent =
@@ -123,7 +125,15 @@ export class WebRTCConnection {
     private async sendOffer(): Promise<SessionData | undefined> {
         if (!this.peerConnection) return;
 
-        throw new Error('Work in progress: not implemented');
+        const { data } = await fetchClient.POST('/api/webrtc/offer', {
+            body: {
+                sdp: this.peerConnection.localDescription?.sdp ?? '',
+                type: this.peerConnection.localDescription?.type ?? '',
+                webrtc_id: this.webrtcId,
+            },
+        });
+
+        return data as SessionData;
     }
 
     private async handleOfferResponse(data: SessionData | undefined): Promise<boolean> {

@@ -24,6 +24,7 @@ class TrainingWorker(BaseProcessWorker):
     def __init__(self, stop_event: EventClass, logger_: loguru.Logger | None = None):
         super().__init__(stop_event=stop_event, logger_=logger_)
 
+    @logger.catch()
     async def run_loop(self) -> None:
         """Main training loop that polls for jobs and manages concurrent training tasks."""
         training_service = TrainingService()

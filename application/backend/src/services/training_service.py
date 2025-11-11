@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 from contextlib import redirect_stdout
+from uuid import UUID
 
 from anomalib.data import Folder
 from anomalib.data.utils import TestSplitMode
@@ -15,6 +16,7 @@ from pydantic_models import Job, JobStatus, JobType, Model
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import ModelService
 from services.job_service import JobService
+from utils.callbacks import GetiInspectProgressCallback, ProgressSyncParams
 from utils.devices import Devices
 from utils.experiment_loggers import TrackioLogger
 
@@ -70,12 +72,24 @@ class TrainingService:
             name=str(model_name),
             train_job_id=job.id,
         )
+        synchronization_parameters = ProgressSyncParams()
         logger.info(f"Training model `{model_name}` for job `{job.id}`")
 
+        synchronization_task: asyncio.Task[None] | None = None
         try:
+            synchronization_task = asyncio.create_task(
+                cls._sync_progress_with_db(
+                    job_service=job_service, job_id=job.id, synchronization_parameters=synchronization_parameters
+                )
+            )
             # Use asyncio.to_thread to keep event loop responsive
             # TODO: Consider ProcessPoolExecutor for true parallelism with multiple jobs
-            trained_model = await asyncio.to_thread(cls._train_model, model=model, device=device)
+            trained_model = await asyncio.to_thread(
+                cls._train_model,
+                model=model,
+                device=device,
+                synchronization_parameters=synchronization_parameters,
+            )
             if trained_model is None:
                 raise ValueError("Training failed - model is None")
 
@@ -94,9 +108,15 @@ class TrainingService:
                 await model_binary_repo.delete_model_folder()
                 await model_service.delete_model(project_id=project_id, model_id=model.id)
             raise e
+        finally:
+            logger.debug("Syncing progress with db stopped")
+            if synchronization_task is not None and not synchronization_task.done():
+                synchronization_task.cancel()
 
     @staticmethod
-    def _train_model(model: Model, device: str | None = None) -> Model | None:
+    def _train_model(
+        model: Model, synchronization_parameters: ProgressSyncParams, device: str | None = None
+    ) -> Model | None:
         """
         Execute CPU-intensive model training using anomalib.
 
@@ -106,6 +126,7 @@ class TrainingService:
 
         Args:
             model: Model object with training configuration
+            synchronization_parameters: Parameters for synchronization between the main process and the training process
             device: Device to train on
 
         Returns:
@@ -145,7 +166,9 @@ class TrainingService:
         engine = Engine(
             default_root_dir=model.export_path,
             logger=[trackio, tensorboard],
+            devices=[0],  # Only single GPU training is supported for now
             max_epochs=10,
+            callbacks=[GetiInspectProgressCallback(synchronization_parameters)],
             accelerator=training_device,
         )
 
@@ -154,7 +177,7 @@ class TrainingService:
 
         # Capture pytorch stdout logs into logger
         with redirect_stdout(LoggerStdoutWriter()):  # type: ignore[type-var]
-            engine.train(model=anomalib_model, datamodule=datamodule)
+            engine.fit(model=anomalib_model, datamodule=datamodule)
 
         # Find and set threshold metric
         for callback in engine.trainer.callbacks:  # type: ignore[attr-defined]
@@ -171,6 +194,31 @@ class TrainingService:
 
         model.is_ready = True
         return model
+
+    @classmethod
+    async def _sync_progress_with_db(
+        cls,
+        job_service: JobService,
+        job_id: UUID,
+        synchronization_parameters: ProgressSyncParams,
+    ) -> None:
+        try:
+            while True:
+                progress: int = synchronization_parameters.progress
+                message = synchronization_parameters.message
+                if not await job_service.is_job_still_running(job_id=job_id):
+                    logger.debug("Job cancelled, stopping progress sync")
+                    synchronization_parameters.set_cancel_training_event()
+                    break
+                logger.debug(f"Syncing progress with db: {progress}% - {message}")
+                await job_service.update_job_status(
+                    job_id=job_id, status=JobStatus.RUNNING, progress=progress, message=message
+                )
+                await asyncio.sleep(0.5)
+        except Exception as e:
+            logger.exception("Failed to sync progress with db: %s", e)
+            await job_service.update_job_status(job_id=job_id, status=JobStatus.FAILED, message="Training failed")
+            raise
 
     @staticmethod
     async def abort_orphan_jobs() -> None:

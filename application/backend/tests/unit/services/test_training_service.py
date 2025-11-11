@@ -8,6 +8,7 @@ import pytest
 from pydantic_models import JobStatus
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import TrainingService
+from utils.callbacks import ProgressSyncParams
 
 
 @pytest.fixture
@@ -191,7 +192,7 @@ class TestTrainingService:
 
         with patch("services.training_service.asyncio.to_thread") as mock_to_thread:
             # Mock the training to succeed first, setting export_path, then fail
-            def mock_train_model(cls, model, device=None):
+            def mock_train_model(cls, model, synchronization_parameters: ProgressSyncParams, device=None):
                 model.export_path = "/path/to/model"
                 raise Exception("Training failed")
 
@@ -221,7 +222,7 @@ class TestTrainingService:
         fxt_model_binary_repo.model_folder_path = "/path/to/model"
 
         # Call the method
-        result = TrainingService._train_model(fxt_model)
+        result = TrainingService._train_model(fxt_model, synchronization_parameters=ProgressSyncParams())
 
         # Verify the result
         assert result == fxt_model
@@ -240,7 +241,7 @@ class TestTrainingService:
         assert len(call_args[1]["logger"]) == 2  # trackio and tensorboard
         assert call_args[1]["max_epochs"] == 10
 
-        fxt_mock_anomalib_components["engine"].train.assert_called_once_with(
+        fxt_mock_anomalib_components["engine"].fit.assert_called_once_with(
             model=fxt_mock_anomalib_components["anomalib_model"], datamodule=fxt_mock_anomalib_components["folder"]
         )
         fxt_mock_anomalib_components["engine"].export.assert_called_once()

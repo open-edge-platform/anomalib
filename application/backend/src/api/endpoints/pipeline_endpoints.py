@@ -107,6 +107,14 @@ async def enable_pipeline(
     Activate a pipeline.
     The pipeline will start processing data from the source, run it through the model, and send results to the sink.
     """
+    if (active_pipeline := await pipeline_service.get_active_pipeline()) and active_pipeline.project_id != project_id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"Another pipeline is already running. "
+                f"Please disable the pipeline {active_pipeline.id} before enabling a new one."
+            ),
+        )
     try:
         await pipeline_service.update_pipeline(project_id, {"status": PipelineStatus.RUNNING})
     except ValidationError as e:

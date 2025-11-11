@@ -15,9 +15,7 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
     const [searchParams, setSearchParams] = useSearchParams();
     const { projectId } = useProjectIdentifier();
     const startTrainingMutation = $api.useMutation('post', '/api/jobs:train', {
-        meta: {
-            invalidates: [['get', '/api/jobs']],
-        },
+        meta: { invalidates: [['get', '/api/jobs']] },
     });
     const { data: availableDevices } = $api.useSuspenseQuery('get', '/api/training-devices');
     const startTraining = async () => {

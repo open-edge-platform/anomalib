@@ -426,3 +426,44 @@ class TestPipelineService:
         """Test percentile calculation with various inputs including edge cases."""
         result = PipelineService._calculate_percentile(data, percentile)
         assert abs(result - expected) < 0.01  # Allow small floating point differences
+
+    def test_get_active_pipeline(self, fxt_pipeline, fxt_pipeline_repository):
+        """Test getting the active pipeline from the database."""
+        fxt_pipeline_repository.get_active_pipeline.return_value = fxt_pipeline
+
+        with patch("services.pipeline_service.PipelineRepository") as mock_repo_class:
+            mock_repo_class.return_value = fxt_pipeline_repository
+
+            result = asyncio.run(PipelineService.get_active_pipeline())
+
+        assert result == fxt_pipeline
+        fxt_pipeline_repository.get_active_pipeline.assert_called_once()
+
+    def test_get_active_pipeline_none(self, fxt_pipeline_repository):
+        """Test getting active pipeline when no pipeline is running."""
+        fxt_pipeline_repository.get_active_pipeline.return_value = None
+
+        with patch("services.pipeline_service.PipelineRepository") as mock_repo_class:
+            mock_repo_class.return_value = fxt_pipeline_repository
+
+            result = asyncio.run(PipelineService.get_active_pipeline())
+
+        assert result is None
+        fxt_pipeline_repository.get_active_pipeline.assert_called_once()
+
+    def test_get_active_pipeline_returns_running_pipeline(self, fxt_pipeline, fxt_pipeline_repository):
+        """Test that get_active_pipeline returns a pipeline with RUNNING status and required fields."""
+        fxt_pipeline_repository.get_active_pipeline.return_value = fxt_pipeline
+
+        with patch("services.pipeline_service.PipelineRepository") as mock_repo_class:
+            mock_repo_class.return_value = fxt_pipeline_repository
+
+            result = asyncio.run(PipelineService.get_active_pipeline())
+
+        assert result is not None
+        assert result.status == PipelineStatus.RUNNING
+        assert result.source is not None
+        assert result.sink is not None
+        assert result.model is not None
+        assert result == fxt_pipeline
+        fxt_pipeline_repository.get_active_pipeline.assert_called_once()

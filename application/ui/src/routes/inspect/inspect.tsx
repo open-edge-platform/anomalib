@@ -4,6 +4,7 @@
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Grid } from '@geti/ui';
 
+import { Footer } from '../../features/inspect/footer/footer.component';
 import { InferenceProvider } from '../../features/inspect/inference-provider.component';
 import { InferenceResult } from '../../features/inspect/inference-result.component';
 import { SelectedMediaItemProvider } from '../../features/inspect/selected-media-item-provider.component';
@@ -15,8 +16,8 @@ export const Inspect = () => {
 
     return (
         <Grid
-            areas={['toolbar sidebar', 'canvas sidebar']}
-            rows={['size-800', 'minmax(0, 1fr)']}
+            areas={['toolbar sidebar', 'canvas sidebar', 'footer sidebar']}
+            rows={['size-800', 'minmax(0, 1fr)', 'auto']}
             columns={['1fr', 'min-content']}
             height={'100%'}
             gap={'size-10'}
@@ -30,6 +31,7 @@ export const Inspect = () => {
                     <Toolbar />
                     <InferenceResult />
                     <Sidebar />
+                    <Footer />
                 </InferenceProvider>
             </SelectedMediaItemProvider>
         </Grid>

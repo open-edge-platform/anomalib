@@ -17,56 +17,7 @@ import {
 } from '@geti/ui';
 import { LogsIcon } from '@geti/ui/icons';
 import { queryOptions, experimental_streamedQuery as streamedQuery, useQuery } from '@tanstack/react-query';
-
-// Connect to an SSE endpoint and yield its messages
-function fetchSSE(url: string) {
-    return {
-        async *[Symbol.asyncIterator]() {
-            const eventSource = new EventSource(url);
-
-            try {
-                let { promise, resolve, reject } = Promise.withResolvers<string>();
-
-                eventSource.onmessage = (event) => {
-                    if (event.data === 'DONE' || event.data.includes('COMPLETED')) {
-                        eventSource.close();
-                        resolve('DONE');
-                        return;
-                    }
-                    resolve(event.data);
-                };
-
-                eventSource.onerror = (error) => {
-                    eventSource.close();
-                    reject(new Error('EventSource failed: ' + error));
-                };
-
-                // Keep yielding data as it comes in
-                while (true) {
-                    const message = await promise;
-
-                    // If server sends 'DONE' message or similar, break the loop
-                    if (message === 'DONE') {
-                        break;
-                    }
-
-                    try {
-                        const data = JSON.parse(message);
-                        if (data['text']) {
-                            yield data['text'];
-                        }
-                    } catch {
-                        console.error('Could not parse message:', message);
-                    }
-
-                    ({ promise, resolve, reject } = Promise.withResolvers<string>());
-                }
-            } finally {
-                eventSource.close();
-            }
-        },
-    };
-}
+import { fetchSSE } from 'src/api/fetch-sse';
 
 const JobLogsDialogContent = ({ jobId }: { jobId: string }) => {
     const query = useQuery(
@@ -81,7 +32,7 @@ const JobLogsDialogContent = ({ jobId }: { jobId: string }) => {
 
     return (
         <Flex direction='column' gap='size-25'>
-            {query.data?.map((line, idx) => <Text key={idx}> {line}</Text>)}
+            {query.data?.map((line, idx) => <Text key={idx}> {line.text}</Text>)}
         </Flex>
     );
 };

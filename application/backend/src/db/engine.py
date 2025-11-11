@@ -28,7 +28,7 @@ async_engine = create_async_engine(
 async_session = async_sessionmaker(async_engine, expire_on_commit=False)
 
 sync_engine = create_engine(
-    settings.database_url,
+    settings.sync_database_url,
     connect_args={"check_same_thread": False, "timeout": 30},
     # Using NullPool to disable connection pooling, which is necessary for SQLite when using multiprocessing
     # https://docs.sqlalchemy.org/en/20/core/pooling.html#using-connection-pools-with-multiprocessing-or-os-fork

@@ -1,3 +1,5 @@
+import { v4 as uuid } from 'uuid';
+
 import { getObjectFromFormData, SinkOutputFormats, WebhookHttpMethod, WebhookSinkConfig } from '../utils';
 
 export type Pair = Record<Fields, string>;
@@ -12,7 +14,7 @@ export const getPairsFromObject = (obj: Record<string, string>): Pair[] => {
 };
 
 export const getWebhookInitialConfig = (project_id: string): WebhookSinkConfig => ({
-    id: '',
+    id: uuid(),
     name: '',
     timeout: 0,
     project_id,

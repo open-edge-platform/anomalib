@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 import datetime
+import json
+import logging
 from collections.abc import AsyncGenerator
 from uuid import UUID
 
@@ -12,8 +14,10 @@ from sse_starlette import ServerSentEvent
 from db import get_async_db_session_ctx
 from exceptions import DuplicateJobException, ResourceNotFoundException
 from pydantic_models import Job, JobList, JobType
-from pydantic_models.job import JobStatus, JobSubmitted, TrainJobPayload
+from pydantic_models.job import JobCancelled, JobStatus, JobSubmitted, TrainJobPayload
 from repositories import JobRepository
+
+logger = logging.getLogger(__name__)
 
 
 class JobService:
@@ -24,7 +28,7 @@ class JobService:
             return JobList(jobs=await repo.get_all(extra_filters=extra_filters))
 
     @staticmethod
-    async def get_job_by_id(job_id: UUID) -> Job | None:
+    async def get_job_by_id(job_id: UUID | str) -> Job | None:
         async with get_async_db_session_ctx() as session:
             repo = JobRepository(session)
             return await repo.get_by_id(job_id)
@@ -56,7 +60,10 @@ class JobService:
 
     @staticmethod
     async def update_job_status(
-        job_id: UUID, status: JobStatus, message: str | None = None, progress: int | None = None
+        job_id: UUID,
+        status: JobStatus,
+        message: str | None = None,
+        progress: int | None = None,
     ) -> None:
         async with get_async_db_session_ctx() as session:
             repo = JobRepository(session)
@@ -76,18 +83,19 @@ class JobService:
             await repo.update(job, updates)
 
     @classmethod
+    async def is_job_still_running(cls, job_id: UUID | str) -> bool:
+        job = await cls.get_job_by_id(job_id=job_id)
+        if job is None:
+            raise ResourceNotFoundException(resource_id=job_id, resource_name="job")
+        return job.status == JobStatus.RUNNING
+
+    @classmethod
     async def stream_logs(cls, job_id: UUID | str) -> AsyncGenerator[ServerSentEvent]:
         from core.logging.utils import get_job_logs_path  # noqa: PLC0415
 
         log_file = get_job_logs_path(job_id=job_id)
         if not await anyio.Path(log_file).exists():
             raise ResourceNotFoundException(resource_id=job_id, resource_name="job_logs")
-
-        async def is_job_still_running():
-            job = await cls.get_job_by_id(job_id=job_id)
-            if job is None:
-                raise ResourceNotFoundException(resource_id=job_id, resource_name="job")
-            return job.status == JobStatus.RUNNING
 
         # Cache job status and only check every 2 seconds
         status_check_interval = 2.0  # seconds
@@ -101,7 +109,7 @@ class JobService:
                 now = loop.time()
                 # Only check job status every status_check_interval seconds
                 if now - last_status_check > status_check_interval:
-                    cached_still_running = await is_job_still_running()
+                    cached_still_running = await cls.is_job_still_running(job_id=job_id)
                     last_status_check = now
                 still_running = cached_still_running
                 if not line:
@@ -113,3 +121,27 @@ class JobService:
                     else:
                         break
                 yield ServerSentEvent(data=line.rstrip())
+
+    @classmethod
+    async def stream_progress(cls, job_id: UUID | str) -> AsyncGenerator[ServerSentEvent]:
+        """Stream the progress of a job by its ID"""
+        still_running = True
+        while still_running:
+            job = await cls.get_job_by_id(job_id=job_id)
+            if job is None:
+                raise ResourceNotFoundException(resource_id=job_id, resource_name="job")
+            yield ServerSentEvent(data=json.dumps({"progress": job.progress, "message": job.message}))
+            still_running = job.status in {JobStatus.RUNNING, JobStatus.PENDING}
+            await asyncio.sleep(0.5)
+
+    @classmethod
+    async def cancel_job(cls, job_id: UUID | str) -> JobCancelled:
+        """Cancel a job by its ID"""
+        async with get_async_db_session_ctx() as session:
+            repo = JobRepository(session)
+            job = await repo.get_by_id(job_id)
+            if job is None:
+                raise ResourceNotFoundException(resource_id=job_id, resource_name="job")
+
+            await repo.update(job, {"status": JobStatus.CANCELED})
+            return JobCancelled(job_id=job.id)

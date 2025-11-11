@@ -43,7 +43,7 @@ class BaseDispatcher(metaclass=ABCMeta):
         """
         self.output_formats = output_config.output_formats
         self.rate_limit = output_config.rate_limit
-        self.min_interval = 1.0 / self.rate_limit if self.rate_limit is not None else 0.0
+        self.min_interval = (1.0 / self.rate_limit) if self.rate_limit else 0.0
         self.last_dispatch_time = 0.0
 
     @abstractmethod
