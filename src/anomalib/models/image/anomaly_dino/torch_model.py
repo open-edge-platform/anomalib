@@ -272,16 +272,32 @@ class AnomalyDINOModel(DynamicBufferMixin, nn.Module):
             return torch.tensor(0.0, device=device, requires_grad=True)
 
         # Inference
-        dist_matrix = self.euclidean_dist(features, self.memory_bank)
-        k = max(1, self.num_neighbours)
-        topk_vals, _ = torch.topk(dist_matrix, k=k, dim=1, largest=False)
-        min_dists = topk_vals.mean(dim=1)
+        # L2-normalized distances
+        # memory_bank : [M, D], features : [Q, D]
 
+        # Compute pairwise distances [Q, M]
+        dists = torch.cdist(features, self.memory_bank, p=2)
+
+        # Convert L2 to cosine distance
+        # (since both vectors are normalized, divide by 2)
+        dists = dists / 2.0
+
+        # Get top-k nearest neighbors
+        k = max(1, self.num_neighbours)
+        topk_vals, _ = torch.topk(dists, k=k, dim=1, largest=False)
+
+        # Mean over k neighbors if needed
+        min_dists = topk_vals.mean(dim=1) if k > 1 else topk_vals.squeeze(1)
+
+        # Vectorized reconstruction
         distances_full = torch.zeros((b, grid_size[0] * grid_size[1]), device=device)
         batch_idx, patch_idx = torch.nonzero(masks, as_tuple=True)
         distances_full[batch_idx, patch_idx] = min_dists
 
+        # Aggregate image-level anomaly scores
         image_score = self.mean_top1p(distances_full)
+
+        # Generate final anomaly map
         anomaly_map = distances_full.view(b, 1, *grid_size)
         anomaly_map = self.anomaly_map_generator(anomaly_map, (h, w))
 
