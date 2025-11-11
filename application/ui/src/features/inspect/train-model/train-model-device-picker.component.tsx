@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 
+import { Link } from '@adobe/react-spectrum';
 import { Flex, Heading, InlineAlert, Radio, RadioGroup, Text } from '@geti/ui';
 
 import { getDeviceMetadata, selectPreferredDevice } from './utils/device-metadata';
@@ -45,7 +46,18 @@ export const TrainModelDevicePicker = ({ devices, selectedDevice, onSelect }: Tr
                 </Heading>
                 <InlineAlert variant='notice'>
                     <Heading level={5}>No training devices detected</Heading>
-                    <Text>Connect an available device to start a training job.</Text>
+                    <Text>
+                        Connect an available device to start a training job. If you believe this is an error,{' '}
+                        <Link
+                            isQuiet
+                            href='https://github.com/open-edge-platform/anomalib/issues'
+                            target='_blank'
+                            rel='noreferrer noopener'
+                        >
+                            let us know on GitHub.
+                        </Link>
+                        .
+                    </Text>
                 </InlineAlert>
             </Flex>
         );
