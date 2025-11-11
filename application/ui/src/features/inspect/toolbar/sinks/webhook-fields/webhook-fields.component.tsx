@@ -2,7 +2,7 @@ import { Flex, Item, NumberField, Picker, TextField } from '@geti/ui';
 
 import { OutputFormats } from '../output-formats/output-formats.component';
 import { WebhookHttpMethod, WebhookSinkConfig } from '../utils';
-import { KeyValueBuilder } from './key-value-builder.component';
+import { HeaderKeyValueBuilder } from './header-key-value-builder.component';
 
 interface WebhookFieldsProps {
     defaultState: WebhookSinkConfig;
@@ -37,7 +37,7 @@ export const WebhookFields = ({ defaultState }: WebhookFieldsProps) => {
 
             <OutputFormats config={defaultState.output_formats} />
 
-            <KeyValueBuilder
+            <HeaderKeyValueBuilder
                 config={defaultState.headers ?? undefined}
                 title='Headers'
                 keysName='headers-keys'

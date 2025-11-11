@@ -1,7 +1,9 @@
+import { v4 as uuid } from 'uuid';
+
 import { MqttSinkConfig, SinkOutputFormats } from '../utils';
 
 export const getMqttInitialConfig = (project_id: string): MqttSinkConfig => ({
-    id: '',
+    id: uuid(),
     name: '',
     project_id,
     topic: '',

@@ -11,6 +11,7 @@ import { useWebRTCConnection } from '../../../components/stream/web-rtc-connecti
 import { useInference } from '../inference-provider.component';
 import { InferenceOpacity } from './inference-opacity';
 import { InputOutputSetup } from './pipeline-configuration.component';
+import { PipelineSwitch } from './pipeline-switch/pipeline-switch.component';
 
 const WebRTCConnectionStatus = () => {
     const { status, stop } = useWebRTCConnection();
@@ -82,9 +83,8 @@ const useTrainedModels = () => {
 };
 
 const ModelsPicker = () => {
-    const { selectedModelId, onSetSelectedModelId } = useInference();
-
     const models = useTrainedModels();
+    const { selectedModelId, onSetSelectedModelId } = useInference();
 
     useEffect(() => {
         if (selectedModelId !== undefined || models.length === 0) {
@@ -132,6 +132,7 @@ export const Toolbar = () => {
                     <InferenceOpacity />
                     <Divider size={'S'} orientation={'vertical'} />
                     <InputOutputSetup />
+                    <PipelineSwitch />
                 </Flex>
             </Flex>
         </View>

@@ -1,7 +1,9 @@
+import { v4 as uuid } from 'uuid';
+
 import { LocalFolderSinkConfig, SinkOutputFormats } from '../utils';
 
 export const getLocalFolderInitialConfig = (project_id: string): LocalFolderSinkConfig => ({
-    id: '',
+    id: uuid(),
     name: '',
     project_id,
     sink_type: 'folder',

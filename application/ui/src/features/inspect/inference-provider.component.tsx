@@ -2,6 +2,8 @@ import { createContext, ReactNode, use, useState } from 'react';
 
 import { $api } from '@geti-inspect/api';
 import { components } from '@geti-inspect/api/spec';
+import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { usePipeline } from 'src/hooks/use-pipeline.hook';
 
 import { MediaItem } from './dataset/types';
 import { useSelectedMediaItem } from './selected-media-item-provider.component';
@@ -61,14 +63,19 @@ interface InferenceProviderProps {
 }
 
 export const InferenceProvider = ({ children }: InferenceProviderProps) => {
-    const { inferenceResult, onInference, isPending } = useInferenceMutation();
-    const [selectedModelId, setSelectedModelId] = useState<string | undefined>(undefined);
-    const [inferenceOpacity, setInferenceOpacity] = useState<number>(0.75);
+    const { data: pipeline } = usePipeline();
+    const { projectId } = useProjectIdentifier();
+    const updatePipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline');
 
     const { selectedMediaItem } = useSelectedMediaItem();
+    const [inferenceOpacity, setInferenceOpacity] = useState<number>(0.75);
+    const { inferenceResult, onInference, isPending } = useInferenceMutation();
 
     const onSetSelectedModelId = (modelId: string | undefined) => {
-        setSelectedModelId(modelId);
+        updatePipeline.mutate({
+            params: { path: { project_id: projectId } },
+            body: { model_id: modelId },
+        });
 
         if (modelId && selectedMediaItem) {
             onInference(selectedMediaItem, modelId);
@@ -80,9 +87,9 @@ export const InferenceProvider = ({ children }: InferenceProviderProps) => {
                 onInference,
                 isPending,
                 inferenceResult,
-                selectedModelId,
-                onSetSelectedModelId,
+                selectedModelId: pipeline.model?.id,
                 inferenceOpacity,
+                onSetSelectedModelId,
                 onInferenceOpacityChange: setInferenceOpacity,
             }}
         >
