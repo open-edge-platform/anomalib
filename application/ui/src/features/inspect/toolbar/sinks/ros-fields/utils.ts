@@ -1,7 +1,9 @@
+import { v4 as uuid } from 'uuid';
+
 import { RosSinkConfig, SinkOutputFormats } from '../utils';
 
 export const getRosInitialConfig = (project_id: string): RosSinkConfig => ({
-    id: '',
+    id: uuid(),
     name: '',
     project_id,
     topic: '',
