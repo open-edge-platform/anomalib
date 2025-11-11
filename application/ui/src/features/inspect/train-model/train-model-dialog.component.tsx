@@ -14,9 +14,7 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
     const [searchParams, setSearchParams] = useSearchParams();
     const { projectId } = useProjectIdentifier();
     const startTrainingMutation = $api.useMutation('post', '/api/jobs:train', {
-        meta: {
-            invalidates: [['get', '/api/jobs']],
-        },
+        meta: { invalidates: [['get', '/api/jobs']] },
     });
     const startTraining = async () => {
         if (selectedModel === null) {

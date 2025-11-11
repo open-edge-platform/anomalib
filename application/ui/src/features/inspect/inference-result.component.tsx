@@ -8,6 +8,7 @@ import { useSpinDelay } from 'spin-delay';
 
 import { useInference } from './inference-provider.component';
 import { useSelectedMediaItem } from './selected-media-item-provider.component';
+import { StreamContainer } from './stream/stream-container';
 
 import styles from './inference.module.scss';
 
@@ -55,6 +56,10 @@ export const InferenceResult = () => {
     const { isPending, inferenceResult, inferenceOpacity } = useInference();
     const isInferenceAvailable = useIsInferenceAvailable();
     const isLoadingInference = useSpinDelay(isPending, { delay: 300 });
+
+    if (selectedMediaItem === undefined) {
+        return <StreamContainer />;
+    }
 
     if (!isInferenceAvailable && selectedMediaItem === undefined) {
         return (
