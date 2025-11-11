@@ -21,6 +21,11 @@ export const PipelineSwitch = () => {
         },
     });
     const disablePipeline = $api.useMutation('post', '/api/projects/{project_id}/pipeline:disable', {
+        onError: (error) => {
+            if (error) {
+                toast({ type: 'error', message: String(error.detail) });
+            }
+        },
         meta: {
             invalidates: [
                 ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id: projectId } } }],

@@ -27,6 +27,15 @@ const test = testBase.extend<Fixtures>({
                     name: 'Project #1',
                 });
             }),
+            http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
+                return response(200).json({
+                    status: 'idle',
+                    project_id: '1',
+                });
+            }),
+            http.get('/api/projects/{project_id}/images', ({ response }) => {
+                return response(200).json({ media: [] });
+            }),
         ],
     }),
 });
