@@ -182,32 +182,6 @@ class AnomalyDINOModel(DynamicBufferMixin, nn.Module):
         return masks
 
     @staticmethod
-    def euclidean_dist(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        """Compute pairwise Euclidean distances between all pairs of vectors.
-
-        Efficiently computes the distance matrix between ``x`` and ``y`` without
-        using ``torch.cdist()``, improving compatibility with ONNX and OpenVINO.
-
-        Args:
-            x (torch.Tensor): Tensor of shape ``(n, d)``.
-            y (torch.Tensor): Tensor of shape ``(m, d)``.
-
-        Returns:
-            torch.Tensor: Distance matrix of shape ``(n, m)``.
-
-        Example:
-            >>> x = torch.randn(100, 512)
-            >>> y = torch.randn(50, 512)
-            >>> distances = AnomalyDINOModel.euclidean_dist(x, y)
-            >>> distances.shape
-            torch.Size([100, 50])
-        """
-        x_norm = x.pow(2).sum(dim=-1, keepdim=True)
-        y_norm = y.pow(2).sum(dim=-1, keepdim=True)
-        res = x_norm - 2 * torch.matmul(x, y.transpose(-2, -1)) + y_norm.transpose(-2, -1)
-        return res.clamp_min_(0).sqrt_()
-
-    @staticmethod
     def mean_top1p(distances: torch.Tensor) -> torch.Tensor:
         """Compute the mean of the top 1% distances per image.
 
