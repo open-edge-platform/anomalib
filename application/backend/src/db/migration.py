@@ -1,15 +1,15 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from alembic import command
 from alembic.config import Config
 from alembic.runtime import migration
 from alembic.script import ScriptDirectory
 from loguru import logger
 from sqlalchemy import text
 
-from db import sync_engine
-from settings import get_settings
+from alembic import command
+from db import sync_engine as db_engine
+from settings import Settings
 
 
 class RevisionNotFoundError(Exception):
@@ -19,20 +19,19 @@ class RevisionNotFoundError(Exception):
 class MigrationManager:
     """Manages database connections and migrations"""
 
-    def __init__(self):
-        self.settings = get_settings()
+    def __init__(self, settings: Settings) -> None:
+        self.settings = settings
         self.__ensure_data_directory()
 
     def __ensure_data_directory(self) -> None:
         """Ensure the data directory exists"""
-        db_path = self.settings.database_dir
-        db_path.mkdir(parents=True, exist_ok=True)
+        self.settings.data_dir.mkdir(parents=True, exist_ok=True)
 
     @staticmethod
     def check_connection() -> bool:
         """Check if database connection is working"""
         try:
-            with sync_engine.connect() as conn:
+            with db_engine.connect() as conn:
                 conn.execute(text("SELECT 1"))
                 return True
         except Exception as e:
@@ -43,7 +42,7 @@ class MigrationManager:
         """Get Alembic configuration"""
         alembic_cfg = Config(self.settings.alembic_config_path)
         alembic_cfg.set_main_option("script_location", self.settings.alembic_script_location)
-        alembic_cfg.set_main_option("sqlalchemy.url", self.settings.database_url)
+        alembic_cfg.set_main_option("sqlalchemy.url", self.settings.sync_database_url)
         return alembic_cfg
 
     def run_migrations(self) -> bool:
@@ -52,7 +51,7 @@ class MigrationManager:
             logger.info("Running database migrations...")
             alembic_cfg = self.get_alembic_config()
             command.upgrade(alembic_cfg, "head")
-            logger.info("✓ Database migrations completed successfully")
+            logger.success("✓ Database migrations completed successfully")
             return True
         except Exception as e:
             logger.error(f"✗ Database migration failed: {e}")
@@ -65,7 +64,7 @@ class MigrationManager:
             script = ScriptDirectory.from_config(alembic_cfg)
             current_head = script.get_current_head()
 
-            with sync_engine.connect() as conn:
+            with db_engine.connect() as conn:
                 context = migration.MigrationContext.configure(conn)
                 current_rev = context.get_current_revision()
 
@@ -104,7 +103,7 @@ class MigrationManager:
             if needs_migration:
                 logger.info("Database needs migration")
                 return self.run_migrations()
-            logger.info("Database is up to date")
+            logger.success("Database is up to date")
             return True
 
         except RevisionNotFoundError as e:
@@ -114,5 +113,23 @@ class MigrationManager:
             logger.error(f"Database initialization failed: {e}")
             return False
 
+    def make_revision(self, message: str, autogenerate: bool = True) -> None:
+        """Create a new Alembic revision.
 
-migration_manager = MigrationManager()
+        Returns: path to the new revision file if successful, else None.
+        """
+        try:
+            alembic_cfg = self.get_alembic_config()
+            script = command.revision(alembic_cfg, message=message, autogenerate=autogenerate)
+
+            if isinstance(script, list):
+                for s in [s for s in script if s]:
+                    logger.success(f"✓ Created migration {s.revision}: {s.path}")
+            elif script is not None:
+                # script is an alembic.script.revision.Revision object
+                logger.success(f"✓ Created migration {script.revision}: {script.path}")
+            else:
+                raise RuntimeError("Alembic did not return a revision script.")
+        except Exception as e:
+            logger.error(f"✗ Failed to create migration: {e}")
+            raise e

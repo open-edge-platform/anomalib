@@ -8,9 +8,13 @@ import sys
 import click
 from anomalib.deploy import ExportType
 
-from db import migration_manager
+from db import MigrationManager
 from db.engine import get_sync_db_session
-from db.schema import ModelDB, ProjectDB
+from db.schema import JobDB, MediaDB, ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
+from settings import get_settings
+
+settings = get_settings()
+migration_manager = MigrationManager(settings)
 
 
 @click.group()
@@ -70,7 +74,6 @@ def check_db() -> None:
 
 @cli.command()
 @click.option("--with-model", default=False)
-@click.option("--model-name", default="card-detection-ssd")
 def seed(with_model: bool, model_name: str) -> None:
     """Seed the database with test data."""
     # If the app is running, it needs to be restarted since it doesn't track direct DB changes
@@ -98,10 +101,38 @@ def seed(with_model: bool, model_name: str) -> None:
 def clean_db() -> None:
     """Remove all data from the database (clean but don't drop tables)."""
     with get_sync_db_session() as db:
+        # Delete in order respecting foreign key constraints:
+        # 1. Pipelines (references projects, sources, sinks, models)
+        db.query(PipelineDB).delete()
+        # 2. Models (references jobs and projects)
         db.query(ModelDB).delete()
+        # 3. Media (references projects)
+        db.query(MediaDB).delete()
+        # 4. Jobs (references projects)
+        db.query(JobDB).delete()
+        # 5. Sources (references projects)
+        db.query(SourceDB).delete()
+        # 6. Sinks (references projects)
+        db.query(SinkDB).delete()
+        # 7. Projects (parent table, can be deleted last)
         db.query(ProjectDB).delete()
         db.commit()
     click.echo("✓ Database cleaned successfully!")
+
+
+@cli.command()
+@click.option("-m", "--message", required=True, help="Migration revision message")
+@click.option("--empty", is_flag=True, default=False, help="Create an empty revision (no autogenerate)")
+def create_db_revision(message: str, empty: bool) -> None:
+    """Generate a new Alembic migration revision."""
+    click.echo("Generating migration...")
+    try:
+        migration_manager.make_revision(message=message, autogenerate=not empty)
+        click.echo("✓ Created new database revision")
+        sys.exit(0)
+    except Exception:
+        click.echo("✗ Failed to create new database revision")
+        sys.exit(1)
 
 
 @cli.command()

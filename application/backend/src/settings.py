@@ -24,33 +24,33 @@ class Settings(BaseSettings):
     openapi_url: str = "/rest_api/openapi.json"
     debug: bool = Field(default=False, alias="DEBUG")
     environment: Literal["dev", "prod"] = "dev"
+    data_dir: Path = Field(default=Path("data"), alias="DATA_DIR")
+    log_dir: Path = Field(default=Path("logs"), alias="LOG_DIR")
 
     # Server
     host: str = Field(default="0.0.0.0", alias="HOST")  # noqa: S104
     port: int = Field(default=8000, alias="PORT")
 
     # Database
-    database_url: str = Field(
-        default="sqlite+aiosqlite:///./data/geti_inspect.db?journal_mode=WAL",
-        alias="DATABASE_URL",
-        description="Database connection URL",
-    )
+    database_file: str = Field(default="geti_inspect.db", alias="DATABASE_FILE", description="Database filename")
     db_echo: bool = Field(default=False, alias="DB_ECHO")
 
-    # Alembic TODO: add alembic support
-    # alembic_config_path: str = "app/alembic.ini"
-    # alembic_script_location: str = "app/alembic"
+    # Alembic
+    alembic_config_path: str = "src/alembic.ini"
+    alembic_script_location: str = "src/alembic"
 
     # Proxy settings
     no_proxy: str = Field(default="localhost,127.0.0.1,::1", alias="no_proxy")
 
     @property
-    def database_dir(self) -> Path:
-        """Get database directory path"""
-        if self.database_url.startswith("sqlite:///"):
-            db_path = Path(self.database_url.replace("sqlite:///", ""))
-            return db_path.parent
-        return Path("./data")
+    def database_url(self) -> str:
+        """Get database URL"""
+        return f"sqlite+aiosqlite:///./{self.data_dir / self.database_file}?journal_mode=WAL"
+
+    @property
+    def sync_database_url(self) -> str:
+        """Get synchronous database URL"""
+        return f"sqlite:///{self.data_dir / self.database_file}"
 
 
 @lru_cache
