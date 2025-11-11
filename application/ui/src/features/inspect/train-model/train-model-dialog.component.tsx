@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useState } from 'react';
+import { Suspense, useState } from 'react';
 
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
@@ -19,6 +19,7 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
             invalidates: [['get', '/api/jobs']],
         },
     });
+    const { data: availableDevices } = $api.useSuspenseQuery('get', '/api/training-devices');
     const startTraining = async () => {
         if (selectedModel === null || selectedDevice === null) {
             return;
@@ -40,9 +41,6 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
     };
     const [selectedModel, setSelectedModel] = useState<string | null>(null);
     const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
-    const handleDeviceSelect = useCallback((device: string | null) => {
-        setSelectedDevice(device);
-    }, []);
 
     const isStartDisabled = selectedModel === null || selectedDevice === null || startTrainingMutation.isPending;
 
@@ -60,7 +58,11 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
                     minWidth={'60vw'}
                 >
                     <Flex direction='column' gap='size-300'>
-                        <TrainModelDevicePicker selectedDevice={selectedDevice} onSelect={handleDeviceSelect} />
+                        <TrainModelDevicePicker
+                            devices={availableDevices.devices ?? []}
+                            selectedDevice={selectedDevice}
+                            onSelect={setSelectedDevice}
+                        />
                         <Flex direction='column' gap='size-150'>
                             <Heading level={4} margin={0}>
                                 Select model template
