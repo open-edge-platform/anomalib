@@ -14,6 +14,7 @@ class XPUAccelerator(Accelerator):
     
     @property
     def name(self) -> str:
+        """Setting the name of the accelerator which is required for accelerators by pytorch-lightning >= 2.5.6"""
         return "xpu"
     
     @staticmethod
