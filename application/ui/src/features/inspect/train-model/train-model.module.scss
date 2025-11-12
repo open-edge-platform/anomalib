@@ -23,7 +23,9 @@
     padding: var(--spectrum-global-dimension-size-200);
     border-radius: var(--spectrum-alias-border-radius-small);
     background-color: var(--spectrum-global-color-gray-75);
-    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    transition:
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;
 
     &:hover {
         background-color: var(--spectrum-global-color-gray-100);
