@@ -14,6 +14,10 @@ class XPUAccelerator(Accelerator):
 
     accelerator_name = "xpu"
 
+    @property
+    def name(self) -> str:
+        return self.accelerator_name
+    
     @staticmethod
     def setup_device(device: torch.device) -> None:
         """Sets up the specified device."""
