@@ -25,7 +25,7 @@ const DEVICE_DISPLAY_NAMES: Record<string, DeviceMetadata> = {
         description: 'Google Cloud Tensor Processing Units via XLA.',
     },
     XLA: {
-        label: 'TPU (XLA)',
+        label: 'XLA',
         description: 'XLA-backed accelerator, commonly used for TPUs.',
     },
     HPU: {

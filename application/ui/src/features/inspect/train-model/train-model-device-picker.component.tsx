@@ -54,7 +54,7 @@ export const TrainModelDevicePicker = ({ devices, selectedDevice, onSelect }: Tr
                             target='_blank'
                             rel='noreferrer noopener'
                         >
-                            let us know on GitHub.
+                            let us know on GitHub
                         </Link>
                         .
                     </Text>
