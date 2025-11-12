@@ -12,11 +12,9 @@ from lightning.pytorch.accelerators import Accelerator, AcceleratorRegistry
 class XPUAccelerator(Accelerator):
     """Support for a XPU, optimized for large-scale machine learning."""
 
-    accelerator_name = "xpu"
-
     @property
     def name(self) -> str:
-        return self.accelerator_name
+        return "xpu"
     
     @staticmethod
     def setup_device(device: torch.device) -> None:
@@ -63,7 +61,7 @@ class XPUAccelerator(Accelerator):
 
 
 AcceleratorRegistry.register(
-    XPUAccelerator.accelerator_name,
+    XPUAccelerator.name,
     XPUAccelerator,
     description="Accelerator supports XPU devices",
 )
