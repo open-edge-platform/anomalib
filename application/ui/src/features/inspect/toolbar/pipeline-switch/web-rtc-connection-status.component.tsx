@@ -1,6 +1,6 @@
 import { Flex, StatusLight } from '@geti/ui';
 
-import { useWebRTCConnection } from './web-rtc-connection-provider';
+import { useWebRTCConnection } from '../../../../components/stream/web-rtc-connection-provider';
 
 export const WebRTCConnectionStatus = () => {
     const { status } = useWebRTCConnection();

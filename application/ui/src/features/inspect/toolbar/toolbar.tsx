@@ -7,7 +7,6 @@ import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Divider, Flex, Item, Picker, View } from '@geti/ui';
 
-import { WebRTCConnectionStatus } from '../../../components/stream/web-rtc-connection-status.component';
 import { useInference } from '../inference-provider.component';
 import { InferenceOpacity } from './inference-opacity';
 import { InputOutputSetup } from './pipeline-configuration.component';
@@ -66,8 +65,6 @@ export const Toolbar = () => {
             }}
         >
             <Flex height='100%' gap='size-200' alignItems={'center'}>
-                <WebRTCConnectionStatus />
-
                 <Divider orientation='vertical' size='S' />
 
                 <Flex marginStart='auto' alignItems={'center'} gap={'size-200'}>

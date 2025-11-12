@@ -1,17 +1,19 @@
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
-import { Switch, toast } from '@geti/ui';
+import { Flex, Switch, toast } from '@geti/ui';
 import { useWebRTCConnection } from 'src/components/stream/web-rtc-connection-provider';
+import { usePipeline } from 'src/hooks/use-pipeline.hook';
 
 import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
+import { WebRTCConnectionStatus } from './web-rtc-connection-status.component';
+
+import classes from './pipeline-switch.module.scss';
 
 export const PipelineSwitch = () => {
     const { projectId } = useProjectIdentifier();
     const { status, start, stop } = useWebRTCConnection();
     const { onSetSelectedMediaItem } = useSelectedMediaItem();
-    const { data: pipeline, isLoading } = $api.useSuspenseQuery('get', '/api/projects/{project_id}/pipeline', {
-        params: { path: { project_id: projectId } },
-    });
+    const { data: pipeline, isLoading } = usePipeline();
 
     const isWebRtcConnecting = status === 'connecting';
 
@@ -45,18 +47,25 @@ export const PipelineSwitch = () => {
         },
     });
 
+    const hasSink = pipeline?.sink !== undefined;
+    const hasSource = pipeline?.source !== undefined;
+
     const handleChange = (isSelected: boolean) => {
         const handler = isSelected ? enablePipeline.mutate : disablePipeline.mutate;
         handler({ params: { path: { project_id: projectId } } });
     };
 
     return (
-        <Switch
-            onChange={handleChange}
-            isSelected={pipeline.status === 'running'}
-            isDisabled={isLoading || isWebRtcConnecting}
-        >
-            {isWebRtcConnecting ? 'Connecting...' : 'Enabled'}
-        </Switch>
+        <Flex>
+            <Switch
+                UNSAFE_className={classes.switch}
+                onChange={handleChange}
+                isSelected={pipeline.status === 'running'}
+                isDisabled={isLoading || isWebRtcConnecting || !hasSink || !hasSource}
+            >
+                Enabled
+            </Switch>
+            <WebRTCConnectionStatus />
+        </Flex>
     );
 };
