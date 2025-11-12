@@ -35,7 +35,9 @@ const DatasetItem = ({ mediaItem }: DatasetItemProps) => {
     const mediaUrl = `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail`;
 
     const handleClick = async () => {
-        onSetSelectedMediaItem(mediaItem);
+        const selection = mediaItem.id === selectedMediaItem?.id ? undefined : mediaItem;
+
+        onSetSelectedMediaItem(selection);
         selectedModelId !== undefined && (await onInference(mediaItem, selectedModelId));
     };
 
