@@ -49,7 +49,7 @@ export const WebRTCConnectionStatus = () => {
                 <Flex gap='size-200' alignItems={'center'}>
                     <TooltipTrigger placement={'top'}>
                         <PressableElement>
-                            <StatusLight role={'status'} aria-label='Connecting' variant='info'>
+                            <StatusLight role={'status'} aria-label='Connected' variant='info'>
                                 Connected
                             </StatusLight>
                         </PressableElement>

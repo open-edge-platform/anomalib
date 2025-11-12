@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from 'react';
 
+import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Button, Flex, Loading, toast, View } from '@geti/ui';
 import { Play } from '@geti/ui/icons';
 import { isEmpty } from 'lodash-es';
@@ -14,6 +15,7 @@ import { Stream } from './stream';
 import classes from '../inference.module.scss';
 
 export const StreamContainer = () => {
+    const { projectId } = useProjectIdentifier();
     const { data: pipeline } = usePipeline();
     const { start, status } = useWebRTCConnection();
     const enablePipeline = useEnablePipeline({ onSuccess: start });
@@ -27,16 +29,17 @@ export const StreamContainer = () => {
         if (status === 'failed') {
             toast({ type: 'error', message: 'Failed to connect to the stream' });
         }
-    }, [status]);
+
+        if (isPipelineRunning && status === 'idle') {
+            start();
+        }
+    }, [isPipelineRunning, status, start]);
 
     const handleStart = async () => {
-        try {
-            if (!isPipelineRunning) {
-                await enablePipeline.mutate({ params: { path: { project_id: pipeline.project_id } } });
-            }
+        if (isPipelineRunning) {
             start();
-        } catch (_error) {
-            toast({ type: 'error', message: 'Failed to start the stream' });
+        } else {
+            enablePipeline.mutate({ params: { path: { project_id: projectId } } });
         }
     };
 

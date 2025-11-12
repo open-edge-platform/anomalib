@@ -31,3 +31,15 @@ Object.defineProperty(global, 'Request', {
     writable: false,
     value: RequestPolyfill,
 });
+
+window.ResizeObserver = class ResizeObserver {
+    observe() {
+        // empty
+    }
+    unobserve() {
+        // empty
+    }
+    disconnect() {
+        // empty
+    }
+};
