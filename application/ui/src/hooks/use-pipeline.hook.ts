@@ -1,6 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { toast } from '@geti/ui';
 import { $api } from 'src/api/client';
 
 import { useProjectIdentifier } from './use-project-identifier.hook';
@@ -38,10 +39,20 @@ export const usePatchPipeline = (project_id: string) => {
     });
 };
 
-export const useEnablePipeline = (project_id: string) => {
+export const useEnablePipeline = ({ onSuccess }: { onSuccess?: () => void }) => {
+    const { projectId } = useProjectIdentifier();
+
     return $api.useMutation('post', '/api/projects/{project_id}/pipeline:enable', {
+        onSuccess,
+        onError: (error) => {
+            if (error) {
+                toast({ type: 'error', message: String(error.detail) });
+            }
+        },
         meta: {
-            invalidates: [['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id } } }]],
+            invalidates: [
+                ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id: projectId } } }],
+            ],
         },
     });
 };
