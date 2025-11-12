@@ -31,6 +31,7 @@ const downloadImageAsFile = async (media: MediaItem) => {
 };
 
 const useInferenceMutation = () => {
+    const pipeline = usePipeline();
     const inferenceMutation = $api.useMutation('post', '/api/projects/{project_id}/models/{model_id}:predict');
 
     const handleInference = async (mediaItem: MediaItem, modelId: string) => {
@@ -38,6 +39,10 @@ const useInferenceMutation = () => {
 
         const formData = new FormData();
         formData.append('file', file);
+
+        if (pipeline.data.inference_device) {
+            formData.append('device', pipeline.data.inference_device);
+        }
 
         inferenceMutation.mutate({
             // @ts-expect-error There is an incorrect type in OpenAPI
