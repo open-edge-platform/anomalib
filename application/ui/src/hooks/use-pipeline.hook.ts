@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { toast } from '@geti/ui';
-import { $api } from 'src/api/client';
+import { useQueries } from '@tanstack/react-query';
+import { $api, fetchClient } from 'src/api/client';
 
 import { useProjectIdentifier } from './use-project-identifier.hook';
 
@@ -85,20 +86,29 @@ export const useActivePipeline = () => {
     const projectsQuery = $api.useQuery('get', '/api/projects');
     const projectIds = projectsQuery.data?.projects?.map(({ id }) => String(id)) ?? [];
 
-    const pipelineQueries = projectIds.map((projectId) =>
-        $api.useQuery(
-            'get',
-            '/api/projects/{project_id}/pipeline',
-            { params: { path: { project_id: projectId } } },
-            { enabled: !!projectsQuery.data }
-        )
-    );
-
-    const activePipeline = pipelineQueries.find(({ data }) => data?.status === 'running')?.data;
+    const activePipelineResult = useQueries({
+        queries: projectIds.map((projectId) => ({
+            queryKey: ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id: projectId } } }],
+            queryFn: async () => {
+                const response = await fetchClient.GET('/api/projects/{project_id}/pipeline', {
+                    params: { path: { project_id: projectId } },
+                });
+                return response.data;
+            },
+            enabled: projectIds.length > 0,
+        })),
+        combine: (results) => {
+            return {
+                data: results.find(({ data }) => data?.status === 'running')?.data,
+                error: results.find(({ error }) => error)?.error,
+                isLoading: results.some(({ isLoading }) => isLoading),
+            };
+        },
+    });
 
     return {
-        data: activePipeline,
-        error: projectsQuery.error || pipelineQueries.find(({ error }) => error)?.error,
-        isLoading: projectsQuery.isLoading || pipelineQueries.some(({ isLoading }) => isLoading),
+        data: activePipelineResult.data,
+        error: projectsQuery.error || activePipelineResult.error,
+        isLoading: projectsQuery.isLoading || activePipelineResult.isLoading,
     };
 };

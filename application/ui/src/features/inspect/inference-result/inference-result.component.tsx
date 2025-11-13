@@ -65,7 +65,7 @@ export const InferenceResult = () => {
     }
 
     if (hasActiveProject && !isCurrentProjectActive) {
-        return <EnableProject />;
+        return <EnableProject currentProjectId={projectId} activeProjectId={activeProjectPipeline.project_id} />;
     }
 
     if (selectedMediaItem === undefined) {

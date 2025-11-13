@@ -1,13 +1,19 @@
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 
 import { LinkExpired } from '@geti-inspect/icons';
-import { Button, Flex, Text } from '@geti/ui';
+import { Button, DialogTrigger, Flex, Loading, Text } from '@geti/ui';
 
 import { useWebRTCConnection } from '../../../../components/stream/web-rtc-connection-provider';
+import { ConfirmationDialog } from './confirmation-dialog.component';
 
 import classes from './enable-project.module.scss';
 
-export const EnableProject = () => {
+interface EnableProjectProps {
+    activeProjectId: string;
+    currentProjectId: string;
+}
+
+export const EnableProject = ({ activeProjectId, currentProjectId }: EnableProjectProps) => {
     const { stop } = useWebRTCConnection();
 
     useEffect(() => {
@@ -26,7 +32,12 @@ export const EnableProject = () => {
 
                 <Text UNSAFE_className={classes.title}>Would you like to activate this project?</Text>
 
-                <Button onPress={() => console.log('Activate project')}>Activate project</Button>
+                <DialogTrigger>
+                    <Button>Activate project</Button>
+                    <Suspense fallback={<Loading mode={'inline'} />}>
+                        <ConfirmationDialog activeProjectId={activeProjectId} currentProjectId={currentProjectId} />
+                    </Suspense>
+                </DialogTrigger>
             </Flex>
         </Flex>
     );
