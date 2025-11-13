@@ -219,8 +219,7 @@ class DinomalyModel(nn.Module):
                 continue
             if i in self.target_layers:
                 encoder_features.append(x)
-        side = int(math.sqrt(encoder_features[0].shape[1] - 1 - self.encoder.num_register_tokens))
-
+ 
         if self.remove_class_token:
             encoder_features = [e[:, 1 + self.encoder.num_register_tokens :, :] for e in encoder_features]
 
@@ -385,7 +384,8 @@ class DinomalyModel(nn.Module):
 
         Args:
             features: List of feature tensors
-            side: Side length for spatial reshaping
+            h_patches: Number of patches in height dimension
+            w_patches: Number of patches in width dimension
 
         Returns:
             List of processed feature tensors with spatial dimensions
