@@ -18,7 +18,7 @@ router = APIRouter(prefix="/api/active-pipeline", tags=["Pipelines"])
     "",
     responses={
         status.HTTP_200_OK: {"description": "Active pipeline found"},
-        status.HTTP_204_OK: {"description": "No active pipeline found"},
+        status.HTTP_204_NO_CONTENT: {"description": "No active pipeline found"},
     },
     response_model_exclude_none=True,
 )
