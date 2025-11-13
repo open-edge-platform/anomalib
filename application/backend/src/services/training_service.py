@@ -5,7 +5,7 @@ from contextlib import redirect_stdout
 from uuid import UUID
 
 from anomalib.data import Folder
-from anomalib.data.utils import TestSplitMode
+from anomalib.data.utils import ValSplitMode
 from anomalib.deploy import ExportType
 from anomalib.engine import Engine
 from anomalib.loggers import AnomalibTensorBoardLogger
@@ -154,7 +154,7 @@ class TrainingService:
         datamodule = Folder(
             name=name,
             normal_dir=image_folder_path,
-            test_split_mode=TestSplitMode.SYNTHETIC,
+            val_split_mode=ValSplitMode.SYNTHETIC,
         )
         logger.info(f"Training from image folder: {image_folder_path} to model folder: {model.export_path}")
 
