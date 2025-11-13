@@ -8,7 +8,8 @@ Dinomaly anomaly detection framework.
 
 Example:
     model = DinoV2Loader.from_name("dinov2_vit_base_14")
-    model = DinoV2Loader.from_name("dinomaly_vit_base_14")
+    model = DinoV2Loader.from_name("vit_base_14")
+    model = DinoV2Loader(vit_factory=my_custom_vit_module).load("dinov2reg_vit_base_14")
 """
 
 from __future__ import annotations
@@ -23,14 +24,12 @@ import torch
 from anomalib.data.utils import DownloadInfo
 from anomalib.data.utils.download import DownloadProgressBar
 from anomalib.models.components.dinov2 import vision_transformer as dinov2_models
-from anomalib.models.image.dinomaly.components import vision_transformer as dinomaly_models
 
 logger = logging.getLogger(__name__)
 
 MODEL_FACTORIES: dict[str, object] = {
     "dinov2": dinov2_models,
     "dinov2_reg": dinov2_models,
-    "dinomaly": dinomaly_models,
 }
 
 
@@ -49,13 +48,13 @@ class DinoV2Loader:
         "large": {"embed_dim": 1024, "num_heads": 16},
     }
 
-    def __init__(self, cache_dir: str | Path = "./pre_trained/") -> None:
-        """Initialize a model loader instance.
-
-        Args:
-            cache_dir: Directory in which downloaded weights will be stored.
-        """
-        self.cache_dir: Path = Path(cache_dir)
+    def __init__(
+        self,
+        cache_dir: str | Path = "./pre_trained/",
+        vit_factory: object | None = None,
+    ) -> None:
+        self.cache_dir = Path(cache_dir)
+        self.vit_factory = vit_factory
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     def load(self, model_name: str) -> torch.nn.Module:
@@ -71,7 +70,7 @@ class DinoV2Loader:
             ValueError: If the requested model name is malformed or unsupported.
         """
         model_type, architecture, patch_size = self._parse_name(model_name)
-        model = self._create_model(model_type, architecture, patch_size)
+        model = self.create_model(model_type, architecture, patch_size)
         self._load_weights(model, model_type, architecture, patch_size)
 
         logger.info(f"Loaded model: {model_name}")
@@ -122,26 +121,21 @@ class DinoV2Loader:
 
         return model_type, architecture, patch_size
 
-    @staticmethod
-    def _create_model(
-        model_type: str,
-        architecture: str,
-        patch_size: int,
-    ) -> torch.nn.Module:
-        """Construct a model instance using the configured factory modules.
+    def create_model(self, model_type: str, architecture: str, patch_size: int) -> torch.nn.Module:
+        """Create a Vision Transformer model.
 
         Args:
-            model_type: Model family, e.g., "dinov2", "dinov2_reg", "dinomaly".
-            architecture: Architecture label ("small", "base", "large").
-            patch_size: Patch resolution.
+            model_type: Normalized model family name (e.g., "dinov2", "dinov2_reg").
+            architecture: Architecture size (e.g., "small", "base", "large").
+            patch_size: ViT patch size.
 
         Returns:
-            An instantiated PyTorch module.
+            Instantiated Vision Transformer model.
 
         Raises:
-            ValueError: If the relevant constructor cannot be found.
+            ValueError: If no matching constructor exists.
         """
-        model_kwargs: dict[str, object] = {
+        model_kwargs = {
             "patch_size": patch_size,
             "img_size": 518,
             "block_chunks": 0,
@@ -153,18 +147,15 @@ class DinoV2Loader:
         if model_type == "dinov2_reg":
             model_kwargs["num_register_tokens"] = 4
 
-        module = MODEL_FACTORIES.get(model_type)
-        if module is None:
-            msg = f"Unknown model type '{model_type}'."
-            raise ValueError(msg)
+        # If user supplied a custom ViT module, use it
+        module = self.vit_factory or MODEL_FACTORIES[model_type]
 
         ctor = getattr(module, f"vit_{architecture}", None)
         if ctor is None:
-            msg = f"No constructor 'vit_{architecture}' in module {module}."
+            msg = f"No constructor vit_{architecture} in module {module}"
             raise ValueError(msg)
 
-        model: torch.nn.Module = ctor(**model_kwargs)
-        return model
+        return ctor(**model_kwargs)
 
     def _load_weights(
         self,
