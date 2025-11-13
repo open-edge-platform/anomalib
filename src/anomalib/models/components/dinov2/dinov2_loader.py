@@ -1,15 +1,30 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Loader for DINOv2 Vision Transformer models.
+"""Loading pre-trained DINOv2 Vision Transformer models.
 
-This module provides a simple interface for loading pre-trained DINOv2 Vision Transformer models for the
-Dinomaly anomaly detection framework.
+This module provides the :class:`DinoV2Loader` class for constructing and loading
+pre-trained DINOv2 Vision Transformer models used in the Dinomaly anomaly detection
+framework. It supports both standard DINOv2 models and register-token variants, and
+allows custom Vision Transformer factories to be supplied.
 
 Example:
-    model = DinoV2Loader.from_name("dinov2_vit_base_14")
-    model = DinoV2Loader.from_name("vit_base_14")
-    model = DinoV2Loader(vit_factory=my_custom_vit_module).load("dinov2reg_vit_base_14")
+    >>> from anomalib.models.components.dinov2 import DinoV2Loader
+    >>> loader = DinoV2Loader()
+    >>> model = loader.load("dinov2_vit_base_14")
+    >>> model = loader.load("vit_base_14")
+    >>> custom_loader = DinoV2Loader(vit_factory=my_custom_vit_module)
+    >>> model = custom_loader.load("dinov2reg_vit_base_14")
+
+The DINOv2 loader handles:
+
+- Parsing model names and validating architecture types
+- Constructing the appropriate Vision Transformer model
+- Locating or downloading the corresponding pre-trained weights
+- Supporting custom ViT implementations via a pluggable factory
+
+This enables a simple, unified interface for accessing DINOv2-based backbones in
+downstream anomaly detection tasks.
 """
 
 from __future__ import annotations

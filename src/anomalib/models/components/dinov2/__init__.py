@@ -6,6 +6,10 @@
 
 References:
 https://github.com/facebookresearch/dinov2/blob/main/dinov2/
+
+Classes:
+    DinoVisionTransformer: DINOv2 implementation.
+    DinoV2Loader: Loader class to support downloading and loading weights.
 """
 
 # vision transformer
