@@ -86,7 +86,7 @@ class Pipeline(ABC):
             try:
                 job_args = pipeline_args.get(runner.generator.job_class.name)
                 previous_results = runner.run(job_args or {}, previous_results)
-            except Exception:  # noqa: PERF203 catch all exception and allow try-catch in loop
+            except Exception:  # noqa: PERF203
                 logger.exception("An error occurred when running the runner.")
                 print(
                     f"There were some errors when running {runner.generator.job_class.name} with"

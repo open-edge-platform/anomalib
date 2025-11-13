@@ -73,7 +73,7 @@ class BenchmarkJobGenerator(JobGenerator):
         self,
         args: dict,
         previous_stage_result: PREV_STAGE_RESULT,
-    ) -> Generator[BenchmarkJob, None, None]:
+    ) -> Generator[BenchmarkJob]:
         """Generate benchmark jobs from the provided arguments.
 
         Args:

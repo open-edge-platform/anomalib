@@ -23,10 +23,10 @@ The module ensures consistent normalization of anomaly scores across different
 detection algorithms.
 """
 
-from enum import Enum
+from enum import StrEnum
 
 
-class NormalizationMethod(str, Enum):
+class NormalizationMethod(StrEnum):
     """Enumeration of supported normalization methods for anomaly scores.
 
     This enum class defines the available methods for normalizing anomaly scores:

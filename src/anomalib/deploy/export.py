@@ -23,12 +23,12 @@ Example:
 """
 
 import logging
-from enum import Enum
+from enum import StrEnum
 
 logger = logging.getLogger("anomalib")
 
 
-class ExportType(str, Enum):
+class ExportType(StrEnum):
     """Model export type.
 
     Supported export formats for anomaly detection models.
@@ -50,7 +50,7 @@ class ExportType(str, Enum):
     TORCH = "torch"
 
 
-class CompressionType(str, Enum):
+class CompressionType(StrEnum):
     """Model compression type when exporting to OpenVINO.
 
     Attributes:
