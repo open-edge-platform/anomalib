@@ -6,6 +6,11 @@ import { Dispatch, RefObject, SetStateAction, useCallback, useEffect, useRef } f
 import { useWebRTCConnection } from '../../../components/stream/web-rtc-connection-provider';
 import { ZoomTransform } from '../../../components/zoom/zoom-transform';
 
+interface StreamProps {
+    size: { width: number; height: number };
+    setSize: Dispatch<SetStateAction<{ width: number; height: number }>>;
+}
+
 const useSetTargetSizeBasedOnVideo = (
     setSize: Dispatch<SetStateAction<{ width: number; height: number }>>,
     videoRef: RefObject<HTMLVideoElement | null>
@@ -82,37 +87,25 @@ const useStreamToVideo = () => {
     return videoRef;
 };
 
-export const Stream = ({
-    size,
-    setSize,
-}: {
-    size: { width: number; height: number };
-    setSize: Dispatch<SetStateAction<{ width: number; height: number }>>;
-}) => {
+export const Stream = ({ size, setSize }: StreamProps) => {
     const videoRef = useStreamToVideo();
-
     useSetTargetSizeBasedOnVideo(setSize, videoRef);
-
-    const { status } = useWebRTCConnection();
 
     return (
         <ZoomTransform target={size}>
-            <div style={{ gridArea: 'innercanvas' }}>
-                {status === 'connected' && (
-                    // eslint-disable-next-line jsx-a11y/media-has-caption
-                    <video
-                        ref={videoRef}
-                        autoPlay
-                        playsInline
-                        width={size.width}
-                        height={size.height}
-                        controls={false}
-                        style={{
-                            background: 'var(--spectrum-global-color-gray-200)',
-                        }}
-                    />
-                )}
-            </div>
+            <video
+                ref={videoRef}
+                muted
+                autoPlay
+                playsInline
+                width={size.width}
+                height={size.height}
+                controls={false}
+                aria-label='stream player'
+                style={{
+                    background: 'var(--spectrum-global-color-gray-200)',
+                }}
+            />
         </ZoomTransform>
     );
 };

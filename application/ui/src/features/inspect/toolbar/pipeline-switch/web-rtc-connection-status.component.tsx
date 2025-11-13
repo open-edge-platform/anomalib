@@ -1,6 +1,6 @@
-import { Flex, StatusLight } from '@geti/ui';
+import { Flex, PressableElement, StatusLight, Tooltip, TooltipTrigger } from '@geti/ui';
 
-import { useWebRTCConnection } from './web-rtc-connection-provider';
+import { useWebRTCConnection } from '../../../../components/stream/web-rtc-connection-provider';
 
 export const WebRTCConnectionStatus = () => {
     const { status } = useWebRTCConnection();
@@ -47,9 +47,14 @@ export const WebRTCConnectionStatus = () => {
         case 'connected':
             return (
                 <Flex gap='size-200' alignItems={'center'}>
-                    <StatusLight role={'status'} aria-label='Connected' variant='positive'>
-                        Connected
-                    </StatusLight>
+                    <TooltipTrigger placement={'top'}>
+                        <PressableElement>
+                            <StatusLight role={'status'} aria-label='Connected' variant='info'>
+                                Connected
+                            </StatusLight>
+                        </PressableElement>
+                        <Tooltip>WebRTC is ready to use</Tooltip>
+                    </TooltipTrigger>
                 </Flex>
             );
     }
