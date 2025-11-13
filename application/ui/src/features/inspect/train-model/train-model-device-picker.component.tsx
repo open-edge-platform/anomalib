@@ -26,15 +26,19 @@ export const TrainModelDevicePicker = ({ devices, selectedDevice, onSelect }: Tr
 
         const preferredDevice = selectPreferredDevice(devices);
 
-        if (preferredDevice === null) {
-            if (selectedDevice !== null) {
-                onSelect(null);
+        if (selectedDevice === null) {
+            if (preferredDevice !== null || devices.length > 0) {
+                onSelect(preferredDevice ?? devices[0]);
             }
             return;
         }
 
-        if (selectedDevice === null || !devices.includes(selectedDevice)) {
-            onSelect(preferredDevice);
+        if (!devices.includes(selectedDevice)) {
+            if (preferredDevice !== null || devices.length > 0) {
+                onSelect(preferredDevice ?? devices[0]);
+            } else {
+                onSelect(null);
+            }
         }
     }, [devices, hasDevices, onSelect, selectedDevice]);
 
