@@ -42,7 +42,7 @@ export const usePatchPipeline = (project_id: string) => {
 export const useEnablePipeline = ({ onSuccess }: { onSuccess?: () => void }) => {
     const { projectId } = useProjectIdentifier();
 
-    return $api.useMutation('post', '/api/projects/{project_id}/pipeline:enable', {
+    return $api.useMutation('post', '/api/projects/{project_id}/pipeline:run', {
         onSuccess,
         onError: (error) => {
             if (error) {
