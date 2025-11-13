@@ -27,8 +27,6 @@ This enables a simple, unified interface for accessing DINOv2-based backbones in
 downstream anomaly detection tasks.
 """
 
-from __future__ import annotations
-
 import logging
 from pathlib import Path
 from typing import ClassVar

@@ -1,5 +1,8 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Meta Platforms, Inc. and affiliates.
+# SPDX-License-Identifier: Apache-2.0
+
 
 """DINO projection head module.
 
@@ -7,10 +10,8 @@ Reference:
 https://github.com/facebookresearch/dinov2/blob/main/dinov2/layers/dino_head.py
 """
 
-from __future__ import annotations
-
 import torch
-from torch import Tensor, nn
+from torch import nn
 from torch.nn.init import trunc_normal_
 from torch.nn.utils import weight_norm
 
@@ -68,7 +69,7 @@ class DINOHead(nn.Module):
             if module.bias is not None:
                 nn.init.constant_(module.bias, 0)
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Run the DINO projection head forward pass."""
         x = self.mlp(x)
 

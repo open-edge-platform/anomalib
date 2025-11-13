@@ -1,5 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Meta Platforms, Inc. and affiliates.
+# SPDX-License-Identifier: Apache-2.0
 
 """Patch embedding module for DINOv2 Vision Transformers.
 
@@ -8,14 +10,10 @@ convolution. It supports square or rectangular image sizes and patch sizes,
 optional output reshaping, and optional normalization.
 """
 
-from __future__ import annotations
+from collections.abc import Callable
 
-from typing import TYPE_CHECKING
-
-from torch import Tensor, nn
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
+import torch
+from torch import nn
 
 
 def make_2tuple(x: int | tuple[int, int]) -> tuple[int, int]:
@@ -79,7 +77,7 @@ class PatchEmbed(nn.Module):
         self.proj = nn.Conv2d(in_chans, embed_dim, kernel_size=patch_hw, stride=patch_hw)
         self.norm = norm_layer(embed_dim) if norm_layer is not None else nn.Identity()
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Embed the input image into patch tokens."""
         _, _, h, w = x.shape
         patch_h, patch_w = self.patch_size

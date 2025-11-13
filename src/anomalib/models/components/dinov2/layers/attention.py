@@ -1,5 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Meta Platforms, Inc. and affiliates.
+# SPDX-License-Identifier: Apache-2.0
 
 """Attention layers for DINOv2 Vision Transformers.
 
@@ -11,12 +13,10 @@ These layers are used as core components within DINOv2 and Dinomaly transformer
 blocks for feature extraction and masked modeling.
 """
 
-from __future__ import annotations
-
 import logging
 
 import torch
-from torch import Tensor, nn
+from torch import nn
 from torch.nn import functional as F  # noqa: N812
 
 logger = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ class Attention(nn.Module):
         if self.proj.bias is not None:
             nn.init.zeros_(self.proj.bias)
 
-    def forward(self, x: Tensor, is_causal: bool = False) -> Tensor:
+    def forward(self, x: torch.Tensor, is_causal: bool = False) -> torch.Tensor:
         """Apply multi-head self-attention.
 
         Args:
@@ -90,7 +90,7 @@ class Attention(nn.Module):
             is_causal: If True, applies causal masking.
 
         Returns:
-            Tensor of shape ``(B, N, C)`` containing attended features.
+            torch.Tensor of shape ``(B, N, C)`` containing attended features.
         """
         b, n, c = x.shape
         qkv = self.qkv(x).reshape(b, n, 3, self.num_heads, c // self.num_heads)
@@ -120,7 +120,7 @@ class MemEffAttention(Attention):
     this implementation uses the scaled dot product from torch.
     """
 
-    def forward(self, x: Tensor, attn_bias: Tensor | None = None) -> Tensor:
+    def forward(self, x: torch.Tensor, attn_bias: torch.Tensor | None = None) -> torch.Tensor:
         """Compute memory-efficient attention using PyTorch's scaled dot product attention.
 
         Args:

@@ -1,5 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Meta Platforms, Inc. and affiliates.
+# SPDX-License-Identifier: Apache-2.0
 
 """LayerScale module used in DINOv2.
 
@@ -8,10 +10,8 @@ to stabilize deep transformer training. It is frequently used in
 Vision Transformers with residual connections.
 """
 
-from __future__ import annotations
-
 import torch
-from torch import Tensor, nn
+from torch import nn
 
 
 class LayerScale(nn.Module):
@@ -33,7 +33,7 @@ class LayerScale(nn.Module):
     def __init__(
         self,
         dim: int,
-        init_values: float | Tensor = 1e-5,
+        init_values: float | torch.Tensor = 1e-5,
         inplace: bool = False,
         device: torch.device | None = None,
         dtype: torch.dtype | None = None,
@@ -48,6 +48,6 @@ class LayerScale(nn.Module):
         """Reset scale parameters to their initialization values."""
         nn.init.constant_(self.gamma, self.init_values)
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Apply channel-wise scaling to the input tensor."""
         return x.mul_(self.gamma) if self.inplace else x * self.gamma

@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import pytest
 import torch
-from torch import Tensor
 
 from anomalib.models.components.dinov2.vision_transformer import (
     DinoVisionTransformer,
@@ -30,7 +29,7 @@ def tiny_vit() -> DinoVisionTransformer:
 
 
 @pytest.fixture()
-def tiny_input() -> Tensor:
+def tiny_input() -> torch.Tensor:
     """Return a small dummy input tensor."""
     return torch.randn(2, 3, 32, 32)  # (B=2, C=3, H=W=32)
 
@@ -50,10 +49,10 @@ def test_model_initializes(tiny_vit: DinoVisionTransformer) -> None:
 
 def test_patch_embedding_shape(
     tiny_vit: DinoVisionTransformer,
-    tiny_input: Tensor,
+    tiny_input: torch.Tensor,
 ) -> None:
     """Patch embedding output has correct (B, N, C) shape."""
-    patches: Tensor = tiny_vit.patch_embed(tiny_input)
+    patches: torch.Tensor = tiny_vit.patch_embed(tiny_input)
     b, n, c = patches.shape
 
     assert b == 2
@@ -63,10 +62,10 @@ def test_patch_embedding_shape(
 
 def test_prepare_tokens_output_shape(
     tiny_vit: DinoVisionTransformer,
-    tiny_input: Tensor,
+    tiny_input: torch.Tensor,
 ) -> None:
     """prepare_tokens_with_masks adds CLS and keeps correct embedding dims."""
-    tokens: Tensor = tiny_vit.prepare_tokens_with_masks(tiny_input)
+    tokens: torch.Tensor = tiny_vit.prepare_tokens_with_masks(tiny_input)
 
     expected_tokens: int = 1 + tiny_vit.patch_embed.num_patches
     assert tokens.shape == (2, expected_tokens, tiny_vit.embed_dim)
@@ -74,17 +73,17 @@ def test_prepare_tokens_output_shape(
 
 def test_forward_features_training_output_shapes(
     tiny_vit: DinoVisionTransformer,
-    tiny_input: Tensor,
+    tiny_input: torch.Tensor,
 ) -> None:
     """forward(is_training=True) returns a dict with expected shapes."""
-    out: dict[str, Tensor | None] = tiny_vit(tiny_input, is_training=True)  # type: ignore[assignment]
+    out: dict[str, torch.Tensor | None] = tiny_vit(tiny_input, is_training=True)  # type: ignore[assignment]
 
     assert isinstance(out, dict)
     assert out["x_norm_clstoken"] is not None
     assert out["x_norm_patchtokens"] is not None
 
-    cls: Tensor = out["x_norm_clstoken"]  # type: ignore[assignment]
-    patches: Tensor = out["x_norm_patchtokens"]  # type: ignore[assignment]
+    cls: torch.Tensor = out["x_norm_clstoken"]  # type: ignore[assignment]
+    patches: torch.Tensor = out["x_norm_patchtokens"]  # type: ignore[assignment]
 
     assert cls.shape == (2, tiny_vit.embed_dim)
     assert patches.shape[1] == tiny_vit.patch_embed.num_patches
@@ -92,28 +91,28 @@ def test_forward_features_training_output_shapes(
 
 def test_forward_inference_output_shape(
     tiny_vit: DinoVisionTransformer,
-    tiny_input: Tensor,
+    tiny_input: torch.Tensor,
 ) -> None:
     """Inference mode returns class-token output only."""
-    out: Tensor = tiny_vit(tiny_input)  # default is is_training=False
+    out: torch.Tensor = tiny_vit(tiny_input)  # default is is_training=False
 
-    assert isinstance(out, Tensor)
+    assert isinstance(out, torch.Tensor)
     assert out.shape == (2, tiny_vit.embed_dim)
 
 
 def test_get_intermediate_layers_shapes(
     tiny_vit: DinoVisionTransformer,
-    tiny_input: Tensor,
+    tiny_input: torch.Tensor,
 ) -> None:
     """Intermediate layer extraction returns tensors shaped (B, tokens, C)."""
-    feats: tuple[Tensor, ...] = tiny_vit.get_intermediate_layers(
+    feats: tuple[torch.Tensor, ...] = tiny_vit.get_intermediate_layers(
         tiny_input,
         n=1,
     )
 
     assert len(feats) == 1
 
-    f: Tensor = feats[0]
+    f: torch.Tensor = feats[0]
     assert f.shape[0] == 2  # batch
     assert f.shape[2] == tiny_vit.embed_dim
 

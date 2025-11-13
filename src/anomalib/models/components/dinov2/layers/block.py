@@ -1,34 +1,26 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Meta Platforms, Inc. and affiliates.
+# SPDX-License-Identifier: Apache-2.0
+
 
 """Transformer blocks used in DINOv2 Vision Transformers.
 
 This module implements:
 - Standard transformer blocks with attention and MLP (`Block`)
 - Causal attention blocks (`CausalAttentionBlock`)
-
-The implementation is adapted from the original DINO and timm Vision
-Transformer code:
-
-- https://github.com/facebookresearch/dino/blob/master/vision_transformer.py
-- https://github.com/rwightman/pytorch-image-models/tree/master/timm/layers/patch_embed.py
 """
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING
+from collections.abc import Callable
 
 import torch
-from torch import Tensor, nn
+from torch import nn
 
 from .attention import Attention
 from .drop_path import DropPath
 from .layer_scale import LayerScale
 from .mlp import Mlp
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
 
 logger = logging.getLogger("dinov2")
 
@@ -66,7 +58,7 @@ class Block(nn.Module):
         ffn_bias: bool = True,
         drop: float = 0.0,
         attn_drop: float = 0.0,
-        init_values: float | Tensor | None = None,
+        init_values: float | torch.Tensor | None = None,
         drop_path: float = 0.0,
         act_layer: Callable[..., nn.Module] = nn.GELU,
         norm_layer: Callable[..., nn.Module] = nn.LayerNorm,
@@ -101,13 +93,13 @@ class Block(nn.Module):
 
         self.sample_drop_ratio: float = drop_path
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Apply attention and MLP residual blocks with optional stochastic depth."""
 
-        def attn_residual_func(inp: Tensor) -> Tensor:
+        def attn_residual_func(inp: torch.Tensor) -> torch.Tensor:
             return self.ls1(self.attn(self.norm1(inp)))
 
-        def ffn_residual_func(inp: Tensor) -> Tensor:
+        def ffn_residual_func(inp: torch.Tensor) -> torch.Tensor:
             return self.ls2(self.mlp(self.norm2(inp)))
 
         if self.training and self.sample_drop_ratio > 0.1:
@@ -200,17 +192,17 @@ class CausalAttentionBlock(nn.Module):
         nn.init.normal_(self.feed_forward.fc2.weight, std=init_proj_std)
         self.ffn_norm.reset_parameters()
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Apply causal attention followed by a feed-forward block."""
         x_attn = x + self.ls1(self.attention(self.attention_norm(x), self.is_causal))
         return x_attn + self.ls2(self.feed_forward(self.ffn_norm(x_attn)))
 
 
 def drop_add_residual_stochastic_depth(
-    x: Tensor,
-    residual_func: Callable[[Tensor], Tensor],
+    x: torch.Tensor,
+    residual_func: Callable[[torch.Tensor], torch.Tensor],
     sample_drop_ratio: float = 0.0,
-) -> Tensor:
+) -> torch.Tensor:
     """Apply stochastic depth to a residual branch on a subset of samples.
 
     Args:
@@ -219,7 +211,7 @@ def drop_add_residual_stochastic_depth(
         sample_drop_ratio: Fraction of samples to drop for residual computation.
 
     Returns:
-        Tensor with residual added to a subset of samples.
+        torch.Tensor with residual added to a subset of samples.
     """
     b, _, _ = x.shape
     sample_subset_size = max(int(b * (1 - sample_drop_ratio)), 1)

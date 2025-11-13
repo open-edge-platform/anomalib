@@ -1,5 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Meta Platforms, Inc. and affiliates.
+# SPDX-License-Identifier: Apache-2.0
 
 """SwiGLU-based feed-forward layers used in DINOv2.
 
@@ -12,15 +14,11 @@ including:
 These layers are used as transformer FFN blocks in DINOv2 models.
 """
 
-from __future__ import annotations
+from collections.abc import Callable
 
-from typing import TYPE_CHECKING
-
+import torch
 import torch.nn.functional as F  # noqa: N812
-from torch import Tensor, nn
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
+from torch import nn
 
 
 class SwiGLUFFN(nn.Module):
@@ -55,7 +53,7 @@ class SwiGLUFFN(nn.Module):
         self.w12 = nn.Linear(in_features, 2 * hidden_features, bias=bias)
         self.w3 = nn.Linear(hidden_features, out_features, bias=bias)
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Apply the SwiGLU feed-forward transformation."""
         x12 = self.w12(x)
         x1, x2 = x12.chunk(2, dim=-1)
@@ -138,7 +136,7 @@ class SwiGLUFFNAligned(nn.Module):
         self.w2 = nn.Linear(in_features, hidden_aligned, bias=bias, device=device)
         self.w3 = nn.Linear(hidden_aligned, out_features, bias=bias, device=device)
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Apply aligned SwiGLU feed-forward transformation."""
         x1 = self.w1(x)
         x2 = self.w2(x)

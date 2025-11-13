@@ -1,5 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Meta Platforms, Inc. and affiliates.
+# SPDX-License-Identifier: Apache-2.0
 
 """Loader for DINOv2 Vision Transformer models.
 
@@ -12,11 +14,9 @@ The module forms the backbone for DINO-based feature extraction used in Dinomaly
 and related anomaly detection frameworks.
 """
 
-from __future__ import annotations
-
 import math
+from collections.abc import Callable, Sequence
 from functools import partial
-from typing import TYPE_CHECKING
 
 import numpy as np
 import torch
@@ -24,9 +24,6 @@ from torch import nn
 from torch.nn.init import trunc_normal_
 
 from anomalib.models.components.dinov2.layers import Block, MemEffAttention, Mlp, PatchEmbed, SwiGLUFFNFused
-
-if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
 
 
 def named_apply(

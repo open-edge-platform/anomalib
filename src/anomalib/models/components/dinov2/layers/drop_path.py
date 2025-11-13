@@ -1,5 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Meta Platforms, Inc. and affiliates.
+# SPDX-License-Identifier: Apache-2.0
 
 """Stochastic depth drop-path implementation used in DINOv2.
 
@@ -8,12 +10,11 @@ nn.Module wrapper. Drop-path (also known as stochastic depth) randomly
 drops entire residual branches during training to improve model robustness.
 """
 
-from __future__ import annotations
+import torch
+from torch import nn
 
-from torch import Tensor, nn
 
-
-def drop_path(x: Tensor, drop_prob: float = 0.0, training: bool = False) -> Tensor:
+def drop_path(x: torch.torch.Tensor, drop_prob: float = 0.0, training: bool = False) -> torch.Tensor:
     """Apply stochastic depth to an input tensor.
 
     Args:
@@ -22,7 +23,7 @@ def drop_path(x: Tensor, drop_prob: float = 0.0, training: bool = False) -> Tens
         training: Whether the module is in training mode.
 
     Returns:
-        Tensor with dropped paths applied during training, or the original
+        torch.Tensor with dropped paths applied during training, or the original
         tensor during evaluation.
 
     Notes:
@@ -57,6 +58,6 @@ class DropPath(nn.Module):
         super().__init__()
         self.drop_prob = drop_prob if drop_prob is not None else 0.0
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass applying stochastic depth."""
         return drop_path(x, drop_prob=self.drop_prob, training=self.training)

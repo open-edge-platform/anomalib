@@ -119,9 +119,7 @@ class DinomalyModel(nn.Module):
             fuse_layer_decoder = DEFAULT_FUSE_LAYERS
 
         self.encoder_name = encoder_name
-        encoder = DinoV2Loader(
-            vit_factory=dinomaly_vision_transformer,
-        ).load(encoder_name)
+        encoder = DinoV2Loader(vit_factory=dinomaly_vision_transformer).load(encoder_name)
 
         # Extract architecture configuration based on the model name
         arch_config = self._get_architecture_config(encoder_name, target_layers)

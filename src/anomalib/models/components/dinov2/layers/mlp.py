@@ -1,5 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2025 Meta Platforms, Inc. and affiliates.
+# SPDX-License-Identifier: Apache-2.0
 
 """Feed-forward MLP block used in DINOv2 Vision Transformers.
 
@@ -8,14 +10,10 @@ activation function and dropout. It is used as the feed-forward component
 inside each transformer block.
 """
 
-from __future__ import annotations
+from collections.abc import Callable
 
-from typing import TYPE_CHECKING
-
-from torch import Tensor, nn
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
+import torch
+from torch import nn
 
 
 class Mlp(nn.Module):
@@ -51,7 +49,7 @@ class Mlp(nn.Module):
         self.fc2 = nn.Linear(hidden_features, out_features, bias=bias)
         self.drop = nn.Dropout(drop)
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Apply the two-layer feed-forward transformation."""
         x = self.fc1(x)
         x = self.act(x)
