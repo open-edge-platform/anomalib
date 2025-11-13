@@ -24,6 +24,7 @@ export const Toolbar = () => {
 
                 <Flex marginStart='auto' alignItems={'center'} gap={'size-200'}>
                     <ModelsPicker />
+
                     <Divider size={'S'} orientation={'vertical'} />
                     <InferenceOpacity />
                     <Divider size={'S'} orientation={'vertical'} />

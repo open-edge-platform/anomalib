@@ -70,7 +70,13 @@ interface InferenceProviderProps {
 export const InferenceProvider = ({ children }: InferenceProviderProps) => {
     const { data: pipeline } = usePipeline();
     const { projectId } = useProjectIdentifier();
-    const updatePipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline');
+    const updatePipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
+        meta: {
+            invalidates: [
+                ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id: projectId } } }],
+            ],
+        },
+    });
 
     const { selectedMediaItem } = useSelectedMediaItem();
     const [inferenceOpacity, setInferenceOpacity] = useState<number>(0.75);
