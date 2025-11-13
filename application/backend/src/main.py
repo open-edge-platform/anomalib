@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from starlette.responses import JSONResponse, Response
 
+from api.endpoints.active_pipeline_endpoints import router as active_pipeline_router
 from api.endpoints.devices_endpoints import device_router
 from api.endpoints.job_endpoints import job_router
 from api.endpoints.media_endpoints import media_router
@@ -55,6 +56,7 @@ app.include_router(job_router)
 app.include_router(media_router)
 app.include_router(model_router)
 app.include_router(pipeline_router)
+app.include_router(active_pipeline_router)
 app.include_router(source_router)
 app.include_router(sink_router)
 app.include_router(webrtc_router)

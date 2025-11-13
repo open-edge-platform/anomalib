@@ -123,31 +123,41 @@ class InferenceWorker(BaseProcessWorker):
             logger.debug(f"Error while handling model reload event: {e}")
 
     @logger.catch()
-    async def run_loop(self) -> None:  # noqa: PLR0912, PLR0915
+    async def run_loop(self) -> None:  # noqa: PLR0912, PLR0915, C901
         while not self.should_stop():
-            # Ensure model is loaded/selected from active pipeline
-            active_model = await self._get_active_model()
-            if active_model is None:
-                logger.trace("No active model configured; retrying in 1 second")
-                await asyncio.sleep(1)
-                continue
-
-            # Refresh loaded model reference if changed
-            if self._loaded_model is None or self._loaded_model.id != active_model.id:
-                self._loaded_model = active_model
-                logger.info(f"Using model '{self._loaded_model.name}' ({self._loaded_model.id}) for inference")
-
-            await self._handle_model_reload()
-
             # Pull next frame
             try:
                 stream_data: StreamData = self._frame_queue.get(timeout=1)
             except std_queue.Empty:
-                logger.debug("No frame available for inference yet")
+                logger.debug("No frame available yet")
                 continue
-            except Exception:
-                logger.debug("No frame available for inference yet")
+            except Exception as e:
+                logger.error("Failed to get frame from queue: %s", e)
                 continue
+
+            # Ensure model is loaded/selected from active pipeline
+            active_model = await self._get_active_model()
+            passthrough_mode = active_model is None
+            if passthrough_mode:
+                logger.debug("No active model configured; frame passthrough mode")
+                # Enqueue for downstream dispatchers/visualization
+                try:
+                    self._pred_queue.put(stream_data, timeout=1)
+                except std_queue.Full:
+                    logger.debug("Prediction queue is full (passthrough mode); dropping frame")
+                continue
+
+            # Refresh loaded model reference if changed
+            if self._loaded_model is None or self._loaded_model.id != active_model.id:  # type: ignore[union-attr]
+                self._loaded_model = active_model
+                logger.info(f"Using model '{self._loaded_model.name}' ({self._loaded_model.id}) for inference")  # type: ignore[union-attr]
+
+            if self._loaded_model is None:
+                logger.error("Loaded model is None after assignment; skipping frame")
+                await asyncio.sleep(1)
+                continue
+
+            await self._handle_model_reload()
 
             # Prepare input bytes for ModelService.predict_image (expects encoded image bytes)
             frame = stream_data.frame_data

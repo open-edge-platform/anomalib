@@ -81,7 +81,7 @@ def mock_services(mock_config, mock_video_stream):
     ):
         # Set up the mocks
         mock_config_instance = Mock()
-        mock_config_instance.get_source_config.return_value = mock_config
+        mock_config_instance.source_config = mock_config
 
         # Mock the async create method
         async def mock_create(*args, **kwargs):

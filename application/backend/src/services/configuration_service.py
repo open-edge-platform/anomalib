@@ -102,6 +102,8 @@ class ConfigurationService:
     async def update_source(self, source_id: UUID, project_id: UUID, partial_config: dict) -> Source:
         async with get_async_db_session_ctx() as db:
             source = await self.get_source_by_id(source_id, project_id, db)
+            if not source:
+                raise ResourceNotFoundError(ResourceType.SOURCE, str(source_id))
             source_repo = SourceRepository(db, project_id=project_id)
             updated = await source_repo.update(source, partial_config)
             await self._on_config_changed(updated.id, PipelineField.SOURCE_ID, db, self._notify_source_changed)

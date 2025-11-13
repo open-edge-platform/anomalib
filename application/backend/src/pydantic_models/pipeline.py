@@ -14,15 +14,24 @@ from pydantic_models.source import Source
 
 class PipelineStatus(StrEnum):
     IDLE = "idle"
+    ACTIVE = "active"
     RUNNING = "running"
 
     @classmethod
-    def from_bool(cls, is_running: bool) -> "PipelineStatus":
-        return cls.RUNNING if is_running else cls.IDLE
+    def from_bool(cls, is_running: bool, is_active: bool) -> "PipelineStatus":
+        if is_running:
+            return cls.RUNNING
+        if is_active:
+            return cls.ACTIVE
+        return cls.IDLE
 
     @property
-    def as_bool(self) -> bool:
+    def is_running(self) -> bool:
         return self == PipelineStatus.RUNNING
+
+    @property
+    def is_active(self) -> bool:
+        return self in {PipelineStatus.RUNNING, PipelineStatus.ACTIVE}
 
 
 class Pipeline(BaseModel):
@@ -40,6 +49,7 @@ class Pipeline(BaseModel):
     status: PipelineStatus = PipelineStatus.IDLE  # Current status of the pipeline
     inference_device: str | None = Field(default=None)
     is_running: bool | None = Field(default=None, exclude=True)  # If set will overwrite status
+    is_active: bool | None = Field(default=None, exclude=True)  # If set will overwrite status
 
     model_config = ConfigDict(
         validate_assignment=True,

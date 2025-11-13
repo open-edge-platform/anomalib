@@ -58,7 +58,7 @@ class StreamLoader(BaseProcessWorker):
 
         while not self.should_stop():
             try:
-                source_config = self._active_pipeline_service.get_source_config()
+                source_config = self._active_pipeline_service.source_config
 
                 if source_config.source_type == SourceType.DISCONNECTED:
                     logger.trace("No source available... retrying in 1 second")
@@ -83,6 +83,7 @@ class StreamLoader(BaseProcessWorker):
                         await asyncio.sleep(0.1)
                 except Exception as e:
                     logger.error(f"Error acquiring frame. Details: `{str(e)}`")
+                    await asyncio.sleep(1)
                     continue
             except Exception as e:
                 logger.error(f"Error acquiring frame. Details: `{str(e)}`")
