@@ -24,9 +24,7 @@ from anomalib.data import InferenceBatch
 from anomalib.models.components import GaussianBlur2d
 from anomalib.models.components.dinov2 import DinoV2Loader
 from anomalib.models.image.dinomaly.components import CosineHardMiningLoss, DinomalyMLP, LinearAttention
-from anomalib.models.image.dinomaly.components.vision_transformer import (
-    DinoVisionTransformer as DinomalyVisionTransformer,
-)
+from anomalib.models.image.dinomaly.components import vision_transformer as dinomaly_vision_transformer
 
 # Encoder architecture configurations for DINOv2 models.
 # The target layers are the
@@ -122,8 +120,8 @@ class DinomalyModel(nn.Module):
 
         self.encoder_name = encoder_name
         encoder = DinoV2Loader(
-            vit_factory=DinomalyVisionTransformer,
-        ).from_name(encoder_name)
+            vit_factory=dinomaly_vision_transformer,
+        ).load(encoder_name)
 
         # Extract architecture configuration based on the model name
         arch_config = self._get_architecture_config(encoder_name, target_layers)

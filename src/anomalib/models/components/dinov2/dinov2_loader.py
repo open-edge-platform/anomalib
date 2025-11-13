@@ -148,7 +148,7 @@ class DinoV2Loader:
             model_kwargs["num_register_tokens"] = 4
 
         # If user supplied a custom ViT module, use it
-        module = self.vit_factory or MODEL_FACTORIES[model_type]
+        module = self.vit_factory if self.vit_factory is not None else MODEL_FACTORIES[model_type]
 
         ctor = getattr(module, f"vit_{architecture}", None)
         if ctor is None:
