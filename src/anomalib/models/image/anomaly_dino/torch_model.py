@@ -28,7 +28,7 @@ from torch.nn import functional as F  # noqa: N812
 
 from anomalib.data import InferenceBatch
 from anomalib.models.components import DynamicBufferMixin, KCenterGreedy
-from anomalib.models.image.dinomaly.components import load as load_dinov2_model
+from anomalib.models.components.dinov2 import DinoV2Loader
 from anomalib.models.image.patchcore.anomaly_map import AnomalyMapGenerator
 
 
@@ -78,7 +78,7 @@ class AnomalyDINOModel(DynamicBufferMixin, nn.Module):
         if not encoder_name.startswith("dinov2"):
             err_str = f"Encoder must be dinov2, got {encoder_name}"
             raise ValueError(err_str)
-        self.feature_encoder = load_dinov2_model(self.encoder_name)
+        self.feature_encoder = DinoV2Loader.from_name(self.encoder_name)
         self.feature_encoder.eval()
 
         # Memory bank and embedding storage
@@ -124,9 +124,7 @@ class AnomalyDINOModel(DynamicBufferMixin, nn.Module):
             where ``N`` is the number of patches and ``D`` the feature dimension.
         """
         with torch.inference_mode():
-            tokens = self.feature_encoder.get_intermediate_layers(image_tensor, n=1)[0]
-            start = self.feature_encoder.num_tokens + self.feature_encoder.num_register_tokens
-            return tokens[:, start:, :]
+            return self.feature_encoder.get_intermediate_layers(image_tensor, n=1)[0]
 
     @staticmethod
     def compute_background_masks(
