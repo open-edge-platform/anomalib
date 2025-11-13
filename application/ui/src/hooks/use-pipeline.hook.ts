@@ -80,3 +80,25 @@ export const useConnectSinkToPipeline = () => {
     return (sink_id: string) =>
         pipeline.mutateAsync({ params: { path: { project_id: projectId } }, body: { sink_id } });
 };
+
+export const useActivePipeline = () => {
+    const projectsQuery = $api.useQuery('get', '/api/projects');
+    const projectIds = projectsQuery.data?.projects?.map(({ id }) => String(id)) ?? [];
+
+    const pipelineQueries = projectIds.map((projectId) =>
+        $api.useQuery(
+            'get',
+            '/api/projects/{project_id}/pipeline',
+            { params: { path: { project_id: projectId } } },
+            { enabled: !!projectsQuery.data }
+        )
+    );
+
+    const activePipeline = pipelineQueries.find(({ data }) => data?.status === 'running')?.data;
+
+    return {
+        data: activePipeline,
+        error: projectsQuery.error || pipelineQueries.find(({ error }) => error)?.error,
+        isLoading: projectsQuery.isLoading || pipelineQueries.some(({ isLoading }) => isLoading),
+    };
+};

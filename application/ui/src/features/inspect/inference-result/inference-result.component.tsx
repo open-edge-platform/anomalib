@@ -1,14 +1,16 @@
-import { Flex, Text } from '@adobe/react-spectrum';
 import { $api } from '@geti-inspect/api';
-import { useProjectIdentifier } from '@geti-inspect/hooks';
-import { Grid, Heading, Loading } from '@geti/ui';
+import { useActivePipeline, useProjectIdentifier } from '@geti-inspect/hooks';
+import { Flex, Grid, Loading, Text } from '@geti/ui';
 import { clsx } from 'clsx';
+import isEmpty from 'lodash-es/isEmpty';
 import { AnimatePresence, motion } from 'motion/react';
 import { useSpinDelay } from 'spin-delay';
 
-import { useInference } from './inference-provider.component';
-import { useSelectedMediaItem } from './selected-media-item-provider.component';
-import { StreamContainer } from './stream/stream-container';
+import { useInference } from '../inference-provider.component';
+import { useSelectedMediaItem } from '../selected-media-item-provider.component';
+import { StreamContainer } from '../stream/stream-container';
+import { EnableProject } from './enable-project/enable-project.component';
+import { TrainModel } from './train-model/train-model.component';
 
 import styles from './inference.module.scss';
 
@@ -41,50 +43,33 @@ const LabelScore = ({ label, score }: LabelProps) => {
 const useIsInferenceAvailable = () => {
     const { projectId } = useProjectIdentifier();
     const { data } = $api.useQuery('get', '/api/projects/{project_id}/models', {
-        params: {
-            path: {
-                project_id: projectId,
-            },
-        },
+        params: { path: { project_id: projectId } },
     });
 
     return data?.models.length !== 0;
 };
 
 export const InferenceResult = () => {
+    const { projectId } = useProjectIdentifier();
     const { selectedMediaItem } = useSelectedMediaItem();
-    const { isPending, inferenceResult, inferenceOpacity } = useInference();
     const isInferenceAvailable = useIsInferenceAvailable();
+    const { data: activeProjectPipeline } = useActivePipeline();
+    const { isPending, inferenceResult, inferenceOpacity } = useInference();
     const isLoadingInference = useSpinDelay(isPending, { delay: 300 });
+
+    const hasActiveProject = !isEmpty(activeProjectPipeline);
+    const isCurrentProjectActive = activeProjectPipeline?.project_id === projectId;
+
+    if (!isInferenceAvailable && selectedMediaItem === undefined) {
+        return <TrainModel />;
+    }
+
+    if (hasActiveProject && !isCurrentProjectActive) {
+        return <EnableProject />;
+    }
 
     if (selectedMediaItem === undefined) {
         return <StreamContainer />;
-    }
-
-    if (!isInferenceAvailable && selectedMediaItem === undefined) {
-        return (
-            <Grid
-                gridArea={'canvas'}
-                UNSAFE_className={styles.canvasContainer}
-                justifyContent={'center'}
-                alignContent={'center'}
-            >
-                <Heading>No trained models available. Please train a model to start inference.</Heading>
-            </Grid>
-        );
-    }
-
-    if (selectedMediaItem === undefined) {
-        return (
-            <Grid
-                gridArea={'canvas'}
-                UNSAFE_className={styles.canvasContainer}
-                justifyContent={'center'}
-                alignContent={'center'}
-            >
-                <Heading>Select an image to start inference and receive predictions.</Heading>
-            </Grid>
-        );
     }
 
     const mediaUrl = `/api/projects/${selectedMediaItem.project_id}/images/${selectedMediaItem.id}/full`;

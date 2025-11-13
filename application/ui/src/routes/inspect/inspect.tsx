@@ -6,7 +6,7 @@ import { Grid } from '@geti/ui';
 
 import { Footer } from '../../features/inspect/footer/footer.component';
 import { InferenceProvider } from '../../features/inspect/inference-provider.component';
-import { InferenceResult } from '../../features/inspect/inference-result.component';
+import { InferenceResult } from '../../features/inspect/inference-result/inference-result.component';
 import { SelectedMediaItemProvider } from '../../features/inspect/selected-media-item-provider.component';
 import { Sidebar } from '../../features/inspect/sidebar.component';
 import { Toolbar } from '../../features/inspect/toolbar/toolbar';

@@ -12,7 +12,7 @@ import { useEnablePipeline, usePipeline } from 'src/hooks/use-pipeline.hook';
 import { useWebRTCConnection } from '../../../components/stream/web-rtc-connection-provider';
 import { Stream } from './stream';
 
-import classes from '../inference.module.scss';
+import classes from './stream-container.module.scss';
 
 export const StreamContainer = () => {
     const { projectId } = useProjectIdentifier();
