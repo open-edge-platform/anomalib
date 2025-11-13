@@ -176,6 +176,7 @@ class ExportMixin:
             args=(input_shape.to(self.device),),
             f=str(onnx_path),
             opset_version=kwargs.pop("opset_version", 14),
+            dynamo=False,
             dynamic_axes=kwargs.pop("dynamic_axes", dynamic_axes),
             input_names=kwargs.pop("input_names", ["input"]),
             output_names=kwargs.pop("output_names", output_names),

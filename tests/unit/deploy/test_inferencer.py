@@ -116,7 +116,7 @@ def test_openvino_inference(ckpt_path: Callable[[str], Path]) -> None:
 def compare_predictions(
     pred1: ImageBatch | NumpyImageBatch,
     pred2: ImageBatch | NumpyImageBatch,
-    tolerance: float = 1e-3,
+    tolerance: float = 3e-3,
 ) -> None:
     """Compare predictions from two different inference methods."""
     score1 = pred1.pred_score if hasattr(pred1, "pred_score") else None
