@@ -10,3 +10,7 @@
 .actionMenu svg {
     transform: rotate(90deg);
 }
+
+.active {
+    background-color: var(--spectrum-global-color-gray-100);
+}

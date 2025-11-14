@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { toast } from '@geti/ui';
-import { useQueries } from '@tanstack/react-query';
-import { $api, fetchClient } from 'src/api/client';
+import { $api } from 'src/api/client';
 
 import { useProjectIdentifier } from './use-project-identifier.hook';
 
@@ -53,6 +52,7 @@ export const useEnablePipeline = ({ onSuccess }: { onSuccess?: () => void }) => 
         meta: {
             invalidates: [
                 ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id: projectId } } }],
+                ['get', '/api/active-pipeline'],
             ],
         },
     });
@@ -61,7 +61,10 @@ export const useEnablePipeline = ({ onSuccess }: { onSuccess?: () => void }) => 
 export const useDisablePipeline = (project_id: string) => {
     return $api.useMutation('post', '/api/projects/{project_id}/pipeline:disable', {
         meta: {
-            invalidates: [['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id } } }]],
+            invalidates: [
+                ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id } } }],
+                ['get', '/api/active-pipeline'],
+            ],
         },
     });
 };
@@ -83,32 +86,5 @@ export const useConnectSinkToPipeline = () => {
 };
 
 export const useActivePipeline = () => {
-    const projectsQuery = $api.useQuery('get', '/api/projects');
-    const projectIds = projectsQuery.data?.projects?.map(({ id }) => String(id)) ?? [];
-
-    const activePipelineResult = useQueries({
-        queries: projectIds.map((projectId) => ({
-            queryKey: ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id: projectId } } }],
-            queryFn: async () => {
-                const response = await fetchClient.GET('/api/projects/{project_id}/pipeline', {
-                    params: { path: { project_id: projectId } },
-                });
-                return response.data;
-            },
-            enabled: projectIds.length > 0,
-        })),
-        combine: (results) => {
-            return {
-                data: results.find(({ data }) => data?.status === 'running')?.data,
-                error: results.find(({ error }) => error)?.error,
-                isLoading: results.some(({ isLoading }) => isLoading),
-            };
-        },
-    });
-
-    return {
-        data: activePipelineResult.data,
-        error: projectsQuery.error || activePipelineResult.error,
-        isLoading: projectsQuery.isLoading || activePipelineResult.isLoading,
-    };
+    return $api.useQuery('get', '/api/active-pipeline');
 };

@@ -13,12 +13,16 @@ interface EnableProjectProps {
     currentProjectId: string;
 }
 
-export const EnableProject = ({ activeProjectId, currentProjectId }: EnableProjectProps) => {
+const useStopCurrentWebRtcConnection = () => {
     const { stop } = useWebRTCConnection();
 
     useEffect(() => {
         stop();
     }, [stop]);
+};
+
+export const EnableProject = ({ activeProjectId, currentProjectId }: EnableProjectProps) => {
+    useStopCurrentWebRtcConnection();
 
     return (
         <Flex UNSAFE_className={classes.container} alignItems={'center'} justifyContent={'center'}>

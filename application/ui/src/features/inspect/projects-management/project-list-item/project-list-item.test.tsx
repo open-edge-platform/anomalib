@@ -37,7 +37,7 @@ describe('ProjectListItem', () => {
     });
 
     it('navigates to project when clicked', async () => {
-        render(<ProjectListItem project={mockProject} isInEditMode={false} onBlur={vi.fn()} />);
+        render(<ProjectListItem project={mockProject} isInEditMode={false} onBlur={vi.fn()} isActive={false} />);
 
         await userEvent.click(screen.getByRole('listitem'));
 
