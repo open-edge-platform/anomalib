@@ -13,7 +13,6 @@ from .metrics_service import MetricsService
 from .pipeline_service import PipelineService
 
 
-
 class PipelineMetricsService:
     def __init__(
         self,
