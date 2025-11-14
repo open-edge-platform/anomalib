@@ -110,7 +110,7 @@ async def run_pipeline(
     The pipeline will start processing data from the source, run it through the model, and send results to the sink.
     If the pipeline is not yet activated, it will be activated as well.
     """
-    await _active_pipeline(pipeline_service, project_id, set_running=True)
+    await _activate_pipeline(pipeline_service, project_id, set_running=True)
 
 
 @router.post(
@@ -133,7 +133,7 @@ async def activate_pipeline(
     Set the pipeline status to ACTIVE.
     The pipeline will be ready to run but will not start processing data until set to RUNNING.
     """
-    await _active_pipeline(pipeline_service, project_id)
+    await _activate_pipeline(pipeline_service, project_id)
 
 
 @router.post(
@@ -183,7 +183,7 @@ async def get_project_metrics(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-async def _active_pipeline(pipeline_service: PipelineService, project_id: UUID, set_running: bool = False) -> None:
+async def _activate_pipeline(pipeline_service: PipelineService, project_id: UUID, set_running: bool = False) -> None:
     if (active_pipeline := await pipeline_service.get_active_pipeline()) and active_pipeline.project_id != project_id:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
