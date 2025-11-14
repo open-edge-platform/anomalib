@@ -84,9 +84,7 @@ class InferenceWorker(BaseProcessWorker):
                 self._loaded_model = await self._get_active_model()
 
                 if self._loaded_model is None:
-                    logger.error("No active model configured.")
                     raise RuntimeError("No active model configured.")
-
                 # Remove cached model to force reload
                 try:
                     self._cached_models.pop(self._loaded_model.id, None)
