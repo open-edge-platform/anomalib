@@ -11,10 +11,11 @@ from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from pydantic import ValidationError
 
-from api.dependencies import get_pipeline_service, get_project_id
+from api.dependencies import get_pipeline_metrics_service, get_pipeline_service, get_project_id
 from pydantic_models.metrics import PipelineMetrics
 from pydantic_models.pipeline import Pipeline, PipelineStatus
 from services import PipelineService
+from services.pipeline_metrics_service import PipelineMetricsService
 
 router = APIRouter(prefix="/api/projects/{project_id}/pipeline", tags=["Pipelines"])
 
@@ -163,7 +164,7 @@ async def disable_pipeline(
 )
 async def get_project_metrics(
     project_id: Annotated[UUID, Depends(get_project_id)],
-    pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
+    pipeline_metrics_service: Annotated[PipelineMetricsService, Depends(get_pipeline_metrics_service)],
     time_window: int = 60,
 ) -> PipelineMetrics:
     """
@@ -178,7 +179,7 @@ async def get_project_metrics(
         )
 
     try:
-        return await pipeline_service.get_pipeline_metrics(project_id, time_window)
+        return await pipeline_metrics_service.get_pipeline_metrics(project_id, time_window)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 

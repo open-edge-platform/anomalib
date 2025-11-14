@@ -3,6 +3,7 @@
 
 from .job import Job, JobList, JobStatus, JobType
 from .media import ImageExtension, Media, MediaList
+from .metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, TimeWindow
 from .model import Model, ModelList, PredictionLabel, PredictionResponse
 from .pipeline import Pipeline, PipelineStatus
 from .project import Project, ProjectList
@@ -14,16 +15,19 @@ __all__ = [
     "DisconnectedSinkConfig",
     "DisconnectedSourceConfig",
     "ImageExtension",
+    "InferenceMetrics",
     "Job",
     "JobList",
     "JobStatus",
     "JobType",
+    "LatencyMetrics",
     "Media",
     "MediaList",
     "Model",
     "ModelList",
     "OutputFormat",
     "Pipeline",
+    "PipelineMetrics",
     "PipelineStatus",
     "PredictionLabel",
     "PredictionResponse",
@@ -33,5 +37,6 @@ __all__ = [
     "SinkType",
     "Source",
     "SourceType",
+    "TimeWindow",
     "TrainableModelList",
 ]

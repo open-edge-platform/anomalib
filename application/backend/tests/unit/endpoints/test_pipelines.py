@@ -9,14 +9,15 @@ import pytest
 from fastapi import status
 from pydantic import ValidationError
 
-from api.dependencies import get_pipeline_service
+from api.dependencies import get_pipeline_metrics_service, get_pipeline_service
 from main import app
-from pydantic_models.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, TimeWindow
+from pydantic_models.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
 from pydantic_models.model import Model
 from pydantic_models.pipeline import Pipeline, PipelineStatus
 from pydantic_models.sink import FolderSinkConfig
 from pydantic_models.source import VideoFileSourceConfig
 from services import PipelineService
+from services.pipeline_metrics_service import PipelineMetricsService
 
 
 @pytest.fixture
@@ -34,6 +35,13 @@ def fxt_pipeline_service() -> MagicMock:
     pipeline_service.get_active_pipeline = AsyncMock(return_value=None)
     app.dependency_overrides[get_pipeline_service] = lambda: pipeline_service
     return pipeline_service
+
+
+@pytest.fixture
+def fxt_pipeline_metrics_service() -> MagicMock:
+    pipeline_metrics_service = MagicMock(spec=PipelineMetricsService)
+    app.dependency_overrides[get_pipeline_metrics_service] = lambda: pipeline_metrics_service
+    return pipeline_metrics_service
 
 
 class TestPipelineEndpoints:
@@ -230,27 +238,30 @@ class TestPipelineEndpoints:
             fxt_pipeline.project_id, {"status": PipelineStatus.RUNNING}
         )
 
-    def test_get_pipeline_metrics_success(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+    def test_get_pipeline_metrics_success(self, fxt_pipeline, fxt_pipeline_metrics_service, fxt_client):
         """Test successful retrieval of pipeline metrics with default time window."""
         mock_metrics = PipelineMetrics(
             time_window=TimeWindow(start=datetime.now(UTC), end=datetime.now(UTC), time_window=60),
             inference=InferenceMetrics(
                 latency=LatencyMetrics(avg_ms=100.5, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0),
+                throughput=ThroughputMetrics(
+                    avg_requests_per_second=30.0, total_requests=1800, max_requests_per_second=45.0
+                ),
             ),
         )
-        fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
+        fxt_pipeline_metrics_service.get_pipeline_metrics.return_value = mock_metrics
 
         response = fxt_client.get(f"/api/projects/{fxt_pipeline.project_id}/pipeline/metrics")
 
         assert response.status_code == status.HTTP_200_OK
-        fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)
+        fxt_pipeline_metrics_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)
 
-    def test_get_pipeline_metrics_invalid_pipeline_id(self, fxt_pipeline_service, fxt_client):
+    def test_get_pipeline_metrics_invalid_pipeline_id(self, fxt_pipeline_metrics_service, fxt_client):
         """Test metrics endpoint with invalid pipeline ID format."""
         response = fxt_client.get("/api/projects/invalid-id/pipeline/metrics")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        fxt_pipeline_service.get_pipeline_metrics.assert_not_called()
+        fxt_pipeline_metrics_service.get_pipeline_metrics.assert_not_called()
 
     # Note: ResourceNotFoundError handling not implemented in current endpoints
     # def test_get_pipeline_metrics_pipeline_not_found(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
@@ -262,9 +273,9 @@ class TestPipelineEndpoints:
     #     assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
     #     fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)
 
-    def test_get_pipeline_metrics_pipeline_not_running(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+    def test_get_pipeline_metrics_pipeline_not_running(self, fxt_pipeline, fxt_pipeline_metrics_service, fxt_client):
         """Test metrics endpoint when pipeline is not in running state."""
-        fxt_pipeline_service.get_pipeline_metrics.side_effect = ValueError(
+        fxt_pipeline_metrics_service.get_pipeline_metrics.side_effect = ValueError(
             "Cannot get metrics for a pipeline that is not running."
         )
 
@@ -272,11 +283,11 @@ class TestPipelineEndpoints:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Cannot get metrics for a pipeline that is not running" in response.json()["detail"]
-        fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)
+        fxt_pipeline_metrics_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)
 
     @pytest.mark.parametrize("invalid_time_window", [0, -1, 3601, 7200])
     def test_get_pipeline_metrics_invalid_time_window(
-        self, invalid_time_window, fxt_pipeline, fxt_pipeline_service, fxt_client
+        self, invalid_time_window, fxt_pipeline, fxt_pipeline_metrics_service, fxt_client
     ):
         """Test metrics endpoint with invalid time window values."""
         response = fxt_client.get(
@@ -285,37 +296,45 @@ class TestPipelineEndpoints:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Duration must be between 1 and 3600 seconds" in response.json()["detail"]
-        fxt_pipeline_service.get_pipeline_metrics.assert_not_called()
+        fxt_pipeline_metrics_service.get_pipeline_metrics.assert_not_called()
 
     @pytest.mark.parametrize("valid_time_window", [1, 30, 300, 1800, 3600])
     def test_get_pipeline_metrics_valid_time_windows(
-        self, valid_time_window, fxt_pipeline, fxt_pipeline_service, fxt_client
+        self, valid_time_window, fxt_pipeline, fxt_pipeline_metrics_service, fxt_client
     ):
         """Test metrics endpoint with various valid time window values."""
         mock_metrics = PipelineMetrics(
             time_window=TimeWindow(start=datetime.now(UTC), end=datetime.now(UTC), time_window=valid_time_window),
             inference=InferenceMetrics(
                 latency=LatencyMetrics(avg_ms=100.0, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0),
+                throughput=ThroughputMetrics(
+                    avg_requests_per_second=30.0, total_requests=1800, max_requests_per_second=45.0
+                ),
             ),
         )
-        fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
+        fxt_pipeline_metrics_service.get_pipeline_metrics.return_value = mock_metrics
 
         response = fxt_client.get(
             f"/api/projects/{fxt_pipeline.project_id}/pipeline/metrics?time_window={valid_time_window}"
         )
 
         assert response.status_code == status.HTTP_200_OK
-        fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, valid_time_window)
+        fxt_pipeline_metrics_service.get_pipeline_metrics.assert_called_once_with(
+            fxt_pipeline.project_id, valid_time_window
+        )
 
-    def test_get_pipeline_metrics_no_data_available(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+    def test_get_pipeline_metrics_no_data_available(self, fxt_pipeline, fxt_pipeline_metrics_service, fxt_client):
         """Test metrics endpoint when no latency data is available."""
         mock_metrics = PipelineMetrics(
             time_window=TimeWindow(start=datetime.now(UTC), end=datetime.now(UTC), time_window=60),
             inference=InferenceMetrics(
                 latency=LatencyMetrics(avg_ms=None, min_ms=None, max_ms=None, p95_ms=None, latest_ms=None),
+                throughput=ThroughputMetrics(
+                    avg_requests_per_second=None, total_requests=None, max_requests_per_second=None
+                ),
             ),
         )
-        fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
+        fxt_pipeline_metrics_service.get_pipeline_metrics.return_value = mock_metrics
 
         response = fxt_client.get(f"/api/projects/{fxt_pipeline.project_id}/pipeline/metrics")
 
@@ -328,17 +347,20 @@ class TestPipelineEndpoints:
         assert response_data["inference"]["latency"]["p95_ms"] is None
         assert response_data["inference"]["latency"]["latest_ms"] is None
 
-        fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)
+        fxt_pipeline_metrics_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)
 
-    def test_get_pipeline_metrics_success_with_data(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+    def test_get_pipeline_metrics_success_with_data(self, fxt_pipeline, fxt_pipeline_metrics_service, fxt_client):
         """Test successful retrieval of pipeline metrics with latency data."""
         mock_metrics = PipelineMetrics(
             time_window=TimeWindow(start=datetime.now(UTC), end=datetime.now(UTC), time_window=60),
             inference=InferenceMetrics(
                 latency=LatencyMetrics(avg_ms=100.5, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0),
+                throughput=ThroughputMetrics(
+                    avg_requests_per_second=30.0, total_requests=1800, max_requests_per_second=45.0
+                ),
             ),
         )
-        fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
+        fxt_pipeline_metrics_service.get_pipeline_metrics.return_value = mock_metrics
 
         response = fxt_client.get(f"/api/projects/{str(fxt_pipeline.project_id)}/pipeline/metrics")
 
@@ -351,4 +373,4 @@ class TestPipelineEndpoints:
         assert response_data["inference"]["latency"]["p95_ms"] == 180.0
         assert response_data["inference"]["latency"]["latest_ms"] == 120.0
 
-        fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)
+        fxt_pipeline_metrics_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)

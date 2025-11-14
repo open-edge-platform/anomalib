@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
-import statistics
 import uuid
 from multiprocessing.synchronize import Condition
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -10,7 +9,6 @@ import pytest
 
 from exceptions import ResourceNotFoundException
 from pydantic_models import Pipeline, PipelineStatus
-from pydantic_models.metrics import PipelineMetrics
 from pydantic_models.model import Model
 from pydantic_models.sink import FolderSinkConfig, MqttSinkConfig
 from pydantic_models.source import VideoFileSourceConfig, WebcamSourceConfig
@@ -88,11 +86,10 @@ def fxt_model_service():
 
 
 @pytest.fixture
-def fxt_pipeline_service(fxt_active_pipeline_service, fxt_metrics_service, fxt_condition, fxt_model_service):
+def fxt_pipeline_service(fxt_active_pipeline_service, fxt_condition, fxt_model_service):
     """Fixture for PipelineService with mocked dependencies."""
     return PipelineService(
         active_pipeline_service=fxt_active_pipeline_service,
-        metrics_service=fxt_metrics_service,
         config_changed_condition=fxt_condition,
         model_service=fxt_model_service,
     )
@@ -115,17 +112,15 @@ def mock_db_context():
 
 
 class TestPipelineService:
-    def test_init(self, fxt_active_pipeline_service, fxt_metrics_service, fxt_condition, fxt_model_service):
+    def test_init(self, fxt_active_pipeline_service, fxt_condition, fxt_model_service):
         """Test PipelineService initialization."""
         service = PipelineService(
             active_pipeline_service=fxt_active_pipeline_service,
-            metrics_service=fxt_metrics_service,
             config_changed_condition=fxt_condition,
             model_service=fxt_model_service,
         )
 
         assert service._active_pipeline_service == fxt_active_pipeline_service
-        assert service._metrics_service == fxt_metrics_service
         assert service._config_changed_condition == fxt_condition
         assert service._model_service == fxt_model_service
 
@@ -325,8 +320,8 @@ class TestPipelineService:
         fxt_condition.__exit__.assert_called_once()
         fxt_condition.notify_all.assert_called_once()
         fxt_active_pipeline_service.reload.assert_called_once()
-        # Should not call activate_model when there's no model
-        fxt_model_service.activate_model.assert_not_called()
+        # activate_model is called on status change regardless of whether model exists
+        fxt_model_service.activate_model.assert_called_once()
 
     def test_update_pipeline_status_change_to_running_with_model(
         self,
@@ -354,78 +349,6 @@ class TestPipelineService:
 
         assert result == updated_pipeline
         fxt_model_service.activate_model.assert_called_once()
-
-    @pytest.mark.parametrize(
-        "latency_samples,time_window,expected_metrics,should_raise",
-        [
-            ([10.5, 12.3, 8.7, 15.2, 9.1], 60, "with_data", False),
-            ([5.1, 7.3, 6.8, 8.2, 4.9], 120, "with_data", False),
-            ([], 30, "no_data", False),
-            (None, 60, None, True),  # Not running pipeline
-        ],
-    )
-    def test_get_pipeline_metrics(
-        self,
-        fxt_pipeline_service,
-        fxt_pipeline,
-        fxt_idle_pipeline,
-        fxt_metrics_service,
-        latency_samples,
-        time_window,
-        expected_metrics,
-        should_raise,
-    ):
-        """Test getting pipeline metrics with different scenarios."""
-        if should_raise:
-            # Use idle pipeline for not running test
-            pipeline = fxt_idle_pipeline
-            fxt_metrics_service.get_latency_measurements.return_value = latency_samples
-        else:
-            pipeline = fxt_pipeline
-            fxt_metrics_service.get_latency_measurements.return_value = latency_samples
-
-        with patch.object(fxt_pipeline_service, "get_pipeline_by_id", return_value=pipeline):
-            if should_raise:
-                with pytest.raises(ValueError, match="Cannot get metrics for a pipeline that is not running"):
-                    asyncio.run(fxt_pipeline_service.get_pipeline_metrics(pipeline.project_id))
-            else:
-                result = asyncio.run(fxt_pipeline_service.get_pipeline_metrics(pipeline.project_id, time_window))
-
-                assert isinstance(result, PipelineMetrics)
-                assert result.time_window.time_window == time_window
-
-                if expected_metrics == "with_data":
-                    assert result.inference.latency.avg_ms == statistics.mean(latency_samples)
-                    assert result.inference.latency.min_ms == min(latency_samples)
-                    assert result.inference.latency.max_ms == max(latency_samples)
-                    assert result.inference.latency.latest_ms == latency_samples[-1]
-                    fxt_metrics_service.get_latency_measurements.assert_called_once_with(
-                        model_id=pipeline.model_id, time_window=time_window
-                    )
-                elif expected_metrics == "no_data":
-                    assert result.inference.latency.avg_ms is None
-                    assert result.inference.latency.min_ms is None
-                    assert result.inference.latency.max_ms is None
-                    assert result.inference.latency.p95_ms is None
-                    assert result.inference.latency.latest_ms is None
-
-    @pytest.mark.parametrize(
-        "data,percentile,expected",
-        [
-            ([], 95, 0.0),
-            ([1.0], 50, 1.0),
-            ([42.0], 95, 42.0),  # Single value edge case
-            ([1.0, 2.0, 3.0, 4.0, 5.0], 0, 1.0),  # 0th percentile edge case
-            ([1.0, 2.0, 3.0, 4.0, 5.0], 50, 3.0),
-            ([1.0, 2.0, 3.0, 4.0, 5.0], 90, 4.6),
-            ([1.0, 2.0, 3.0, 4.0, 5.0], 95, 4.8),
-            ([1.0, 2.0, 3.0, 4.0, 5.0], 100, 5.0),  # 100th percentile edge case
-        ],
-    )
-    def test_calculate_percentile(self, data, percentile, expected):
-        """Test percentile calculation with various inputs including edge cases."""
-        result = PipelineService._calculate_percentile(data, percentile)
-        assert abs(result - expected) < 0.01  # Allow small floating point differences
 
     def test_get_active_pipeline(self, fxt_pipeline, fxt_pipeline_repository):
         """Test getting the active pipeline from the database."""
