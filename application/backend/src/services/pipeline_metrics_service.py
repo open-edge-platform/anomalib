@@ -12,7 +12,6 @@ from pydantic_models.metrics import InferenceMetrics, LatencyMetrics, PipelineMe
 from .metrics_service import MetricsService
 from .pipeline_service import PipelineService
 
-MSG_ERR_DELETE_RUNNING_PIPELINE = "Cannot delete a running pipeline."
 
 
 class PipelineMetricsService:
