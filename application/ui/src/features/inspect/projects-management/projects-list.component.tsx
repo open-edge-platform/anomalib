@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { isEmpty } from 'lodash-es';
 
 import { Project, ProjectListItem } from './project-list-item/project-list-item.component';
@@ -16,6 +17,7 @@ interface ProjectListProps {
 }
 
 export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition }: ProjectListProps) => {
+    const { projectId: currentProjectId } = useProjectIdentifier();
     const isInEditionMode = (projectId?: string) => {
         return projectIdInEdition === projectId;
     };
@@ -37,6 +39,7 @@ export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition
                     project={project}
                     onBlur={handleBlur}
                     isInEditMode={isInEditionMode(project.id)}
+                    isActive={currentProjectId === project.id}
                 />
             ))}
         </ul>

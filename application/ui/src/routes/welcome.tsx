@@ -61,7 +61,7 @@ export const Welcome = () => {
         >
             <IllustratedMessage>
                 <Fireworks />
-                <Heading level={1}>Welcome to Geti Prompt!</Heading>
+                <Heading level={1}>Welcome to Geti Inspect!</Heading>
                 <Content>
                     <Flex direction={'column'} gap={'size-200'}>
                         <Text>Press the button below to create your first project</Text>

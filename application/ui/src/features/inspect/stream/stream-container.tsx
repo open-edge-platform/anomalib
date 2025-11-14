@@ -12,7 +12,7 @@ import { useEnablePipeline, usePipeline } from 'src/hooks/use-pipeline.hook';
 import { useWebRTCConnection } from '../../../components/stream/web-rtc-connection-provider';
 import { Stream } from './stream';
 
-import classes from '../inference.module.scss';
+import classes from './stream-container.module.scss';
 
 export const StreamContainer = () => {
     const { projectId } = useProjectIdentifier();
@@ -44,39 +44,37 @@ export const StreamContainer = () => {
     };
 
     return (
-        <View gridArea={'canvas'} overflow={'hidden'} maxHeight={'100%'}>
+        <Flex
+            gridArea={'canvas'}
+            maxHeight={'100%'}
+            UNSAFE_className={classes.canvasContainer}
+            alignItems={'center'}
+            justifyContent={'center'}
+        >
             {status === 'idle' && (
-                <div className={classes.canvasContainer}>
-                    <View backgroundColor={'gray-200'} width='90%' height='90%'>
-                        <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
-                            <Button
-                                onPress={handleStart}
-                                aria-label={'Start stream'}
-                                isDisabled={hasNoSink || hasNoSource}
-                                UNSAFE_className={classes.playButton}
-                            >
-                                <Play width='128px' height='128px' />
-                            </Button>
-                        </Flex>
-                    </View>
-                </div>
+                <View backgroundColor={'gray-200'} width='90%' height='90%'>
+                    <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
+                        <Button
+                            onPress={handleStart}
+                            aria-label={'Start stream'}
+                            isDisabled={hasNoSink || hasNoSource}
+                            UNSAFE_className={classes.playButton}
+                        >
+                            <Play width='128px' height='128px' />
+                        </Button>
+                    </Flex>
+                </View>
             )}
 
             {(status === 'connecting' || enablePipeline.isPending) && (
-                <div className={classes.canvasContainer}>
-                    <View backgroundColor={'gray-200'} width='90%' height='90%'>
-                        <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
-                            <Loading mode='inline' />
-                        </Flex>
-                    </View>
-                </div>
+                <View backgroundColor={'gray-200'} width='90%' height='90%'>
+                    <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
+                        <Loading mode='inline' />
+                    </Flex>
+                </View>
             )}
 
-            {status === 'connected' && (
-                <div className={classes.canvasContainer}>
-                    <Stream size={size} setSize={setSize} />
-                </div>
-            )}
-        </View>
+            {status === 'connected' && <Stream size={size} setSize={setSize} />}
+        </Flex>
     );
 };
