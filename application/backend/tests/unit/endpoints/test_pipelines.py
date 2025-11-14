@@ -78,21 +78,21 @@ class TestPipelineEndpoints:
     @pytest.mark.parametrize(
         "operation, pipeline_status",
         [
-            ("enable", PipelineStatus.RUNNING),
+            ("run", PipelineStatus.RUNNING),
             ("disable", PipelineStatus.IDLE),
         ],
     )
     def test_enable_pipeline(self, operation, pipeline_status, fxt_pipeline, fxt_pipeline_service, fxt_client):
         project_id = fxt_pipeline.project_id
-        # Mock get_active_pipeline to return None (no active pipeline) for enable operation
-        if operation == "enable":
+        # Mock get_active_pipeline to return None (no active pipeline) for run operation
+        if operation == "run":
             fxt_pipeline_service.get_active_pipeline = AsyncMock(return_value=None)
         response = fxt_client.post(f"/api/projects/{project_id}/pipeline:{operation}")
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
         fxt_pipeline_service.update_pipeline.assert_called_once_with(project_id, {"status": pipeline_status})
 
-    @pytest.mark.parametrize("operation", ["enable", "disable"])
+    @pytest.mark.parametrize("operation", ["run", "disable"])
     def test_enable_pipeline_invalid_id(self, operation, fxt_pipeline, fxt_pipeline_service, fxt_client):
         response = fxt_client.post(f"/api/projects/invalid-id/pipeline:{operation}")
 
@@ -126,7 +126,7 @@ class TestPipelineEndpoints:
             ],
         )
 
-        response = fxt_client.post(f"/api/projects/{fxt_pipeline.project_id}/pipeline:enable")
+        response = fxt_client.post(f"/api/projects/{fxt_pipeline.project_id}/pipeline:run")
 
         assert response.status_code == status.HTTP_409_CONFLICT
         fxt_pipeline_service.get_active_pipeline.assert_called_once()
@@ -175,10 +175,10 @@ class TestPipelineEndpoints:
         )
         fxt_pipeline_service.get_active_pipeline = AsyncMock(return_value=active_pipeline)
 
-        response = fxt_client.post(f"/api/projects/{fxt_pipeline.project_id}/pipeline:enable")
+        response = fxt_client.post(f"/api/projects/{fxt_pipeline.project_id}/pipeline:run")
 
         assert response.status_code == status.HTTP_409_CONFLICT
-        assert "Another pipeline is already running" in response.json()["detail"]
+        assert "Another pipeline is already active" in response.json()["detail"]
         assert str(active_pipeline.id) in response.json()["detail"]
         fxt_pipeline_service.get_active_pipeline.assert_called_once()
         fxt_pipeline_service.update_pipeline.assert_not_called()
@@ -222,7 +222,7 @@ class TestPipelineEndpoints:
         fxt_pipeline_service.get_active_pipeline = AsyncMock(return_value=active_pipeline)
         fxt_pipeline_service.update_pipeline.return_value = active_pipeline
 
-        response = fxt_client.post(f"/api/projects/{fxt_pipeline.project_id}/pipeline:enable")
+        response = fxt_client.post(f"/api/projects/{fxt_pipeline.project_id}/pipeline:run")
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
         fxt_pipeline_service.get_active_pipeline.assert_called_once()

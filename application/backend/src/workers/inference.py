@@ -55,6 +55,7 @@ class InferenceWorker(BaseProcessWorker):
         self._loaded_model: LoadedModel | None = None
         self._last_model_obj_id = 0  # track the id of the Model object to install the callback only once
         self._cached_models: dict[Any, object] = {}
+        self._model_check_interval: float = 5.0  # seconds between model refresh checks
 
     def setup(self) -> None:
         super().setup()
@@ -74,132 +75,211 @@ class InferenceWorker(BaseProcessWorker):
             logger.error(f"Failed to query active pipeline/model: {e}", exc_info=True)
             return None
 
+    async def _model_refresh_daemon(self) -> None:
+        """Background daemon that periodically refreshes the active model reference.
+
+        Runs independently every _model_check_interval seconds to detect
+        configuration changes without impacting frame processing performance.
+        """
+        while not self.should_stop():
+            await asyncio.sleep(self._model_check_interval)
+
+            try:
+                previous_model_id = self._loaded_model.id if self._loaded_model else None
+                self._loaded_model = await self._get_active_model()
+
+                # Log model transitions
+                new_model_id = self._loaded_model.id if self._loaded_model else None
+                if previous_model_id != new_model_id:
+                    if new_model_id:
+                        logger.info(
+                            f"Model refresh daemon: Active model changed to "
+                            f"'{self._loaded_model.name}' ({new_model_id})"  # type: ignore[union-attr]
+                        )
+                    else:
+                        logger.info("Model refresh daemon: Switched to passthrough mode (no active model)")
+            except Exception as e:
+                logger.error(f"Model refresh daemon error: {e}", exc_info=True)
+                # Continue running despite errors
+
     async def _handle_model_reload(self) -> None:
         # Handle model reload signal: force reload currently active model
+        if self._model_reload_event.is_set():
+            # The loop handles the case when the active model is switched again while reloading
+            while self._model_reload_event.is_set():
+                self._model_reload_event.clear()
+                logger.info("Model reload event detected; reloading active model")
+                self._loaded_model = await self._get_active_model()
+
+                if self._loaded_model is None:
+                    raise RuntimeError("No active model configured.")
+                # Remove cached model to force reload
+                try:
+                    self._cached_models.pop(self._loaded_model.id, None)
+                except Exception as e:
+                    model_id = getattr(self._loaded_model, "id", "unknown")
+                    logger.debug(f"Failed to evict cached model {model_id}: {e}")
+                # Preload the model for faster first inference
+                try:
+                    inferencer = await ModelService.load_inference_model(
+                        self._loaded_model.model, device=self._loaded_model.device
+                    )
+                    self._cached_models[self._loaded_model.id] = inferencer
+                    logger.info(
+                        f"Reloaded inference model '{self._loaded_model.name}' ({self._loaded_model.id}) "
+                        f"on device `{self._loaded_model.device}`",
+                    )
+                except DeviceNotFoundError:
+                    # Load model using the default device
+                    logger.warning(
+                        f"Device '{self._loaded_model.device}' not found; "
+                        f"loading model '{self._loaded_model.name}' ({self._loaded_model.id}) on default device"
+                    )
+                    inferencer = await ModelService.load_inference_model(self._loaded_model.model)
+                    self._cached_models[self._loaded_model.id] = inferencer
+                except Exception as e:
+                    logger.error(f"Failed to reload model '{self._loaded_model.name}': {e}", exc_info=True)
+                    # Leave cache empty; next predict will attempt to load again
+
+    async def _get_next_frame(self) -> StreamData | None:
+        """Retrieve the next frame from the queue."""
         try:
-            if self._model_reload_event.is_set():
-                # The loop handles the case when the active model is switched again while reloading
-                while self._model_reload_event.is_set():
-                    self._model_reload_event.clear()
-
-                    if self._loaded_model is None:
-                        continue
-
-                    # Remove cached model to force reload
-                    try:
-                        self._cached_models.pop(self._loaded_model.id, None)
-                    except Exception as e:
-                        logger.debug(
-                            "Failed to evict cached model %s: %s",
-                            getattr(self._loaded_model, "id", "unknown"),
-                            e,
-                        )
-                    # Preload the model for faster first inference
-                    try:
-                        inferencer = await ModelService.load_inference_model(
-                            self._loaded_model.model, device=self._loaded_model.device
-                        )
-                        self._cached_models[self._loaded_model.id] = inferencer
-                        logger.info(
-                            "Reloaded inference model '%s' (%s) on device %s",
-                            self._loaded_model.name,
-                            self._loaded_model.id,
-                            self._loaded_model.device,
-                        )
-                    except DeviceNotFoundError:
-                        # Load model using the default device
-                        logger.warning(
-                            "Device '%s' not found; loading model '%s' (%s) on default device",
-                            self._loaded_model.device,
-                            self._loaded_model.name,
-                            self._loaded_model.id,
-                        )
-                        inferencer = await ModelService.load_inference_model(self._loaded_model.model)
-                        self._cached_models[self._loaded_model.id] = inferencer
-                    except Exception as e:
-                        logger.error(f"Failed to reload model '{self._loaded_model.name}': {e}", exc_info=True)
-                        # Leave cache empty; next predict will attempt to load again
+            return self._frame_queue.get(timeout=1)
+        except std_queue.Empty:
+            logger.debug("No frame available yet")
+            return None
         except Exception as e:
-            logger.debug(f"Error while handling model reload event: {e}")
+            logger.error(f"Failed to get frame from queue: {e}")
+            return None
+
+    async def _handle_passthrough_mode(self, stream_data: StreamData) -> None:
+        """Handle frame in passthrough mode (no model loaded)."""
+        logger.debug("No active model configured; frame passthrough mode")
+        try:
+            self._pred_queue.put(stream_data, timeout=1)
+        except std_queue.Full:
+            logger.debug("Prediction queue is full (passthrough mode); dropping frame")
+
+    async def _encode_frame(self, frame: np.ndarray) -> bytes | None:
+        """Encode frame to JPEG bytes for inference."""
+        try:
+            success, buf = cv2.imencode(".jpg", frame)
+            if not success:
+                logger.warning("Failed to encode frame; skipping")
+                return None
+            return buf.tobytes()
+        except Exception as e:
+            logger.error(f"Error encoding frame: {e}", exc_info=True)
+            return None
+
+    async def _run_inference(self, image_bytes: bytes) -> Any | None:
+        """Run inference on encoded image and record metrics."""
+        if self._loaded_model is None:
+            logger.error("Cannot run inference: no active model configured")
+            return None
+
+        start_t = MetricsService.record_inference_start()
+        try:
+            return await ModelService.predict_image(
+                self._loaded_model.model,
+                image_bytes,
+                self._cached_models,  # type: ignore[arg-type]
+            )
+        except Exception as e:
+            logger.error(f"Inference failed: {e}", exc_info=True)
+            return None
+        finally:
+            try:
+                if self._metrics_service is not None and self._loaded_model is not None:
+                    self._metrics_service.record_inference_end(self._loaded_model.id, start_t)
+            except Exception as e:
+                logger.debug(f"Failed to record inference metric: {e}")
+
+    async def _process_frame_with_model(self, stream_data: StreamData) -> None:
+        """Process frame with loaded model and attach inference data.
+
+        Raises:
+            ValueError: If frame data is invalid or encoding fails
+            RuntimeError: If inference or model operations fail
+        """
+        frame = stream_data.frame_data
+        if frame is None:
+            raise ValueError("Received empty frame data")
+
+        # Encode frame
+        image_bytes = await self._encode_frame(frame)
+        if image_bytes is None:
+            raise ValueError("Failed to encode frame to JPEG")
+
+        # Run inference
+        prediction_response = await self._run_inference(image_bytes)
+        if prediction_response is None or self._loaded_model is None:
+            raise RuntimeError("Inference failed or model became unavailable")
+
+        # Build visualization
+        vis_frame: np.ndarray = Visualizer.overlay_predictions(frame, prediction_response)
+
+        # Package inference data
+        stream_data.inference_data = InferenceData(
+            prediction=prediction_response,  # type: ignore[arg-type]
+            visualized_prediction=vis_frame,
+            model_name=self._loaded_model.name,
+        )
+
+    async def _enqueue_result(self, stream_data: StreamData) -> None:
+        """Enqueue processed result to prediction queue."""
+        try:
+            self._pred_queue.put(stream_data, timeout=1)
+        except std_queue.Full:
+            logger.debug("Prediction queue is full; dropping result")
 
     @logger.catch()
-    async def run_loop(self) -> None:  # noqa: PLR0912, PLR0915
-        while not self.should_stop():
-            # Ensure model is loaded/selected from active pipeline
-            active_model = await self._get_active_model()
-            if active_model is None:
-                logger.trace("No active model configured; retrying in 1 second")
-                await asyncio.sleep(1)
-                continue
+    async def run_loop(self) -> None:
+        """Main processing loop for inference worker."""
+        # Initialize model reference on startup
+        self._loaded_model = await self._get_active_model()
 
-            # Refresh loaded model reference if changed
-            if self._loaded_model is None or self._loaded_model.id != active_model.id:
-                self._loaded_model = active_model
-                logger.info(f"Using model '{self._loaded_model.name}' ({self._loaded_model.id}) for inference")
+        # Start background daemon for periodic model refresh
+        refresh_task = asyncio.create_task(self._model_refresh_daemon())
 
-            await self._handle_model_reload()
-
-            # Pull next frame
-            try:
-                stream_data: StreamData = self._frame_queue.get(timeout=1)
-            except std_queue.Empty:
-                logger.debug("No frame available for inference yet")
-                continue
-            except Exception:
-                logger.debug("No frame available for inference yet")
-                continue
-
-            # Prepare input bytes for ModelService.predict_image (expects encoded image bytes)
-            frame = stream_data.frame_data
-            if frame is None:
-                logger.debug("Received empty frame; skipping")
-                continue
-
-            try:
-                success, buf = cv2.imencode(".jpg", frame)
-                if not success:
-                    logger.warning("Failed to encode frame; skipping")
+        try:
+            while not self.should_stop():
+                # Pull next frame
+                stream_data = await self._get_next_frame()
+                if stream_data is None:
                     continue
-                image_bytes = buf.tobytes()
-            except Exception as e:
-                logger.error(f"Error encoding frame: {e}", exc_info=True)
-                continue
 
-            # Run inference and collect latency metric
-            start_t = MetricsService.record_inference_start()
-            try:
-                prediction_response = await ModelService.predict_image(
-                    self._loaded_model.model,
-                    image_bytes,
-                    self._cached_models,  # type: ignore[arg-type]
-                )
-            except Exception as e:
-                logger.error(f"Inference failed: {e}", exc_info=True)
-                continue
-            finally:
+                # Check passthrough mode (no DB query!)
+                passthrough_mode = self._loaded_model is None
+
+                if passthrough_mode:
+                    await self._handle_passthrough_mode(stream_data)
+                    continue
+
+                # Handle model reload (immediate refresh on events)
                 try:
-                    if self._metrics_service is not None and self._loaded_model is not None:
-                        self._metrics_service.record_inference_end(self._loaded_model.id, start_t)
+                    await self._handle_model_reload()
+                    if self._loaded_model is None:
+                        raise RuntimeError("No active model configured")
                 except Exception as e:
-                    logger.debug(f"Failed to record inference metric: {e}")
+                    logger.error(f"Model reload handling failed: {e}")
+                    await asyncio.sleep(1)
+                    continue
 
-            # Build visualization via utility (no direct overlay/manipulation here)
-            vis_frame: np.ndarray = Visualizer.overlay_predictions(frame, prediction_response)
-
-            # Package inference data into stream payload
+                # Process frame with model and enqueue result
+                try:
+                    await self._process_frame_with_model(stream_data)
+                    await self._enqueue_result(stream_data)
+                except (ValueError, RuntimeError) as e:
+                    logger.warning(f"Frame processing skipped: {e}")
+                    continue
+                except Exception as e:
+                    logger.error(f"Unexpected error during frame processing: {e}", exc_info=True)
+                    continue
+        finally:
+            # Clean shutdown: cancel daemon task
+            refresh_task.cancel()
             try:
-                stream_data.inference_data = InferenceData(
-                    prediction=prediction_response,  # type: ignore[arg-type]
-                    visualized_prediction=vis_frame,
-                    model_name=self._loaded_model.name,
-                )
-            except Exception as e:
-                logger.error(f"Failed to attach inference data: {e}", exc_info=True)
-                continue
-
-            # Enqueue for downstream dispatchers/visualization
-            try:
-                self._pred_queue.put(stream_data, timeout=1)
-            except std_queue.Full:
-                logger.debug("Prediction queue is full; dropping result")
-                continue
+                await refresh_task
+            except asyncio.CancelledError:
+                logger.info("Model refresh daemon stopped")

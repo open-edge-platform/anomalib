@@ -36,6 +36,7 @@ class DispatchingWorker(BaseThreadWorker):
         self._rtc_stream_queue = rtc_stream_queue
 
         self._active_config_changed_condition = active_config_changed_condition
+        self._active_pipeline_service: ActivePipelineService | None = None
 
         self._prev_sink_config: Sink | None = None
         self._destinations: list[Dispatcher] = []
@@ -48,8 +49,8 @@ class DispatchingWorker(BaseThreadWorker):
 
     @logger.catch()
     async def run_loop(self) -> None:
-        active_pipeline_service = await ActivePipelineService.create(
-            self._active_config_changed_condition, start_daemon=True
+        self._active_pipeline_service = await ActivePipelineService.create(
+            config_changed_condition=self._active_config_changed_condition, start_daemon=True
         )
 
         while not self.should_stop():
@@ -57,21 +58,32 @@ class DispatchingWorker(BaseThreadWorker):
             parent_process = mp.parent_process()
             if parent_process is not None and not parent_process.is_alive():
                 break
-            sink_config = active_pipeline_service.get_sink_config()
 
+            # Read from the queue
+            try:
+                stream_data: StreamData = self._pred_queue.get(timeout=1)
+            except queue.Empty:
+                logger.debug("Nothing to dispatch yet... retrying in 1 second")
+                await asyncio.sleep(1)
+                continue
+
+            passthrough_mode = not self._active_pipeline_service.is_running
+            if passthrough_mode:
+                logger.debug("Passthrough mode; only dispatching to WebRTC stream")
+                # Only dispatch to WebRTC stream
+                try:
+                    self._rtc_stream_queue.put(stream_data.frame_data, block=False)
+                except queue.Full:
+                    logger.debug("Visualization queue is full; skipping")
+                continue
+
+            sink_config = self._active_pipeline_service.sink_config
             if sink_config.sink_type == SinkType.DISCONNECTED:
                 logger.trace("No sink available... retrying in 1 second")
                 await asyncio.sleep(1)
                 continue
 
             self._reset_sink_if_needed(sink_config)
-
-            # Read from the queue
-            try:
-                stream_data: StreamData = self._pred_queue.get(timeout=1)
-            except queue.Empty:
-                logger.debug("Nothing to dispatch yet")
-                continue
 
             if stream_data.inference_data is None:
                 logger.error("Missing inference data in stream_data; skipping dispatch")

@@ -90,35 +90,50 @@ async def update_pipeline(
 
 
 @router.post(
-    ":enable",
+    ":run",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
-        status.HTTP_204_NO_CONTENT: {"description": "Pipeline successfully enabled"},
+        status.HTTP_204_NO_CONTENT: {
+            "description": "Pipeline successfully set to run (also activates it if not already active)."
+        },
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
-        status.HTTP_409_CONFLICT: {"description": "Pipeline cannot be enabled"},
+        status.HTTP_409_CONFLICT: {"description": "Pipeline cannot be run"},
     },
 )
-async def enable_pipeline(
+async def run_pipeline(
     project_id: Annotated[UUID, Depends(get_project_id)],
     pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
 ) -> None:
     """
-    Activate a pipeline.
+    Set the pipeline status to RUNNING.
     The pipeline will start processing data from the source, run it through the model, and send results to the sink.
+    If the pipeline is not yet activated, it will be activated as well.
     """
-    if (active_pipeline := await pipeline_service.get_active_pipeline()) and active_pipeline.project_id != project_id:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                f"Another pipeline is already running. "
-                f"Please disable the pipeline {active_pipeline.id} before enabling a new one."
-            ),
-        )
-    try:
-        await pipeline_service.update_pipeline(project_id, {"status": PipelineStatus.RUNNING})
-    except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+    await _activate_pipeline(pipeline_service, project_id, set_running=True)
+
+
+@router.post(
+    ":activate",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_204_NO_CONTENT: {
+            "description": "Pipeline successfully activated (but not necessarily running yet)."
+        },
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
+        status.HTTP_409_CONFLICT: {"description": "Pipeline cannot be activated"},
+    },
+)
+async def activate_pipeline(
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
+) -> None:
+    """
+    Set the pipeline status to ACTIVE.
+    The pipeline will be ready to run but will not start processing data until set to RUNNING.
+    """
+    await _activate_pipeline(pipeline_service, project_id)
 
 
 @router.post(
@@ -166,3 +181,19 @@ async def get_project_metrics(
         return await pipeline_service.get_pipeline_metrics(project_id, time_window)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+async def _activate_pipeline(pipeline_service: PipelineService, project_id: UUID, set_running: bool = False) -> None:
+    if (active_pipeline := await pipeline_service.get_active_pipeline()) and active_pipeline.project_id != project_id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"Another pipeline is already active. "
+                f"Please disable the pipeline {active_pipeline.id} before activating a new one."
+            ),
+        )
+    try:
+        new_status = PipelineStatus.RUNNING if set_running else PipelineStatus.ACTIVE
+        await pipeline_service.update_pipeline(project_id, {"status": new_status})
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))

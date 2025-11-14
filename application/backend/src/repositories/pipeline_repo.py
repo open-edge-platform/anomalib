@@ -30,4 +30,4 @@ class PipelineRepository(BaseRepository):
 
     async def get_active_pipeline(self) -> Pipeline | None:
         """Get the active pipeline from database."""
-        return await self.get_one(expressions=[PipelineDB.is_running])
+        return await self.get_one(expressions=[PipelineDB.is_active])

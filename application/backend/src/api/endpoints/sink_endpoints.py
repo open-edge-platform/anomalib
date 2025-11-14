@@ -11,6 +11,7 @@ from fastapi import APIRouter, Body, Depends, File, UploadFile, status
 from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse, Response
+from sqlalchemy.exc import IntegrityError
 
 from api.dependencies import get_configuration_service, get_project_id, get_sink_id
 from pydantic_models import Sink, SinkType
@@ -104,6 +105,8 @@ async def create_sink(
         return await configuration_service.create_sink(validated_sink)
     except ResourceAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+    except IntegrityError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Name must be unique within a project")
 
 
 @router.get(

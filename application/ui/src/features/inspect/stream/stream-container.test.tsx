@@ -57,7 +57,7 @@ describe('StreamContainer', () => {
             const pipelinePatchSpy = vi.fn();
 
             server.use(
-                http.post('/api/projects/{project_id}/pipeline:enable', () => {
+                http.post('/api/projects/{project_id}/pipeline:run', () => {
                     pipelinePatchSpy();
                     return HttpResponse.json({}, { status: 204 });
                 })
@@ -77,7 +77,7 @@ describe('StreamContainer', () => {
             const pipelinePatchSpy = vi.fn();
 
             server.use(
-                http.post('/api/projects/{project_id}/pipeline:enable', () => {
+                http.post('/api/projects/{project_id}/pipeline:run', () => {
                     pipelinePatchSpy();
                     return HttpResponse.json({}, { status: 204 });
                 })

@@ -23,7 +23,7 @@ class PipelineMapper(IBaseMapper):
             sink_id=UUID(pipeline_db.sink_id) if pipeline_db.sink_id else None,
             model_id=UUID(pipeline_db.model_id) if pipeline_db.model_id else None,
             source_id=UUID(pipeline_db.source_id) if pipeline_db.source_id else None,
-            status=PipelineStatus.from_bool(pipeline_db.is_running),
+            status=PipelineStatus.from_bool(pipeline_db.is_running, pipeline_db.is_active),
             inference_device=pipeline_db.inference_device.upper() if pipeline_db.inference_device else None,
         )
 
@@ -35,6 +35,7 @@ class PipelineMapper(IBaseMapper):
             source_id=str(pipeline.source_id) if pipeline.source_id else None,
             model_id=str(pipeline.model_id) if pipeline.model_id else None,
             sink_id=str(pipeline.sink_id) if pipeline.sink_id else None,
-            is_running=pipeline.status.as_bool,
+            is_running=pipeline.status.is_running,
+            is_active=pipeline.status.is_active,
             inference_device=pipeline.inference_device.upper() if pipeline.inference_device else None,
         )

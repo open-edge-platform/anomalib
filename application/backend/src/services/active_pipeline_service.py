@@ -8,7 +8,7 @@ from threading import Thread
 from loguru import logger
 
 from db import get_async_db_session_ctx
-from pydantic_models import DisconnectedSinkConfig, DisconnectedSourceConfig, Sink, Source
+from pydantic_models import DisconnectedSinkConfig, DisconnectedSourceConfig, Pipeline, Sink, Source
 from repositories import PipelineRepository
 
 
@@ -69,6 +69,7 @@ class ActivePipelineService:
         self.config_changed_condition = config_changed_condition
         self._source: Source = DisconnectedSourceConfig()
         self._sink: Sink = DisconnectedSinkConfig()
+        self._pipeline: Pipeline | None = None
         await self._load_app_config()
 
         # For child processes with config_changed_condition, start a daemon to monitor configuration changes
@@ -106,17 +107,19 @@ class ActivePipelineService:
             repo = PipelineRepository(db)
 
             # Loads the first active pipeline
-            pipeline = await repo.get_active_pipeline()
-            if pipeline is None:
+            self._pipeline = await repo.get_active_pipeline()
+            if self._pipeline is None:
                 self._source = DisconnectedSourceConfig()
                 self._sink = DisconnectedSinkConfig()
                 return
 
-            source = pipeline.source
+            logger.info(f"Configuration loaded from database: {self._pipeline}")
+
+            source = self._pipeline.source
             if source is not None:
                 self._source = source
 
-            sink = pipeline.sink
+            sink = self._pipeline.sink
             if sink is not None:
                 self._sink = sink
 
@@ -142,7 +145,8 @@ class ActivePipelineService:
                 # Schedule the async reload in the event loop using the stored loop reference
                 asyncio.run(self.reload())
 
-    def get_source_config(self) -> Source:
+    @property
+    def source_config(self) -> Source:
         """
         Get the current source configuration.
 
@@ -151,7 +155,8 @@ class ActivePipelineService:
         """
         return self._source
 
-    def get_sink_config(self) -> Sink:
+    @property
+    def sink_config(self) -> Sink:
         """
         Get the current sink configuration.
 
@@ -159,3 +164,8 @@ class ActivePipelineService:
             Sink: The current sink configuration.
         """
         return self._sink
+
+    @property
+    def is_running(self) -> bool:
+        """Check if the active pipeline is marked as running"""
+        return self._pipeline is not None and self._pipeline.status.is_running
