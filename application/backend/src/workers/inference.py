@@ -265,7 +265,7 @@ class InferenceWorker(BaseProcessWorker):
                     continue
 
                 if self._loaded_model is None:
-                    logger.error("Cannot run inference: model is not loaded... retrying in 1 second")
+                    logger.error("Cannot run inference: model is not loaded: retrying in 1 second")
                     await asyncio.sleep(1)
                     continue
 
