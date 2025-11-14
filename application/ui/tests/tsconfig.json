@@ -6,5 +6,5 @@
             "@geti-inspect/test-fixtures": ["./fixtures"]
         }
     },
-    "include": ["./"],
+    "include": ["./"]
 }

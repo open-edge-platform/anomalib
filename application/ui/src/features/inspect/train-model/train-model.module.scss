@@ -9,6 +9,35 @@
     }
 }
 
+.deviceSection {
+    gap: var(--spectrum-global-dimension-size-150);
+}
+
+.deviceGroup {
+    & label {
+        margin: 0;
+    }
+}
+
+.deviceOption {
+    padding: var(--spectrum-global-dimension-size-200);
+    border-radius: var(--spectrum-alias-border-radius-small);
+    background-color: var(--spectrum-global-color-gray-75);
+    transition:
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;
+
+    &:hover {
+        background-color: var(--spectrum-global-color-gray-100);
+        box-shadow: 0 0 0 var(--spectrum-global-dimension-size-25) var(--spectrum-global-color-gray-200);
+    }
+}
+
+.deviceDescription {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+}
+
 /// model list box
 // Ratings
 .rate {
