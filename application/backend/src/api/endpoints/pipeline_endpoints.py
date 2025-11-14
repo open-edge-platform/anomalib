@@ -93,7 +93,9 @@ async def update_pipeline(
     ":run",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
-        status.HTTP_204_NO_CONTENT: {"description": "Pipeline successfully set to run (also activates it if not already active)."},
+        status.HTTP_204_NO_CONTENT: {
+            "description": "Pipeline successfully set to run (also activates it if not already active)."
+        },
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
         status.HTTP_409_CONFLICT: {"description": "Pipeline cannot be run"},
