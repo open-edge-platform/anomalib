@@ -1,8 +1,8 @@
 import { Grid, Heading } from '@geti/ui';
 
-import styles from './train-model.module.scss';
+import styles from './train-model-message.module.scss';
 
-export const TrainModel = () => {
+export const TrainModelMessage = () => {
     return (
         <Grid
             gridArea={'canvas'}
