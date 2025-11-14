@@ -71,8 +71,6 @@ class PipelineService:
             elif pipeline.status != updated.status:
                 # If the pipeline is being activated or stopped
                 await self._notify_pipeline_changed()
-                # # On activation, trigger model activation so inference reloads the active model
-                # if updated.status.is_running and updated.model is not None:
                 self._model_service.activate_model()
             if updated.inference_device != pipeline.inference_device:
                 # reload model on device change
