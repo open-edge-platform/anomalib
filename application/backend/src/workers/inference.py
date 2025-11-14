@@ -55,7 +55,7 @@ class InferenceWorker(BaseProcessWorker):
         self._loaded_model: LoadedModel | None = None
         self._last_model_obj_id = 0  # track the id of the Model object to install the callback only once
         self._cached_models: dict[Any, object] = {}
-        self._model_check_interval: float = 1.0  # seconds between model refresh checks
+        self._model_check_interval: float = 5.0  # seconds between model refresh checks
         self._is_passthrough_mode: bool = False
 
     def setup(self) -> None:
