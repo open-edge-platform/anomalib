@@ -106,7 +106,7 @@ async def create_sink(
     except ResourceAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
     except IntegrityError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Name must be unique inside of a project")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Name must be unique within a project")
 
 
 @router.get(
