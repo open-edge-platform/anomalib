@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import time
+from collections import defaultdict
 from datetime import UTC, datetime
 from multiprocessing.shared_memory import SharedMemory
 from multiprocessing.synchronize import Lock
@@ -63,7 +64,7 @@ class MetricsService:
             idx = self._head % MAX_MEASUREMENTS
             self._array[idx] = (measurement.model_id, measurement.latency_ms, measurement.timestamp)
             self._head += 1
-            logger.trace(f"Latency measurement recorded for model {model_id}: {latency_ms:.2f} ms")
+            logger.debug(f"Latency measurement recorded for model {model_id}: {latency_ms:.2f} ms")
 
     def get_latency_measurements(self, model_id: UUID, time_window: int = 60) -> list[float]:
         """
@@ -75,16 +76,51 @@ class MetricsService:
 
         Returns: List of latency measurements in milliseconds
         """
+        str_model_id = str(model_id)
         cutoff_time = datetime.now(UTC).timestamp() - time_window
         with self._lock:
             arr = self._array.copy()
-            result = []
-            for entry in arr:
-                if entry["timestamp"] < cutoff_time or entry["timestamp"] == 0.0:
-                    continue
-                if entry["model_id"] == str(model_id):
-                    result.append(entry["latency_ms"])
-            return result
+        result = []
+        for entry in arr:
+            if entry["timestamp"] < cutoff_time or entry["timestamp"] == 0.0:
+                continue
+            if entry["model_id"] == str_model_id:
+                result.append(entry["latency_ms"])
+        return result
+
+    def get_throughput_measurements(self, model_id: UUID, time_window: int = 60) -> tuple[int, list[tuple[float, int]]]:
+        """
+        Retrieve throughput measurements for a specific model within the given time window.
+
+        Args:
+            model_id: UUID of the model to filter measurements
+            time_window: Time window in seconds to look back for measurements (default 60s)
+
+        Returns: Tuple of (total_requests, list of (timestamp, inference_count) per second)
+        """
+        str_model_id = str(model_id)
+        cutoff_time = datetime.now(UTC).timestamp() - time_window
+        with self._lock:
+            arr = self._array.copy()
+
+        # Count inferences per second
+        inferences_per_second: dict[int, int] = defaultdict(int)
+        total_requests = 0
+
+        for entry in arr:
+            if entry["timestamp"] < cutoff_time or entry["timestamp"] == 0.0:
+                continue
+            if entry["model_id"] == str_model_id:
+                # Round timestamp to the nearest second
+                second_timestamp = int(entry["timestamp"])
+                inferences_per_second[second_timestamp] += 1
+                total_requests += 1
+
+        # Convert to list of (timestamp, count) tuples
+        throughput_data = [(float(ts), count) for ts, count in inferences_per_second.items()]
+        throughput_data.sort()  # Sort by timestamp
+
+        return total_requests, throughput_data
 
     def reset(self) -> None:
         with self._lock:
