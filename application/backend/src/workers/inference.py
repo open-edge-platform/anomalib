@@ -149,6 +149,7 @@ class InferenceWorker(BaseProcessWorker):
     async def _run_inference(self, image_bytes: bytes) -> Any | None:
         """Run inference on encoded image and record metrics."""
         if self._loaded_model is None:
+            logger.error("Cannot run inference: no active model configured")
             return None
 
         start_t = MetricsService.record_inference_start()
