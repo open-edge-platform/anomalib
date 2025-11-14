@@ -69,6 +69,9 @@ class InferenceWorker(BaseProcessWorker):
                 pipeline = await repo.get_active_pipeline()
                 if pipeline is None or pipeline.model is None:
                     return None
+                # Passthrough mode: The pipeline is 'active' but not 'running'.
+                # In this state, inference should be bypassed and frames are passed through without processing.
+                # This requires special handling to ensure the system behaves correctly when no model is active.
                 self._is_passthrough_mode = pipeline.status.is_active and not pipeline.status.is_running
                 model = pipeline.model
                 return LoadedModel(name=model.name, id=model.id, model=model, device=pipeline.inference_device)
