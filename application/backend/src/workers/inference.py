@@ -55,6 +55,7 @@ class InferenceWorker(BaseProcessWorker):
         self._loaded_model: LoadedModel | None = None
         self._last_model_obj_id = 0  # track the id of the Model object to install the callback only once
         self._cached_models: dict[Any, object] = {}
+        self._model_check_interval: float = 5.0  # seconds between model refresh checks
 
     def setup(self) -> None:
         super().setup()
@@ -73,6 +74,33 @@ class InferenceWorker(BaseProcessWorker):
         except Exception as e:
             logger.error(f"Failed to query active pipeline/model: {e}", exc_info=True)
             return None
+
+    async def _model_refresh_daemon(self) -> None:
+        """Background daemon that periodically refreshes the active model reference.
+
+        Runs independently every _model_check_interval seconds to detect
+        configuration changes without impacting frame processing performance.
+        """
+        while not self.should_stop():
+            await asyncio.sleep(self._model_check_interval)
+
+            try:
+                previous_model_id = self._loaded_model.id if self._loaded_model else None
+                self._loaded_model = await self._get_active_model()
+
+                # Log model transitions
+                new_model_id = self._loaded_model.id if self._loaded_model else None
+                if previous_model_id != new_model_id:
+                    if new_model_id:
+                        logger.info(
+                            f"Model refresh daemon: Active model changed to "
+                            f"'{self._loaded_model.name}' ({new_model_id})"  # type: ignore[union-attr]
+                        )
+                    else:
+                        logger.info("Model refresh daemon: Switched to passthrough mode (no active model)")
+            except Exception as e:
+                logger.error(f"Model refresh daemon error: {e}", exc_info=True)
+                # Continue running despite errors
 
     async def _handle_model_reload(self) -> None:
         # Handle model reload signal: force reload currently active model
@@ -208,37 +236,50 @@ class InferenceWorker(BaseProcessWorker):
     @logger.catch()
     async def run_loop(self) -> None:
         """Main processing loop for inference worker."""
-        while not self.should_stop():
-            # Pull next frame
-            stream_data = await self._get_next_frame()
-            if stream_data is None:
-                continue
+        # Initialize model reference on startup
+        self._loaded_model = await self._get_active_model()
 
-            # Ensure model is loaded/selected from active pipeline
-            self._loaded_model = await self._get_active_model()
-            passthrough_mode = self._loaded_model is None
+        # Start background daemon for periodic model refresh
+        refresh_task = asyncio.create_task(self._model_refresh_daemon())
 
-            if passthrough_mode:
-                await self._handle_passthrough_mode(stream_data)
-                continue
+        try:
+            while not self.should_stop():
+                # Pull next frame
+                stream_data = await self._get_next_frame()
+                if stream_data is None:
+                    continue
 
-            # Handle model reload
+                # Check passthrough mode (no DB query!)
+                passthrough_mode = self._loaded_model is None
+
+                if passthrough_mode:
+                    await self._handle_passthrough_mode(stream_data)
+                    continue
+
+                # Handle model reload (immediate refresh on events)
+                try:
+                    await self._handle_model_reload()
+                    if self._loaded_model is None:
+                        raise RuntimeError("No active model configured")
+                except Exception as e:
+                    logger.error(f"Model reload handling failed: {e}")
+                    await asyncio.sleep(1)
+                    continue
+
+                # Process frame with model and enqueue result
+                try:
+                    await self._process_frame_with_model(stream_data)
+                    await self._enqueue_result(stream_data)
+                except (ValueError, RuntimeError) as e:
+                    logger.warning(f"Frame processing skipped: {e}")
+                    continue
+                except Exception as e:
+                    logger.error(f"Unexpected error during frame processing: {e}", exc_info=True)
+                    continue
+        finally:
+            # Clean shutdown: cancel daemon task
+            refresh_task.cancel()
             try:
-                await self._handle_model_reload()
-                if self._loaded_model is None:
-                    raise RuntimeError("No active model configured")
-            except Exception as e:
-                logger.error(f"Model reload handling failed: {e}")
-                await asyncio.sleep(1)
-                continue
-
-            # Process frame with model and enqueue result
-            try:
-                await self._process_frame_with_model(stream_data)
-                await self._enqueue_result(stream_data)
-            except (ValueError, RuntimeError) as e:
-                logger.warning(f"Frame processing skipped: {e}")
-                continue
-            except Exception as e:
-                logger.error(f"Unexpected error during frame processing: {e}", exc_info=True)
-                continue
+                await refresh_task
+            except asyncio.CancelledError:
+                logger.info("Model refresh daemon stopped")
