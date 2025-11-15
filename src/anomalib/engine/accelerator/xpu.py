@@ -35,7 +35,7 @@ class XPUAccelerator(Accelerator):
 
     @staticmethod
     def get_parallel_devices(devices: list) -> list[torch.device]:
-        """Generates a list of parrallel devices."""
+        """Generates a list of parallel devices."""
         return [torch.device("xpu", idx) for idx in devices]
 
     @staticmethod
