@@ -96,13 +96,7 @@ class TrainingService:
             )
 
             if synchronization_parameters.cancel_training_event.is_set():
-                logger.info("Training job `%s` cancelled before completion", job.id)
-                await job_service.update_job_status(
-                    job_id=job.id,
-                    status=JobStatus.CANCELED,
-                    message="Training cancelled by user",
-                )
-                return None
+                raise TrainingCancelledError()
 
             if trained_model is None:
                 raise ValueError("Training failed - model is None")
