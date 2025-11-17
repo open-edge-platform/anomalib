@@ -8,7 +8,8 @@ import pytest
 from pydantic_models import JobStatus
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import TrainingService
-from utils.callbacks import ProgressSyncParams
+from services.training_service import TrainingCancelledError  # type: ignore[import-not-found]
+from utils.callbacks import ProgressSyncParams  # type: ignore[import-not-found]
 
 
 @pytest.fixture
@@ -245,3 +246,46 @@ class TestTrainingService:
             model=fxt_mock_anomalib_components["anomalib_model"], datamodule=fxt_mock_anomalib_components["folder"]
         )
         fxt_mock_anomalib_components["engine"].export.assert_called_once()
+
+    def test_train_pending_job_cancelled(
+        self,
+        fxt_job,
+        fxt_mock_job_service_class,
+        fxt_mock_model_service_class,
+        fxt_mock_job_service,
+    ):
+        """Training should mark job as cancelled when cancellation flag is set."""
+        fxt_job.payload = {"model_name": "padim"}
+        fxt_mock_job_service.get_pending_train_job.return_value = fxt_job
+
+        async def fake_train_model(*args, **kwargs):  # noqa: ANN001, ARG002
+            sync_params: ProgressSyncParams = kwargs["synchronization_parameters"]
+            sync_params.set_cancel_training_event()
+            return MagicMock()
+
+        with (
+            patch("services.training_service.asyncio.to_thread", side_effect=fake_train_model),
+            patch("services.training_service.TrainingService._sync_progress_with_db", new=AsyncMock()),
+        ):
+            result = asyncio.run(TrainingService.train_pending_job())
+
+        assert result is None
+        fxt_mock_job_service.update_job_status.assert_any_call(
+            job_id=fxt_job.id, status=JobStatus.RUNNING, message="Training started"
+        )
+        fxt_mock_job_service.update_job_status.assert_any_call(
+            job_id=fxt_job.id, status=JobStatus.CANCELED, message="Training cancelled by user"
+        )
+
+    def test_train_model_cancelled_before_start(
+        self,
+        fxt_model,
+        fxt_mock_anomalib_components,
+        fxt_mock_binary_repos,
+    ):
+        """_train_model should abort early when cancellation is requested before training starts."""
+        sync_params = ProgressSyncParams()
+        sync_params.set_cancel_training_event()
+
+        with pytest.raises(TrainingCancelledError):
+            TrainingService._train_model(fxt_model, synchronization_parameters=sync_params)

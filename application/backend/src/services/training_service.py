@@ -20,6 +20,9 @@ from utils.callbacks import GetiInspectProgressCallback, ProgressSyncParams
 from utils.devices import Devices
 from utils.experiment_loggers import TrackioLogger
 
+class TrainingCancelledError(Exception):
+    """Raised when a training job is cancelled by the user."""
+
 
 class TrainingService:
     """
@@ -57,7 +60,7 @@ class TrainingService:
             return await cls._run_training_job(job, job_service)
 
     @classmethod
-    async def _run_training_job(cls, job: Job, job_service: JobService) -> Model:
+    async def _run_training_job(cls, job: Job, job_service: JobService) -> Model | None:
         # Mark job as running
         await job_service.update_job_status(job_id=job.id, status=JobStatus.RUNNING, message="Training started")
         project_id = job.project_id
@@ -90,6 +93,16 @@ class TrainingService:
                 device=device,
                 synchronization_parameters=synchronization_parameters,
             )
+
+            if synchronization_parameters.cancel_training_event.is_set():
+                logger.info("Training job `%s` cancelled before completion", job.id)
+                await job_service.update_job_status(
+                    job_id=job.id,
+                    status=JobStatus.CANCELED,
+                    message="Training cancelled by user",
+                )
+                return None
+
             if trained_model is None:
                 raise ValueError("Training failed - model is None")
 
@@ -97,6 +110,17 @@ class TrainingService:
                 job_id=job.id, status=JobStatus.COMPLETED, message="Training completed successfully"
             )
             return await model_service.create_model(trained_model)
+        except TrainingCancelledError:
+            logger.info("Training job `%s` cancelled by user", job.id)
+            await job_service.update_job_status(
+                job_id=job.id,
+                status=JobStatus.CANCELED,
+                message="Training cancelled by user",
+            )
+            if model.export_path:
+                model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model.id)
+                await model_binary_repo.delete_model_folder()
+            return None
         except Exception as e:
             logger.error("Failed to train pending training job: %s", e)
             await job_service.update_job_status(
@@ -172,12 +196,23 @@ class TrainingService:
             accelerator=training_device,
         )
 
+        if synchronization_parameters.cancel_training_event.is_set():
+            raise TrainingCancelledError()
+
         # Execute training and export
         export_format = ExportType.OPENVINO
 
         # Capture pytorch stdout logs into logger
-        with redirect_stdout(LoggerStdoutWriter()):  # type: ignore[type-var]
-            engine.fit(model=anomalib_model, datamodule=datamodule)
+        try:
+            with redirect_stdout(LoggerStdoutWriter()):  # type: ignore[type-var]
+                engine.fit(model=anomalib_model, datamodule=datamodule)
+        except Exception as exc:  # noqa: BLE001
+            if synchronization_parameters.cancel_training_event.is_set():
+                raise TrainingCancelledError() from exc
+            raise
+
+        if synchronization_parameters.cancel_training_event.is_set():
+            raise TrainingCancelledError()
 
         # Find and set threshold metric
         for callback in engine.trainer.callbacks:  # type: ignore[attr-defined]
@@ -185,6 +220,8 @@ class TrainingService:
                 logger.debug(f"Found pixel threshold set to: {threshold}")
                 model.threshold = threshold.item()
                 break
+        if synchronization_parameters.cancel_training_event.is_set():
+            raise TrainingCancelledError()
         export_path = engine.export(
             model=anomalib_model,
             export_type=export_format,
