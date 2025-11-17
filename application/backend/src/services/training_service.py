@@ -215,8 +215,6 @@ class TrainingService:
                 logger.debug(f"Found pixel threshold set to: {threshold}")
                 model.threshold = threshold.item()
                 break
-        if synchronization_parameters.cancel_training_event.is_set():
-            raise TrainingCancelledError
         export_path = engine.export(
             model=anomalib_model,
             export_type=export_format,
