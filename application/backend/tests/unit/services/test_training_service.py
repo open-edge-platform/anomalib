@@ -6,11 +6,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from pydantic_models import JobStatus
-from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
+from pydantic_models import JobStatus  # type: ignore[import-not-found]
+from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository  # type: ignore[import-not-found]
 from services import TrainingService
-from services.training_service import TrainingCancelledError
-from utils.callbacks import ProgressSyncParams
+from utils.callbacks import ProgressSyncParams  # type: ignore[import-not-found]
 
 
 @pytest.fixture
@@ -288,5 +287,6 @@ class TestTrainingService:
         sync_params = ProgressSyncParams()
         sync_params.set_cancel_training_event()
 
-        with pytest.raises(TrainingCancelledError):
-            TrainingService._train_model(fxt_model, synchronization_parameters=sync_params)
+        result = TrainingService._train_model(fxt_model, synchronization_parameters=sync_params)
+
+        assert result is None

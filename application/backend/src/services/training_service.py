@@ -21,10 +21,6 @@ from utils.devices import Devices
 from utils.experiment_loggers import TrackioLogger
 
 
-class TrainingCancelledError(Exception):
-    """Raised when a training job is cancelled by the user."""
-
-
 class TrainingService:
     """
     Service for managing model training jobs.
@@ -96,7 +92,8 @@ class TrainingService:
             )
 
             if synchronization_parameters.cancel_training_event.is_set():
-                raise TrainingCancelledError
+                await cls._handle_job_cancellation(job_service=job_service, job=job, model=model)
+                return None
 
             if trained_model is None:
                 raise ValueError("Training failed - model is None")
@@ -105,27 +102,19 @@ class TrainingService:
                 job_id=job.id, status=JobStatus.COMPLETED, message="Training completed successfully"
             )
             return await model_service.create_model(trained_model)
-        except TrainingCancelledError:
-            logger.info("Training job `%s` cancelled by user", job.id)
-            await job_service.update_job_status(
-                job_id=job.id,
-                status=JobStatus.CANCELED,
-                message="Training cancelled by user",
-            )
-            if model.export_path:
-                model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model.id)
-                await model_binary_repo.delete_model_folder()
-            return None
         except Exception as e:
             logger.error("Failed to train pending training job: %s", e)
             await job_service.update_job_status(
                 job_id=job.id, status=JobStatus.FAILED, message=f"Failed with exception: {str(e)}"
             )
             if model.export_path:
-                logger.warning(f"Deleting partially created model with id: {model.id}")
-                model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model.id)
-                await model_binary_repo.delete_model_folder()
-                await model_service.delete_model(project_id=project_id, model_id=model.id)
+                logger.warning("Deleting partially created model with id: %s", model.id)
+                await cls._cleanup_partial_model(
+                    job=job,
+                    model=model,
+                    delete_model_record=True,
+                    model_service=model_service,
+                )
             raise e
         finally:
             logger.debug("Syncing progress with db stopped")
@@ -192,7 +181,7 @@ class TrainingService:
         )
 
         if synchronization_parameters.cancel_training_event.is_set():
-            raise TrainingCancelledError
+            return None
 
         # Execute training and export
         export_format = ExportType.OPENVINO
@@ -203,11 +192,9 @@ class TrainingService:
                 engine.fit(model=anomalib_model, datamodule=datamodule)
         except Exception as exc:
             if synchronization_parameters.cancel_training_event.is_set():
-                raise TrainingCancelledError from exc
+                logger.info("Training cancelled during execution: %s", exc)
+                return None
             raise
-
-        if synchronization_parameters.cancel_training_event.is_set():
-            raise TrainingCancelledError
 
         # Find and set threshold metric
         for callback in engine.trainer.callbacks:  # type: ignore[attr-defined]
@@ -215,6 +202,10 @@ class TrainingService:
                 logger.debug(f"Found pixel threshold set to: {threshold}")
                 model.threshold = threshold.item()
                 break
+
+        if synchronization_parameters.cancel_training_event.is_set():
+            return None
+
         export_path = engine.export(
             model=anomalib_model,
             export_type=export_format,
@@ -224,6 +215,36 @@ class TrainingService:
 
         model.is_ready = True
         return model
+
+    @staticmethod
+    async def _handle_job_cancellation(job_service: JobService, job: Job, model: Model) -> None:
+        """Mark job as cancelled and remove partially exported artifacts."""
+        logger.info("Training job `%s` cancelled by user", job.id)
+        await job_service.update_job_status(
+            job_id=job.id,
+            status=JobStatus.CANCELED,
+            message="Training cancelled by user",
+        )
+        await TrainingService._cleanup_partial_model(job=job, model=model, delete_model_record=False)
+
+    @staticmethod
+    async def _cleanup_partial_model(
+        *,
+        job: Job,
+        model: Model,
+        delete_model_record: bool,
+        model_service: ModelService | None = None,
+    ) -> None:
+        """Remove partially exported artifacts and optionally delete model record."""
+        if not model.export_path:
+            return
+
+        model_binary_repo = ModelBinaryRepository(project_id=job.project_id, model_id=model.id)
+        await model_binary_repo.delete_model_folder()
+
+        if delete_model_record:
+            service = model_service or ModelService()
+            await service.delete_model(project_id=job.project_id, model_id=model.id)
 
     @classmethod
     async def _sync_progress_with_db(
