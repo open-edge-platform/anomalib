@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -8,7 +9,7 @@ import pytest
 from pydantic_models import JobStatus
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import TrainingService
-from services.training_service import TrainingCancelledError  # type: ignore[import-not-found]
+from services.training_service import TrainingCancelledError
 from utils.callbacks import ProgressSyncParams
 
 
@@ -258,7 +259,7 @@ class TestTrainingService:
         fxt_job.payload = {"model_name": "padim"}
         fxt_mock_job_service.get_pending_train_job.return_value = fxt_job
 
-        async def fake_train_model(*args, **kwargs):  # noqa: ANN001, ARG002
+        async def fake_train_model(*args: Any, **kwargs: Any) -> MagicMock:
             sync_params: ProgressSyncParams = kwargs["synchronization_parameters"]
             sync_params.set_cancel_training_event()
             return MagicMock()

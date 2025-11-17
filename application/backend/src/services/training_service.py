@@ -20,6 +20,7 @@ from utils.callbacks import GetiInspectProgressCallback, ProgressSyncParams
 from utils.devices import Devices
 from utils.experiment_loggers import TrackioLogger
 
+
 class TrainingCancelledError(Exception):
     """Raised when a training job is cancelled by the user."""
 
@@ -95,7 +96,7 @@ class TrainingService:
             )
 
             if synchronization_parameters.cancel_training_event.is_set():
-                raise TrainingCancelledError()
+                raise TrainingCancelledError
 
             if trained_model is None:
                 raise ValueError("Training failed - model is None")
@@ -191,7 +192,7 @@ class TrainingService:
         )
 
         if synchronization_parameters.cancel_training_event.is_set():
-            raise TrainingCancelledError()
+            raise TrainingCancelledError
 
         # Execute training and export
         export_format = ExportType.OPENVINO
@@ -200,13 +201,13 @@ class TrainingService:
         try:
             with redirect_stdout(LoggerStdoutWriter()):  # type: ignore[type-var]
                 engine.fit(model=anomalib_model, datamodule=datamodule)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             if synchronization_parameters.cancel_training_event.is_set():
-                raise TrainingCancelledError() from exc
+                raise TrainingCancelledError from exc
             raise
 
         if synchronization_parameters.cancel_training_event.is_set():
-            raise TrainingCancelledError()
+            raise TrainingCancelledError
 
         # Find and set threshold metric
         for callback in engine.trainer.callbacks:  # type: ignore[attr-defined]
@@ -215,7 +216,7 @@ class TrainingService:
                 model.threshold = threshold.item()
                 break
         if synchronization_parameters.cancel_training_event.is_set():
-            raise TrainingCancelledError()
+            raise TrainingCancelledError
         export_path = engine.export(
             model=anomalib_model,
             export_type=export_format,
