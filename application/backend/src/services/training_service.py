@@ -22,7 +22,6 @@ from utils.experiment_loggers import TrackioLogger
 
 class TrainingCancelledError(Exception):
     """Raised when a training job is cancelled by the user."""
-    pass
 
 
 class TrainingService:
