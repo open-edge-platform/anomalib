@@ -9,7 +9,7 @@ from pydantic_models import JobStatus
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import TrainingService
 from services.training_service import TrainingCancelledError  # type: ignore[import-not-found]
-from utils.callbacks import ProgressSyncParams  # type: ignore[import-not-found]
+from utils.callbacks import ProgressSyncParams
 
 
 @pytest.fixture
