@@ -55,3 +55,11 @@ class DeviceNotFoundError(Exception):
 
     def __init__(self, device_name: str):
         super().__init__(f"Device '{device_name}' not found.")
+
+
+class ActivePipelineConflictError(Exception):
+    """Exception raised when a pipeline cannot be activated."""
+
+    def __init__(self, pipeline_id: str, reason: str):
+        self.message: str = f"Cannot activate pipeline with ID {pipeline_id}: {reason}."
+        super().__init__(self.message)

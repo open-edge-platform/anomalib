@@ -16,7 +16,7 @@ from pydantic_models.model import Model
 from pydantic_models.pipeline import Pipeline, PipelineStatus
 from pydantic_models.sink import FolderSinkConfig
 from pydantic_models.source import VideoFileSourceConfig
-from services import PipelineService
+from services import ActivePipelineConflictError, PipelineService
 from services.pipeline_metrics_service import PipelineMetricsService
 
 
@@ -95,10 +95,22 @@ class TestPipelineEndpoints:
         # Mock get_active_pipeline to return None (no active pipeline) for run operation
         if operation == "run":
             fxt_pipeline_service.get_active_pipeline = AsyncMock(return_value=None)
+            # activate_pipeline internally calls update_pipeline, so we make activate_pipeline call update_pipeline
+
+            async def activate_pipeline_side_effect(proj_id, set_running=False):
+                await fxt_pipeline_service.update_pipeline(proj_id, {"status": pipeline_status})
+                return fxt_pipeline
+
+            fxt_pipeline_service.activate_pipeline = AsyncMock(side_effect=activate_pipeline_side_effect)
+            fxt_pipeline_service.update_pipeline = AsyncMock(return_value=fxt_pipeline)
         response = fxt_client.post(f"/api/projects/{project_id}/pipeline:{operation}")
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
-        fxt_pipeline_service.update_pipeline.assert_called_once_with(project_id, {"status": pipeline_status})
+        if operation == "run":
+            fxt_pipeline_service.activate_pipeline.assert_called_once_with(project_id, set_running=True)
+            fxt_pipeline_service.update_pipeline.assert_called_once_with(project_id, {"status": pipeline_status})
+        else:
+            fxt_pipeline_service.update_pipeline.assert_called_once_with(project_id, {"status": pipeline_status})
 
     @pytest.mark.parametrize("operation", ["run", "disable"])
     def test_enable_pipeline_invalid_id(self, operation, fxt_pipeline, fxt_pipeline_service, fxt_client):
@@ -121,8 +133,8 @@ class TestPipelineEndpoints:
     #     fxt_pipeline_service.update_pipeline.assert_called_once_with(project_id, {"status": pipeline_status})
 
     def test_cannot_enable_pipeline(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
-        # Mock get_active_pipeline to return None (no active pipeline)
-        fxt_pipeline_service.update_pipeline.side_effect = ValidationError.from_exception_data(
+        # Mock activate_pipeline to raise ValidationError (which happens when update_pipeline raises it)
+        fxt_pipeline_service.activate_pipeline.side_effect = ValidationError.from_exception_data(
             "Pipeline",
             [
                 {
@@ -137,10 +149,7 @@ class TestPipelineEndpoints:
         response = fxt_client.post(f"/api/projects/{fxt_pipeline.project_id}/pipeline:run")
 
         assert response.status_code == status.HTTP_409_CONFLICT
-        fxt_pipeline_service.get_active_pipeline.assert_called_once()
-        fxt_pipeline_service.update_pipeline.assert_called_once_with(
-            fxt_pipeline.project_id, {"status": PipelineStatus.RUNNING}
-        )
+        fxt_pipeline_service.activate_pipeline.assert_called_once_with(fxt_pipeline.project_id, set_running=True)
 
     def test_enable_pipeline_with_active_pipeline_different_project(
         self, fxt_pipeline, fxt_pipeline_service, fxt_client
@@ -181,15 +190,18 @@ class TestPipelineEndpoints:
             model_id=model.id,
             status=PipelineStatus.RUNNING,
         )
-        fxt_pipeline_service.get_active_pipeline = AsyncMock(return_value=active_pipeline)
+        # activate_pipeline raises ActivePipelineConflictError when there's an active pipeline from different project
+        fxt_pipeline_service.activate_pipeline.side_effect = ActivePipelineConflictError(
+            pipeline_id=str(fxt_pipeline.project_id),
+            reason=f"another pipeline is already active. Please disable the pipeline {active_pipeline.id} "
+            f"before activating a new one",
+        )
 
         response = fxt_client.post(f"/api/projects/{fxt_pipeline.project_id}/pipeline:run")
 
         assert response.status_code == status.HTTP_409_CONFLICT
-        assert "Another pipeline is already active" in response.json()["detail"]
-        assert str(active_pipeline.id) in response.json()["detail"]
-        fxt_pipeline_service.get_active_pipeline.assert_called_once()
-        fxt_pipeline_service.update_pipeline.assert_not_called()
+        assert "Cannot activate pipeline" in response.json()["detail"]
+        fxt_pipeline_service.activate_pipeline.assert_called_once_with(fxt_pipeline.project_id, set_running=True)
 
     def test_enable_pipeline_with_active_pipeline_same_project(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
         """Test enabling a pipeline when the same pipeline is already active (re-enabling)."""
@@ -227,13 +239,22 @@ class TestPipelineEndpoints:
             model_id=model.id,
             status=PipelineStatus.RUNNING,
         )
+        # activate_pipeline internally calls get_active_pipeline and update_pipeline
+        # Make activate_pipeline call update_pipeline when called
+
+        async def activate_pipeline_side_effect(proj_id, set_running=False):
+            await fxt_pipeline_service.update_pipeline(proj_id, {"status": PipelineStatus.RUNNING})
+            return active_pipeline
+
         fxt_pipeline_service.get_active_pipeline = AsyncMock(return_value=active_pipeline)
-        fxt_pipeline_service.update_pipeline.return_value = active_pipeline
+        fxt_pipeline_service.update_pipeline = AsyncMock(return_value=active_pipeline)
+        fxt_pipeline_service.activate_pipeline = AsyncMock(side_effect=activate_pipeline_side_effect)
 
         response = fxt_client.post(f"/api/projects/{fxt_pipeline.project_id}/pipeline:run")
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
-        fxt_pipeline_service.get_active_pipeline.assert_called_once()
+        fxt_pipeline_service.activate_pipeline.assert_called_once_with(fxt_pipeline.project_id, set_running=True)
+        # activate_pipeline internally calls update_pipeline when re-enabling
         fxt_pipeline_service.update_pipeline.assert_called_once_with(
             fxt_pipeline.project_id, {"status": PipelineStatus.RUNNING}
         )

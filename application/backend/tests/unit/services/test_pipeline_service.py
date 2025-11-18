@@ -7,13 +7,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from exceptions import ResourceNotFoundException
 from pydantic_models import Pipeline, PipelineStatus
 from pydantic_models.model import Model
 from pydantic_models.sink import FolderSinkConfig, MqttSinkConfig
 from pydantic_models.source import VideoFileSourceConfig, WebcamSourceConfig
 from repositories import PipelineRepository
-from services import ActivePipelineService, ModelService
+from services import ActivePipelineService, ModelService, ResourceNotFoundError
 from services.metrics_service import MetricsService
 from services.pipeline_service import PipelineService
 
@@ -177,10 +176,10 @@ class TestPipelineService:
             mock_repo_class.return_value = fxt_pipeline_repository
 
             if should_raise:
-                with pytest.raises(ResourceNotFoundException) as exc_info:
+                with pytest.raises(ResourceNotFoundError) as exc_info:
                     asyncio.run(PipelineService.get_pipeline_by_id(project_id))
                 assert str(project_id) in str(exc_info.value)
-                assert "pipeline" in str(exc_info.value)
+                assert "pipeline" in str(exc_info.value).lower()
             else:
                 if has_session:
                     result = asyncio.run(PipelineService.get_pipeline_by_id(project_id, fxt_db_session))
