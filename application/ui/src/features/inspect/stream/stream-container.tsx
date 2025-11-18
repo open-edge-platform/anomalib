@@ -15,12 +15,24 @@ import { Stream } from './stream';
 
 import classes from './stream-container.module.scss';
 
+const useStopCurrentWebRtcConnection = () => {
+    const { stop, status } = useWebRTCConnection();
+
+    useEffect(() => {
+        return () => {
+            status == 'connected' && stop();
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+};
+
 export const StreamContainer = () => {
     const { projectId } = useProjectIdentifier();
     const { data: pipeline } = usePipeline();
     const { start, status } = useWebRTCConnection();
     const activePipeline = useActivatePipeline({ onSuccess: start });
     const [size, setSize] = useState({ height: 608, width: 892 });
+    useStopCurrentWebRtcConnection();
 
     const hasNoSink = isEmpty(pipeline?.sink);
     const hasNoSource = isEmpty(pipeline?.source);

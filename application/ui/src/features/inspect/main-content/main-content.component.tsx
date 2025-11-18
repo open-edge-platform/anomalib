@@ -13,12 +13,11 @@ export const MainContent = () => {
     const { selectedMediaItem } = useSelectedMediaItem();
     const { data: activeProjectPipeline } = useActivePipeline();
 
-    const hasSink = !isEmpty(pipeline.sink?.id);
-    const hasSource = !isEmpty(pipeline.source?.id);
     const hasActiveProject = !isEmpty(activeProjectPipeline);
+    const isMissingSourceOrSink = isEmpty(pipeline.sink?.id) || isEmpty(pipeline.source?.id);
     const isCurrentProjectActive = activeProjectPipeline?.project_id === projectId;
 
-    if (isEmpty(selectedMediaItem) && (!hasSource || !hasSink)) {
+    if (isEmpty(selectedMediaItem) && isMissingSourceOrSink) {
         return <SourceSinkMessage />;
     }
 

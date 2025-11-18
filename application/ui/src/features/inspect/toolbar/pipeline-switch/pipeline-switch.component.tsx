@@ -11,6 +11,7 @@ import classes from './pipeline-switch.module.scss';
 
 export const PipelineSwitch = () => {
     const { projectId } = useProjectIdentifier();
+    const activatePipeline = useActivatePipeline({});
     const { status, start } = useWebRTCConnection();
     const { onSetSelectedMediaItem } = useSelectedMediaItem();
     const { data: pipeline, isLoading } = usePipeline();
@@ -22,15 +23,15 @@ export const PipelineSwitch = () => {
         },
     });
 
-    const hasSink = !isEmpty(pipeline?.sink);
-    const hasSource = !isEmpty(pipeline?.source);
-    const activatePipeline = useActivatePipeline({});
+    const isModelMissing = isEmpty(pipeline.model?.id);
     const isPipelineActive = isStatusActive(pipeline.status);
     const isWebRtcConnecting = status === 'connecting';
-    const isInferenceAvailable = !isEmpty(pipeline.model?.id);
+    const isMissingSourceOrSink = isEmpty(pipeline.sink?.id) || isEmpty(pipeline.source?.id);
+    const isProcessing = runPipeline.isPending || activatePipeline.isPending;
 
     const handleChange = async (isSelected: boolean) => {
         const handler = isSelected ? runPipeline.mutateAsync : activatePipeline.mutateAsync;
+
         await handler({ params: { path: { project_id: projectId } } });
     };
 
@@ -41,12 +42,12 @@ export const PipelineSwitch = () => {
                 onChange={handleChange}
                 isSelected={pipeline.status === 'running'}
                 isDisabled={
-                    !hasSink ||
                     isLoading ||
-                    !hasSource ||
+                    isProcessing ||
+                    isModelMissing ||
                     !isPipelineActive ||
                     isWebRtcConnecting ||
-                    !isInferenceAvailable
+                    isMissingSourceOrSink
                 }
             >
                 Enabled

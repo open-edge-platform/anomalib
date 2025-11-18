@@ -1,9 +1,8 @@
-import { Suspense, useEffect } from 'react';
+import { Suspense, useState } from 'react';
 
 import { LinkExpired } from '@geti-inspect/icons';
-import { Button, DialogTrigger, Flex, Loading, Text } from '@geti/ui';
+import { Button, DialogContainer, Flex, Loading, Text } from '@geti/ui';
 
-import { useWebRTCConnection } from '../../../../components/stream/web-rtc-connection-provider';
 import { ConfirmationDialog } from './confirmation-dialog.component';
 
 import classes from './enable-project.module.scss';
@@ -13,17 +12,8 @@ interface EnableProjectProps {
     currentProjectId: string;
 }
 
-const useStopCurrentWebRtcConnection = () => {
-    const { stop } = useWebRTCConnection();
-
-    useEffect(() => {
-        stop();
-    }, [stop]);
-};
-
 export const EnableProject = ({ activeProjectId, currentProjectId }: EnableProjectProps) => {
-    useStopCurrentWebRtcConnection();
-
+    const [isOpen, setIsOpen] = useState(false);
     return (
         <Flex UNSAFE_className={classes.container} alignItems={'center'} justifyContent={'center'}>
             <Flex direction='column' width={'90%'} maxWidth={'32rem'} gap={'size-200'} alignItems={'center'}>
@@ -36,12 +26,15 @@ export const EnableProject = ({ activeProjectId, currentProjectId }: EnableProje
 
                 <Text UNSAFE_className={classes.title}>Would you like to activate this project?</Text>
 
-                <DialogTrigger>
-                    <Button>Activate project</Button>
-                    <Suspense fallback={<Loading mode={'inline'} />}>
-                        <ConfirmationDialog activeProjectId={activeProjectId} currentProjectId={currentProjectId} />
-                    </Suspense>
-                </DialogTrigger>
+                <Button onPress={() => setIsOpen(true)}>Activate project</Button>
+
+                <DialogContainer onDismiss={() => setIsOpen(false)}>
+                    {isOpen && (
+                        <Suspense fallback={<Loading mode={'inline'} />}>
+                            <ConfirmationDialog activeProjectId={activeProjectId} currentProjectId={currentProjectId} />
+                        </Suspense>
+                    )}
+                </DialogContainer>
             </Flex>
         </Flex>
     );
