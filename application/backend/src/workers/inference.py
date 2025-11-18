@@ -67,10 +67,13 @@ class InferenceWorker(BaseProcessWorker):
             async with get_async_db_session_ctx() as session:
                 repo = PipelineRepository(session)
                 pipeline = await repo.get_active_pipeline()
+                # Passthrough mode: pipeline is active but not running, so bypass inference
+                self._is_passthrough_mode = pipeline is None or (
+                    pipeline.status.is_active and not pipeline.status.is_running
+                )
                 if pipeline is None or pipeline.model is None:
                     return None
-                # Passthrough mode: pipeline is active but not running, so bypass inference
-                self._is_passthrough_mode = pipeline.status.is_active and not pipeline.status.is_running
+
                 model = pipeline.model
                 return LoadedModel(name=model.name, id=model.id, model=model, device=pipeline.inference_device)
         except Exception as e:
@@ -100,6 +103,7 @@ class InferenceWorker(BaseProcessWorker):
                         )
                     else:
                         logger.info("Model refresh daemon: Switched to passthrough mode (no active model)")
+                logger.debug(f"Model refresh daemon running in {self._model_check_interval}s")
             except Exception as e:
                 logger.error(f"Model refresh daemon error: {e}", exc_info=True)
                 # Continue running despite errors
