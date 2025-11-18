@@ -7,8 +7,10 @@ import { useEffect, useRef, useState } from 'react';
 
 import { SchemaProjectList } from '@geti-inspect/api/spec';
 import { Flex, PhotoPlaceholder, Text, TextField, type TextFieldRef } from '@geti/ui';
+import { clsx } from 'clsx';
 import { useNavigate } from 'react-router';
 
+import { useWebRTCConnection } from '../../../../components/stream/web-rtc-connection-provider';
 import { paths } from '../../../../routes/paths';
 
 import styles from './project-list-item.module.scss';
@@ -32,7 +34,9 @@ const ProjectEdition = ({ name, onBlur }: ProjectEditionProps) => {
         if (e.key === 'Enter') {
             e.preventDefault();
             onBlur(newName);
-        } else if (e.key === 'Escape') {
+        }
+
+        if (e.key === 'Escape') {
             e.preventDefault();
             setNewName(name);
             onBlur(name);
@@ -58,48 +62,52 @@ const ProjectEdition = ({ name, onBlur }: ProjectEditionProps) => {
 
 interface ProjectListItemProps {
     project: Project;
+    isActive: boolean;
     isInEditMode: boolean;
     onBlur: (projectId: string, newName: string) => void;
 }
 
-export const ProjectListItem = ({ project, isInEditMode, onBlur }: ProjectListItemProps) => {
+export const ProjectListItem = ({ project, isInEditMode, isActive, onBlur }: ProjectListItemProps) => {
     const navigate = useNavigate();
+    const { stop } = useWebRTCConnection();
 
-    const handleBlur = (projectId?: string) => (newName: string) => {
-        if (projectId === undefined) {
+    const handleBlur = (newProjectId?: string) => (newName: string) => {
+        if (newProjectId === undefined) {
             return;
         }
 
-        onBlur(projectId, newName);
+        onBlur(newProjectId, newName);
     };
 
     const handleNavigateToProject = () => {
-        if (project.id === undefined) {
+        if (project.id === undefined || isActive) {
             return;
         }
 
+        stop();
         navigate(`${paths.project({ projectId: project.id })}?mode=Dataset`);
     };
 
     return (
-        <>
-            <li className={styles.projectListItem} onClick={isInEditMode ? undefined : handleNavigateToProject}>
-                <Flex justifyContent='space-between' alignItems='center' marginX={'size-200'}>
-                    {isInEditMode ? (
-                        <ProjectEdition name={project.name} onBlur={handleBlur(project.id)} />
-                    ) : (
-                        <Flex alignItems={'center'} gap={'size-100'}>
-                            <PhotoPlaceholder
-                                name={project.name}
-                                indicator={project.id ?? project.name}
-                                height={'size-300'}
-                                width={'size-300'}
-                            />
-                            <Text>{project.name}</Text>
-                        </Flex>
-                    )}
-                </Flex>
-            </li>
-        </>
+        <li
+            className={clsx(styles.projectListItem, { [styles.active]: isActive })}
+            onClick={isInEditMode ? undefined : handleNavigateToProject}
+        >
+            <Flex justifyContent='space-between' alignItems='center' marginX={'size-200'}>
+                {isInEditMode ? (
+                    <ProjectEdition name={project.name} onBlur={handleBlur(project.id)} />
+                ) : (
+                    <Flex alignItems={'center'} gap={'size-100'}>
+                        <PhotoPlaceholder
+                            name={project.name}
+                            indicator={project.id ?? project.name}
+                            height={'size-300'}
+                            width={'size-300'}
+                        />
+                        <Text>{project.name}</Text>
+                    </Flex>
+                )}
+            </Flex>
+        </li>
     );
 };
