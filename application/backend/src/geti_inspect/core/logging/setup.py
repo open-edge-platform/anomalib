@@ -63,7 +63,7 @@ def setup_logging(config: LogConfig | None = None) -> None:
         try:
             os.makedirs(os.path.dirname(log_path), exist_ok=True)
         except OSError as e:
-            logger.warning(f"Failed to create log directory {os.path.abspath(log_path)}: {e}")
+            logger.warning(f"Failed to create log directory {os.path.abspath(os.path.dirname(log_path))}: {e}")
             continue
 
         try:
