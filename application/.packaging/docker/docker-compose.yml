@@ -1,0 +1,42 @@
+x-proxy-list: &proxy-list
+  - HTTP_PROXY=${HTTP_PROXY}
+  - HTTPS_PROXY=${HTTPS_PROXY}
+  - NO_PROXY=${NO_PROXY}
+  - http_proxy=${http_proxy}
+  - https_proxy=${https_proxy}
+  - no_proxy=${no_proxy}
+
+x-proxies: &proxies
+  args: *proxy-list
+
+services:
+  geti-inspect:
+    image: geti-inspect-${AI_DEVICE:-cpu}:${TAG:-latest}
+    environment: *proxy-list
+    restart: unless-stopped
+    build:
+      # Use root directory as context to build the image
+      context: ../../..
+      dockerfile: application/.packaging/docker/Dockerfile
+      target: geti-inspect-${AI_DEVICE:-cpu}
+      <<: *proxies
+    working_dir: /app
+    container_name: geti-inspect-${AI_DEVICE:-cpu}
+
+    volumes:
+      # Persist database and uploaded data
+      - ../../backend/data/:/app/data
+      # Persist logs
+      - ../../backend/logs/:/app/logs
+    ports:
+      - "80:80"
+    # Map all host devices to provide access to webcams and other attached devices
+    privileged: true
+    devices:
+      - /dev:/dev
+
+volumes:
+  backend-data:
+    driver: local
+  backend-logs:
+    driver: local
