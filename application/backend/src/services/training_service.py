@@ -206,8 +206,10 @@ class TrainingService:
             if os.path.isfile(path):
                 return os.path.getsize(path)
             if not os.path.isdir(path):
+                logger.warning(f"Cannot compute export size because `{path}` is not a directory")
                 return None
-        except OSError:
+        except OSError as error:
+            logger.error(f"Failed to access export path `{path}` while computing size: {error}")
             return None
 
         def iter_file_sizes():
