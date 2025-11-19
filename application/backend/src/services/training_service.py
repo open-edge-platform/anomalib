@@ -104,8 +104,6 @@ class TrainingService:
             )
             if model.export_path:
                 logger.warning(f"Deleting partially created model with id: {model.id}")
-                model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model.id)
-                await model_binary_repo.delete_model_folder()
                 await model_service.delete_model(project_id=project_id, model_id=model.id, delete_artifacts=False)
             raise e
         finally:
