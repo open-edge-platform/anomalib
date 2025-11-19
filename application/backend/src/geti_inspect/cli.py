@@ -7,9 +7,9 @@ import sys
 
 import click
 from anomalib.deploy import ExportType
-from db import MigrationManager
-from db.engine import get_sync_db_session
-from db.schema import JobDB, MediaDB, ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
+from geti_inspect.db import MigrationManager
+from geti_inspect.db.engine import get_sync_db_session
+from geti_inspect.db.schema import JobDB, MediaDB, ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
 from settings import get_settings
 
 settings = get_settings()
