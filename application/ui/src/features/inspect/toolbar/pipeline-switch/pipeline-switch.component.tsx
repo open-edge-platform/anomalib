@@ -23,10 +23,10 @@ export const PipelineSwitch = () => {
         },
     });
 
+    const isSinkMissing = isEmpty(pipeline.sink?.id);
     const isModelMissing = isEmpty(pipeline.model?.id);
     const isPipelineActive = isStatusActive(pipeline.status);
     const isWebRtcConnecting = status === 'connecting';
-    const isMissingSourceOrSink = isEmpty(pipeline.sink?.id) || isEmpty(pipeline.source?.id);
     const isProcessing = runPipeline.isPending || stopPipeline.isPending;
 
     const handleChange = (isSelected: boolean) => {
@@ -44,10 +44,10 @@ export const PipelineSwitch = () => {
                 isDisabled={
                     isLoading ||
                     isProcessing ||
+                    isSinkMissing ||
                     isModelMissing ||
                     !isPipelineActive ||
-                    isWebRtcConnecting ||
-                    isMissingSourceOrSink
+                    isWebRtcConnecting
                 }
             >
                 Enabled

@@ -112,7 +112,7 @@ describe('PipelineSwitch', () => {
         it('source is missing', async () => {
             renderApp({ pipelineConfig: { source: undefined } });
 
-            expect(await screen.findByRole('switch')).toBeDisabled();
+            expect(await screen.findByRole('switch')).toBeEnabled();
         });
 
         it('sink is missing', async () => {

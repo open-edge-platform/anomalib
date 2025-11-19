@@ -2,7 +2,7 @@ import { Grid, Heading } from '@geti/ui';
 
 import styles from './source-sink-message.module.scss';
 
-export const SOURCE_SINK_MESSAGE = 'No source or sink is configured. Please set both before starting the stream.';
+export const SOURCE_MESSAGE = 'No source configured. Please set it before starting the stream.';
 
 export const SourceSinkMessage = () => {
     return (
@@ -12,7 +12,7 @@ export const SourceSinkMessage = () => {
             justifyContent={'center'}
             alignContent={'center'}
         >
-            <Heading>{SOURCE_SINK_MESSAGE}</Heading>
+            <Heading>{SOURCE_MESSAGE}</Heading>
         </Grid>
     );
 };

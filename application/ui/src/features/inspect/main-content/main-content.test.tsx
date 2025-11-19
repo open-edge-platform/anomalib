@@ -12,7 +12,7 @@ import { useWebRTCConnection, WebRTCConnectionState } from '../../../components/
 import { MediaItem } from '../dataset/types';
 import { useSelectedMediaItem } from '../selected-media-item-provider.component';
 import { MainContent } from './main-content.component';
-import { SOURCE_SINK_MESSAGE } from './source-sink-message/source-sink-message.component';
+import { SOURCE_MESSAGE } from './source-sink-message/source-sink-message.component';
 
 vi.mock('../../../components/stream/web-rtc-connection-provider', () => ({
     useWebRTCConnection: vi.fn(),
@@ -71,23 +71,23 @@ describe('MainContent', () => {
         );
     };
 
-    describe('SourceSinkMessage', () => {
+    describe('SinkMessage', () => {
         it('renders when no source is configured and no media item selected', async () => {
             renderApp({ pipelineConfig: { source: undefined } });
 
-            expect(await screen.findByText(SOURCE_SINK_MESSAGE)).toBeVisible();
+            expect(await screen.findByText(SOURCE_MESSAGE)).toBeVisible();
         });
 
-        it('renders when no sink is configured and no media item selected', async () => {
+        it('does not render SinkMessage when no sink is configured', async () => {
             renderApp({ pipelineConfig: { sink: undefined } });
 
-            expect(await screen.findByText(SOURCE_SINK_MESSAGE)).toBeVisible();
+            expect(screen.queryByText(SOURCE_MESSAGE)).not.toBeInTheDocument();
         });
 
         it('renders when both source and sink are missing', async () => {
             renderApp({ pipelineConfig: { source: undefined, sink: undefined } });
 
-            expect(await screen.findByText(SOURCE_SINK_MESSAGE)).toBeVisible();
+            expect(await screen.findByText(SOURCE_MESSAGE)).toBeVisible();
         });
     });
 
@@ -154,7 +154,7 @@ describe('MainContent', () => {
         it('renders when media item is selected', async () => {
             renderApp({ selectedMediaItem: mockMediaItem });
 
-            expect(screen.queryByText(SOURCE_SINK_MESSAGE)).not.toBeInTheDocument();
+            expect(screen.queryByText(SOURCE_MESSAGE)).not.toBeInTheDocument();
             expect(screen.queryByRole('button', { name: /Start stream/i })).not.toBeInTheDocument();
         });
 
@@ -164,7 +164,7 @@ describe('MainContent', () => {
                 selectedMediaItem: mockMediaItem,
             });
 
-            expect(screen.queryByText(SOURCE_SINK_MESSAGE)).not.toBeInTheDocument();
+            expect(screen.queryByText(SOURCE_MESSAGE)).not.toBeInTheDocument();
         });
 
         it('renders InferenceResult even when another project is active if media item selected', async () => {

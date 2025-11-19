@@ -14,10 +14,9 @@ export const MainContent = () => {
     const { data: activeProjectPipeline } = useActivePipeline();
 
     const hasActiveProject = !isEmpty(activeProjectPipeline);
-    const isMissingSourceOrSink = isEmpty(pipeline.sink?.id) || isEmpty(pipeline.source?.id);
     const isCurrentProjectActive = activeProjectPipeline?.project_id === projectId;
 
-    if (isEmpty(selectedMediaItem) && isMissingSourceOrSink) {
+    if (isEmpty(selectedMediaItem) && isEmpty(pipeline.source?.id)) {
         return <SourceSinkMessage />;
     }
 
