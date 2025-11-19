@@ -93,7 +93,7 @@ class ModelService:
         try:
             await model_binary_repo.delete_model_folder()
         except FileNotFoundError:
-            logger.debug("Model artifacts already absent on disk for model %s in project %s", model_id, project_id)
+            logger.warning("Model artifacts already absent on disk for model %s in project %s", model_id, project_id)
 
         await self.delete_model(project_id=project_id, model_id=model_id)
         self.activate_model()
