@@ -4,13 +4,14 @@
 from multiprocessing.synchronize import Condition
 from uuid import UUID
 
+from loguru import logger
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from db import get_async_db_session_ctx
-from exceptions import ResourceNotFoundException
-from pydantic_models import Pipeline
+from pydantic_models import Pipeline, PipelineStatus
 from repositories import PipelineRepository
-from services import ActivePipelineService
+from services import ActivePipelineConflictError, ActivePipelineService, ResourceNotFoundError
+from services.exceptions import ResourceType
 from services.model_service import ModelService
 
 MSG_ERR_DELETE_RUNNING_PIPELINE = "Cannot delete a running pipeline."
@@ -49,7 +50,7 @@ class PipelineService:
             repo = PipelineRepository(session)
             pipeline = await repo.get_by_id(project_id)
         if not pipeline:
-            raise ResourceNotFoundException(resource_id=project_id, resource_name="pipeline")
+            raise ResourceNotFoundError(resource_type=ResourceType.PIPELINE, resource_id=str(project_id))
         return pipeline
 
     async def update_pipeline(self, project_id: UUID, partial_config: dict) -> Pipeline:
@@ -83,3 +84,26 @@ class PipelineService:
         """Retrieve the currently active (running) pipeline from the database."""
         async with get_async_db_session_ctx() as session:
             return await PipelineRepository(session).get_active_pipeline()
+
+    async def activate_pipeline(self, project_id: UUID, set_running: bool = False) -> Pipeline:
+        """Activate a pipeline. If set_running is True, set the pipeline status to RUNNING."""
+        active_pipeline = await self.get_active_pipeline()
+        if active_pipeline and active_pipeline.project_id != project_id:
+            raise ActivePipelineConflictError(
+                pipeline_id=str(project_id),
+                reason=(
+                    f"another pipeline is already active. "
+                    f"Please disable the pipeline {active_pipeline.id} before activating a new one"
+                ),
+            )
+        if active_pipeline and (
+            (active_pipeline.status == PipelineStatus.ACTIVE and not set_running)
+            or (active_pipeline.status == PipelineStatus.RUNNING and set_running)
+        ):
+            logger.info(
+                f"Activating already {active_pipeline.status.value.lower()} pipeline `{active_pipeline.id}`, "
+                f"no changes made."
+            )
+            return active_pipeline
+        new_status = PipelineStatus.RUNNING if set_running else PipelineStatus.ACTIVE
+        return await self.update_pipeline(project_id, {"status": new_status})
