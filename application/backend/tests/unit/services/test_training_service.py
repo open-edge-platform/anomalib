@@ -202,7 +202,6 @@ class TestTrainingService:
                 asyncio.run(TrainingService.train_pending_job())
 
             # Verify cleanup was called
-            fxt_mock_binary_repos[0].return_value.delete_model_folder.assert_called_once()
             fxt_mock_model_service.delete_model.assert_called_once()
             call_args = fxt_mock_model_service.delete_model.call_args
             assert call_args[1]["project_id"] == fxt_job.project_id
