@@ -10,7 +10,6 @@ import { isEmpty } from 'lodash-es';
 import { useActivatePipeline, usePipeline } from 'src/hooks/use-pipeline.hook';
 
 import { useWebRTCConnection } from '../../../components/stream/web-rtc-connection-provider';
-import { isStatusActive } from '../utils';
 import { Stream } from './stream';
 
 import classes from './stream-container.module.scss';
@@ -22,22 +21,20 @@ export const StreamContainer = () => {
     const activePipeline = useActivatePipeline({ onSuccess: start });
     const [size, setSize] = useState({ height: 608, width: 892 });
 
-    const hasNoSink = isEmpty(pipeline?.sink);
-    const hasNoSource = isEmpty(pipeline?.source);
-    const isPipelineActive = isStatusActive(pipeline.status);
+    const hasSource = !isEmpty(pipeline?.source);
 
     useEffect(() => {
         if (status === 'failed') {
             toast({ type: 'error', message: 'Failed to connect to the stream' });
         }
 
-        if (isPipelineActive && status === 'idle') {
+        if (hasSource && status === 'idle') {
             start();
         }
-    }, [isPipelineActive, status, start]);
+    }, [hasSource, status, start]);
 
     const handleStart = async () => {
-        if (isPipelineActive) {
+        if (hasSource) {
             start();
         } else {
             activePipeline.mutate({ params: { path: { project_id: projectId } } });
@@ -58,7 +55,7 @@ export const StreamContainer = () => {
                         <Button
                             onPress={handleStart}
                             aria-label={'Start stream'}
-                            isDisabled={hasNoSink || hasNoSource}
+                            isDisabled={!hasSource}
                             UNSAFE_className={classes.playButton}
                         >
                             <Play width='128px' height='128px' />
