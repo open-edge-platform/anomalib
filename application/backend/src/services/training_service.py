@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
+import os
 from contextlib import redirect_stdout
 from uuid import UUID
 
@@ -193,7 +194,36 @@ class TrainingService:
         logger.info(f"Exporting model to {export_path}")
 
         model.is_ready = True
+        model.size = TrainingService._compute_export_size(model.export_path)
         return model
+
+    @staticmethod
+    def _compute_export_size(path: str | None) -> int | None:
+        if path is None:
+            return None
+
+        try:
+            if os.path.isfile(path):
+                return os.path.getsize(path)
+            if not os.path.isdir(path):
+                logger.warning(f"Cannot compute export size because `{path}` is not a directory")
+                return None
+        except OSError as error:
+            logger.error(f"Failed to access export path `{path}` while computing size: {error}")
+            return None
+
+        def iter_file_sizes():
+            for root, _, files in os.walk(path, followlinks=False):
+                for file_name in files:
+                    file_path = os.path.join(root, file_name)
+                    if os.path.islink(file_path):
+                        continue
+                    try:
+                        yield os.path.getsize(file_path)
+                    except OSError:
+                        continue
+
+        return sum(iter_file_sizes())
 
     @classmethod
     async def _sync_progress_with_db(

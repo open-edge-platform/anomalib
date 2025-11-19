@@ -222,12 +222,14 @@ class TestTrainingService:
         fxt_model_binary_repo.model_folder_path = "/path/to/model"
 
         # Call the method
-        result = TrainingService._train_model(fxt_model, synchronization_parameters=ProgressSyncParams())
+        with patch.object(TrainingService, "_compute_export_size", return_value=123):
+            result = TrainingService._train_model(fxt_model, synchronization_parameters=ProgressSyncParams())
 
         # Verify the result
         assert result == fxt_model
         assert fxt_model.is_ready is True
         assert fxt_model.export_path == "/path/to/model"
+        assert fxt_model.size == 123
 
         # Verify all components were called correctly
         fxt_mock_anomalib_components["folder_class"].assert_called_once()
