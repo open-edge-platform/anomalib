@@ -6,10 +6,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from pydantic_models import JobStatus  # type: ignore[import-not-found]
-from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository  # type: ignore[import-not-found]
+from pydantic_models import JobStatus
+from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import TrainingService
-from utils.callbacks import ProgressSyncParams  # type: ignore[import-not-found]
+from utils.callbacks import ProgressSyncParams
 
 
 @pytest.fixture

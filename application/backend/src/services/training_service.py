@@ -180,21 +180,12 @@ class TrainingService:
             accelerator=training_device,
         )
 
-        if synchronization_parameters.cancel_training_event.is_set():
-            return None
-
         # Execute training and export
         export_format = ExportType.OPENVINO
 
         # Capture pytorch stdout logs into logger
-        try:
-            with redirect_stdout(LoggerStdoutWriter()):  # type: ignore[type-var]
-                engine.fit(model=anomalib_model, datamodule=datamodule)
-        except Exception as exc:
-            if synchronization_parameters.cancel_training_event.is_set():
-                logger.info("Training cancelled during execution: %s", exc)
-                return None
-            raise
+        with redirect_stdout(LoggerStdoutWriter()):  # type: ignore[type-var]
+            engine.fit(model=anomalib_model, datamodule=datamodule)
 
         # Find and set threshold metric
         for callback in engine.trainer.callbacks:  # type: ignore[attr-defined]
