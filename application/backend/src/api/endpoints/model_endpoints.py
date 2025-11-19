@@ -11,7 +11,7 @@ from api.media_rest_validator import MediaRestValidator
 from exceptions import ResourceNotFoundException
 from pydantic_models import Model, ModelList, PredictionResponse
 from services import ModelService
-from services.exceptions import DeviceNotFoundError, ResourceNotFoundError
+from services.exceptions import DeviceNotFoundError
 
 model_api_prefix_url = project_api_prefix_url + "/{project_id}/models"
 model_router = APIRouter(
@@ -85,7 +85,4 @@ async def delete_model(
     model_id: Annotated[UUID, Depends(get_model_id)],
 ) -> None:
     """Delete a model and any exported artifacts."""
-    try:
-        await model_service.delete_model_and_artifacts(project_id=project_id, model_id=model_id)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    await model_service.delete_model(project_id=project_id, model_id=model_id)
