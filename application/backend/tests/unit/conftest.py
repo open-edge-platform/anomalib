@@ -82,6 +82,7 @@ def fxt_model(fxt_project):
         is_ready=True,
         export_path="/path/to/model",
         train_job_id=uuid.uuid4(),
+        size=0,
     )
 
 

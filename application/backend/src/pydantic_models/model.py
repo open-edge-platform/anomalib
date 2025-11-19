@@ -29,6 +29,7 @@ class Model(BaseIDNameModel):
     is_ready: bool = Field(default=False, description="Indicates if the model is ready for use")
     export_path: str | None = None
     train_job_id: UUID = Field(description="ID of the training job for this model")
+    size: int | None = Field(default=None, ge=0, description="Total size in bytes of exported model artifacts")
 
     @property
     def weights_path(self) -> str:
@@ -49,6 +50,7 @@ class Model(BaseIDNameModel):
                 ),
                 "threshold": 0.5,
                 "train_job_id": "0db0c16d-0d3c-4e0e-bc5a-ca710579e549",
+                "size": 12345678,
             }
         }
     }

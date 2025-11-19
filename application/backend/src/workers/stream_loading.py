@@ -106,6 +106,6 @@ def _enqueue_frame_with_retry(
         except queue.Full:
             if is_real_time:
                 frame_queue.get(timeout=0.01)  # Discard oldest frame
-                logger.debug("Frame queue is full, skipping frame")
+                logger.debug("Frame queue is full, discarded oldest frame for real-time stream")
                 break
             logger.debug("Frame queue is full, retrying...")
