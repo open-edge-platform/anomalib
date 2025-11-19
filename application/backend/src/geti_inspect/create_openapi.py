@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 from fastapi.openapi.utils import get_openapi
-from main import app
+from geti_inspect.main import app
 
 
 def create_openapi(target_path: str) -> None:
