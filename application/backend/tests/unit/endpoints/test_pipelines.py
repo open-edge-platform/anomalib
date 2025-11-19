@@ -9,14 +9,15 @@ import pytest
 from fastapi import status
 from pydantic import ValidationError
 
-from api.dependencies import get_pipeline_service
+from api.dependencies import get_pipeline_metrics_service, get_pipeline_service
 from main import app
-from pydantic_models.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, TimeWindow
+from pydantic_models.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
 from pydantic_models.model import Model
 from pydantic_models.pipeline import Pipeline, PipelineStatus
 from pydantic_models.sink import FolderSinkConfig
 from pydantic_models.source import VideoFileSourceConfig
-from services import PipelineService
+from services import ActivePipelineConflictError, PipelineService
+from services.pipeline_metrics_service import PipelineMetricsService
 
 
 @pytest.fixture
@@ -34,6 +35,13 @@ def fxt_pipeline_service() -> MagicMock:
     pipeline_service.get_active_pipeline = AsyncMock(return_value=None)
     app.dependency_overrides[get_pipeline_service] = lambda: pipeline_service
     return pipeline_service
+
+
+@pytest.fixture
+def fxt_pipeline_metrics_service() -> MagicMock:
+    pipeline_metrics_service = MagicMock(spec=PipelineMetricsService)
+    app.dependency_overrides[get_pipeline_metrics_service] = lambda: pipeline_metrics_service
+    return pipeline_metrics_service
 
 
 class TestPipelineEndpoints:
@@ -87,10 +95,22 @@ class TestPipelineEndpoints:
         # Mock get_active_pipeline to return None (no active pipeline) for run operation
         if operation == "run":
             fxt_pipeline_service.get_active_pipeline = AsyncMock(return_value=None)
+            # activate_pipeline internally calls update_pipeline, so we make activate_pipeline call update_pipeline
+
+            async def activate_pipeline_side_effect(proj_id, set_running=False):
+                await fxt_pipeline_service.update_pipeline(proj_id, {"status": pipeline_status})
+                return fxt_pipeline
+
+            fxt_pipeline_service.activate_pipeline = AsyncMock(side_effect=activate_pipeline_side_effect)
+            fxt_pipeline_service.update_pipeline = AsyncMock(return_value=fxt_pipeline)
         response = fxt_client.post(f"/api/projects/{project_id}/pipeline:{operation}")
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
-        fxt_pipeline_service.update_pipeline.assert_called_once_with(project_id, {"status": pipeline_status})
+        if operation == "run":
+            fxt_pipeline_service.activate_pipeline.assert_called_once_with(project_id, set_running=True)
+            fxt_pipeline_service.update_pipeline.assert_called_once_with(project_id, {"status": pipeline_status})
+        else:
+            fxt_pipeline_service.update_pipeline.assert_called_once_with(project_id, {"status": pipeline_status})
 
     @pytest.mark.parametrize("operation", ["run", "disable"])
     def test_enable_pipeline_invalid_id(self, operation, fxt_pipeline, fxt_pipeline_service, fxt_client):
@@ -113,8 +133,8 @@ class TestPipelineEndpoints:
     #     fxt_pipeline_service.update_pipeline.assert_called_once_with(project_id, {"status": pipeline_status})
 
     def test_cannot_enable_pipeline(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
-        # Mock get_active_pipeline to return None (no active pipeline)
-        fxt_pipeline_service.update_pipeline.side_effect = ValidationError.from_exception_data(
+        # Mock activate_pipeline to raise ValidationError (which happens when update_pipeline raises it)
+        fxt_pipeline_service.activate_pipeline.side_effect = ValidationError.from_exception_data(
             "Pipeline",
             [
                 {
@@ -129,10 +149,7 @@ class TestPipelineEndpoints:
         response = fxt_client.post(f"/api/projects/{fxt_pipeline.project_id}/pipeline:run")
 
         assert response.status_code == status.HTTP_409_CONFLICT
-        fxt_pipeline_service.get_active_pipeline.assert_called_once()
-        fxt_pipeline_service.update_pipeline.assert_called_once_with(
-            fxt_pipeline.project_id, {"status": PipelineStatus.RUNNING}
-        )
+        fxt_pipeline_service.activate_pipeline.assert_called_once_with(fxt_pipeline.project_id, set_running=True)
 
     def test_enable_pipeline_with_active_pipeline_different_project(
         self, fxt_pipeline, fxt_pipeline_service, fxt_client
@@ -173,15 +190,18 @@ class TestPipelineEndpoints:
             model_id=model.id,
             status=PipelineStatus.RUNNING,
         )
-        fxt_pipeline_service.get_active_pipeline = AsyncMock(return_value=active_pipeline)
+        # activate_pipeline raises ActivePipelineConflictError when there's an active pipeline from different project
+        fxt_pipeline_service.activate_pipeline.side_effect = ActivePipelineConflictError(
+            pipeline_id=str(fxt_pipeline.project_id),
+            reason=f"another pipeline is already active. Please disable the pipeline {active_pipeline.id} "
+            f"before activating a new one",
+        )
 
         response = fxt_client.post(f"/api/projects/{fxt_pipeline.project_id}/pipeline:run")
 
         assert response.status_code == status.HTTP_409_CONFLICT
-        assert "Another pipeline is already active" in response.json()["detail"]
-        assert str(active_pipeline.id) in response.json()["detail"]
-        fxt_pipeline_service.get_active_pipeline.assert_called_once()
-        fxt_pipeline_service.update_pipeline.assert_not_called()
+        assert "Cannot activate pipeline" in response.json()["detail"]
+        fxt_pipeline_service.activate_pipeline.assert_called_once_with(fxt_pipeline.project_id, set_running=True)
 
     def test_enable_pipeline_with_active_pipeline_same_project(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
         """Test enabling a pipeline when the same pipeline is already active (re-enabling)."""
@@ -219,38 +239,50 @@ class TestPipelineEndpoints:
             model_id=model.id,
             status=PipelineStatus.RUNNING,
         )
+        # activate_pipeline internally calls get_active_pipeline and update_pipeline
+        # Make activate_pipeline call update_pipeline when called
+
+        async def activate_pipeline_side_effect(proj_id, set_running=False):
+            await fxt_pipeline_service.update_pipeline(proj_id, {"status": PipelineStatus.RUNNING})
+            return active_pipeline
+
         fxt_pipeline_service.get_active_pipeline = AsyncMock(return_value=active_pipeline)
-        fxt_pipeline_service.update_pipeline.return_value = active_pipeline
+        fxt_pipeline_service.update_pipeline = AsyncMock(return_value=active_pipeline)
+        fxt_pipeline_service.activate_pipeline = AsyncMock(side_effect=activate_pipeline_side_effect)
 
         response = fxt_client.post(f"/api/projects/{fxt_pipeline.project_id}/pipeline:run")
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
-        fxt_pipeline_service.get_active_pipeline.assert_called_once()
+        fxt_pipeline_service.activate_pipeline.assert_called_once_with(fxt_pipeline.project_id, set_running=True)
+        # activate_pipeline internally calls update_pipeline when re-enabling
         fxt_pipeline_service.update_pipeline.assert_called_once_with(
             fxt_pipeline.project_id, {"status": PipelineStatus.RUNNING}
         )
 
-    def test_get_pipeline_metrics_success(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+    def test_get_pipeline_metrics_success(self, fxt_pipeline, fxt_pipeline_metrics_service, fxt_client):
         """Test successful retrieval of pipeline metrics with default time window."""
         mock_metrics = PipelineMetrics(
             time_window=TimeWindow(start=datetime.now(UTC), end=datetime.now(UTC), time_window=60),
             inference=InferenceMetrics(
                 latency=LatencyMetrics(avg_ms=100.5, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0),
+                throughput=ThroughputMetrics(
+                    avg_requests_per_second=30.0, total_requests=1800, max_requests_per_second=45.0
+                ),
             ),
         )
-        fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
+        fxt_pipeline_metrics_service.get_pipeline_metrics.return_value = mock_metrics
 
         response = fxt_client.get(f"/api/projects/{fxt_pipeline.project_id}/pipeline/metrics")
 
         assert response.status_code == status.HTTP_200_OK
-        fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)
+        fxt_pipeline_metrics_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)
 
-    def test_get_pipeline_metrics_invalid_pipeline_id(self, fxt_pipeline_service, fxt_client):
+    def test_get_pipeline_metrics_invalid_pipeline_id(self, fxt_pipeline_metrics_service, fxt_client):
         """Test metrics endpoint with invalid pipeline ID format."""
         response = fxt_client.get("/api/projects/invalid-id/pipeline/metrics")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        fxt_pipeline_service.get_pipeline_metrics.assert_not_called()
+        fxt_pipeline_metrics_service.get_pipeline_metrics.assert_not_called()
 
     # Note: ResourceNotFoundError handling not implemented in current endpoints
     # def test_get_pipeline_metrics_pipeline_not_found(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
@@ -262,9 +294,9 @@ class TestPipelineEndpoints:
     #     assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
     #     fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)
 
-    def test_get_pipeline_metrics_pipeline_not_running(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+    def test_get_pipeline_metrics_pipeline_not_running(self, fxt_pipeline, fxt_pipeline_metrics_service, fxt_client):
         """Test metrics endpoint when pipeline is not in running state."""
-        fxt_pipeline_service.get_pipeline_metrics.side_effect = ValueError(
+        fxt_pipeline_metrics_service.get_pipeline_metrics.side_effect = ValueError(
             "Cannot get metrics for a pipeline that is not running."
         )
 
@@ -272,11 +304,11 @@ class TestPipelineEndpoints:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Cannot get metrics for a pipeline that is not running" in response.json()["detail"]
-        fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)
+        fxt_pipeline_metrics_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)
 
     @pytest.mark.parametrize("invalid_time_window", [0, -1, 3601, 7200])
     def test_get_pipeline_metrics_invalid_time_window(
-        self, invalid_time_window, fxt_pipeline, fxt_pipeline_service, fxt_client
+        self, invalid_time_window, fxt_pipeline, fxt_pipeline_metrics_service, fxt_client
     ):
         """Test metrics endpoint with invalid time window values."""
         response = fxt_client.get(
@@ -285,37 +317,45 @@ class TestPipelineEndpoints:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Duration must be between 1 and 3600 seconds" in response.json()["detail"]
-        fxt_pipeline_service.get_pipeline_metrics.assert_not_called()
+        fxt_pipeline_metrics_service.get_pipeline_metrics.assert_not_called()
 
     @pytest.mark.parametrize("valid_time_window", [1, 30, 300, 1800, 3600])
     def test_get_pipeline_metrics_valid_time_windows(
-        self, valid_time_window, fxt_pipeline, fxt_pipeline_service, fxt_client
+        self, valid_time_window, fxt_pipeline, fxt_pipeline_metrics_service, fxt_client
     ):
         """Test metrics endpoint with various valid time window values."""
         mock_metrics = PipelineMetrics(
             time_window=TimeWindow(start=datetime.now(UTC), end=datetime.now(UTC), time_window=valid_time_window),
             inference=InferenceMetrics(
                 latency=LatencyMetrics(avg_ms=100.0, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0),
+                throughput=ThroughputMetrics(
+                    avg_requests_per_second=30.0, total_requests=1800, max_requests_per_second=45.0
+                ),
             ),
         )
-        fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
+        fxt_pipeline_metrics_service.get_pipeline_metrics.return_value = mock_metrics
 
         response = fxt_client.get(
             f"/api/projects/{fxt_pipeline.project_id}/pipeline/metrics?time_window={valid_time_window}"
         )
 
         assert response.status_code == status.HTTP_200_OK
-        fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, valid_time_window)
+        fxt_pipeline_metrics_service.get_pipeline_metrics.assert_called_once_with(
+            fxt_pipeline.project_id, valid_time_window
+        )
 
-    def test_get_pipeline_metrics_no_data_available(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+    def test_get_pipeline_metrics_no_data_available(self, fxt_pipeline, fxt_pipeline_metrics_service, fxt_client):
         """Test metrics endpoint when no latency data is available."""
         mock_metrics = PipelineMetrics(
             time_window=TimeWindow(start=datetime.now(UTC), end=datetime.now(UTC), time_window=60),
             inference=InferenceMetrics(
                 latency=LatencyMetrics(avg_ms=None, min_ms=None, max_ms=None, p95_ms=None, latest_ms=None),
+                throughput=ThroughputMetrics(
+                    avg_requests_per_second=None, total_requests=None, max_requests_per_second=None
+                ),
             ),
         )
-        fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
+        fxt_pipeline_metrics_service.get_pipeline_metrics.return_value = mock_metrics
 
         response = fxt_client.get(f"/api/projects/{fxt_pipeline.project_id}/pipeline/metrics")
 
@@ -328,17 +368,20 @@ class TestPipelineEndpoints:
         assert response_data["inference"]["latency"]["p95_ms"] is None
         assert response_data["inference"]["latency"]["latest_ms"] is None
 
-        fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)
+        fxt_pipeline_metrics_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)
 
-    def test_get_pipeline_metrics_success_with_data(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+    def test_get_pipeline_metrics_success_with_data(self, fxt_pipeline, fxt_pipeline_metrics_service, fxt_client):
         """Test successful retrieval of pipeline metrics with latency data."""
         mock_metrics = PipelineMetrics(
             time_window=TimeWindow(start=datetime.now(UTC), end=datetime.now(UTC), time_window=60),
             inference=InferenceMetrics(
                 latency=LatencyMetrics(avg_ms=100.5, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0),
+                throughput=ThroughputMetrics(
+                    avg_requests_per_second=30.0, total_requests=1800, max_requests_per_second=45.0
+                ),
             ),
         )
-        fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
+        fxt_pipeline_metrics_service.get_pipeline_metrics.return_value = mock_metrics
 
         response = fxt_client.get(f"/api/projects/{str(fxt_pipeline.project_id)}/pipeline/metrics")
 
@@ -351,4 +394,4 @@ class TestPipelineEndpoints:
         assert response_data["inference"]["latency"]["p95_ms"] == 180.0
         assert response_data["inference"]["latency"]["latest_ms"] == 120.0
 
-        fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)
+        fxt_pipeline_metrics_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)

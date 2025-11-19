@@ -12,10 +12,6 @@
     object-fit: contain;
 }
 
-.notReadyInference {
-    filter: grayscale(1) blur(8px);
-}
-
 .inferencedImage {
     grid-area: inference-result;
     justify-self: start;
@@ -34,17 +30,4 @@
 
 .labelAnomalous {
     background-color: var(--brand-coral-cobalt);
-}
-
-.canvasItem {
-    grid-area: innercanvas;
-}
-
-.playButton {
-    display: flex;
-    gap: var(--spectrum-global-dimension-size-400);
-    align-items: center;
-    padding: var(--spectrum-global-dimension-size-1200);
-    position: relative;
-    border-radius: var(--spectrum-alias-border-radius-medium);
 }

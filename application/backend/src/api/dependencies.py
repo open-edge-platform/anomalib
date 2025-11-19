@@ -15,6 +15,7 @@ from services import (
 )
 from services.metrics_service import MetricsService
 from services.model_service import ModelService
+from services.pipeline_metrics_service import PipelineMetricsService
 from webrtc.manager import WebRTCManager
 
 
@@ -76,16 +77,25 @@ def get_configuration_service(
 @lru_cache
 def get_pipeline_service(
     active_pipeline_service: Annotated[ActivePipelineService, Depends(get_active_pipeline_service)],
-    metrics_service: Annotated[MetricsService, Depends(get_metrics_service)],
     scheduler: Annotated[Scheduler, Depends(get_scheduler)],
     model_service: Annotated[ModelService, Depends(get_model_service)],
 ) -> PipelineService:
     """Provides a PipelineService instance with the active pipeline service and config changed condition."""
     return PipelineService(
         active_pipeline_service=active_pipeline_service,
-        metrics_service=metrics_service,
         config_changed_condition=scheduler.mp_config_changed_condition,
         model_service=model_service,
+    )
+
+
+def get_pipeline_metrics_service(
+    pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
+    metrics_service: Annotated[MetricsService, Depends(get_metrics_service)],
+) -> PipelineMetricsService:
+    """Provides a PipelineMetricsService instance."""
+    return PipelineMetricsService(
+        pipeline_service=pipeline_service,
+        metrics_service=metrics_service,
     )
 
 

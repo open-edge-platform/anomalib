@@ -108,6 +108,7 @@ def upgrade() -> None:
         sa.Column("is_ready", sa.Boolean(), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("train_job_id", sa.String(), nullable=False),
+        sa.Column("size", sa.BigInteger(), nullable=True),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"]),
         sa.ForeignKeyConstraint(["train_job_id"], ["jobs.id"], ondelete="RESTRICT"),
         sa.PrimaryKeyConstraint("id"),

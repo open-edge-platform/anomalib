@@ -56,19 +56,24 @@ class InferenceWorker(BaseProcessWorker):
         self._last_model_obj_id = 0  # track the id of the Model object to install the callback only once
         self._cached_models: dict[Any, object] = {}
         self._model_check_interval: float = 5.0  # seconds between model refresh checks
+        self._is_passthrough_mode: bool = False
 
     def setup(self) -> None:
         super().setup()
         self._metrics_service = MetricsService(self._shm_name, self._shm_lock)
 
-    @staticmethod
-    async def _get_active_model() -> LoadedModel | None:
+    async def _get_active_model(self) -> LoadedModel | None:
         try:
             async with get_async_db_session_ctx() as session:
                 repo = PipelineRepository(session)
                 pipeline = await repo.get_active_pipeline()
+                # Passthrough mode: pipeline is active but not running, so bypass inference
+                self._is_passthrough_mode = pipeline is None or (
+                    pipeline.status.is_active and not pipeline.status.is_running
+                )
                 if pipeline is None or pipeline.model is None:
                     return None
+
                 model = pipeline.model
                 return LoadedModel(name=model.name, id=model.id, model=model, device=pipeline.inference_device)
         except Exception as e:
@@ -98,6 +103,7 @@ class InferenceWorker(BaseProcessWorker):
                         )
                     else:
                         logger.info("Model refresh daemon: Switched to passthrough mode (no active model)")
+                logger.debug(f"Model refresh daemon running in {self._model_check_interval}s")
             except Exception as e:
                 logger.error(f"Model refresh daemon error: {e}", exc_info=True)
                 # Continue running despite errors
@@ -249,20 +255,21 @@ class InferenceWorker(BaseProcessWorker):
                 if stream_data is None:
                     continue
 
-                # Check passthrough mode (no DB query!)
-                passthrough_mode = self._loaded_model is None
-
-                if passthrough_mode:
-                    await self._handle_passthrough_mode(stream_data)
-                    continue
-
                 # Handle model reload (immediate refresh on events)
                 try:
                     await self._handle_model_reload()
-                    if self._loaded_model is None:
-                        raise RuntimeError("No active model configured")
                 except Exception as e:
-                    logger.error(f"Model reload handling failed: {e}")
+                    logger.warning(f"Model reload handling failed: {e}")
+                    await asyncio.sleep(1)
+                    continue
+
+                # Check passthrough mode (no inference)
+                if self._is_passthrough_mode:
+                    await self._handle_passthrough_mode(stream_data)
+                    continue
+
+                if self._loaded_model is None:
+                    logger.error("Cannot run inference: model is not loaded: retrying in 1 second")
                     await asyncio.sleep(1)
                     continue
 

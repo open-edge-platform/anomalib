@@ -11,10 +11,11 @@ from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from pydantic import ValidationError
 
-from api.dependencies import get_pipeline_service, get_project_id
+from api.dependencies import get_pipeline_metrics_service, get_pipeline_service, get_project_id
 from pydantic_models.metrics import PipelineMetrics
 from pydantic_models.pipeline import Pipeline, PipelineStatus
 from services import PipelineService
+from services.pipeline_metrics_service import PipelineMetricsService
 
 router = APIRouter(prefix="/api/projects/{project_id}/pipeline", tags=["Pipelines"])
 
@@ -110,7 +111,47 @@ async def run_pipeline(
     The pipeline will start processing data from the source, run it through the model, and send results to the sink.
     If the pipeline is not yet activated, it will be activated as well.
     """
-    await _activate_pipeline(pipeline_service, project_id, set_running=True)
+    try:
+        await pipeline_service.activate_pipeline(project_id, set_running=True)
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+
+@router.post(
+    ":stop",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_204_NO_CONTENT: {"description": "Pipeline stopped successfully."},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
+        status.HTTP_409_CONFLICT: {"description": "Pipeline cannot be stopped"},
+    },
+)
+async def stop_pipeline(
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
+) -> None:
+    """
+    Stops the running pipeline but does not deactivate it.
+    This keeps the pipeline activated, switching to source passthrough mode.
+    """
+    active_pipeline = await pipeline_service.get_active_pipeline()
+    if active_pipeline and active_pipeline.project_id != project_id:
+        reason = f"another pipeline `{active_pipeline.project_id}` is currently {active_pipeline.status}."
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Cannot stop pipeline `{project_id}`: {reason}",
+        )
+    if not (active_pipeline and active_pipeline.project_id == project_id and active_pipeline.status.is_running):
+        reason = "the pipeline is not running."
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Cannot stop pipeline `{project_id}`: {reason}",
+        )
+    try:
+        await pipeline_service.update_pipeline(project_id, {"status": PipelineStatus.ACTIVE})
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
 @router.post(
@@ -133,7 +174,10 @@ async def activate_pipeline(
     Set the pipeline status to ACTIVE.
     The pipeline will be ready to run but will not start processing data until set to RUNNING.
     """
-    await _activate_pipeline(pipeline_service, project_id)
+    try:
+        await pipeline_service.activate_pipeline(project_id)
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
 @router.post(
@@ -163,7 +207,7 @@ async def disable_pipeline(
 )
 async def get_project_metrics(
     project_id: Annotated[UUID, Depends(get_project_id)],
-    pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
+    pipeline_metrics_service: Annotated[PipelineMetricsService, Depends(get_pipeline_metrics_service)],
     time_window: int = 60,
 ) -> PipelineMetrics:
     """
@@ -178,22 +222,6 @@ async def get_project_metrics(
         )
 
     try:
-        return await pipeline_service.get_pipeline_metrics(project_id, time_window)
+        return await pipeline_metrics_service.get_pipeline_metrics(project_id, time_window)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
-
-async def _activate_pipeline(pipeline_service: PipelineService, project_id: UUID, set_running: bool = False) -> None:
-    if (active_pipeline := await pipeline_service.get_active_pipeline()) and active_pipeline.project_id != project_id:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                f"Another pipeline is already active. "
-                f"Please disable the pipeline {active_pipeline.id} before activating a new one."
-            ),
-        )
-    try:
-        new_status = PipelineStatus.RUNNING if set_running else PipelineStatus.ACTIVE
-        await pipeline_service.update_pipeline(project_id, {"status": new_status})
-    except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
