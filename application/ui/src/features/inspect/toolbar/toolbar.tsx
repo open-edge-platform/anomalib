@@ -20,10 +20,9 @@ export const Toolbar = () => {
             }}
         >
             <Flex height='100%' gap='size-200' alignItems={'center'}>
-                <Divider orientation='vertical' size='S' />
-
                 <Flex marginStart='auto' alignItems={'center'} gap={'size-200'}>
                     <ModelsPicker />
+
                     <Divider size={'S'} orientation={'vertical'} />
                     <InferenceOpacity />
                     <Divider size={'S'} orientation={'vertical'} />

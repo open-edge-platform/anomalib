@@ -1,7 +1,7 @@
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
 import { LinkExpired } from '@geti-inspect/icons';
-import { Button, DialogTrigger, Flex, Loading, Text } from '@geti/ui';
+import { Button, DialogContainer, Flex, Loading, Text } from '@geti/ui';
 
 import { useWebRTCConnection } from '../../../../components/stream/web-rtc-connection-provider';
 import { ConfirmationDialog } from './confirmation-dialog.component';
@@ -22,6 +22,7 @@ const useStopCurrentWebRtcConnection = () => {
 };
 
 export const EnableProject = ({ activeProjectId, currentProjectId }: EnableProjectProps) => {
+    const [isOpen, setIsOpen] = useState(false);
     useStopCurrentWebRtcConnection();
 
     return (
@@ -36,12 +37,15 @@ export const EnableProject = ({ activeProjectId, currentProjectId }: EnableProje
 
                 <Text UNSAFE_className={classes.title}>Would you like to activate this project?</Text>
 
-                <DialogTrigger>
-                    <Button>Activate project</Button>
-                    <Suspense fallback={<Loading mode={'inline'} />}>
-                        <ConfirmationDialog activeProjectId={activeProjectId} currentProjectId={currentProjectId} />
-                    </Suspense>
-                </DialogTrigger>
+                <Button onPress={() => setIsOpen(true)}>Activate project</Button>
+
+                <DialogContainer onDismiss={() => setIsOpen(false)}>
+                    {isOpen && (
+                        <Suspense fallback={<Loading mode={'inline'} />}>
+                            <ConfirmationDialog activeProjectId={activeProjectId} currentProjectId={currentProjectId} />
+                        </Suspense>
+                    )}
+                </DialogContainer>
             </Flex>
         </Flex>
     );

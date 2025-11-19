@@ -1,8 +1,10 @@
 import { Grid, Heading } from '@geti/ui';
 
-import styles from './train-model-message.module.scss';
+import styles from './source-sink-message.module.scss';
 
-export const TrainModelMessage = () => {
+export const SOURCE_MESSAGE = 'No source configured. Please set it before starting the stream.';
+
+export const SourceSinkMessage = () => {
     return (
         <Grid
             gridArea={'canvas'}
@@ -10,7 +12,7 @@ export const TrainModelMessage = () => {
             justifyContent={'center'}
             alignContent={'center'}
         >
-            <Heading>No trained models available. Please train a model to start inference.</Heading>
+            <Heading>{SOURCE_MESSAGE}</Heading>
         </Grid>
     );
 };

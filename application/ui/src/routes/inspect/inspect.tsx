@@ -6,7 +6,7 @@ import { Grid } from '@geti/ui';
 
 import { Footer } from '../../features/inspect/footer/footer.component';
 import { InferenceProvider } from '../../features/inspect/inference-provider.component';
-import { MediaActions } from '../../features/inspect/media-actions/media-actions.component';
+import { MainContent } from '../../features/inspect/main-content/main-content.component';
 import { SelectedMediaItemProvider } from '../../features/inspect/selected-media-item-provider.component';
 import { Sidebar } from '../../features/inspect/sidebar.component';
 import { Toolbar } from '../../features/inspect/toolbar/toolbar';
@@ -29,7 +29,7 @@ export const Inspect = () => {
             <SelectedMediaItemProvider>
                 <InferenceProvider>
                     <Toolbar />
-                    <MediaActions />
+                    <MainContent />
                     <Sidebar />
                     <Footer />
                 </InferenceProvider>

@@ -5,7 +5,7 @@ import { Button, Flex, Text } from 'packages/ui';
 
 import { StatusTag } from '../../../../../components/status-tag/status-tag.component';
 import { usePipeline } from '../../../../../hooks/use-pipeline.hook';
-import { removeUnderscore } from '../../../../utils';
+import { removeUnderscore } from '../../../utils';
 import { SourceMenu } from '../source-menu/source-menu.component';
 import { SourceConfig } from '../util';
 import { SettingsList } from './settings-list/settings-list.component';

@@ -1,48 +1,37 @@
-import { $api } from '@geti-inspect/api';
-import { useProjectIdentifier } from '@geti-inspect/hooks';
-import { Flex, Switch, toast } from '@geti/ui';
+import { usePipeline, useProjectIdentifier, useRunPipeline, useStopPipeline } from '@geti-inspect/hooks';
+import { Flex, Switch } from '@geti/ui';
+import isEmpty from 'lodash-es/isEmpty';
 import { useWebRTCConnection } from 'src/components/stream/web-rtc-connection-provider';
-import { useEnablePipeline, usePipeline } from 'src/hooks/use-pipeline.hook';
 
 import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
+import { isStatusActive } from '../../utils';
 import { WebRTCConnectionStatus } from './web-rtc-connection-status.component';
 
 import classes from './pipeline-switch.module.scss';
 
 export const PipelineSwitch = () => {
     const { projectId } = useProjectIdentifier();
-    const { status, start, stop } = useWebRTCConnection();
+    const stopPipeline = useStopPipeline(projectId);
+    const { status, start } = useWebRTCConnection();
     const { onSetSelectedMediaItem } = useSelectedMediaItem();
     const { data: pipeline, isLoading } = usePipeline();
 
-    const enablePipeline = useEnablePipeline({
+    const runPipeline = useRunPipeline({
         onSuccess: async () => {
             await start();
             onSetSelectedMediaItem(undefined);
         },
     });
 
+    const isSinkMissing = isEmpty(pipeline.sink?.id);
+    const isModelMissing = isEmpty(pipeline.model?.id);
+    const isPipelineActive = isStatusActive(pipeline.status);
     const isWebRtcConnecting = status === 'connecting';
-
-    const disablePipeline = $api.useMutation('post', '/api/projects/{project_id}/pipeline:disable', {
-        onSuccess: () => stop(),
-        onError: (error) => {
-            if (error) {
-                toast({ type: 'error', message: String(error.detail) });
-            }
-        },
-        meta: {
-            invalidates: [
-                ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id: projectId } } }],
-            ],
-        },
-    });
-
-    const hasSink = pipeline?.sink !== undefined;
-    const hasSource = pipeline?.source !== undefined;
+    const isProcessing = runPipeline.isPending || stopPipeline.isPending;
 
     const handleChange = (isSelected: boolean) => {
-        const handler = isSelected ? enablePipeline.mutate : disablePipeline.mutate;
+        const handler = isSelected ? runPipeline.mutate : stopPipeline.mutate;
+
         handler({ params: { path: { project_id: projectId } } });
     };
 
@@ -52,7 +41,14 @@ export const PipelineSwitch = () => {
                 UNSAFE_className={classes.switch}
                 onChange={handleChange}
                 isSelected={pipeline.status === 'running'}
-                isDisabled={isLoading || isWebRtcConnecting || !hasSink || !hasSource}
+                isDisabled={
+                    isLoading ||
+                    isProcessing ||
+                    isSinkMissing ||
+                    isModelMissing ||
+                    !isPipelineActive ||
+                    isWebRtcConnecting
+                }
             >
                 Enabled
             </Switch>

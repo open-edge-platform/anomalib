@@ -7,9 +7,10 @@ import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Button, Flex, Loading, toast, View } from '@geti/ui';
 import { Play } from '@geti/ui/icons';
 import { isEmpty } from 'lodash-es';
-import { useEnablePipeline, usePipeline } from 'src/hooks/use-pipeline.hook';
+import { useActivatePipeline, usePipeline } from 'src/hooks/use-pipeline.hook';
 
 import { useWebRTCConnection } from '../../../components/stream/web-rtc-connection-provider';
+import { isStatusActive } from '../utils';
 import { Stream } from './stream';
 
 import classes from './stream-container.module.scss';
@@ -18,28 +19,28 @@ export const StreamContainer = () => {
     const { projectId } = useProjectIdentifier();
     const { data: pipeline } = usePipeline();
     const { start, status } = useWebRTCConnection();
-    const enablePipeline = useEnablePipeline({ onSuccess: start });
+    const activePipeline = useActivatePipeline({ onSuccess: start });
     const [size, setSize] = useState({ height: 608, width: 892 });
 
     const hasNoSink = isEmpty(pipeline?.sink);
     const hasNoSource = isEmpty(pipeline?.source);
-    const isPipelineRunning = pipeline?.status === 'running';
+    const isPipelineActive = isStatusActive(pipeline.status);
 
     useEffect(() => {
         if (status === 'failed') {
             toast({ type: 'error', message: 'Failed to connect to the stream' });
         }
 
-        if (isPipelineRunning && status === 'idle') {
+        if (isPipelineActive && status === 'idle') {
             start();
         }
-    }, [isPipelineRunning, status, start]);
+    }, [isPipelineActive, status, start]);
 
     const handleStart = async () => {
-        if (isPipelineRunning) {
+        if (isPipelineActive) {
             start();
         } else {
-            enablePipeline.mutate({ params: { path: { project_id: projectId } } });
+            activePipeline.mutate({ params: { path: { project_id: projectId } } });
         }
     };
 
@@ -66,7 +67,7 @@ export const StreamContainer = () => {
                 </View>
             )}
 
-            {(status === 'connecting' || enablePipeline.isPending) && (
+            {(status === 'connecting' || activePipeline.isPending) && (
                 <View backgroundColor={'gray-200'} width='90%' height='90%'>
                     <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
                         <Loading mode='inline' />

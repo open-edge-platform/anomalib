@@ -1,5 +1,5 @@
 import { $api } from '@geti-inspect/api';
-import { useDisablePipeline, useEnablePipeline } from '@geti-inspect/hooks';
+import { useActivatePipeline, useDisablePipeline } from '@geti-inspect/hooks';
 import { AlertDialog } from '@geti/ui';
 
 interface ConfirmationDialogProps {
@@ -8,7 +8,7 @@ interface ConfirmationDialogProps {
 }
 
 export const ConfirmationDialog = ({ activeProjectId, currentProjectId }: ConfirmationDialogProps) => {
-    const enablePipeline = useEnablePipeline({});
+    const activePipeline = useActivatePipeline({});
     const disablePipeline = useDisablePipeline(activeProjectId);
 
     const activeProject = $api.useSuspenseQuery('get', '/api/projects/{project_id}', {
@@ -26,7 +26,7 @@ export const ConfirmationDialog = ({ activeProjectId, currentProjectId }: Confir
             params: { path: { project_id: activeProjectId } },
         });
 
-        await enablePipeline.mutateAsync({
+        await activePipeline.mutateAsync({
             params: { path: { project_id: currentProjectId } },
         });
     };
