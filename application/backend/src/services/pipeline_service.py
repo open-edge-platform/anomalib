@@ -96,8 +96,14 @@ class PipelineService:
                     f"Please disable the pipeline {active_pipeline.id} before activating a new one"
                 ),
             )
-        if active_pipeline and active_pipeline.status.is_active and not set_running:
-            logger.info(f"Activating already active pipeline `{active_pipeline.id}`, no changes made.")
+        if active_pipeline and (
+            (active_pipeline.status == PipelineStatus.ACTIVE and not set_running)
+            or (active_pipeline.status == PipelineStatus.RUNNING and set_running)
+        ):
+            logger.info(
+                f"Activating already {active_pipeline.status.value.lower()} pipeline `{active_pipeline.id}`, "
+                f"no changes made."
+            )
             return active_pipeline
         new_status = PipelineStatus.RUNNING if set_running else PipelineStatus.ACTIVE
         return await self.update_pipeline(project_id, {"status": new_status})

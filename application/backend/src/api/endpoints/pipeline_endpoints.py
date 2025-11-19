@@ -136,20 +136,22 @@ async def stop_pipeline(
     This keeps the pipeline activated, switching to source passthrough mode.
     """
     active_pipeline = await pipeline_service.get_active_pipeline()
-    if active_pipeline and active_pipeline.project_id == project_id and active_pipeline.status.is_running:
-        try:
-            await pipeline_service.update_pipeline(project_id, {"status": PipelineStatus.ACTIVE})
-        except ValidationError as e:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-    else:
-        if active_pipeline and active_pipeline.project_id != project_id:
-            reason = f"another pipeline `{active_pipeline.project_id}` is currently {active_pipeline.status}."
-        else:
-            reason = "the pipeline is not running."
+    if active_pipeline and active_pipeline.project_id != project_id:
+        reason = f"another pipeline `{active_pipeline.project_id}` is currently {active_pipeline.status}."
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Cannot stop pipeline `{project_id}`: {reason}",
         )
+    if not (active_pipeline and active_pipeline.project_id == project_id and active_pipeline.status.is_running):
+        reason = "the pipeline is not running."
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Cannot stop pipeline `{project_id}`: {reason}",
+        )
+    try:
+        await pipeline_service.update_pipeline(project_id, {"status": PipelineStatus.ACTIVE})
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
 @router.post(
