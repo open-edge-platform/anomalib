@@ -239,6 +239,7 @@ class TrainingService:
             service = model_service or ModelService()
             await service.delete_model(project_id=job.project_id, model_id=model.id)
 
+    @staticmethod
     def _compute_export_size(path: str | None) -> int | None:
         if path is None:
             return None
