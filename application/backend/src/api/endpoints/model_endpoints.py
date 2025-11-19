@@ -11,7 +11,7 @@ from api.media_rest_validator import MediaRestValidator
 from exceptions import ResourceNotFoundException
 from pydantic_models import Model, ModelList, PredictionResponse
 from services import ModelService
-from services.exceptions import DeviceNotFoundError
+from services.exceptions import DeviceNotFoundError, ResourceNotFoundError
 
 model_api_prefix_url = project_api_prefix_url + "/{project_id}/models"
 model_router = APIRouter(
@@ -68,3 +68,24 @@ async def predict(
         return await model_service.predict_image(model, image_bytes, request.app.state.active_models, device=device)
     except DeviceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@model_router.delete(
+    "/{model_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_204_NO_CONTENT: {"description": "Model and exported artifacts successfully deleted"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid model ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Model not found"},
+    },
+)
+async def delete_model(
+    model_service: Annotated[ModelService, Depends(get_model_service)],
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    model_id: Annotated[UUID, Depends(get_model_id)],
+) -> None:
+    """Delete a model and any exported artifacts."""
+    try:
+        await model_service.delete_model_and_artifacts(project_id=project_id, model_id=model_id)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

@@ -18,7 +18,7 @@ from db import get_async_db_session_ctx
 from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
 from repositories import ModelRepository
 from repositories.binary_repo import ModelBinaryRepository
-from services.exceptions import DeviceNotFoundError
+from services.exceptions import DeviceNotFoundError, ResourceNotFoundError, ResourceType
 from utils.devices import Devices
 
 DEFAULT_DEVICE = "AUTO"
@@ -82,6 +82,23 @@ class ModelService:
         async with get_async_db_session_ctx() as session:
             repo = ModelRepository(session, project_id=project_id)
             return await repo.delete_by_id(model_id)
+
+    async def delete_model_and_artifacts(self, project_id: UUID, model_id: UUID) -> None:
+        """Remove model metadata and exported artifacts for the given project/model pair."""
+        model = await self.get_model_by_id(project_id=project_id, model_id=model_id)
+        if model is None:
+            raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+
+        model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model_id)
+        try:
+            await model_binary_repo.delete_model_folder()
+        except FileNotFoundError:
+            logger.debug(
+                "Model artifacts already absent on disk for model %s in project %s", model_id, project_id
+            )
+
+        await self.delete_model(project_id=project_id, model_id=model_id)
+        self.activate_model()
 
     @classmethod
     async def load_inference_model(cls, model: Model, device: str | None = None) -> OpenVINOInferencer:
