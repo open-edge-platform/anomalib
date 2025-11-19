@@ -62,6 +62,13 @@
       matchDepTypes: ["project.optional-dependencies"],
     },
 
+    // torch is upgraded manually
+    {
+      enabled: false,
+      matchDatasources: ["pypi"],
+      matchDepNames: ["torch"],
+    },
+
     // Group GitHub Actions updates
     {
       enabled: true,
@@ -78,17 +85,6 @@
       matchDatasources: ["github-releases"],
       matchDepNames: ["python"],
       matchDepTypes: ["uses-with"],
-    },
-  ],
-
-  // is used to upgrade Zizmor version
-  customManagers: [
-    {
-      fileMatch: ["^\\.github/actions/security/zizmor/[^/]+\\.ya?ml$"],
-      //   https://docs.renovatebot.com/modules/manager/regex/#advanced-capture
-      matchStrings: [
-        "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\s+.+default: (?<currentValue>.*)",
-      ],
     },
   ],
 

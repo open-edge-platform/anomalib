@@ -216,7 +216,7 @@ class AnomalibDataModule(LightningDataModule, ABC):
                 if model_resize.antialias != aug_resize.antialias:
                     msg = f"Conflicting antialiasing setting found between augmentations and model transforms. You are \
                         using a Resize transform in your input data augmentations. Please be aware that the model also \
-                        applies a Resize transform with a different antialising setting. Using conflicting \
+                        applies a Resize transform with a different antialiasing setting. Using conflicting \
                         antialiasing settings can lead to unexpected behaviour, so it is recommended to use the same \
                         antialiasing setting between augmentations and model transforms. Augmentations: \
                         antialias={aug_resize.antialias}, Model transforms: antialias={model_resize.antialias}"
