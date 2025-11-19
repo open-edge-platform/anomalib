@@ -254,6 +254,7 @@ class TestTrainingService:
         fxt_mock_job_service_class,
         fxt_mock_model_service_class,
         fxt_mock_job_service,
+        fxt_mock_binary_repos,
     ):
         """Training should mark job as cancelled when cancellation flag is set."""
         fxt_job.payload = {"model_name": "padim"}
