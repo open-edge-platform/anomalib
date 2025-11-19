@@ -30,7 +30,7 @@ export const PipelineSwitch = () => {
     const isProcessing = runPipeline.isPending || stopPipeline.isPending;
 
     const handleChange = (isSelected: boolean) => {
-        const handler = isSelected ? runPipeline.mutateAsync : stopPipeline.mutateAsync;
+        const handler = isSelected ? runPipeline.mutate : stopPipeline.mutate;
 
         handler({ params: { path: { project_id: projectId } } });
     };

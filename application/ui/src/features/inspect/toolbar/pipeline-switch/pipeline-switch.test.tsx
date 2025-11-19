@@ -170,13 +170,13 @@ describe('PipelineSwitch', () => {
             });
         });
 
-        it('calls activatePipeline when switch is turned off', async () => {
+        it('stops inference when switch is turned off', async () => {
             const mockStart = vi.fn();
-            const activatePipelineSpy = vi.fn();
+            const stopPipelineSpy = vi.fn();
 
             server.use(
-                http.post('/api/projects/{project_id}/pipeline:activate', () => {
-                    activatePipelineSpy();
+                http.post('/api/projects/{project_id}/pipeline:stop', () => {
+                    stopPipelineSpy();
                     return HttpResponse.json({}, { status: 204 });
                 })
             );
@@ -188,7 +188,7 @@ describe('PipelineSwitch', () => {
             await userEvent.click(await screen.findByRole('switch'));
 
             await waitFor(() => {
-                expect(activatePipelineSpy).toHaveBeenCalled();
+                expect(stopPipelineSpy).toHaveBeenCalled();
                 expect(mockStart).not.toHaveBeenCalled();
             });
         });
