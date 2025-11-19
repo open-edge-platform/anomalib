@@ -59,17 +59,13 @@ def test_delete_model_success(fxt_client, fxt_model_service, fxt_project):
     response = fxt_client.delete(f"/api/projects/{project_id}/models/{model_id}")
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    fxt_model_service.delete_model_and_artifacts.assert_called_once_with(
-        project_id=project_id, model_id=model_id
-    )
+    fxt_model_service.delete_model_and_artifacts.assert_called_once_with(project_id=project_id, model_id=model_id)
 
 
 def test_delete_model_not_found(fxt_client, fxt_model_service, fxt_project):
     project_id = fxt_project.id
     model_id = uuid4()
-    fxt_model_service.delete_model_and_artifacts.side_effect = ResourceNotFoundError(
-        ResourceType.MODEL, str(model_id)
-    )
+    fxt_model_service.delete_model_and_artifacts.side_effect = ResourceNotFoundError(ResourceType.MODEL, str(model_id))
 
     response = fxt_client.delete(f"/api/projects/{project_id}/models/{model_id}")
 
