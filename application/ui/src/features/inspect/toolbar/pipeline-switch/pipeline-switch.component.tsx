@@ -1,4 +1,4 @@
-import { useActivatePipeline, usePipeline, useProjectIdentifier, useRunPipeline } from '@geti-inspect/hooks';
+import { usePipeline, useProjectIdentifier, useRunPipeline, useStopPipeline } from '@geti-inspect/hooks';
 import { Flex, Switch } from '@geti/ui';
 import isEmpty from 'lodash-es/isEmpty';
 import { useWebRTCConnection } from 'src/components/stream/web-rtc-connection-provider';
@@ -11,7 +11,7 @@ import classes from './pipeline-switch.module.scss';
 
 export const PipelineSwitch = () => {
     const { projectId } = useProjectIdentifier();
-    const activatePipeline = useActivatePipeline({});
+    const stopPipeline = useStopPipeline(projectId);
     const { status, start } = useWebRTCConnection();
     const { onSetSelectedMediaItem } = useSelectedMediaItem();
     const { data: pipeline, isLoading } = usePipeline();
@@ -27,12 +27,12 @@ export const PipelineSwitch = () => {
     const isPipelineActive = isStatusActive(pipeline.status);
     const isWebRtcConnecting = status === 'connecting';
     const isMissingSourceOrSink = isEmpty(pipeline.sink?.id) || isEmpty(pipeline.source?.id);
-    const isProcessing = runPipeline.isPending || activatePipeline.isPending;
+    const isProcessing = runPipeline.isPending || stopPipeline.isPending;
 
-    const handleChange = async (isSelected: boolean) => {
-        const handler = isSelected ? runPipeline.mutateAsync : activatePipeline.mutateAsync;
+    const handleChange = (isSelected: boolean) => {
+        const handler = isSelected ? runPipeline.mutateAsync : stopPipeline.mutateAsync;
 
-        await handler({ params: { path: { project_id: projectId } } });
+        handler({ params: { path: { project_id: projectId } } });
     };
 
     return (

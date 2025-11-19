@@ -88,6 +88,14 @@ export const useDisablePipeline = (project_id: string) => {
     });
 };
 
+export const useStopPipeline = (project_id: string) => {
+    return $api.useMutation('post', '/api/projects/{project_id}/pipeline:stop', {
+        meta: {
+            invalidates: [['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id } } }]],
+        },
+    });
+};
+
 export const useConnectSourceToPipeline = () => {
     const { projectId } = useProjectIdentifier();
     const pipeline = usePatchPipeline(projectId);
