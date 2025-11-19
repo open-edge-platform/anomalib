@@ -104,7 +104,7 @@ class TrainingService:
             )
             if model.export_path:
                 logger.warning(f"Deleting partially created model with id: {model.id}")
-                await model_service.delete_model(project_id=project_id, model_id=model.id, delete_artifacts=False)
+                await model_service.delete_model(project_id=project_id, model_id=model.id, delete_artifacts=True)
             raise e
         finally:
             logger.debug("Syncing progress with db stopped")
