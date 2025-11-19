@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
+import os
 from contextlib import redirect_stdout
 from uuid import UUID
 
@@ -57,7 +58,7 @@ class TrainingService:
             return await cls._run_training_job(job, job_service)
 
     @classmethod
-    async def _run_training_job(cls, job: Job, job_service: JobService) -> Model:
+    async def _run_training_job(cls, job: Job, job_service: JobService) -> Model | None:
         # Mark job as running
         await job_service.update_job_status(job_id=job.id, status=JobStatus.RUNNING, message="Training started")
         project_id = job.project_id
@@ -90,6 +91,11 @@ class TrainingService:
                 device=device,
                 synchronization_parameters=synchronization_parameters,
             )
+
+            if synchronization_parameters.cancel_training_event.is_set():
+                await cls._handle_job_cancellation(job_service=job_service, job=job, model=model)
+                return None
+
             if trained_model is None:
                 raise ValueError("Training failed - model is None")
 
@@ -103,10 +109,13 @@ class TrainingService:
                 job_id=job.id, status=JobStatus.FAILED, message=f"Failed with exception: {str(e)}"
             )
             if model.export_path:
-                logger.warning(f"Deleting partially created model with id: {model.id}")
-                model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model.id)
-                await model_binary_repo.delete_model_folder()
-                await model_service.delete_model(project_id=project_id, model_id=model.id)
+                logger.warning("Deleting partially created model with id: %s", model.id)
+                await cls._cleanup_partial_model(
+                    job=job,
+                    model=model,
+                    delete_model_record=True,
+                    model_service=model_service,
+                )
             raise e
         finally:
             logger.debug("Syncing progress with db stopped")
@@ -185,6 +194,10 @@ class TrainingService:
                 logger.debug(f"Found pixel threshold set to: {threshold}")
                 model.threshold = threshold.item()
                 break
+
+        if synchronization_parameters.cancel_training_event.is_set():
+            return None
+
         export_path = engine.export(
             model=anomalib_model,
             export_type=export_format,
@@ -193,7 +206,66 @@ class TrainingService:
         logger.info(f"Exporting model to {export_path}")
 
         model.is_ready = True
+        model.size = TrainingService._compute_export_size(model.export_path)
         return model
+
+    @staticmethod
+    async def _handle_job_cancellation(job_service: JobService, job: Job, model: Model) -> None:
+        """Mark job as cancelled and remove partially exported artifacts."""
+        logger.info("Training job `%s` cancelled by user", job.id)
+        await job_service.update_job_status(
+            job_id=job.id,
+            status=JobStatus.CANCELED,
+            message="Training cancelled by user",
+        )
+        await TrainingService._cleanup_partial_model(job=job, model=model, delete_model_record=False)
+
+    @staticmethod
+    async def _cleanup_partial_model(
+        *,
+        job: Job,
+        model: Model,
+        delete_model_record: bool,
+        model_service: ModelService | None = None,
+    ) -> None:
+        """Remove partially exported artifacts and optionally delete model record."""
+        if not model.export_path:
+            return
+
+        model_binary_repo = ModelBinaryRepository(project_id=job.project_id, model_id=model.id)
+        await model_binary_repo.delete_model_folder()
+
+        if delete_model_record:
+            service = model_service or ModelService()
+            await service.delete_model(project_id=job.project_id, model_id=model.id)
+
+    @staticmethod
+    def _compute_export_size(path: str | None) -> int | None:
+        if path is None:
+            return None
+
+        try:
+            if os.path.isfile(path):
+                return os.path.getsize(path)
+            if not os.path.isdir(path):
+                logger.warning(f"Cannot compute export size because `{path}` is not a directory")
+                return None
+        except OSError as error:
+            logger.error(f"Failed to access export path `{path}` while computing size: {error}")
+            return None
+
+        def iter_file_sizes():
+            for root, _, files in os.walk(path, followlinks=False):
+                for file_name in files:
+                    file_path = os.path.join(root, file_name)
+                    if os.path.islink(file_path):
+                        continue
+                    try:
+                        yield os.path.getsize(file_path)
+                    except OSError:
+                        continue
+
+        return sum(iter_file_sizes())
 
     @classmethod
     async def _sync_progress_with_db(

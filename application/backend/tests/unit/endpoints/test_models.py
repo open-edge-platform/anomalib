@@ -21,6 +21,7 @@ def fxt_model(fxt_project):
         project_id=fxt_project.id,
         export_path="/path/to/model",
         train_job_id=uuid4(),
+        size=1024,
     )
 
 
@@ -48,4 +49,5 @@ def test_get_models(fxt_client, fxt_model_service, fxt_model, fxt_project):
     response = fxt_client.get(f"/api/projects/{project_id}/models")
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["models"]) == 1
+    assert response.json()["models"][0]["size"] == 1024
     fxt_model_service.get_model_list.assert_called_once_with(project_id=project_id)

@@ -39,7 +39,7 @@ export const usePatchPipeline = (project_id: string) => {
     });
 };
 
-export const useEnablePipeline = ({ onSuccess }: { onSuccess?: () => void }) => {
+export const useRunPipeline = ({ onSuccess }: { onSuccess?: () => void }) => {
     const { projectId } = useProjectIdentifier();
 
     return $api.useMutation('post', '/api/projects/{project_id}/pipeline:run', {
@@ -52,6 +52,26 @@ export const useEnablePipeline = ({ onSuccess }: { onSuccess?: () => void }) => 
         meta: {
             invalidates: [
                 ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id: projectId } } }],
+                ['get', '/api/active-pipeline'],
+            ],
+        },
+    });
+};
+
+export const useActivatePipeline = ({ onSuccess }: { onSuccess?: () => void }) => {
+    const { projectId } = useProjectIdentifier();
+
+    return $api.useMutation('post', '/api/projects/{project_id}/pipeline:activate', {
+        onSuccess,
+        onError: (error) => {
+            if (error) {
+                toast({ type: 'error', message: String(error.detail) });
+            }
+        },
+        meta: {
+            invalidates: [
+                ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id: projectId } } }],
+                ['get', '/api/active-pipeline'],
             ],
         },
     });
@@ -59,6 +79,17 @@ export const useEnablePipeline = ({ onSuccess }: { onSuccess?: () => void }) => 
 
 export const useDisablePipeline = (project_id: string) => {
     return $api.useMutation('post', '/api/projects/{project_id}/pipeline:disable', {
+        meta: {
+            invalidates: [
+                ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id } } }],
+                ['get', '/api/active-pipeline'],
+            ],
+        },
+    });
+};
+
+export const useStopPipeline = (project_id: string) => {
+    return $api.useMutation('post', '/api/projects/{project_id}/pipeline:stop', {
         meta: {
             invalidates: [['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id } } }]],
         },
@@ -79,4 +110,8 @@ export const useConnectSinkToPipeline = () => {
 
     return (sink_id: string) =>
         pipeline.mutateAsync({ params: { path: { project_id: projectId } }, body: { sink_id } });
+};
+
+export const useActivePipeline = () => {
+    return $api.useQuery('get', '/api/active-pipeline');
 };

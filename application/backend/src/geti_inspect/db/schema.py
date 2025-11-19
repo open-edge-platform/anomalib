@@ -4,7 +4,7 @@
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, String, Text
+from sqlalchemy import JSON, BigInteger, Boolean, DateTime, Float, ForeignKey, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -48,6 +48,7 @@ class ModelDB(Base):
     threshold: Mapped[float] = mapped_column(Float, nullable=False)
     export_path: Mapped[str] = mapped_column(Text, nullable=False)
     is_ready: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    size: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     train_job_id: Mapped[str] = mapped_column(ForeignKey("jobs.id", ondelete="RESTRICT"))
 

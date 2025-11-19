@@ -1,4 +1,4 @@
-import { removeUnderscore } from '../../../../../utils';
+import { removeUnderscore } from '../../../../utils';
 import { SinkConfig, SinkOutputFormats, WebhookSinkConfig } from '../../utils';
 import { getPairsFromObject } from '../../webhook-fields/utils';
 
