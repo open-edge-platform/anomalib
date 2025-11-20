@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+
 import { Skeleton } from '@geti/ui';
 import { useQuery } from '@tanstack/react-query';
 import { clsx } from 'clsx';
@@ -27,11 +29,17 @@ export const DatasetItem = ({ mediaItem }: DatasetItemProps) => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-            return response.blob();
+            return URL.createObjectURL(await response.blob());
         },
         retry: 3,
-        retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 100000),
+        retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 10000),
     });
+
+    useEffect(() => {
+        return () => {
+            thumbnailBlob && URL.revokeObjectURL(thumbnailBlob);
+        };
+    }, [thumbnailBlob]);
 
     const handleClick = async () => {
         const selection = mediaItem.id === selectedMediaItem?.id ? undefined : mediaItem;
@@ -46,7 +54,7 @@ export const DatasetItem = ({ mediaItem }: DatasetItemProps) => {
                 <Skeleton width={'100%'} height={'100%'} />
             ) : (
                 <>
-                    <img src={URL.createObjectURL(thumbnailBlob)} alt={mediaItem.filename} />
+                    <img src={thumbnailBlob} alt={mediaItem.filename} />
                     <div className={clsx(styles.floatingContainer, styles.rightTopElement)}>
                         <DeleteMediaItem
                             itemsIds={[String(mediaItem.id)]}

@@ -28,9 +28,9 @@ export const captureVideoFrame = (videoRef: RefObject<HTMLVideoElement | null>) 
             return;
         }
 
-        const file = new File([blob], 'frame.jpg', { type: blob.type });
+        const file = new File([blob], 'frame.jpg', { type: 'image/jpeg' });
         resolve(file);
-    }, 'image/jpg');
+    }, 'image/jpeg');
 
     return promise;
 };
