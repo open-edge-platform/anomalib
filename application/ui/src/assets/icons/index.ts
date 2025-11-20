@@ -23,3 +23,5 @@ export { ReactComponent as Fireworks } from './fire-works.svg';
 export { ReactComponent as PipelineLink } from './pipeline-link.svg';
 export { ReactComponent as Folder } from './folder.svg';
 export { ReactComponent as LinkExpired } from './link-expired.svg';
+export { ReactComponent as ActiveIcon } from './active-icon.svg';
+export { ReactComponent as LoadingIcon } from './loading-icon.svg';
