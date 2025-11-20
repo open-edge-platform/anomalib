@@ -77,11 +77,21 @@ class ModelService:
             repo = ModelRepository(session, project_id=project_id)
             return await repo.get_by_id(model_id)
 
-    @staticmethod
-    async def delete_model(project_id: UUID, model_id: UUID) -> None:
+    async def delete_model(self, project_id: UUID, model_id: UUID, delete_artifacts: bool = True) -> None:
+        if delete_artifacts:
+            model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model_id)
+            try:
+                await model_binary_repo.delete_model_folder()
+            except FileNotFoundError:
+                logger.warning(
+                    "Model artifacts already absent on disk for model %s in project %s", model_id, project_id
+                )
+
         async with get_async_db_session_ctx() as session:
             repo = ModelRepository(session, project_id=project_id)
             return await repo.delete_by_id(model_id)
+
+        self.activate_model()
 
     @classmethod
     async def load_inference_model(cls, model: Model, device: str | None = None) -> OpenVINOInferencer:

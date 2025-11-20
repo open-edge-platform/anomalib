@@ -10,7 +10,8 @@ from fastapi import status
 from api.dependencies import get_model_service
 from main import app
 from pydantic_models import Model, ModelList
-from services import ModelService
+from services import ModelService, ResourceNotFoundError
+from services.exceptions import ResourceType
 
 
 @pytest.fixture
@@ -51,3 +52,24 @@ def test_get_models(fxt_client, fxt_model_service, fxt_model, fxt_project):
     assert len(response.json()["models"]) == 1
     assert response.json()["models"][0]["size"] == 1024
     fxt_model_service.get_model_list.assert_called_once_with(project_id=project_id)
+
+
+def test_delete_model_success(fxt_client, fxt_model_service, fxt_project):
+    project_id = fxt_project.id
+    model_id = uuid4()
+
+    response = fxt_client.delete(f"/api/projects/{project_id}/models/{model_id}")
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    fxt_model_service.delete_model.assert_called_once_with(project_id=project_id, model_id=model_id)
+
+
+def test_delete_model_not_found(fxt_client, fxt_model_service, fxt_project):
+    project_id = fxt_project.id
+    model_id = uuid4()
+    fxt_model_service.delete_model.side_effect = ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+
+    response = fxt_client.delete(f"/api/projects/{project_id}/models/{model_id}")
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert "not found" in response.json()["detail"].lower()

@@ -68,3 +68,21 @@ async def predict(
         return await model_service.predict_image(model, image_bytes, request.app.state.active_models, device=device)
     except DeviceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@model_router.delete(
+    "/{model_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_204_NO_CONTENT: {"description": "Model and exported artifacts successfully deleted"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid model ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Model not found"},
+    },
+)
+async def delete_model(
+    model_service: Annotated[ModelService, Depends(get_model_service)],
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    model_id: Annotated[UUID, Depends(get_model_id)],
+) -> None:
+    """Delete a model and any exported artifacts."""
+    await model_service.delete_model(project_id=project_id, model_id=model_id)

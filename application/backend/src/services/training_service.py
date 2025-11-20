@@ -109,13 +109,8 @@ class TrainingService:
                 job_id=job.id, status=JobStatus.FAILED, message=f"Failed with exception: {str(e)}"
             )
             if model.export_path:
-                logger.warning("Deleting partially created model with id: %s", model.id)
-                await cls._cleanup_partial_model(
-                    job=job,
-                    model=model,
-                    delete_model_record=True,
-                    model_service=model_service,
-                )
+                logger.warning(f"Deleting partially created model with id: {model.id}")
+                await model_service.delete_model(project_id=project_id, model_id=model.id, delete_artifacts=True)
             raise e
         finally:
             logger.debug("Syncing progress with db stopped")
@@ -218,26 +213,9 @@ class TrainingService:
             status=JobStatus.CANCELED,
             message="Training cancelled by user",
         )
-        await TrainingService._cleanup_partial_model(job=job, model=model, delete_model_record=False)
-
-    @staticmethod
-    async def _cleanup_partial_model(
-        *,
-        job: Job,
-        model: Model,
-        delete_model_record: bool,
-        model_service: ModelService | None = None,
-    ) -> None:
-        """Remove partially exported artifacts and optionally delete model record."""
-        if not model.export_path:
-            return
 
         model_binary_repo = ModelBinaryRepository(project_id=job.project_id, model_id=model.id)
         await model_binary_repo.delete_model_folder()
-
-        if delete_model_record:
-            service = model_service or ModelService()
-            await service.delete_model(project_id=job.project_id, model_id=model.id)
 
     @staticmethod
     def _compute_export_size(path: str | None) -> int | None:
