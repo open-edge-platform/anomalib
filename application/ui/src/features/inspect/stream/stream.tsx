@@ -9,7 +9,10 @@ import { Button, dimensionValue, Flex, toast } from '@geti/ui';
 
 import { useWebRTCConnection } from '../../../components/stream/web-rtc-connection-provider';
 import { ZoomTransform } from '../../../components/zoom/zoom-transform';
+import { useEventListener } from '../../../hooks/event-listener/event-listener.hook';
 import { captureVideoFrame } from './util';
+
+import classes from './stream.module.scss';
 
 interface StreamProps {
     size: { width: number; height: number };
@@ -92,10 +95,25 @@ const useStreamToVideo = () => {
     return videoRef;
 };
 
+const addAnimationClasses = (videoRef: RefObject<HTMLVideoElement | null>) => {
+    if (!videoRef.current) return;
+
+    videoRef?.current.classList.add(classes.takeFlash);
+    videoRef?.current.classList.add(classes.takeOldCamera);
+};
+
+const removeAnimationClasses = (videoRef: RefObject<HTMLVideoElement | null>) => {
+    if (!videoRef.current) return;
+
+    videoRef?.current.classList.remove(classes.takeFlash);
+    videoRef?.current.classList.remove(classes.takeOldCamera);
+};
+
 export const Stream = ({ size, setSize }: StreamProps) => {
     const videoRef = useStreamToVideo();
     const { projectId } = useProjectIdentifier();
     useSetTargetSizeBasedOnVideo(setSize, videoRef);
+    useEventListener('animationend', () => removeAnimationClasses(videoRef), videoRef);
 
     const captureImageMutation = $api.useMutation('post', '/api/projects/{project_id}/capture', {
         onError: () => {
@@ -109,6 +127,7 @@ export const Stream = ({ size, setSize }: StreamProps) => {
     });
 
     const handleCaptureFrame = async () => {
+        addAnimationClasses(videoRef);
         const frame = await captureVideoFrame(videoRef);
 
         const formData = new FormData();

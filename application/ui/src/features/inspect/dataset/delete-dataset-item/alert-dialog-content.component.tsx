@@ -1,11 +1,20 @@
 import { AlertDialog, Text } from '@geti/ui';
 
+import { useEventListener } from '../../../../hooks/event-listener/event-listener.hook';
+
 type AlertDialogContentProps = {
     itemsIds: string[];
     onPrimaryAction: () => void;
 };
 
 export const AlertDialogContent = ({ itemsIds, onPrimaryAction }: AlertDialogContentProps) => {
+    useEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            onPrimaryAction();
+        }
+    });
+
     return (
         <AlertDialog
             maxHeight={'size-6000'}
