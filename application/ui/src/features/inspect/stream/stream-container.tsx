@@ -10,6 +10,7 @@ import { isEmpty } from 'lodash-es';
 import { useActivatePipeline, usePipeline } from 'src/hooks/use-pipeline.hook';
 
 import { useWebRTCConnection } from '../../../components/stream/web-rtc-connection-provider';
+import { isStatusActive } from '../utils';
 import { Stream } from './stream';
 
 import classes from './stream-container.module.scss';
@@ -22,6 +23,7 @@ export const StreamContainer = () => {
     const [size, setSize] = useState({ height: 608, width: 892 });
 
     const hasSource = !isEmpty(pipeline?.source);
+    const isPipelineActive = isStatusActive(pipeline.status);
 
     useEffect(() => {
         if (status === 'failed') {
@@ -34,7 +36,7 @@ export const StreamContainer = () => {
     }, [hasSource, status, start]);
 
     const handleStart = async () => {
-        if (hasSource) {
+        if (isPipelineActive) {
             start();
         } else {
             activePipeline.mutate({ params: { path: { project_id: projectId } } });
