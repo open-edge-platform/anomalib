@@ -67,7 +67,7 @@ class MediaService:
         media_id = uuid4()
 
         if extension is None:
-            raise ValueError("File extension be provided")
+            raise ValueError("File extension must be provided")
 
         if isinstance(image, np.ndarray):
 
