@@ -118,7 +118,7 @@ async def capture_image(
 ) -> Media:
     """Endpoint to capture an image"""
     image_bytes = await file.read()
-    extension = file.filename.rsplit(".", maxsplit=1)[-1]
+    extension = "." + file.filename.rsplit(".", maxsplit=1)[-1]
     media = await media_service.upload_image(
         project_id=project_id, image=image_bytes, is_anomalous=False, extension=extension, size=file.size
     )
