@@ -128,9 +128,8 @@ class TestModelService:
         with patch("services.model_service.ModelRepository") as mock_repo_class:
             mock_repo_class.return_value = fxt_model_repository
 
-            asyncio.run(
-                fxt_model_service.delete_model(fxt_model_service, fxt_project.id, fxt_model.id, delete_artifacts=False)
-            )
+            service = fxt_model_service()
+            asyncio.run(service.delete_model(fxt_project.id, fxt_model.id, delete_artifacts=False))
 
         fxt_model_repository.delete_by_id.assert_called_once_with(fxt_model.id)
 
