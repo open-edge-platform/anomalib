@@ -23,8 +23,9 @@ RUN npm run build
 FROM python:3.13-slim@sha256:58c30f5bfaa718b5803a53393190b9c68bd517c44c6c94c1b6c8c172bcfad040 AS geti-inspect-base
 COPY --from=docker.io/astral/uv:0.9.7@sha256:ba4857bf2a068e9bc0e64eed8563b065908a4cd6bfb66b531a9c424c8e25e142 /uv /uvx /bin/
 
-WORKDIR /app
-ENV PYTHONPATH=/app
+# Create non-root user and group
+RUN groupadd --gid 10001 non-root && \
+    useradd --uid 10001 --gid 10001 --create-home --shell /bin/bash non-root
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -34,33 +35,37 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-RUN useradd -m -u 10001 non-root
+WORKDIR /app
+ENV PYTHONPATH=/app
 
-COPY --chown=10001:10001 application/.packaging/docker/nginx.conf /etc/nginx/nginx.conf
-COPY --chown=10001:10001 --from=web-ui /home/app/web_ui/dist /usr/share/nginx/html
+COPY --chown=non-root:non-root application/.packaging/docker/nginx.conf /etc/nginx/nginx.conf
+COPY --chown=non-root:non-root --from=web-ui /home/app/web_ui/dist /usr/share/nginx/html
 
 # Copy anomalib source code (required for build)
-COPY --chown=10001:10001 --link src ./src
-COPY --chown=10001:10001 --link pyproject.toml uv.lock ./
-COPY --chown=10001:10001 --link LICENSE ./LICENSE
-COPY --chown=10001:10001 --link README.md ./README.md
+COPY --chown=non-root:non-root  src ./src
+COPY --chown=non-root:non-root  pyproject.toml uv.lock ./
+COPY --chown=non-root:non-root LICENSE ./LICENSE
+COPY --chown=non-root:non-root README.md ./README.md
 
 # Copy backend application
-COPY --link application/backend /app/application/backend
-RUN chown -R 10001:10001 /app
+COPY --chown=non-root:non-root application/backend /app/application/backend
 
 # Create nginx directories and set ownership for non-root user
 RUN mkdir -p /var/lib/nginx/body /var/lib/nginx/proxy /var/lib/nginx/fastcgi \
-             /var/lib/nginx/uwsgi /var/lib/nginx/scgi /var/run/nginx \
-    && chown -R 10001:10001 /var/lib/nginx /var/run/nginx /var/log/nginx \
-    && chmod -R 755 /var/lib/nginx /var/run/nginx /var/log/nginx
+/var/lib/nginx/uwsgi /var/lib/nginx/scgi /var/run/nginx \
+&& chown -R non-root:non-root /var/lib/nginx /var/run/nginx /var/log/nginx \
+&& chmod -R 755 /var/lib/nginx /var/run/nginx /var/log/nginx
+
+# Create data and logs directories with write permissions for mounted volumes
+RUN mkdir -p /app/data /app/logs 
+RUN chown -R non-root:non-root /app
 
 # Geti Inspect CPU version
 FROM geti-inspect-base AS geti-inspect-cpu
 USER non-root
 WORKDIR /app
 
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,target=/home/non-root/.cache/uv,uid=10001,gid=10001 \
     uv sync --frozen --no-dev --extra cpu --extra application
 
 EXPOSE 80

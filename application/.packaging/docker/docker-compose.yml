@@ -22,12 +22,12 @@ services:
       <<: *proxies
     working_dir: /app
     container_name: geti-inspect-${AI_DEVICE:-cpu}
-
+    user: "10001:10001"
     volumes:
       # Persist database and uploaded data
-      - ../../backend/data/:/app/data
+      - backend-data:/app/data
       # Persist logs
-      - ../../backend/logs/:/app/logs
+      - backend-logs:/app/logs
     ports:
       - "80:80"
     # Map all host devices to provide access to webcams and other attached devices
