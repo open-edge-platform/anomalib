@@ -3,8 +3,16 @@
 
 import { Dispatch, RefObject, SetStateAction, useCallback, useEffect, useRef } from 'react';
 
+import { $api } from '@geti-inspect/api';
+import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { Button, dimensionValue, Flex, toast } from '@geti/ui';
+
 import { useWebRTCConnection } from '../../../components/stream/web-rtc-connection-provider';
 import { ZoomTransform } from '../../../components/zoom/zoom-transform';
+import { useEventListener } from '../../../hooks/event-listener/event-listener.hook';
+import { captureVideoFrame } from './util';
+
+import classes from './stream.module.scss';
 
 interface StreamProps {
     size: { width: number; height: number };
@@ -87,25 +95,73 @@ const useStreamToVideo = () => {
     return videoRef;
 };
 
+const addAnimationClasses = (videoRef: RefObject<HTMLVideoElement | null>) => {
+    if (!videoRef.current) return;
+
+    videoRef?.current.classList.add(classes.takeFlash);
+    videoRef?.current.classList.add(classes.takeOldCamera);
+};
+
+const removeAnimationClasses = (videoRef: RefObject<HTMLVideoElement | null>) => {
+    if (!videoRef.current) return;
+
+    videoRef?.current.classList.remove(classes.takeFlash);
+    videoRef?.current.classList.remove(classes.takeOldCamera);
+};
+
 export const Stream = ({ size, setSize }: StreamProps) => {
     const videoRef = useStreamToVideo();
+    const { projectId } = useProjectIdentifier();
     useSetTargetSizeBasedOnVideo(setSize, videoRef);
+    useEventListener('animationend', () => removeAnimationClasses(videoRef), videoRef);
+
+    const captureImageMutation = $api.useMutation('post', '/api/projects/{project_id}/capture', {
+        onError: () => {
+            toast({ type: 'error', message: `Failed to upload 1 item` });
+        },
+        meta: {
+            invalidates: [
+                ['get', '/api/projects/{project_id}/images', { params: { path: { project_id: projectId } } }],
+            ],
+        },
+    });
+
+    const handleCaptureFrame = async () => {
+        addAnimationClasses(videoRef);
+        const frame = await captureVideoFrame(videoRef);
+
+        const formData = new FormData();
+        formData.append('file', frame);
+
+        await captureImageMutation.mutateAsync({
+            params: { path: { project_id: projectId } },
+            // @ts-expect-error There is an incorrect type in OpenAPI
+            body: formData,
+        });
+    };
 
     return (
-        <ZoomTransform target={size}>
-            <video
-                ref={videoRef}
-                muted
-                autoPlay
-                playsInline
-                width={size.width}
-                height={size.height}
-                controls={false}
-                aria-label='stream player'
-                style={{
-                    background: 'var(--spectrum-global-color-gray-200)',
-                }}
-            />
-        </ZoomTransform>
+        <Flex
+            position={'relative'}
+            direction={'column'}
+            alignItems={'center'}
+            justifyContent={'center'}
+            UNSAFE_style={{ width: '100%', height: '100%', paddingBlockEnd: dimensionValue('size-400') }}
+        >
+            <ZoomTransform target={size}>
+                <video
+                    ref={videoRef}
+                    muted
+                    autoPlay
+                    playsInline
+                    width={size.width}
+                    height={size.height}
+                    controls={false}
+                    aria-label='stream player'
+                    style={{ background: 'var(--spectrum-global-color-gray-200)' }}
+                />
+            </ZoomTransform>
+            <Button onPress={handleCaptureFrame}>Capture</Button>
+        </Flex>
     );
 };

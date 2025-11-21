@@ -1,6 +1,7 @@
 .datasetItem {
     aspect-ratio: 4/3;
     cursor: pointer;
+    position: relative;
 
     img {
         display: block;
@@ -11,8 +12,13 @@
     }
 
     border: var(--spectrum-alias-border-size-thick) solid transparent;
-
     transition: border-color 0.3s ease-in-out;
+
+    &:hover {
+        .floatingContainer {
+            opacity: 1;
+        }
+    }
 }
 
 .datasetItemSelected {
@@ -22,4 +28,18 @@
 .datasetItemPlaceholder {
     border: 1px dashed var(--spectrum-global-color-gray-700);
     background-color: var(--spectrum-global-color-gray-200);
+}
+
+.floatingContainer {
+    opacity: 0;
+    position: absolute;
+    line-height: 0px;
+    padding: var(--spectrum-global-dimension-size-125);
+    border-radius: var(--spectrum-global-dimension-size-50);
+    background-color: var(--spectrum-gray-100);
+}
+
+.rightTopElement {
+    top: var(--spectrum-global-dimension-size-50);
+    right: var(--spectrum-global-dimension-size-50);
 }

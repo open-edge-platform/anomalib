@@ -57,13 +57,16 @@ describe('StreamContainer', () => {
             const pipelinePatchSpy = vi.fn();
 
             server.use(
-                http.post('/api/projects/{project_id}/pipeline:run', () => {
+                http.post('/api/projects/{project_id}/pipeline:activate', () => {
                     pipelinePatchSpy();
                     return HttpResponse.json({}, { status: 204 });
                 })
             );
 
-            renderApp({ webRtcConfig: { status: 'idle', start: mockedStart }, pipelineConfig: { status: 'idle' } });
+            renderApp({
+                webRtcConfig: { status: 'idle', start: mockedStart },
+                pipelineConfig: { status: 'idle' },
+            });
 
             const button = await screen.findByRole('button', { name: /Start stream/i });
             await userEvent.click(button);

@@ -13,11 +13,7 @@ const useMediaItems = () => {
     const { projectId } = useProjectIdentifier();
 
     const { data } = $api.useSuspenseQuery('get', '/api/projects/{project_id}/images', {
-        params: {
-            path: {
-                project_id: projectId,
-            },
-        },
+        params: { path: { project_id: projectId } },
     });
 
     return {

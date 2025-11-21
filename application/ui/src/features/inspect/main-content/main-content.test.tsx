@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { SchemaPipeline } from 'src/api/openapi-spec';
 import { http } from 'src/api/utils';
@@ -10,6 +10,7 @@ import { getMockedMediaItem } from '../../../../mocks/mock-media-item';
 import { getMockedPipeline } from '../../../../mocks/mock-pipeline';
 import { useWebRTCConnection, WebRTCConnectionState } from '../../../components/stream/web-rtc-connection-provider';
 import { MediaItem } from '../dataset/types';
+import { InferenceProvider } from '../inference-provider.component';
 import { useSelectedMediaItem } from '../selected-media-item-provider.component';
 import { MainContent } from './main-content.component';
 import { SOURCE_MESSAGE } from './source-sink-message/source-sink-message.component';
@@ -63,7 +64,14 @@ describe('MainContent', () => {
                 <ZoomProvider>
                     <MemoryRouter initialEntries={['/projects/123/inspect']}>
                         <Routes>
-                            <Route path='/projects/:projectId/inspect' element={<MainContent />} />
+                            <Route
+                                path='/projects/:projectId/inspect'
+                                element={
+                                    <InferenceProvider>
+                                        <MainContent />
+                                    </InferenceProvider>
+                                }
+                            />
                         </Routes>
                     </MemoryRouter>
                 </ZoomProvider>
@@ -81,7 +89,9 @@ describe('MainContent', () => {
         it('does not render SinkMessage when no sink is configured', async () => {
             renderApp({ pipelineConfig: { sink: undefined } });
 
-            expect(screen.queryByText(SOURCE_MESSAGE)).not.toBeInTheDocument();
+            await waitFor(() => {
+                expect(screen.queryByText(SOURCE_MESSAGE)).not.toBeInTheDocument();
+            });
         });
 
         it('renders when both source and sink are missing', async () => {
@@ -116,7 +126,9 @@ describe('MainContent', () => {
                 activePipelineConfig: null,
             });
 
-            expect(screen.queryByRole('button', { name: /Activate project/i })).not.toBeInTheDocument();
+            await waitFor(() => {
+                expect(screen.queryByRole('button', { name: /Activate project/i })).not.toBeInTheDocument();
+            });
         });
     });
 
@@ -154,8 +166,10 @@ describe('MainContent', () => {
         it('renders when media item is selected', async () => {
             renderApp({ selectedMediaItem: mockMediaItem });
 
-            expect(screen.queryByText(SOURCE_MESSAGE)).not.toBeInTheDocument();
-            expect(screen.queryByRole('button', { name: /Start stream/i })).not.toBeInTheDocument();
+            await waitFor(() => {
+                expect(screen.queryByText(SOURCE_MESSAGE)).not.toBeInTheDocument();
+                expect(screen.queryByRole('button', { name: /Start stream/i })).not.toBeInTheDocument();
+            });
         });
 
         it('renders InferenceResult even when source/sink missing if media item selected', async () => {
@@ -164,7 +178,9 @@ describe('MainContent', () => {
                 selectedMediaItem: mockMediaItem,
             });
 
-            expect(screen.queryByText(SOURCE_MESSAGE)).not.toBeInTheDocument();
+            await waitFor(() => {
+                expect(screen.queryByText(SOURCE_MESSAGE)).not.toBeInTheDocument();
+            });
         });
 
         it('renders InferenceResult even when another project is active if media item selected', async () => {
@@ -174,7 +190,9 @@ describe('MainContent', () => {
                 selectedMediaItem: mockMediaItem,
             });
 
-            expect(screen.queryByRole('button', { name: /Activate project/i })).not.toBeInTheDocument();
+            await waitFor(() => {
+                expect(screen.queryByRole('button', { name: /Activate project/i })).not.toBeInTheDocument();
+            });
         });
     });
 });

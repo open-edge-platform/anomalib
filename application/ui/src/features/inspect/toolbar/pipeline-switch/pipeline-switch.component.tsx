@@ -5,7 +5,6 @@ import { useWebRTCConnection } from 'src/components/stream/web-rtc-connection-pr
 
 import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { isStatusActive } from '../../utils';
-import { WebRTCConnectionStatus } from './web-rtc-connection-status.component';
 
 import classes from './pipeline-switch.module.scss';
 
@@ -52,7 +51,6 @@ export const PipelineSwitch = () => {
             >
                 Enabled
             </Switch>
-            <WebRTCConnectionStatus />
         </Flex>
     );
 };
