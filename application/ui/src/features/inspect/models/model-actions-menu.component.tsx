@@ -2,20 +2,10 @@ import { useState } from 'react';
 
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
-import {
-    ActionButton,
-    AlertDialog,
-    DialogContainer,
-    Item,
-    Menu,
-    MenuTrigger,
-    type Key,
-    toast,
-} from '@geti/ui';
+import { ActionButton, AlertDialog, DialogContainer, Item, Menu, MenuTrigger, toast, type Key } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 
 import { JobLogsDialog } from '../jobs/show-job-logs.component';
-
 import type { ModelData } from './model-types';
 
 interface ModelActionsMenuProps {

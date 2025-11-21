@@ -19,10 +19,10 @@ import { useDateFormatter } from 'react-aria';
 import { useProjectTrainingJobs, useRefreshModelsOnJobUpdates } from '../dataset/dataset-status-panel.component';
 import { useInference } from '../inference-provider.component';
 import { formatSize } from '../utils';
-
 import { ModelActionsMenu } from './model-actions-menu.component';
 import { ModelStatusBadges } from './model-status-badges.component';
 import { ModelData } from './model-types';
+
 import classes from './models-view.module.scss';
 
 const useModels = () => {
