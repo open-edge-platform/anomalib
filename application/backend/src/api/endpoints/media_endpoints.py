@@ -102,7 +102,7 @@ async def delete_media(
 
 
 @media_router.post(
-    "/capture",
+    "/images",
     response_model_exclude_none=True,
     status_code=status.HTTP_201_CREATED,
     responses={
@@ -118,14 +118,15 @@ async def capture_image(
 ) -> Media:
     """Endpoint to capture an image"""
     image_bytes = await file.read()
+    extension = file.filename.rsplit(".", maxsplit=1)[-1]
     media = await media_service.upload_image(
-        project_id=project_id, file=file, image_bytes=image_bytes, is_anomalous=False
+        project_id=project_id, image=image_bytes, is_anomalous=False, extension=extension, size=file.size
     )
 
     background_tasks.add_task(
         media_service.generate_thumbnail,
         project_id=project_id,
         media_id=media.id,
-        image_bytes=image_bytes,
+        image=image_bytes,
     )
     return media

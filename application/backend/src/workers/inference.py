@@ -71,6 +71,7 @@ class InferenceWorker(BaseProcessWorker):
                 self._is_passthrough_mode = pipeline is None or (
                     pipeline.status.is_active and not pipeline.status.is_running
                 )
+                logger.info(f"Passthrough mode {'activated' if self._is_passthrough_mode else 'disabled'}.")
                 if pipeline is None or pipeline.model is None:
                     return None
 
@@ -160,7 +161,6 @@ class InferenceWorker(BaseProcessWorker):
 
     async def _handle_passthrough_mode(self, stream_data: StreamData) -> None:
         """Handle frame in passthrough mode (no model loaded)."""
-        logger.debug("No active model configured; frame passthrough mode")
         try:
             self._pred_queue.put(stream_data, timeout=1)
         except std_queue.Full:
