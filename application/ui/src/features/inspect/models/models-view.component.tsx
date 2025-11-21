@@ -223,7 +223,9 @@ export const ModelsView = () => {
                             <Cell>
                                 <Flex alignItems='start' gap='size-50' direction='column'>
                                     <Flex alignItems='end' gap='size-75'>
-                                        <Text marginTop={'size-25'}>{model.name}</Text>
+                                        <Text marginTop={'size-25'} UNSAFE_className={classes.modelName}>
+                                            {model.name}
+                                        </Text>
                                         {selectedModelId === model.id && (
                                             <Badge variant='info' UNSAFE_className={classes.badge}>
                                                 <ActiveIcon />
@@ -255,18 +257,11 @@ export const ModelsView = () => {
                                             </Badge>
                                         )}
                                     </Flex>
-                                    <Text
-                                        UNSAFE_style={{
-                                            fontSize: '0.9rem',
-                                            color: 'var(--spectrum-global-color-gray-500)',
-                                        }}
-                                    >
-                                        {model.timestamp}
-                                    </Text>
+                                    <Text UNSAFE_className={classes.modelTimestamp}>{model.timestamp}</Text>
                                 </Flex>
                             </Cell>
                             <Cell>
-                                <Text>{formatSize(model.sizeBytes)}</Text>
+                                <Text UNSAFE_className={classes.modelSize}>{formatSize(model.sizeBytes)}</Text>
                             </Cell>
                             <Cell>
                                 <Flex justifyContent='end' alignItems='center'>

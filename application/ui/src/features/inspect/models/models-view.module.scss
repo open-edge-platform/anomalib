@@ -1,3 +1,17 @@
+.modelName {
+    font-size: 1.1rem;
+}
+
+.modelTimestamp {
+    font-size: 0.85rem;
+    color: var(--spectrum-global-color-gray-500);
+}
+
+.modelSize {
+    font-size: 0.85rem;
+    color: var(--spectrum-global-color-gray-700);
+}
+
 .badge {
     line-height: calc(var(--spectrum-global-dimension-size-175));
     padding-inline: var(--spectrum-global-dimension-static-size-75);
