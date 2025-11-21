@@ -21,7 +21,7 @@ def _dataset_names() -> list[str]:
 
 
 @pytest.fixture(scope="session")
-def project_path() -> Generator[Path, None, None]:
+def project_path() -> Generator[Path]:
     """Return a temporary directory path that is used as the project directory for the entire test."""
     # Get the root directory of the project
     root_dir = Path(__file__).parent.parent

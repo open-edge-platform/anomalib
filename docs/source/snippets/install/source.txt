@@ -1,6 +1,6 @@
 # Use of virtual environment is highy recommended
 # Using conda
-yes | conda create -n anomalib_env python=3.10
+yes | conda create -n anomalib_env python>=3.10
 conda activate anomalib_env
 
 # Or using your favorite virtual environment
