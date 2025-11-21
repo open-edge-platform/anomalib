@@ -16,7 +16,7 @@ from PIL import Image
 
 from db import get_async_db_session_ctx
 from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
-from repositories import ModelRepository
+from repositories import JobRepository, ModelRepository
 from repositories.binary_repo import ModelBinaryRepository
 from services.exceptions import DeviceNotFoundError
 from utils.devices import Devices
@@ -89,7 +89,18 @@ class ModelService:
 
         async with get_async_db_session_ctx() as session:
             repo = ModelRepository(session, project_id=project_id)
-            return await repo.delete_by_id(model_id)
+            model = await repo.get_by_id(model_id)
+
+            if model is None:
+                return
+
+            job_repo = JobRepository(session)
+            train_job_id = model.train_job_id
+
+            await repo.delete_by_id(model_id)
+
+            if train_job_id:
+                await job_repo.delete_by_id(train_job_id)
 
         self.activate_model()
 
