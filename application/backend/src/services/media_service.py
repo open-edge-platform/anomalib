@@ -66,7 +66,7 @@ class MediaService:
         # Generate unique filename and media ID
         media_id = uuid4()
 
-        if extension is None:
+        if not extension or not extension.lstrip("."):
             raise ValueError("File extension must be provided")
 
         if isinstance(image, np.ndarray):
@@ -75,8 +75,6 @@ class MediaService:
                 with BytesIO() as output:
                     # Determine format from extension, default to PNG if unknown or generic
                     fmt = extension.lstrip(".").upper()
-                    if not fmt:
-                        fmt = "PNG"
                     Image.fromarray(image).save(output, format=fmt)
                     return output.getvalue()
 
