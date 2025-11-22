@@ -48,6 +48,8 @@
 name: Security Checks
 
 on:
+  push:
+    branches: ["main", "feature/**"]
   schedule:
     # Run security checks every day at 2 AM UTC
     - cron: "0 2 * * *"
