@@ -47,7 +47,7 @@ Note:
 
 from collections.abc import Iterator
 from dataclasses import InitVar, asdict, dataclass, fields
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -68,7 +68,7 @@ if TYPE_CHECKING:
     from matplotlib.axis import Axes
 
 
-class VisualizationMode(str, Enum):
+class VisualizationMode(StrEnum):
     """Visualization mode for controlling output style.
 
     The mode determines how results are displayed:

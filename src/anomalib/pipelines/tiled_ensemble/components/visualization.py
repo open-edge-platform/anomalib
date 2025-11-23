@@ -126,7 +126,7 @@ class VisualizationJobGenerator(JobGenerator):
         self,
         args: dict | None = None,
         prev_stage_result: list[Any] | None = None,
-    ) -> Generator[VisualizationJob, None, None]:
+    ) -> Generator[VisualizationJob]:
         """Return a generator producing a single visualization job.
 
         Args:

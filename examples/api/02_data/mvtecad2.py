@@ -40,11 +40,13 @@ print(f"Number of test samples (private mixed): {len(datamodule.test_private_mix
 
 # 2. Custom Transforms
 print("\n2. Custom Transforms")
-transform = Compose([
-    ToImage(),
-    Resize((256, 256)),
-    ToDtype(torch.float32, scale=True),
-])
+transform = Compose(
+    [
+        ToImage(),
+        Resize((256, 256)),
+        ToDtype(torch.float32, scale=True),
+    ],
+)
 
 # Create dataset with custom transform
 datamodule = MVTecAD2(

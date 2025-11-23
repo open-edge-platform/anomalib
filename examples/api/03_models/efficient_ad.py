@@ -19,9 +19,11 @@ from anomalib.pre_processing import PreProcessor
 model = EfficientAd()
 
 # OPTIONAL 2. Set up a pre-processing transformation
-transform = Compose([
-    Resize(size=(512, 512)),
-])
+transform = Compose(
+    [
+        Resize(size=(512, 512)),
+    ],
+)
 pre_processor = PreProcessor(transform=transform)
 
 # 3. Custom Configuration

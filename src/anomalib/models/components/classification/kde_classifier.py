@@ -28,7 +28,7 @@ Example:
 
 import logging
 import random
-from enum import Enum
+from enum import StrEnum
 
 import torch
 from torch import nn
@@ -38,7 +38,7 @@ from anomalib.models.components import PCA, GaussianKDE
 logger = logging.getLogger(__name__)
 
 
-class FeatureScalingMethod(str, Enum):
+class FeatureScalingMethod(StrEnum):
     """Feature scaling methods for KDE classifier.
 
     The scaling method determines how feature embeddings are normalized before

@@ -230,11 +230,13 @@ class Dinomaly(AnomalibModule):
             msg = f"Crop size {crop_size} cannot be larger than image size {image_size}"
             raise ValueError(msg)
 
-        data_transforms = Compose([
-            Resize(image_size),
-            CenterCrop(crop_size),
-            Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
+        data_transforms = Compose(
+            [
+                Resize(image_size),
+                CenterCrop(crop_size),
+                Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ],
+        )
 
         return PreProcessor(transform=data_transforms)
 

@@ -70,10 +70,10 @@ body:
       value: |
         OS information:
         - OS: [e.g. Ubuntu 20.04]
-        - Python version: [e.g. 3.10.0]
-        - Anomalib version: [e.g. 0.3.6]
-        - PyTorch version: [e.g. 1.9.0]
-        - CUDA/cuDNN version: [e.g. 11.1]
+        - Python version: [e.g. 3.13.0]
+        - Anomalib version: [e.g. 2.3.0]
+        - PyTorch version: [e.g. 2.5.1]
+        - CUDA/cuDNN version: [e.g. 12.4]
         - GPU models and configuration: [e.g. 2x GeForce RTX 3090]
         - Any other relevant information: [e.g. I'm using a custom dataset]
     validations:

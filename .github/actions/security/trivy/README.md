@@ -30,7 +30,7 @@ permissions:
       - name: Set up Python
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
-          python-version: "3.10"
+          python-version: "3.13"
       - name: Install dependencies
         run: python -m pip install pip-tools
       - name: Freeze dependencies

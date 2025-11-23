@@ -32,7 +32,7 @@ Example:
 import logging
 import math
 from collections.abc import Sequence
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 import torch
@@ -43,7 +43,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class Split(str, Enum):
+class Split(StrEnum):
     """Dataset split type.
 
     Attributes:
@@ -57,7 +57,7 @@ class Split(str, Enum):
     TEST = "test"
 
 
-class TestSplitMode(str, Enum):
+class TestSplitMode(StrEnum):
     """Mode used to obtain test split.
 
     Attributes:
@@ -71,7 +71,7 @@ class TestSplitMode(str, Enum):
     SYNTHETIC = "synthetic"
 
 
-class ValSplitMode(str, Enum):
+class ValSplitMode(StrEnum):
     """Mode used to obtain validation split.
 
     Attributes:
