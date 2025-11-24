@@ -10,6 +10,7 @@ from uuid import UUID
 import cv2
 import numpy as np
 import openvino.properties.hint as ov_hints
+from requests import session
 from anomalib.deploy import ExportType, OpenVINOInferencer
 from loguru import logger
 from PIL import Image
@@ -97,10 +98,11 @@ class ModelService:
             job_repo = JobRepository(session)
             train_job_id = model.train_job_id
 
-            await repo.delete_by_id(model_id)
+            async with session.begin():
+                await repo.delete_by_id(model_id)
 
-            if train_job_id:
-                await job_repo.delete_by_id(train_job_id)
+                if train_job_id:
+                    await job_repo.delete_by_id(train_job_id)
 
         self.activate_model()
 
