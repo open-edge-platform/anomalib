@@ -27,7 +27,7 @@ APP_MODULE=${APP_MODULE:-src/main.py}
 UV_CMD=${UV_CMD:-uv run}
 
 export PYTHONUNBUFFERED=1
-export PYTHONPATH=.
+export PYTHONPATH=.:src
 
 if [[ "$SEED_DB" == "true" ]]; then
   echo "Seeding the database..."
