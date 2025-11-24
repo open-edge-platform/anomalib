@@ -36,6 +36,9 @@ const test = testBase.extend<Fixtures>({
             http.get('/api/projects/{project_id}/images', ({ response }) => {
                 return response(200).json({ media: [] });
             }),
+            http.get('/api/inference-devices', ({ response }) => {
+                return response(200).json({ devices: ['cpu'] });
+            }),
         ],
     }),
 });
