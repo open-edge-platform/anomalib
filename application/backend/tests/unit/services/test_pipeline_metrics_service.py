@@ -12,8 +12,8 @@ from pydantic_models.metrics import PipelineMetrics
 from pydantic_models.model import Model
 from pydantic_models.pipeline import Pipeline, PipelineStatus
 from pydantic_models.project import Project
-from pydantic_models.sink import FolderSinkConfig
-from pydantic_models.source import VideoFileSourceConfig
+from pydantic_models.sink import FolderSinkConfig, OutputFormat, SinkType
+from pydantic_models.source import SourceType, VideoFileSourceConfig
 from services.metrics_service import MetricsService
 from services.pipeline_metrics_service import PipelineMetricsService
 from services.pipeline_service import PipelineService
@@ -45,17 +45,17 @@ def fxt_pipeline(fxt_project, fxt_model) -> Pipeline:
     source = VideoFileSourceConfig(
         id=uuid.uuid4(),
         project_id=fxt_project.id,
-        source_type="video_file",
+        source_type=SourceType.VIDEO_FILE,
         name="Test Source",
         video_path="/path/to/video.mp4",
     )
     sink = FolderSinkConfig(
         id=uuid.uuid4(),
         project_id=fxt_project.id,
-        sink_type="folder",
+        sink_type=SinkType.FOLDER,
         name="Test Sink",
         folder_path="/path/to/output",
-        output_formats=["image_original"],
+        output_formats=[OutputFormat.IMAGE_ORIGINAL],
         rate_limit=0.2,
     )
     return Pipeline(
