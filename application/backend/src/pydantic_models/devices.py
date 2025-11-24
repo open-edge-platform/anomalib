@@ -26,7 +26,7 @@ class CameraList(BaseModel):
     model_config = {
         "json_schema_extra": {
             "example": {
-                "deviecs": [
+                "devices": [
                     {"index": 1200, "name": "camera_name1"},
                     {"index": 1201, "name": "camera_name2"},
                     {"index": 1202, "name": "camera_name3"},
