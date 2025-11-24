@@ -17,7 +17,7 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
     const startTrainingMutation = $api.useMutation('post', '/api/jobs:train', {
         meta: { invalidates: [['get', '/api/jobs']] },
     });
-    const { data: availableDevices } = $api.useSuspenseQuery('get', '/api/training-devices');
+    const { data: availableDevices } = $api.useSuspenseQuery('get', '/api/devices/training');
     const startTraining = async () => {
         if (selectedModel === null || selectedDevice === null) {
             return;

@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from fastapi import APIRouter, HTTPException
-from loguru import logger
 
 from api.endpoints import API_PREFIX
 from pydantic_models.devices import Camera, CameraList, DeviceList
@@ -32,7 +31,6 @@ def get_webcam_devices() -> CameraList:
     try:
         result = Devices.get_webcam_devices()
     except RuntimeError as e:
-        logger.error(f"Camera enumeration failed: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
     camera_list = [Camera(index=cam["index"], name=cam["name"]) for cam in result]
