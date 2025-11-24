@@ -37,7 +37,7 @@ const JobLogsDialogContent = ({ jobId }: { jobId: string }) => {
     );
 };
 
-const JobLogsDialog = ({ close, jobId }: { close: () => void; jobId: string }) => {
+export const JobLogsDialog = ({ close, jobId }: { close: () => void; jobId: string }) => {
     return (
         <Dialog>
             <Heading>Logs</Heading>
