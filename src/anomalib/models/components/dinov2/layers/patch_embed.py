@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 # Copyright (C) 2025 Meta Platforms, Inc. and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 
