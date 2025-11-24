@@ -770,7 +770,7 @@ class UnetDecoder(nn.Module):
         self.fin_out = nn.Sequential(nn.Conv2d(base_width, out_channels, kernel_size=3, padding=1))
 
     def forward(self, b1: torch.Tensor, b2: torch.Tensor, b3: torch.Tensor, b4: torch.Tensor) -> torch.Tensor:
-        """Decodes latent represnetations into an image.
+        """Decodes latent representations into an image.
 
         Args:
             b1 (torch.Tensor): First (top level) quantized feature map.
