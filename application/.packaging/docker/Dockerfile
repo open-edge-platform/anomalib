@@ -13,8 +13,11 @@ COPY --link application/ui/tsconfig.json ./tsconfig.json
 COPY --link application/ui/rsbuild.config.ts ./rsbuild.config.ts
 COPY --link application/ui/src ./src
 
+ENV PUBLIC_API_BASE_URL=""
+ENV PUBLIC_API_BASE_URL ${PUBLIC_API_BASE_URL}
 
 FROM web-ui-base AS web-ui
+
 
 RUN npm run build
 
