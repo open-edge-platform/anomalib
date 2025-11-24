@@ -3,6 +3,7 @@
 
 import { Divider, Flex, View } from '@geti/ui';
 
+import { InferenceDevices } from '../models/inference-devices.component';
 import { InferenceOpacity } from './inference-opacity';
 import { InputOutputSetup } from './pipeline-configuration.component';
 import { PipelineSwitch } from './pipeline-switch/pipeline-switch.component';
@@ -25,6 +26,8 @@ export const Toolbar = () => {
                     <Divider size={'S'} orientation={'vertical'} />
                     <InputOutputSetup />
                     <PipelineSwitch />
+                    <Divider size={'S'} orientation={'vertical'} />
+                    <InferenceDevices />
                 </Flex>
             </Flex>
         </View>
