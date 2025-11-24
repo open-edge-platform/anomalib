@@ -35,6 +35,7 @@ class Devices:
             list[CameraInfo]: List of dictionaries containing camera index and name.
         """
         if sys.platform == "darwin":
+            # On macOS, use a separate process because AVFoundation uses caching that prevents device list update
             return Devices._get_webcam_devices_worker_process()
 
         return [{"index": cam.index, "name": cam.name} for cam in cv2_enumerate_cameras.enumerate_cameras()]
