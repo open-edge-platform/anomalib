@@ -69,7 +69,7 @@ class DispatchingWorker(BaseThreadWorker):
 
             passthrough_mode = not self._active_pipeline_service.is_running
             if passthrough_mode:
-                logger.debug("Passthrough mode; only dispatching to WebRTC stream")
+                logger.trace("Passthrough mode; only dispatching to WebRTC stream")
                 # Only dispatch to WebRTC stream
                 try:
                     self._rtc_stream_queue.put(stream_data.frame_data, block=False)

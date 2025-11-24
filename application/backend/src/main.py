@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.endpoints.active_pipeline_endpoints import router as active_pipeline_router
+from api.endpoints.capture_endpoints import router as capture_router
 from api.endpoints.devices_endpoints import device_router
 from api.endpoints.job_endpoints import job_router
 from api.endpoints.media_endpoints import media_router
@@ -56,6 +57,7 @@ app.include_router(sink_router)
 app.include_router(webrtc_router)
 app.include_router(trainable_model_router)
 app.include_router(device_router)
+app.include_router(capture_router)
 
 
 if __name__ == "__main__":

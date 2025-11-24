@@ -25,7 +25,7 @@ const UploadImages = () => {
     const { projectId } = useProjectIdentifier();
     const queryClient = useQueryClient();
 
-    const captureImageMutation = $api.useMutation('post', '/api/projects/{project_id}/capture');
+    const captureImageMutation = $api.useMutation('post', '/api/projects/{project_id}/images');
 
     const handleAddMediaItem = async (files: File[]) => {
         const uploadPromises = files.map((file) => {

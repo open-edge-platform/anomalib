@@ -1,11 +1,10 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
-import os
 from io import BytesIO
 from uuid import UUID, uuid4
 
-from fastapi import UploadFile
+import numpy as np
 from loguru import logger
 from PIL import Image
 
@@ -56,14 +55,33 @@ class MediaService:
         return bin_repo.get_full_path(filename=thumbnail_filename)
 
     @classmethod
-    async def upload_image(cls, project_id: UUID, file: UploadFile, image_bytes: bytes, is_anomalous: bool) -> Media:
+    async def upload_image(
+        cls,
+        project_id: UUID,
+        image: np.ndarray | bytes,
+        is_anomalous: bool,
+        extension: str | None = None,
+        size: int | None = None,
+    ) -> Media:
         # Generate unique filename and media ID
         media_id = uuid4()
 
-        if file.filename is None or file.size is None:
-            raise ValueError("File must have a filename and size")
+        if not extension or not extension.lstrip("."):
+            raise ValueError("File extension must be provided")
 
-        extension = list(os.path.splitext(file.filename)).pop().lower()
+        if isinstance(image, np.ndarray):
+
+            def _encode_image() -> bytes:
+                with BytesIO() as output:
+                    # Determine format from extension, default to PNG if unknown or generic
+                    fmt = extension.lstrip(".").upper()
+                    Image.fromarray(image).save(output, format=fmt)
+                    return output.getvalue()
+
+            image_bytes = await asyncio.to_thread(_encode_image)
+        else:
+            image_bytes = image
+
         filename = f"{media_id}{extension}"
         bin_repo = ImageBinaryRepository(project_id=project_id)
         saved_media: Media | None = None
@@ -90,7 +108,7 @@ class MediaService:
                     id=media_id,
                     project_id=project_id,
                     filename=filename,
-                    size=file.size,
+                    size=size or len(image_bytes),
                     is_anomalous=is_anomalous,
                     width=width,
                     height=height,
@@ -137,7 +155,7 @@ class MediaService:
         cls,
         project_id: UUID,
         media_id: UUID,
-        image_bytes: bytes,
+        image: np.ndarray | bytes,
         height_px: int = THUMBNAIL_SIZE,
         width_px: int = THUMBNAIL_SIZE,
     ) -> None:
@@ -150,7 +168,7 @@ class MediaService:
         Args:
             project_id: Identifier of the owning project.
             media_id: Identifier of the media item the thumbnail belongs to.
-            image_bytes: Original image bytes used to create the thumbnail.
+            image: Original image (bytes or numpy array) used to create the thumbnail.
             height_px: Maximum thumbnail height in pixels. Defaults to
                 ``THUMBNAIL_SIZE``.
             width_px: Maximum thumbnail width in pixels. Defaults to
@@ -164,7 +182,12 @@ class MediaService:
         """
 
         def _create() -> bytes:
-            with Image.open(BytesIO(image_bytes)) as img:
+            if isinstance(image, np.ndarray):
+                img = Image.fromarray(image)
+            else:
+                img = Image.open(BytesIO(image))
+
+            with img:
                 # Preserve aspect ratio while fitting within the box
                 img.thumbnail((width_px, height_px))
                 with BytesIO() as buf:
