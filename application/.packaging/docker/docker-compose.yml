@@ -30,6 +30,18 @@ services:
       - backend-logs:/app/logs
     ports:
       - "80:80"
+    # Increase file descriptor limits
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     # Map all host devices to provide access to webcams and other attached devices
     privileged: true
     devices:

@@ -14,7 +14,7 @@ COPY --link application/ui/rsbuild.config.ts ./rsbuild.config.ts
 COPY --link application/ui/src ./src
 
 ENV PUBLIC_API_BASE_URL=""
-ENV PUBLIC_API_BASE_URL ${PUBLIC_API_BASE_URL}
+ENV PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL}
 
 FROM web-ui-base AS web-ui
 
@@ -25,20 +25,24 @@ RUN npm run build
 # Geti Inspect Base with UI built
 FROM python:3.13-slim@sha256:58c30f5bfaa718b5803a53393190b9c68bd517c44c6c94c1b6c8c172bcfad040 AS geti-inspect-base
 COPY --from=docker.io/astral/uv:0.9.7@sha256:ba4857bf2a068e9bc0e64eed8563b065908a4cd6bfb66b531a9c424c8e25e142 /uv /uvx /bin/
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+ENV UV_PYTHON_DOWNLOADS=0
+
 
 # Create non-root user and group
 RUN groupadd --gid 10001 non-root && \
-    useradd --uid 10001 --gid 10001 --create-home --shell /bin/bash non-root
+useradd --uid 10001 --gid 10001 --create-home --shell /bin/bash non-root
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-    libgl1 \
-    libglib2.0-0 \
-    g++ \
-    nginx=1.26.* \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+&& apt-get install -y --no-install-recommends \
+libgl1 \
+libglib2.0-0 \
+g++ \
+nginx=1.26.* \
+&& rm -rf /var/lib/apt/lists/* \
+&& apt-get clean
 
+ENV PATH=/app/.venv/bin:$PATH
 WORKDIR /app
 ENV PYTHONPATH=/app
 
@@ -74,4 +78,35 @@ RUN --mount=type=cache,target=/home/non-root/.cache/uv,uid=10001,gid=10001 \
 
 EXPOSE 80
 
-CMD ["sh", "-c", "nginx && uv run geti-inspect"]
+CMD ["sh", "-c", "nginx && exec geti-inspect"]
+
+# Geti Inspect CUDA version
+FROM geti-inspect-base AS geti-inspect-cuda
+
+RUN apt-get update  \
+    && apt-get install -y --no-install-recommends wget=1.25.0-2 \
+    && wget -q https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb \
+    && dpkg -i cuda-keyring_1.1-1_all.deb \
+    && rm -rf cuda-keyring_1.1-1_all.deb \
+    && apt-get remove -y wget
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    cuda-cudart-12-4 \
+    libcublas-12-4 \
+    libcufft-12-4 \
+    libcurand-12-4 \
+    libcusolver-12-4 \
+    libcusparse-12-4 \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+USER non-root
+WORKDIR /app
+
+RUN --mount=type=cache,target=/home/non-root/.cache/uv,uid=10001,gid=10001 \
+    uv sync --frozen --no-dev --extra cu124 --extra application
+
+EXPOSE 80
+
+CMD ["sh", "-c", "nginx && exec geti-inspect"]
