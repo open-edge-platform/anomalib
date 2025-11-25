@@ -1,9 +1,10 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
+import asyncio
 from typing import Annotated
 from uuid import UUID
 
+import anyio
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 
@@ -73,7 +74,17 @@ async def get_media_thumbnail(
 ) -> FileResponse:
     """Return a PNG thumbnail for the requested image."""
     try:
-        return FileResponse(await media_service.get_thumbnail_file_path(project_id=project_id, media_id=media_id))
+        thumbnail_path = await media_service.get_thumbnail_file_path(project_id=project_id, media_id=media_id)
+        # Wait for thumbnail with timeout
+        max_retries = 10  # 0.5 seconds
+        for _ in range(max_retries):
+            if await anyio.Path(thumbnail_path).exists():
+                return FileResponse(thumbnail_path)
+            await asyncio.sleep(0.05)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Thumbnail for media with ID {media_id} not found",
+        )
     except FileNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -102,7 +113,7 @@ async def delete_media(
 
 
 @media_router.post(
-    "/capture",
+    "/images",
     response_model_exclude_none=True,
     status_code=status.HTTP_201_CREATED,
     responses={
@@ -118,14 +129,17 @@ async def capture_image(
 ) -> Media:
     """Endpoint to capture an image"""
     image_bytes = await file.read()
+    if not file.filename or "." not in file.filename:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Uploaded file must have an extension.")
+    extension = "." + file.filename.rsplit(".", maxsplit=1)[-1]
     media = await media_service.upload_image(
-        project_id=project_id, file=file, image_bytes=image_bytes, is_anomalous=False
+        project_id=project_id, image=image_bytes, is_anomalous=False, extension=extension, size=file.size
     )
 
     background_tasks.add_task(
         media_service.generate_thumbnail,
         project_id=project_id,
         media_id=media.id,
-        image_bytes=image_bytes,
+        image=image_bytes,
     )
     return media
