@@ -40,9 +40,12 @@ export const InferenceDevices = () => {
 
     return (
         <Picker
-            width='100%'
+            isQuiet
+            width='auto'
+            label='Inference devices: '
+            labelAlign='end'
+            labelPosition='side'
             items={options}
-            label='Inference devices'
             onSelectionChange={handleChange}
             selectedKey={selectedKey}
         >

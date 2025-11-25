@@ -3,7 +3,6 @@ import { Suspense } from 'react';
 import { Flex, Heading, Loading } from '@geti/ui';
 
 import { TrainModelButton } from '../train-model/train-model-button.component';
-import { InferenceDevices } from './inference-devices.component';
 import { ModelsView } from './models-view.component';
 
 export const Models = () => {
@@ -18,12 +17,9 @@ export const Models = () => {
                 </Flex>
             </Heading>
             <Suspense fallback={<Loading mode={'inline'} />}>
-                <>
-                    <InferenceDevices />
-                    <Flex direction={'column'} height={'100%'} gap={'size-300'}>
-                        <ModelsView />
-                    </Flex>
-                </>
+                <Flex direction={'column'} height={'100%'} gap={'size-300'}>
+                    <ModelsView />
+                </Flex>
             </Suspense>
         </Flex>
     );

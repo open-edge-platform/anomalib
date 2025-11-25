@@ -1,7 +1,6 @@
-import { useEffect } from 'react';
+import { useState } from 'react';
 
 import { Skeleton } from '@geti/ui';
-import { useQuery } from '@tanstack/react-query';
 import { clsx } from 'clsx';
 
 import { useInference } from '../../inference-provider.component';
@@ -15,31 +14,27 @@ interface DatasetItemProps {
     mediaItem: MediaItem;
 }
 
+const RETRY_LIMIT = 3;
+
 export const DatasetItem = ({ mediaItem }: DatasetItemProps) => {
-    const { selectedMediaItem, onSetSelectedMediaItem } = useSelectedMediaItem();
+    const [retry, setRetry] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
     const { onInference, selectedModelId } = useInference();
+    const { selectedMediaItem, onSetSelectedMediaItem } = useSelectedMediaItem();
 
     const isSelected = selectedMediaItem?.id === mediaItem.id;
 
-    const { data: thumbnailBlob, isLoading } = useQuery({
-        queryKey: ['media', mediaItem.id],
-        queryFn: async () => {
-            const response = await fetch(`/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail`);
+    const mediaUrl = `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail?retry=${retry}`;
 
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return URL.createObjectURL(await response.blob());
-        },
-        retry: 3,
-        retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 10000),
-    });
+    const handleError = () => {
+        if (retry < RETRY_LIMIT) {
+            setRetry((current) => current + 1);
+        }
+    };
 
-    useEffect(() => {
-        return () => {
-            thumbnailBlob && URL.revokeObjectURL(thumbnailBlob);
-        };
-    }, [thumbnailBlob]);
+    const handleLoad = () => {
+        setIsLoading(false);
+    };
 
     const handleClick = async () => {
         const selection = mediaItem.id === selectedMediaItem?.id ? undefined : mediaItem;
@@ -50,21 +45,17 @@ export const DatasetItem = ({ mediaItem }: DatasetItemProps) => {
 
     return (
         <div className={clsx(styles.datasetItem, { [styles.datasetItemSelected]: isSelected })} onClick={handleClick}>
-            {isLoading || !thumbnailBlob ? (
-                <Skeleton width={'100%'} height={'100%'} />
-            ) : (
-                <>
-                    <img src={thumbnailBlob} alt={mediaItem.filename} />
-                    <div className={clsx(styles.floatingContainer, styles.rightTopElement)}>
-                        <DeleteMediaItem
-                            itemsIds={[String(mediaItem.id)]}
-                            onDeleted={() => {
-                                selectedMediaItem?.id === mediaItem.id && onSetSelectedMediaItem(undefined);
-                            }}
-                        />
-                    </div>
-                </>
-            )}
+            {isLoading && <Skeleton width={'100%'} height={'100%'} UNSAFE_className={styles.loader} />}
+
+            <img src={mediaUrl} alt={mediaItem.filename} onError={handleError} onLoad={handleLoad} />
+            <div className={clsx(styles.floatingContainer, styles.rightTopElement)}>
+                <DeleteMediaItem
+                    itemsIds={[String(mediaItem.id)]}
+                    onDeleted={() => {
+                        selectedMediaItem?.id === mediaItem.id && onSetSelectedMediaItem(undefined);
+                    }}
+                />
+            </div>
         </div>
     );
 };

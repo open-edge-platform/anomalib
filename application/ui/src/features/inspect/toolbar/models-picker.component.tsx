@@ -3,24 +3,10 @@
 
 import { useEffect } from 'react';
 
-import { $api } from '@geti-inspect/api';
-import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Item, Picker } from '@geti/ui';
 
+import { useTrainedModels } from '../../../hooks/use-model';
 import { useInference } from '../inference-provider.component';
-
-const useTrainedModels = () => {
-    const { projectId } = useProjectIdentifier();
-    const { data } = $api.useQuery('get', '/api/projects/{project_id}/models', {
-        params: {
-            path: {
-                project_id: projectId,
-            },
-        },
-    });
-
-    return data?.models.map((model) => ({ id: model.id, name: model.name })) || [];
-};
 
 export const ModelsPicker = () => {
     const models = useTrainedModels();
