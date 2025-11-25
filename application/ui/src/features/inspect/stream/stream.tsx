@@ -104,7 +104,7 @@ export const Stream = ({ size, setSize }: StreamProps) => {
     useSetTargetSizeBasedOnVideo(setSize, videoRef);
     useEventListener('animationend', () => setHasCaptureAnimation(false), videoRef);
 
-    const captureImageMutation = $api.useMutation('post', '/api/projects/{project_id}/capture', {
+    const captureImageMutation = $api.useMutation('get', '/api/projects/{project_id}/capture', {
         onError: () => {
             toast({ type: 'error', message: `Failed to upload 1 item` });
         },
@@ -124,8 +124,6 @@ export const Stream = ({ size, setSize }: StreamProps) => {
 
         await captureImageMutation.mutateAsync({
             params: { path: { project_id: projectId } },
-            // @ts-expect-error There is an incorrect type in OpenAPI
-            body: formData,
         });
     };
 
