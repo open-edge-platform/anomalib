@@ -67,6 +67,7 @@ interface InferenceProviderProps {
     children: ReactNode;
 }
 
+//Todo: revisit this provider it might not the needed any more
 export const InferenceProvider = ({ children }: InferenceProviderProps) => {
     const { data: pipeline } = usePipeline();
     const { projectId } = useProjectIdentifier();

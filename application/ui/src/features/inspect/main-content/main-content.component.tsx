@@ -5,7 +5,6 @@ import { useSelectedMediaItem } from '../selected-media-item-provider.component'
 import { StreamContainer } from '../stream/stream-container';
 import { EnableProject } from './enable-project/enable-project.component';
 import { useEnsureActivePipeline } from './hooks/use-ensure-active-pipeline.hook';
-import { InferenceResult } from './inference-result/inference-result.component';
 import { SourceSinkMessage } from './source-sink-message/source-sink-message.component';
 
 export const MainContent = () => {
@@ -22,9 +21,5 @@ export const MainContent = () => {
         return <EnableProject currentProjectId={projectId} activeProjectId={String(activeProjectId)} />;
     }
 
-    if (isEmpty(selectedMediaItem)) {
-        return <StreamContainer />;
-    }
-
-    return <InferenceResult selectedMediaItem={selectedMediaItem} />;
+    return <StreamContainer />;
 };

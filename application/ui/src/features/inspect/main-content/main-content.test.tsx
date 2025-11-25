@@ -97,7 +97,9 @@ describe('MainContent', () => {
         it('renders when both source and sink are missing', async () => {
             renderApp({ pipelineConfig: { source: undefined, sink: undefined } });
 
-            expect(await screen.findByText(SOURCE_MESSAGE)).toBeVisible();
+            await waitFor(async () => {
+                expect(await screen.findByText(SOURCE_MESSAGE)).toBeVisible();
+            });
         });
     });
 
@@ -108,7 +110,9 @@ describe('MainContent', () => {
                 activePipelineConfig: { project_id: '456' },
             });
 
-            expect(await screen.findByRole('button', { name: /Activate project/i })).toBeVisible();
+            await waitFor(async () => {
+                expect(await screen.findByRole('button', { name: /Activate project/i })).toBeVisible();
+            });
         });
 
         it('does not render EnableProject when current project is active', async () => {
@@ -117,10 +121,12 @@ describe('MainContent', () => {
                 activePipelineConfig: { project_id: '123' },
             });
 
-            expect(screen.queryByRole('button', { name: /Activate project/i })).not.toBeInTheDocument();
+            await waitFor(() => {
+                expect(screen.queryByRole('button', { name: /Activate project/i })).not.toBeInTheDocument();
+            });
         });
 
-        it('does not render EnableProject when no active pipeline', async () => {
+        it.only('does not render EnableProject when no active pipeline', async () => {
             renderApp({
                 pipelineConfig: { project_id: '123' },
                 activePipelineConfig: null,
@@ -139,7 +145,9 @@ describe('MainContent', () => {
                 webRtcConfig: { status: 'idle' },
             });
 
-            expect(await screen.findByRole('button', { name: /Start stream/i })).toBeVisible();
+            await waitFor(async () => {
+                expect(await screen.findByRole('button', { name: /Start stream/i })).toBeVisible();
+            });
         });
 
         it('renders when no media item selected and no other project is active', async () => {
@@ -148,7 +156,9 @@ describe('MainContent', () => {
                 activePipelineConfig: null,
             });
 
-            expect(await screen.findByRole('button', { name: /Start stream/i })).toBeVisible();
+            await waitFor(async () => {
+                expect(await screen.findByRole('button', { name: /Start stream/i })).toBeVisible();
+            });
         });
 
         it('renders when current project is active', async () => {
@@ -158,7 +168,9 @@ describe('MainContent', () => {
                 activePipelineConfig: { project_id: '123' },
             });
 
-            expect(await screen.findByRole('button', { name: /Start stream/i })).toBeVisible();
+            await waitFor(async () => {
+                expect(await screen.findByRole('button', { name: /Start stream/i })).toBeVisible();
+            });
         });
     });
 

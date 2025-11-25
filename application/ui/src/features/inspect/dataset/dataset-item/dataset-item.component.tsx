@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Skeleton } from '@geti/ui';
 import { clsx } from 'clsx';
 
-import { useInference } from '../../inference-provider.component';
 import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { DeleteMediaItem } from '../delete-dataset-item/delete-dataset-item.component';
 import { type MediaItem } from '../types';
@@ -12,14 +11,15 @@ import styles from './dataset-item.module.scss';
 
 interface DatasetItemProps {
     mediaItem: MediaItem;
+    onClick: (mediaItem: MediaItem) => void;
 }
 
 const RETRY_LIMIT = 3;
 
-export const DatasetItem = ({ mediaItem }: DatasetItemProps) => {
+export const DatasetItem = ({ mediaItem, onClick }: DatasetItemProps) => {
     const [retry, setRetry] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
-    const { onInference, selectedModelId } = useInference();
+
     const { selectedMediaItem, onSetSelectedMediaItem } = useSelectedMediaItem();
 
     const isSelected = selectedMediaItem?.id === mediaItem.id;
@@ -37,10 +37,13 @@ export const DatasetItem = ({ mediaItem }: DatasetItemProps) => {
     };
 
     const handleClick = async () => {
-        const selection = mediaItem.id === selectedMediaItem?.id ? undefined : mediaItem;
+        /* const selection = mediaItem.id === selectedMediaItem?.id ? undefined : mediaItem;
 
         onSetSelectedMediaItem(selection);
-        selectedModelId !== undefined && (await onInference(mediaItem, selectedModelId));
+        selectedModelId !== undefined && (await onInference(mediaItem, selectedModelId)); 
+        */
+
+        onClick(mediaItem);
     };
 
     return (

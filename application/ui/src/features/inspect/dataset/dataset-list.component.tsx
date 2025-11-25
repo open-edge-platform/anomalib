@@ -1,8 +1,11 @@
-import { Flex, Grid, Heading, minmax, repeat } from '@geti/ui';
+import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { DialogContainer, Flex, Grid, Heading, minmax, repeat } from '@geti/ui';
 import isEmpty from 'lodash-es/isEmpty';
 
+import { useSelectedMediaItem } from '../selected-media-item-provider.component';
 import { DatasetItemPlaceholder } from './dataset-item/dataset-item-placeholder.component';
 import { DatasetItem } from './dataset-item/dataset-item.component';
+import { MediaPreview } from './media-preview/media-preview.component';
 import { MediaItem } from './types';
 import { REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING } from './utils';
 
@@ -11,6 +14,9 @@ interface DatasetItemProps {
 }
 
 export const DatasetList = ({ mediaItems }: DatasetItemProps) => {
+    const { projectId } = useProjectIdentifier();
+    const { selectedMediaItem, onSetSelectedMediaItem } = useSelectedMediaItem();
+
     const mediaItemsToRender = [
         ...mediaItems,
         ...Array.from({
@@ -33,10 +39,21 @@ export const DatasetList = ({ mediaItems }: DatasetItemProps) => {
                     isEmpty(mediaItem) ? (
                         <DatasetItemPlaceholder key={index} />
                     ) : (
-                        <DatasetItem key={mediaItem.id} mediaItem={mediaItem} />
+                        <DatasetItem key={mediaItem.id} mediaItem={mediaItem} onClick={onSetSelectedMediaItem} />
                     )
                 )}
             </Grid>
+
+            <DialogContainer onDismiss={() => onSetSelectedMediaItem(undefined)}>
+                {!isEmpty(selectedMediaItem) && (
+                    <MediaPreview
+                        projectId={String(projectId)}
+                        mediaItem={selectedMediaItem}
+                        onClose={() => onSetSelectedMediaItem(undefined)}
+                        onSelectedMediaItem={onSetSelectedMediaItem}
+                    />
+                )}
+            </DialogContainer>
         </Flex>
     );
 };
