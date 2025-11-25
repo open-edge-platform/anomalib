@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 import {
@@ -100,6 +102,14 @@ export const ModelsView = () => {
 
     const { selectedModelId, onSetSelectedModelId } = useInference();
 
+    const tableSelectedKeys = useMemo(() => {
+        if (selectedModelId === undefined) {
+            return new Set<string>();
+        }
+
+        return new Set<string>([selectedModelId]);
+    }, [selectedModelId]);
+
     return (
         <View backgroundColor='gray-100' height='100%'>
             {/* Models Table */}
@@ -108,13 +118,16 @@ export const ModelsView = () => {
                 overflowMode='wrap'
                 selectionStyle='highlight'
                 selectionMode='single'
-                selectedKeys={selectedModelId === undefined ? new Set() : new Set([selectedModelId])}
+                selectedKeys={tableSelectedKeys}
                 onSelectionChange={(key) => {
                     if (typeof key === 'string') {
                         return;
                     }
 
                     const selectedId = key.values().next().value;
+                    if (selectedId === selectedModelId) {
+                        return;
+                    }
                     const selectedModel = models.find((model) => model.id === selectedId);
 
                     if (selectedModel?.status === 'Completed') {
