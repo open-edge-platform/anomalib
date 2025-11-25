@@ -5,6 +5,8 @@ import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Item, Key, Picker, toast } from '@geti/ui';
 import { usePipeline } from 'src/hooks/use-pipeline.hook';
 
+import classes from './inference-devices.module.scss';
+
 export const InferenceDevices = () => {
     const { data } = $api.useSuspenseQuery('get', '/api/devices/inference');
     const { data: pipeline } = usePipeline();
@@ -48,6 +50,7 @@ export const InferenceDevices = () => {
             items={options}
             onSelectionChange={handleChange}
             selectedKey={selectedKey}
+            UNSAFE_className={classes.picker}
         >
             {(item) => <Item>{item.name}</Item>}
         </Picker>
