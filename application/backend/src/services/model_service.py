@@ -10,7 +10,6 @@ from uuid import UUID
 import cv2
 import numpy as np
 import openvino.properties.hint as ov_hints
-from requests import session
 from anomalib.deploy import ExportType, OpenVINOInferencer
 from loguru import logger
 from PIL import Image
