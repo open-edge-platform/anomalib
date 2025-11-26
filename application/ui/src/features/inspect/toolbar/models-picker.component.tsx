@@ -3,22 +3,25 @@
 
 import { useEffect } from 'react';
 
+import { usePipeline, useSetModelToPipeline } from '@geti-inspect/hooks';
 import { Item, Picker } from '@geti/ui';
 
 import { useTrainedModels } from '../../../hooks/use-model';
-import { useInference } from '../inference-provider.component';
 
 export const ModelsPicker = () => {
     const models = useTrainedModels();
-    const { selectedModelId, onSetSelectedModelId } = useInference();
+    const { data: pipeline } = usePipeline();
+    const setModelToPipelineMutation = useSetModelToPipeline();
+
+    const selectedModelId = pipeline.model?.id;
 
     useEffect(() => {
         if (selectedModelId !== undefined || models.length === 0) {
             return;
         }
 
-        onSetSelectedModelId(models[0].id);
-    }, [selectedModelId, models, onSetSelectedModelId]);
+        setModelToPipelineMutation(models[0].id);
+    }, [selectedModelId, models, setModelToPipelineMutation]);
 
     if (models === undefined || models.length === 0) {
         return null;
@@ -29,7 +32,7 @@ export const ModelsPicker = () => {
             aria-label='Select model'
             items={models}
             selectedKey={selectedModelId}
-            onSelectionChange={(key) => onSetSelectedModelId(String(key))}
+            onSelectionChange={(key) => setModelToPipelineMutation(String(key))}
         >
             {(item) => <Item key={item.id}>{item.name}</Item>}
         </Picker>

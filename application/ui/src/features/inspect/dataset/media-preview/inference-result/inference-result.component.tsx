@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
+import { usePipeline } from '@geti-inspect/hooks';
 import { dimensionValue, Flex, View } from '@geti/ui';
 import { clsx } from 'clsx';
 import { AnimatePresence, motion } from 'motion/react';
@@ -15,11 +16,20 @@ interface InferenceResultProps {
 }
 
 export const InferenceResult = ({ selectedMediaItem }: InferenceResultProps) => {
+    const { data: pipeline } = usePipeline();
     const [isVerticalImage, setIsVerticalImage] = useState(false);
-    const { inferenceOpacity, inferenceResult } = useInference();
+    const { inferenceOpacity, inferenceResult, onInference, resetInference } = useInference();
+    const selectedModelId = pipeline?.model?.id;
+
+    useEffect(() => {
+        return () => {
+            resetInference();
+        };
+    }, [resetInference]);
 
     const handleInference = async (imageElement: HTMLImageElement) => {
         setIsVerticalImage(imageElement.clientHeight > imageElement.clientWidth);
+        selectedModelId && onInference(selectedMediaItem, selectedModelId);
     };
 
     return (

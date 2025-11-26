@@ -4,7 +4,7 @@
 import { ActionButton, DialogTrigger, Flex, Slider, Text, View } from '@geti/ui';
 import { ChevronDownSmall } from '@geti/ui/icons';
 
-import { useInference } from '../inference-provider.component';
+import { useInference } from '../../../inference-provider.component';
 
 export const InferenceOpacity = () => {
     const { inferenceOpacity, onInferenceOpacityChange, inferenceResult } = useInference();

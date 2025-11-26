@@ -23,6 +23,7 @@ export const MediaThumbnail = ({ onDoubleClick, onClick, url, alt }: MediaThumbn
     const handleError = () => {
         if (retry < RETRY_LIMIT) {
             setRetry((current) => current + 1);
+            setIsLoading(true);
         } else {
             setIsLoading(false);
         }

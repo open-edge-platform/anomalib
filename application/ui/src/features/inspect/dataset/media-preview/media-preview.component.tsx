@@ -1,9 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, ButtonGroup, Content, Dialog, dimensionValue, Divider, Grid, Heading, View } from '@geti/ui';
+import { Button, ButtonGroup, Content, Dialog, dimensionValue, Divider, Grid, Header, Heading, View } from '@geti/ui';
 
 import { MediaItem } from '../types';
+import { InferenceOpacity } from './inference-opacity/inference-opacity.component';
 import { InferenceResult } from './inference-result/inference-result.component';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
 
@@ -18,6 +19,9 @@ export const MediaPreview = ({ selectedMediaItem, mediaItems, onClose, onSetSele
     return (
         <Dialog UNSAFE_style={{ width: '95vw', height: '95vh' }}>
             <Heading>Preview</Heading>
+            <Header>
+                <InferenceOpacity />
+            </Header>
 
             <Divider />
 

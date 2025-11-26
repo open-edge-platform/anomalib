@@ -112,6 +112,18 @@ export const useConnectSinkToPipeline = () => {
         pipeline.mutateAsync({ params: { path: { project_id: projectId } }, body: { sink_id } });
 };
 
+export const useSetModelToPipeline = () => {
+    const { projectId } = useProjectIdentifier();
+    const pipeline = usePatchPipeline(projectId);
+
+    return (modelId: string | undefined) => {
+        pipeline.mutate({
+            params: { path: { project_id: projectId } },
+            body: { model_id: modelId },
+        });
+    };
+};
+
 export const useActivePipeline = () => {
     return $api.useSuspenseQuery('get', '/api/active-pipeline');
 };

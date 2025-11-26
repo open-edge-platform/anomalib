@@ -97,9 +97,7 @@ describe('MainContent', () => {
         it('renders when both source and sink are missing', async () => {
             renderApp({ pipelineConfig: { source: undefined, sink: undefined } });
 
-            await waitFor(async () => {
-                expect(await screen.findByText(SOURCE_MESSAGE)).toBeVisible();
-            });
+            expect(await screen.findByText(SOURCE_MESSAGE)).toBeVisible();
         });
     });
 
@@ -110,9 +108,7 @@ describe('MainContent', () => {
                 activePipelineConfig: { project_id: '456' },
             });
 
-            await waitFor(async () => {
-                expect(await screen.findByRole('button', { name: /Activate project/i })).toBeVisible();
-            });
+            expect(await screen.findByRole('button', { name: /Activate project/i })).toBeVisible();
         });
 
         it('does not render EnableProject when current project is active', async () => {
@@ -126,7 +122,7 @@ describe('MainContent', () => {
             });
         });
 
-        it.only('does not render EnableProject when no active pipeline', async () => {
+        it('does not render EnableProject when no active pipeline', async () => {
             renderApp({
                 pipelineConfig: { project_id: '123' },
                 activePipelineConfig: null,
@@ -145,9 +141,7 @@ describe('MainContent', () => {
                 webRtcConfig: { status: 'idle' },
             });
 
-            await waitFor(async () => {
-                expect(await screen.findByRole('button', { name: /Start stream/i })).toBeVisible();
-            });
+            expect(await screen.findByRole('button', { name: /Start stream/i })).toBeVisible();
         });
 
         it('renders when no media item selected and no other project is active', async () => {
@@ -156,9 +150,7 @@ describe('MainContent', () => {
                 activePipelineConfig: null,
             });
 
-            await waitFor(async () => {
-                expect(await screen.findByRole('button', { name: /Start stream/i })).toBeVisible();
-            });
+            expect(await screen.findByRole('button', { name: /Start stream/i })).toBeVisible();
         });
 
         it('renders when current project is active', async () => {
@@ -168,9 +160,7 @@ describe('MainContent', () => {
                 activePipelineConfig: { project_id: '123' },
             });
 
-            await waitFor(async () => {
-                expect(await screen.findByRole('button', { name: /Start stream/i })).toBeVisible();
-            });
+            expect(await screen.findByRole('button', { name: /Start stream/i })).toBeVisible();
         });
     });
 

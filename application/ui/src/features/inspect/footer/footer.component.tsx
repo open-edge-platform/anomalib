@@ -5,25 +5,26 @@ import { Suspense, useEffect } from 'react';
 
 import { $api } from '@geti-inspect/api';
 import { SchemaJob as Job } from '@geti-inspect/api/spec';
-import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { usePipeline, useProjectIdentifier, useSetModelToPipeline } from '@geti-inspect/hooks';
 import { Flex, Loading, Text, View } from '@geti/ui';
 import { WaitingIcon } from '@geti/ui/icons';
 
 import { useTrainedModels } from '../../../hooks/use-model';
-import { useInference } from '../inference-provider.component';
 import { TrainingStatusItem } from './training-status-item.component';
 
 const IdleItem = () => {
     const models = useTrainedModels();
-    const { selectedModelId, onSetSelectedModelId } = useInference();
+    const { data: pipeline } = usePipeline();
+    const setModelToPipelineMutation = useSetModelToPipeline();
+    const selectedModelId = pipeline?.model?.id;
 
     useEffect(() => {
         if (selectedModelId !== undefined || models.length === 0) {
             return;
         }
 
-        onSetSelectedModelId(models[0].id);
-    }, [selectedModelId, models, onSetSelectedModelId]);
+        setModelToPipelineMutation(models[0].id);
+    }, [selectedModelId, models, setModelToPipelineMutation]);
 
     return (
         <Flex

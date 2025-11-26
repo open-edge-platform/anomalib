@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 import { $api } from '@geti-inspect/api';
-import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { usePipeline, useProjectIdentifier, useSetModelToPipeline } from '@geti-inspect/hooks';
 import {
     Cell,
     Column,
@@ -19,7 +19,6 @@ import { sortBy } from 'lodash-es';
 import { useDateFormatter } from 'react-aria';
 
 import { useProjectTrainingJobs, useRefreshModelsOnJobUpdates } from '../dataset/dataset-status-panel.component';
-import { useInference } from '../inference-provider.component';
 import { formatSize } from '../utils';
 import { ModelActionsMenu } from './model-actions-menu.component';
 import { ModelStatusBadges } from './model-status-badges.component';
@@ -38,9 +37,11 @@ const useModels = () => {
 };
 
 export const ModelsView = () => {
-    const dateFormatter = useDateFormatter({ dateStyle: 'medium', timeStyle: 'short' });
-
+    const { data: pipeline } = usePipeline();
     const { jobs = [] } = useProjectTrainingJobs();
+    const setModelToPipelineMutation = useSetModelToPipeline();
+    const dateFormatter = useDateFormatter({ dateStyle: 'medium', timeStyle: 'short' });
+    const selectedModelId = pipeline.model?.id;
     useRefreshModelsOnJobUpdates(jobs);
 
     const models = useModels()
@@ -100,8 +101,6 @@ export const ModelsView = () => {
 
     const showModels = sortBy([...nonCompletedJobs, ...models], (model) => -model.startTime);
 
-    const { selectedModelId, onSetSelectedModelId } = useInference();
-
     const tableSelectedKeys = useMemo(() => {
         if (selectedModelId === undefined) {
             return new Set<string>();
@@ -109,6 +108,10 @@ export const ModelsView = () => {
 
         return new Set<string>([selectedModelId]);
     }, [selectedModelId]);
+
+    const handleSetModel = (modelId?: string) => {
+        setModelToPipelineMutation(modelId);
+    };
 
     return (
         <View backgroundColor='gray-100' height='100%'>
@@ -128,10 +131,11 @@ export const ModelsView = () => {
                     if (selectedId === selectedModelId) {
                         return;
                     }
+
                     const selectedModel = models.find((model) => model.id === selectedId);
 
                     if (selectedModel?.status === 'Completed') {
-                        onSetSelectedModelId(selectedModel?.id);
+                        handleSetModel(selectedModel.id);
                     }
                 }}
                 UNSAFE_className={classes.table}
@@ -177,7 +181,7 @@ export const ModelsView = () => {
                                         <ModelActionsMenu
                                             model={model}
                                             selectedModelId={selectedModelId}
-                                            onSetSelectedModelId={onSetSelectedModelId}
+                                            onSetSelectedModelId={handleSetModel}
                                         />
                                     </Flex>
                                 </Flex>
