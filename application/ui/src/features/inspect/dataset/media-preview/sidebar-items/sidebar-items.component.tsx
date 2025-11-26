@@ -1,0 +1,65 @@
+import { Selection, Size, View } from '@geti/ui';
+import { MediaThumbnail } from 'src/components/media-thumbnail/media-thumbnail.component';
+import { GridMediaItem } from 'src/components/virtualizer-grid-layout/grid-media-item/grid-media-item.component';
+import { VirtualizerGridLayout } from 'src/components/virtualizer-grid-layout/virtualizer-grid-layout.component';
+import { useInference } from 'src/features/inspect/inference-provider.component';
+
+import { MediaItem } from '../../types';
+
+interface SidebarItemsProps {
+    mediaItems: MediaItem[];
+    selectedMediaItem: MediaItem;
+    onSetSelectedMediaItem: (mediaItem: MediaItem | undefined) => void;
+}
+
+const layoutOptions = {
+    maxColumns: 1,
+    minSpace: new Size(8, 8),
+    minItemSize: new Size(120, 120),
+    maxItemSize: new Size(120, 120),
+    preserveAspectRatio: true,
+};
+
+const getThumbnailUrl = (mediaItem: MediaItem) =>
+    `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail`;
+
+export const SidebarItems = ({ mediaItems, selectedMediaItem, onSetSelectedMediaItem }: SidebarItemsProps) => {
+    const { onInference, selectedModelId } = useInference();
+    const selectedIndex = mediaItems.findIndex((item) => item.id === selectedMediaItem.id);
+
+    const handleSelectionChange = (newKeys: Selection) => {
+        const updatedSelectedKeys = new Set(newKeys);
+
+        updatedSelectedKeys.forEach(async (key) => {
+            const mediaItem = mediaItems.find((item) => item.id === key);
+
+            selectedModelId && mediaItem && onInference(mediaItem, selectedModelId);
+            onSetSelectedMediaItem(mediaItem);
+        });
+    };
+
+    return (
+        <View width={'100%'} height={'100%'}>
+            <VirtualizerGridLayout
+                items={mediaItems}
+                ariaLabel='sidebar-items'
+                selectionMode='single'
+                selectedKeys={new Set([String(selectedMediaItem.id)])}
+                layoutOptions={layoutOptions}
+                scrollToIndex={selectedIndex}
+                onSelectionChange={handleSelectionChange}
+                contentItem={(item) => (
+                    <GridMediaItem
+                        contentElement={() => (
+                            <MediaThumbnail
+                                alt={item.filename}
+                                url={getThumbnailUrl(item)}
+                                onClick={() => onSetSelectedMediaItem(item)}
+                            />
+                        )}
+                    />
+                )}
+            />
+        </View>
+    );
+};

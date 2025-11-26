@@ -28,6 +28,8 @@ export const DatasetItem = ({ isSelected, mediaItem, onClick, onDeleted }: Datas
     const handleError = () => {
         if (retry < RETRY_LIMIT) {
             setRetry((current) => current + 1);
+        } else {
+            setIsLoading(false);
         }
     };
 

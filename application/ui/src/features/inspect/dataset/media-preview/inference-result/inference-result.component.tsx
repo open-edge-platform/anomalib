@@ -1,9 +1,8 @@
 import { useState } from 'react';
 
-import { Flex, Loading, View } from '@geti/ui';
+import { dimensionValue, Flex, View } from '@geti/ui';
 import { clsx } from 'clsx';
 import { AnimatePresence, motion } from 'motion/react';
-import { useSpinDelay } from 'spin-delay';
 
 import { useInference } from '../../../inference-provider.component';
 import { MediaItem } from '../../types';
@@ -17,9 +16,7 @@ interface InferenceResultProps {
 
 export const InferenceResult = ({ selectedMediaItem }: InferenceResultProps) => {
     const [isVerticalImage, setIsVerticalImage] = useState(false);
-    const { inferenceOpacity, isPending, inferenceResult } = useInference();
-
-    const isLoadingInference = useSpinDelay(isPending, { delay: 300 });
+    const { inferenceOpacity, inferenceResult } = useInference();
 
     const handleInference = async (imageElement: HTMLImageElement) => {
         setIsVerticalImage(imageElement.clientHeight > imageElement.clientWidth);
@@ -28,10 +25,14 @@ export const InferenceResult = ({ selectedMediaItem }: InferenceResultProps) => 
     return (
         <Flex height={'100%'} direction={'column'} alignItems={'center'} justifyContent={'center'}>
             <Flex height={'100%'} direction={'column'} alignItems={'baseline'} justifyContent={'center'}>
-                {isLoadingInference && <Loading mode={'overlay'} />}
-                {inferenceResult && <LabelScore label={inferenceResult.label} score={inferenceResult.score} />}
+                <View height={'size-350'}>
+                    {inferenceResult && <LabelScore label={inferenceResult.label} score={inferenceResult.score} />}
+                </View>
 
-                <View position={'relative'} UNSAFE_style={{ height: isVerticalImage ? 'calc(100% - 28px)' : 'auto' }}>
+                <View
+                    position={'relative'}
+                    UNSAFE_style={{ height: isVerticalImage ? `calc(100% - ${dimensionValue('size-350')})` : 'auto' }}
+                >
                     <img
                         alt={selectedMediaItem.filename}
                         className={clsx(classes.img, { [classes.verticalImg]: isVerticalImage })}

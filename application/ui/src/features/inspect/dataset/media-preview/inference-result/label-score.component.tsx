@@ -16,7 +16,6 @@ export const LabelScore = ({ label, score }: LabelProps) => {
 
     return (
         <Flex
-            gridArea={'label'}
             UNSAFE_className={clsx(styles.label, {
                 [styles.labelNormal]: label.toLowerCase() === 'normal',
                 [styles.labelAnomalous]: label.toLowerCase() === 'anomalous',

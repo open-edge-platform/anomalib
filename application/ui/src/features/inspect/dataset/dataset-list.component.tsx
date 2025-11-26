@@ -1,4 +1,3 @@
-import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { DialogContainer, Flex, Grid, Heading, minmax, repeat } from '@geti/ui';
 import isEmpty from 'lodash-es/isEmpty';
 
@@ -14,7 +13,6 @@ interface DatasetItemProps {
 }
 
 export const DatasetList = ({ mediaItems }: DatasetItemProps) => {
-    const { projectId } = useProjectIdentifier();
     const { selectedMediaItem, onSetSelectedMediaItem } = useSelectedMediaItem();
 
     const mediaItemsToRender = [
@@ -25,7 +23,7 @@ export const DatasetList = ({ mediaItems }: DatasetItemProps) => {
     ];
 
     return (
-        <Flex gap='size-200' direction={'column'}>
+        <Flex gap='size-200' direction={'column'} height={'100%'}>
             <Heading>Normal images</Heading>
 
             <Grid
@@ -55,10 +53,10 @@ export const DatasetList = ({ mediaItems }: DatasetItemProps) => {
             <DialogContainer onDismiss={() => onSetSelectedMediaItem(undefined)}>
                 {!isEmpty(selectedMediaItem) && (
                     <MediaPreview
-                        projectId={String(projectId)}
-                        mediaItem={selectedMediaItem}
+                        mediaItems={mediaItems}
+                        selectedMediaItem={selectedMediaItem}
+                        onSetSelectedMediaItem={onSetSelectedMediaItem}
                         onClose={() => onSetSelectedMediaItem(undefined)}
-                        onSelectedMediaItem={onSetSelectedMediaItem}
                     />
                 )}
             </DialogContainer>

@@ -1,52 +1,47 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, ButtonGroup, Content, Dialog, dimensionValue, Divider, Flex, Grid, Heading, View } from '@geti/ui';
+import { Button, ButtonGroup, Content, Dialog, dimensionValue, Divider, Grid, Heading, View } from '@geti/ui';
 
 import { MediaItem } from '../types';
 import { InferenceResult } from './inference-result/inference-result.component';
+import { SidebarItems } from './sidebar-items/sidebar-items.component';
 
 type MediaPreviewProps = {
-    projectId: string;
-    mediaItem: MediaItem;
+    selectedMediaItem: MediaItem;
+    mediaItems: MediaItem[];
     onClose: () => void;
-    onSelectedMediaItem: (item: MediaItem) => void;
+    onSetSelectedMediaItem: (mediaItem: MediaItem | undefined) => void;
 };
 
-export const MediaPreview = ({ mediaItem, projectId, onClose, onSelectedMediaItem }: MediaPreviewProps) => {
+export const MediaPreview = ({ selectedMediaItem, mediaItems, onClose, onSetSelectedMediaItem }: MediaPreviewProps) => {
     return (
         <Dialog UNSAFE_style={{ width: '95vw', height: '95vh' }}>
             <Heading>Preview</Heading>
 
             <Divider />
 
-            <Content
-                UNSAFE_style={{
-                    backgroundColor: 'var(--spectrum-global-color-gray-50)',
-                }}
-            >
+            <Content UNSAFE_style={{ backgroundColor: 'var(--spectrum-global-color-gray-50)' }}>
                 <Grid
                     gap='size-125'
+                    rows='auto'
                     width='100%'
                     height='100%'
                     columns='1fr 140px'
                     UNSAFE_style={{ padding: dimensionValue('size-125') }}
-                    areas={['canvas aside', 'canvas aside']}
+                    areas={['canvas sidebar', 'canvas sidebar']}
                 >
                     <View gridArea={'canvas'} overflow={'hidden'}>
-                        <InferenceResult selectedMediaItem={mediaItem} />
+                        <InferenceResult selectedMediaItem={selectedMediaItem} />
                     </View>
 
-                    {/* <View gridArea={'aside'}>
-                            <SidebarItems
-                                items={items}
-                                mediaItem={mediaItem}
-                                hasNextPage={hasNextPage}
-                                isFetchingNextPage={isFetchingNextPage}
-                                fetchNextPage={fetchNextPage}
-                                onSelectedMediaItem={onSelectedMediaItem}
-                            />
-                        </View> */}
+                    <View gridArea={'sidebar'}>
+                        <SidebarItems
+                            mediaItems={mediaItems}
+                            selectedMediaItem={selectedMediaItem}
+                            onSetSelectedMediaItem={onSetSelectedMediaItem}
+                        />
+                    </View>
                 </Grid>
             </Content>
             <ButtonGroup>
