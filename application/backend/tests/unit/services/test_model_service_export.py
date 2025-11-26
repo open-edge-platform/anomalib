@@ -106,7 +106,7 @@ async def test_export_model_ckpt_not_found(
     mock_binary_repo.model_folder_path = str(tmp_path)
     mock_binary_repo_cls.return_value = mock_binary_repo
 
-    # Don't create checkpoint file
+    # Checkpoint file intentionally omitted to test error handling
 
     export_params = ExportParameters(format=ExportType.OPENVINO)
 
