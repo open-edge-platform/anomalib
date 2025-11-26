@@ -140,7 +140,7 @@ class TestModelService:
             # Mock async method
             mock_snapshot_service.delete_snapshot_if_unused = AsyncMock()
 
-            asyncio.run(fxt_model_service.delete_model(fxt_model_service, fxt_project.id, fxt_model.id))
+            asyncio.run(fxt_model_service.delete_model(fxt_project.id, fxt_model.id))
 
         fxt_model_repository.delete_by_id.assert_called_once_with(fxt_model.id)
         mock_snapshot_service.delete_snapshot_if_unused.assert_called_once_with(
