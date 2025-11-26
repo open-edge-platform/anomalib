@@ -3,13 +3,15 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, UploadFile, status
+from fastapi.responses import FileResponse
 
 from api.dependencies import get_device_name, get_model_id, get_model_service, get_project_id
 from api.endpoints.project_endpoints import project_api_prefix_url
 from api.media_rest_validator import MediaRestValidator
 from exceptions import ResourceNotFoundException
 from pydantic_models import Model, ModelList, PredictionResponse
+from pydantic_models.model import ExportParameters
 from services import ModelService
 from services.exceptions import DeviceNotFoundError
 
@@ -86,3 +88,29 @@ async def delete_model(
 ) -> None:
     """Delete a model and any exported artifacts."""
     await model_service.delete_model(project_id=project_id, model_id=model_id)
+
+
+@model_router.post(
+    "/{model_id}:export",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_200_OK: {"description": "Model exported successfully", "content": {"application/zip": {}}},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid model ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Model not found"},
+    },
+)
+async def export_model(
+    model_service: Annotated[ModelService, Depends(get_model_service)],
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    model_id: Annotated[UUID, Depends(get_model_id)],
+    export_parameters: Annotated[ExportParameters, Body()],
+) -> FileResponse:
+    """Export a model to zip file."""
+    try:
+        zip_path = await model_service.export_model(
+            project_id=project_id, model_id=model_id, export_parameters=export_parameters
+        )
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+    return FileResponse(path=zip_path, filename=zip_path.name, media_type="application/zip")

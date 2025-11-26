@@ -3,22 +3,29 @@
 import asyncio
 import base64
 import io
+import shutil
+import tempfile
 from dataclasses import dataclass
 from multiprocessing.synchronize import Event as EventClass
+from pathlib import Path
 from uuid import UUID
 
 import cv2
 import numpy as np
 import openvino.properties.hint as ov_hints
 from anomalib.deploy import ExportType, OpenVINOInferencer
+from anomalib.engine import Engine
+from anomalib.models import get_model
 from loguru import logger
 from PIL import Image
 
 from db import get_async_db_session_ctx
 from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
+from pydantic_models.model import ExportParameters
 from repositories import ModelRepository
 from repositories.binary_repo import ModelBinaryRepository
-from services.exceptions import DeviceNotFoundError
+from services import ResourceNotFoundError
+from services.exceptions import DeviceNotFoundError, ResourceType
 from utils.devices import Devices
 
 DEFAULT_DEVICE = "AUTO"
@@ -77,7 +84,8 @@ class ModelService:
             repo = ModelRepository(session, project_id=project_id)
             return await repo.get_by_id(model_id)
 
-    async def delete_model(self, project_id: UUID, model_id: UUID, delete_artifacts: bool = True) -> None:
+    @staticmethod
+    async def delete_model(project_id: UUID, model_id: UUID, delete_artifacts: bool = True) -> None:
         if delete_artifacts:
             model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model_id)
             try:
@@ -89,9 +97,90 @@ class ModelService:
 
         async with get_async_db_session_ctx() as session:
             repo = ModelRepository(session, project_id=project_id)
-            return await repo.delete_by_id(model_id)
+            await repo.delete_by_id(model_id)
 
-        self.activate_model()
+    async def export_model(self, project_id: UUID, model_id: UUID, export_parameters: ExportParameters) -> Path:
+        """Export a trained model to a zip file.
+
+        Args:
+            project_id: ID of the project
+            model_id: ID of the model
+            export_parameters: Parameters for export (format, compression)
+
+        Returns:
+            Path: Path to the exported zip file
+        """
+        model = await self.get_model_by_id(project_id, model_id)
+        if model is None:
+            raise ResourceNotFoundError(resource_type=ResourceType.MODEL, resource_id=str(model_id))
+
+        # Construct export path
+        name = f"{model.project_id}-{model.name}"
+        exports_dir = Path("data/exports") / str(model_id) / model.name.title() / name
+        exports_dir.mkdir(parents=True, exist_ok=True)
+
+        compression_suffix = f"_{export_parameters.compression.value}" if export_parameters.compression else ""
+        filename = f"{model.name}_{export_parameters.format.value}{compression_suffix}.zip"
+        export_zip_path = exports_dir / filename
+
+        # Cache check
+        if export_zip_path.exists():
+            return export_zip_path
+
+        # Locate checkpoint
+        model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model_id)
+        name = f"{model.project_id}-{model.name}"
+        ckpt_path = (
+            Path(model_binary_repo.model_folder_path)
+            / model.name.title()
+            / name
+            / "latest"
+            / "weights"
+            / "lightning"
+            / "model.ckpt"
+        )
+
+        if not ckpt_path.exists():
+            # Try alternative path for older structure or if title case isn't used
+            ckpt_path = Path(model_binary_repo.model_folder_path) / "weights" / "lightning" / "model.ckpt"
+            if not ckpt_path.exists():
+                raise FileNotFoundError(f"Model checkpoint not found at {ckpt_path}")
+
+        # Run export in thread (CPU intensive)
+        return await asyncio.to_thread(
+            self._run_export,
+            model_name=model.name,
+            ckpt_path=ckpt_path,
+            export_parameters=export_parameters,
+            export_zip_path=export_zip_path,
+        )
+
+    @staticmethod
+    def _run_export(
+        model_name: str, ckpt_path: Path, export_parameters: ExportParameters, export_zip_path: Path
+    ) -> Path:
+        """Run the export process in a separate thread."""
+        # Setup engine
+        engine = Engine()
+        model_module = get_model(model_name)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+
+            # Export
+            engine.export(
+                model=model_module,
+                export_type=export_parameters.format,
+                export_root=temp_path,
+                ckpt_path=str(ckpt_path),
+                compression_type=export_parameters.compression,
+            )
+
+            # Create zip archive
+            # shutil.make_archive expects base_name without extension for zip
+            shutil.make_archive(str(export_zip_path.with_suffix("")), "zip", temp_path)
+
+        return export_zip_path
 
     @classmethod
     async def load_inference_model(cls, model: Model, device: str | None = None) -> OpenVINOInferencer:

@@ -4,7 +4,7 @@ import os
 from enum import StrEnum
 from uuid import UUID
 
-from anomalib.deploy import ExportType
+from anomalib.deploy import CompressionType, ExportType
 from pydantic import BaseModel, Field, model_validator
 
 from pydantic_models.base import BaseIDNameModel
@@ -85,3 +85,20 @@ class PredictionResponse(BaseModel):
             }
         }
     }
+
+
+class ExportParameters(BaseModel):
+    """Parameters required for exporting a model."""
+
+    format: ExportType = Field(default=ExportType.OPENVINO, description="OpenVINO export format")
+    compression: CompressionType | None = Field(
+        default=None,
+        description="Model compression type when exporting to OpenVINO (e.g. FP16, INT8)",
+    )
+
+    @model_validator(mode="after")
+    def validate_compression(self) -> "ExportParameters":
+        """Ensure compression is only set for OpenVINO format."""
+        if self.format != ExportType.OPENVINO and self.compression is not None:
+            raise ValueError("Compression can only be set when format is OpenVINO")
+        return self
