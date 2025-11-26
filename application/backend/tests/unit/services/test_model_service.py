@@ -126,12 +126,27 @@ class TestModelService:
         fxt_model_repository.delete_by_id.return_value = None
         fxt_model_repository.get_by_id.return_value = fxt_model
 
-        with patch("services.model_service.ModelRepository") as mock_repo_class:
+        with (
+            patch("services.model_service.ModelRepository") as mock_repo_class,
+            patch("services.model_service.DatasetSnapshotService") as mock_snapshot_service,
+            patch("services.model_service.ModelBinaryRepository") as mock_binary_repo_class,
+        ):
             mock_repo_class.return_value = fxt_model_repository
+
+            mock_binary_repo = MagicMock()
+            mock_binary_repo_class.return_value = mock_binary_repo
+            mock_binary_repo.delete_model_folder = AsyncMock()
+
+            # Mock async method
+            mock_snapshot_service.delete_snapshot_if_unused = AsyncMock()
 
             asyncio.run(fxt_model_service.delete_model(fxt_model_service, fxt_project.id, fxt_model.id))
 
         fxt_model_repository.delete_by_id.assert_called_once_with(fxt_model.id)
+        mock_snapshot_service.delete_snapshot_if_unused.assert_called_once_with(
+            snapshot_id=fxt_model.dataset_snapshot_id, project_id=fxt_project.id
+        )
+        mock_binary_repo.delete_model_folder.assert_called_once()
 
     def test_load_inference_model_success(self, fxt_model_service, fxt_model, fxt_openvino_inferencer):
         """Test loading inference model successfully."""
