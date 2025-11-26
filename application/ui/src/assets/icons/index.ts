@@ -25,3 +25,4 @@ export { ReactComponent as Folder } from './folder.svg';
 export { ReactComponent as LinkExpired } from './link-expired.svg';
 export { ReactComponent as ActiveIcon } from './active-icon.svg';
 export { ReactComponent as LoadingIcon } from './loading-icon.svg';
+export { ReactComponent as NotFoundIcon } from './not-found.svg';
