@@ -285,8 +285,15 @@ class TrainingService:
                 progress: int = synchronization_parameters.progress
                 message = synchronization_parameters.message
                 job = await job_service.get_job_by_id(job_id=job_id)
-                if job and job.status != JobStatus.RUNNING:
-                    logger.debug(f"Job status changed to {job.status}, stopping progress sync")
+                if job is None:
+                    logger.error(f"Job with id {job_id} not found, stopping progress sync")
+                    break
+                if job.status == JobStatus.CANCELED:
+                    logger.info(f"Job with id {job_id} marked as cancelled, stopping training")
+                    synchronization_parameters.cancel_training_event.set()
+                    break
+                if job.status != JobStatus.RUNNING:
+                    logger.info(f"Job status changed to {job.status}, stopping progress sync")
                     break
 
                 logger.debug(f"Syncing progress with db: {progress}% - {message}")
