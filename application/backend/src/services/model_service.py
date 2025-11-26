@@ -26,7 +26,7 @@ from repositories import ModelRepository
 from repositories.binary_repo import ModelBinaryRepository
 from services import ResourceNotFoundError
 from services.dataset_snapshot_service import DatasetSnapshotService
-from services.exceptions import DeviceNotFoundError, ResourceNotFoundError, ResourceType
+from services.exceptions import DeviceNotFoundError, ResourceType
 from utils.devices import Devices
 
 DEFAULT_DEVICE = "AUTO"
@@ -85,8 +85,9 @@ class ModelService:
             repo = ModelRepository(session, project_id=project_id)
             return await repo.get_by_id(model_id)
 
-    async def delete_model(self, project_id: UUID, model_id: UUID) -> None:
-        model = await self.get_model_by_id(project_id, model_id)
+    @classmethod
+    async def delete_model(cls, project_id: UUID, model_id: UUID) -> None:
+        model = await cls.get_model_by_id(project_id, model_id)
         if not model:
             raise ResourceNotFoundError(resource_id=str(model_id), resource_type=ResourceType.MODEL)
 
