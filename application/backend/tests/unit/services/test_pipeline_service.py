@@ -276,6 +276,7 @@ class TestPipelineService:
             name="new_model",
             format="openvino",
             train_job_id=uuid.uuid4(),
+            dataset_snapshot_id=uuid.uuid4(),
         )
         updated_pipeline = fxt_pipeline.model_copy(update={"model": new_model, "model_id": new_model.id})
         fxt_pipeline_repository.get_by_id.return_value = fxt_pipeline

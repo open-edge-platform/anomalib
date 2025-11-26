@@ -14,8 +14,9 @@ from anomalib.models import get_model
 from loguru import logger
 
 from pydantic_models import Job, JobStatus, JobType, Model
-from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
+from repositories.binary_repo import ModelBinaryRepository
 from services import ModelService
+from services.dataset_snapshot_service import DatasetSnapshotService
 from services.job_service import JobService
 from utils.callbacks import GetiInspectProgressCallback, ProgressSyncParams
 from utils.devices import Devices
@@ -64,17 +65,30 @@ class TrainingService:
         project_id = job.project_id
         model_name = job.payload.get("model_name")
         device = job.payload.get("device")
+        snapshot_id = job.payload.get("dataset_snapshot_id")
+
         if model_name is None:
             raise ValueError(f"Job {job.id} payload must contain 'model_name'")
 
         model_service = ModelService()
+
+        # 1. Snapshot Resolution
+        if snapshot_id:
+            logger.info(f"Using existing snapshot {snapshot_id} for training")
+            snapshot_id = UUID(str(snapshot_id))
+        else:
+            logger.info("No snapshot provided, creating new snapshot")
+            snapshot = await DatasetSnapshotService.create_snapshot(project_id=project_id)
+            snapshot_id = snapshot.id
+
         model = Model(
             project_id=project_id,
             name=str(model_name),
             train_job_id=job.id,
+            dataset_snapshot_id=snapshot_id,
         )
         synchronization_parameters = ProgressSyncParams()
-        logger.info(f"Training model `{model_name}` for job `{job.id}`")
+        logger.info(f"Training model `{model_name}` for job `{job.id}` using snapshot `{snapshot_id}`")
 
         synchronization_task: asyncio.Task[None] | None = None
         try:
@@ -83,14 +97,18 @@ class TrainingService:
                     job_service=job_service, job_id=job.id, synchronization_parameters=synchronization_parameters
                 )
             )
-            # Use asyncio.to_thread to keep event loop responsive
-            # TODO: Consider ProcessPoolExecutor for true parallelism with multiple jobs
-            trained_model = await asyncio.to_thread(
-                cls._train_model,
-                model=model,
-                device=device,
-                synchronization_parameters=synchronization_parameters,
-            )
+
+            # Use the context manager from DatasetSnapshotService to prepare data
+            async with DatasetSnapshotService.use_snapshot_as_folder(snapshot_id, project_id) as dataset_root:
+                # Use asyncio.to_thread to keep event loop responsive
+                # TODO: Consider ProcessPoolExecutor for true parallelism with multiple jobs
+                trained_model = await asyncio.to_thread(
+                    cls._train_model,
+                    model=model,
+                    device=device,
+                    synchronization_parameters=synchronization_parameters,
+                    dataset_root=dataset_root,
+                )
 
             if synchronization_parameters.cancel_training_event.is_set():
                 await cls._handle_job_cancellation(job_service=job_service, job=job, model=model)
@@ -110,16 +128,25 @@ class TrainingService:
             )
             if model.export_path:
                 logger.warning(f"Deleting partially created model with id: {model.id}")
-                await model_service.delete_model(project_id=project_id, model_id=model.id, delete_artifacts=True)
+                await model_service.delete_model(project_id=project_id, model_id=model.id)
             raise e
         finally:
             logger.debug("Syncing progress with db stopped")
             if synchronization_task is not None and not synchronization_task.done():
                 synchronization_task.cancel()
 
+            # Cleanup unused snapshot
+            # If training succeeded, model is created and references snapshot, so it won't delete.
+            # If training failed (model not created), it will delete if no other model uses it.
+            if snapshot_id:
+                await DatasetSnapshotService.delete_snapshot_if_unused(snapshot_id=snapshot_id, project_id=project_id)
+
     @staticmethod
     def _train_model(
-        model: Model, synchronization_parameters: ProgressSyncParams, device: str | None = None
+        model: Model,
+        synchronization_parameters: ProgressSyncParams,
+        dataset_root: str,
+        device: str | None = None,
     ) -> Model | None:
         """
         Execute CPU-intensive model training using anomalib.
@@ -131,6 +158,7 @@ class TrainingService:
         Args:
             model: Model object with training configuration
             synchronization_parameters: Parameters for synchronization between the main process and the training process
+            dataset_root: Path to the temporary folder containing the extracted dataset
             device: Device to train on
 
         Returns:
@@ -149,18 +177,18 @@ class TrainingService:
         logger.info(f"Training on device: {training_device}")
 
         model_binary_repo = ModelBinaryRepository(project_id=model.project_id, model_id=model.id)
-        image_binary_repo = ImageBinaryRepository(project_id=model.project_id)
-        image_folder_path = image_binary_repo.project_folder_path
         model.export_path = model_binary_repo.model_folder_path
         name = f"{model.project_id}-{model.name}"
 
-        # Configure datamodule for anomalib training
+        normal_dir = os.path.join(dataset_root, "normal")
+
+        logger.info(f"Training from temp folder: {dataset_root}")
+        # TODO: implement Parquet datamodule in anomalib to avoid folder extraction step
         datamodule = Folder(
             name=name,
-            normal_dir=image_folder_path,
+            normal_dir=normal_dir,
             val_split_mode=ValSplitMode.SYNTHETIC,
         )
-        logger.info(f"Training from image folder: {image_folder_path} to model folder: {model.export_path}")
 
         # Initialize anomalib model and engine
         anomalib_model = get_model(model=model.name)

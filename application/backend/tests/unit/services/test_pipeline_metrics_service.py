@@ -36,6 +36,7 @@ def fxt_model(fxt_project) -> Model:
         project_id=fxt_project.id,
         name="Test Model",
         train_job_id=uuid.uuid4(),
+        dataset_snapshot_id=uuid.uuid4(),
     )
 
 

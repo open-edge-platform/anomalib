@@ -16,6 +16,7 @@ STORAGE_ROOT_PATH = "data"
 class FileType(StrEnum):
     IMAGES = "images"
     MODELS = "models"
+    SNAPSHOTS = "snapshots"
 
 
 class BinaryRepository(metaclass=abc.ABCMeta):
@@ -94,6 +95,23 @@ class BinaryRepository(metaclass=abc.ABCMeta):
                 raise FileNotFoundError(f"File not found: {full_path}")
 
         await asyncio.to_thread(stdlib_delete)
+
+
+class DatasetSnapshotBinaryRepository(BinaryRepository):
+    def __init__(self, project_id: str | UUID):
+        super().__init__(project_id=project_id, file_type=FileType.SNAPSHOTS)
+
+    def get_full_path(self, filename: str) -> str:
+        return os.path.join(self.project_folder_path, filename)
+
+    def get_snapshot_path(self, snapshot_id: str | UUID) -> str:
+        """
+        Get the full path for a dataset snapshot.
+
+        :param snapshot_id: ID of the snapshot.
+        :return: Full path to the snapshot file.
+        """
+        return self.get_full_path(f"{snapshot_id}.parquet")
 
 
 class ImageBinaryRepository(BinaryRepository):

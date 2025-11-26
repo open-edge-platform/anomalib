@@ -24,6 +24,7 @@ dependencies = [
     "loguru==0.7.3",
     "trackio~=0.6.0",
     "cv2-enumerate-cameras==1.3.0",
+    "pyarrow~=21.0.0",
 ]
 
 [dependency-groups]

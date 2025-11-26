@@ -179,6 +179,7 @@ class TestPipelineEndpoints:
             name="Test Model",
             format="openvino",
             train_job_id=uuid4(),
+            dataset_snapshot_id=uuid4(),
         )
         active_pipeline = Pipeline(
             project_id=other_project_id,
@@ -228,6 +229,7 @@ class TestPipelineEndpoints:
             name="Test Model",
             format="openvino",
             train_job_id=uuid4(),
+            dataset_snapshot_id=uuid4(),
         )
         active_pipeline = Pipeline(
             project_id=fxt_pipeline.project_id,
