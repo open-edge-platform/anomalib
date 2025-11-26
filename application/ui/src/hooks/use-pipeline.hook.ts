@@ -113,5 +113,5 @@ export const useConnectSinkToPipeline = () => {
 };
 
 export const useActivePipeline = () => {
-    return $api.useQuery('get', '/api/active-pipeline');
+    return $api.useSuspenseQuery('get', '/api/active-pipeline');
 };
