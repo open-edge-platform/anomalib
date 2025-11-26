@@ -284,10 +284,11 @@ class TrainingService:
             while True:
                 progress: int = synchronization_parameters.progress
                 message = synchronization_parameters.message
-                if not await job_service.is_job_still_running(job_id=job_id):
-                    logger.debug("Job cancelled, stopping progress sync")
-                    synchronization_parameters.set_cancel_training_event()
+                job = await job_service.get_job_by_id(job_id=job_id)
+                if job and job.status != JobStatus.RUNNING:
+                    logger.debug(f"Job status changed to {job.status}, stopping progress sync")
                     break
+
                 logger.debug(f"Syncing progress with db: {progress}% - {message}")
                 await job_service.update_job_status(
                     job_id=job_id, status=JobStatus.RUNNING, progress=progress, message=message
