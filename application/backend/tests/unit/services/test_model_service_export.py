@@ -52,14 +52,6 @@ async def test_export_model_success(
 
     # Setup binary repo mock
     mock_binary_repo = MagicMock()
-    # We need a fake model folder path that actually exists or mock Path.exists
-    # Since the code checks for existence, we'll mock the Path object behavior in the service
-    # But simpler is to rely on the logic that checks existence.
-
-    # Instead of mocking Path.exists heavily, let's use patch inside the test function context
-    # or rely on the fact that we mock to_thread for the heavy lifting part.
-
-    # The service code checks if ckpt exists. We need to mock that.
     mock_binary_repo.model_folder_path = str(tmp_path)
     mock_binary_repo_cls.return_value = mock_binary_repo
 
@@ -87,9 +79,6 @@ async def test_export_model_success(
     # Verify results
     assert result == expected_zip_path
     mock_to_thread.assert_called_once()
-
-    # Verify Engine was called inside the thread (we can't easily verify args passed to thread target
-    # without more complex mocking, but we can assume to_thread calls _run_export)
 
 
 @pytest.mark.asyncio
@@ -127,48 +116,11 @@ async def test_export_model_ckpt_not_found(
 
 @pytest.mark.asyncio
 @patch("services.model_service.ModelService.get_model_by_id")
-@patch("services.model_service.ModelBinaryRepository")
-@patch("services.model_service.Path.exists")
-async def test_export_model_cached(
-    mock_path_exists, mock_binary_repo_cls, mock_get_model_by_id, mock_model_service, mock_model
-):
-    """Test that cached export is returned if it exists."""
-    mock_get_model_by_id.return_value = mock_model
-
-    # Mock Path.exists to return True for the zip file
-    # Note: Path.exists is called multiple times (mkdir, cache check, ckpt check)
-    # We need to be careful.
-
-    # Better strategy: patch Path object or use fs mocks.
-    # But since we are patching Path.exists globally for the test, we need side_effect.
-
-    # First existence check is export_zip_path.exists()
-    # The code:
-    # 1. exports_dir.mkdir(parents=True, exist_ok=True) -> internally might call exists?
-    # 2. export_zip_path.exists() -> We want this to be True
-
-    # It's safer to not mock Path.exists globally and instead mock the specific path check
-    # OR mock the entire file system.
-    # Given the complexity, let's rely on 'with patch.object' on the specific Path instance if possible,
-    # but Path instances are created on the fly.
-
-    # Let's actually CREATE the dummy zip file in tmp_path and pass that to the service logic?
-    # But the service uses hardcoded "data/exports" path base.
-    # We should mock the Path construction or the 'exists' check specifically.
-
-
-# Re-implementing test_export_model_cached with proper patching
-@pytest.mark.asyncio
-@patch("services.model_service.ModelService.get_model_by_id")
-async def test_export_model_cached_logic(mock_get_model_by_id, mock_model_service, mock_model, tmp_path):
+async def test_export_model_cached_logic(mock_get_model_by_id, mock_model_service, mock_model):
     """Test that cached export is returned if it exists."""
     mock_get_model_by_id.return_value = mock_model
 
     export_params = ExportParameters(format=ExportType.OPENVINO)
-
-    # We need to intercept the Path construction or mkdir calls to redirect to tmp_path
-    # OR we can simply assume the code logic is sound and test the 'if exists return' branch
-    # by mocking Path.exists only for the specific call.
 
     with patch("services.model_service.Path") as mock_path_cls:
         # Setup the mock path chain
