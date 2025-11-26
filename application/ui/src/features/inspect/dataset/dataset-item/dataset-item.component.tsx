@@ -3,26 +3,25 @@ import { useState } from 'react';
 import { Skeleton } from '@geti/ui';
 import { clsx } from 'clsx';
 
-import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
+import { useInference } from '../../inference-provider.component';
 import { DeleteMediaItem } from '../delete-dataset-item/delete-dataset-item.component';
 import { type MediaItem } from '../types';
 
 import styles from './dataset-item.module.scss';
 
 interface DatasetItemProps {
+    isSelected: boolean;
     mediaItem: MediaItem;
-    onClick: (mediaItem: MediaItem) => void;
+    onClick: () => void;
+    onDeleted: () => void;
 }
 
 const RETRY_LIMIT = 3;
 
-export const DatasetItem = ({ mediaItem, onClick }: DatasetItemProps) => {
+export const DatasetItem = ({ isSelected, mediaItem, onClick, onDeleted }: DatasetItemProps) => {
     const [retry, setRetry] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
-
-    const { selectedMediaItem, onSetSelectedMediaItem } = useSelectedMediaItem();
-
-    const isSelected = selectedMediaItem?.id === mediaItem.id;
+    const { onInference, selectedModelId } = useInference();
 
     const mediaUrl = `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail?retry=${retry}`;
 
@@ -37,13 +36,9 @@ export const DatasetItem = ({ mediaItem, onClick }: DatasetItemProps) => {
     };
 
     const handleClick = async () => {
-        /* const selection = mediaItem.id === selectedMediaItem?.id ? undefined : mediaItem;
+        onClick();
 
-        onSetSelectedMediaItem(selection);
-        selectedModelId !== undefined && (await onInference(mediaItem, selectedModelId)); 
-        */
-
-        onClick(mediaItem);
+        selectedModelId !== undefined && (await onInference(mediaItem, selectedModelId));
     };
 
     return (
@@ -52,12 +47,7 @@ export const DatasetItem = ({ mediaItem, onClick }: DatasetItemProps) => {
 
             <img src={mediaUrl} alt={mediaItem.filename} onError={handleError} onLoad={handleLoad} />
             <div className={clsx(styles.floatingContainer, styles.rightTopElement)}>
-                <DeleteMediaItem
-                    itemsIds={[String(mediaItem.id)]}
-                    onDeleted={() => {
-                        selectedMediaItem?.id === mediaItem.id && onSetSelectedMediaItem(undefined);
-                    }}
-                />
+                <DeleteMediaItem itemsIds={[String(mediaItem.id)]} onDeleted={onDeleted} />
             </div>
         </div>
     );

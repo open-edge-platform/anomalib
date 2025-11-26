@@ -39,7 +39,15 @@ export const DatasetList = ({ mediaItems }: DatasetItemProps) => {
                     isEmpty(mediaItem) ? (
                         <DatasetItemPlaceholder key={index} />
                     ) : (
-                        <DatasetItem key={mediaItem.id} mediaItem={mediaItem} onClick={onSetSelectedMediaItem} />
+                        <DatasetItem
+                            key={mediaItem.id}
+                            mediaItem={mediaItem}
+                            isSelected={selectedMediaItem?.id === mediaItem.id}
+                            onClick={() => onSetSelectedMediaItem(mediaItem)}
+                            onDeleted={() =>
+                                selectedMediaItem?.id === mediaItem.id && onSetSelectedMediaItem(undefined)
+                            }
+                        />
                     )
                 )}
             </Grid>

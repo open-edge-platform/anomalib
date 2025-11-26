@@ -1,5 +1,12 @@
-.img {
+img {
+    height: 100%;
     width: 100%;
+    object-fit: contain;
+}
+
+.verticalImg {
+    width: auto;
+    height: 100%;
 }
 
 .inferenceImage {
@@ -8,6 +15,7 @@
     width: 100%;
     height: 100%;
     position: absolute;
+    object-fit: cover;
 }
 
 .label {
