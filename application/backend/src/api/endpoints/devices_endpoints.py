@@ -26,7 +26,7 @@ async def get_training_devices() -> DeviceList:
 
 
 @device_router.get("/camera")
-def get_webcam_devices() -> CameraList:
+async def get_webcam_devices() -> CameraList:
     """Endpoint to get list of available webcam devices."""
     try:
         result = Devices.get_webcam_devices()

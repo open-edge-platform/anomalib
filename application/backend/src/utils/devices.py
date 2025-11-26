@@ -31,6 +31,9 @@ class Devices:
     def get_webcam_devices() -> list[CameraInfo]:
         """Get list of available webcam devices.
 
+        On macOS, uses a separate process to enumerate cameras due to AVFoundation caching issues.
+        May raise RuntimeError if camera enumeration fails (especially on macOS).
+
         Returns:
             list[CameraInfo]: List of dictionaries containing camera index and name.
         """
