@@ -20,6 +20,7 @@ def mock_model():
         format=ExportType.OPENVINO,
         is_ready=True,
         train_job_id=uuid4(),
+        dataset_snapshot_id=uuid4(),
     )
 
 
