@@ -1,3 +1,5 @@
+import { $api } from '@geti-inspect/api';
+
 import { SourceConfig } from '../../util';
 
 import classes from './settings-list.module.scss';
@@ -5,6 +7,22 @@ import classes from './settings-list.module.scss';
 interface SettingsListProps {
     source: SourceConfig;
 }
+
+const CameraDeviceDisplay = ({ deviceId }: { deviceId: number }) => {
+    const { data: cameraDevices, isLoading } = $api.useQuery('get', '/api/devices/camera');
+    const devices = cameraDevices?.devices ?? [];
+    const device = devices[deviceId];
+
+    if (isLoading) {
+        return <span>Loading...</span>;
+    }
+
+    return (
+        <ul className={classes.list}>
+            <li>Device: {device ? device.name : `Unknown device (id: ${deviceId})`}</li>
+        </ul>
+    );
+};
 
 export const SettingsList = ({ source }: SettingsListProps) => {
     if (source.source_type === 'images_folder') {
@@ -34,11 +52,7 @@ export const SettingsList = ({ source }: SettingsListProps) => {
     }
 
     if (source.source_type === 'webcam') {
-        return (
-            <ul className={classes.list}>
-                <li>Device id: {source.device_id}</li>
-            </ul>
-        );
+        return <CameraDeviceDisplay deviceId={source.device_id} />;
     }
 
     return <></>;

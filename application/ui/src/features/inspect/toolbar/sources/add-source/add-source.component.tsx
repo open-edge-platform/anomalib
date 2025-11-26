@@ -3,7 +3,7 @@
 
 import { ReactNode } from 'react';
 
-import { Button, Form } from '@geti/ui';
+import { Button, Flex, Form } from '@geti/ui';
 
 import { useConnectSourceToPipeline } from '../../../../../hooks/use-pipeline.hook';
 import { useSourceAction } from '../hooks/use-source-action.hook';
@@ -36,11 +36,13 @@ export const AddSource = <T extends SourceConfig>({
 
     return (
         <Form action={submitAction}>
-            <>{componentFields(state)}</>
+            <Flex gap={'size-200'} direction={'column'}>
+                <>{componentFields(state)}</>
 
-            <Button type='submit' isDisabled={isPending} UNSAFE_style={{ maxWidth: 'fit-content' }}>
-                Add & Connect
-            </Button>
+                <Button type='submit' isDisabled={isPending} UNSAFE_style={{ maxWidth: 'fit-content' }}>
+                    Add & Connect
+                </Button>
+            </Flex>
         </Form>
     );
 };
