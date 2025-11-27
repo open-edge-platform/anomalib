@@ -22,7 +22,8 @@ services:
       <<: *proxies
     working_dir: /app
     container_name: geti-inspect-${AI_DEVICE:-cpu}
-    user: "10001:10001"
+    group_add:
+      - "${RENDER_GROUP_ID}" # This is needed to allow access to the 'render' group for GPU rendering
     volumes:
       # Persist database and uploaded data
       - backend-data:/app/data
@@ -35,13 +36,14 @@ services:
       nofile:
         soft: 65536
         hard: 65536
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+    # Uncomment the following lines to enable GPU support (NVIDIA GPUs only)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
     # Map all host devices to provide access to webcams and other attached devices
     privileged: true
     devices:
