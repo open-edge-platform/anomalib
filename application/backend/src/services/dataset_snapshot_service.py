@@ -17,7 +17,7 @@ from sqlalchemy import func, select
 
 from db import get_async_db_session_ctx
 from db.schema import ModelDB
-from pydantic_models import DatasetSnapshot, Media
+from pydantic_models import DatasetSnapshot
 from repositories import DatasetSnapshotRepository, MediaRepository
 from repositories.binary_repo import DatasetSnapshotBinaryRepository, ImageBinaryRepository
 
@@ -34,16 +34,12 @@ class DatasetSnapshotService:
         async with get_async_db_session_ctx() as session:
             # 1. Fetch all media
             media_repo = MediaRepository(session, project_id=project_id)
-            all_media: list[Media] = await media_repo.get_all()
-
-            if not all_media:
-                logger.warning(f"Creating snapshot for project {project_id} with no media")
 
             # 2. Read images and prepare data for Parquet
             image_bin_repo = ImageBinaryRepository(project_id=project_id)
 
             data_rows = []
-            for media in all_media:
+            for media in await media_repo.get_all():
                 # Read bytes
                 try:
                     img_bytes = await image_bin_repo.read_file(media.filename)
@@ -62,6 +58,7 @@ class DatasetSnapshotService:
 
             # 3. Create Table
             if not data_rows:
+                logger.warning(f"Creating snapshot for project {project_id} with no media")
                 # Create empty table with schema
                 schema = pa.schema([
                     ("image", pa.binary()),
