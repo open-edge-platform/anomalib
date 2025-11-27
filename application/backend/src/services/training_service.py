@@ -72,6 +72,8 @@ class TrainingService:
             raise ValueError(f"Job {job.id} payload must contain 'model_name'")
 
         synchronization_task: asyncio.Task[None] | None = None
+        model: Model | None = None  # Initialize model to None
+
         try:
             model_service = ModelService()
             snapshot = await DatasetSnapshotService.get_or_create_snapshot(
@@ -119,7 +121,7 @@ class TrainingService:
             await job_service.update_job_status(
                 job_id=job.id, status=JobStatus.FAILED, message=f"Failed with exception: {str(e)}"
             )
-            if model.export_path:
+            if model and model.export_path:
                 logger.warning(f"Deleting partially created model with id: {model.id}")
                 await model_service.delete_model(project_id=project_id, model_id=model.id)
             raise e

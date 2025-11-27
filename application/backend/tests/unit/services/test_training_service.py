@@ -31,6 +31,7 @@ def fxt_mock_job_service():
     mock_job_service = MagicMock()
     mock_job_service.get_pending_train_job = AsyncMock()
     mock_job_service.update_job_status = AsyncMock()
+    mock_job_service.get_job_by_id = AsyncMock()
     return mock_job_service
 
 
@@ -107,6 +108,8 @@ def fxt_mock_dataset_snapshot_service():
         mock_snapshot = MagicMock()
         mock_snapshot.id = uuid4()
         mock_service.create_snapshot = AsyncMock(return_value=mock_snapshot)
+        # Fix: get_or_create_snapshot needs to be awaited
+        mock_service.get_or_create_snapshot = AsyncMock(return_value=mock_snapshot)
         mock_service.delete_snapshot_if_unused = AsyncMock()
 
         # Setup context manager for use_snapshot_as_folder
@@ -186,6 +189,10 @@ class TestTrainingService:
         """Test training failure handling with different failure scenarios."""
         fxt_job.payload = {"model_name": "padim"}
         fxt_mock_job_service.get_pending_train_job.return_value = fxt_job
+
+        # Simulate that after failure, the job status in DB is FAILED (not active)
+        failed_job = fxt_job.model_copy(update={"status": JobStatus.FAILED})
+        fxt_mock_job_service.get_job_by_id.return_value = failed_job
 
         with patch("services.training_service.asyncio.to_thread") as mock_to_thread:
             if isinstance(exception, ValueError) and "model is None" in str(exception):
