@@ -23,7 +23,7 @@ services:
     working_dir: /app
     container_name: geti-inspect-${AI_DEVICE:-cpu}
     group_add:
-      - "${RENDER_GROUP_ID}" # This is needed to allow access to the 'render' group for GPU rendering
+      - "${RENDER_GROUP_ID}" # This is needed to allow access to the 'render' group for torch XPU support
     volumes:
       # Persist database and uploaded data
       - backend-data:/app/data
