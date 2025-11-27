@@ -9,13 +9,13 @@ import { InferenceResult } from './inference-result/inference-result.component';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
 
 type MediaPreviewProps = {
-    selectedMediaItem: MediaItem;
     mediaItems: MediaItem[];
+    selectedMediaItem: MediaItem;
     onClose: () => void;
-    onSetSelectedMediaItem: (mediaItem: MediaItem | undefined) => void;
+    onSelectedMediaItem: (mediaItem: string | null) => void;
 };
 
-export const MediaPreview = ({ selectedMediaItem, mediaItems, onClose, onSetSelectedMediaItem }: MediaPreviewProps) => {
+export const MediaPreview = ({ mediaItems, selectedMediaItem, onClose, onSelectedMediaItem }: MediaPreviewProps) => {
     return (
         <Dialog UNSAFE_style={{ width: '95vw', height: '95vh' }}>
             <Heading>Preview</Heading>
@@ -43,7 +43,7 @@ export const MediaPreview = ({ selectedMediaItem, mediaItems, onClose, onSetSele
                         <SidebarItems
                             mediaItems={mediaItems}
                             selectedMediaItem={selectedMediaItem}
-                            onSetSelectedMediaItem={onSetSelectedMediaItem}
+                            onSelectedMediaItem={onSelectedMediaItem}
                         />
                     </View>
                 </Grid>

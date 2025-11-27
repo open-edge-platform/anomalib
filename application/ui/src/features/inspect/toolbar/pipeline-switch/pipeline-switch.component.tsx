@@ -3,7 +3,6 @@ import { Flex, Switch } from '@geti/ui';
 import isEmpty from 'lodash-es/isEmpty';
 import { useWebRTCConnection } from 'src/components/stream/web-rtc-connection-provider';
 
-import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { isStatusActive } from '../../utils';
 
 import classes from './pipeline-switch.module.scss';
@@ -12,13 +11,11 @@ export const PipelineSwitch = () => {
     const { projectId } = useProjectIdentifier();
     const stopPipeline = useStopPipeline(projectId);
     const { status, start } = useWebRTCConnection();
-    const { onSetSelectedMediaItem } = useSelectedMediaItem();
     const { data: pipeline, isLoading } = usePipeline();
 
     const runPipeline = useRunPipeline({
         onSuccess: async () => {
             await start();
-            onSetSelectedMediaItem(undefined);
         },
     });
 

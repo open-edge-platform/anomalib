@@ -8,7 +8,7 @@ import { MediaItem } from '../../types';
 interface SidebarItemsProps {
     mediaItems: MediaItem[];
     selectedMediaItem: MediaItem;
-    onSetSelectedMediaItem: (mediaItem: MediaItem | undefined) => void;
+    onSelectedMediaItem: (mediaItem: string | null) => void;
 }
 
 const layoutOptions = {
@@ -22,7 +22,7 @@ const layoutOptions = {
 const getThumbnailUrl = (mediaItem: MediaItem) =>
     `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail`;
 
-export const SidebarItems = ({ mediaItems, selectedMediaItem, onSetSelectedMediaItem }: SidebarItemsProps) => {
+export const SidebarItems = ({ mediaItems, selectedMediaItem, onSelectedMediaItem }: SidebarItemsProps) => {
     const selectedIndex = mediaItems.findIndex((item) => item.id === selectedMediaItem.id);
 
     const handleSelectionChange = (newKeys: Selection) => {
@@ -30,7 +30,7 @@ export const SidebarItems = ({ mediaItems, selectedMediaItem, onSetSelectedMedia
         const firstKey = updatedSelectedKeys.values().next().value;
         const mediaItem = mediaItems.find((item) => item.id === firstKey);
 
-        onSetSelectedMediaItem(mediaItem);
+        onSelectedMediaItem(mediaItem?.id ?? null);
     };
 
     return (
@@ -49,7 +49,7 @@ export const SidebarItems = ({ mediaItems, selectedMediaItem, onSetSelectedMedia
                             <MediaThumbnail
                                 alt={item.filename}
                                 url={getThumbnailUrl(item)}
-                                onClick={() => onSetSelectedMediaItem(item)}
+                                onClick={() => onSelectedMediaItem(item.id ?? null)}
                             />
                         )}
                     />

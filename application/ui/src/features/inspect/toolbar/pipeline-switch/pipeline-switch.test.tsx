@@ -9,16 +9,15 @@ import { server } from 'src/msw-node-setup';
 
 import { getMockedPipeline } from '../../../../../mocks/mock-pipeline';
 import { useWebRTCConnection, WebRTCConnectionState } from '../../../../components/stream/web-rtc-connection-provider';
-import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { PipelineSwitch } from './pipeline-switch.component';
 
 vi.mock('../../../../components/stream/web-rtc-connection-provider', () => ({
     useWebRTCConnection: vi.fn(),
 }));
 
-vi.mock('../../selected-media-item-provider.component', () => ({
+/* vi.mock('../../selected-media-item-provider.component', () => ({
     useSelectedMediaItem: vi.fn(),
-}));
+})); */
 
 describe('PipelineSwitch', () => {
     const renderApp = ({

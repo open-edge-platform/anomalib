@@ -11,7 +11,6 @@ import { getMockedPipeline } from '../../../../mocks/mock-pipeline';
 import { useWebRTCConnection, WebRTCConnectionState } from '../../../components/stream/web-rtc-connection-provider';
 import { MediaItem } from '../dataset/types';
 import { InferenceProvider } from '../inference-provider.component';
-import { useSelectedMediaItem } from '../selected-media-item-provider.component';
 import { MainContent } from './main-content.component';
 import { SOURCE_MESSAGE } from './source-sink-message/source-sink-message.component';
 
@@ -19,9 +18,9 @@ vi.mock('../../../components/stream/web-rtc-connection-provider', () => ({
     useWebRTCConnection: vi.fn(),
 }));
 
-vi.mock('../selected-media-item-provider.component', () => ({
+/* vi.mock('../selected-media-item-provider.component', () => ({
     useSelectedMediaItem: vi.fn(),
-}));
+})); */
 
 describe('MainContent', () => {
     const mockMediaItem = getMockedMediaItem({});

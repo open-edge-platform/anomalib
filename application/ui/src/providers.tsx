@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 import { Toast } from '@geti/ui';
 import { ThemeProvider } from '@geti/ui/theme';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v6';
 import { MemoryRouterProps, RouterProvider } from 'react-router';
 import { MemoryRouter as Router } from 'react-router-dom';
 
@@ -17,7 +18,9 @@ export const Providers = () => {
             <ThemeProvider router={router}>
                 <WebRTCConnectionProvider>
                     <ZoomProvider>
-                        <RouterProvider router={router} />
+                        <NuqsAdapter>
+                            <RouterProvider router={router} />
+                        </NuqsAdapter>
                     </ZoomProvider>
                 </WebRTCConnectionProvider>
             </ThemeProvider>
@@ -29,10 +32,12 @@ export const TestProviders = ({ children, routerProps }: { children: ReactNode; 
     return (
         <QueryClientProvider client={queryClient}>
             <ThemeProvider>
-                <Router {...routerProps}>
-                    <WebRTCConnectionProvider>{children}</WebRTCConnectionProvider>
-                    <Toast />
-                </Router>
+                <NuqsAdapter>
+                    <Router {...routerProps}>
+                        <WebRTCConnectionProvider>{children}</WebRTCConnectionProvider>
+                        <Toast />
+                    </Router>
+                </NuqsAdapter>
             </ThemeProvider>
         </QueryClientProvider>
     );

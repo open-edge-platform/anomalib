@@ -37,6 +37,7 @@
         "comlink": "^4.4.2",
         "lodash-es": "^4.17.21",
         "motion": "^12.23.24",
+        "nuqs": "^2.8.1",
         "openapi-fetch": "^0.14.0",
         "openapi-react-query": "^0.5.0",
         "react": "^19.1.1",

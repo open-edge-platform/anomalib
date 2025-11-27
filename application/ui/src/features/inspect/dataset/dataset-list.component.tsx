@@ -1,7 +1,7 @@
 import { DialogContainer, Flex, Grid, Heading, minmax, repeat } from '@geti/ui';
 import isEmpty from 'lodash-es/isEmpty';
+import { useQueryState } from 'nuqs';
 
-import { useSelectedMediaItem } from '../selected-media-item-provider.component';
 import { DatasetItemPlaceholder } from './dataset-item/dataset-item-placeholder.component';
 import { DatasetItem } from './dataset-item/dataset-item.component';
 import { MediaPreview } from './media-preview/media-preview.component';
@@ -13,7 +13,8 @@ interface DatasetItemProps {
 }
 
 export const DatasetList = ({ mediaItems }: DatasetItemProps) => {
-    const { selectedMediaItem, onSetSelectedMediaItem } = useSelectedMediaItem();
+    const [selectedMediaItemId, setSelectedMediaItem] = useQueryState('selectedMediaItem');
+    const selectedMediaItem = mediaItems.find((item) => item.id === selectedMediaItemId);
 
     const mediaItemsToRender = [
         ...mediaItems,
@@ -41,22 +42,20 @@ export const DatasetList = ({ mediaItems }: DatasetItemProps) => {
                             key={mediaItem.id}
                             mediaItem={mediaItem}
                             isSelected={selectedMediaItem?.id === mediaItem.id}
-                            onClick={() => onSetSelectedMediaItem(mediaItem)}
-                            onDeleted={() =>
-                                selectedMediaItem?.id === mediaItem.id && onSetSelectedMediaItem(undefined)
-                            }
+                            onClick={() => setSelectedMediaItem(mediaItem?.id ?? null)}
+                            onDeleted={() => selectedMediaItem?.id === mediaItem.id && setSelectedMediaItem(null)}
                         />
                     )
                 )}
             </Grid>
 
-            <DialogContainer onDismiss={() => onSetSelectedMediaItem(undefined)}>
+            <DialogContainer onDismiss={() => setSelectedMediaItem(null)}>
                 {!isEmpty(selectedMediaItem) && (
                     <MediaPreview
                         mediaItems={mediaItems}
                         selectedMediaItem={selectedMediaItem}
-                        onSetSelectedMediaItem={onSetSelectedMediaItem}
-                        onClose={() => onSetSelectedMediaItem(undefined)}
+                        onClose={() => setSelectedMediaItem(null)}
+                        onSelectedMediaItem={setSelectedMediaItem}
                     />
                 )}
             </DialogContainer>
