@@ -3,36 +3,25 @@
 
 import { useEffect } from 'react';
 
-import { $api } from '@geti-inspect/api';
-import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { usePipeline, useSetModelToPipeline } from '@geti-inspect/hooks';
 import { Item, Picker } from '@geti/ui';
 
-import { useInference } from '../inference-provider.component';
-
-const useTrainedModels = () => {
-    const { projectId } = useProjectIdentifier();
-    const { data } = $api.useQuery('get', '/api/projects/{project_id}/models', {
-        params: {
-            path: {
-                project_id: projectId,
-            },
-        },
-    });
-
-    return data?.models.map((model) => ({ id: model.id, name: model.name })) || [];
-};
+import { useTrainedModels } from '../../../hooks/use-model';
 
 export const ModelsPicker = () => {
     const models = useTrainedModels();
-    const { selectedModelId, onSetSelectedModelId } = useInference();
+    const { data: pipeline } = usePipeline();
+    const setModelToPipelineMutation = useSetModelToPipeline();
+
+    const selectedModelId = pipeline.model?.id;
 
     useEffect(() => {
         if (selectedModelId !== undefined || models.length === 0) {
             return;
         }
 
-        onSetSelectedModelId(models[0].id);
-    }, [selectedModelId, models, onSetSelectedModelId]);
+        setModelToPipelineMutation(models[0].id);
+    }, [selectedModelId, models, setModelToPipelineMutation]);
 
     if (models === undefined || models.length === 0) {
         return null;
@@ -43,7 +32,7 @@ export const ModelsPicker = () => {
             aria-label='Select model'
             items={models}
             selectedKey={selectedModelId}
-            onSelectionChange={(key) => onSetSelectedModelId(String(key))}
+            onSelectionChange={(key) => setModelToPipelineMutation(String(key))}
         >
             {(item) => <Item key={item.id}>{item.name}</Item>}
         </Picker>

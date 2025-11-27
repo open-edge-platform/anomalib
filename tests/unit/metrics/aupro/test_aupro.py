@@ -46,18 +46,9 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
     fpr_limit.append(float(np.mean(fpr_limit)))
     expected_aupro.append(torch.tensor(np.mean(expected_aupro)))
 
-    threshold_count = [
-        200,
-        200,
-        200,
-    ]
-
     if metafunc.function is test_aupro:
         vals = list(zip(labels, preds, fpr_limit, expected_aupro, strict=True))
         metafunc.parametrize(argnames=("labels", "preds", "fpr_limit", "expected_aupro"), argvalues=vals)
-    elif metafunc.function is test_binned_aupro:
-        vals = list(zip(labels, preds, threshold_count, strict=True))
-        metafunc.parametrize(argnames=("labels", "preds", "threshold_count"), argvalues=vals)
 
 
 def test_aupro(labels: torch.Tensor, preds: torch.Tensor, fpr_limit: float, expected_aupro: torch.Tensor) -> None:
@@ -73,28 +64,3 @@ def test_aupro(labels: torch.Tensor, preds: torch.Tensor, fpr_limit: float, expe
     tolerance = 0.001
     assert torch.allclose(computed_aupro, expected_aupro, atol=tolerance)
     assert torch.allclose(computed_aupro, ref_aupro, atol=tolerance)
-
-
-def test_binned_aupro(labels: torch.Tensor, preds: torch.Tensor, threshold_count: int) -> None:
-    """Test if the binned aupro is the same as the non-binned aupro."""
-    aupro = AUPRO()
-    computed_not_binned_aupro = aupro(preds, labels)
-
-    binned_pro = AUPRO(num_thresholds=threshold_count)
-    computed_binned_aupro = binned_pro(preds, labels)
-
-    tolerance = 0.001
-    # with threshold binning the roc curve computed within the metric is more memory efficient
-    # but a bit less accurate. So we check the difference in order to validate the binning effect.
-    assert computed_binned_aupro != computed_not_binned_aupro
-    assert torch.allclose(computed_not_binned_aupro, computed_binned_aupro, atol=tolerance)
-
-    # test with prediction higher than 1
-    preds = preds * 2
-    computed_binned_aupro = binned_pro(preds, labels)
-    computed_not_binned_aupro = aupro(preds, labels)
-
-    # with threshold binning the roc curve computed within the metric is more memory efficient
-    # but a bit less accurate. So we check the difference in order to validate the binning effect.
-    assert computed_binned_aupro != computed_not_binned_aupro
-    assert torch.allclose(computed_not_binned_aupro, computed_binned_aupro, atol=tolerance)

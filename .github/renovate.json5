@@ -29,7 +29,7 @@
   // if necessary, add supported releases branches here
   // it is possible to enable/disable specific upgrades per branch with
   // `matchBaseBranches` in specific rule
-  baseBranches: ["main"],
+  baseBranches: ["main", "feature/geti-inspect"],
 
   enabledManagers: ["github-actions", "pep621", "custom.regex"],
 
@@ -40,9 +40,17 @@
   packageRules: [
     // weekly dependencies upgrades
     {
+      matchBaseBranches: ["main"],
       enabled: true,
       matchManagers: ["pep621"],
       schedule: ["* * * * 0"], // weekly
+    },
+
+    // Disable non-security upgrades for pypi, except lock file update
+    {
+      matchBaseBranches: ["feature/geti-inspect"],
+      enabled: false,
+      matchDatasources: ["pypi"],
     },
 
     // Python version is upgraded manually
@@ -62,6 +70,13 @@
       matchDepTypes: ["project.optional-dependencies"],
     },
 
+    // torch is upgraded manually
+    {
+      enabled: false,
+      matchDatasources: ["pypi"],
+      matchDepNames: ["torch"],
+    },
+
     // Group GitHub Actions updates
     {
       enabled: true,
@@ -78,17 +93,6 @@
       matchDatasources: ["github-releases"],
       matchDepNames: ["python"],
       matchDepTypes: ["uses-with"],
-    },
-  ],
-
-  // is used to upgrade Zizmor version
-  customManagers: [
-    {
-      fileMatch: ["^\\.github/actions/security/zizmor/[^/]+\\.ya?ml$"],
-      //   https://docs.renovatebot.com/modules/manager/regex/#advanced-capture
-      matchStrings: [
-        "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\s+.+default: (?<currentValue>.*)",
-      ],
     },
   ],
 

@@ -1,10 +1,19 @@
-.canvasContainer {
-    overflow: hidden;
-    width: 100%;
-    height: 100%;
-    padding: var(--spectrum-global-dimension-size-1200);
+.container {
+    border: 1px dashed #b7b9be;
+    margin: var(--spectrum-global-dimension-size-500);
+    background: var(--background-inverse);
+    border-radius: var(--spectrum-global-dimension-size-200);
+}
 
-    h3 {
-        text-align: center;
-    }
+.title {
+    font-size: var(--spectrum-global-dimension-size-200);
+    line-height: var(--spectrum-global-dimension-size-300);
+}
+
+.description {
+    text-align: center;
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--spectrum-global-dimension-size-150);
+    line-height: var(--spectrum-global-dimension-size-225);
+    max-width: 39.4375rem;
 }

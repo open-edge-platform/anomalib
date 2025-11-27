@@ -4,7 +4,7 @@ import os
 from enum import StrEnum
 from uuid import UUID
 
-from anomalib.deploy import ExportType
+from anomalib.deploy import CompressionType, ExportType
 from pydantic import BaseModel, Field, model_validator
 
 from pydantic_models.base import BaseIDNameModel
@@ -18,8 +18,7 @@ class PredictionLabel(StrEnum):
 
 
 class Model(BaseIDNameModel):
-    """
-    Base model schema that includes common fields for all models.
+    """Base model schema that includes common fields for all models.
     This can be extended by other schemas to include additional fields.
     """
 
@@ -28,6 +27,7 @@ class Model(BaseIDNameModel):
     threshold: float = Field(default=0.5, gt=0.0, lt=1.0, description="Confidence threshold for the model")
     is_ready: bool = Field(default=False, description="Indicates if the model is ready for use")
     export_path: str | None = None
+    dataset_snapshot_id: UUID = Field(description="ID of the dataset snapshot used for training")
     train_job_id: UUID = Field(description="ID of the training job for this model")
     size: int | None = Field(default=None, ge=0, description="Total size in bytes of exported model artifacts")
 
@@ -51,8 +51,8 @@ class Model(BaseIDNameModel):
                 "threshold": 0.5,
                 "train_job_id": "0db0c16d-0d3c-4e0e-bc5a-ca710579e549",
                 "size": 12345678,
-            }
-        }
+            },
+        },
     }
 
 
@@ -82,6 +82,23 @@ class PredictionResponse(BaseModel):
                 ),
                 "label": "Normal",
                 "score": 0.23,
-            }
-        }
+            },
+        },
     }
+
+
+class ExportParameters(BaseModel):
+    """Parameters required for exporting a model."""
+
+    format: ExportType = Field(default=ExportType.OPENVINO, description="OpenVINO export format")
+    compression: CompressionType | None = Field(
+        default=None,
+        description="Model compression type when exporting to OpenVINO (e.g. FP16, INT8)",
+    )
+
+    @model_validator(mode="after")
+    def validate_compression(self) -> "ExportParameters":
+        """Ensure compression is only set for OpenVINO format."""
+        if self.format != ExportType.OPENVINO and self.compression is not None:
+            raise ValueError("Compression can only be set when format is OpenVINO")
+        return self

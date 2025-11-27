@@ -3,6 +3,7 @@
 import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import uuid4
 
 import pytest
 
@@ -30,6 +31,7 @@ def fxt_mock_job_service():
     mock_job_service = MagicMock()
     mock_job_service.get_pending_train_job = AsyncMock()
     mock_job_service.update_job_status = AsyncMock()
+    mock_job_service.get_job_by_id = AsyncMock()
     return mock_job_service
 
 
@@ -47,7 +49,7 @@ def fxt_mock_binary_repos(fxt_model_binary_repo, fxt_image_binary_repo):
     """Fixture for mock binary repositories."""
     with (
         patch("services.training_service.ModelBinaryRepository") as mock_model_bin_repo_class,
-        patch("services.training_service.ImageBinaryRepository") as mock_image_bin_repo_class,
+        patch("services.dataset_snapshot_service.ImageBinaryRepository") as mock_image_bin_repo_class,
     ):
         mock_model_bin_repo_class.return_value = fxt_model_binary_repo
         mock_image_bin_repo_class.return_value = fxt_image_binary_repo
@@ -98,6 +100,34 @@ def fxt_mock_model_service_class(fxt_mock_model_service):
         yield mock_model_service_class
 
 
+@pytest.fixture
+def fxt_mock_dataset_snapshot_service():
+    """Fixture for mocking DatasetSnapshotService."""
+    with patch("services.training_service.DatasetSnapshotService") as mock_service:
+        # Setup default return values
+        mock_snapshot = MagicMock()
+        mock_snapshot.id = uuid4()
+        mock_service.create_snapshot = AsyncMock(return_value=mock_snapshot)
+        # Fix: get_or_create_snapshot needs to be awaited
+        mock_service.get_or_create_snapshot = AsyncMock(return_value=mock_snapshot)
+        mock_service.delete_snapshot_if_unused = AsyncMock()
+
+        # Setup context manager for use_snapshot_as_folder
+        mock_ctx = MagicMock()
+
+        async def enter_mock(*args, **kwargs):
+            return "/tmp/dataset"
+
+        async def exit_mock(*args, **kwargs):
+            return None
+
+        mock_ctx.__aenter__ = AsyncMock(side_effect=enter_mock)
+        mock_ctx.__aexit__ = AsyncMock(side_effect=exit_mock)
+        mock_service.use_snapshot_as_folder.return_value = mock_ctx
+
+        yield mock_service
+
+
 class TestTrainingService:
     def test_train_pending_job_no_pending_jobs(self, fxt_mock_job_service_class, fxt_mock_job_service):
         """Test training when no pending jobs exist."""
@@ -116,6 +146,7 @@ class TestTrainingService:
         fxt_mock_model_service_class,
         fxt_mock_job_service,
         fxt_mock_model_service,
+        fxt_mock_dataset_snapshot_service,
     ):
         """Test successful training of a pending job."""
         fxt_job.payload = {"model_name": "padim"}
@@ -131,10 +162,14 @@ class TestTrainingService:
             # Should be called twice: RUNNING then COMPLETED
             assert fxt_mock_job_service.update_job_status.call_count == 2
             fxt_mock_job_service.update_job_status.assert_any_call(
-                job_id=fxt_job.id, status=JobStatus.RUNNING, message="Training started"
+                job_id=fxt_job.id,
+                status=JobStatus.RUNNING,
+                message="Training started",
             )
             fxt_mock_job_service.update_job_status.assert_any_call(
-                job_id=fxt_job.id, status=JobStatus.COMPLETED, message="Training completed successfully"
+                job_id=fxt_job.id,
+                status=JobStatus.COMPLETED,
+                message="Training completed successfully",
             )
             fxt_mock_model_service.create_model.assert_called_once()
 
@@ -151,12 +186,17 @@ class TestTrainingService:
         fxt_mock_job_service_class,
         fxt_mock_model_service_class,
         fxt_mock_job_service,
+        fxt_mock_dataset_snapshot_service,
         exception,
         expected_message,
     ):
         """Test training failure handling with different failure scenarios."""
         fxt_job.payload = {"model_name": "padim"}
         fxt_mock_job_service.get_pending_train_job.return_value = fxt_job
+
+        # Simulate that after failure, the job status in DB is FAILED (not active)
+        failed_job = fxt_job.model_copy(update={"status": JobStatus.FAILED})
+        fxt_mock_job_service.get_job_by_id.return_value = failed_job
 
         with patch("services.training_service.asyncio.to_thread") as mock_to_thread:
             if isinstance(exception, ValueError) and "model is None" in str(exception):
@@ -170,10 +210,14 @@ class TestTrainingService:
             # Should be called twice: RUNNING then FAILED
             assert fxt_mock_job_service.update_job_status.call_count == 2
             fxt_mock_job_service.update_job_status.assert_any_call(
-                job_id=fxt_job.id, status=JobStatus.RUNNING, message="Training started"
+                job_id=fxt_job.id,
+                status=JobStatus.RUNNING,
+                message="Training started",
             )
             fxt_mock_job_service.update_job_status.assert_any_call(
-                job_id=fxt_job.id, status=JobStatus.FAILED, message=f"Failed with exception: {expected_message}"
+                job_id=fxt_job.id,
+                status=JobStatus.FAILED,
+                message=f"Failed with exception: {expected_message}",
             )
 
     def test_train_pending_job_cleanup_on_failure(
@@ -185,6 +229,7 @@ class TestTrainingService:
         fxt_mock_job_service,
         fxt_mock_model_service,
         fxt_mock_binary_repos,
+        fxt_mock_dataset_snapshot_service,
     ):
         """Test cleanup when training fails and model has export_path."""
         fxt_job.payload = {"model_name": "padim"}
@@ -193,7 +238,13 @@ class TestTrainingService:
 
         with patch("services.training_service.asyncio.to_thread") as mock_to_thread:
             # Mock the training to succeed first, setting export_path, then fail
-            def mock_train_model(cls, model, synchronization_parameters: ProgressSyncParams, device=None):
+            def mock_train_model(
+                cls,
+                model,
+                synchronization_parameters: ProgressSyncParams,
+                device=None,
+                dataset_root=None,
+            ):
                 model.export_path = "/path/to/model"
                 raise Exception("Training failed")
 
@@ -223,7 +274,11 @@ class TestTrainingService:
 
         # Call the method
         with patch.object(TrainingService, "_compute_export_size", return_value=123):
-            result = TrainingService._train_model(fxt_model, synchronization_parameters=ProgressSyncParams())
+            result = TrainingService._train_model(
+                fxt_model,
+                synchronization_parameters=ProgressSyncParams(),
+                dataset_root="/tmp/dataset",
+            )
 
         # Verify the result
         assert result == fxt_model
@@ -244,7 +299,8 @@ class TestTrainingService:
         assert call_args[1]["max_epochs"] == 10
 
         fxt_mock_anomalib_components["engine"].fit.assert_called_once_with(
-            model=fxt_mock_anomalib_components["anomalib_model"], datamodule=fxt_mock_anomalib_components["folder"]
+            model=fxt_mock_anomalib_components["anomalib_model"],
+            datamodule=fxt_mock_anomalib_components["folder"],
         )
         fxt_mock_anomalib_components["engine"].export.assert_called_once()
 
@@ -255,6 +311,7 @@ class TestTrainingService:
         fxt_mock_model_service_class,
         fxt_mock_job_service,
         fxt_mock_binary_repos,
+        fxt_mock_dataset_snapshot_service,
     ):
         """Training should mark job as cancelled when cancellation flag is set."""
         fxt_job.payload = {"model_name": "padim"}
@@ -273,10 +330,14 @@ class TestTrainingService:
 
         assert result is None
         fxt_mock_job_service.update_job_status.assert_any_call(
-            job_id=fxt_job.id, status=JobStatus.RUNNING, message="Training started"
+            job_id=fxt_job.id,
+            status=JobStatus.RUNNING,
+            message="Training started",
         )
         fxt_mock_job_service.update_job_status.assert_any_call(
-            job_id=fxt_job.id, status=JobStatus.CANCELED, message="Training cancelled by user"
+            job_id=fxt_job.id,
+            status=JobStatus.CANCELED,
+            message="Training cancelled by user",
         )
 
     def test_train_model_cancelled_before_start(
@@ -289,6 +350,10 @@ class TestTrainingService:
         sync_params = ProgressSyncParams()
         sync_params.set_cancel_training_event()
 
-        result = TrainingService._train_model(fxt_model, synchronization_parameters=sync_params)
+        result = TrainingService._train_model(
+            fxt_model,
+            synchronization_parameters=sync_params,
+            dataset_root="/tmp/dataset",
+        )
 
         assert result is None

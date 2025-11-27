@@ -43,5 +43,5 @@ repos:
       - id: hadolint
         files: ^application/\.packaging/docker/ # TODO: this will break when the Dockerfile is moved
         args:
-            - "--ignore=DL3008" # Pin versions in apt-get install
-            - "--ignore=DL4006" # Use bash in scripts
+          - "--ignore=DL3008" # Pin versions in apt-get install
+          - "--ignore=DL4006" # Use bash in scripts

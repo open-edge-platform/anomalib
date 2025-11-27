@@ -31,7 +31,7 @@ class ProgressSyncParams:
     def message(self, stage: str) -> None:
         with self._lock:
             self._message = f"Stage: {stage}"
-        logger.debug("Message updated: %s", self._message)
+        logger.debug(f"Message updated: {self._message}")
 
     @property
     def progress(self) -> int:
@@ -42,7 +42,7 @@ class ProgressSyncParams:
     def progress(self, progress: int) -> None:
         with self._lock:
             self._progress = progress
-        logger.debug("Progress updated: %s", progress)
+        logger.debug(f"Progress updated: {progress}")
 
     def set_cancel_training_event(self) -> None:
         with self._lock:
@@ -65,6 +65,7 @@ class GetiInspectProgressCallback(Callback):
 
     def __init__(self, synchronization_parameters: ProgressSyncParams) -> None:
         """Initialize the callback with synchronization parameters.
+
         Args:
             synchronization_parameters: Parameters for synchronization between the main process and the training process
         """
@@ -79,6 +80,7 @@ class GetiInspectProgressCallback(Callback):
         """Send progress update to frontend via event queue.
         Puts a generic event message into the multiprocessing queue which will
         be picked up by the main process and broadcast via WebSocket.
+
         Args:
             progress: Progress value between 0.0 and 1.0
             message: The current training message
@@ -87,11 +89,11 @@ class GetiInspectProgressCallback(Callback):
         progress_percent = int(progress * 100)
 
         try:
-            logger.debug("Sent progress: %s - %d%%", message, progress_percent)
+            logger.debug(f"Sent progress: {message} - {progress_percent}%")
             self.synchronization_parameters.progress = progress_percent
             self.synchronization_parameters.message = message
         except Exception as e:
-            logger.warning("Failed to send progress to event queue: %s", e)
+            logger.warning(f"Failed to send progress to event queue: {e}")
 
     # Training callbacks
     def on_train_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
@@ -135,7 +137,12 @@ class GetiInspectProgressCallback(Callback):
         self._check_cancel_training(trainer)
 
     def on_validation_batch_start(
-        self, trainer: Trainer, pl_module: LightningModule, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self,
+        trainer: Trainer,
+        pl_module: LightningModule,
+        batch: Any,
+        batch_idx: int,
+        dataloader_idx: int = 0,
     ) -> None:
         """Called when a validation batch starts."""
         del pl_module, batch, batch_idx, dataloader_idx  # unused
@@ -162,7 +169,12 @@ class GetiInspectProgressCallback(Callback):
         self._check_cancel_training(trainer)
 
     def on_test_batch_start(
-        self, trainer: Trainer, pl_module: LightningModule, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self,
+        trainer: Trainer,
+        pl_module: LightningModule,
+        batch: Any,
+        batch_idx: int,
+        dataloader_idx: int = 0,
     ) -> None:
         """Called when a test batch starts."""
         del pl_module, batch, batch_idx, dataloader_idx  # unused
@@ -199,7 +211,12 @@ class GetiInspectProgressCallback(Callback):
         self._check_cancel_training(trainer)
 
     def on_predict_batch_start(
-        self, trainer: Trainer, pl_module: LightningModule, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self,
+        trainer: Trainer,
+        pl_module: LightningModule,
+        batch: Any,
+        batch_idx: int,
+        dataloader_idx: int = 0,
     ) -> None:
         """Called when a prediction batch starts."""
         del pl_module, batch, batch_idx, dataloader_idx  # unused

@@ -1,13 +1,57 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import multiprocessing
+import sys
 from functools import lru_cache
+from typing import TypedDict
 
+import cv2_enumerate_cameras
 import openvino as ov
 from lightning.pytorch.accelerators import AcceleratorRegistry
+from loguru import logger
+
+
+class CameraInfo(TypedDict):
+    index: int
+    name: str
+
+
+def _enumerate_cameras_worker_pool() -> list[CameraInfo]:
+    """Worker function to enumerate cameras (for use with multiprocessing.Pool)."""
+    return [
+        {"index": camera_info.index, "name": camera_info.name}
+        for camera_info in cv2_enumerate_cameras.enumerate_cameras()
+    ]
 
 
 class Devices:
     """Utility class for device-related operations."""
+
+    @staticmethod
+    def get_webcam_devices() -> list[CameraInfo]:
+        """Get list of available webcam devices.
+
+        On macOS, uses a separate process to enumerate cameras due to AVFoundation caching issues.
+        May raise RuntimeError if camera enumeration fails (especially on macOS).
+
+        Returns:
+            list[CameraInfo]: List of dictionaries containing camera index and name.
+        """
+        if sys.platform == "darwin":
+            # On macOS, use a separate process because AVFoundation uses caching that prevents device list update
+            return Devices._get_webcam_devices_worker_process()
+
+        return [{"index": cam.index, "name": cam.name} for cam in cv2_enumerate_cameras.enumerate_cameras()]
+
+    @staticmethod
+    def _get_webcam_devices_worker_process() -> list[CameraInfo]:
+        """Get webcam devices using a separate process."""
+        try:
+            with multiprocessing.get_context("spawn").Pool(processes=1) as pool:
+                return pool.apply(_enumerate_cameras_worker_pool)
+        except Exception as e:
+            logger.error(f"Camera enumeration failed: {e}")
+            raise RuntimeError(f"Camera enumeration failed: {e}") from e
 
     @staticmethod
     @lru_cache

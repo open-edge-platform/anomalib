@@ -2,21 +2,19 @@ import { createContext, ReactNode, use, useState } from 'react';
 
 import { $api } from '@geti-inspect/api';
 import { components } from '@geti-inspect/api/spec';
-import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { toast } from 'packages/ui';
 import { usePipeline } from 'src/hooks/use-pipeline.hook';
 
 import { MediaItem } from './dataset/types';
-import { useSelectedMediaItem } from './selected-media-item-provider.component';
 
 type InferenceResult = components['schemas']['PredictionResponse'] | undefined;
 
 interface InferenceContextProps {
-    onInference: (media: MediaItem, modelId: string) => Promise<void>;
     inferenceResult: InferenceResult;
     isPending: boolean;
-    selectedModelId: string | undefined;
-    onSetSelectedModelId: (model: string | undefined) => void;
     inferenceOpacity: number;
+    resetInference: () => void;
+    onInference: (media: MediaItem, modelId: string) => Promise<void>;
     onInferenceOpacityChange: (opacity: number) => void;
 }
 
@@ -32,7 +30,11 @@ const downloadImageAsFile = async (media: MediaItem) => {
 
 const useInferenceMutation = () => {
     const pipeline = usePipeline();
-    const inferenceMutation = $api.useMutation('post', '/api/projects/{project_id}/models/{model_id}:predict');
+    const inferenceMutation = $api.useMutation('post', '/api/projects/{project_id}/models/{model_id}:predict', {
+        onError: () => {
+            toast({ type: 'error', message: 'Unable to process the image. Please try again.' });
+        },
+    });
 
     const handleInference = async (mediaItem: MediaItem, modelId: string) => {
         const file = await downloadImageAsFile(mediaItem);
@@ -57,9 +59,10 @@ const useInferenceMutation = () => {
     };
 
     return {
-        inferenceResult: inferenceMutation.data,
         onInference: handleInference,
         isPending: inferenceMutation.isPending,
+        resetInference: inferenceMutation.reset,
+        inferenceResult: inferenceMutation.data,
     };
 };
 
@@ -68,39 +71,17 @@ interface InferenceProviderProps {
 }
 
 export const InferenceProvider = ({ children }: InferenceProviderProps) => {
-    const { data: pipeline } = usePipeline();
-    const { projectId } = useProjectIdentifier();
-    const updatePipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
-        meta: {
-            invalidates: [
-                ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id: projectId } } }],
-            ],
-        },
-    });
-
-    const { selectedMediaItem } = useSelectedMediaItem();
     const [inferenceOpacity, setInferenceOpacity] = useState<number>(0.75);
-    const { inferenceResult, onInference, isPending } = useInferenceMutation();
+    const { inferenceResult, isPending, onInference, resetInference } = useInferenceMutation();
 
-    const onSetSelectedModelId = (modelId: string | undefined) => {
-        updatePipeline.mutate({
-            params: { path: { project_id: projectId } },
-            body: { model_id: modelId },
-        });
-
-        if (modelId && selectedMediaItem) {
-            onInference(selectedMediaItem, modelId);
-        }
-    };
     return (
         <InferenceContext
             value={{
                 onInference,
                 isPending,
                 inferenceResult,
-                selectedModelId: pipeline.model?.id,
                 inferenceOpacity,
-                onSetSelectedModelId,
+                resetInference,
                 onInferenceOpacityChange: setInferenceOpacity,
             }}
         >

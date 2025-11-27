@@ -18,8 +18,9 @@ class ProjectDB(Base):
 
     id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid4()))
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.current_timestamp())
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+    dataset_updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
 
     pipeline = relationship("PipelineDB", back_populates="project", uselist=False, lazy="joined")
 
@@ -35,7 +36,16 @@ class MediaDB(Base):
     height: Mapped[int] = mapped_column(nullable=False)
     is_anomalous: Mapped[bool] = mapped_column(Boolean, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
-    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.current_timestamp())
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+
+
+class DatasetSnapshotDB(Base):
+    __tablename__ = "dataset_snapshot"
+
+    id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid4()))
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"))
+    filename: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
 
 
 class ModelDB(Base):
@@ -51,6 +61,9 @@ class ModelDB(Base):
     size: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     train_job_id: Mapped[str] = mapped_column(ForeignKey("jobs.id", ondelete="RESTRICT"))
+    dataset_snapshot_id: Mapped[str] = mapped_column(ForeignKey("dataset_snapshot.id", ondelete="RESTRICT"))
+
+    dataset_snapshot = relationship("DatasetSnapshotDB", uselist=False, lazy="joined")
 
 
 class JobDB(Base):

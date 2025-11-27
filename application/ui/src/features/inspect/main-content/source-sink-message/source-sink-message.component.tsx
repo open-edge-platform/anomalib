@@ -1,18 +1,29 @@
-import { Grid, Heading } from '@geti/ui';
+import { NotFoundIcon } from '@geti-inspect/icons';
+import { Flex, Text } from '@geti/ui';
 
 import styles from './source-sink-message.module.scss';
 
-export const SOURCE_MESSAGE = 'No source configured. Please set it before starting the stream.';
+export const SOURCE_MESSAGE = 'Setup your input source';
 
 export const SourceSinkMessage = () => {
     return (
-        <Grid
+        <Flex
+            gap={'size-125'}
             gridArea={'canvas'}
-            UNSAFE_className={styles.canvasContainer}
-            justifyContent={'center'}
+            direction={'column'}
+            alignItems={'center'}
             alignContent={'center'}
+            justifyContent={'center'}
+            UNSAFE_className={styles.container}
         >
-            <Heading>{SOURCE_MESSAGE}</Heading>
-        </Grid>
+            <NotFoundIcon />
+            <Text UNSAFE_className={styles.description}>
+                Please select the data source that you want your model to infer on via the pipeline configuration panel
+                on the right. Once connected, you can start to collect normal scenes from your data source to fine-tune
+                your model.
+            </Text>
+
+            <Text UNSAFE_className={styles.title}>{SOURCE_MESSAGE}</Text>
+        </Flex>
     );
 };

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 import os
+import pathlib
 from contextlib import redirect_stdout
 from uuid import UUID
 
@@ -14,8 +15,9 @@ from anomalib.models import get_model
 from loguru import logger
 
 from pydantic_models import Job, JobStatus, JobType, Model
-from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
+from repositories.binary_repo import ModelBinaryRepository
 from services import ModelService
+from services.dataset_snapshot_service import DatasetSnapshotService
 from services.job_service import JobService
 from utils.callbacks import GetiInspectProgressCallback, ProgressSyncParams
 from utils.devices import Devices
@@ -23,8 +25,7 @@ from utils.experiment_loggers import TrackioLogger
 
 
 class TrainingService:
-    """
-    Service for managing model training jobs.
+    """Service for managing model training jobs.
 
     Handles the complete training pipeline including job fetching, model training,
     status updates, and error handling. Currently, using asyncio.to_thread for
@@ -36,8 +37,7 @@ class TrainingService:
 
     @classmethod
     async def train_pending_job(cls) -> Model | None:
-        """
-        Process the next pending training job from the queue.
+        """Process the next pending training job from the queue.
 
         Fetches a pending job, executes training in a separate thread to maintain
         event loop responsiveness, and updates job status accordingly.
@@ -64,33 +64,51 @@ class TrainingService:
         project_id = job.project_id
         model_name = job.payload.get("model_name")
         device = job.payload.get("device")
+        snapshot_id_ = job.payload.get("dataset_snapshot_id")
+        snapshot_id = UUID(snapshot_id_) if snapshot_id_ else None
+
         if model_name is None:
             raise ValueError(f"Job {job.id} payload must contain 'model_name'")
 
-        model_service = ModelService()
-        model = Model(
-            project_id=project_id,
-            name=str(model_name),
-            train_job_id=job.id,
-        )
-        synchronization_parameters = ProgressSyncParams()
-        logger.info(f"Training model `{model_name}` for job `{job.id}`")
-
         synchronization_task: asyncio.Task[None] | None = None
+        model: Model | None = None  # Initialize model to None
+
         try:
+            model_service = ModelService()
+            snapshot = await DatasetSnapshotService.get_or_create_snapshot(
+                project_id=project_id,
+                snapshot_id=snapshot_id,
+            )
+            snapshot_id = snapshot.id
+
+            model = Model(
+                project_id=project_id,
+                name=str(model_name),
+                train_job_id=job.id,
+                dataset_snapshot_id=snapshot_id,
+            )
+            synchronization_parameters = ProgressSyncParams()
+            logger.info(f"Training model `{model_name}` for job `{job.id}` using snapshot `{snapshot_id}`")
+
             synchronization_task = asyncio.create_task(
                 cls._sync_progress_with_db(
-                    job_service=job_service, job_id=job.id, synchronization_parameters=synchronization_parameters
+                    job_service=job_service,
+                    job_id=job.id,
+                    synchronization_parameters=synchronization_parameters,
+                ),
+            )
+
+            # Use the context manager from DatasetSnapshotService to prepare data
+            async with DatasetSnapshotService.use_snapshot_as_folder(snapshot_id, project_id) as dataset_root:
+                # Use asyncio.to_thread to keep event loop responsive
+                # TODO: Consider ProcessPoolExecutor for true parallelism with multiple jobs
+                trained_model = await asyncio.to_thread(
+                    cls._train_model,
+                    model=model,
+                    device=device,
+                    synchronization_parameters=synchronization_parameters,
+                    dataset_root=dataset_root,
                 )
-            )
-            # Use asyncio.to_thread to keep event loop responsive
-            # TODO: Consider ProcessPoolExecutor for true parallelism with multiple jobs
-            trained_model = await asyncio.to_thread(
-                cls._train_model,
-                model=model,
-                device=device,
-                synchronization_parameters=synchronization_parameters,
-            )
 
             if synchronization_parameters.cancel_training_event.is_set():
                 await cls._handle_job_cancellation(job_service=job_service, job=job, model=model)
@@ -99,30 +117,53 @@ class TrainingService:
             if trained_model is None:
                 raise ValueError("Training failed - model is None")
 
-            await job_service.update_job_status(
-                job_id=job.id, status=JobStatus.COMPLETED, message="Training completed successfully"
-            )
             return await model_service.create_model(trained_model)
         except Exception as e:
-            logger.error("Failed to train pending training job: %s", e)
+            logger.error(f"Failed to train pending training job: {e!s}")
             await job_service.update_job_status(
-                job_id=job.id, status=JobStatus.FAILED, message=f"Failed with exception: {str(e)}"
+                job_id=job.id,
+                status=JobStatus.FAILED,
+                message=f"Failed with exception: {e!s}",
             )
-            if model.export_path:
+            if model and model.export_path:
                 logger.warning(f"Deleting partially created model with id: {model.id}")
-                await model_service.delete_model(project_id=project_id, model_id=model.id, delete_artifacts=True)
+                await model_service.delete_model(project_id=project_id, model_id=model.id)
             raise e
         finally:
             logger.debug("Syncing progress with db stopped")
             if synchronization_task is not None and not synchronization_task.done():
                 synchronization_task.cancel()
+                try:
+                    await synchronization_task
+                except asyncio.CancelledError:
+                    logger.info("Synchronization task cancelled successfully")
+                except Exception as e:
+                    logger.error(f"Synchronization task failed with: `{e}`")
+
+            # bookkeeping after training completion
+            # update must happen after synchronization task is cancelled to avoid overwriting
+            job_ = await job_service.get_job_by_id(job_id=job.id)
+            if job_ is not None and job_.is_active:
+                logger.success(f"Successfully trained model: `{model_name}`")
+                await job_service.update_job_status(
+                    job_id=job.id,
+                    status=JobStatus.COMPLETED,
+                    message="Training completed successfully",
+                )
+            # Cleanup unused snapshot
+            # If training succeeded, model is created and references snapshot, so it won't delete.
+            # If training failed (model not created), it will delete if no other model uses it.
+            if snapshot_id:
+                await DatasetSnapshotService.delete_snapshot_if_unused(snapshot_id=snapshot_id, project_id=project_id)
 
     @staticmethod
     def _train_model(
-        model: Model, synchronization_parameters: ProgressSyncParams, device: str | None = None
+        model: Model,
+        synchronization_parameters: ProgressSyncParams,
+        dataset_root: str,
+        device: str | None = None,
     ) -> Model | None:
-        """
-        Execute CPU-intensive model training using anomalib.
+        """Execute CPU-intensive model training using anomalib.
 
         This synchronous function runs in a separate thread via asyncio.to_thread
         to prevent blocking the event loop. Sets up the anomalib model, trains it
@@ -131,6 +172,7 @@ class TrainingService:
         Args:
             model: Model object with training configuration
             synchronization_parameters: Parameters for synchronization between the main process and the training process
+            dataset_root: Path to the temporary folder containing the extracted dataset
             device: Device to train on
 
         Returns:
@@ -142,25 +184,25 @@ class TrainingService:
         if device and not Devices.is_device_supported_for_training(device):
             raise ValueError(
                 f"Device '{device}' is not supported for training. "
-                f"Supported devices: {', '.join(Devices.training_devices())}"
+                f"Supported devices: {', '.join(Devices.training_devices())}",
             )
 
         training_device = device or "auto"
         logger.info(f"Training on device: {training_device}")
 
         model_binary_repo = ModelBinaryRepository(project_id=model.project_id, model_id=model.id)
-        image_binary_repo = ImageBinaryRepository(project_id=model.project_id)
-        image_folder_path = image_binary_repo.project_folder_path
         model.export_path = model_binary_repo.model_folder_path
         name = f"{model.project_id}-{model.name}"
 
-        # Configure datamodule for anomalib training
+        normal_dir = os.path.join(dataset_root, "normal")
+
+        logger.info(f"Training from temp folder: {dataset_root}")
+        # TODO: implement Parquet datamodule in anomalib to avoid folder extraction step
         datamodule = Folder(
             name=name,
-            normal_dir=image_folder_path,
+            normal_dir=normal_dir,
             val_split_mode=ValSplitMode.SYNTHETIC,
         )
-        logger.info(f"Training from image folder: {image_folder_path} to model folder: {model.export_path}")
 
         # Initialize anomalib model and engine
         anomalib_model = get_model(model=model.name)
@@ -223,9 +265,9 @@ class TrainingService:
             return None
 
         try:
-            if os.path.isfile(path):
-                return os.path.getsize(path)
-            if not os.path.isdir(path):
+            if pathlib.Path(path).is_file():
+                return pathlib.Path(path).stat().st_size
+            if not pathlib.Path(path).is_dir():
                 logger.warning(f"Cannot compute export size because `{path}` is not a directory")
                 return None
         except OSError as error:
@@ -236,10 +278,10 @@ class TrainingService:
             for root, _, files in os.walk(path, followlinks=False):
                 for file_name in files:
                     file_path = os.path.join(root, file_name)
-                    if os.path.islink(file_path):
+                    if pathlib.Path(file_path).is_symlink():
                         continue
                     try:
-                        yield os.path.getsize(file_path)
+                        yield pathlib.Path(file_path).stat().st_size
                     except OSError:
                         continue
 
@@ -253,17 +295,31 @@ class TrainingService:
         synchronization_parameters: ProgressSyncParams,
     ) -> None:
         try:
+            last_progress = 0
+            last_message = ""
             while True:
                 progress: int = synchronization_parameters.progress
                 message = synchronization_parameters.message
-                if not await job_service.is_job_still_running(job_id=job_id):
-                    logger.debug("Job cancelled, stopping progress sync")
-                    synchronization_parameters.set_cancel_training_event()
+                job = await job_service.get_job_by_id(job_id=job_id)
+                if job is None:
+                    logger.error(f"Job with id {job_id} not found, stopping progress sync")
                     break
-                logger.debug(f"Syncing progress with db: {progress}% - {message}")
-                await job_service.update_job_status(
-                    job_id=job_id, status=JobStatus.RUNNING, progress=progress, message=message
-                )
+                if job.status == JobStatus.CANCELED:
+                    logger.info(f"Job with id {job_id} marked as cancelled, stopping training")
+                    synchronization_parameters.cancel_training_event.set()
+                    break
+                if job.status != JobStatus.RUNNING:
+                    logger.info(f"Job status changed to {job.status}, stopping progress sync")
+                    break
+
+                if progress != last_progress or message != last_message:
+                    logger.trace(f"Syncing progress with db: {progress}% - {message}")
+                    await job_service.update_job_status(
+                        job_id=job_id,
+                        status=JobStatus.RUNNING,
+                        progress=progress,
+                        message=message,
+                    )
                 await asyncio.sleep(0.5)
         except Exception as e:
             logger.exception("Failed to sync progress with db: %s", e)
@@ -272,8 +328,7 @@ class TrainingService:
 
     @staticmethod
     async def abort_orphan_jobs() -> None:
-        """
-        Abort all running orphan training jobs (that do not belong to any worker).
+        """Abort all running orphan training jobs (that do not belong to any worker).
 
         This method can be called during application shutdown/setup to ensure that
         any orphan in-progress training jobs are marked as failed.

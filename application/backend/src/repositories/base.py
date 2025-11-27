@@ -75,6 +75,7 @@ class BaseRepository[ModelType, SchemaType](metaclass=abc.ABCMeta):
         return None
 
     async def get_all(self, extra_filters: dict | None = None, expressions: list[Any] | None = None) -> list[ModelType]:
+        # TODO: use generator to avoid loading all records into memory at once
         query = self._get_filter_query(extra_filters=extra_filters, expressions=expressions)
         results = await self.db.execute(query)
         scalars = results.scalars().all()

@@ -22,8 +22,7 @@ export const StreamContainer = () => {
     const activePipeline = useActivatePipeline({ onSuccess: start });
     const [size, setSize] = useState({ height: 608, width: 892 });
 
-    const hasNoSink = isEmpty(pipeline?.sink);
-    const hasNoSource = isEmpty(pipeline?.source);
+    const hasSource = !isEmpty(pipeline?.source);
     const isPipelineActive = isStatusActive(pipeline.status);
 
     useEffect(() => {
@@ -31,10 +30,10 @@ export const StreamContainer = () => {
             toast({ type: 'error', message: 'Failed to connect to the stream' });
         }
 
-        if (isPipelineActive && status === 'idle') {
+        if (hasSource && status === 'idle') {
             start();
         }
-    }, [isPipelineActive, status, start]);
+    }, [hasSource, status, start]);
 
     const handleStart = async () => {
         if (isPipelineActive) {
@@ -58,7 +57,7 @@ export const StreamContainer = () => {
                         <Button
                             onPress={handleStart}
                             aria-label={'Start stream'}
-                            isDisabled={hasNoSink || hasNoSource}
+                            isDisabled={!hasSource}
                             UNSAFE_className={classes.playButton}
                         >
                             <Play width='128px' height='128px' />

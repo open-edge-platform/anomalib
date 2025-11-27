@@ -9,26 +9,19 @@ import { server } from 'src/msw-node-setup';
 
 import { getMockedPipeline } from '../../../../../mocks/mock-pipeline';
 import { useWebRTCConnection, WebRTCConnectionState } from '../../../../components/stream/web-rtc-connection-provider';
-import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
 import { PipelineSwitch } from './pipeline-switch.component';
 
 vi.mock('../../../../components/stream/web-rtc-connection-provider', () => ({
     useWebRTCConnection: vi.fn(),
 }));
 
-vi.mock('../../selected-media-item-provider.component', () => ({
-    useSelectedMediaItem: vi.fn(),
-}));
-
 describe('PipelineSwitch', () => {
     const renderApp = ({
         webRtcConfig = {},
         pipelineConfig = {},
-        onSetSelectedMediaItem = vi.fn(),
     }: {
         webRtcConfig?: Partial<WebRTCConnectionState>;
         pipelineConfig?: Partial<SchemaPipeline>;
-        onSetSelectedMediaItem?: () => void;
     } = {}) => {
         vi.mocked(useWebRTCConnection).mockReturnValue({
             status: 'idle',
@@ -36,11 +29,6 @@ describe('PipelineSwitch', () => {
             start: vi.fn(),
             webRTCConnectionRef: { current: null },
             ...webRtcConfig,
-        });
-
-        vi.mocked(useSelectedMediaItem).mockReturnValue({
-            selectedMediaItem: undefined,
-            onSetSelectedMediaItem,
         });
 
         server.use(
@@ -144,7 +132,6 @@ describe('PipelineSwitch', () => {
         it('calls runPipeline when switch is turned on', async () => {
             const mockStart = vi.fn();
             const runPipelineSpy = vi.fn();
-            const mockOnSetSelectedMediaItem = vi.fn();
 
             server.use(
                 http.post('/api/projects/{project_id}/pipeline:run', () => {
@@ -156,7 +143,6 @@ describe('PipelineSwitch', () => {
             renderApp({
                 pipelineConfig: { status: 'active' },
                 webRtcConfig: { start: mockStart },
-                onSetSelectedMediaItem: mockOnSetSelectedMediaItem,
             });
 
             expect(await screen.findByRole('switch')).not.toBeChecked();
@@ -166,7 +152,6 @@ describe('PipelineSwitch', () => {
             await waitFor(() => {
                 expect(runPipelineSpy).toHaveBeenCalled();
                 expect(mockStart).toHaveBeenCalled();
-                expect(mockOnSetSelectedMediaItem).toHaveBeenCalledWith(undefined);
             });
         });
 
@@ -206,21 +191,6 @@ describe('PipelineSwitch', () => {
 
             await waitFor(() => {
                 expect(mockStart).toHaveBeenCalled();
-            });
-        });
-
-        it('clears selected media item after successful runPipeline', async () => {
-            const mockOnSetSelectedMediaItem = vi.fn();
-            server.use(
-                http.post('/api/projects/{project_id}/pipeline:run', () => HttpResponse.json({}, { status: 204 }))
-            );
-
-            renderApp({ pipelineConfig: { status: 'active' }, onSetSelectedMediaItem: mockOnSetSelectedMediaItem });
-
-            await userEvent.click(await screen.findByRole('switch'));
-
-            await waitFor(() => {
-                expect(mockOnSetSelectedMediaItem).toHaveBeenCalledWith(undefined);
             });
         });
     });

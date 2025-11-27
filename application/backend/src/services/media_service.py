@@ -1,17 +1,16 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
-import os
 from io import BytesIO
 from uuid import UUID, uuid4
 
-from fastapi import UploadFile
+import numpy as np
 from loguru import logger
 from PIL import Image
 
 from db import get_async_db_session_ctx
 from pydantic_models import Media, MediaList
-from repositories import MediaRepository
+from repositories import MediaRepository, ProjectRepository
 from repositories.binary_repo import ImageBinaryRepository
 from services import ResourceNotFoundError
 from services.exceptions import ResourceType
@@ -56,14 +55,33 @@ class MediaService:
         return bin_repo.get_full_path(filename=thumbnail_filename)
 
     @classmethod
-    async def upload_image(cls, project_id: UUID, file: UploadFile, image_bytes: bytes, is_anomalous: bool) -> Media:
+    async def upload_image(
+        cls,
+        project_id: UUID,
+        image: np.ndarray | bytes,
+        is_anomalous: bool,
+        extension: str | None = None,
+        size: int | None = None,
+    ) -> Media:
         # Generate unique filename and media ID
         media_id = uuid4()
 
-        if file.filename is None or file.size is None:
-            raise ValueError("File must have a filename and size")
+        if not extension or not extension.lstrip("."):
+            raise ValueError("File extension must be provided")
 
-        extension = list(os.path.splitext(file.filename)).pop().lower()
+        if isinstance(image, np.ndarray):
+
+            def _encode_image() -> bytes:
+                with BytesIO() as output:
+                    # Determine format from extension, default to PNG if unknown or generic
+                    fmt = extension.lstrip(".").upper()
+                    Image.fromarray(image).save(output, format=fmt)
+                    return output.getvalue()
+
+            image_bytes = await asyncio.to_thread(_encode_image)
+        else:
+            image_bytes = image
+
         filename = f"{media_id}{extension}"
         bin_repo = ImageBinaryRepository(project_id=project_id)
         saved_media: Media | None = None
@@ -75,38 +93,40 @@ class MediaService:
 
         width, height = await asyncio.to_thread(_get_image_size)
 
-        async with get_async_db_session_ctx() as session:
-            media_repo = MediaRepository(session, project_id=project_id)
-            try:
-                # Save original file to filesystem
-                saved_file_path = await bin_repo.save_file(
-                    filename=filename,
-                    content=image_bytes,
-                )
-                logger.info(f"Saved media file: {saved_file_path}")
+        try:
+            # Save original file to filesystem
+            saved_file_path = await bin_repo.save_file(
+                filename=filename,
+                content=image_bytes,
+            )
+            logger.info(f"Saved media file: {saved_file_path}")
 
-                # Create media record in database
-                media = Media(
-                    id=media_id,
-                    project_id=project_id,
-                    filename=filename,
-                    size=file.size,
-                    is_anomalous=is_anomalous,
-                    width=width,
-                    height=height,
-                )
+            # Create media record in database
+            media = Media(
+                id=media_id,
+                project_id=project_id,
+                filename=filename,
+                size=size or len(image_bytes),
+                is_anomalous=is_anomalous,
+                width=width,
+                height=height,
+            )
+            async with get_async_db_session_ctx() as session:
+                media_repo = MediaRepository(session, project_id=project_id)
                 saved_media = await media_repo.save(media)
-            except Exception as e:
-                logger.error(f"Rolling back media upload due to error: {e}")
-                # Attempt to delete the files if they were saved
-                try:
-                    await cls._delete_media_file(project_id=project_id, filename=filename)
-                except Exception as delete_error:
-                    logger.error(f"Failed to delete media file during rollback: {delete_error}")
-                if saved_media is not None:
-                    await media_repo.delete_by_id(saved_media.id)
-                raise e
-            return saved_media
+                await ProjectRepository(session).update_dataset_timestamp(project_id=project_id)
+        except Exception as e:
+            logger.error(f"Rolling back media upload due to error: {e}")
+            # Attempt to delete the files if they were saved
+            try:
+                await cls._delete_media_file(project_id=project_id, filename=filename)
+            except Exception as delete_error:
+                logger.error(f"Failed to delete media file during rollback: {delete_error}")
+            if saved_media is not None:
+                async with get_async_db_session_ctx() as session:
+                    await MediaRepository(session, project_id=project_id).delete_by_id(saved_media.id)
+            raise e
+        return saved_media
 
     @classmethod
     async def delete_media(cls, media_id: UUID, project_id: UUID) -> None:
@@ -116,9 +136,10 @@ class MediaService:
             if media is None:
                 raise ResourceNotFoundError(resource_type=ResourceType.MEDIA, resource_id=str(media_id))
             await media_repo.delete_by_id(media_id)
-            thumbnail_filename = cls._get_thumbnail_filename(media_id)
-            await cls._delete_media_file(project_id=project_id, filename=media.filename)
-            await cls._delete_media_file(project_id=project_id, filename=thumbnail_filename)
+        thumbnail_filename = cls._get_thumbnail_filename(media_id)
+        await cls._delete_media_file(project_id=project_id, filename=media.filename)
+        await cls._delete_media_file(project_id=project_id, filename=thumbnail_filename)
+        await ProjectRepository(session).update_dataset_timestamp(project_id=project_id)
 
     @staticmethod
     async def _delete_media_file(project_id: UUID, filename: str) -> None:
@@ -137,7 +158,7 @@ class MediaService:
         cls,
         project_id: UUID,
         media_id: UUID,
-        image_bytes: bytes,
+        image: np.ndarray | bytes,
         height_px: int = THUMBNAIL_SIZE,
         width_px: int = THUMBNAIL_SIZE,
     ) -> None:
@@ -150,7 +171,7 @@ class MediaService:
         Args:
             project_id: Identifier of the owning project.
             media_id: Identifier of the media item the thumbnail belongs to.
-            image_bytes: Original image bytes used to create the thumbnail.
+            image: Original image (bytes or numpy array) used to create the thumbnail.
             height_px: Maximum thumbnail height in pixels. Defaults to
                 ``THUMBNAIL_SIZE``.
             width_px: Maximum thumbnail width in pixels. Defaults to
@@ -164,7 +185,12 @@ class MediaService:
         """
 
         def _create() -> bytes:
-            with Image.open(BytesIO(image_bytes)) as img:
+            if isinstance(image, np.ndarray):
+                img = Image.fromarray(image)
+            else:
+                img = Image.open(BytesIO(image))
+
+            with img:
                 # Preserve aspect ratio while fitting within the box
                 img.thumbnail((width_px, height_px))
                 with BytesIO() as buf:

@@ -22,6 +22,7 @@ def fxt_model(fxt_project):
         project_id=fxt_project.id,
         export_path="/path/to/model",
         train_job_id=uuid4(),
+        dataset_snapshot_id=uuid4(),
         size=1024,
     )
 

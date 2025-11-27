@@ -1,66 +1,49 @@
-import { Image } from '@geti-inspect/icons';
-import { Flex } from '@geti/ui';
+import { useState } from 'react';
+
+import { Skeleton } from '@geti/ui';
 import { clsx } from 'clsx';
 
-import { useInference } from '../../inference-provider.component';
-import { useSelectedMediaItem } from '../../selected-media-item-provider.component';
+import { DeleteMediaItem } from '../delete-dataset-item/delete-dataset-item.component';
 import { type MediaItem } from '../types';
 
 import styles from './dataset-item.module.scss';
 
-const DatasetItemPlaceholder = () => {
-    return (
-        <Flex
-            justifyContent={'center'}
-            alignItems={'center'}
-            UNSAFE_className={clsx(styles.datasetItemPlaceholder, styles.datasetItem)}
-        >
-            <Flex>
-                <Image />
-            </Flex>
-        </Flex>
-    );
-};
-
 interface DatasetItemProps {
+    isSelected: boolean;
     mediaItem: MediaItem;
+    onClick: () => void;
+    onDeleted: () => void;
 }
 
-const DatasetItem = ({ mediaItem }: DatasetItemProps) => {
-    const { selectedMediaItem, onSetSelectedMediaItem } = useSelectedMediaItem();
-    const { onInference, selectedModelId } = useInference();
+const RETRY_LIMIT = 3;
 
-    const isSelected = selectedMediaItem?.id === mediaItem.id;
+export const DatasetItem = ({ isSelected, mediaItem, onClick, onDeleted }: DatasetItemProps) => {
+    const [retry, setRetry] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const mediaUrl = `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail`;
+    const mediaUrl = `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail?retry=${retry}`;
 
-    const handleClick = async () => {
-        const selection = mediaItem.id === selectedMediaItem?.id ? undefined : mediaItem;
+    const handleError = () => {
+        if (retry < RETRY_LIMIT) {
+            setRetry((current) => current + 1);
+            setIsLoading(true);
+        } else {
+            setIsLoading(false);
+        }
+    };
 
-        onSetSelectedMediaItem(selection);
-        selectedModelId !== undefined && (await onInference(mediaItem, selectedModelId));
+    const handleLoad = () => {
+        setIsLoading(false);
     };
 
     return (
-        <div
-            className={clsx(styles.datasetItem, {
-                [styles.datasetItemSelected]: isSelected,
-            })}
-            onClick={handleClick}
-        >
-            <img src={mediaUrl} alt={mediaItem.filename} />
+        <div className={clsx(styles.datasetItem, { [styles.datasetItemSelected]: isSelected })} onClick={onClick}>
+            {isLoading && <Skeleton width={'100%'} height={'100%'} UNSAFE_className={styles.loader} />}
+
+            <img src={mediaUrl} alt={mediaItem.filename} onError={handleError} onLoad={handleLoad} />
+            <div className={clsx(styles.floatingContainer, styles.rightTopElement)}>
+                <DeleteMediaItem itemsIds={[String(mediaItem.id)]} onDeleted={onDeleted} />
+            </div>
         </div>
     );
-};
-
-interface DatasetItemContainerProps {
-    mediaItem: MediaItem | undefined;
-}
-
-export const DatasetItemContainer = ({ mediaItem }: DatasetItemContainerProps) => {
-    if (mediaItem === undefined) {
-        return <DatasetItemPlaceholder />;
-    }
-
-    return <DatasetItem mediaItem={mediaItem} />;
 };

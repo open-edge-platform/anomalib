@@ -37,6 +37,10 @@ class Job(BaseIDModel):
     def serialize_project_id(self, project_id: UUID, _info: Any) -> str:
         return str(project_id)
 
+    @property
+    def is_active(self) -> bool:
+        return self.status in {JobStatus.PENDING, JobStatus.RUNNING}
+
 
 class JobList(BaseModel):
     jobs: list[Job]
@@ -58,3 +62,4 @@ class TrainJobPayload(BaseModel):
     project_id: UUID = Field(exclude=True)
     model_name: str
     device: str | None = Field(default=None)
+    dataset_snapshot_id: str | None = Field(default=None)  # used because UUID is not JSON serializable

@@ -10,7 +10,7 @@ from anomalib.deploy import ExportType
 
 from db import MigrationManager
 from db.engine import get_sync_db_session
-from db.schema import JobDB, MediaDB, ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
+from db.schema import DatasetSnapshotDB, JobDB, MediaDB, ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
 from settings import get_settings
 
 settings = get_settings()
@@ -106,15 +106,17 @@ def clean_db() -> None:
         db.query(PipelineDB).delete()
         # 2. Models (references jobs and projects)
         db.query(ModelDB).delete()
-        # 3. Media (references projects)
+        # 3. Dataset Snapshots (references projects, referenced by models)
+        db.query(DatasetSnapshotDB).delete()
+        # 4. Media (references projects)
         db.query(MediaDB).delete()
-        # 4. Jobs (references projects)
+        # 5. Jobs (references projects)
         db.query(JobDB).delete()
-        # 5. Sources (references projects)
+        # 6. Sources (references projects)
         db.query(SourceDB).delete()
-        # 6. Sinks (references projects)
+        # 7. Sinks (references projects)
         db.query(SinkDB).delete()
-        # 7. Projects (parent table, can be deleted last)
+        # 8. Projects (parent table, can be deleted last)
         db.query(ProjectDB).delete()
         db.commit()
     click.echo("✓ Database cleaned successfully!")

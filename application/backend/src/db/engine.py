@@ -46,6 +46,8 @@ def set_sqlite_pragma(dbapi_connection: Connection, _: Any) -> None:
     # https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html#using-events-with-the-asyncio-extension
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.execute("PRAGMA journal_mode=WAL")  # avoids database being locked
+    cursor.execute("PRAGMA synchronous=NORMAL")
     cursor.close()
 
 

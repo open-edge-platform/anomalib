@@ -28,6 +28,7 @@ def upgrade() -> None:
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.Column("dataset_updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
 
@@ -98,6 +99,16 @@ def upgrade() -> None:
 
     # Create models table (depends on jobs)
     op.create_table(
+        "dataset_snapshot",
+        sa.Column("id", sa.Text(), nullable=False),
+        sa.Column("project_id", sa.String(), nullable=False),
+        sa.Column("filename", sa.Text(), nullable=False),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+    )
+
+    # Create models table (depends on jobs and dataset snapshot)
+    op.create_table(
         "models",
         sa.Column("id", sa.Text(), nullable=False),
         sa.Column("project_id", sa.String(), nullable=False),
@@ -109,8 +120,10 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("train_job_id", sa.String(), nullable=False),
         sa.Column("size", sa.BigInteger(), nullable=True),
+        sa.Column("dataset_snapshot_id", sa.String(), nullable=False),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"]),
         sa.ForeignKeyConstraint(["train_job_id"], ["jobs.id"], ondelete="RESTRICT"),
+        sa.ForeignKeyConstraint(["dataset_snapshot_id"], ["dataset_snapshot.id"], ondelete="RESTRICT"),
         sa.PrimaryKeyConstraint("id"),
     )
 
@@ -140,6 +153,7 @@ def downgrade() -> None:
     # Drop tables in reverse order of dependencies
     op.drop_table("pipelines")
     op.drop_table("models")
+    op.drop_table("dataset_snapshot")
     op.drop_table("media")
     op.drop_table("sinks")
     op.drop_table("sources")
