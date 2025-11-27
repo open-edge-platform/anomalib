@@ -6,6 +6,7 @@ import { ActionButton, AlertDialog, DialogContainer, Item, Menu, MenuTrigger, to
 import { MoreMenu } from '@geti/ui/icons';
 
 import { JobLogsDialog } from '../jobs/show-job-logs.component';
+import { ExportModelDialog } from './export-model-dialog.component';
 import type { ModelData } from './model-types';
 
 interface ModelActionsMenuProps {
@@ -18,6 +19,7 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
     const { projectId } = useProjectIdentifier();
     const [isLogsDialogOpen, setIsLogsDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
 
     const cancelJobMutation = $api.useMutation('post', '/api/jobs/{job_id}:cancel');
     const deleteModelMutation = $api.useMutation('delete', '/api/projects/{project_id}/models/{model_id}', {
@@ -32,7 +34,8 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
 
     const hasJobActions = Boolean(model.job?.id);
     const canDeleteModel = model.status === 'Completed' && model.id !== selectedModelId;
-    const shouldShowMenu = hasJobActions || canDeleteModel;
+    const canExportModel = model.status === 'Completed';
+    const shouldShowMenu = hasJobActions || canDeleteModel || canExportModel;
 
     if (!shouldShowMenu) {
         return null;
@@ -110,6 +113,9 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
                         if (actionKey === 'cancel' && model.job?.id) {
                             void handleCancelJob();
                         }
+                        if (actionKey === 'export' && canExportModel) {
+                            setIsExportDialogOpen(true);
+                        }
                         if (actionKey === 'delete' && canDeleteModel) {
                             setIsDeleteDialogOpen(true);
                         }
@@ -119,6 +125,7 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
                     {model.job?.status === 'pending' || model.job?.status === 'running' ? (
                         <Item key='cancel'>Cancel training</Item>
                     ) : null}
+                    {canExportModel ? <Item key='export'>Export model</Item> : null}
                     {canDeleteModel ? <Item key='delete'>Delete model</Item> : null}
                 </Menu>
             </MenuTrigger>
@@ -144,6 +151,12 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
                         Deleting a model removes any exported artifacts and cannot be undone.
                     </AlertDialog>
                 )}
+            </DialogContainer>
+
+            <DialogContainer onDismiss={() => setIsExportDialogOpen(false)}>
+                {isExportDialogOpen && canExportModel ? (
+                    <ExportModelDialog model={model} close={() => setIsExportDialogOpen(false)} />
+                ) : null}
             </DialogContainer>
         </>
     );
