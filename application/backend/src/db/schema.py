@@ -20,6 +20,7 @@ class ProjectDB(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+    dataset_updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
 
     pipeline = relationship("PipelineDB", back_populates="project", uselist=False, lazy="joined")
 

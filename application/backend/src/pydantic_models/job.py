@@ -37,6 +37,10 @@ class Job(BaseIDModel):
     def serialize_project_id(self, project_id: UUID, _info: Any) -> str:
         return str(project_id)
 
+    @property
+    def is_active(self) -> bool:
+        return self.status in {JobStatus.PENDING, JobStatus.RUNNING}
+
 
 class JobList(BaseModel):
     jobs: list[Job]

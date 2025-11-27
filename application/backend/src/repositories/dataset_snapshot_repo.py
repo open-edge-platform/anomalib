@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from uuid import UUID
 
+import sqlalchemy as sa
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from db.schema import DatasetSnapshotDB
@@ -24,3 +25,14 @@ class DatasetSnapshotRepository(ProjectBaseRepository[DatasetSnapshot, DatasetSn
     @property
     def from_schema(self) -> Callable[[DatasetSnapshotDB], DatasetSnapshot]:
         return DatasetSnapshotMapper.from_schema
+
+    async def get_latest_snapshot(self) -> DatasetSnapshot | None:
+        """Get the latest dataset snapshot for the project."""
+        result = await self.db.execute(
+            sa.select(self.schema)
+            .where(self.schema.project_id == self.project_id)
+            .order_by(self.schema.created_at.desc())
+            .limit(1)
+        )
+        snapshot_db = result.scalar_one_or_none()
+        return self.from_schema(snapshot_db) if snapshot_db else None

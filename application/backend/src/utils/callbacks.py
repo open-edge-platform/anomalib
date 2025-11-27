@@ -31,7 +31,7 @@ class ProgressSyncParams:
     def message(self, stage: str) -> None:
         with self._lock:
             self._message = f"Stage: {stage}"
-        logger.debug("Message updated: %s", self._message)
+        logger.debug(f"Message updated: {self._message}")
 
     @property
     def progress(self) -> int:
@@ -42,7 +42,7 @@ class ProgressSyncParams:
     def progress(self, progress: int) -> None:
         with self._lock:
             self._progress = progress
-        logger.debug("Progress updated: %s", progress)
+        logger.debug(f"Progress updated: {progress}")
 
     def set_cancel_training_event(self) -> None:
         with self._lock:
@@ -87,11 +87,11 @@ class GetiInspectProgressCallback(Callback):
         progress_percent = int(progress * 100)
 
         try:
-            logger.debug("Sent progress: %s - %d%%", message, progress_percent)
+            logger.debug(f"Sent progress: {message} - {progress_percent}%")
             self.synchronization_parameters.progress = progress_percent
             self.synchronization_parameters.message = message
         except Exception as e:
-            logger.warning("Failed to send progress to event queue: %s", e)
+            logger.warning(f"Failed to send progress to event queue: {e}")
 
     # Training callbacks
     def on_train_start(self, trainer: Trainer, pl_module: LightningModule) -> None:

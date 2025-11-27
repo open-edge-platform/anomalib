@@ -18,7 +18,7 @@ from sqlalchemy import func, select
 from db import get_async_db_session_ctx
 from db.schema import ModelDB
 from pydantic_models import DatasetSnapshot
-from repositories import DatasetSnapshotRepository, MediaRepository
+from repositories import DatasetSnapshotRepository, MediaRepository, ProjectRepository
 from repositories.binary_repo import DatasetSnapshotBinaryRepository, ImageBinaryRepository
 
 
@@ -106,6 +106,30 @@ class DatasetSnapshotService:
             except FileNotFoundError:
                 logger.info(f"No incomplete snapshot file {filename} to delete")
             raise e
+
+    @classmethod
+    async def get_or_create_snapshot(cls, project_id: UUID, snapshot_id: UUID | None) -> DatasetSnapshot:
+        """Get existing snapshot or create a new one:
+        - If snapshot_id is provided, fetch and return it.
+        - If snapshot_id is None, create a new snapshot if necessary.
+        - If dataset has not being updated since last snapshot, return existing snapshot.
+        """
+        async with get_async_db_session_ctx() as session:
+            snapshot_repo = DatasetSnapshotRepository(session, project_id=project_id)
+            if snapshot_id is not None:
+                snapshot = await snapshot_repo.get_by_id(snapshot_id)
+                if snapshot is None:
+                    raise ValueError(f"Snapshot {snapshot_id} not found in project {project_id}")
+                return snapshot
+
+            dataset_updated_at = await ProjectRepository(session).get_dataset_timestamp(project_id=project_id)
+            latest_snapshot = await snapshot_repo.get_latest_snapshot()
+            if latest_snapshot and latest_snapshot.created_at >= dataset_updated_at:
+                logger.info(f"Using existing up-to-date snapshot `{latest_snapshot.id}` in project `{project_id}`")
+                return latest_snapshot
+        # Create new snapshot only if no up-to-date snapshot exists
+        logger.info(f"Creating new snapshot for project `{project_id}`")
+        return await cls.create_snapshot(project_id=project_id)
 
     @classmethod
     async def delete_snapshot_if_unused(cls, snapshot_id: UUID, project_id: UUID) -> None:

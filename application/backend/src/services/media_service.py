@@ -10,7 +10,7 @@ from PIL import Image
 
 from db import get_async_db_session_ctx
 from pydantic_models import Media, MediaList
-from repositories import MediaRepository
+from repositories import MediaRepository, ProjectRepository
 from repositories.binary_repo import ImageBinaryRepository
 from services import ResourceNotFoundError
 from services.exceptions import ResourceType
@@ -93,38 +93,40 @@ class MediaService:
 
         width, height = await asyncio.to_thread(_get_image_size)
 
-        async with get_async_db_session_ctx() as session:
-            media_repo = MediaRepository(session, project_id=project_id)
-            try:
-                # Save original file to filesystem
-                saved_file_path = await bin_repo.save_file(
-                    filename=filename,
-                    content=image_bytes,
-                )
-                logger.info(f"Saved media file: {saved_file_path}")
+        try:
+            # Save original file to filesystem
+            saved_file_path = await bin_repo.save_file(
+                filename=filename,
+                content=image_bytes,
+            )
+            logger.info(f"Saved media file: {saved_file_path}")
 
-                # Create media record in database
-                media = Media(
-                    id=media_id,
-                    project_id=project_id,
-                    filename=filename,
-                    size=size or len(image_bytes),
-                    is_anomalous=is_anomalous,
-                    width=width,
-                    height=height,
-                )
+            # Create media record in database
+            media = Media(
+                id=media_id,
+                project_id=project_id,
+                filename=filename,
+                size=size or len(image_bytes),
+                is_anomalous=is_anomalous,
+                width=width,
+                height=height,
+            )
+            async with get_async_db_session_ctx() as session:
+                media_repo = MediaRepository(session, project_id=project_id)
                 saved_media = await media_repo.save(media)
-            except Exception as e:
-                logger.error(f"Rolling back media upload due to error: {e}")
-                # Attempt to delete the files if they were saved
-                try:
-                    await cls._delete_media_file(project_id=project_id, filename=filename)
-                except Exception as delete_error:
-                    logger.error(f"Failed to delete media file during rollback: {delete_error}")
-                if saved_media is not None:
-                    await media_repo.delete_by_id(saved_media.id)
-                raise e
-            return saved_media
+                await ProjectRepository(session).update_dataset_timestamp(project_id=project_id)
+        except Exception as e:
+            logger.error(f"Rolling back media upload due to error: {e}")
+            # Attempt to delete the files if they were saved
+            try:
+                await cls._delete_media_file(project_id=project_id, filename=filename)
+            except Exception as delete_error:
+                logger.error(f"Failed to delete media file during rollback: {delete_error}")
+            if saved_media is not None:
+                async with get_async_db_session_ctx() as session:
+                    await MediaRepository(session, project_id=project_id).delete_by_id(saved_media.id)
+            raise e
+        return saved_media
 
     @classmethod
     async def delete_media(cls, media_id: UUID, project_id: UUID) -> None:
@@ -134,9 +136,10 @@ class MediaService:
             if media is None:
                 raise ResourceNotFoundError(resource_type=ResourceType.MEDIA, resource_id=str(media_id))
             await media_repo.delete_by_id(media_id)
-            thumbnail_filename = cls._get_thumbnail_filename(media_id)
-            await cls._delete_media_file(project_id=project_id, filename=media.filename)
-            await cls._delete_media_file(project_id=project_id, filename=thumbnail_filename)
+        thumbnail_filename = cls._get_thumbnail_filename(media_id)
+        await cls._delete_media_file(project_id=project_id, filename=media.filename)
+        await cls._delete_media_file(project_id=project_id, filename=thumbnail_filename)
+        await ProjectRepository(session).update_dataset_timestamp(project_id=project_id)
 
     @staticmethod
     async def _delete_media_file(project_id: UUID, filename: str) -> None:

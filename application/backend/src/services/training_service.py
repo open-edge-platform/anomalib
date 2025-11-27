@@ -65,33 +65,29 @@ class TrainingService:
         project_id = job.project_id
         model_name = job.payload.get("model_name")
         device = job.payload.get("device")
-        snapshot_id = job.payload.get("dataset_snapshot_id")
+        snapshot_id_ = job.payload.get("dataset_snapshot_id")
+        snapshot_id = UUID(snapshot_id_) if snapshot_id_ else None
 
         if model_name is None:
             raise ValueError(f"Job {job.id} payload must contain 'model_name'")
 
-        model_service = ModelService()
-
-        # 1. Snapshot Resolution
-        if snapshot_id:
-            logger.info(f"Using existing snapshot {snapshot_id} for training")
-            snapshot_id = UUID(str(snapshot_id))
-        else:
-            logger.info("No snapshot provided, creating new snapshot")
-            snapshot = await DatasetSnapshotService.create_snapshot(project_id=project_id)
-            snapshot_id = snapshot.id
-
-        model = Model(
-            project_id=project_id,
-            name=str(model_name),
-            train_job_id=job.id,
-            dataset_snapshot_id=snapshot_id,
-        )
-        synchronization_parameters = ProgressSyncParams()
-        logger.info(f"Training model `{model_name}` for job `{job.id}` using snapshot `{snapshot_id}`")
-
         synchronization_task: asyncio.Task[None] | None = None
         try:
+            model_service = ModelService()
+            snapshot = await DatasetSnapshotService.get_or_create_snapshot(
+                project_id=project_id, snapshot_id=snapshot_id
+            )
+            snapshot_id = snapshot.id
+
+            model = Model(
+                project_id=project_id,
+                name=str(model_name),
+                train_job_id=job.id,
+                dataset_snapshot_id=snapshot_id,
+            )
+            synchronization_parameters = ProgressSyncParams()
+            logger.info(f"Training model `{model_name}` for job `{job.id}` using snapshot `{snapshot_id}`")
+
             synchronization_task = asyncio.create_task(
                 cls._sync_progress_with_db(
                     job_service=job_service, job_id=job.id, synchronization_parameters=synchronization_parameters
@@ -117,12 +113,9 @@ class TrainingService:
             if trained_model is None:
                 raise ValueError("Training failed - model is None")
 
-            await job_service.update_job_status(
-                job_id=job.id, status=JobStatus.COMPLETED, message="Training completed successfully"
-            )
             return await model_service.create_model(trained_model)
         except Exception as e:
-            logger.error("Failed to train pending training job: %s", e)
+            logger.error(f"Failed to train pending training job: {str(e)}")
             await job_service.update_job_status(
                 job_id=job.id, status=JobStatus.FAILED, message=f"Failed with exception: {str(e)}"
             )
@@ -134,7 +127,21 @@ class TrainingService:
             logger.debug("Syncing progress with db stopped")
             if synchronization_task is not None and not synchronization_task.done():
                 synchronization_task.cancel()
+                try:
+                    await synchronization_task
+                except asyncio.CancelledError:
+                    logger.info("Synchronization task cancelled successfully")
+                except Exception as e:
+                    logger.error(f"Synchronization task failed with: `{e}`")
 
+            # bookkeeping after training completion
+            # update must happen after synchronization task is cancelled to avoid overwriting
+            job_ = await job_service.get_job_by_id(job_id=job.id)
+            if job_ is not None and job_.is_active:
+                logger.success(f"Successfully trained model: `{model_name}`")
+                await job_service.update_job_status(
+                    job_id=job.id, status=JobStatus.COMPLETED, message="Training completed successfully"
+                )
             # Cleanup unused snapshot
             # If training succeeded, model is created and references snapshot, so it won't delete.
             # If training failed (model not created), it will delete if no other model uses it.
@@ -281,6 +288,8 @@ class TrainingService:
         synchronization_parameters: ProgressSyncParams,
     ) -> None:
         try:
+            last_progress = 0
+            last_message = ""
             while True:
                 progress: int = synchronization_parameters.progress
                 message = synchronization_parameters.message
@@ -296,10 +305,11 @@ class TrainingService:
                     logger.info(f"Job status changed to {job.status}, stopping progress sync")
                     break
 
-                logger.debug(f"Syncing progress with db: {progress}% - {message}")
-                await job_service.update_job_status(
-                    job_id=job_id, status=JobStatus.RUNNING, progress=progress, message=message
-                )
+                if progress != last_progress or message != last_message:
+                    logger.trace(f"Syncing progress with db: {progress}% - {message}")
+                    await job_service.update_job_status(
+                        job_id=job_id, status=JobStatus.RUNNING, progress=progress, message=message
+                    )
                 await asyncio.sleep(0.5)
         except Exception as e:
             logger.exception("Failed to sync progress with db: %s", e)
