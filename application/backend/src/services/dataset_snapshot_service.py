@@ -32,10 +32,8 @@ class DatasetSnapshotService:
         logger.info(f"Creating dataset snapshot {snapshot_id} for project {project_id}")
 
         async with get_async_db_session_ctx() as session:
-            # 1. Fetch all media
             media_repo = MediaRepository(session, project_id=project_id)
 
-            # 2. Read images and prepare data for Parquet
             image_bin_repo = ImageBinaryRepository(project_id=project_id)
 
             data_rows = []
@@ -56,7 +54,7 @@ class DatasetSnapshotService:
                     # "mask": ... # TODO: Add mask support if we have masks
                 })
 
-            # 3. Create Table
+            # Create Table
             if not data_rows:
                 logger.warning(f"Creating snapshot for project {project_id} with no media")
                 # Create empty table with schema
@@ -75,7 +73,7 @@ class DatasetSnapshotService:
                 }
                 table = pa.Table.from_pydict(pydict)
 
-        # 4. Write Parquet file
+        # Write Parquet file
         snapshot_bin_repo = DatasetSnapshotBinaryRepository(project_id=project_id)
 
         def _write_parquet() -> bytes:
@@ -89,7 +87,7 @@ class DatasetSnapshotService:
             await snapshot_bin_repo.save_file(filename, parquet_bytes)
             logger.info(f"Saved snapshot file {filename}")
 
-            # 5. Create DB Record
+            # Create snapshot DB Record
             async with get_async_db_session_ctx() as session:
                 snapshot_repo = DatasetSnapshotRepository(session, project_id=project_id)
                 snapshot = DatasetSnapshot(
