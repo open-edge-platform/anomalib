@@ -22,8 +22,10 @@ services:
       <<: *proxies
     working_dir: /app
     container_name: geti-inspect-${AI_DEVICE:-cpu}
-    group_add:
-      - "${RENDER_GROUP_ID}" # This is needed to allow access to the 'render' group for torch XPU support
+    # Uncomment the following lines to enable torch XPU support
+    # For more info, see README.md
+    # group_add:
+    #   - "${RENDER_GROUP_ID}" # This is needed to allow access to the 'render' group for torch XPU support
     volumes:
       # Persist database and uploaded data
       - backend-data:/app/data
