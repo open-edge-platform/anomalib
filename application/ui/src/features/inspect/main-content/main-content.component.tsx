@@ -9,7 +9,6 @@ import { SourceSinkMessage } from './source-sink-message/source-sink-message.com
 export const MainContent = () => {
     const { data: pipeline } = usePipeline();
     const { projectId } = useProjectIdentifier();
-
     const { hasActiveProject, isCurrentProjectActive, activeProjectId } = useEnsureActivePipeline(projectId);
 
     if (isEmpty(pipeline.source?.id)) {
