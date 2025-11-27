@@ -18,6 +18,13 @@ export const downloadBlob = (blob: Blob, filename: string) => {
     window.URL.revokeObjectURL(url);
 };
 
+export const sanitizeFilename = (name: string): string => {
+    return name
+        .replace(/\s+/g, '_')
+        .replace(/[^a-zA-Z0-9_\-\.]/g, '')
+        .toLowerCase();
+};
+
 export const formatSize = (bytes: number | null | undefined) => {
     if (bytes === null || bytes === undefined) {
         return '';

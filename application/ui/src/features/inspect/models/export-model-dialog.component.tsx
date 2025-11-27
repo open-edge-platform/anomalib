@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { fetchClient } from '@geti-inspect/api';
+import { $api, fetchClient } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 import {
     Button,
@@ -18,7 +18,7 @@ import {
 } from '@geti/ui';
 import type { SchemaCompressionType, SchemaExportType } from 'src/api/openapi-spec';
 
-import { downloadBlob } from '../utils';
+import { downloadBlob, sanitizeFilename } from '../utils';
 import type { ModelData } from './model-types';
 
 const EXPORT_FORMATS: { id: SchemaExportType; name: string }[] = [
@@ -42,6 +42,9 @@ interface ExportModelDialogProps {
 
 export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
     const { projectId } = useProjectIdentifier();
+    const { data: project } = $api.useSuspenseQuery('get', '/api/projects/{project_id}', {
+        params: { path: { project_id: projectId } },
+    });
     const [selectedFormat, setSelectedFormat] = useState<SchemaExportType>('openvino');
     const [selectedCompression, setSelectedCompression] = useState<SchemaCompressionType | 'none'>('none');
     const [isExporting, setIsExporting] = useState(false);
@@ -87,7 +90,9 @@ export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
 
             const blob = response.data as Blob;
             const compressionSuffix = compression ? `_${compression}` : '';
-            const filename = `${model.name}_${selectedFormat}${compressionSuffix}.zip`;
+            const sanitizedProjectName = sanitizeFilename(project.name);
+            const sanitizedModelName = sanitizeFilename(model.name);
+            const filename = `${sanitizedProjectName}_${sanitizedModelName}_${selectedFormat}${compressionSuffix}.zip`;
             downloadBlob(blob, filename);
 
             toast({ type: 'success', message: `Model "${model.name}" exported successfully.` });

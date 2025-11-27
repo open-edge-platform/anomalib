@@ -15,11 +15,11 @@ interface ModelActionsMenuProps {
     onSetSelectedModelId: (modelId: string | undefined) => void;
 }
 
+type DialogType = 'logs' | 'delete' | 'export' | null;
+
 export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId }: ModelActionsMenuProps) => {
     const { projectId } = useProjectIdentifier();
-    const [isLogsDialogOpen, setIsLogsDialogOpen] = useState(false);
-    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+    const [openDialog, setOpenDialog] = useState<DialogType>(null);
 
     const cancelJobMutation = $api.useMutation('post', '/api/jobs/{job_id}:cancel');
     const deleteModelMutation = $api.useMutation('delete', '/api/projects/{project_id}/models/{model_id}', {
@@ -92,7 +92,7 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
                     toast({ type: 'error', message: `Failed to delete "${model.name}".` });
                 },
                 onSettled: () => {
-                    setIsDeleteDialogOpen(false);
+                    setOpenDialog(null);
                 },
             }
         );
@@ -108,16 +108,16 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
                     disabledKeys={disabledMenuKeys}
                     onAction={(actionKey) => {
                         if (actionKey === 'logs' && model.job?.id) {
-                            setIsLogsDialogOpen(true);
+                            setOpenDialog('logs');
                         }
                         if (actionKey === 'cancel' && model.job?.id) {
                             void handleCancelJob();
                         }
                         if (actionKey === 'export' && canExportModel) {
-                            setIsExportDialogOpen(true);
+                            setOpenDialog('export');
                         }
                         if (actionKey === 'delete' && canDeleteModel) {
-                            setIsDeleteDialogOpen(true);
+                            setOpenDialog('delete');
                         }
                     }}
                 >
@@ -130,14 +130,14 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
                 </Menu>
             </MenuTrigger>
 
-            <DialogContainer type='fullscreen' onDismiss={() => setIsLogsDialogOpen(false)}>
-                {isLogsDialogOpen && model.job?.id ? (
-                    <JobLogsDialog close={() => setIsLogsDialogOpen(false)} jobId={model.job.id} />
+            <DialogContainer type='fullscreen' onDismiss={() => setOpenDialog(null)}>
+                {openDialog === 'logs' && model.job?.id ? (
+                    <JobLogsDialog close={() => setOpenDialog(null)} jobId={model.job.id} />
                 ) : null}
             </DialogContainer>
 
-            <DialogContainer onDismiss={() => setIsDeleteDialogOpen(false)}>
-                {!isDeleteDialogOpen || !canDeleteModel ? null : (
+            <DialogContainer onDismiss={() => setOpenDialog(null)}>
+                {openDialog === 'delete' && canDeleteModel ? (
                     <AlertDialog
                         variant='destructive'
                         cancelLabel='Cancel'
@@ -150,12 +150,12 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
                     >
                         Deleting a model removes any exported artifacts and cannot be undone.
                     </AlertDialog>
-                )}
+                ) : null}
             </DialogContainer>
 
-            <DialogContainer onDismiss={() => setIsExportDialogOpen(false)}>
-                {isExportDialogOpen && canExportModel ? (
-                    <ExportModelDialog model={model} close={() => setIsExportDialogOpen(false)} />
+            <DialogContainer onDismiss={() => setOpenDialog(null)}>
+                {openDialog === 'export' && canExportModel ? (
+                    <ExportModelDialog model={model} close={() => setOpenDialog(null)} />
                 ) : null}
             </DialogContainer>
         </>
