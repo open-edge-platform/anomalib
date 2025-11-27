@@ -4,7 +4,6 @@ import sys
 from functools import lru_cache
 from typing import TypedDict
 
-import AVFoundation
 import cv2_enumerate_cameras
 import openvino as ov
 from lightning.pytorch.accelerators import AcceleratorRegistry
@@ -27,6 +26,8 @@ class Devices:
         """
         # TODO: remove branching after: https://github.com/lukehugh/cv2_enumerate_cameras/pull/13
         if sys.platform == "darwin":
+            import AVFoundation  # noqa: PLC0415 # late import to avoid issues on non-macOS systems
+
             # macOS hardware connection notifications are delivered asynchronously via the NSRunLoop.
             # Running it once is enough to process pending notifications and update the list.
             run_loop = AVFoundation.NSRunLoop.currentRunLoop()
