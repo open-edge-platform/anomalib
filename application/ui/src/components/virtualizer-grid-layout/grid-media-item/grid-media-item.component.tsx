@@ -27,7 +27,7 @@ export const GridMediaItem = ({
     bottomRightElement,
 }: GridMediaItemProps) => {
     return (
-        <View width={'100%'} height={'100%'} overflow={'hidden'} UNSAFE_className={className}>
+        <View width={'100%'} height={'100%'} overflow={'hidden'} UNSAFE_className={clsx(classes.root, className)}>
             {contentElement()}
 
             {isFunction(topLeftElement) && (

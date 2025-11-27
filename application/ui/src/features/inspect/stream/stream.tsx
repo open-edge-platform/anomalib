@@ -144,7 +144,9 @@ export const Stream = ({ size, setSize }: StreamProps) => {
                     className={clsx({ [classes.takeOldCamera]: hasCaptureAnimation })}
                 />
             </ZoomTransform>
-            <Button onPress={handleCaptureFrame}>Capture</Button>
+            <Button onPress={handleCaptureFrame} variant='primary' UNSAFE_className={classes.captureButton}>
+                Capture
+            </Button>
         </Flex>
     );
 };

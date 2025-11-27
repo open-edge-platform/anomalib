@@ -27,12 +27,10 @@ export const SidebarItems = ({ mediaItems, selectedMediaItem, onSetSelectedMedia
 
     const handleSelectionChange = (newKeys: Selection) => {
         const updatedSelectedKeys = new Set(newKeys);
+        const firstKey = updatedSelectedKeys.values().next().value;
+        const mediaItem = mediaItems.find((item) => item.id === firstKey);
 
-        updatedSelectedKeys.forEach(async (key) => {
-            const mediaItem = mediaItems.find((item) => item.id === key);
-
-            onSetSelectedMediaItem(mediaItem);
-        });
+        onSetSelectedMediaItem(mediaItem);
     };
 
     return (
