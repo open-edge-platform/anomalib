@@ -13,7 +13,7 @@ type WebcamFieldsProps = {
 export const WebcamFields = ({ defaultState }: WebcamFieldsProps) => {
     const { data: cameraDevices, isLoading } = $api.useQuery('get', '/api/devices/camera');
 
-    const devices = (cameraDevices?.devices ?? [])?.map((device, index) => ({ name: device.name, id: index }));
+    const devices = (cameraDevices?.devices ?? []).map((device, index) => ({ name: device.name, id: index }));
 
     return (
         <Flex direction='column' gap='size-200'>

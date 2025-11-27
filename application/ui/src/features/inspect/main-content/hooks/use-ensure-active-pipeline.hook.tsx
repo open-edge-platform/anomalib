@@ -7,7 +7,7 @@ export const useEnsureActivePipeline = (projectId: string) => {
     const activePipelineMutation = useActivatePipeline({});
     const { data: activeProjectPipeline, isFetching } = useActivePipeline();
 
-    const hasActiveProject = !isEmpty(activeProjectPipeline);
+    const hasActiveProject = !isEmpty(activeProjectPipeline?.project_id);
     const isCurrentProjectActive = activeProjectPipeline?.project_id === projectId;
 
     useEffect(() => {
