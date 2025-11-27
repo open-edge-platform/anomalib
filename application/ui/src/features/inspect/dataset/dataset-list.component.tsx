@@ -5,6 +5,7 @@ import { useQueryState } from 'nuqs';
 import { DatasetItemPlaceholder } from './dataset-item/dataset-item-placeholder.component';
 import { DatasetItem } from './dataset-item/dataset-item.component';
 import { MediaPreview } from './media-preview/media-preview.component';
+import { InferenceOpacityProvider } from './media-preview/providers/inference-opacity-provider.component';
 import { MediaItem } from './types';
 import { REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING } from './utils';
 
@@ -14,6 +15,7 @@ interface DatasetItemProps {
 
 export const DatasetList = ({ mediaItems }: DatasetItemProps) => {
     const [selectedMediaItemId, setSelectedMediaItem] = useQueryState('selectedMediaItem');
+    //Todo: revisit implementation when dataset loading is paginated
     const selectedMediaItem = mediaItems.find((item) => item.id === selectedMediaItemId);
 
     const mediaItemsToRender = [
@@ -51,12 +53,14 @@ export const DatasetList = ({ mediaItems }: DatasetItemProps) => {
 
             <DialogContainer onDismiss={() => setSelectedMediaItem(null)}>
                 {!isEmpty(selectedMediaItem) && (
-                    <MediaPreview
-                        mediaItems={mediaItems}
-                        selectedMediaItem={selectedMediaItem}
-                        onClose={() => setSelectedMediaItem(null)}
-                        onSelectedMediaItem={setSelectedMediaItem}
-                    />
+                    <InferenceOpacityProvider>
+                        <MediaPreview
+                            mediaItems={mediaItems}
+                            selectedMediaItem={selectedMediaItem}
+                            onClose={() => setSelectedMediaItem(null)}
+                            onSelectedMediaItem={setSelectedMediaItem}
+                        />
+                    </InferenceOpacityProvider>
                 )}
             </DialogContainer>
         </Flex>
