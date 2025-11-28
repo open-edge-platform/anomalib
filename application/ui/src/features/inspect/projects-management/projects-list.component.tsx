@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { isEmpty } from 'lodash-es';
 
@@ -22,6 +23,12 @@ export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition
         return projectIdInEdition === projectId;
     };
 
+    const updateProject = $api.useMutation('patch', '/api/projects/{project_id}', {
+        meta: {
+            invalidates: [['get', '/api/projects']],
+        },
+    });
+
     const handleBlur = (projectId: string, newName: string) => {
         setProjectInEdition(null);
 
@@ -29,6 +36,11 @@ export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition
         if (projectToUpdate?.name === newName || isEmpty(newName.trim())) {
             return;
         }
+
+        updateProject.mutate({
+            params: { path: { project_id: projectId } },
+            body: { name: newName },
+        });
     };
 
     return (
