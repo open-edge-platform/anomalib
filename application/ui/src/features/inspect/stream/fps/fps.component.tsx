@@ -1,0 +1,43 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import { $api } from '@geti-inspect/api';
+import { usePipeline } from '@geti-inspect/hooks';
+import { dimensionValue, View } from '@geti/ui';
+import { isEmpty } from 'lodash-es';
+
+interface FpsProp {
+    projectId: string;
+}
+
+export const Fps = ({ projectId }: FpsProp) => {
+    const { data: pipeline } = usePipeline();
+    const isRunning = pipeline?.status === 'running';
+
+    const { data: metrics } = $api.useQuery(
+        'get',
+        '/api/projects/{project_id}/pipeline/metrics',
+        { params: { path: { project_id: projectId } } },
+        { enabled: isRunning }
+    );
+
+    if (isEmpty(metrics)) {
+        return <></>;
+    }
+
+    return (
+        <View
+            position={'absolute'}
+            top={'size-200'}
+            right={'size-200'}
+            backgroundColor={'gray-100'}
+            UNSAFE_style={{
+                fontSize: dimensionValue('size-130'),
+                padding: `${dimensionValue('size-85')} ${dimensionValue('size-65')}`,
+                borderRadius: dimensionValue('size-25'),
+            }}
+        >
+            {metrics?.inference.throughput.avg_requests_per_second} fps
+        </View>
+    );
+};

@@ -11,6 +11,7 @@ import { clsx } from 'clsx';
 import { useWebRTCConnection } from '../../../components/stream/web-rtc-connection-provider';
 import { ZoomTransform } from '../../../components/zoom/zoom-transform';
 import { useEventListener } from '../../../hooks/event-listener/event-listener.hook';
+import { Fps } from './fps/fps.component';
 
 import classes from './stream.module.scss';
 
@@ -130,6 +131,8 @@ export const Stream = ({ size, setSize }: StreamProps) => {
             justifyContent={'center'}
             UNSAFE_style={{ width: '100%', height: '100%', paddingBlockEnd: dimensionValue('size-400') }}
         >
+            <Fps projectId={projectId} />
+
             <ZoomTransform target={size}>
                 <video
                     ref={videoRef}
