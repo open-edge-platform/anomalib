@@ -17,14 +17,17 @@ import {
     type Key,
 } from '@geti/ui';
 import type { SchemaCompressionType, SchemaExportType } from 'src/api/openapi-spec';
+import { Onnx, OpenVino, PyTorch } from 'src/assets/icons';
 
 import { downloadBlob, sanitizeFilename } from '../utils';
 import type { ModelData } from './model-types';
 
-const EXPORT_FORMATS: { id: SchemaExportType; name: string }[] = [
-    { id: 'openvino', name: 'OpenVINO' },
-    { id: 'onnx', name: 'ONNX' },
-    { id: 'torch', name: 'PyTorch' },
+import classes from './export-model-dialog.module.scss';
+
+const EXPORT_FORMATS: { id: SchemaExportType; name: string; Icon: React.FC<React.SVGProps<SVGSVGElement>> }[] = [
+    { id: 'openvino', name: 'OpenVINO', Icon: OpenVino },
+    { id: 'onnx', name: 'ONNX', Icon: Onnx },
+    { id: 'torch', name: 'PyTorch', Icon: PyTorch },
 ];
 
 const COMPRESSION_OPTIONS: { id: SchemaCompressionType | 'none'; name: string }[] = [
@@ -49,9 +52,8 @@ export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
     const [selectedCompression, setSelectedCompression] = useState<SchemaCompressionType | 'none'>('none');
     const [isExporting, setIsExporting] = useState(false);
 
-    const handleFormatChange = (key: Key | null) => {
-        if (key === null) return;
-        const format = key as SchemaExportType;
+    const handleFormatChange = (value: string) => {
+        const format = value as SchemaExportType;
         setSelectedFormat(format);
 
         if (format !== 'openvino') {
@@ -114,15 +116,23 @@ export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
                         Export <strong>{model.name}</strong> to a downloadable format.
                     </Text>
 
-                    <Picker
-                        label='Export Format'
-                        items={EXPORT_FORMATS}
-                        selectedKey={selectedFormat}
-                        onSelectionChange={handleFormatChange}
-                        width='100%'
-                    >
-                        {(item) => <Item key={item.id}>{item.name}</Item>}
-                    </Picker>
+                    <Flex direction='column' gap='size-100'>
+                        <Text UNSAFE_className={classes.label}>Export Format</Text>
+                        <div className={classes.formatGroup} role='radiogroup' aria-label='Select export format'>
+                            {EXPORT_FORMATS.map(({ id, Icon }) => (
+                                <button
+                                    key={id}
+                                    type='button'
+                                    role='radio'
+                                    aria-checked={selectedFormat === id}
+                                    onClick={() => handleFormatChange(id)}
+                                    className={`${classes.formatOption} ${selectedFormat === id ? classes.formatOptionSelected : ''}`}
+                                >
+                                    <Icon className={classes.formatIcon} />
+                                </button>
+                            ))}
+                        </div>
+                    </Flex>
 
                     {selectedFormat === 'openvino' && (
                         <Picker
