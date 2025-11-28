@@ -37,11 +37,7 @@ _ = exception_handlers  # to avoid import being removed by linters
 # Enable CORS for local test UI
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:9000",
-        "http://127.0.0.1:9000",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -60,7 +56,12 @@ app.include_router(device_router)
 app.include_router(capture_router)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Main function to run the Geti Inspect server"""
     settings = get_settings()
     uvicorn_port = int(os.environ.get("HTTP_SERVER_PORT", settings.port))
     uvicorn.run("main:app", loop="uvloop", host=settings.host, port=uvicorn_port, log_config=None)
+
+
+if __name__ == "__main__":
+    main()

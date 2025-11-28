@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 import os
+import pathlib
 from contextlib import redirect_stdout
 from uuid import UUID
 
@@ -24,8 +25,7 @@ from utils.experiment_loggers import TrackioLogger
 
 
 class TrainingService:
-    """
-    Service for managing model training jobs.
+    """Service for managing model training jobs.
 
     Handles the complete training pipeline including job fetching, model training,
     status updates, and error handling. Currently, using asyncio.to_thread for
@@ -37,8 +37,7 @@ class TrainingService:
 
     @classmethod
     async def train_pending_job(cls) -> Model | None:
-        """
-        Process the next pending training job from the queue.
+        """Process the next pending training job from the queue.
 
         Fetches a pending job, executes training in a separate thread to maintain
         event loop responsiveness, and updates job status accordingly.
@@ -77,7 +76,8 @@ class TrainingService:
         try:
             model_service = ModelService()
             snapshot = await DatasetSnapshotService.get_or_create_snapshot(
-                project_id=project_id, snapshot_id=snapshot_id
+                project_id=project_id,
+                snapshot_id=snapshot_id,
             )
             snapshot_id = snapshot.id
 
@@ -92,8 +92,10 @@ class TrainingService:
 
             synchronization_task = asyncio.create_task(
                 cls._sync_progress_with_db(
-                    job_service=job_service, job_id=job.id, synchronization_parameters=synchronization_parameters
-                )
+                    job_service=job_service,
+                    job_id=job.id,
+                    synchronization_parameters=synchronization_parameters,
+                ),
             )
 
             # Use the context manager from DatasetSnapshotService to prepare data
@@ -117,9 +119,11 @@ class TrainingService:
 
             return await model_service.create_model(trained_model)
         except Exception as e:
-            logger.error(f"Failed to train pending training job: {str(e)}")
+            logger.error(f"Failed to train pending training job: {e!s}")
             await job_service.update_job_status(
-                job_id=job.id, status=JobStatus.FAILED, message=f"Failed with exception: {str(e)}"
+                job_id=job.id,
+                status=JobStatus.FAILED,
+                message=f"Failed with exception: {e!s}",
             )
             if model and model.export_path:
                 logger.warning(f"Deleting partially created model with id: {model.id}")
@@ -142,7 +146,9 @@ class TrainingService:
             if job_ is not None and job_.is_active:
                 logger.success(f"Successfully trained model: `{model_name}`")
                 await job_service.update_job_status(
-                    job_id=job.id, status=JobStatus.COMPLETED, message="Training completed successfully"
+                    job_id=job.id,
+                    status=JobStatus.COMPLETED,
+                    message="Training completed successfully",
                 )
             # Cleanup unused snapshot
             # If training succeeded, model is created and references snapshot, so it won't delete.
@@ -157,8 +163,7 @@ class TrainingService:
         dataset_root: str,
         device: str | None = None,
     ) -> Model | None:
-        """
-        Execute CPU-intensive model training using anomalib.
+        """Execute CPU-intensive model training using anomalib.
 
         This synchronous function runs in a separate thread via asyncio.to_thread
         to prevent blocking the event loop. Sets up the anomalib model, trains it
@@ -179,7 +184,7 @@ class TrainingService:
         if device and not Devices.is_device_supported_for_training(device):
             raise ValueError(
                 f"Device '{device}' is not supported for training. "
-                f"Supported devices: {', '.join(Devices.training_devices())}"
+                f"Supported devices: {', '.join(Devices.training_devices())}",
             )
 
         training_device = device or "auto"
@@ -260,9 +265,9 @@ class TrainingService:
             return None
 
         try:
-            if os.path.isfile(path):
-                return os.path.getsize(path)
-            if not os.path.isdir(path):
+            if pathlib.Path(path).is_file():
+                return pathlib.Path(path).stat().st_size
+            if not pathlib.Path(path).is_dir():
                 logger.warning(f"Cannot compute export size because `{path}` is not a directory")
                 return None
         except OSError as error:
@@ -273,10 +278,10 @@ class TrainingService:
             for root, _, files in os.walk(path, followlinks=False):
                 for file_name in files:
                     file_path = os.path.join(root, file_name)
-                    if os.path.islink(file_path):
+                    if pathlib.Path(file_path).is_symlink():
                         continue
                     try:
-                        yield os.path.getsize(file_path)
+                        yield pathlib.Path(file_path).stat().st_size
                     except OSError:
                         continue
 
@@ -310,7 +315,10 @@ class TrainingService:
                 if progress != last_progress or message != last_message:
                     logger.trace(f"Syncing progress with db: {progress}% - {message}")
                     await job_service.update_job_status(
-                        job_id=job_id, status=JobStatus.RUNNING, progress=progress, message=message
+                        job_id=job_id,
+                        status=JobStatus.RUNNING,
+                        progress=progress,
+                        message=message,
                     )
                 await asyncio.sleep(0.5)
         except Exception as e:
@@ -320,8 +328,7 @@ class TrainingService:
 
     @staticmethod
     async def abort_orphan_jobs() -> None:
-        """
-        Abort all running orphan training jobs (that do not belong to any worker).
+        """Abort all running orphan training jobs (that do not belong to any worker).
 
         This method can be called during application shutdown/setup to ensure that
         any orphan in-progress training jobs are marked as failed.

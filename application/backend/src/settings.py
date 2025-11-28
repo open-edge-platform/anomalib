@@ -10,6 +10,9 @@ from typing import Literal
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Get the directory where this settings module is located
+_MODULE_DIR = Path(__file__).parent
+
 
 class Settings(BaseSettings):
     """Application settings with environment variable support"""
@@ -36,8 +39,8 @@ class Settings(BaseSettings):
     db_echo: bool = Field(default=False, alias="DB_ECHO")
 
     # Alembic
-    alembic_config_path: str = "src/alembic.ini"
-    alembic_script_location: str = "src/alembic"
+    alembic_config_path: str = str(_MODULE_DIR / "alembic.ini")
+    alembic_script_location: str = str(_MODULE_DIR / "alembic")
 
     # Proxy settings
     no_proxy: str = Field(default="localhost,127.0.0.1,::1", alias="no_proxy")

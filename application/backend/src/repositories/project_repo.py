@@ -45,7 +45,7 @@ class ProjectRepository(BaseRepository):
             .values(
                 dataset_updated_at=sa.func.current_timestamp(),
                 updated_at=sa.func.current_timestamp(),
-            )
+            ),
         )
         await self.db.commit()
 
