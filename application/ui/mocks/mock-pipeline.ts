@@ -19,6 +19,7 @@ export const getMockedPipeline = (customPipeline?: Partial<SchemaPipeline>): Sch
             threshold: 0.5,
             is_ready: true,
             train_job_id: 'train-job-1',
+            dataset_snapshot_id: '',
         },
         sink: {
             id: 'sink-id',

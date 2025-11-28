@@ -21,7 +21,7 @@ export const InferenceResult = ({ selectedMediaItem, inferenceResult }: Inferenc
     const { inferenceOpacity } = useInference();
     const [isVerticalImage, setIsVerticalImage] = useState(false);
 
-    const handleInference = async (imageElement: HTMLImageElement) => {
+    const handleImageOrientation = (imageElement: HTMLImageElement) => {
         setIsVerticalImage(imageElement.clientHeight > imageElement.clientWidth);
     };
 
@@ -40,7 +40,7 @@ export const InferenceResult = ({ selectedMediaItem, inferenceResult }: Inferenc
                         alt={selectedMediaItem.filename}
                         className={clsx(classes.img, { [classes.verticalImg]: isVerticalImage })}
                         src={`/api/projects/${selectedMediaItem.project_id}/images/${selectedMediaItem.id}/full`}
-                        onLoad={({ target }) => handleInference(target as HTMLImageElement)}
+                        onLoad={({ target }) => handleImageOrientation(target as HTMLImageElement)}
                     />
 
                     <AnimatePresence>
