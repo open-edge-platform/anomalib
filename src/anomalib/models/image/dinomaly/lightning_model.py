@@ -202,8 +202,8 @@ class Dinomaly(AnomalibModule):
         """Configure the default pre-processor for Dinomaly.
 
         Sets up image preprocessing pipeline including resizing, center cropping,
-        and normalization with ImageNet statistics. The preprocessing is optimized
-        for DINOv2 Vision Transformer models.
+        and normalization with ImageNet statistics. The preprocessing follows the
+        paper's approach: resize to 448x448 then center-crop to 392x392.
 
         Args:
             image_size (tuple[int, int] | None): Target size for image resizing
@@ -221,6 +221,10 @@ class Dinomaly(AnomalibModule):
             The default ImageNet normalization statistics are used:
             - Mean: [0.485, 0.456, 0.406]
             - Std: [0.229, 0.224, 0.225]
+
+            As per the paper, images are resized to 448x448 then center-cropped to 392x392.
+            The model handles the cropping offset during visualization.
+            See: https://github.com/open-edge-platform/anomalib/issues/3129
         """
         crop_size = crop_size or DEFAULT_CROP_SIZE
         image_size = image_size or (DEFAULT_IMAGE_SIZE, DEFAULT_IMAGE_SIZE)

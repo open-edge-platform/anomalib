@@ -249,8 +249,12 @@ class DinomalyModel(nn.Module):
         anomaly maps by comparing encoder and decoder features using cosine similarity,
         applies Gaussian smoothing, and returns anomaly scores and maps.
 
+        The anomaly map is generated at the input size (after center crop), then "uncropped"
+        by padding it to match the pre-crop dimensions for proper visualization alignment.
+
         Args:
             batch (torch.Tensor): Input batch of images with shape (B, C, H, W).
+                After preprocessing (Resize + CenterCrop), this is typically (B, C, 392, 392).
             global_step (int | None): Current training step, used for loss computation.
 
         Returns:
@@ -258,7 +262,7 @@ class DinomalyModel(nn.Module):
                 - During training: Dictionary containing encoder and decoder features
                   for loss computation.
                 - During inference: InferenceBatch with pred_score (anomaly scores)
-                  and anomaly_map (pixel-level anomaly maps).
+                  and anomaly_map (pixel-level anomaly maps padded to pre-crop dimensions).
 
         """
         en, de = self.get_encoder_decoder_outputs(batch)
@@ -273,7 +277,9 @@ class DinomalyModel(nn.Module):
 
         # If inference, calculate anomaly maps, predictions, from the encoder and decoder features.
         anomaly_map, _ = self.calculate_anomaly_maps(en, de, out_size=image_size)
-        anomaly_map_resized = anomaly_map.clone()
+
+        # Store the anomaly map before any resize (at cropped size, e.g., 392x392)
+        anomaly_map_at_crop_size = anomaly_map.clone()
 
         # Resize anomaly map for processing
         if DEFAULT_RESIZE_SIZE is not None:
@@ -294,7 +300,16 @@ class DinomalyModel(nn.Module):
             sp_score = sp_score.mean(dim=1)
         pred_score = sp_score
 
-        return InferenceBatch(pred_score=pred_score, anomaly_map=anomaly_map_resized)
+        # "Uncrop" the anomaly map by padding it to match pre-crop dimensions
+        # This fixes visualization alignment when center crop is used
+        # Default: 392x392 (cropped) -> 448x448 (pre-crop)
+        anomaly_map_uncropped = self._uncrop_anomaly_map(
+            anomaly_map_at_crop_size,
+            crop_size=image_size,
+            target_size=448,  # Pre-crop size from preprocessing
+        )
+
+        return InferenceBatch(pred_score=pred_score, anomaly_map=anomaly_map_uncropped)
 
     @staticmethod
     def calculate_anomaly_maps(
@@ -394,6 +409,53 @@ class DinomalyModel(nn.Module):
         # Reshape to spatial dimensions
         batch_size = features[0].shape[0]
         return [f.permute(0, 2, 1).reshape([batch_size, -1, side, side]).contiguous() for f in features]
+
+    @staticmethod
+    def _uncrop_anomaly_map(
+        anomaly_map: torch.Tensor,
+        crop_size: int,
+        target_size: int,
+    ) -> torch.Tensor:
+        """Uncrop anomaly map by padding to match pre-crop dimensions.
+
+        When center crop is used in preprocessing (e.g., Resize 448 -> CenterCrop 392),
+        the anomaly map is generated at the cropped size (392x392). For proper visualization
+        alignment with the original image, we need to pad it back to the pre-crop dimensions
+        (448x448) with the same offset that was used during cropping.
+
+        Args:
+            anomaly_map: Anomaly map at cropped size (B, 1, crop_size, crop_size)
+            crop_size: Size after center crop (e.g., 392)
+            target_size: Size before center crop (e.g., 448)
+
+        Returns:
+            Anomaly map padded to target size (B, 1, target_size, target_size)
+
+        Example:
+            >>> anomaly_map = torch.randn(1, 1, 392, 392)  # After crop
+            >>> uncropped = _uncrop_anomaly_map(anomaly_map, crop_size=392, target_size=448)
+            >>> uncropped.shape
+            torch.Size([1, 1, 448, 448])
+        """
+        if crop_size == target_size:
+            # No crop was applied, return as-is
+            return anomaly_map
+
+        # Calculate padding to add on each side (same as center crop offset)
+        pad_total = target_size - crop_size
+        pad_top = pad_total // 2
+        pad_bottom = pad_total - pad_top  # Handle odd padding
+        pad_left = pad_total // 2
+        pad_right = pad_total - pad_left
+
+        # Pad the anomaly map (pad format: left, right, top, bottom)
+        # Fill padded regions with 0 (no anomaly)
+        return F.pad(
+            anomaly_map,
+            (pad_left, pad_right, pad_top, pad_bottom),
+            mode="constant",
+            value=0.0,
+        )
 
 
 class DecoderViTBlock(nn.Module):
