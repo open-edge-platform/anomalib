@@ -58,7 +58,7 @@ dependencies = [
 
 [project.optional-dependencies]
 # Model-specific optional dependencies
-openvino = ["openvino>=2024.0", "nncf>=2.10.0", "onnx>=1.16.0"]
+openvino = ["openvino>=2024.0", "nncf>=2.10.0", "onnx>=1.16.0", "onnxscript"]
 clip = [
     # NOTE: open-clip-torch throws the following error on v2.26.1
     #   torch.onnx.errors.UnsupportedOperatorError: Exporting the operator
