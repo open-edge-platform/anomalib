@@ -15,11 +15,6 @@ import { Fps } from './fps/fps.component';
 
 import classes from './stream.module.scss';
 
-interface StreamProps {
-    size: { width: number; height: number };
-    setSize: Dispatch<SetStateAction<{ width: number; height: number }>>;
-}
-
 const useSetTargetSizeBasedOnVideo = (
     setSize: Dispatch<SetStateAction<{ width: number; height: number }>>,
     videoRef: RefObject<HTMLVideoElement | null>
@@ -96,10 +91,11 @@ const useStreamToVideo = () => {
     return videoRef;
 };
 
-export const Stream = ({ size, setSize }: StreamProps) => {
+export const Stream = () => {
     const videoRef = useStreamToVideo();
     const { projectId } = useProjectIdentifier();
     const [hasCaptureAnimation, setHasCaptureAnimation] = useState(false);
+    const [size, setSize] = useState({ height: 608, width: 892 });
 
     useSetTargetSizeBasedOnVideo(setSize, videoRef);
     useEventListener('animationend', () => setHasCaptureAnimation(false), videoRef);

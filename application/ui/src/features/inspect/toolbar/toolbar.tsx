@@ -5,7 +5,6 @@ import { dimensionValue, Divider, Flex, View } from '@geti/ui';
 
 import { InferenceDevices } from './inference-devices/inference-devices.component';
 import { PipelineConfiguration } from './pipeline-configuration.component';
-import { PipelineSwitch } from './pipeline-switch/pipeline-switch.component';
 
 export const Toolbar = () => {
     return (
@@ -21,7 +20,6 @@ export const Toolbar = () => {
                     <InferenceDevices />
                     <Divider size={'S'} orientation={'vertical'} />
                     <PipelineConfiguration />
-                    <PipelineSwitch />
                 </Flex>
             </Flex>
         </View>

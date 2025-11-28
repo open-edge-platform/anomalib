@@ -13,6 +13,7 @@ interface FpsProp {
 export const Fps = ({ projectId }: FpsProp) => {
     const { data: pipeline } = usePipeline();
     const isRunning = pipeline?.status === 'running';
+    const formatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 
     const { data: metrics } = $api.useQuery(
         'get',
@@ -21,7 +22,7 @@ export const Fps = ({ projectId }: FpsProp) => {
         { enabled: isRunning }
     );
 
-    if (isEmpty(metrics)) {
+    if (isEmpty(metrics) || metrics?.inference.throughput.avg_requests_per_second == null) {
         return <></>;
     }
 
@@ -37,7 +38,8 @@ export const Fps = ({ projectId }: FpsProp) => {
                 borderRadius: dimensionValue('size-25'),
             }}
         >
-            {metrics?.inference.throughput.avg_requests_per_second} fps
+            {formatter.format(metrics?.inference.throughput.avg_requests_per_second)} fps
+            {/* {metrics?.inference.throughput.avg_requests_per_second} fps */}
         </View>
     );
 };

@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { getMockedMetrics } from 'mocks/mock-metrics';
 import { HttpResponse } from 'msw';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { SchemaPipeline } from 'src/api/openapi-spec';
@@ -25,9 +26,9 @@ describe('StreamContainer', () => {
         pipelineConfig?: Partial<SchemaPipeline>;
     }) => {
         vi.mocked(useWebRTCConnection).mockReturnValue({
+            stop: vi.fn(),
             start: vi.fn(),
             status: 'idle',
-            stop: vi.fn(),
             webRTCConnectionRef: { current: null },
             ...webRtcConfig,
         });
@@ -35,6 +36,9 @@ describe('StreamContainer', () => {
         server.use(
             http.get('/api/projects/{project_id}/pipeline', ({ response }) =>
                 response(200).json(getMockedPipeline(pipelineConfig))
+            ),
+            http.get('/api/projects/{project_id}/pipeline/metrics', ({ response }) =>
+                response(200).json(getMockedMetrics({}))
             )
         );
 
@@ -92,7 +96,7 @@ describe('StreamContainer', () => {
             await userEvent.click(button);
 
             expect(mockedStart).toHaveBeenCalled();
-            expect(pipelinePatchSpy).not.toHaveBeenCalled();
+            expect(pipelinePatchSpy).toHaveBeenCalled();
         });
     });
 
