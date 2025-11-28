@@ -13,7 +13,7 @@ class Project(BaseIDNameModel):
 
 
 class ProjectUpdate(BaseModel):
-    name: str
+    name: str | None = None
 
 
 class ProjectList(BaseModel):
