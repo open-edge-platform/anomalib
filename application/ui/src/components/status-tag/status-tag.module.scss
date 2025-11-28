@@ -1,0 +1,20 @@
+.container {
+    padding: var(--spectrum-global-dimension-size-75) var(--spectrum-global-dimension-size-150);
+    background: var(--spectrum-global-color-gray-300);
+    border-radius: var(--spectrum-global-dimension-size-200);
+}
+
+.status {
+    border-radius: 50%;
+    background: var(--electric-daisy);
+    width: var(--spectrum-global-dimension-size-130);
+    height: var(--spectrum-global-dimension-size-130);
+}
+
+.connected {
+    background: var(--aqua);
+}
+
+.disconnected {
+    background: var(--coral);
+}
