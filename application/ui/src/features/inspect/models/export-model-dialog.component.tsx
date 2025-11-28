@@ -16,6 +16,7 @@ import {
     toast,
     type Key,
 } from '@geti/ui';
+import { useMutation } from '@tanstack/react-query';
 import type { SchemaCompressionType, SchemaExportType } from 'src/api/openapi-spec';
 import { Onnx, OpenVino, PyTorch } from 'src/assets/icons';
 
@@ -50,26 +51,9 @@ export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
     });
     const [selectedFormat, setSelectedFormat] = useState<SchemaExportType>('openvino');
     const [selectedCompression, setSelectedCompression] = useState<SchemaCompressionType | 'none'>('none');
-    const [isExporting, setIsExporting] = useState(false);
 
-    const handleFormatChange = (value: string) => {
-        const format = value as SchemaExportType;
-        setSelectedFormat(format);
-
-        if (format !== 'openvino') {
-            setSelectedCompression('none');
-        }
-    };
-
-    const handleCompressionChange = (key: Key | null) => {
-        if (key === null) return;
-        setSelectedCompression(key as SchemaCompressionType | 'none');
-    };
-
-    const handleExport = async () => {
-        setIsExporting(true);
-
-        try {
+    const exportMutation = useMutation({
+        mutationFn: async () => {
             const compression = selectedCompression === 'none' ? null : selectedCompression;
 
             const response = await fetchClient.POST('/api/projects/{project_id}/models/{model_id}:export', {
@@ -95,15 +79,31 @@ export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
             const sanitizedProjectName = sanitizeFilename(project.name);
             const sanitizedModelName = sanitizeFilename(model.name);
             const filename = `${sanitizedProjectName}_${sanitizedModelName}_${selectedFormat}${compressionSuffix}.zip`;
-            downloadBlob(blob, filename);
 
+            return { blob, filename };
+        },
+        onSuccess: ({ blob, filename }) => {
+            downloadBlob(blob, filename);
             toast({ type: 'success', message: `Model "${model.name}" exported successfully.` });
             close();
-        } catch {
+        },
+        onError: () => {
             toast({ type: 'error', message: `Failed to export model "${model.name}".` });
-        } finally {
-            setIsExporting(false);
+        },
+    });
+
+    const handleFormatChange = (value: string) => {
+        const format = value as SchemaExportType;
+        setSelectedFormat(format);
+
+        if (format !== 'openvino') {
+            setSelectedCompression('none');
         }
+    };
+
+    const handleCompressionChange = (key: Key | null) => {
+        if (key === null) return;
+        setSelectedCompression(key as SchemaCompressionType | 'none');
     };
 
     return (
@@ -126,7 +126,9 @@ export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
                                     role='radio'
                                     aria-checked={selectedFormat === id}
                                     onClick={() => handleFormatChange(id)}
-                                    className={`${classes.formatOption} ${selectedFormat === id ? classes.formatOptionSelected : ''}`}
+                                    className={`${classes.formatOption} ${
+                                        selectedFormat === id ? classes.formatOptionSelected : ''
+                                    }`}
                                 >
                                     <Icon className={classes.formatIcon} />
                                 </button>
@@ -148,10 +150,15 @@ export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
                 </Flex>
             </Content>
             <ButtonGroup>
-                <Button variant='secondary' onPress={close} isDisabled={isExporting}>
+                <Button variant='secondary' onPress={close} isDisabled={exportMutation.isPending}>
                     Cancel
                 </Button>
-                <Button variant='accent' onPress={handleExport} isPending={isExporting} isDisabled={isExporting}>
+                <Button
+                    variant='accent'
+                    onPress={() => exportMutation.mutate()}
+                    isPending={exportMutation.isPending}
+                    isDisabled={exportMutation.isPending}
+                >
                     Export
                 </Button>
             </ButtonGroup>
