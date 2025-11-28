@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { $api } from '@geti-inspect/api';
-import { Flex, Item, Picker, TextField } from '@geti/ui';
+import { ActionButton, Flex, Item, Loading, Picker, TextField } from '@geti/ui';
+import { Refresh } from '@geti/ui/icons';
 
 import { WebcamSourceConfig } from '../util';
 
@@ -11,7 +12,7 @@ type WebcamFieldsProps = {
 };
 
 export const WebcamFields = ({ defaultState }: WebcamFieldsProps) => {
-    const { data: cameraDevices, isLoading } = $api.useQuery('get', '/api/devices/camera');
+    const { data: cameraDevices, isLoading, isRefetching, refetch } = $api.useQuery('get', '/api/devices/camera');
 
     const devices = (cameraDevices?.devices ?? []).map((device, index) => ({ name: device.name, id: index }));
 
@@ -21,16 +22,27 @@ export const WebcamFields = ({ defaultState }: WebcamFieldsProps) => {
             <TextField isHidden label='project_id' name='project_id' defaultValue={defaultState.project_id} />
             <TextField width={'100%'} label='Name' name='name' defaultValue={defaultState.name} />
 
-            <Picker
-                width='auto'
-                label='Cameras'
-                name='device_id'
-                items={devices}
-                isLoading={isLoading}
-                defaultSelectedKey={defaultState.device_id}
-            >
-                {(item) => <Item>{item.name}</Item>}
-            </Picker>
+            <Flex alignItems='end' gap='size-200'>
+                <Picker
+                    flex='1'
+                    label='Cameras'
+                    name='device_id'
+                    items={devices}
+                    isLoading={isLoading}
+                    defaultSelectedKey={defaultState.device_id}
+                >
+                    {(item) => <Item>{item.name}</Item>}
+                </Picker>
+
+                <ActionButton
+                    onPress={() => refetch()}
+                    isQuiet
+                    aria-label='Refresh Cameras'
+                    isDisabled={isLoading || isRefetching}
+                >
+                    {isRefetching ? <Loading mode={'inline'} size='S' /> : <Refresh />}
+                </ActionButton>
+            </Flex>
         </Flex>
     );
 };

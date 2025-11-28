@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { toast } from '@geti/ui';
-import { $api } from 'src/api/client';
 
+import { $api } from '../api/client';
 import { useProjectIdentifier } from './use-project-identifier.hook';
 
 export const usePipeline = () => {
