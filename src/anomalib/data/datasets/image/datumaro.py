@@ -80,13 +80,15 @@ def make_datumaro_dataset(
         image_path = Path(root) / "images" / "default" / item["image"]["path"]
         label_index = item["annotations"][0]["label_id"]
         label = categories[label_index]
-        samples.append({
-            "image_path": str(image_path),
-            "label": label,
-            "label_index": label_index,
-            "split": None,
-            "mask_path": "",  # mask is provided in annotation file
-        })
+        samples.append(
+            {
+                "image_path": str(image_path),
+                "label": label,
+                "label_index": label_index,
+                "split": None,
+                "mask_path": "",  # mask is provided in annotation file
+            },
+        )
     samples_df = pd.DataFrame(
         samples,
         columns=["image_path", "label", "label_index", "split", "mask_path"],

@@ -27,7 +27,7 @@
 #    - Retention configuration
 #
 # Required Inputs:
-# - python-version: Python version for building (default: "3.10")
+# - python-version: Python version for building (default: "3.11")
 # - verify-package: Enable package verification (default: true)
 #
 # Outputs:
@@ -46,7 +46,7 @@
 #      build:
 #        uses: ./.github/workflows/_reusable-artifact-builder.yaml
 #        with:
-#          python-version: "3.10"
+#          python-version: "3.11"
 #          verify-package: true
 #
 # Note: Requires proper Python project structure and build configuration
@@ -59,7 +59,7 @@ on:
       python-version:
         description: "Python version for building"
         type: string
-        default: "3.10"
+        default: "3.11"
       verify-package:
         description: "Run package verification"
         type: boolean

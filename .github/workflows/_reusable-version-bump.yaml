@@ -27,7 +27,7 @@
 #    - PR creation
 #
 # Required Inputs:
-# - python-version: Python version for bumping (default: "3.10")
+# - python-version: Python version for bumping (default: "3.13")
 # - create-pr: Whether to create a PR (default: true)
 # - target-branch: Target branch for PR (default: "main")
 #
@@ -51,7 +51,7 @@
 #      version-bump:
 #        uses: ./.github/workflows/_reusable-version-bump.yaml
 #        with:
-#          python-version: "3.11"
+#          python-version: "3.13"
 #          create-pr: false
 #        secrets:
 #          github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -66,7 +66,7 @@ on:
       python-version:
         description: "Python version for version bumping"
         type: string
-        default: "3.10"
+        default: "3.13"
       create-pr:
         description: "Whether to create a pull request"
         type: boolean

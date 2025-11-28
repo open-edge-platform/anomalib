@@ -58,7 +58,7 @@
 #        uses: ./.github/workflows/_reusable-release-validation.yaml
 #        with:
 #          version: "v1.2.3"
-#          python-version: "3.10"
+#          python-version: "3.11"
 #        secrets:
 #          codecov-token: ${{ secrets.CODECOV_TOKEN }}
 #
@@ -68,7 +68,7 @@
 #        uses: ./.github/workflows/_reusable-release-validation.yaml
 #        with:
 #          version: "v1.2.3-rc1"
-#          python-version: "3.10"
+#          python-version: "3.11"
 #          allow-prerelease: true
 #        secrets:
 #          codecov-token: ${{ secrets.CODECOV_TOKEN }}
