@@ -73,7 +73,7 @@ class ActivePipelineService:
         await self._load_app_config()
 
         # For child processes with config_changed_condition, start a daemon to monitor configuration changes
-        if start_daemon is not None and self.config_changed_condition is not None:
+        if start_daemon and self.config_changed_condition is not None:
             # Store the current event loop for the daemon thread to use
             self._event_loop = asyncio.get_running_loop()
 
@@ -81,7 +81,7 @@ class ActivePipelineService:
                 target=self._reload_config_daemon_routine, name="Config reloader", daemon=True
             )
             self._config_reload_daemon.start()
-        elif start_daemon is not None and self.config_changed_condition is None:
+        elif self.config_changed_condition is None:
             # This is a child process but no condition provided - this is likely an API process
             # that doesn't need the daemon thread, so we just log and continue
             logger.debug("Child process detected but no config_changed_condition provided - skipping daemon thread")
@@ -102,7 +102,6 @@ class ActivePipelineService:
         This method loads the active pipeline configuration and updates the
         internal source and sink configurations accordingly.
         """
-        logger.info("Loading configuration from database")
         async with get_async_db_session_ctx() as db:
             repo = PipelineRepository(db)
 
@@ -141,7 +140,7 @@ class ActivePipelineService:
                 notified = self.config_changed_condition.wait(timeout=3)
                 if not notified:  # awakened before of timeout
                     continue
-                logger.debug(f"Configuration changes detected. Process: {mp.current_process().name}")
+                logger.info(f"Configuration changes detected. Process: {mp.current_process().name}")
                 # Schedule the async reload in the event loop using the stored loop reference
                 asyncio.run(self.reload())
 

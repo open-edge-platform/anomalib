@@ -10,7 +10,6 @@ from uuid import UUID, uuid4
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-from anomalib.data.utils import LabelName
 from loguru import logger
 from PIL import Image
 from sqlalchemy import func, select
@@ -35,43 +34,42 @@ class DatasetSnapshotService:
             media_repo = MediaRepository(session, project_id=project_id)
 
             image_bin_repo = ImageBinaryRepository(project_id=project_id)
+            images = media_repo.get_all()
 
-            data_rows = []
-            for media in await media_repo.get_all():
-                # Read bytes
-                try:
-                    img_bytes = await image_bin_repo.read_file(media.filename)
-                except FileNotFoundError:
-                    logger.error(f"Image file {media.filename} missing for media {media.id}, skipping")
-                    continue
+        data_rows = []
+        for media in await images:
+            # Read bytes
+            try:
+                img_bytes = await image_bin_repo.read_file(media.filename)
+            except FileNotFoundError:
+                logger.error(f"Image file {media.filename} missing for media {media.id}, skipping")
+                continue
 
-                label_index = LabelName.ABNORMAL if media.is_anomalous else LabelName.NORMAL
+            data_rows.append({
+                "image": img_bytes,
+                "is_anomalous": media.is_anomalous,
+                "filename": media.filename,  # Virtual path, useful for debugging
+                # "mask": ... # TODO: Add mask support if we have masks
+            })
 
-                data_rows.append({
-                    "image": img_bytes,
-                    "label_index": label_index,
-                    "original_image_path": media.filename,  # Virtual path, useful for debugging
-                    # "mask": ... # TODO: Add mask support if we have masks
-                })
-
-            # Create Table
-            if not data_rows:
-                logger.warning(f"Creating snapshot for project {project_id} with no media")
-                # Create empty table with schema
-                schema = pa.schema([
-                    ("image", pa.binary()),
-                    ("label_index", pa.int64()),
-                    ("original_image_path", pa.string()),
-                ])
-                table = pa.Table.from_pydict({}, schema=schema)
-            else:
-                # Convert to PyArrow Table
-                pydict = {
-                    "image": [r["image"] for r in data_rows],
-                    "label_index": [r["label_index"] for r in data_rows],
-                    "original_image_path": [r["original_image_path"] for r in data_rows],
-                }
-                table = pa.Table.from_pydict(pydict)
+        # Create Table
+        if not data_rows:
+            logger.warning(f"Creating snapshot for project {project_id} with no media")
+            # Create empty table with schema
+            schema = pa.schema([
+                ("image", pa.binary()),
+                ("is_anomalous", pa.bool_()),
+                ("filename", pa.string()),
+            ])
+            table = pa.Table.from_pydict({}, schema=schema)
+        else:
+            # Convert to PyArrow Table
+            pydict = {
+                "image": [r["image"] for r in data_rows],
+                "is_anomalous": [r["is_anomalous"] for r in data_rows],
+                "filename": [r["filename"] for r in data_rows],
+            }
+            table = pa.Table.from_pydict(pydict)
 
         # Write Parquet file
         snapshot_bin_repo = DatasetSnapshotBinaryRepository(project_id=project_id)
@@ -94,6 +92,7 @@ class DatasetSnapshotService:
                     id=snapshot_id,
                     project_id=project_id,
                     filename=filename,
+                    count=len(data_rows),
                 )
                 return await snapshot_repo.save(snapshot)
 
@@ -180,8 +179,8 @@ class DatasetSnapshotService:
             try:
                 # Determine label
                 is_anomalous = False
-                if hasattr(row, "label_index"):
-                    is_anomalous = row.label_index == 1
+                if hasattr(row, "is_anomalous"):
+                    is_anomalous = row.is_anomalous
                 elif hasattr(row, "label"):
                     is_anomalous = str(row.label).lower() in {"abnormal", "anomalous"}
 
@@ -189,7 +188,7 @@ class DatasetSnapshotService:
 
                 # Determine filename
                 filename = f"image_{idx}.png"
-                if original_path := getattr(row, "original_image_path", None):
+                if original_path := getattr(row, "filename", None):
                     filename = os.path.basename(str(original_path))
 
                 # Handle duplicates
@@ -217,3 +216,20 @@ class DatasetSnapshotService:
         with tempfile.TemporaryDirectory() as temp_dir:
             await asyncio.to_thread(cls.extract_snapshot_to_path, snapshot_path, temp_dir)
             yield temp_dir
+
+    @staticmethod
+    async def list_snapshots(project_id: UUID) -> list[DatasetSnapshot]:
+        """List all dataset snapshots for a project."""
+        async with get_async_db_session_ctx() as session:
+            snapshot_repo = DatasetSnapshotRepository(session, project_id=project_id)
+            return await snapshot_repo.get_all()
+
+    @staticmethod
+    async def get_snapshot(project_id: UUID, snapshot_id: UUID) -> DatasetSnapshot:
+        """Get dataset snapshot by ID."""
+        async with get_async_db_session_ctx() as session:
+            snapshot_repo = DatasetSnapshotRepository(session, project_id=project_id)
+            snapshot = await snapshot_repo.get_by_id(snapshot_id)
+            if snapshot is None:
+                raise ValueError(f"Snapshot {snapshot_id} not found in project {project_id}")
+            return snapshot
