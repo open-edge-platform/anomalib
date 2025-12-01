@@ -457,7 +457,7 @@ class Engine:
             ckpt_path = Path(ckpt_path).resolve()
         if model:
             self._setup_trainer(model)
-        return self.trainer.validate(model, dataloaders, ckpt_path, verbose, datamodule)
+        return self.trainer.validate(model, dataloaders, ckpt_path, verbose, datamodule, weights_only=False)
 
     def test(
         self,
@@ -551,7 +551,7 @@ class Engine:
         if self._should_run_validation(model or self.model, ckpt_path):
             logger.info("Running validation before testing to collect normalization metrics and/or thresholds.")
             self.trainer.validate(model, dataloaders, None, verbose=False, datamodule=datamodule)
-        return self.trainer.test(model, dataloaders, ckpt_path, verbose, datamodule)
+        return self.trainer.test(model, dataloaders, ckpt_path, verbose, datamodule, weights_only=False)
 
     def predict(
         self,
@@ -658,9 +658,10 @@ class Engine:
                 ckpt_path=None,
                 verbose=False,
                 datamodule=datamodule,
+                weights_only=False,
             )
 
-        return self.trainer.predict(model, dataloaders, datamodule, return_predictions, ckpt_path)
+        return self.trainer.predict(model, dataloaders, datamodule, return_predictions, ckpt_path, weights_only=False)
 
     def train(
         self,
@@ -716,8 +717,14 @@ class Engine:
             # if the model is zero-shot or few-shot, we only need to run validate for normalization and thresholding
             self.trainer.validate(model, val_dataloaders, None, verbose=False, datamodule=datamodule)
         else:
-            self.trainer.fit(model, train_dataloaders, val_dataloaders, datamodule, ckpt_path)
-        return self.trainer.test(model, test_dataloaders, ckpt_path=ckpt_path, datamodule=datamodule)
+            self.trainer.fit(model, train_dataloaders, val_dataloaders, datamodule, ckpt_path, weights_only=False)
+        return self.trainer.test(
+            model,
+            test_dataloaders,
+            ckpt_path=ckpt_path,
+            datamodule=datamodule,
+            weights_only=False,
+        )
 
     def export(
         self,
@@ -816,7 +823,7 @@ class Engine:
         self._setup_trainer(model)
         if ckpt_path:
             ckpt_path = Path(ckpt_path).resolve()
-            model = model.__class__.load_from_checkpoint(ckpt_path)
+            model = model.__class__.load_from_checkpoint(ckpt_path, weights_only=False)
 
         if export_root is None:
             export_root = Path(self.trainer.default_root_dir)

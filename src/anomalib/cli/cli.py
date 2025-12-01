@@ -99,9 +99,9 @@ class AnomalibCLI:
     def subcommands() -> dict[str, set[str]]:
         """Skip predict subcommand as it is added later."""
         return {
-            "fit": {"model", "train_dataloaders", "val_dataloaders", "datamodule"},
-            "validate": {"model", "dataloaders", "datamodule"},
-            "test": {"model", "dataloaders", "datamodule"},
+            "fit": {"model", "train_dataloaders", "val_dataloaders", "datamodule", "weights_only"},
+            "validate": {"model", "dataloaders", "datamodule", "weights_only"},
+            "test": {"model", "dataloaders", "datamodule", "weights_only"},
         }
 
     @staticmethod
