@@ -407,9 +407,15 @@ class Engine:
         self._setup_trainer(model)
         if model.learning_type in {LearningType.ZERO_SHOT, LearningType.FEW_SHOT}:
             # if the model is zero-shot or few-shot, we only need to run validate for normalization and thresholding
-            self.trainer.validate(model, val_dataloaders, datamodule=datamodule, ckpt_path=ckpt_path)
+            self.trainer.validate(
+                model,
+                val_dataloaders,
+                datamodule=datamodule,
+                ckpt_path=ckpt_path,
+                weights_only=False,
+            )
         else:
-            self.trainer.fit(model, train_dataloaders, val_dataloaders, datamodule, ckpt_path)
+            self.trainer.fit(model, train_dataloaders, val_dataloaders, datamodule, ckpt_path, weights_only=False)
 
     def validate(
         self,
