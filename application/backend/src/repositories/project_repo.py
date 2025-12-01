@@ -5,6 +5,7 @@ from datetime import datetime
 from uuid import UUID
 
 import sqlalchemy as sa
+from loguru import logger
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from db.schema import PipelineDB, ProjectDB
@@ -47,6 +48,7 @@ class ProjectRepository(BaseRepository):
                 updated_at=sa.func.current_timestamp(),
             )
         )
+        logger.info(f"Updated dataset timestamp for project {project_id} to current time.")
         await self.db.commit()
 
     async def get_dataset_timestamp(self, project_id: str | UUID) -> datetime:

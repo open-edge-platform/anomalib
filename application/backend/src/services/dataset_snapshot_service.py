@@ -7,7 +7,6 @@ import tempfile
 from contextlib import asynccontextmanager
 from uuid import UUID, uuid4
 
-import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 from loguru import logger
@@ -123,7 +122,7 @@ class DatasetSnapshotService:
 
             dataset_updated_at = await ProjectRepository(session).get_dataset_timestamp(project_id=project_id)
             latest_snapshot = await snapshot_repo.get_latest_snapshot()
-            if latest_snapshot and latest_snapshot.created_at >= dataset_updated_at:
+            if latest_snapshot and latest_snapshot.created_at and latest_snapshot.created_at >= dataset_updated_at:
                 logger.info(f"Using existing up-to-date snapshot `{latest_snapshot.id}` in project `{project_id}`")
                 return latest_snapshot
         # Create new snapshot only if no up-to-date snapshot exists
@@ -172,39 +171,31 @@ class DatasetSnapshotService:
         os.makedirs(normal_dir, exist_ok=True)
         os.makedirs(abnormal_dir, exist_ok=True)
 
-        # Read parquet
-        df = pd.read_parquet(snapshot_path)
+        # Read parquet in batches
+        parquet_file = pq.ParquetFile(snapshot_path)
 
-        for idx, row in enumerate(df.itertuples(index=False)):
-            try:
-                # Determine label
-                is_anomalous = False
-                if hasattr(row, "is_anomalous"):
+        # Iterate over batches to avoid OOM with large datasets
+        for batch in parquet_file.iter_batches(batch_size=100):
+            df = batch.to_pandas()
+
+            for row in df.itertuples(index=False):
+                try:
                     is_anomalous = row.is_anomalous
-                elif hasattr(row, "label"):
-                    is_anomalous = str(row.label).lower() in {"abnormal", "anomalous"}
+                    filename = os.path.basename(row.filename)
+                    target_dir = abnormal_dir if is_anomalous else normal_dir
+                    save_path = os.path.join(target_dir, filename)
 
-                target_dir = abnormal_dir if is_anomalous else normal_dir
-
-                # Determine filename
-                filename = f"image_{idx}.png"
-                if original_path := getattr(row, "filename", None):
-                    filename = os.path.basename(str(original_path))
-
-                # Handle duplicates
-                save_path = os.path.join(target_dir, filename)
-                if os.path.exists(save_path):
-                    base, ext = os.path.splitext(filename)
-                    save_path = os.path.join(target_dir, f"{base}_{idx}{ext}")
-
-                # Write image
-                image_data = getattr(row, "image", None)
-                if image_data and isinstance(image_data, (bytes, bytearray)):
-                    image = Image.open(io.BytesIO(image_data))
-                    image.save(save_path)
-
-            except Exception as e:
-                logger.warning(f"Failed to extract image at index {idx}: {e}")
+                    # Write image
+                    image_data = row.image
+                    if isinstance(image_data, (bytes, bytearray)):
+                        image = Image.open(io.BytesIO(image_data))
+                        image.save(save_path)
+                    else:
+                        logger.error(f"Image type {type(image_data)} is not supported.")
+                        raise ValueError(f"Image type {type(image_data)} is not supported.")
+                except AttributeError as e:
+                    logger.error(f"Snapshot file `{snapshot_path}` has missing expected columns: {e}")
+                    raise e
 
     @classmethod
     @asynccontextmanager

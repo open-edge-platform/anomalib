@@ -35,6 +35,7 @@ def fxt_snapshot(fxt_project_id):
         id=uuid.uuid4(),
         project_id=fxt_project_id,
         filename="snapshot.parquet",
+        count=1,  # Add missing required field
     )
 
 
@@ -124,22 +125,36 @@ def test_extract_snapshot_to_path():
     snapshot_path = "dummy.parquet"
     temp_dir = "/tmp/dataset"
 
-    # Create a dummy dataframe
-    df = pd.DataFrame({"image": [b"fake_bytes"], "label_index": [0], "original_image_path": ["img.jpg"]})
+    # Create a dummy dataframe batch
+    df = pd.DataFrame({"image": [b"fake_bytes"], "is_anomalous": [False], "filename": ["img.jpg"]})
 
+    # Mock row tuple to behave like namedtuple
+    # In iter_tuples, rows are namedtuples by default
+
+    # We need to mock pyarrow.parquet.ParquetFile
     with (
-        patch("pandas.read_parquet", return_value=df) as mock_read_parquet,
+        patch("pyarrow.parquet.ParquetFile") as mock_parquet_file_cls,
         patch("os.makedirs") as mock_makedirs,
         patch("PIL.Image.open") as mock_image_open,
         patch("io.BytesIO"),
         patch("os.path.exists", return_value=False),
     ):
+        # Setup ParquetFile mock
+        mock_parquet_file = MagicMock()
+        mock_parquet_file_cls.return_value = mock_parquet_file
+
+        # Setup iter_batches to return one batch
+        mock_batch = MagicMock()
+        mock_batch.to_pandas.return_value = df
+        mock_parquet_file.iter_batches.return_value = [mock_batch]
+
         mock_img = MagicMock()
         mock_image_open.return_value = mock_img
 
         DatasetSnapshotService.extract_snapshot_to_path(snapshot_path, temp_dir)
 
-        mock_read_parquet.assert_called_once_with(snapshot_path)
+        mock_parquet_file_cls.assert_called_once_with(snapshot_path)
+        mock_parquet_file.iter_batches.assert_called_once()
         mock_makedirs.assert_called()
         mock_image_open.assert_called_once()
         mock_img.save.assert_called_once()

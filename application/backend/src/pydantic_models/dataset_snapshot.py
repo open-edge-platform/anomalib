@@ -17,7 +17,7 @@ class DatasetSnapshot(BaseIDModel):
     project_id: UUID
     filename: str
     count: int
-    created_at: datetime = Field(default_factory=datetime.now)
+    created_at: datetime | None = Field(default=None)
 
     model_config = {
         "json_schema_extra": {
