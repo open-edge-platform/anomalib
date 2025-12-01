@@ -8,6 +8,25 @@ export const isStatusActive = (status: string) => {
     return ['running', 'active'].includes(status);
 };
 
+export const downloadBlob = (blob: Blob, filename: string) => {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+};
+
+export const sanitizeFilename = (name: string): string => {
+    return name
+        .replace(/\s+/g, '_')
+        .replace(/[^a-zA-Z0-9_\-\.]/g, '')
+        .toLowerCase();
+};
+
 export const formatSize = (bytes: number | null | undefined) => {
     if (bytes === null || bytes === undefined) {
         return '';
