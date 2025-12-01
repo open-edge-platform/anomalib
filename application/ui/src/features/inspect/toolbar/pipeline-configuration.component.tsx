@@ -42,11 +42,11 @@ export const PipelineConfiguration = () => {
                             <Item key='sources' textValue='Sources'>
                                 <Text>Input</Text>
                             </Item>
-                            <Item key='sinks' textValue='Sinks'>
-                                <Text>Output</Text>
-                            </Item>
                             <Item key='models' textValue='Models'>
                                 <Text>Models</Text>
+                            </Item>
+                            <Item key='sinks' textValue='Sinks'>
+                                <Text>Output</Text>
                             </Item>
                         </TabList>
                         <TabPanels>
@@ -57,17 +57,17 @@ export const PipelineConfiguration = () => {
                                     </Suspense>
                                 </View>
                             </Item>
-                            <Item key='sinks'>
-                                <View marginTop={'size-200'}>
-                                    <Suspense fallback={<Loading size='M' />}>
-                                        <SinkActions />
-                                    </Suspense>
-                                </View>
-                            </Item>
                             <Item key='models'>
                                 <View marginTop={'size-200'}>
                                     <Suspense fallback={<Loading size='M' />}>
                                         <ModelsList />
+                                    </Suspense>
+                                </View>
+                            </Item>
+                            <Item key='sinks'>
+                                <View marginTop={'size-200'}>
+                                    <Suspense fallback={<Loading size='M' />}>
+                                        <SinkActions />
                                     </Suspense>
                                 </View>
                             </Item>

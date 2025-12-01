@@ -4,7 +4,7 @@
 import { $api } from '@geti-inspect/api';
 import { usePipeline } from '@geti-inspect/hooks';
 import { dimensionValue, View } from '@geti/ui';
-import { isEmpty } from 'lodash-es';
+import { isEmpty, isNil } from 'lodash-es';
 
 interface FpsProp {
     projectId: string;
@@ -22,7 +22,9 @@ export const Fps = ({ projectId }: FpsProp) => {
         { enabled: isRunning }
     );
 
-    if (isEmpty(metrics) || metrics?.inference.throughput.avg_requests_per_second == null) {
+    const requestsPerSecond = metrics?.inference.throughput.avg_requests_per_second;
+
+    if (isEmpty(metrics) || isNil(requestsPerSecond)) {
         return <></>;
     }
 
@@ -38,8 +40,7 @@ export const Fps = ({ projectId }: FpsProp) => {
                 borderRadius: dimensionValue('size-25'),
             }}
         >
-            {formatter.format(metrics?.inference.throughput.avg_requests_per_second)} fps
-            {/* {metrics?.inference.throughput.avg_requests_per_second} fps */}
+            {formatter.format(requestsPerSecond)} fps
         </View>
     );
 };

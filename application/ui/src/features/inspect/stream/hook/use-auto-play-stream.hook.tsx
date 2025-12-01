@@ -26,7 +26,7 @@ export const useAutoPlayStream = () => {
 
     useEffect(() => {
         if (status === 'failed') {
-            toast({ type: 'error', message: 'Failed to connect to the stream' });
+            toast({ type: 'error', message: STREAM_ERROR_MESSAGE });
         }
 
         if (hasSource && status === 'idle') {
