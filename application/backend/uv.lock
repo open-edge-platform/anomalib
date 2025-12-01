@@ -909,16 +909,16 @@ wheels = [
 
 [[package]]
 name = "cv2-enumerate-cameras"
-version = "1.3.0"
+version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pyobjc-framework-avfoundation", marker = "sys_platform == 'darwin'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/71/cf/a6eb5fa54d7dfc87c93a6161aef57527c6ef4d8239be7cef10d13fb9efd6/cv2_enumerate_cameras-1.3.0.tar.gz", hash = "sha256:795d8005b0e92ca117e1b8c4849c752edb39b7e2a1818b2d7ac4463aa26caac1", size = 12455, upload-time = "2025-09-12T04:42:33.549Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ee/9a/b37be592cf3ac2d3d75a5cce13c1e9d6c642c732c1f157cbedebc709b6c7/cv2_enumerate_cameras-1.3.1.tar.gz", hash = "sha256:28f8f42df9998ff47aab65198a848f0033420dc86d858764e098ab602d745357", size = 12878, upload-time = "2025-11-29T07:15:38.155Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3c/38/cc570b8579a2be52d0a3f6dba7afad536bc6d41cfc44108727ef7d8b185a/cv2_enumerate_cameras-1.3.0-cp32-abi3-win32.whl", hash = "sha256:bd24be3c2df42b88da59e9f6029b97484fc8468678a2be3900aa717835c40f6a", size = 20406, upload-time = "2025-09-12T04:42:28.463Z" },
-    { url = "https://files.pythonhosted.org/packages/9d/ef/0a6e095462e90d12358ef68653c7ea4d86dd6f5dd8f433279ecb5745e9ca/cv2_enumerate_cameras-1.3.0-cp32-abi3-win_amd64.whl", hash = "sha256:ef892cc7d92dec3ad0f696fa592a9d5461e593698048f84e877353cffcfc486f", size = 21296, upload-time = "2025-09-12T04:42:30.87Z" },
-    { url = "https://files.pythonhosted.org/packages/7e/d5/6a6b74c92b6901d7077eb67284010354d90762702ed3451ea5d6297ef692/cv2_enumerate_cameras-1.3.0-py3-none-any.whl", hash = "sha256:7a67d8cc98fd112c3df51ff699c6953884e96088ced2ee05191bdeaaa2e1e847", size = 11571, upload-time = "2025-09-12T04:42:32.272Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/be/fde95b064dc7c15f32a748d6070350dab920527c0bceba62a0fe1bd64bd2/cv2_enumerate_cameras-1.3.1-cp32-abi3-win32.whl", hash = "sha256:3efd052be5ed3f629ff0b7a1d82e4bc109ef89dbc62fa0e9ec3b5fad2cb09ab6", size = 20873, upload-time = "2025-11-29T07:15:34.5Z" },
+    { url = "https://files.pythonhosted.org/packages/87/3d/9e9c8c7b13a61aec1dbd1ef211391ade06f4629ee0a1f4fd5404a4b45c45/cv2_enumerate_cameras-1.3.1-cp32-abi3-win_amd64.whl", hash = "sha256:e7f2e3011b63b1a7d600ec19018c34acdd4d856385f1417afa0f5f10b1a5a980", size = 21761, upload-time = "2025-11-29T07:15:35.909Z" },
+    { url = "https://files.pythonhosted.org/packages/d1/60/da4ec76896917663009af2659864a893a243131f08a6d0fa51295d47f8bb/cv2_enumerate_cameras-1.3.1-py3-none-any.whl", hash = "sha256:7927c1c71136e2c6002b488d007d2efd237b888c65dc8bd5f9a006f5306f516d", size = 12036, upload-time = "2025-11-29T07:15:36.902Z" },
 ]
 
 [[package]]
@@ -1476,6 +1476,7 @@ dependencies = [
     { name = "pyarrow" },
     { name = "pydantic-settings" },
     { name = "sqlalchemy", extra = ["asyncio"] },
+    { name = "sse-starlette" },
     { name = "torchmetrics" },
     { name = "trackio" },
     { name = "uvicorn" },
@@ -1513,7 +1514,7 @@ requires-dist = [
     { name = "aiosqlite", specifier = "~=0.21" },
     { name = "alembic", specifier = "~=1.16.4" },
     { name = "anomalib", extras = ["full"], editable = "../../" },
-    { name = "cv2-enumerate-cameras", specifier = "==1.3.0" },
+    { name = "cv2-enumerate-cameras", specifier = "==1.3.1" },
     { name = "fastapi", extras = ["standard"], specifier = "~=0.116" },
     { name = "jsonschema", specifier = ">=4.18.0a10" },
     { name = "loguru", specifier = "==0.7.3" },
@@ -1524,6 +1525,7 @@ requires-dist = [
     { name = "pyarrow", specifier = "~=21.0.0" },
     { name = "pydantic-settings", specifier = "~=2.10.1" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = "~=2.0" },
+    { name = "sse-starlette", specifier = "~=3.0" },
     { name = "torchmetrics", specifier = ">=1.8.2" },
     { name = "trackio", specifier = "~=0.6.0" },
     { name = "uvicorn", specifier = "~=0.17" },
