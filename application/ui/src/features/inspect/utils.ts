@@ -1,3 +1,5 @@
+import { isString } from 'lodash-es';
+
 export const removeUnderscore = (text: string) => {
     return text.replaceAll('_', ' ');
 };
@@ -25,3 +27,5 @@ export const formatSize = (bytes: number | null | undefined) => {
 
     return `${formatter.format(size)} ${units[unitIndex]}`;
 };
+
+export const isNonEmptyString = (value: unknown): value is string => isString(value) && value !== '';

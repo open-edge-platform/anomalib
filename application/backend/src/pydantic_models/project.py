@@ -12,5 +12,9 @@ class Project(BaseIDNameModel):
     created_at: datetime | None = Field(default=None, description="Project creation timestamp", exclude=True)
 
 
+class ProjectUpdate(BaseModel):
+    name: str | None = None
+
+
 class ProjectList(BaseModel):
     projects: list[Project]

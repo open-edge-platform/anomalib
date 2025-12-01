@@ -8,7 +8,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, status
 
 from api.dependencies import get_project_id, get_project_service
 from api.endpoints import API_PREFIX
-from pydantic_models import Project, ProjectList
+from pydantic_models import Project, ProjectList, ProjectUpdate
 from services import ProjectService
 
 project_api_prefix_url = API_PREFIX + "/projects"
@@ -40,6 +40,19 @@ async def get_project_by_id(
 ) -> Project:
     """Endpoint to get project metadata by ID"""
     project = await project_service.get_project_by_id(project_id)
+    if project is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    return project
+
+
+@project_router.patch("/{project_id}")
+async def update_project(
+    project_service: Annotated[ProjectService, Depends(get_project_service)],
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_update: Annotated[ProjectUpdate, Body()],
+) -> Project:
+    """Endpoint to update project metadata by ID"""
+    project = await project_service.update_project(project_id, project_update)
     if project is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
     return project
