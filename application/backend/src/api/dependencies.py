@@ -156,7 +156,7 @@ async def get_job_id(job_id: str) -> UUID:
 
 async def get_snapshot_id(snapshot_id: str) -> UUID:
     """Initializes and validates a Snapshot ID"""
-    return get_uuid(snapshot_id, "snashot")
+    return get_uuid(snapshot_id, "snapshot")
 
 
 async def get_webrtc_manager(request: Request) -> WebRTCManager:
