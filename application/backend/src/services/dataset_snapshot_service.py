@@ -33,10 +33,10 @@ class DatasetSnapshotService:
             media_repo = MediaRepository(session, project_id=project_id)
 
             image_bin_repo = ImageBinaryRepository(project_id=project_id)
-            images = media_repo.get_all()
+            images = await media_repo.get_all()
 
         data_rows = []
-        for media in await images:
+        for media in images:
             # Read bytes
             try:
                 img_bytes = await image_bin_repo.read_file(media.filename)

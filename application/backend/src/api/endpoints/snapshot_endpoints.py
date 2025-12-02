@@ -6,15 +6,14 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import FileResponse
 
-from api.dependencies import get_project_id
+from api.dependencies import get_project_id, get_snapshot_id
 from api.endpoints import API_PREFIX
 from pydantic_models.dataset_snapshot import DatasetSnapshot, DatasetSnapshotList
 from repositories.binary_repo import DatasetSnapshotBinaryRepository
 from services.dataset_snapshot_service import DatasetSnapshotService
 
-dataset_snaphot_api_prefix_url = API_PREFIX + "/projects/{project_id}"
 router = APIRouter(
-    prefix=dataset_snaphot_api_prefix_url,
+    prefix=API_PREFIX + "/projects/{project_id}",
     tags=["snapshots"],
 )
 
@@ -56,7 +55,7 @@ async def get_snapshot(
 )
 async def get_snapshot_file(
     project_id: Annotated[UUID, Depends(get_project_id)],
-    snapshot_id: UUID,
+    snapshot_id: Annotated[UUID, Depends(get_snapshot_id)],
 ) -> FileResponse:
     """Endpoint to get snapshot file by ID"""
     try:
