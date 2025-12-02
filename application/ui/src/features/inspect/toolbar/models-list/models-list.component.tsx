@@ -2,11 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { usePatchPipeline, usePipeline, useProjectIdentifier } from '@geti-inspect/hooks';
-import { Content, IllustratedMessage, Radio, RadioGroup, View } from '@geti/ui';
+import { Button, Content, Flex, IllustratedMessage, Text } from '@geti/ui';
+import { clsx } from 'clsx';
 import { isEmpty } from 'lodash-es';
 import { NotFound } from 'packages/ui/icons';
 
 import { useTrainedModels } from '../../../../hooks/use-model';
+
+import classes from './model-list.module.scss';
 
 export const ModelsList = () => {
     const models = useTrainedModels();
@@ -29,22 +32,20 @@ export const ModelsList = () => {
     }
 
     return (
-        <View padding={'size-250'} backgroundColor={'gray-200'} borderRadius={'regular'}>
-            <RadioGroup
-                isEmphasized
-                defaultValue='dragon'
-                aria-label='models list'
-                value={selectedModelId}
-                onChange={handleSelectionChange}
-                isDisabled={patchPipeline.isPending}
-            >
-                {models.map((model) => (
-                    <Radio key={model.id} value={String(model.id)}>
-                        {model.name}
-                    </Radio>
-                ))}
-            </RadioGroup>
-        </View>
+        <Flex direction='column' gap='size-100'>
+            {models.map((model) => (
+                <Button
+                    key={model.id}
+                    variant={model.id === selectedModelId ? 'accent' : 'secondary'}
+                    onPress={() => handleSelectionChange(String(model.id))}
+                    isPending={patchPipeline.isPending}
+                    isDisabled={patchPipeline.isPending}
+                    UNSAFE_className={clsx(classes.option)}
+                >
+                    <Text>{model.name}</Text>
+                </Button>
+            ))}
+        </Flex>
     );
 };
 

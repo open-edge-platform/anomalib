@@ -42,8 +42,8 @@ export const PipelineConfiguration = () => {
                             <Item key='sources' textValue='Sources'>
                                 <Text>Input</Text>
                             </Item>
-                            <Item key='models' textValue='Models'>
-                                <Text>Models</Text>
+                            <Item key='model' textValue='Model'>
+                                <Text>Model</Text>
                             </Item>
                             <Item key='sinks' textValue='Sinks'>
                                 <Text>Output</Text>
@@ -57,7 +57,7 @@ export const PipelineConfiguration = () => {
                                     </Suspense>
                                 </View>
                             </Item>
-                            <Item key='models'>
+                            <Item key='model'>
                                 <View marginTop={'size-200'}>
                                     <Suspense fallback={<Loading size='M' />}>
                                         <ModelsList />
