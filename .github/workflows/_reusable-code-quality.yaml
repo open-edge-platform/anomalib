@@ -1,7 +1,7 @@
 # Code Quality Workflow
 #
-# This reusable workflow executes code quality checks using prek (pre-commit workspace tool)
-# with support for monorepo configurations and multiple pre-commit configs.
+# This reusable workflow executes code quality checks using prek (prek workspace tool)
+# with support for monorepo configurations and multiple prek configs.
 #
 # Key Features:
 # - Workspace mode support (multiple .pre-commit-config.yaml files)
