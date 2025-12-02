@@ -16,6 +16,7 @@ from api.endpoints.model_endpoints import model_router
 from api.endpoints.pipeline_endpoints import router as pipeline_router
 from api.endpoints.project_endpoints import project_router
 from api.endpoints.sink_endpoints import router as sink_router
+from api.endpoints.snapshot_endpoints import router as snapshot_router
 from api.endpoints.source_endpoints import router as source_router
 from api.endpoints.trainable_models_endpoints import router as trainable_model_router
 from api.endpoints.webrtc import router as webrtc_router
@@ -58,6 +59,7 @@ app.include_router(webrtc_router)
 app.include_router(trainable_model_router)
 app.include_router(device_router)
 app.include_router(capture_router)
+app.include_router(snapshot_router)
 
 
 if __name__ == "__main__":

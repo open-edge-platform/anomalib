@@ -4,7 +4,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from pydantic_models.base import BaseIDModel
 
@@ -16,7 +16,8 @@ class DatasetSnapshot(BaseIDModel):
 
     project_id: UUID
     filename: str
-    created_at: datetime = Field(default_factory=datetime.now)
+    count: int
+    created_at: datetime | None = Field(default=None)
 
     model_config = {
         "json_schema_extra": {
@@ -24,7 +25,12 @@ class DatasetSnapshot(BaseIDModel):
                 "id": "76e07d18-196e-4e33-bf98-ac1d35dca4cb",
                 "project_id": "16e07d18-196e-4e33-bf98-ac1d35dcaaaa",
                 "filename": "dataset_snapshot_123.parquet",
+                "count": 42,
                 "created_at": "2025-01-01T12:00:00",
             }
         }
     }
+
+
+class DatasetSnapshotList(BaseModel):
+    snapshots: list[DatasetSnapshot]
