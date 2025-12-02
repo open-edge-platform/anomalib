@@ -3,10 +3,10 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, UploadFile, status
 from fastapi.responses import FileResponse
 
-from api.dependencies import get_device_name, get_model_id, get_model_service, get_project_id
+from api.dependencies import PaginationLimit, get_device_name, get_model_id, get_model_service, get_project_id
 from api.endpoints.project_endpoints import project_api_prefix_url
 from api.media_rest_validator import MediaRestValidator
 from exceptions import ResourceNotFoundException
@@ -26,9 +26,11 @@ model_router = APIRouter(
 async def get_models(
     model_service: Annotated[ModelService, Depends(get_model_service)],
     project_id: Annotated[UUID, Depends(get_project_id)],
+    limit: Annotated[int, Depends(PaginationLimit())],
+    offset: Annotated[int, Query(ge=0)] = 0,
 ) -> ModelList:
     """Endpoint to get list of all models"""
-    return await model_service.get_model_list(project_id=project_id)
+    return await model_service.get_model_list(project_id=project_id, limit=limit, offset=offset)
 
 
 @model_router.get("/{model_id}")

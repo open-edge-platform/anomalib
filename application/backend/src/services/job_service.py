@@ -14,6 +14,7 @@ from sse_starlette import ServerSentEvent
 from db import get_async_db_session_ctx
 from exceptions import DuplicateJobException, ResourceNotFoundException
 from pydantic_models import Job, JobList, JobType
+from pydantic_models.base import Pagination
 from pydantic_models.job import JobCancelled, JobStatus, JobSubmitted, TrainJobPayload
 from repositories import JobRepository
 
@@ -22,10 +23,27 @@ logger = logging.getLogger(__name__)
 
 class JobService:
     @staticmethod
-    async def get_job_list(extra_filters: dict | None = None) -> JobList:
+    async def get_job_list(limit: int, offset: int, extra_filters: dict | None = None) -> JobList:
         async with get_async_db_session_ctx() as session:
             repo = JobRepository(session)
-            return JobList(jobs=await repo.get_all(extra_filters=extra_filters))
+            total = await repo.get_all_count(extra_filters=extra_filters)
+            items = await repo.get_all_pagination(extra_filters=extra_filters, limit=limit, offset=offset)
+        return JobList(
+            jobs=items,
+            pagination=Pagination(
+                limit=limit,
+                offset=offset,
+                count=len(items),
+                total=total,
+            ),
+        )
+
+    @staticmethod
+    async def get_job_list_streaming(extra_filters: dict | None = None) -> AsyncGenerator[Job]:
+        async with get_async_db_session_ctx() as session:
+            repo = JobRepository(session)
+            async for item in repo.get_all_streaming(extra_filters=extra_filters):
+                yield item  # need to re-yield to extends session's context
 
     @staticmethod
     async def get_job_by_id(job_id: UUID | str) -> Job | None:

@@ -26,9 +26,6 @@ class ProjectRepository(BaseRepository):
     def from_schema(self) -> Callable[[ProjectDB], Project]:
         return ProjectMapper.from_schema
 
-    async def get_by_name(self, name: str) -> list[Project]:
-        return await self.get_all(extra_filters={"name": name})
-
     async def save(self, project: Project) -> Project:
         project_schema: ProjectDB = self.to_schema(project)
         project_schema.pipeline = PipelineDB(

@@ -10,6 +10,7 @@ from PIL import Image
 
 from db import get_async_db_session_ctx
 from pydantic_models import Media, MediaList
+from pydantic_models.base import Pagination
 from repositories import MediaRepository, ProjectRepository
 from repositories.binary_repo import ImageBinaryRepository
 from services import ResourceNotFoundError
@@ -25,10 +26,20 @@ class MediaService:
         return f"thumb_{media_id}.png"
 
     @staticmethod
-    async def get_media_list(project_id: UUID) -> MediaList:
+    async def get_media_list(project_id: UUID, limit: int, offset: int) -> MediaList:
         async with get_async_db_session_ctx() as session:
             repo = MediaRepository(session, project_id=project_id)
-            return MediaList(media=await repo.get_all())
+            total = await repo.get_all_count()
+            items = await repo.get_all_pagination(limit=limit, offset=offset)
+        return MediaList(
+            media=items,
+            pagination=Pagination(
+                limit=limit,
+                offset=offset,
+                count=len(items),
+                total=total,
+            ),
+        )
 
     @staticmethod
     async def get_media_by_id(project_id: UUID, media_id: UUID) -> Media | None:

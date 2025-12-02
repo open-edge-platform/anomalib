@@ -4,9 +4,9 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, HTTPException, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 
-from api.dependencies import get_project_id, get_project_service
+from api.dependencies import PaginationLimit, get_project_id, get_project_service
 from api.endpoints import API_PREFIX
 from pydantic_models import Project, ProjectList, ProjectUpdate
 from services import ProjectService
@@ -19,9 +19,13 @@ project_router = APIRouter(
 
 
 @project_router.get("")
-async def get_projects(project_service: Annotated[ProjectService, Depends(get_project_service)]) -> ProjectList:
+async def get_projects(
+    project_service: Annotated[ProjectService, Depends(get_project_service)],
+    limit: Annotated[int, Depends(PaginationLimit())],
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> ProjectList:
     """Endpoint to get list of all projects"""
-    return await project_service.get_project_list()
+    return await project_service.get_project_list(limit=limit, offset=offset)
 
 
 @project_router.post("")

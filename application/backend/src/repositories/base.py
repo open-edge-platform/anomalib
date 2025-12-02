@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import abc
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
 from typing import Any, TypeVar
 from uuid import UUID
 
@@ -74,12 +74,55 @@ class BaseRepository[ModelType, SchemaType](metaclass=abc.ABCMeta):
             return self.from_schema(first_result)
         return None
 
-    async def get_all(self, extra_filters: dict | None = None, expressions: list[Any] | None = None) -> list[ModelType]:
-        # TODO: use generator to avoid loading all records into memory at once
+    async def get_all_count(self, extra_filters: dict | None = None, expressions: list[Any] | None = None) -> int:
         query = self._get_filter_query(extra_filters=extra_filters, expressions=expressions)
+        count_query = expression.select(expression.func.count()).select_from(query.subquery())
+        result = await self.db.execute(count_query)
+        return result.scalar_one()
+
+    async def get_all_pagination(
+        self,
+        limit: int,
+        offset: int,
+        extra_filters: dict | None = None,
+        expressions: list[Any] | None = None,
+    ) -> list[ModelType]:
+        """
+        Get a paginated list of records.
+
+        Args:
+            limit: Maximum number of records to return.
+            offset: Number of records to skip.
+            extra_filters: Dictionary of equality filters (column=value).
+            expressions: List of SQLAlchemy expressions to filter by.
+
+        Returns:
+            List of ModelType instances.
+        """
+        query = self._get_filter_query(extra_filters=extra_filters, expressions=expressions)
+        query = query.limit(limit).offset(offset)
         results = await self.db.execute(query)
         scalars = results.scalars().all()
         return [self.from_schema(result) for result in scalars]
+
+    async def get_all_streaming(
+        self, extra_filters: dict | None = None, expressions: list[Any] | None = None, batch_size: int = 100
+    ) -> AsyncGenerator[ModelType]:
+        """
+        Stream all records via a generator.
+
+        Args:
+            extra_filters: Dictionary of equality filters (column=value).
+            expressions: List of SQLAlchemy expressions to filter by.
+            batch_size: Number of records to fetch from the DB at a time.
+
+        Yields:
+            ModelType instances one by one.
+        """
+        query = self._get_filter_query(extra_filters=extra_filters, expressions=expressions)
+        result = await self.db.stream(query.execution_options(yield_per=batch_size))
+        async for row in result.scalars():
+            yield self.from_schema(row)
 
     async def save(self, item: ModelType) -> ModelType:
         schema_item: SchemaType = self.to_schema(item)

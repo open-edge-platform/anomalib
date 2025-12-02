@@ -3,10 +3,10 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import FileResponse
 
-from api.dependencies import get_project_id, get_snapshot_id
+from api.dependencies import PaginationLimit, get_project_id, get_snapshot_id
 from api.endpoints import API_PREFIX
 from pydantic_models.dataset_snapshot import DatasetSnapshot, DatasetSnapshotList
 from repositories.binary_repo import DatasetSnapshotBinaryRepository
@@ -27,10 +27,11 @@ router = APIRouter(
 )
 async def get_snapshot_list(
     project_id: Annotated[UUID, Depends(get_project_id)],
+    limit: Annotated[int, Depends(PaginationLimit())],
+    offset: Annotated[int, Query(ge=0)] = 0,
 ) -> DatasetSnapshotList:
     """Endpoint to get list of all snapshots"""
-    snapshots = await DatasetSnapshotService.list_snapshots(project_id=project_id)
-    return DatasetSnapshotList(snapshots=snapshots)
+    return await DatasetSnapshotService.list_snapshots(project_id=project_id, limit=limit, offset=offset)
 
 
 @router.get(

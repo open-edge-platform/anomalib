@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from pydantic_models.base import BaseIDModel
+from pydantic_models.base import BaseIDModel, Pagination
 
 
 class DatasetSnapshot(BaseIDModel):
@@ -34,3 +34,4 @@ class DatasetSnapshot(BaseIDModel):
 
 class DatasetSnapshotList(BaseModel):
     snapshots: list[DatasetSnapshot]
+    pagination: Pagination
