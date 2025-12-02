@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import { $api } from '@geti-inspect/api';
-import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { usePatchPipeline, useProjectIdentifier } from '@geti-inspect/hooks';
 import { ActionButton, AlertDialog, DialogContainer, Item, Menu, MenuTrigger, toast, type Key } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 
@@ -12,13 +12,13 @@ import type { ModelData } from './model-types';
 interface ModelActionsMenuProps {
     model: ModelData;
     selectedModelId: string | undefined;
-    onSetSelectedModelId: (modelId: string | undefined) => void;
 }
 
 type DialogType = 'logs' | 'delete' | 'export' | null;
 
-export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId }: ModelActionsMenuProps) => {
+export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuProps) => {
     const { projectId } = useProjectIdentifier();
+    const patchPipeline = usePatchPipeline(projectId);
     const [openDialog, setOpenDialog] = useState<DialogType>(null);
 
     const cancelJobMutation = $api.useMutation('post', '/api/jobs/{job_id}:cancel');
@@ -33,8 +33,9 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
     });
 
     const hasJobActions = Boolean(model.job?.id);
-    const canDeleteModel = model.status === 'Completed' && model.id !== selectedModelId;
-    const canExportModel = model.status === 'Completed';
+    const hasCompletedStatus = model.status === 'Completed';
+    const canDeleteModel = hasCompletedStatus && model.id !== selectedModelId;
+    const canExportModel = hasCompletedStatus;
     const shouldShowMenu = hasJobActions || canDeleteModel || canExportModel;
 
     if (!shouldShowMenu) {
@@ -48,6 +49,9 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
     if (deleteModelMutation.isPending) {
         disabledMenuKeys.push('delete');
     }
+    if (model.id === selectedModelId || patchPipeline.isPending) {
+        disabledMenuKeys.push('activate');
+    }
 
     const handleCancelJob = () => {
         if (!model.job?.id) {
@@ -55,13 +59,7 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
         }
 
         void cancelJobMutation.mutateAsync(
-            {
-                params: {
-                    path: {
-                        job_id: model.job.id,
-                    },
-                },
-            },
+            { params: { path: { job_id: model.job.id } } },
             {
                 onError: () => {
                     toast({ type: 'error', message: 'Failed to cancel training job.' });
@@ -70,20 +68,17 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
         );
     };
 
+    const handleSetModel = (modelId?: string) => {
+        patchPipeline.mutateAsync({ params: { path: { project_id: projectId } }, body: { model_id: modelId } });
+    };
+
     const handleDeleteModel = () => {
         void deleteModelMutation.mutateAsync(
-            {
-                params: {
-                    path: {
-                        project_id: projectId,
-                        model_id: model.id,
-                    },
-                },
-            },
+            { params: { path: { project_id: projectId, model_id: model.id } } },
             {
                 onSuccess: () => {
                     if (selectedModelId === model.id) {
-                        onSetSelectedModelId(undefined);
+                        handleSetModel(undefined);
                     }
 
                     toast({ type: 'success', message: `Model "${model.name}" has been deleted.` });
@@ -119,8 +114,12 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
                         if (actionKey === 'delete' && canDeleteModel) {
                             setOpenDialog('delete');
                         }
+                        if (actionKey === 'activate' && hasCompletedStatus) {
+                            handleSetModel(model.id);
+                        }
                     }}
                 >
+                    {hasCompletedStatus ? <Item key='activate'>Activate</Item> : null}
                     {hasJobActions ? <Item key='logs'>View logs</Item> : null}
                     {model.job?.status === 'pending' || model.job?.status === 'running' ? (
                         <Item key='cancel'>Cancel training</Item>

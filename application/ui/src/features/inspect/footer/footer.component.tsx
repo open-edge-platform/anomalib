@@ -31,10 +31,11 @@ const useDefaultModel = () => {
     const { projectId } = useProjectIdentifier();
     const patchPipeline = usePatchPipeline(projectId);
 
-    const selectedModelId = pipeline?.model?.id;
+    const hasSelectedModel = pipeline?.model?.id !== undefined;
+    const hasNonAvailableModels = models.length === 0;
 
     useEffect(() => {
-        if (selectedModelId !== undefined || models.length === 0 || patchPipeline.isPending) {
+        if (hasSelectedModel || hasNonAvailableModels || patchPipeline.isPending) {
             return;
         }
 
@@ -42,7 +43,7 @@ const useDefaultModel = () => {
             params: { path: { project_id: projectId } },
             body: { model_id: models[0].id },
         });
-    }, [models, patchPipeline, projectId, selectedModelId]);
+    }, [hasNonAvailableModels, hasSelectedModel, models, patchPipeline, projectId]);
 };
 
 export const ProgressBarItem = () => {

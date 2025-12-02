@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 import { $api } from '@geti-inspect/api';
-import { usePipeline, useProjectIdentifier, useSetModelToPipeline } from '@geti-inspect/hooks';
+import { usePipeline, useProjectIdentifier } from '@geti-inspect/hooks';
 import {
     Cell,
     Column,
@@ -39,7 +39,7 @@ const useModels = () => {
 export const ModelsView = () => {
     const { data: pipeline } = usePipeline();
     const { jobs = [] } = useProjectTrainingJobs();
-    const setModelToPipelineMutation = useSetModelToPipeline();
+
     const dateFormatter = useDateFormatter({ dateStyle: 'medium', timeStyle: 'short' });
     const selectedModelId = pipeline.model?.id;
     useRefreshModelsOnJobUpdates(jobs);
@@ -109,10 +109,6 @@ export const ModelsView = () => {
         return new Set<string>([selectedModelId]);
     }, [selectedModelId]);
 
-    const handleSetModel = (modelId?: string) => {
-        setModelToPipelineMutation(modelId);
-    };
-
     return (
         <View backgroundColor='gray-100' height='100%'>
             {/* Models Table */}
@@ -122,22 +118,6 @@ export const ModelsView = () => {
                 selectionStyle='highlight'
                 selectionMode='single'
                 selectedKeys={tableSelectedKeys}
-                onSelectionChange={(key) => {
-                    if (typeof key === 'string') {
-                        return;
-                    }
-
-                    const selectedId = key.values().next().value;
-                    if (selectedId === selectedModelId) {
-                        return;
-                    }
-
-                    const selectedModel = models.find((model) => model.id === selectedId);
-
-                    if (selectedModel?.status === 'Completed') {
-                        handleSetModel(selectedModel.id);
-                    }
-                }}
                 UNSAFE_className={classes.table}
                 renderEmptyState={() => (
                     <IllustratedMessage>
@@ -178,11 +158,7 @@ export const ModelsView = () => {
                             <Cell>
                                 <Flex justifyContent='end' alignItems='center'>
                                     <Flex alignItems='center' gap='size-200'>
-                                        <ModelActionsMenu
-                                            model={model}
-                                            selectedModelId={selectedModelId}
-                                            onSetSelectedModelId={handleSetModel}
-                                        />
+                                        <ModelActionsMenu model={model} selectedModelId={selectedModelId} />
                                     </Flex>
                                 </Flex>
                             </Cell>

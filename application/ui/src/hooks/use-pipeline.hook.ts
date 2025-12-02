@@ -33,6 +33,11 @@ export const usePipelineMetrics = () => {
 
 export const usePatchPipeline = (project_id: string) => {
     return $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
+        onError: (error) => {
+            if (error) {
+                toast({ type: 'error', message: String(error.detail) });
+            }
+        },
         meta: {
             invalidates: [['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id } } }]],
         },
@@ -110,18 +115,6 @@ export const useConnectSinkToPipeline = () => {
 
     return (sink_id: string) =>
         pipeline.mutateAsync({ params: { path: { project_id: projectId } }, body: { sink_id } });
-};
-
-export const useSetModelToPipeline = () => {
-    const { projectId } = useProjectIdentifier();
-    const pipeline = usePatchPipeline(projectId);
-
-    return (modelId: string | undefined) => {
-        pipeline.mutate({
-            params: { path: { project_id: projectId } },
-            body: { model_id: modelId },
-        });
-    };
 };
 
 export const useActivePipeline = () => {

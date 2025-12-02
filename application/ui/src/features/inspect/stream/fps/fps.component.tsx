@@ -25,7 +25,7 @@ export const Fps = ({ projectId }: FpsProp) => {
     const requestsPerSecond = metrics?.inference.throughput.avg_requests_per_second;
 
     if (isEmpty(metrics) || isNil(requestsPerSecond)) {
-        return <></>;
+        return null;
     }
 
     return (

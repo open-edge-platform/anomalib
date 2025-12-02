@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { usePatchPipeline, usePipeline, useProjectIdentifier } from '@geti-inspect/hooks';
-import { Button, Content, Flex, IllustratedMessage, Text } from '@geti/ui';
+import { Button, Content, Flex, IllustratedMessage } from '@geti/ui';
 import { clsx } from 'clsx';
 import { isEmpty } from 'lodash-es';
 import { NotFound } from 'packages/ui/icons';
@@ -27,7 +27,7 @@ export const ModelsList = () => {
         });
     };
 
-    if (isEmpty(modelsIds) || !selectedModelId) {
+    if (isEmpty(modelsIds)) {
         return renderEmptyState();
     }
 
@@ -36,13 +36,13 @@ export const ModelsList = () => {
             {models.map((model) => (
                 <Button
                     key={model.id}
-                    variant={model.id === selectedModelId ? 'accent' : 'secondary'}
+                    variant='secondary'
                     onPress={() => handleSelectionChange(String(model.id))}
                     isPending={patchPipeline.isPending}
                     isDisabled={patchPipeline.isPending}
-                    UNSAFE_className={clsx(classes.option)}
+                    UNSAFE_className={clsx(classes.option, { [classes.active]: model.id === selectedModelId })}
                 >
-                    <Text>{model.name}</Text>
+                    {model.name}
                 </Button>
             ))}
         </Flex>
