@@ -33,21 +33,21 @@ class DatasetSnapshotService:
             media_repo = MediaRepository(session, project_id=project_id)
 
             image_bin_repo = ImageBinaryRepository(project_id=project_id)
-            images = await media_repo.get_all()
+            items = await media_repo.get_all()
 
         data_rows = []
-        for media in images:
+        for item in items:
             # Read bytes
             try:
-                img_bytes = await image_bin_repo.read_file(media.filename)
+                img_bytes = await image_bin_repo.read_file(item.filename)
             except FileNotFoundError:
-                logger.error(f"Image file {media.filename} missing for media {media.id}, skipping")
+                logger.error(f"Image file {item.filename} missing for media item `{item.id}`, skipping")
                 continue
 
             data_rows.append({
                 "image": img_bytes,
-                "is_anomalous": media.is_anomalous,
-                "filename": media.filename,  # Virtual path, useful for debugging
+                "is_anomalous": item.is_anomalous,
+                "filename": item.filename,  # Virtual path, useful for debugging
                 # "mask": ... # TODO: Add mask support if we have masks
             })
 
