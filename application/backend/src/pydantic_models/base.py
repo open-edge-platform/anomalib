@@ -42,7 +42,7 @@ class NoRequiredIDs(BaseModel):
     id: SkipJsonSchema[UUID] = Field(exclude=True, default_factory=uuid4)
 
 
-class Pagination(ABC, BaseModel):
+class Pagination(BaseModel):
     """Pagination model."""
 
     offset: int  # index of the first item returned (0-based)
