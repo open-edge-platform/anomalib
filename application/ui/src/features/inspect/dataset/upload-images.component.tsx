@@ -1,18 +1,47 @@
+import { useRef } from 'react';
+
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Button, FileTrigger, toast } from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
 
+import { useUploadStatus } from '../footer/adapters';
 import { TrainModelButton } from '../train-model/train-model-button.component';
 import { REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING } from './utils';
 
 export const UploadImages = () => {
     const { projectId } = useProjectIdentifier();
     const queryClient = useQueryClient();
+    const { startUpload, updateProgress, completeUpload } = useUploadStatus();
 
-    const captureImageMutation = $api.useMutation('post', '/api/projects/{project_id}/images');
+    // Track progress across parallel uploads
+    const progressRef = useRef({ completed: 0, failed: 0, total: 0 });
+
+    const captureImageMutation = $api.useMutation('post', '/api/projects/{project_id}/images', {
+        onSuccess: () => {
+            progressRef.current.completed++;
+            updateProgress({
+                completed: progressRef.current.completed + progressRef.current.failed,
+                total: progressRef.current.total,
+                failed: progressRef.current.failed,
+            });
+        },
+        onError: () => {
+            progressRef.current.failed++;
+            updateProgress({
+                completed: progressRef.current.completed + progressRef.current.failed,
+                total: progressRef.current.total,
+                failed: progressRef.current.failed,
+            });
+        },
+    });
 
     const handleAddMediaItem = async (files: File[]) => {
+        const total = files.length;
+
+        progressRef.current = { completed: 0, failed: 0, total };
+        startUpload(total);
+
         const uploadPromises = files.map((file) => {
             const formData = new FormData();
             formData.append('file', file);
@@ -24,10 +53,10 @@ export const UploadImages = () => {
             });
         });
 
-        const promises = await Promise.allSettled(uploadPromises);
+        await Promise.allSettled(uploadPromises);
 
-        const succeeded = promises.filter((result) => result.status === 'fulfilled').length;
-        const failed = promises.filter((result) => result.status === 'rejected').length;
+        const { failed } = progressRef.current;
+        completeUpload(failed === 0, failed);
 
         const imagesOptions = $api.queryOptions('get', '/api/projects/{project_id}/images', {
             params: { path: { project_id: projectId } },
@@ -43,18 +72,6 @@ export const UploadImages = () => {
                 duration: Infinity,
                 actionButtons: [<TrainModelButton key='train' />],
                 position: 'bottom-left',
-            });
-            return;
-        }
-
-        if (failed === 0) {
-            toast({ type: 'success', message: `Uploaded ${succeeded} item(s)` });
-        } else if (succeeded === 0) {
-            toast({ type: 'error', message: `Failed to upload ${failed} item(s)` });
-        } else {
-            toast({
-                type: 'warning',
-                message: `Uploaded ${succeeded} item(s), ${failed} failed`,
             });
         }
     };

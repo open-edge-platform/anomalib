@@ -11,6 +11,7 @@ import { WebRTCConnectionProvider } from './components/stream/web-rtc-connection
 import { ZoomProvider } from './components/zoom/zoom';
 import { queryClient } from './query-client/query-client';
 import { router } from './routes/router';
+import { StatusBarProvider } from './features/inspect/footer/status-bar';
 
 export const Providers = () => {
     return (
@@ -19,7 +20,9 @@ export const Providers = () => {
                 <WebRTCConnectionProvider>
                     <ZoomProvider>
                         <NuqsAdapter>
-                            <RouterProvider router={router} />
+                            <StatusBarProvider>
+                                <RouterProvider router={router} />
+                            </StatusBarProvider>
                         </NuqsAdapter>
                     </ZoomProvider>
                 </WebRTCConnectionProvider>
