@@ -8,9 +8,8 @@ from utils.devices import Devices
 class TestDevices:
     """Test suite for Devices utility class."""
 
-    @patch("utils.devices.sys.platform", "linux")
     @patch("utils.devices.cv2_enumerate_cameras.enumerate_cameras")
-    def test_get_webcam_devices_non_macos(self, mock_enumerate: MagicMock) -> None:
+    def test_get_webcam_devices(self, mock_enumerate: MagicMock) -> None:
         """Test get_webcam_devices."""
         # Setup mock return value
         mock_cam = MagicMock()
