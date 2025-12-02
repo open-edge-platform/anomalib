@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Dataset as DatasetIcon, Models as ModelsIcon, Stats } from '@geti-inspect/icons';
+import { Dataset as DatasetIcon, Models as ModelsIcon } from '@geti-inspect/icons';
 import { Flex, Grid, ToggleButton, View } from '@geti/ui';
 import { useSearchParams } from 'react-router-dom';
 
@@ -15,7 +15,8 @@ import styles from './sidebar.module.scss';
 const TABS = [
     { label: 'Dataset', icon: <DatasetIcon />, content: <Dataset /> },
     { label: 'Models', icon: <ModelsIcon />, content: <Models /> },
-    { label: 'Stats', icon: <Stats />, content: <>Stats</> },
+    // TODO: Add Stats tab implementation
+    /* { label: 'Stats', icon: <Stats />, content: <>Stats</> }, */
 ];
 
 interface TabProps {
