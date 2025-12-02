@@ -10,6 +10,7 @@ from fastapi import status
 from api.dependencies import get_project_service
 from main import app
 from pydantic_models import ProjectList
+from pydantic_models.base import Pagination
 from services import ProjectService
 
 
@@ -21,12 +22,15 @@ def fxt_project_service() -> MagicMock:
 
 
 def test_get_projects(fxt_client, fxt_project_service, fxt_project):
-    fxt_project_service.get_project_list.return_value = ProjectList(projects=[fxt_project])
+    fxt_project_service.get_project_list.return_value = ProjectList(
+        projects=[fxt_project],
+        pagination=Pagination(offset=0, limit=20, count=1, total=1),
+    )
 
     response = fxt_client.get("/api/projects")
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["projects"]) == 1
-    fxt_project_service.get_project_list.assert_called_once()
+    fxt_project_service.get_project_list.assert_called_once_with(limit=20, offset=0)
 
 
 def test_get_project_not_found(fxt_client, fxt_project_service):

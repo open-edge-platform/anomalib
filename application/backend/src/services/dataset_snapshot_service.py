@@ -59,7 +59,7 @@ class DatasetSnapshotService:
                 ("is_anomalous", pa.bool_()),
                 ("filename", pa.string()),
             ])
-            table = pa.Table.from_pydict({}, schema=schema)
+            table = pa.Table.from_pydict({"image": [], "is_anomalous": [], "filename": []}, schema=schema)
         else:
             # Convert to PyArrow Table
             pydict = {

@@ -34,15 +34,18 @@ def mock_db_context():
 class TestProjectService:
     def test_get_project_list(self, fxt_project_service, fxt_project_repository, fxt_project_list):
         """Test getting project list."""
-        fxt_project_repository.get_all.return_value = fxt_project_list.projects
+        fxt_project_repository.get_all_count = AsyncMock(return_value=len(fxt_project_list.projects))
+        fxt_project_repository.get_all_pagination = AsyncMock(return_value=fxt_project_list.projects)
 
         with patch("services.project_service.ProjectRepository") as mock_repo_class:
             mock_repo_class.return_value = fxt_project_repository
 
-            result = asyncio.run(fxt_project_service.get_project_list())
+            result = asyncio.run(fxt_project_service.get_project_list(limit=20, offset=0))
 
-        assert result == fxt_project_list
-        fxt_project_repository.get_all.assert_called_once()
+        assert result.projects == fxt_project_list.projects
+        assert result.pagination.total == len(fxt_project_list.projects)
+        fxt_project_repository.get_all_count.assert_called_once()
+        fxt_project_repository.get_all_pagination.assert_called_once_with(limit=20, offset=0)
 
     def test_get_project_by_id(self, fxt_project_service, fxt_project_repository, fxt_project):
         """Test getting project by ID."""

@@ -12,8 +12,9 @@ from fastapi import status
 
 from api.dependencies import get_configuration_service
 from main import app
-from pydantic_models.sink import FolderSinkConfig, MqttSinkConfig, OutputFormat, SinkType
-from pydantic_models.source import SourceType, VideoFileSourceConfig, WebcamSourceConfig
+from pydantic_models.base import Pagination
+from pydantic_models.sink import FolderSinkConfig, MqttSinkConfig, OutputFormat, SinkList, SinkType
+from pydantic_models.source import SourceList, SourceType, VideoFileSourceConfig, WebcamSourceConfig
 from services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 from services.exceptions import ResourceType
 
@@ -147,13 +148,26 @@ class TestSourceAndSinkEndpoints:
     )
     def test_list_configs(self, fixtures, api_path, list_method, fxt_config_service, fxt_client, fxt_project, request):
         fxt_configs = [request.getfixturevalue(fixture) for fixture in fixtures]
-        getattr(fxt_config_service, list_method).return_value = fxt_configs
+        if api_path == ConfigApiPath.SOURCES:
+            list_response = SourceList(
+                sources=fxt_configs,
+                pagination=Pagination(offset=0, limit=20, count=2, total=2),
+            )
+        else:
+            list_response = SinkList(
+                sinks=fxt_configs,
+                pagination=Pagination(offset=0, limit=20, count=2, total=2),
+            )
+        getattr(fxt_config_service, list_method).return_value = list_response
 
         response = fxt_client.get(f"/api/projects/{fxt_project.id}/{api_path}")
 
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.json()) == 2
-        getattr(fxt_config_service, list_method).assert_called_once()
+        if api_path == ConfigApiPath.SOURCES:
+            assert len(response.json()["sources"]) == 2
+        else:
+            assert len(response.json()["sinks"]) == 2
+        getattr(fxt_config_service, list_method).assert_called_once_with(project_id=fxt_project.id, limit=20, offset=0)
 
     @pytest.mark.parametrize(
         "fixture_name, api_path, get_method",
