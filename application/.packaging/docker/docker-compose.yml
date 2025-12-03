@@ -20,7 +20,7 @@ services:
       dockerfile: application/.packaging/docker/Dockerfile
       target: geti-inspect-${AI_DEVICE:-cpu}
       <<: *proxies
-    working_dir: /app
+    working_dir: /app/application/backend
     container_name: geti-inspect-${AI_DEVICE:-cpu}
     # Uncomment the following lines to enable torch XPU support
     # For more info, see README.md

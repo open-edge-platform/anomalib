@@ -48,7 +48,7 @@ nginx=1.26.* \
 
 ENV PATH=/app/.venv/bin:$PATH
 WORKDIR /app
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app/application/backend
 
 COPY --chown=non-root:non-root application/.packaging/docker/nginx.conf /etc/nginx/nginx.conf
 COPY --chown=non-root:non-root --from=web-ui /home/app/web_ui/dist /usr/share/nginx/html
@@ -78,14 +78,14 @@ RUN mkdir -p /app/data /app/logs \
 #------------------------------------------
 FROM geti-inspect-base AS geti-inspect-cpu
 USER non-root
-WORKDIR /app
+WORKDIR /app/application/backend
 
 RUN --mount=type=cache,target=/home/non-root/.cache/uv,uid=10001,gid=10001 \
-    uv sync --frozen --no-dev --extra cpu --extra application
+    uv sync --frozen --no-dev --extra cpu
 
 EXPOSE 80
 
-CMD ["sh", "-c", "nginx && exec geti-inspect"]
+CMD ["sh", "-c", "nginx && exec uv run src/main.py"]
 
 #------------------------------------------
 # Geti Inspect CUDA version
@@ -111,14 +111,14 @@ RUN apt-get update \
     && apt-get clean
 
 USER non-root
-WORKDIR /app
+WORKDIR /app/application/backend
 
 RUN --mount=type=cache,target=/home/non-root/.cache/uv,uid=10001,gid=10001 \
-    uv sync --frozen --no-dev --extra cu124 --extra application
+    uv sync --frozen --no-dev --extra cu124
 
 EXPOSE 80
 
-CMD ["sh", "-c", "nginx && exec geti-inspect"]
+CMD ["sh", "-c", "nginx && exec uv run src/main.py"]
 
 #------------------------------------------
 # Geti Inspect XPU version
@@ -144,11 +144,11 @@ RUN apt-get update \
 RUN groupadd -f render && usermod -aG render non-root
 
 USER non-root
-WORKDIR /app
+WORKDIR /app/application/backend
 
 RUN --mount=type=cache,target=/home/non-root/.cache/uv,uid=10001,gid=10001 \
-    uv sync --frozen --no-dev --extra xpu --extra application
+    uv sync --frozen --no-dev --extra xpu
 
 EXPOSE 80
 
-CMD ["sh", "-c", "nginx && exec geti-inspect"]
+CMD ["sh", "-c", "nginx && exec uv run src/main.py"]
