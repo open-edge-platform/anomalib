@@ -49,7 +49,7 @@ mqtt = [
     "paho-mqtt~=2.1.0",
 ]
 
-# Explicit versions are needed as we can't propogate extra dependencies to anomalib
+# Explicit versions are needed as we can't propagate extra dependencies to anomalib
 cpu = ["anomalib[cpu,full]"]
 cu124 = ["anomalib[cu124,full]"]
 xpu = ["anomalib[xpu,full]"]
