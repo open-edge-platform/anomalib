@@ -133,11 +133,7 @@ async def capture_image(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Uploaded file must have an extension.")
     extension = "." + file.filename.rsplit(".", maxsplit=1)[-1]
     media = await media_service.upload_image(
-        project_id=project_id,
-        image=image_bytes,
-        is_anomalous=False,
-        extension=extension,
-        size=file.size,
+        project_id=project_id, image=image_bytes, is_anomalous=False, extension=extension, size=file.size
     )
 
     background_tasks.add_task(

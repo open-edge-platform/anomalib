@@ -46,7 +46,7 @@ class ProjectRepository(BaseRepository):
             .values(
                 dataset_updated_at=sa.func.current_timestamp(),
                 updated_at=sa.func.current_timestamp(),
-            ),
+            )
         )
         logger.info(f"Updated dataset timestamp for project {project_id} to current time.")
         await self.db.commit()

@@ -53,7 +53,8 @@ async def predict(
     file: Annotated[UploadFile, Depends(MediaRestValidator.validate_image_file)],
     device: Annotated[str | None, Depends(get_device_name)] = None,
 ) -> PredictionResponse:
-    """Run prediction on an uploaded image using the specified model.
+    """
+    Run prediction on an uploaded image using the specified model.
 
     Returns prediction results including anomaly map, label, and confidence score.
     """
@@ -107,9 +108,7 @@ async def export_model(
     """Export a model to zip file."""
     try:
         zip_path = await model_service.export_model(
-            project_id=project_id,
-            model_id=model_id,
-            export_parameters=export_parameters,
+            project_id=project_id, model_id=model_id, export_parameters=export_parameters
         )
     except FileNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

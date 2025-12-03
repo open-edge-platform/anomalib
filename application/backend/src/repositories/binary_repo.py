@@ -3,7 +3,6 @@
 import abc
 import asyncio
 import os
-import pathlib
 import shutil
 from enum import StrEnum
 from functools import cached_property
@@ -26,7 +25,8 @@ class BinaryRepository(metaclass=abc.ABCMeta):
         self.file_type = file_type
 
     async def read_file(self, filename: str) -> bytes:
-        """Read a binary file from the filesystem.
+        """
+        Read a binary file from the filesystem.
 
         :param filename: Relative path to the file.
         :return: Binary content of the file.
@@ -34,28 +34,32 @@ class BinaryRepository(metaclass=abc.ABCMeta):
 
         def stdlib_read():
             full_path = self.get_full_path(filename)
-            if not pathlib.Path(full_path).is_file():
+            if not os.path.isfile(full_path):
                 raise FileNotFoundError(f"File not found: {full_path}")
-            with pathlib.Path(full_path).open("rb") as fp:
+            with open(full_path, "rb") as fp:
                 return fp.read()
 
         return await asyncio.to_thread(stdlib_read)
 
     @cached_property
     def project_folder_path(self) -> str:
-        """Get the project folder path containing the binary files."""
+        """
+        Get the project folder path containing the binary files.
+        """
         return os.path.join(STORAGE_ROOT_PATH, self.file_type, "projects", self.project_id)
 
     @abc.abstractmethod
     def get_full_path(self, filename: str) -> str:
-        """Get the full path for a given filename within the project folder.
+        """
+        Get the full path for a given filename within the project folder.
 
         :param filename: Name of the file.
         :return: Full path to the file.
         """
 
     async def save_file(self, filename: str, content: bytes) -> str:
-        """Save a binary file to the filesystem under the project directory.
+        """
+        Save a binary file to the filesystem under the project directory.
 
         :param filename: Name of the file to save.
         :param content: Binary content of the file.
@@ -65,8 +69,8 @@ class BinaryRepository(metaclass=abc.ABCMeta):
         def stdlib_write():
             full_path = self.get_full_path(filename)
             folder, _ = full_path.split(filename)
-            pathlib.Path(folder).mkdir(exist_ok=True, parents=True)
-            with pathlib.Path(full_path).open("wb") as f:
+            os.makedirs(folder, exist_ok=True)
+            with open(full_path, "wb") as f:
                 f.write(content)
             return full_path
 
@@ -77,15 +81,16 @@ class BinaryRepository(metaclass=abc.ABCMeta):
         return destination_path
 
     async def delete_file(self, filename: str) -> None:
-        """Delete a binary file from the filesystem.
+        """
+        Delete a binary file from the filesystem.
 
         :param filename: Name of the file to delete.
         """
 
         def stdlib_delete():
             full_path = self.get_full_path(filename)
-            if pathlib.Path(full_path).is_file():
-                pathlib.Path(full_path).unlink()
+            if os.path.isfile(full_path):
+                os.remove(full_path)
             else:
                 raise FileNotFoundError(f"File not found: {full_path}")
 
@@ -100,7 +105,8 @@ class DatasetSnapshotBinaryRepository(BinaryRepository):
         return os.path.join(self.project_folder_path, filename)
 
     def get_snapshot_path(self, snapshot_id: str | UUID) -> str:
-        """Get the full path for a dataset snapshot.
+        """
+        Get the full path for a dataset snapshot.
 
         :param snapshot_id: ID of the snapshot.
         :return: Full path to the snapshot file.
@@ -126,18 +132,21 @@ class ModelBinaryRepository(BinaryRepository):
 
     @cached_property
     def model_folder_path(self) -> str:
-        """Get the folder path for models.
+        """
+        Get the folder path for models.
 
         :return: Folder path for models.
         """
         return os.path.join(self.project_folder_path, self._model_id)
 
     async def delete_model_folder(self) -> None:
-        """Delete a model folder from the filesystem."""
+        """
+        Delete a model folder from the filesystem.
+        """
 
         def stdlib_delete_folder():
             folder_path = self.model_folder_path
-            if pathlib.Path(folder_path).exists():
+            if os.path.exists(folder_path):
                 shutil.rmtree(folder_path)
             else:
                 raise FileNotFoundError(f"Model folder not found: {folder_path}")
@@ -145,7 +154,8 @@ class ModelBinaryRepository(BinaryRepository):
         await asyncio.to_thread(stdlib_delete_folder)
 
     def get_weights_file_path(self, format: ExportType, name: str) -> str:
-        """Read a weights file from the model folder.
+        """
+        Read a weights file from the model folder.
 
         :param format: Format of the model (e.g., ExportType.OPENVINO).
         :param name: Name of the weights to read.

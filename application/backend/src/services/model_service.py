@@ -161,10 +161,7 @@ class ModelService:
 
     @staticmethod
     def _run_export(
-        model_name: str,
-        ckpt_path: Path,
-        export_parameters: ExportParameters,
-        export_zip_path: Path,
+        model_name: str, ckpt_path: Path, export_parameters: ExportParameters, export_zip_path: Path
     ) -> Path:
         """Run the export process in a separate thread."""
         # Setup engine
