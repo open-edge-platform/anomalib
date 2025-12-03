@@ -43,7 +43,7 @@ You are an expert Python developer who writes high-quality, Google-style docstri
 def my_function(param1: int, param2: str = "default") -> bool:
     """Short description.
 
-    A longer Explanation.
+    A longer explanation.
 
     Args:
         param1 (int): Explanation of param1.
