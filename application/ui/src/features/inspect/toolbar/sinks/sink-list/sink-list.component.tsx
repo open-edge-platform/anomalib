@@ -1,7 +1,7 @@
 import { Add as AddIcon } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 import { isEqual } from 'lodash-es';
-import { Button, Flex, Text } from 'packages/ui';
+import { Button, Flex, Loading, Text, VirtualizedListLayout } from 'packages/ui';
 
 import { StatusTag } from '../../../../../components/status-tag/status-tag.component';
 import { usePipeline } from '../../../../../hooks/use-pipeline.hook';
@@ -15,6 +15,8 @@ import classes from './sink-list.module.scss';
 
 type SinksListProps = {
     sinks: SinkConfig[];
+    isLoading: boolean;
+    onLoadMore: () => void;
     onAddSink: () => void;
     onEditSink: (config: SinkConfig) => void;
 };
@@ -61,24 +63,30 @@ const SinkListItem = ({ sink, isConnected, onEditSink }: SinksListItemProps) => 
     );
 };
 
-export const SinkList = ({ sinks, onAddSink, onEditSink }: SinksListProps) => {
+export const SinkList = ({ sinks, isLoading, onLoadMore, onAddSink, onEditSink }: SinksListProps) => {
     const pipeline = usePipeline();
     const currentSinkId = pipeline.data.sink?.id;
 
     return (
-        <Flex gap={'size-200'} direction={'column'}>
-            <Button variant='secondary' UNSAFE_className={classes.addSink} onPress={onAddSink}>
+        <Flex direction={'column'} gap={'size-200'}>
+            <Button onPress={onAddSink} variant={'secondary'} UNSAFE_className={classes.addSink}>
                 <AddIcon /> Add new sink
             </Button>
 
-            {sinks.map((sink) => (
-                <SinkListItem
-                    key={sink.id}
-                    sink={sink}
-                    isConnected={isEqual(currentSinkId, sink.id)}
-                    onEditSink={onEditSink}
-                />
-            ))}
+            <VirtualizedListLayout
+                items={sinks}
+                isLoading={isLoading}
+                onLoadMore={onLoadMore}
+                ariaLabel='sinks list'
+                containerHeight={sinks.length > 1 ? 'size-3600' : 'size-3000'}
+                layoutOptions={{ gap: 10 }}
+                idFormatter={(sink: SinkConfig) => String(sink.id)}
+                textValueFormatter={(sink: SinkConfig) => sink.name}
+                renderLoading={() => <Loading mode={'inline'} size='S' />}
+                renderItem={(sink: SinkConfig) => (
+                    <SinkListItem sink={sink} isConnected={isEqual(currentSinkId, sink.id)} onEditSink={onEditSink} />
+                )}
+            />
         </Flex>
     );
 };

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties, Suspense } from 'react';
+import { CSSProperties } from 'react';
 
 import { PipelineLink } from '@geti-inspect/icons';
 import {
@@ -11,7 +11,6 @@ import {
     DialogTrigger,
     dimensionValue,
     Item,
-    Loading,
     TabList,
     TabPanels,
     Tabs,
@@ -48,16 +47,12 @@ export const InputOutputSetup = () => {
                         <TabPanels>
                             <Item key='sources'>
                                 <View marginTop={'size-200'}>
-                                    <Suspense fallback={<Loading size='M' />}>
-                                        <SourceActions />
-                                    </Suspense>
+                                    <SourceActions />
                                 </View>
                             </Item>
                             <Item key='sinks'>
                                 <View marginTop={'size-200'}>
-                                    <Suspense fallback={<Loading size='M' />}>
-                                        <SinkActions />
-                                    </Suspense>
+                                    <SinkActions />
                                 </View>
                             </Item>
                         </TabPanels>
