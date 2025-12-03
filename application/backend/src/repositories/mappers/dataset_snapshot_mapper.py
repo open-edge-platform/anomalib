@@ -16,6 +16,7 @@ class DatasetSnapshotMapper(IBaseMapper[DatasetSnapshotDB, DatasetSnapshot]):
             id=str(model.id),
             project_id=str(model.project_id),
             filename=model.filename,
+            count=model.count,
             created_at=model.created_at,
         )
 
@@ -25,5 +26,6 @@ class DatasetSnapshotMapper(IBaseMapper[DatasetSnapshotDB, DatasetSnapshot]):
             id=UUID(schema.id),
             project_id=UUID(schema.project_id),
             filename=schema.filename,
+            count=schema.count,
             created_at=schema.created_at,
         )

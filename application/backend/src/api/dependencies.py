@@ -154,6 +154,11 @@ async def get_job_id(job_id: str) -> UUID:
     return get_uuid(job_id, "job")
 
 
+async def get_snapshot_id(snapshot_id: str) -> UUID:
+    """Initializes and validates a Snapshot ID"""
+    return get_uuid(snapshot_id, "snapshot")
+
+
 async def get_webrtc_manager(request: Request) -> WebRTCManager:
     """Provides the global WebRTCManager instance from FastAPI application's state."""
     return request.app.state.webrtc_manager
