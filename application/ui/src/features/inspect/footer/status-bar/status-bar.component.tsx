@@ -4,10 +4,10 @@
 import { ActionButton, Text } from '@geti/ui';
 import { clsx } from 'clsx';
 
+import { useStatusBar } from './status-bar-context';
 import { ConnectionStatus } from './status-bar.interface';
 
 import classes from './status-bar.module.scss';
-import { useStatusBar } from './status-bar-context';
 
 const CONNECTION_LABELS: Record<ConnectionStatus, string> = {
     connected: 'Connected',
@@ -17,7 +17,6 @@ const CONNECTION_LABELS: Record<ConnectionStatus, string> = {
 };
 
 export const StatusBar = () => {
-
     const { connection, activeStatus } = useStatusBar();
     const hasActiveStatus = activeStatus !== null;
     const isIndeterminate = activeStatus?.progress === undefined;
@@ -40,10 +39,7 @@ export const StatusBar = () => {
                 {/* WebRTC status */}
                 <div className={classes.connectionSlot}>
                     <div
-                        className={clsx(
-                            classes.connectionDot,
-                            hasActiveStatus ? classes.neutral : classes[connection]
-                        )}
+                        className={clsx(classes.connectionDot, hasActiveStatus ? classes.neutral : classes[connection])}
                     />
                     <Text UNSAFE_className={classes.connectionText}>{CONNECTION_LABELS[connection]}</Text>
                 </div>
@@ -53,9 +49,15 @@ export const StatusBar = () => {
                     {activeStatus ? (
                         <>
                             <Text UNSAFE_className={classes.message}>{activeStatus.message}</Text>
-                            {activeStatus.detail && <Text UNSAFE_className={classes.detail}>{activeStatus.detail}</Text>}
+                            {activeStatus.detail && (
+                                <Text UNSAFE_className={classes.detail}>{activeStatus.detail}</Text>
+                            )}
                             {activeStatus.isCancellable && activeStatus.onCancel && (
-                                <ActionButton isQuiet onPress={activeStatus.onCancel} UNSAFE_className={classes.cancelButton}>
+                                <ActionButton
+                                    isQuiet
+                                    onPress={activeStatus.onCancel}
+                                    UNSAFE_className={classes.cancelButton}
+                                >
                                     Cancel
                                 </ActionButton>
                             )}

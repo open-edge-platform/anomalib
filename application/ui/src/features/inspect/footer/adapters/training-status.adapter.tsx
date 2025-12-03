@@ -18,14 +18,14 @@ export const TrainingStatusAdapter = () => {
     });
 
     const { mutate: cancelJob } = $api.useMutation('post', '/api/jobs/{job_id}:cancel', {
-        meta: { invalidates: [
-            ['get', '/api/jobs'],
-        ]},
+        meta: { invalidates: [['get', '/api/jobs']] },
     });
 
     const trainingJob = jobsData?.jobs.find(
         (job: Job) =>
-            job.project_id === projectId && job.type === 'training' && (job.status === 'running' || job.status === 'pending')
+            job.project_id === projectId &&
+            job.type === 'training' &&
+            (job.status === 'running' || job.status === 'pending')
     );
 
     useEffect(() => {
@@ -53,7 +53,16 @@ export const TrainingStatusAdapter = () => {
                 }
             },
         });
-    }, [trainingJob?.id, trainingJob?.payload.model_name, trainingJob?.message, trainingJob?.progress, trainingJob?.status, setStatus, removeStatus, cancelJob]);
+    }, [
+        trainingJob?.id,
+        trainingJob?.payload.model_name,
+        trainingJob?.message,
+        trainingJob?.progress,
+        trainingJob?.status,
+        setStatus,
+        removeStatus,
+        cancelJob,
+    ]);
 
     return null;
 };

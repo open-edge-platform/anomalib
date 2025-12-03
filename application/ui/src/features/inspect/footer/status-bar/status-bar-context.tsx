@@ -45,9 +45,7 @@ export const StatusBarProvider = ({ children }: StatusBarProviderProps) => {
     const activeStatus = useMemo(() => {
         if (statuses.size === 0) return null;
 
-        return Array.from(statuses.values()).sort(
-            (a, b) => STATUS_PRIORITY[a.type] - STATUS_PRIORITY[b.type]
-        )[0];
+        return Array.from(statuses.values()).sort((a, b) => STATUS_PRIORITY[a.type] - STATUS_PRIORITY[b.type])[0];
     }, [statuses]);
 
     const value = useMemo(
