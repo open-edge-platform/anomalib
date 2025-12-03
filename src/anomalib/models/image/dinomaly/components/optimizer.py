@@ -11,14 +11,14 @@ https://github.com/guojiajeremy/Dinomaly/
 
 import math
 from collections.abc import Callable, Iterable
-from typing import Any, TypeAlias
+from typing import Any
 
 import numpy as np
 import torch
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.optim.optimizer import Optimizer
 
-ParamsT: TypeAlias = Iterable[torch.Tensor] | Iterable[dict[str, Any]] | Iterable[tuple[str, torch.Tensor]]
+type ParamsT = Iterable[torch.Tensor] | Iterable[dict[str, Any]] | Iterable[tuple[str, torch.Tensor]]
 
 
 class WarmCosineScheduler(_LRScheduler):

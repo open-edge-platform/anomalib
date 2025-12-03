@@ -72,14 +72,14 @@ jobs:
     if: github.event_name == 'pull_request'
     uses: ./.github/workflows/_reusable-pr-title-check.yaml
     with:
-      python-version: "3.10"
+      python-version: "3.13"
 
   # Code quality job using reusable workflow
   quality:
     if: github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-code-quality.yaml
     with:
-      python-version: "3.10"
+      python-version: "3.13"
 
   # Test suite job using reusable workflow
   unit-tests:

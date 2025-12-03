@@ -21,14 +21,14 @@ Example:
     torch.Size([2, 1, 256, 256])
 """
 
-from enum import Enum
+from enum import StrEnum
 
 import torch
 from torch import nn
 from torch.nn import functional as F  # noqa: N812
 
 
-class AnomalyMapMode(str, Enum):
+class AnomalyMapMode(StrEnum):
     """Mode for generating anomaly maps.
 
     The mode determines how the anomaly scores from different scales are combined:

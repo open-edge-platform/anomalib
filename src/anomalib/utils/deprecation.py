@@ -227,7 +227,7 @@ def _wrap_deprecated_function(
 
 
 @overload
-def deprecate(__obj: _T) -> _T: ...
+def deprecate(__obj: _T) -> _T: ...  # noqa: UP047
 
 
 @overload

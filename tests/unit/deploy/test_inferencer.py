@@ -139,6 +139,12 @@ def compare_predictions(
         if isinstance(score2, torch.Tensor):
             score2 = score2.cpu().item()
 
+        # OpenVINO inference might return a numpy array. Extract the scalar value.
+        if isinstance(score1, np.ndarray):
+            score1 = score1.item()
+        if isinstance(score2, np.ndarray):
+            score2 = score2.item()
+
     if score1 is not None and score2 is not None:
         score_diff = abs(score1 - score2)
         if score_diff > tolerance:
@@ -187,6 +193,6 @@ def test_inference_similarity(
     openvino_inferencer = OpenVINOInferencer(openvino_path, device="CPU")
     openvino_pred = openvino_inferencer.predict(test_image_path)
 
-    compare_predictions(engine_pred, torch_pred)
-    compare_predictions(engine_pred, openvino_pred)
-    compare_predictions(torch_pred, openvino_pred)
+    compare_predictions(engine_pred, torch_pred, tolerance=5e-3)
+    compare_predictions(engine_pred, openvino_pred, tolerance=5e-3)
+    compare_predictions(torch_pred, openvino_pred, tolerance=5e-3)

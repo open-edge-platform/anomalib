@@ -27,7 +27,7 @@
 #    - Status updates
 #
 # Required Inputs:
-# - python-version: Python version for checks (default: "3.10")
+# - python-version: Python version for checks (default: "3.13")
 #
 # Example Usage:
 # 1. Default Configuration:
@@ -40,7 +40,7 @@
 #      quality:
 #        uses: ./.github/workflows/_reusable-code-quality.yaml
 #        with:
-#          python-version: "3.11"
+#          python-version: "3.13"
 #
 # Note: Requires configured pre-commit hooks in repository
 
@@ -52,7 +52,7 @@ on:
       python-version:
         description: "Python version for checks"
         type: string
-        default: "3.10"
+        default: "3.13"
 
 permissions:
   contents: read
