@@ -103,6 +103,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Text(), nullable=False),
         sa.Column("project_id", sa.String(), nullable=False),
         sa.Column("filename", sa.Text(), nullable=False),
+        sa.Column("count", sa.Integer(), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )

@@ -1,6 +1,5 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import sys
 from functools import lru_cache
 from typing import TypedDict
 
@@ -24,15 +23,6 @@ class Devices:
         Returns:
             list[CameraInfo]: List of dictionaries containing camera index and name.
         """
-        # TODO: remove branching after: https://github.com/lukehugh/cv2_enumerate_cameras/pull/13
-        if sys.platform == "darwin":
-            import AVFoundation  # noqa: PLC0415 # late import to avoid issues on non-macOS systems
-
-            # macOS hardware connection notifications are delivered asynchronously via the NSRunLoop.
-            # Running it once is enough to process pending notifications and update the list.
-            run_loop = AVFoundation.NSRunLoop.currentRunLoop()
-            run_loop.runUntilDate_(AVFoundation.NSDate.dateWithTimeIntervalSinceNow_(0))  # runs loop once
-
         return [{"index": cam.index, "name": cam.name} for cam in cv2_enumerate_cameras.enumerate_cameras()]
 
     @staticmethod

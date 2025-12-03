@@ -45,6 +45,7 @@ class DatasetSnapshotDB(Base):
     id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid4()))
     project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"))
     filename: Mapped[str] = mapped_column(Text, nullable=False)
+    count: Mapped[int] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
 
 
