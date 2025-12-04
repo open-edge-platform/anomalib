@@ -6,10 +6,10 @@ from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 
-from api.dependencies import PaginationLimit, get_pipeline_service, get_project_id, get_project_service
+from api.dependencies import PaginationLimit, get_job_service, get_pipeline_service, get_project_id, get_project_service
 from api.endpoints import API_PREFIX
 from pydantic_models import Project, ProjectList, ProjectUpdate
-from services import PipelineService, ProjectService
+from services import JobService, PipelineService, ProjectService
 
 project_api_prefix_url = API_PREFIX + "/projects"
 project_router = APIRouter(
@@ -64,6 +64,7 @@ async def update_project(
 
 @project_router.delete("/{project_id}")
 async def delete_project(
+    job_service: Annotated[JobService, Depends(get_job_service)],
     pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
     project_service: Annotated[ProjectService, Depends(get_project_service)],
     project_id: Annotated[UUID, Depends(get_project_id)],
@@ -75,8 +76,13 @@ async def delete_project(
     active_pipeline = await pipeline_service.get_active_pipeline()
     if active_pipeline and active_pipeline.project_id == project_id and active_pipeline.is_running:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_409_CONFLICT,
             detail="Cannot delete project with active pipeline. Please deactivate the pipeline first.",
+        )
+    if await job_service.has_running_jobs(project_id=project_id):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete project with running jobs. Please cancel the jobs first.",
         )
     try:
         await project_service.delete_project(project_id)
