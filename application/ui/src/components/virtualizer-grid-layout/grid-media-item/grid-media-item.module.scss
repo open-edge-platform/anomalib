@@ -10,6 +10,7 @@
     line-height: 0px;
     padding: var(--spectrum-global-dimension-size-125);
     border-radius: var(--spectrum-global-dimension-size-50);
+    background-color: var(--spectrum-gray-100);
 
     &:empty {
         display: none;
