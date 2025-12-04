@@ -7,7 +7,7 @@ import { clsx } from 'clsx';
 import { isEmpty } from 'lodash-es';
 import { NotFound } from 'packages/ui/icons';
 
-import { useTrainedModels } from '../../../../hooks/use-model';
+import { useTrainedModels } from '../../../../hooks/use-trained-models';
 
 import classes from './model-list.module.scss';
 

@@ -8,8 +8,9 @@ import { SchemaJob as Job } from '@geti-inspect/api/spec';
 import { usePatchPipeline, usePipeline, useProjectIdentifier } from '@geti-inspect/hooks';
 import { Flex, Loading, Text, View } from '@geti/ui';
 import { WaitingIcon } from '@geti/ui/icons';
+import { isEmpty } from 'lodash-es';
 
-import { useTrainedModels } from '../../../hooks/use-model';
+import { useCompletedModels } from '../../../hooks/use-completed-models.hook';
 import { TrainingStatusItem } from './training-status-item.component';
 
 const useCurrentJob = () => {
@@ -26,13 +27,13 @@ const useCurrentJob = () => {
 };
 
 const useDefaultModel = () => {
-    const models = useTrainedModels();
+    const models = useCompletedModels();
     const { data: pipeline } = usePipeline();
     const { projectId } = useProjectIdentifier();
     const patchPipeline = usePatchPipeline(projectId);
 
     const hasSelectedModel = pipeline?.model?.id !== undefined;
-    const hasNonAvailableModels = models.length === 0;
+    const hasNonAvailableModels = isEmpty(models.filter(({ status }) => status === 'Completed'));
 
     useEffect(() => {
         if (hasSelectedModel || hasNonAvailableModels || patchPipeline.isPending) {

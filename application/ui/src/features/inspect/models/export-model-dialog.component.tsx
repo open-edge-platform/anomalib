@@ -20,8 +20,8 @@ import { useMutation } from '@tanstack/react-query';
 import type { SchemaCompressionType, SchemaExportType } from 'src/api/openapi-spec';
 import { Onnx, OpenVino, PyTorch } from 'src/assets/icons';
 
+import type { ModelData } from '../../../hooks/utils';
 import { downloadBlob, sanitizeFilename } from '../utils';
-import type { ModelData } from './model-types';
 
 import classes from './export-model-dialog.module.scss';
 
