@@ -23,3 +23,18 @@ class TestDevices:
         assert cameras[0]["index"] == 1
         assert cameras[0]["name"] == "Linux Camera"
         mock_enumerate.assert_called_once()
+
+    @patch("utils.devices.cv2_enumerate_cameras.enumerate_cameras")
+    def test_get_webcam_devices_duplicate_names(self, mock_enumerate: MagicMock) -> None:
+        """Ensure duplicate camera names are suffixed to remain unique."""
+
+        def build_cam(index: int, name: str) -> MagicMock:
+            cam = MagicMock()
+            cam.index = index
+            cam.name = name
+            return cam
+
+        mock_enumerate.return_value = [build_cam(0, "nikon"), build_cam(1, "nikon")]
+        cameras = Devices.get_webcam_devices()
+        assert [cam["name"] for cam in cameras] == ["nikon", "nikon (1)"]
+        assert [cam["index"] for cam in cameras] == [0, 1]
