@@ -5,9 +5,9 @@ import { usePatchPipeline, useProjectIdentifier } from '@geti-inspect/hooks';
 import { ActionButton, AlertDialog, DialogContainer, Item, Menu, MenuTrigger, toast, type Key } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 
+import type { ModelData } from '../../../hooks/utils';
 import { JobLogsDialog } from '../jobs/show-job-logs.component';
 import { ExportModelDialog } from './export-model-dialog.component';
-import type { ModelData } from './model-types';
 
 interface ModelActionsMenuProps {
     model: ModelData;

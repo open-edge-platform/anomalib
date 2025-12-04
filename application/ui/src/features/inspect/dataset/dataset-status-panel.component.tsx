@@ -1,12 +1,12 @@
 import { ComponentProps, Suspense, useEffect, useRef } from 'react';
 
-import { $api } from '@geti-inspect/api';
 import { SchemaJob as Job, SchemaJob, SchemaJobStatus } from '@geti-inspect/api/spec';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Content, Flex, Heading, InlineAlert, IntelBrandedLoading, ProgressBar, Text } from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { isEqual } from 'lodash-es';
 
+import { useProjectTrainingJobs } from '../../../hooks/use-project-trainingJobs.hook';
 import { ShowJobLogs } from '../jobs/show-job-logs.component';
 import { REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING } from './utils';
 
@@ -86,25 +86,6 @@ const TrainingInProgress = ({ job }: TrainingInProgressProps) => {
             </Content>
         </InlineAlert>
     );
-};
-
-const REFETCH_INTERVAL_WITH_TRAINING = 1_000;
-
-export const useProjectTrainingJobs = () => {
-    const { projectId } = useProjectIdentifier();
-
-    const { data } = $api.useQuery('get', '/api/jobs', undefined, {
-        refetchInterval: ({ state }) => {
-            const projectHasTrainingJob = state.data?.jobs.some(
-                ({ project_id, type, status }) =>
-                    projectId === project_id && type === 'training' && (status === 'running' || status === 'pending')
-            );
-
-            return projectHasTrainingJob ? REFETCH_INTERVAL_WITH_TRAINING : undefined;
-        },
-    });
-
-    return { jobs: data?.jobs.filter((job) => job.project_id === projectId) };
 };
 
 export const useRefreshModelsOnJobUpdates = (jobs: Job[] | undefined) => {

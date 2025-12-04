@@ -5,19 +5,20 @@ import { Suspense, useEffect } from 'react';
 
 import { usePatchPipeline, usePipeline, useProjectIdentifier } from '@geti-inspect/hooks';
 import { Loading, View } from '@geti/ui';
+import { isEmpty } from 'lodash-es';
 
-import { useTrainedModels } from '../../../hooks/use-model';
+import { useCompletedModels } from '../../../hooks/use-completed-models.hook';
 import { ConnectionStatusAdapter, TrainingStatusAdapter } from './adapters';
 import { StatusBar } from './status-bar';
 
 const useDefaultModel = () => {
-    const models = useTrainedModels();
+    const models = useCompletedModels();
     const { data: pipeline } = usePipeline();
     const { projectId } = useProjectIdentifier();
     const patchPipeline = usePatchPipeline(projectId);
 
     const hasSelectedModel = pipeline?.model?.id !== undefined;
-    const hasNonAvailableModels = models.length === 0;
+    const hasNonAvailableModels = isEmpty(models.filter(({ status }) => status === 'Completed'));
 
     useEffect(() => {
         if (hasSelectedModel || hasNonAvailableModels || patchPipeline.isPending) {
