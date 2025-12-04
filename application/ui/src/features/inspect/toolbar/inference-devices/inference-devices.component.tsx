@@ -45,6 +45,7 @@ export const InferenceDevices = () => {
             isQuiet
             width='auto'
             label='Inference devices: '
+            aria-label='inference devices'
             labelAlign='end'
             labelPosition='side'
             items={options}

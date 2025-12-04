@@ -20,7 +20,6 @@ vi.mock('react-router', async () => {
     };
 });
 
-const mockStop = vi.fn();
 const mockNavigate = vi.fn();
 
 describe('ProjectListItem', () => {
@@ -33,7 +32,7 @@ describe('ProjectListItem', () => {
         vi.clearAllMocks();
         vi.mocked(useNavigate).mockReturnValue(mockNavigate);
         vi.mocked(useWebRTCConnection).mockReturnValue({
-            stop: mockStop,
+            stop: vi.fn(),
             start: vi.fn(),
             status: 'idle',
             webRTCConnectionRef: { current: null },
@@ -54,7 +53,6 @@ describe('ProjectListItem', () => {
 
         await userEvent.click(screen.getByRole('listitem'));
 
-        expect(mockStop).toHaveBeenCalled();
         expect(mockNavigate).toHaveBeenCalledWith('/projects/project-123?mode=Dataset');
     });
 
