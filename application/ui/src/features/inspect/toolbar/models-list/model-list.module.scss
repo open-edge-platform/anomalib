@@ -1,0 +1,14 @@
+.option {
+    text-align: left;
+    background-color: var(--spectrum-global-color-gray-75);
+    border-radius: var(--spectrum-alias-border-radius-regular);
+    border: var(--spectrum-alias-border-size-thin) solid var(--spectrum-global-color-gray-200) !important;
+
+    span {
+        text-align: left;
+    }
+}
+
+.active {
+    border-left: var(--spectrum-global-dimension-size-50) solid var(--aqua) !important;
+}

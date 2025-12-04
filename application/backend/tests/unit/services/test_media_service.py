@@ -56,15 +56,18 @@ class TestMediaService:
 
     def test_get_media_list(self, fxt_media_service, fxt_media_repository, fxt_media_list, fxt_project):
         """Test getting media list."""
-        fxt_media_repository.get_all.return_value = fxt_media_list.media
+        fxt_media_repository.get_all_count = AsyncMock(return_value=len(fxt_media_list.media))
+        fxt_media_repository.get_all_pagination = AsyncMock(return_value=fxt_media_list.media)
 
         with patch("services.media_service.MediaRepository") as mock_repo_class:
             mock_repo_class.return_value = fxt_media_repository
 
-            result = asyncio.run(fxt_media_service.get_media_list(fxt_project.id))
+            result = asyncio.run(fxt_media_service.get_media_list(fxt_project.id, limit=20, offset=0))
 
-        assert result == fxt_media_list
-        fxt_media_repository.get_all.assert_called_once()
+        assert result.media == fxt_media_list.media
+        assert result.pagination.total == len(fxt_media_list.media)
+        fxt_media_repository.get_all_count.assert_called_once()
+        fxt_media_repository.get_all_pagination.assert_called_once_with(limit=20, offset=0)
 
     def test_get_media_by_id(self, fxt_media_service, fxt_media_repository, fxt_media, fxt_project):
         """Test getting media by ID."""

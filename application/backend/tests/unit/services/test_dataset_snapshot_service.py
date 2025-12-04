@@ -57,7 +57,11 @@ def test_create_snapshot_success(fxt_project_id, fxt_media, fxt_snapshot):
 
             # Mock Media Repo
             mock_media_repo = MagicMock()
-            mock_media_repo.get_all = AsyncMock(return_value=[fxt_media])
+
+            async def mock_get_all_streaming():
+                yield fxt_media
+
+            mock_media_repo.get_all_streaming = mock_get_all_streaming
             mock_media_repo_cls.return_value = mock_media_repo
 
             # Mock Image Binary Repo
@@ -81,7 +85,6 @@ def test_create_snapshot_success(fxt_project_id, fxt_media, fxt_snapshot):
             result = await DatasetSnapshotService.create_snapshot(fxt_project_id)
 
             assert result == fxt_snapshot
-            mock_media_repo.get_all.assert_called_once()
             mock_image_repo.read_file.assert_called_once_with(fxt_media.filename)
             mock_snapshot_bin_repo.save_file.assert_called_once()
             mock_snapshot_repo.save.assert_called_once()

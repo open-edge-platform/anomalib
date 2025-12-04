@@ -21,6 +21,7 @@ from PIL import Image
 
 from db import get_async_db_session_ctx
 from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
+from pydantic_models.base import Pagination
 from pydantic_models.model import ExportParameters
 from repositories import ModelRepository
 from repositories.binary_repo import ModelBinaryRepository
@@ -74,10 +75,20 @@ class ModelService:
             return await repo.save(model)
 
     @staticmethod
-    async def get_model_list(project_id: UUID) -> ModelList:
+    async def get_model_list(project_id: UUID, limit: int, offset: int) -> ModelList:
         async with get_async_db_session_ctx() as session:
             repo = ModelRepository(session, project_id=project_id)
-            return ModelList(models=await repo.get_all())
+            total = await repo.get_all_count()
+            items = await repo.get_all_pagination(limit=limit, offset=offset)
+        return ModelList(
+            models=items,
+            pagination=Pagination(
+                limit=limit,
+                offset=offset,
+                count=len(items),
+                total=total,
+            ),
+        )
 
     @staticmethod
     async def get_model_by_id(project_id: UUID, model_id: UUID) -> Model | None:

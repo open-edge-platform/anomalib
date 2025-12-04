@@ -23,6 +23,7 @@ from pydantic_models import (
     Project,
     ProjectList,
 )
+from pydantic_models.base import Pagination
 from pydantic_models.job import TrainJobPayload
 
 
@@ -117,25 +118,37 @@ def fxt_db_session():
 @pytest.fixture
 def fxt_project_list(fxt_project):
     """Fixture for a test project list."""
-    return ProjectList(projects=[fxt_project])
+    return ProjectList(
+        projects=[fxt_project],
+        pagination=Pagination(offset=0, limit=20, count=1, total=1),
+    )
 
 
 @pytest.fixture
 def fxt_job_list(fxt_job):
     """Fixture for a test job list."""
-    return JobList(jobs=[fxt_job])
+    return JobList(
+        jobs=[fxt_job],
+        pagination=Pagination(offset=0, limit=20, count=1, total=1),
+    )
 
 
 @pytest.fixture
 def fxt_media_list(fxt_media):
     """Fixture for a test media list."""
-    return MediaList(media=[fxt_media])
+    return MediaList(
+        media=[fxt_media],
+        pagination=Pagination(offset=0, limit=20, count=1, total=1),
+    )
 
 
 @pytest.fixture
 def fxt_model_list(fxt_model):
     """Fixture for a test model list."""
-    return ModelList(models=[fxt_model])
+    return ModelList(
+        models=[fxt_model],
+        pagination=Pagination(offset=0, limit=20, count=1, total=1),
+    )
 
 
 @pytest.fixture

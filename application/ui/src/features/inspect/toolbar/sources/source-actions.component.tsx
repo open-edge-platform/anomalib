@@ -3,25 +3,19 @@
 
 import { useState } from 'react';
 
-import { useProjectIdentifier } from '@geti-inspect/hooks';
-import { ActionButton, Flex, Text } from '@geti/ui';
+import { ActionButton, Flex, Loading, Text } from '@geti/ui';
 import { Back } from '@geti/ui/icons';
 import { isEmpty } from 'lodash-es';
 
-import { $api } from '../../../../api/client';
+import { useGetSources } from '../sinks/hooks/use-get-sources.hooks';
 import { EditSourceForm } from './edit-source-form.component';
 import { SourcesList } from './source-list/source-list.component';
 import { SourceOptions } from './source-options.component';
 import { SourceConfig } from './util';
 
 export const SourceActions = () => {
-    const { projectId } = useProjectIdentifier();
-    const sourcesQuery = $api.useSuspenseQuery('get', '/api/projects/{project_id}/sources', {
-        params: { path: { project_id: projectId } },
-    });
-
-    const sources = sourcesQuery.data ?? [];
-    const [view, setView] = useState<'list' | 'options' | 'edit'>(isEmpty(sources) ? 'options' : 'list');
+    const { sources, isFetchingNextPage, isLoading, fetchNextPage } = useGetSources();
+    const [view, setView] = useState<'list' | 'options' | 'edit'>('list');
     const [currentSource, setCurrentSource] = useState<SourceConfig | null>(null);
 
     const handleShowList = () => {
@@ -37,12 +31,24 @@ export const SourceActions = () => {
         setCurrentSource(source);
     };
 
+    if (isLoading) {
+        return <Loading mode={'inline'} size='M' />;
+    }
+
     if (view === 'edit' && !isEmpty(currentSource)) {
         return <EditSourceForm config={currentSource} onSaved={handleShowList} onBackToList={handleShowList} />;
     }
 
     if (view === 'list') {
-        return <SourcesList sources={sources} onAddSource={handleAddSource} onEditSource={handleEditSource} />;
+        return (
+            <SourcesList
+                sources={sources}
+                isLoading={isFetchingNextPage}
+                onLoadMore={fetchNextPage}
+                onAddSource={handleAddSource}
+                onEditSource={handleEditSource}
+            />
+        );
     }
 
     return (

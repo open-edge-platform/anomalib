@@ -87,15 +87,18 @@ class TestModelService:
 
     def test_get_model_list(self, fxt_model_service, fxt_model_repository, fxt_model_list, fxt_project):
         """Test getting model list."""
-        fxt_model_repository.get_all.return_value = fxt_model_list.models
+        fxt_model_repository.get_all_count = AsyncMock(return_value=len(fxt_model_list.models))
+        fxt_model_repository.get_all_pagination = AsyncMock(return_value=fxt_model_list.models)
 
         with patch("services.model_service.ModelRepository") as mock_repo_class:
             mock_repo_class.return_value = fxt_model_repository
 
-            result = asyncio.run(fxt_model_service.get_model_list(fxt_project.id))
+            result = asyncio.run(fxt_model_service.get_model_list(fxt_project.id, limit=20, offset=0))
 
-        assert result == fxt_model_list
-        fxt_model_repository.get_all.assert_called_once()
+        assert result.models == fxt_model_list.models
+        assert result.pagination.total == len(fxt_model_list.models)
+        fxt_model_repository.get_all_count.assert_called_once()
+        fxt_model_repository.get_all_pagination.assert_called_once_with(limit=20, offset=0)
 
     def test_get_model_by_id(self, fxt_model_service, fxt_model_repository, fxt_model, fxt_project):
         """Test getting model by ID."""

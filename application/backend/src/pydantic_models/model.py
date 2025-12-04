@@ -7,7 +7,7 @@ from uuid import UUID
 from anomalib.deploy import CompressionType, ExportType
 from pydantic import BaseModel, Field, model_validator
 
-from pydantic_models.base import BaseIDNameModel
+from pydantic_models.base import BaseIDNameModel, Pagination
 
 
 class PredictionLabel(StrEnum):
@@ -59,6 +59,7 @@ class Model(BaseIDNameModel):
 
 class ModelList(BaseModel):
     models: list[Model]
+    pagination: Pagination
 
 
 class PredictionResponse(BaseModel):

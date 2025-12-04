@@ -10,6 +10,7 @@ from fastapi import status
 from api.dependencies import get_media_service
 from main import app
 from pydantic_models import Media, MediaList
+from pydantic_models.base import Pagination
 from services import MediaService, ResourceNotFoundError
 from services.exceptions import ResourceType
 
@@ -36,22 +37,28 @@ def fxt_media_service() -> MagicMock:
 
 def test_get_media_list_empty(fxt_client, fxt_media_service):
     project_id = uuid4()
-    fxt_media_service.get_media_list.return_value = MediaList(media=[])
+    fxt_media_service.get_media_list.return_value = MediaList(
+        media=[],
+        pagination=Pagination(offset=0, limit=20, count=0, total=0),
+    )
 
     response = fxt_client.get(f"/api/projects/{project_id}/images")
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == {"media": []}
-    fxt_media_service.get_media_list.assert_called_once_with(project_id=project_id)
+    assert response.json()["media"] == []
+    fxt_media_service.get_media_list.assert_called_once_with(project_id=project_id, limit=20, offset=0)
 
 
 def test_get_media_list(fxt_client, fxt_media_service, fxt_media):
     project_id = uuid4()
-    fxt_media_service.get_media_list.return_value = MediaList(media=[fxt_media])
+    fxt_media_service.get_media_list.return_value = MediaList(
+        media=[fxt_media],
+        pagination=Pagination(offset=0, limit=20, count=1, total=1),
+    )
 
     response = fxt_client.get(f"/api/projects/{project_id}/images")
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["media"]) == 1
-    fxt_media_service.get_media_list.assert_called_once_with(project_id=project_id)
+    fxt_media_service.get_media_list.assert_called_once_with(project_id=project_id, limit=20, offset=0)
 
 
 def test_get_media_thumbnail_success(fxt_client, fxt_media_service, tmp_path):

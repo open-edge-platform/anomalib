@@ -15,7 +15,7 @@ interface DatasetItemProps {
 
 export const DatasetList = ({ mediaItems }: DatasetItemProps) => {
     const [selectedMediaItemId, setSelectedMediaItem] = useQueryState('selectedMediaItem');
-    //Todo: revisit implementation when dataset loading is paginated
+    //TODO: revisit implementation when dataset loading is paginated
     const selectedMediaItem = mediaItems.find((item) => item.id === selectedMediaItemId);
 
     const mediaItemsToRender = [

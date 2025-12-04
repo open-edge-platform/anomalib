@@ -5,15 +5,26 @@ from uuid import UUID
 
 from db import get_async_db_session_ctx
 from pydantic_models import Project, ProjectList, ProjectUpdate
+from pydantic_models.base import Pagination
 from repositories import ProjectRepository
 
 
 class ProjectService:
     @staticmethod
-    async def get_project_list() -> ProjectList:
+    async def get_project_list(limit: int, offset: int) -> ProjectList:
         async with get_async_db_session_ctx() as session:
             repo = ProjectRepository(session)
-            return ProjectList(projects=await repo.get_all())
+            total = await repo.get_all_count()
+            items = await repo.get_all_pagination(limit=limit, offset=offset)
+        return ProjectList(
+            projects=items,
+            pagination=Pagination(
+                limit=limit,
+                offset=offset,
+                count=len(items),
+                total=total,
+            ),
+        )
 
     @staticmethod
     async def get_project_by_id(project_id: UUID) -> Project | None:

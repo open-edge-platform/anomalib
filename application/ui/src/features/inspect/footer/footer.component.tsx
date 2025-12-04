@@ -3,34 +3,39 @@
 
 import { Suspense, useEffect } from 'react';
 
-import { usePipeline, useSetModelToPipeline } from '@geti-inspect/hooks';
+import { usePatchPipeline, usePipeline, useProjectIdentifier } from '@geti-inspect/hooks';
 import { Loading, View } from '@geti/ui';
 
 import { useTrainedModels } from '../../../hooks/use-model';
 import { ConnectionStatusAdapter, TrainingStatusAdapter } from './adapters';
 import { StatusBar } from './status-bar';
 
-const AutoSelectModel = () => {
+const useDefaultModel = () => {
     const models = useTrainedModels();
     const { data: pipeline } = usePipeline();
-    const setModelToPipelineMutation = useSetModelToPipeline();
-    const selectedModelId = pipeline?.model?.id;
+    const { projectId } = useProjectIdentifier();
+    const patchPipeline = usePatchPipeline(projectId);
+
+    const hasSelectedModel = pipeline?.model?.id !== undefined;
+    const hasNonAvailableModels = models.length === 0;
 
     useEffect(() => {
-        if (selectedModelId !== undefined || models.length === 0) {
+        if (hasSelectedModel || hasNonAvailableModels || patchPipeline.isPending) {
             return;
         }
 
-        setModelToPipelineMutation(models[0].id);
-    }, [selectedModelId, models, setModelToPipelineMutation]);
-
-    return null;
+        patchPipeline.mutate({
+            params: { path: { project_id: projectId } },
+            body: { model_id: models[0].id },
+        });
+    }, [hasNonAvailableModels, hasSelectedModel, models, patchPipeline, projectId]);
 };
 
 export const Footer = () => {
+    useDefaultModel();
+
     return (
         <View gridArea={'footer'} backgroundColor={'gray-100'} width={'100%'} height={'size-400'} overflow={'hidden'}>
-            <AutoSelectModel />
             <Suspense fallback={<Loading mode={'inline'} size='S' />}>
                 <ConnectionStatusAdapter />
                 <TrainingStatusAdapter />

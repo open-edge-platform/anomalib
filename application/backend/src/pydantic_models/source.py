@@ -7,9 +7,9 @@ from typing import Annotated, Literal
 from urllib.parse import urlparse, urlunparse
 from uuid import UUID
 
-from pydantic import Field, TypeAdapter
+from pydantic import BaseModel, Field, TypeAdapter
 
-from pydantic_models.base import BaseIDNameModel, NoRequiredIDs
+from pydantic_models.base import BaseIDNameModel, NoRequiredIDs, Pagination
 
 IP_CAMERA_USERNAME = "IP_CAMERA_USERNAME"
 IP_CAMERA_PASSWORD = "IP_CAMERA_PASSWORD"  # noqa: S105
@@ -129,6 +129,11 @@ Source = Annotated[
 ]
 
 SourceAdapter: TypeAdapter[Source] = TypeAdapter(Source)
+
+
+class SourceList(BaseModel):
+    sources: list[Source]
+    pagination: Pagination
 
 
 # ---------------------------------
