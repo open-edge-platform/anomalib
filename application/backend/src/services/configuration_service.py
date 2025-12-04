@@ -155,3 +155,15 @@ class ConfigurationService:
             sink = await self.get_sink_by_id(sink_id, project_id, db)
             sink_repo = SinkRepository(db, project_id=project_id)
             await sink_repo.delete_by_id(sink.id)
+
+    @staticmethod
+    async def delete_project_source_db(session: AsyncSession, project_id: UUID, commit: bool = False) -> None:
+        """Delete all sources associated with a project from the database."""
+        source_repo = SourceRepository(session, project_id=project_id)
+        await source_repo.delete_all(commit=commit)
+
+    @staticmethod
+    async def delete_project_sink_db(session: AsyncSession, project_id: UUID, commit: bool = False) -> None:
+        """Delete all sinks associated with a project from the database."""
+        sink_repo = SinkRepository(session, project_id=project_id)
+        await sink_repo.delete_all(commit=commit)

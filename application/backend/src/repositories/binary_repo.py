@@ -10,6 +10,8 @@ from uuid import UUID
 
 from anomalib.deploy import ExportType
 
+from pydantic_models.model import ExportParameters
+
 STORAGE_ROOT_PATH = "data"
 
 
@@ -17,6 +19,7 @@ class FileType(StrEnum):
     IMAGES = "images"
     MODELS = "models"
     SNAPSHOTS = "snapshots"
+    MODEL_EXPORTS = "model_exports"
 
 
 class BinaryRepository(metaclass=abc.ABCMeta):
@@ -96,6 +99,17 @@ class BinaryRepository(metaclass=abc.ABCMeta):
 
         await asyncio.to_thread(stdlib_delete)
 
+    async def delete_project_folder(self) -> None:
+        """
+        Delete the entire project folder for this file type.
+        """
+
+        def stdlib_delete_folder():
+            if os.path.exists(self.project_folder_path):
+                shutil.rmtree(self.project_folder_path)
+
+        await asyncio.to_thread(stdlib_delete_folder)
+
 
 class DatasetSnapshotBinaryRepository(BinaryRepository):
     def __init__(self, project_id: str | UUID):
@@ -162,3 +176,33 @@ class ModelBinaryRepository(BinaryRepository):
         :return: path of the weights file.
         """
         return os.path.join(self.model_folder_path, "weights", format, name)
+
+
+class ModelExportBinaryRepository(BinaryRepository):
+    def __init__(self, project_id: str | UUID, model_id: str | UUID):
+        super().__init__(project_id=project_id, file_type=FileType.MODEL_EXPORTS)
+        self._model_id = str(model_id)
+
+    def get_full_path(self, filename: str) -> str:
+        return os.path.join(self.model_export_folder_path, filename)
+
+    @cached_property
+    def model_export_folder_path(self) -> str:
+        """
+        Get the folder path for model exports.
+
+        :return: Folder path for model exports.
+        """
+        return os.path.join(self.project_folder_path, self._model_id)
+
+    def get_model_export_path(self, model_name: str, export_params: ExportParameters) -> str:
+        """
+        Get the full path for a dataset snapshot.
+
+        :param model_name: name of the model
+        :param export_params: model export parameters
+        :return: Full path to the model export zip file.
+        """
+        compression_suffix = f"_{export_params.compression.value}" if export_params.compression else ""
+        filename = f"{model_name}_{export_params.format.value}{compression_suffix}.zip"
+        return self.get_full_path(filename)

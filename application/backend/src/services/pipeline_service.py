@@ -107,3 +107,9 @@ class PipelineService:
             return active_pipeline
         new_status = PipelineStatus.RUNNING if set_running else PipelineStatus.ACTIVE
         return await self.update_pipeline(project_id, {"status": new_status})
+
+    @classmethod
+    async def delete_project_pipelines_db(cls, session: AsyncSession, project_id: UUID, commit: bool = False) -> None:
+        """Delete all pipelines associated with a project from the database."""
+        repo = PipelineRepository(session)
+        await repo.delete_all(commit=commit, extra_filters={"project_id": str(project_id)})
