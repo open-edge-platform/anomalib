@@ -34,7 +34,7 @@ class Devices:
             duplicate_suffix = f" ({duplicate_count})" if duplicate_count > 0 else ""
             unique_camera_name = f"{cam.name}{duplicate_suffix}"
             names_count[cam.name] += 1
-            cameras.append(CameraInfo(index=cam.index - 1200, name=unique_camera_name))
+            cameras.append(CameraInfo(index=cam.index, name=unique_camera_name))
         return cameras
 
     @staticmethod
