@@ -185,7 +185,8 @@ class DinoV2Loader:
 
         # Weights_only is set to True
         # See mitigation details in https://github.com/open-edge-platform/anomalib/pull/2729
-        state_dict = torch.load(weight_path, map_location="cpu", weights_only=True)  # nosec B614  # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
+        # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
+        state_dict = torch.load(weight_path, map_location="cpu", weights_only=True)  # nosec B614
         model.load_state_dict(state_dict, strict=False)
 
     def _get_weight_path(
