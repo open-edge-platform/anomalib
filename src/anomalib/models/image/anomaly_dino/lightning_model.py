@@ -88,7 +88,7 @@ class AnomalyDINO(MemoryBankMixin, AnomalibModule):
             to simulate occlusions or missing patches. Defaults to ``False``.
         coreset_subsampling (bool, optional): Whether to apply coreset subsampling
             to reduce the size of the memory bank. Defaults to ``False``.
-        sampling ratio(float, optional): If coreset subsampling, by what ratio
+        sampling_ratio (float, optional): If coreset subsampling, by what ratio
             should we subsample. Defaults to ``0.1``
         precision (str, optional): Precision type for model computations.
             Supported values are defined in :class:`PrecisionType`.

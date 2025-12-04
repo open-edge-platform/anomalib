@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Unit tests for the WinCLIP torch model."""
+"""Unit tests for the AnomalyDINO torch model."""
 
 import numpy as np
 import pytest

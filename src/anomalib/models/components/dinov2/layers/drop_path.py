@@ -15,7 +15,7 @@ import torch
 from torch import nn
 
 
-def drop_path(x: torch.torch.Tensor, drop_prob: float = 0.0, training: bool = False) -> torch.Tensor:
+def drop_path(x: torch.Tensor, drop_prob: float = 0.0, training: bool = False) -> torch.Tensor:
     """Apply stochastic depth to an input tensor.
 
     Args:
