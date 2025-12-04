@@ -89,5 +89,5 @@ async def delete_project(
     except RuntimeError as err:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete project. Deletion rolled back. Error: {err}",
+            detail=f"Failed to delete project. Deletion rolled back. Error: {str(err)}",
         )

@@ -163,7 +163,7 @@ class ModelService:
 
         # Cache check
         if await export_zip_path.exists():
-            return export_zip_path
+            return Path(export_zip_path)
 
         # Locate checkpoint
         model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model_id)
@@ -190,7 +190,7 @@ class ModelService:
             model_name=model.name,
             ckpt_path=ckpt_path,
             export_parameters=export_parameters,
-            export_zip_path=export_zip_path,
+            export_zip_path=Path(export_zip_path),
         )
 
     @staticmethod
