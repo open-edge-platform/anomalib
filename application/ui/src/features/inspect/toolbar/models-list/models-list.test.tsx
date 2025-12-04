@@ -20,7 +20,17 @@ describe('ModelsList', () => {
         pipelineConfig?: Partial<SchemaPipeline>;
     } = {}) => {
         server.use(
-            http.get('/api/projects/{project_id}/models', ({ response }) => response(200).json({ models })),
+            http.get('/api/projects/{project_id}/models', ({ response }) =>
+                response(200).json({
+                    models,
+                    pagination: {
+                        offset: 0,
+                        limit: 0,
+                        count: 0,
+                        total: 0,
+                    },
+                })
+            ),
             http.get('/api/projects/{project_id}/pipeline', ({ response }) =>
                 response(200).json(getMockedPipeline(pipelineConfig))
             )

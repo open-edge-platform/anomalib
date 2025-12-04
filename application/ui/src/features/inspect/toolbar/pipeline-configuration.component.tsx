@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties } from 'react';
+import { CSSProperties, Suspense } from 'react';
 
 import { PipelineLink } from '@geti-inspect/icons';
 import {
@@ -11,6 +11,7 @@ import {
     DialogTrigger,
     dimensionValue,
     Item,
+    Loading,
     TabList,
     TabPanels,
     Tabs,
