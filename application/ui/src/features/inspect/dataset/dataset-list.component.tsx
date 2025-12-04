@@ -10,14 +10,11 @@ import { getThumbnailUrl } from '../utils';
 import { DatasetItemPlaceholder } from './dataset-item-placeholder/dataset-item-placeholder.component';
 import { getPlaceholderItem, isPlaceholderItem } from './dataset-item-placeholder/util';
 import { DeleteMediaItem } from './delete-dataset-item/delete-dataset-item.component';
+import { useGetMediaItems } from './hooks/use-get-media-items.hook';
 import { MediaPreview } from './media-preview/media-preview.component';
 import { InferenceOpacityProvider } from './media-preview/providers/inference-opacity-provider.component';
 import { MediaItem } from './types';
 import { REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING } from './utils';
-
-interface DatasetItemProps {
-    mediaItems: MediaItem[];
-}
 
 const layoutOptions = {
     maxColumns: 4,
@@ -26,7 +23,8 @@ const layoutOptions = {
     preserveAspectRatio: true,
 };
 
-export const DatasetList = ({ mediaItems }: DatasetItemProps) => {
+export const DatasetList = () => {
+    const { mediaItems, isFetchingNextPage, fetchNextPage } = useGetMediaItems();
     const [selectedMediaItemId, setSelectedMediaItem] = useQueryState('selectedMediaItem');
     //TODO: revisit implementation when dataset loading is paginated
     const selectedMediaItem = mediaItems.find((item) => item.id === selectedMediaItemId);
@@ -58,6 +56,8 @@ export const DatasetList = ({ mediaItems }: DatasetItemProps) => {
                     ariaLabel='sidebar-items'
                     selectionMode='single'
                     layoutOptions={layoutOptions}
+                    isLoadingMore={isFetchingNextPage}
+                    onLoadMore={fetchNextPage}
                     onSelectionChange={handleSelectionChange}
                     contentItem={(mediaItem) =>
                         mediaItem.filename === 'placeholder' ? (

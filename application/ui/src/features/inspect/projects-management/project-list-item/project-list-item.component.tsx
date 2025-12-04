@@ -9,7 +9,6 @@ import { Flex, PhotoPlaceholder, Text } from '@geti/ui';
 import { clsx } from 'clsx';
 import { useNavigate } from 'react-router';
 
-import { useWebRTCConnection } from '../../../../components/stream/web-rtc-connection-provider';
 import { paths } from '../../../../routes/paths';
 import { ProjectEdition } from './project-edition/project-edition.component';
 import { ProjectActions } from './project-list-actions/project-list-actions.component';
@@ -27,7 +26,6 @@ interface ProjectListItemProps {
 
 export const ProjectListItem = ({ project, isActive, isInEditMode, setProjectInEdition }: ProjectListItemProps) => {
     const navigate = useNavigate();
-    const { stop } = useWebRTCConnection();
 
     const updateProject = $api.useMutation('patch', '/api/projects/{project_id}', {
         onSettled: () => setProjectInEdition(null),
@@ -50,7 +48,6 @@ export const ProjectListItem = ({ project, isActive, isInEditMode, setProjectInE
             return;
         }
 
-        stop();
         navigate(`${paths.project({ projectId: project.id })}?mode=Dataset`);
     };
 
