@@ -156,14 +156,13 @@ class ModelService:
         if model is None:
             raise ResourceNotFoundError(resource_type=ResourceType.MODEL, resource_id=str(model_id))
 
-        # Construct export path
         bin_repo = ModelExportBinaryRepository(project_id=project_id, model_id=model_id)
         export_zip_path = anyio.Path(
             bin_repo.get_model_export_path(model_name=model.name, export_params=export_parameters)
         )
 
         # Cache check
-        if export_zip_path.exists():
+        if await export_zip_path.exists():
             return export_zip_path
 
         # Locate checkpoint

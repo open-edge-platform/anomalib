@@ -56,7 +56,7 @@ class ProjectService:
             return await repo.update(project, project_update.model_dump(exclude_unset=True))
 
     @staticmethod
-    @logger.catch
+    @logger.catch(reraise=True)
     async def delete_project(project_id: UUID) -> None:
         """
         Delete a project in a transactional manner.
