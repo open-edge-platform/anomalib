@@ -253,7 +253,7 @@ class DinoVisionTransformer(nn.Module):
         w0 = w // self.patch_size
         h0 = h // self.patch_size
         m = int(math.sqrt(n_pos))
-        assert n_pos == m * m
+        assert n_pos == m * m, f"Expected {m * m} positional embeddings but got {n_pos}"
 
         kwargs: dict[str, object] = {}
         if self.interpolate_offset:

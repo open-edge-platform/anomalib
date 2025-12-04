@@ -27,7 +27,7 @@ def make_2tuple(x: int | tuple[int, int]) -> tuple[int, int]:
         A tuple ``(h, w)``.
     """
     if isinstance(x, tuple):
-        assert len(x) == 2
+        assert len(x) == 2, f"Expected tuple of length 2, got {len(x)}"
         return x
     return (x, x)
 

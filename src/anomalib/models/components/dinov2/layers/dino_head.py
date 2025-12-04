@@ -104,7 +104,7 @@ def _build_mlp(
     if nlayers == 1:
         return nn.Linear(in_dim, bottleneck_dim, bias=bias)
 
-    assert hidden_dim is not None, "hidden_dim must be provided when nlayers > 1"
+    assert hidden_dim is not None, f"hidden_dim must be provided when nlayers ({nlayers}) > 1"
 
     layers: list[nn.Module] = [
         nn.Linear(in_dim, hidden_dim, bias=bias),
