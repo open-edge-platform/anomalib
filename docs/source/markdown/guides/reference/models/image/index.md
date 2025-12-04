@@ -46,6 +46,14 @@ Deep Feature Kernel Density Estimation
 Probabilistic Modeling of Deep Features for Out-of-Distribution and Adversarial Detection
 :::
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` Dinomaly
+:link: ./dinomaly
+:link-type: doc
+
+Dinomaly: The Less Is More Philosophy in Unsupervised Anomaly Detection
+
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` DRAEM
 :link: ./draem
 :link-type: doc
@@ -130,6 +138,13 @@ SuperSimpleNet: A Unified Surface Defect Detection Model for all Supervision Reg
 U-Flow: A U-shaped Normalizing Flow for Anomaly Detection with Unsupervised Threshold
 :::
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` UniNet
+:link: ./uninet
+:link-type: doc
+
+UniNet: A Contrastive Learning-guided Unified Framework with Feature Selection for Anomaly Detection
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` VLM-AD
 :link: ./vlm_ad
 :link-type: doc
@@ -155,6 +170,7 @@ WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation
 ./csflow
 ./dfkde
 ./dfm
+./dinomaly
 ./draem
 ./dsr
 ./efficient_ad
@@ -165,6 +181,9 @@ WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation
 ./patchcore
 ./reverse_distillation
 ./stfpm
+./supersimplenet
 ./uflow
+./uninet
+./vlm_ad
 ./winclip
 ```
