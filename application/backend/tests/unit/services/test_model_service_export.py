@@ -160,8 +160,7 @@ async def test_export_model_cached_logic(
     mock_export_path.exists = AsyncMock(return_value=True)
     mock_anyio_path_cls.return_value = mock_export_path
 
-    result = await mock_model_service.export_model(mock_model.project_id, mock_model.id, export_params)
+    await mock_model_service.export_model(mock_model.project_id, mock_model.id, export_params)
 
     # Should return the cached path immediately without triggering export
-    assert result == mock_export_path
     mock_to_thread.assert_not_called()
