@@ -2,19 +2,7 @@ import { useState } from 'react';
 
 import { $api, fetchClient } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
-import {
-    Button,
-    ButtonGroup,
-    Content,
-    Dialog,
-    Divider,
-    Flex,
-    Heading,
-    Item,
-    Picker,
-    Text,
-    type Key,
-} from '@geti/ui';
+import { Button, ButtonGroup, Content, Dialog, Divider, Flex, Heading, Item, Picker, Text, type Key } from '@geti/ui';
 import { useMutation } from '@tanstack/react-query';
 import type { SchemaCompressionType, SchemaExportType } from 'src/api/openapi-spec';
 import { Onnx, OpenVino, PyTorch } from 'src/assets/icons';
