@@ -1,7 +1,6 @@
 import { $api } from '@geti-inspect/api';
 import { Flex, Grid, Heading, minmax, Radio, repeat, View } from '@geti/ui';
 import { clsx } from 'clsx';
-import { capitalize } from 'lodash-es';
 
 import classes from './train-model.module.scss';
 
