@@ -38,6 +38,7 @@ export const ModelsList = () => {
                     key={model.id}
                     variant='secondary'
                     onPress={() => handleSelectionChange(String(model.id))}
+                    height={'size-800'}
                     isPending={patchPipeline.isPending}
                     isDisabled={patchPipeline.isPending}
                     UNSAFE_className={clsx(classes.option, { [classes.active]: model.id === selectedModelId })}

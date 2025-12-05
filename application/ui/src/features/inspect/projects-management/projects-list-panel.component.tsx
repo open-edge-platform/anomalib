@@ -18,12 +18,10 @@ import {
     Header,
     Heading,
     PhotoPlaceholder,
-    Text,
     View,
 } from '@geti/ui';
-import { AddCircle } from '@geti/ui/icons';
-import { v4 as uuid } from 'uuid';
 
+import { AddProjectButton } from './add-project-button/add-project-button.component';
 import { ProjectsList } from './projects-list.component';
 
 import styles from './projects-list.module.scss';
@@ -40,47 +38,6 @@ const SelectedProjectButton = ({ name, id }: SelectedProjectProps) => {
             <View margin='size-50'>
                 <PhotoPlaceholder name={name} indicator={id ?? name} height={'size-400'} width={'size-400'} />
             </View>
-        </ActionButton>
-    );
-};
-
-interface AddProjectProps {
-    onSetProjectInEdition: (projectId: string) => void;
-    projectsCount: number;
-}
-
-const AddProjectButton = ({ onSetProjectInEdition, projectsCount }: AddProjectProps) => {
-    const addProjectMutation = $api.useMutation('post', '/api/projects', {
-        meta: {
-            invalidates: [['get', '/api/projects']],
-        },
-    });
-
-    const addProject = () => {
-        const newProjectId = uuid();
-        const newProjectName = `Project #${projectsCount + 1}`;
-
-        addProjectMutation.mutate({
-            body: {
-                id: newProjectId,
-                name: newProjectName,
-            },
-        });
-
-        onSetProjectInEdition(newProjectId);
-    };
-
-    return (
-        <ActionButton
-            isQuiet
-            width={'100%'}
-            marginStart={'size-100'}
-            marginEnd={'size-350'}
-            UNSAFE_className={styles.addProjectButton}
-            onPress={addProject}
-        >
-            <AddCircle />
-            <Text marginX='size-50'>Add project</Text>
         </ActionButton>
     );
 };

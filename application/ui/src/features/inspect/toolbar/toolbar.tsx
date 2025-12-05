@@ -1,12 +1,18 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { usePipeline } from '@geti-inspect/hooks';
 import { dimensionValue, Divider, Flex, View } from '@geti/ui';
+import { isNil } from 'lodash-es';
 
 import { InferenceDevices } from './inference-devices/inference-devices.component';
 import { PipelineConfiguration } from './pipeline-configuration.component';
 
 export const Toolbar = () => {
+    const { data: pipeline } = usePipeline();
+
+    const hasModel = !isNil(pipeline?.model?.id);
+
     return (
         <View
             gridArea='toolbar'
@@ -16,8 +22,12 @@ export const Toolbar = () => {
         >
             <Flex height='100%' gap='size-200' alignItems={'center'}>
                 <Flex marginStart='auto' alignItems={'center'} gap={'size-200'}>
-                    <Divider size={'S'} orientation={'vertical'} />
-                    <InferenceDevices />
+                    {hasModel && (
+                        <>
+                            <Divider size={'S'} orientation={'vertical'} />
+                            <InferenceDevices />
+                        </>
+                    )}
                     <Divider size={'S'} orientation={'vertical'} />
                     <PipelineConfiguration />
                 </Flex>

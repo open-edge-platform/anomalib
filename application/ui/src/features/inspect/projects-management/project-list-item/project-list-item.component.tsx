@@ -3,80 +3,44 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useEffect, useRef, useState } from 'react';
-
+import { $api } from '@geti-inspect/api';
 import { SchemaProjectList } from '@geti-inspect/api/spec';
-import { Flex, PhotoPlaceholder, Text, TextField, type TextFieldRef } from '@geti/ui';
+import { Flex, PhotoPlaceholder, Text } from '@geti/ui';
 import { clsx } from 'clsx';
 import { useNavigate } from 'react-router';
 
-import { useWebRTCConnection } from '../../../../components/stream/web-rtc-connection-provider';
 import { paths } from '../../../../routes/paths';
+import { ProjectEdition } from './project-edition/project-edition.component';
+import { ProjectActions } from './project-list-actions/project-list-actions.component';
 
 import styles from './project-list-item.module.scss';
 
 export type Project = SchemaProjectList['projects'][number];
 
-interface ProjectEditionProps {
-    onBlur: (newName: string) => void;
-    name: string;
-}
-
-const ProjectEdition = ({ name, onBlur }: ProjectEditionProps) => {
-    const textFieldRef = useRef<TextFieldRef>(null);
-    const [newName, setNewName] = useState<string>(name);
-
-    const handleBlur = () => {
-        onBlur(newName);
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            onBlur(newName);
-        }
-
-        if (e.key === 'Escape') {
-            e.preventDefault();
-            setNewName(name);
-            onBlur(name);
-        }
-    };
-
-    useEffect(() => {
-        textFieldRef.current?.select();
-    }, []);
-
-    return (
-        <TextField
-            isQuiet
-            ref={textFieldRef}
-            value={newName}
-            onBlur={handleBlur}
-            onKeyDown={handleKeyDown}
-            onChange={setNewName}
-            aria-label='Edit project name'
-        />
-    );
-};
-
 interface ProjectListItemProps {
     project: Project;
     isActive: boolean;
     isInEditMode: boolean;
-    onBlur: (projectId: string, newName: string) => void;
+    setProjectInEdition: (projectId: string | null) => void;
 }
 
-export const ProjectListItem = ({ project, isInEditMode, isActive, onBlur }: ProjectListItemProps) => {
+export const ProjectListItem = ({ project, isActive, isInEditMode, setProjectInEdition }: ProjectListItemProps) => {
     const navigate = useNavigate();
-    const { stop } = useWebRTCConnection();
 
-    const handleBlur = (newProjectId?: string) => (newName: string) => {
-        if (newProjectId === undefined) {
+    const updateProject = $api.useMutation('patch', '/api/projects/{project_id}', {
+        onSettled: () => setProjectInEdition(null),
+        meta: { invalidates: [['get', '/api/projects']] },
+    });
+
+    const handleNameChange = (projectId?: string) => (newName: string) => {
+        if (projectId === undefined) {
             return;
         }
 
-        onBlur(newProjectId, newName);
+        updateProject.mutate({
+            params: { path: { project_id: projectId } },
+            body: { name: newName },
+        });
     };
 
     const handleNavigateToProject = () => {
@@ -84,7 +48,6 @@ export const ProjectListItem = ({ project, isInEditMode, isActive, onBlur }: Pro
             return;
         }
 
-        stop();
         navigate(`${paths.project({ projectId: project.id })}?mode=Dataset`);
     };
 
@@ -95,7 +58,11 @@ export const ProjectListItem = ({ project, isInEditMode, isActive, onBlur }: Pro
         >
             <Flex justifyContent='space-between' alignItems='center' marginX={'size-200'}>
                 {isInEditMode ? (
-                    <ProjectEdition name={project.name} onBlur={handleBlur(project.id)} />
+                    <ProjectEdition
+                        name={project.name}
+                        onChange={handleNameChange(project.id)}
+                        isPending={updateProject.isPending}
+                    />
                 ) : (
                     <Flex alignItems={'center'} gap={'size-100'}>
                         <PhotoPlaceholder
@@ -107,6 +74,8 @@ export const ProjectListItem = ({ project, isInEditMode, isActive, onBlur }: Pro
                         <Text>{project.name}</Text>
                     </Flex>
                 )}
+
+                <ProjectActions onRename={() => setProjectInEdition(project.id ?? null)} />
             </Flex>
         </li>
     );
