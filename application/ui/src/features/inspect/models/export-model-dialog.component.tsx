@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { useState } from 'react';
 
 import { $api, fetchClient } from '@geti-inspect/api';
@@ -99,7 +102,7 @@ export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
 
     const handleExport = () => {
         exportMutation.mutate();
-        close(); // Close dialog immediately, status bar will show progress
+        close();
     };
 
     return (

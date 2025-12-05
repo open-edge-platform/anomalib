@@ -10,6 +10,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 
 import { http } from '../../../../api/utils';
+import { getMockedPagination } from '../../../../../mocks/mock-pagination';
 import { server } from '../../../../msw-node-setup';
 import { StatusBarProvider, useStatusBar } from '../status-bar';
 import { TrainingStatusAdapter } from './training-status.adapter';
@@ -34,7 +35,7 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 
 describe('TrainingStatusAdapter', () => {
     it('does not set status when no training job exists', async () => {
-        server.use(http.get('/api/jobs', ({ response }) => response(200).json({ jobs: [] })));
+        server.use(http.get('/api/jobs', ({ response }) => response(200).json({ jobs: [], pagination: getMockedPagination() })));
 
         const { result } = renderHook(() => useStatusBar(), { wrapper });
 
@@ -53,7 +54,7 @@ describe('TrainingStatusAdapter', () => {
             message: 'Epoch 5/10',
             payload: { model_name: 'EfficientAd' },
         };
-        server.use(http.get('/api/jobs', ({ response }) => response(200).json({ jobs: [trainingJob] })));
+        server.use(http.get('/api/jobs', ({ response }) => response(200).json({ jobs: [trainingJob], pagination: getMockedPagination() })));
 
         const { result } = renderHook(() => useStatusBar(), { wrapper });
 
@@ -82,7 +83,7 @@ describe('TrainingStatusAdapter', () => {
             message: 'Waiting...',
             payload: { model_name: 'Padim' },
         };
-        server.use(http.get('/api/jobs', ({ response }) => response(200).json({ jobs: [trainingJob] })));
+        server.use(http.get('/api/jobs', ({ response }) => response(200).json({ jobs: [trainingJob], pagination: getMockedPagination() })));
 
         const { result } = renderHook(() => useStatusBar(), { wrapper });
 
@@ -101,7 +102,7 @@ describe('TrainingStatusAdapter', () => {
             message: 'Training...',
             payload: { model_name: 'Test' },
         };
-        server.use(http.get('/api/jobs', ({ response }) => response(200).json({ jobs: [trainingJob] })));
+        server.use(http.get('/api/jobs', ({ response }) => response(200).json({ jobs: [trainingJob], pagination: getMockedPagination() })));
 
         const { result } = renderHook(() => useStatusBar(), { wrapper });
 
@@ -120,7 +121,7 @@ describe('TrainingStatusAdapter', () => {
             message: 'Done',
             payload: { model_name: 'Test' },
         };
-        server.use(http.get('/api/jobs', ({ response }) => response(200).json({ jobs: [completedJob] })));
+        server.use(http.get('/api/jobs', ({ response }) => response(200).json({ jobs: [completedJob], pagination: getMockedPagination() })));
 
         const { result } = renderHook(() => useStatusBar(), { wrapper });
 
@@ -141,7 +142,7 @@ describe('TrainingStatusAdapter', () => {
             payload: { model_name: 'EfficientAd' },
         };
         server.use(
-            http.get('/api/jobs', ({ response }) => response(200).json({ jobs: [trainingJob] })),
+            http.get('/api/jobs', ({ response }) => response(200).json({ jobs: [trainingJob], pagination: getMockedPagination() })),
             http.post('/api/jobs/{job_id}:cancel', ({ params }) => {
                 cancelJobSpy(params.job_id);
                 return HttpResponse.json({}, { status: 204 });
