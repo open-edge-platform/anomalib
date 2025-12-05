@@ -155,6 +155,24 @@ class BaseRepository[ModelType, SchemaType](metaclass=abc.ABCMeta):
         await self.db.execute(query)
         await self.db.commit()
 
+    async def delete_all(self, commit: bool, extra_filters: dict | None = None) -> None:
+        """Delete all records matching the filters.
+
+        Does NOT commit the transaction.
+        """
+        if extra_filters is None:
+            extra_filters = {}
+
+        combined_filters = extra_filters | self.base_filters
+
+        query = expression.delete(self.schema)
+        if combined_filters:
+            query = query.filter_by(**combined_filters)
+
+        await self.db.execute(query)
+        if commit:
+            await self.db.commit()
+
     @staticmethod
     def _id_to_str(obj_id: str | UUID) -> str:
         if isinstance(obj_id, UUID):

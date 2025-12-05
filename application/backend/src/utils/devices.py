@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from collections import defaultdict
 from functools import lru_cache
 from typing import TypedDict
 
@@ -18,12 +19,23 @@ class Devices:
 
     @staticmethod
     def get_webcam_devices() -> list[CameraInfo]:
-        """Get list of available webcam devices.
+        """
+        Get list of available webcam devices.
+        If duplicate names are present, append a suffix to make them unique.
+        Example: ["camera", "camera"] -> ["camera", "camera (1)"]
 
         Returns:
             list[CameraInfo]: List of dictionaries containing camera index and name.
         """
-        return [{"index": cam.index, "name": cam.name} for cam in cv2_enumerate_cameras.enumerate_cameras()]
+        names_count: dict[str, int] = defaultdict(int)
+        cameras: list[CameraInfo] = []
+        for cam in cv2_enumerate_cameras.enumerate_cameras():
+            duplicate_count = names_count[cam.name]
+            duplicate_suffix = f" ({duplicate_count})" if duplicate_count > 0 else ""
+            unique_camera_name = f"{cam.name}{duplicate_suffix}"
+            names_count[cam.name] += 1
+            cameras.append(CameraInfo(index=cam.index, name=unique_camera_name))
+        return cameras
 
     @staticmethod
     @lru_cache

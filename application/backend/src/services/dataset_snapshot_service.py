@@ -12,6 +12,7 @@ import pyarrow.parquet as pq
 from loguru import logger
 from PIL import Image
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from db import get_async_db_session_ctx
 from db.schema import ModelDB
@@ -158,6 +159,23 @@ class DatasetSnapshotService:
                 pass
             except Exception as e:
                 logger.error(f"Error deleting snapshot file {snapshot.filename}: {e}")
+
+    @classmethod
+    async def delete_project_snapshots_db(cls, session: AsyncSession, project_id: UUID, commit: bool = False) -> None:
+        """Delete all snapshots associated with a project from the database."""
+        snapshot_repo = DatasetSnapshotRepository(session, project_id=project_id)
+        await snapshot_repo.delete_all(commit=commit)
+
+    @classmethod
+    async def cleanup_project_snapshot_files(cls, project_id: UUID) -> None:
+        """Cleanup snapshot files for a project."""
+        try:
+            # Cleanup project folder (removes all files at once)
+            snapshot_bin_repo = DatasetSnapshotBinaryRepository(project_id=project_id)
+            await snapshot_bin_repo.delete_project_folder()
+            logger.info(f"Cleaned up snapshot files for project {project_id}")
+        except Exception as e:
+            logger.warning(f"Failed to cleanup snapshot files for project {project_id}: {e}")
 
     @staticmethod
     def extract_snapshot_to_path(snapshot_path: str, temp_dir: str) -> None:

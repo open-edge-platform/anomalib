@@ -9,6 +9,7 @@ from uuid import UUID
 
 import anyio
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio.session import AsyncSession
 from sse_starlette import ServerSentEvent
 
 from db import get_async_db_session_ctx
@@ -163,3 +164,18 @@ class JobService:
 
             await repo.update(job, {"status": JobStatus.CANCELED})
             return JobCancelled(job_id=job.id)
+
+    @classmethod
+    async def delete_project_jobs_db(cls, session: AsyncSession, project_id: UUID, commit: bool = False) -> None:
+        """Delete all jobs associated with a project from the database."""
+        repo = JobRepository(session)
+        await repo.delete_all(commit=commit, extra_filters={"project_id": str(project_id)})
+
+    @staticmethod
+    async def has_running_jobs(project_id: str | UUID) -> bool:
+        async with get_async_db_session_ctx() as session:
+            repo = JobRepository(session)
+            count = await repo.get_all_count(
+                extra_filters={"status": JobStatus.RUNNING, "project_id": str(project_id)},
+            )
+            return count > 0

@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 import numpy as np
 from loguru import logger
 from PIL import Image
+from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from db import get_async_db_session_ctx
 from pydantic_models import Media, MediaList
@@ -151,6 +152,23 @@ class MediaService:
         await cls._delete_media_file(project_id=project_id, filename=media.filename)
         await cls._delete_media_file(project_id=project_id, filename=thumbnail_filename)
         await ProjectRepository(session).update_dataset_timestamp(project_id=project_id)
+
+    @classmethod
+    async def delete_project_media_db(cls, session: AsyncSession, project_id: UUID, commit: bool = False) -> None:
+        """Delete all media associated with a project from the database."""
+        media_repo = MediaRepository(session, project_id=project_id)
+        await media_repo.delete_all(commit=commit)
+
+    @classmethod
+    async def cleanup_project_media_files(cls, project_id: UUID) -> None:
+        """Cleanup media files for a project."""
+        try:
+            # Cleanup project folder (removes all files at once)
+            bin_repo = ImageBinaryRepository(project_id=project_id)
+            await bin_repo.delete_project_folder()
+            logger.info(f"Cleaned up media files for project {project_id}")
+        except Exception as e:
+            logger.warning(f"Failed to cleanup media files for project {project_id}: {e}")
 
     @staticmethod
     async def _delete_media_file(project_id: UUID, filename: str) -> None:

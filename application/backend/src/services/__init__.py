@@ -3,6 +3,7 @@
 
 from .active_pipeline_service import ActivePipelineService
 from .configuration_service import ConfigurationService
+from .dataset_snapshot_service import DatasetSnapshotService
 from .dispatch_service import DispatchService
 from .exceptions import (
     ActivePipelineConflictError,
@@ -22,6 +23,7 @@ __all__ = [
     "ActivePipelineConflictError",
     "ActivePipelineService",
     "ConfigurationService",
+    "DatasetSnapshotService",
     "DispatchService",
     "JobService",
     "MediaService",

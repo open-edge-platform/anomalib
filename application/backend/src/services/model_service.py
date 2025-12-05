@@ -8,8 +8,9 @@ import tempfile
 from dataclasses import dataclass
 from multiprocessing.synchronize import Event as EventClass
 from pathlib import Path
-from uuid import UUID
+from uuid import UUID, uuid4
 
+import anyio
 import cv2
 import numpy as np
 import openvino.properties.hint as ov_hints
@@ -18,13 +19,14 @@ from anomalib.engine import Engine
 from anomalib.models import get_model
 from loguru import logger
 from PIL import Image
+from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from db import get_async_db_session_ctx
 from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
 from pydantic_models.base import Pagination
 from pydantic_models.model import ExportParameters
 from repositories import ModelRepository
-from repositories.binary_repo import ModelBinaryRepository
+from repositories.binary_repo import ModelBinaryRepository, ModelExportBinaryRepository
 from services import ResourceNotFoundError
 from services.dataset_snapshot_service import DatasetSnapshotService
 from services.exceptions import DeviceNotFoundError, ResourceType
@@ -114,6 +116,31 @@ class ModelService:
             repo = ModelRepository(session, project_id=project_id)
             await repo.delete_by_id(model_id)
 
+    @classmethod
+    async def delete_project_models_db(cls, session: AsyncSession, project_id: UUID, commit: bool = False) -> None:
+        """Delete all models associated with a project from the database."""
+        # We still need to handle side effects like snapshot reference counting if possible,
+        # but since we are deleting the project, all snapshots will be deleted anyway.
+        # So we can just delete the models.
+        repo = ModelRepository(session, project_id=project_id)
+        await repo.delete_all(commit=commit)
+
+    @classmethod
+    async def cleanup_project_model_files(cls, project_id: UUID) -> None:
+        """Cleanup model files for a project."""
+        try:
+            # Cleanup project folder (removes all model folders at once)
+            # Note: using dummy model_id since we are deleting the entire project folder
+            model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=uuid4())
+            await model_binary_repo.delete_project_folder()
+            logger.info(f"Cleaned up model files for project {project_id}")
+
+            model_export_bin_repo = ModelExportBinaryRepository(project_id=project_id, model_id=uuid4())
+            await model_export_bin_repo.delete_project_folder()
+            logger.info(f"Cleaned up model export files for project {project_id}")
+        except Exception as e:
+            logger.warning(f"Failed to cleanup model files for project {project_id}: {e}")
+
     async def export_model(self, project_id: UUID, model_id: UUID, export_parameters: ExportParameters) -> Path:
         """Export a trained model to a zip file.
 
@@ -129,18 +156,14 @@ class ModelService:
         if model is None:
             raise ResourceNotFoundError(resource_type=ResourceType.MODEL, resource_id=str(model_id))
 
-        # Construct export path
-        name = f"{model.project_id}-{model.name}"
-        exports_dir = Path("data/exports") / str(model_id) / model.name.title() / name
-        exports_dir.mkdir(parents=True, exist_ok=True)
-
-        compression_suffix = f"_{export_parameters.compression.value}" if export_parameters.compression else ""
-        filename = f"{model.name}_{export_parameters.format.value}{compression_suffix}.zip"
-        export_zip_path = exports_dir / filename
+        bin_repo = ModelExportBinaryRepository(project_id=project_id, model_id=model_id)
+        export_zip_path = anyio.Path(
+            bin_repo.get_model_export_path(model_name=model.name, export_params=export_parameters)
+        )
 
         # Cache check
-        if export_zip_path.exists():
-            return export_zip_path
+        if await export_zip_path.exists():
+            return Path(export_zip_path)
 
         # Locate checkpoint
         model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model_id)
@@ -167,7 +190,7 @@ class ModelService:
             model_name=model.name,
             ckpt_path=ckpt_path,
             export_parameters=export_parameters,
-            export_zip_path=export_zip_path,
+            export_zip_path=Path(export_zip_path),
         )
 
     @staticmethod
