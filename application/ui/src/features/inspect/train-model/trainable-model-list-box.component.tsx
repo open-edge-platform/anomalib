@@ -175,7 +175,7 @@ export const TrainableModelListBox = ({ selectedModelTemplateId }: ModelTypesLis
     const models = trainableModels.map((model) => {
         return {
             modelTemplateId: model.id,
-            name: capitalize(model.name),
+            name: model.name,
             license: 'Apache 2.0',
             performanceRatings: {
                 accuracy: 1,
