@@ -18,8 +18,8 @@ export const WebcamFields = ({ defaultState }: WebcamFieldsProps) => {
     const [name, setName] = useState(defaultState.name);
     const [isModified, setIsModified] = useState(!!defaultState.name);
 
-    const devices = (cameraDevices?.devices ?? []).map((device, index) => ({
-        id: device.index ?? index,
+    const devices = (cameraDevices?.devices ?? []).map((device) => ({
+        id: device.index,
         name: device.name,
     }));
 
