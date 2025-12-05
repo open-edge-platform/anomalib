@@ -105,8 +105,11 @@ def is_valid_uuid(identifier: str) -> bool:
     """
     Check if a given string identifier is formatted as a valid UUID
 
-    :param identifier: String to check
-    :return: True if valid UUID, False otherwise
+    Args:
+        identifier: String to check
+
+    Returns:
+        True if valid UUID, False otherwise
     """
     try:
         UUID(identifier)
