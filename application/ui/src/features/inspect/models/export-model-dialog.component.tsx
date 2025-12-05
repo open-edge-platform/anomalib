@@ -1,26 +1,17 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { useState } from 'react';
 
 import { $api, fetchClient } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
-import {
-    Button,
-    ButtonGroup,
-    Content,
-    Dialog,
-    Divider,
-    Flex,
-    Heading,
-    Item,
-    Picker,
-    Text,
-    toast,
-    type Key,
-} from '@geti/ui';
+import { Button, ButtonGroup, Content, Dialog, Divider, Flex, Heading, Item, Picker, Text, type Key } from '@geti/ui';
 import { useMutation } from '@tanstack/react-query';
 import type { SchemaCompressionType, SchemaExportType } from 'src/api/openapi-spec';
 import { Onnx, OpenVino, PyTorch } from 'src/assets/icons';
 
 import type { ModelData } from '../../../hooks/utils';
+import { useExportStatus } from '../footer/adapters';
 import { downloadBlob, sanitizeFilename } from '../utils';
 
 import classes from './export-model-dialog.module.scss';
@@ -51,10 +42,14 @@ export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
     });
     const [selectedFormat, setSelectedFormat] = useState<SchemaExportType>('openvino');
     const [selectedCompression, setSelectedCompression] = useState<SchemaCompressionType | 'none'>('none');
+    const { startExport, completeExport } = useExportStatus();
 
     const exportMutation = useMutation({
         mutationFn: async () => {
             const compression = selectedCompression === 'none' ? null : selectedCompression;
+
+            const formatLabel = EXPORT_FORMATS.find((f) => f.id === selectedFormat)?.name ?? selectedFormat;
+            startExport(model.name, formatLabel);
 
             const response = await fetchClient.POST('/api/projects/{project_id}/models/{model_id}:export', {
                 params: {
@@ -83,12 +78,11 @@ export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
             return { blob, filename };
         },
         onSuccess: ({ blob, filename }) => {
+            completeExport(true);
             downloadBlob(blob, filename);
-            toast({ type: 'success', message: `Model "${model.name}" exported successfully.` });
-            close();
         },
         onError: () => {
-            toast({ type: 'error', message: `Failed to export model "${model.name}".` });
+            completeExport(false);
         },
     });
 
@@ -104,6 +98,11 @@ export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
     const handleCompressionChange = (key: Key | null) => {
         if (key === null) return;
         setSelectedCompression(key as SchemaCompressionType | 'none');
+    };
+
+    const handleExport = () => {
+        exportMutation.mutate();
+        close();
     };
 
     return (
@@ -150,15 +149,10 @@ export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
                 </Flex>
             </Content>
             <ButtonGroup>
-                <Button variant='secondary' onPress={close} isDisabled={exportMutation.isPending}>
+                <Button variant='secondary' onPress={close}>
                     Cancel
                 </Button>
-                <Button
-                    variant='accent'
-                    onPress={() => exportMutation.mutate()}
-                    isPending={exportMutation.isPending}
-                    isDisabled={exportMutation.isPending}
-                >
+                <Button variant='accent' onPress={handleExport}>
                     Export
                 </Button>
             </ButtonGroup>
