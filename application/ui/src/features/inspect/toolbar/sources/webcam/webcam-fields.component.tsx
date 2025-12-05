@@ -16,7 +16,7 @@ type WebcamFieldsProps = {
 export const WebcamFields = ({ defaultState }: WebcamFieldsProps) => {
     const { data: cameraDevices, isLoading, isRefetching, refetch } = $api.useQuery('get', '/api/devices/camera');
     const [name, setName] = useState(defaultState.name);
-    const [isModified, setIsModified] = useState(!!defaultState.name);
+    const [isModified, setIsModified] = useState(false);
 
     const devices = (cameraDevices?.devices ?? []).map((device) => ({
         id: device.index,
