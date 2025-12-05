@@ -31,7 +31,7 @@ describe('Toolbar', () => {
     };
 
     describe('InferenceDevices', () => {
-        it.only('renders when model is configured', async () => {
+        it('renders when model is configured', async () => {
             renderApp({
                 pipelineConfig: {
                     model: {

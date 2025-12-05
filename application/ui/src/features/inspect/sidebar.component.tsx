@@ -15,7 +15,8 @@ import styles from './sidebar.module.scss';
 const TABS = [
     { label: 'Dataset', icon: <DatasetIcon />, content: <Dataset /> },
     { label: 'Models', icon: <ModelsIcon />, content: <Models /> },
-    // TODO: Add Stats tab implementation
+    /* TODO: Add Stats tab implementation. See GitHub issue 
+    https://github.com/open-edge-platform/anomalib/issues/3173 */
     /* { label: 'Stats', icon: <Stats />, content: <>Stats</> }, */
 ];
 

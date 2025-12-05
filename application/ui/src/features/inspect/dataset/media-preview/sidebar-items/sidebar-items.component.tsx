@@ -2,8 +2,8 @@ import { Selection, Size, View } from '@geti/ui';
 import { getThumbnailUrl } from 'src/features/inspect/utils';
 
 import { GridMediaItem } from '../../../../..//components/virtualizer-grid-layout/grid-media-item/grid-media-item.component';
-import { VirtualizerGridLayout } from '../../../../..//components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 import { MediaThumbnail } from '../../../../../components/media-thumbnail/media-thumbnail.component';
+import { VirtualizerGridLayout } from '../../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 import { MediaItem } from '../../types';
 
 interface SidebarItemsProps {
