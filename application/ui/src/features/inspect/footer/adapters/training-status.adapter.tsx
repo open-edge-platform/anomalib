@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 import { $api } from '@geti-inspect/api';
 import { SchemaJob as Job } from '@geti-inspect/api/spec';
@@ -53,6 +53,7 @@ export const TrainingStatusAdapter = () => {
                 }
             },
         });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         trainingJob?.id,
         trainingJob?.payload.model_name,

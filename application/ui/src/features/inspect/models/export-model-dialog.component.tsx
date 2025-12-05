@@ -13,7 +13,6 @@ import {
     Item,
     Picker,
     Text,
-    toast,
     type Key,
 } from '@geti/ui';
 import { useMutation } from '@tanstack/react-query';

@@ -3,7 +3,7 @@
 
 import { ReactNode } from 'react';
 
-import { act, renderHook } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 
 import { useWebRTCConnection } from '../../../../components/stream/web-rtc-connection-provider';
 import { StatusBarProvider, useStatusBar } from '../status-bar';

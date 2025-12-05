@@ -3,7 +3,7 @@
 
 import { useEffect } from 'react';
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { StatusBarProvider, useStatusBar } from './status-bar-context';
