@@ -3,9 +3,10 @@
 
 import { ActionButton, Text } from '@geti/ui';
 import { clsx } from 'clsx';
+import { isNull } from 'lodash-es';
 
 import { useStatusBar } from './status-bar-context';
-import { ConnectionStatus } from './status-bar.interface';
+import { ConnectionStatus, MainStatusState } from './status-bar.interface';
 
 import classes from './status-bar.module.scss';
 
@@ -16,56 +17,62 @@ const CONNECTION_LABELS: Record<ConnectionStatus, string> = {
     failed: 'Connection failed',
 };
 
+const ProgressBar = ({ activeStatus }: { activeStatus: MainStatusState | null }) => {
+    const isIndeterminate = activeStatus?.progress === undefined;
+
+    if (isNull(activeStatus)) return null;
+
+    return (
+        <div
+            className={clsx(
+                classes.progressFill,
+                classes[activeStatus.variant],
+                isIndeterminate && classes.indeterminate
+            )}
+            style={{ '--progress': `${activeStatus.progress ?? 100}%` }}
+        />
+    );
+};
+
+const WebRTCStatus = ({ connection, hasActiveStatus }: { connection: ConnectionStatus; hasActiveStatus: boolean }) => {
+    return (
+        <div className={classes.connectionSlot}>
+            <div className={clsx(classes.connectionDot, hasActiveStatus ? classes.neutral : classes[connection])} />
+            <Text UNSAFE_className={classes.connectionText}>{CONNECTION_LABELS[connection]}</Text>
+        </div>
+    );
+};
+
+const MainStatus = ({ activeStatus }: { activeStatus: MainStatusState | null }) => (
+    <div className={classes.mainStatusArea}>
+        {!isNull(activeStatus) ? (
+            <>
+                <Text UNSAFE_className={classes.message}>{activeStatus.message}</Text>
+                {activeStatus.detail && <Text UNSAFE_className={classes.detail}>{activeStatus.detail}</Text>}
+                {activeStatus.isCancellable && activeStatus.onCancel && (
+                    <ActionButton isQuiet onPress={activeStatus.onCancel} UNSAFE_className={classes.cancelButton}>
+                        Cancel
+                    </ActionButton>
+                )}
+            </>
+        ) : (
+            <Text UNSAFE_className={clsx(classes.message, classes.idleMessage)}>Idle</Text>
+        )}
+    </div>
+);
+
 export const StatusBar = () => {
     const { connection, activeStatus } = useStatusBar();
     const hasActiveStatus = activeStatus !== null;
-    const isIndeterminate = activeStatus?.progress === undefined;
 
     return (
         <div className={classes.statusBar}>
-            {/* Progress bar */}
-            {activeStatus && (
-                <div
-                    className={clsx(
-                        classes.progressFill,
-                        classes[activeStatus.variant],
-                        isIndeterminate && classes.indeterminate
-                    )}
-                    style={{ '--progress': `${activeStatus.progress ?? 100}%` }}
-                />
-            )}
+            <ProgressBar activeStatus={activeStatus} />
 
             <div className={clsx(classes.contentWrapper, hasActiveStatus && classes.hasBackground)}>
-                {/* WebRTC status */}
-                <div className={classes.connectionSlot}>
-                    <div
-                        className={clsx(classes.connectionDot, hasActiveStatus ? classes.neutral : classes[connection])}
-                    />
-                    <Text UNSAFE_className={classes.connectionText}>{CONNECTION_LABELS[connection]}</Text>
-                </div>
+                <WebRTCStatus connection={connection} hasActiveStatus={hasActiveStatus} />
 
-                {/* Main Status Area */}
-                <div className={classes.mainStatusArea}>
-                    {activeStatus ? (
-                        <>
-                            <Text UNSAFE_className={classes.message}>{activeStatus.message}</Text>
-                            {activeStatus.detail && (
-                                <Text UNSAFE_className={classes.detail}>{activeStatus.detail}</Text>
-                            )}
-                            {activeStatus.isCancellable && activeStatus.onCancel && (
-                                <ActionButton
-                                    isQuiet
-                                    onPress={activeStatus.onCancel}
-                                    UNSAFE_className={classes.cancelButton}
-                                >
-                                    Cancel
-                                </ActionButton>
-                            )}
-                        </>
-                    ) : (
-                        <Text UNSAFE_className={clsx(classes.message, classes.idleMessage)}>Idle</Text>
-                    )}
-                </div>
+                <MainStatus activeStatus={activeStatus} />
             </div>
         </div>
     );

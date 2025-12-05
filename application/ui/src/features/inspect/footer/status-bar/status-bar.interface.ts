@@ -28,6 +28,8 @@ export interface MainStatusState {
     isCancellable?: boolean;
     /** Cancel callback */
     onCancel?: () => void;
+    /** Auto-remove status after delay (ms) */
+    autoRemoveDelay?: number;
 }
 
 /** Priority order for main status: training > export > upload */

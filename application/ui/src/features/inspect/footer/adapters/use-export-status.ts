@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 import { useStatusBar } from '../status-bar';
 
 export const useExportStatus = () => {
-    const { setStatus, removeStatus } = useStatusBar();
+    const { setStatus } = useStatusBar();
 
     const startExport = useCallback(
         (modelName: string, format: string) => {
@@ -32,8 +32,8 @@ export const useExportStatus = () => {
                     variant: 'success',
                     progress: 100,
                     isCancellable: false,
+                    autoRemoveDelay: 3000,
                 });
-                setTimeout(() => removeStatus('export'), 3000);
             } else {
                 setStatus({
                     id: 'export',
@@ -42,11 +42,11 @@ export const useExportStatus = () => {
                     variant: 'error',
                     progress: 100,
                     isCancellable: false,
+                    autoRemoveDelay: 5000,
                 });
-                setTimeout(() => removeStatus('export'), 5000);
             }
         },
-        [setStatus, removeStatus]
+        [setStatus]
     );
 
     return { startExport, completeExport };

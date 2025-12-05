@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ConnectionStatus, MainStatusState, STATUS_PRIORITY } from './status-bar.interface';
 
@@ -28,17 +28,47 @@ interface StatusBarProviderProps {
 export const StatusBarProvider = ({ children }: StatusBarProviderProps) => {
     const [connection, setConnection] = useState<ConnectionStatus>('disconnected');
     const [statuses, setStatuses] = useState<Map<string, MainStatusState>>(new Map());
+    const autoRemoveTimers = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
-    const setStatus = useCallback((status: MainStatusState) => {
-        setStatuses((prev) => new Map(prev).set(status.id, status));
+    const clearAutoRemoveTimer = useCallback((id: string) => {
+        const timer = autoRemoveTimers.current.get(id);
+        if (timer) {
+            clearTimeout(timer);
+            autoRemoveTimers.current.delete(id);
+        }
     }, []);
 
-    const removeStatus = useCallback((id: string) => {
-        setStatuses((prev) => {
-            const next = new Map(prev);
-            next.delete(id);
-            return next;
-        });
+    const removeStatus = useCallback(
+        (id: string) => {
+            clearAutoRemoveTimer(id);
+            setStatuses((prev) => {
+                const next = new Map(prev);
+                next.delete(id);
+                return next;
+            });
+        },
+        [clearAutoRemoveTimer]
+    );
+
+    const setStatus = useCallback(
+        (status: MainStatusState) => {
+            clearAutoRemoveTimer(status.id);
+            setStatuses((prev) => new Map(prev).set(status.id, status));
+
+            if (status.autoRemoveDelay) {
+                const timer = setTimeout(() => {
+                    removeStatus(status.id);
+                }, status.autoRemoveDelay);
+                autoRemoveTimers.current.set(status.id, timer);
+            }
+        },
+        [clearAutoRemoveTimer, removeStatus]
+    );
+
+    useEffect(() => {
+        return () => {
+            autoRemoveTimers.current.forEach((timer) => clearTimeout(timer));
+        };
     }, []);
 
     // Get highest priority status (lowest priority number)

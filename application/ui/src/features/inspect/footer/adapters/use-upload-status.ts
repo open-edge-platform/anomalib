@@ -75,8 +75,8 @@ export const useUploadStatus = () => {
                     variant: 'success',
                     progress: 100,
                     isCancellable: false,
+                    autoRemoveDelay: 3000,
                 });
-                setTimeout(() => removeStatus('batch-upload'), 3000);
             } else if (failed > 0) {
                 setStatus({
                     id: 'batch-upload',
@@ -85,8 +85,8 @@ export const useUploadStatus = () => {
                     variant: 'warning',
                     progress: 100,
                     isCancellable: false,
+                    autoRemoveDelay: 5000,
                 });
-                setTimeout(() => removeStatus('batch-upload'), 5000);
             } else {
                 setStatus({
                     id: 'batch-upload',
@@ -95,11 +95,11 @@ export const useUploadStatus = () => {
                     progress: 100,
                     variant: 'error',
                     isCancellable: false,
+                    autoRemoveDelay: 3000,
                 });
-                setTimeout(() => removeStatus('batch-upload'), 3000);
             }
         },
-        [setStatus, removeStatus]
+        [setStatus]
     );
 
     const cancelUpload = useCallback(() => {
