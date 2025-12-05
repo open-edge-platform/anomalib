@@ -58,6 +58,7 @@ from anomalib.models.components import AnomalibModule
 from anomalib.utils.path import convert_snake_to_pascal_case, convert_to_snake_case, convert_to_title_case
 
 from .image import (
+    AnomalyDINO,
     Cfa,
     Cflow,
     Csflow,
@@ -96,17 +97,20 @@ class UnknownModelError(ModuleNotFoundError):
 
 
 __all__ = [
+    "AiVad",
+    "AnomalyDINO",
     "Cfa",
     "Cflow",
     "Csflow",
     "Dfkde",
     "Dfm",
-    "Draem",
     "Dinomaly",
+    "Draem",
     "Dsr",
     "EfficientAd",
     "Fastflow",
     "Fre",
+    "Fuvas",
     "Ganomaly",
     "Padim",
     "Patchcore",
@@ -117,8 +121,6 @@ __all__ = [
     "UniNet",
     "VlmAd",
     "WinClip",
-    "AiVad",
-    "Fuvas",
 ]
 
 logger = logging.getLogger(__name__)

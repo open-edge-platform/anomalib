@@ -4,6 +4,13 @@
 :margin: 1 1 0 0
 :gutter: 1
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` AnomalyDINO
+:link: ./anomaly_dino
+:link-type: doc
+
+Boosting Patch-based Few-shot Anomaly Detection with DINOv2
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` CFA
 :link: ./cfa
 :link-type: doc
@@ -157,6 +164,7 @@ WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation
 :caption: Data
 :hidden:
 
+./anomaly_dino
 ./cfa
 ./cflow
 ./csflow

@@ -23,6 +23,7 @@ Example:
     >>> predictions = engine.predict(model=model, datamodule=datamodule)  # doctest: +SKIP
 
 Available Models:
+    - :class: `AnomalyDINO`: Boost Memorybank Models with DINOv2
     - :class:`Cfa`: Contrastive Feature Aggregation
     - :class:`Cflow`: Conditional Normalizing Flow
     - :class:`Csflow`: Conditional Split Flow
@@ -46,6 +47,7 @@ Available Models:
     - :class:`WinClip`: Zero-/Few-Shot CLIP-based Detection
 """
 
+from .anomaly_dino import AnomalyDINO
 from .cfa import Cfa
 from .cflow import Cflow
 from .csflow import Csflow
@@ -69,11 +71,13 @@ from .vlm_ad import VlmAd
 from .winclip import WinClip
 
 __all__ = [
+    "AnomalyDINO",
     "Cfa",
     "Cflow",
     "Csflow",
     "Dfkde",
     "Dfm",
+    "Dinomaly",
     "Draem",
     "Dsr",
     "EfficientAd",
@@ -89,5 +93,4 @@ __all__ = [
     "UniNet",
     "VlmAd",
     "WinClip",
-    "Dinomaly",
 ]
