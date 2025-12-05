@@ -36,7 +36,7 @@ export const WebcamFields = ({ defaultState }: WebcamFieldsProps) => {
         const device = devices.find((d) => d.id === Number(key));
 
         // if user modifies the name field, don't override it
-        if (device && (!isModified || !name || name.trim() === '')) {
+        if (device && (!isModified || !name?.trim())) {
             setName(device.name);
         }
     };
