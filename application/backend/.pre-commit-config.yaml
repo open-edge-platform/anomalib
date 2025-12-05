@@ -1,0 +1,36 @@
+# Pre-commit configuration for geti-inspect application (application-backend + UI)
+# This config uses Python 3.13+ and Node.js 24.2.0+ with tool versions matching application dependencies
+# Install from application/ directory with: pre-commit install --config .pre-commit-config.yaml
+
+default_language_version:
+  python: python3.13
+
+repos:
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: "v0.14.3"
+    hooks:
+      # Run the linter.
+      - id: ruff
+        alias: ruff-application-backend
+        name: ruff (application-backend)
+        args: ["--fix"]
+      # Run the formatter
+      - id: ruff-format
+
+  # application-backend: python static type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: "v1.18.2"
+    hooks:
+      - id: mypy
+        alias: mypy-application-backend
+        name: mypy (application-backend)
+        additional_dependencies: [types-PyYAML, types-setuptools, types-requests, alembic]
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.45.0
+    hooks:
+      - id: markdownlint
+        alias: markdownlint-application-backend
+        name: markdownlint (application-backend)
+        args: [--config=.markdownlint.yaml]

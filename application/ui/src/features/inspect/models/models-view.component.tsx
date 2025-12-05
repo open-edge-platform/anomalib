@@ -1,0 +1,132 @@
+import { useMemo } from 'react';
+
+import { usePipeline } from '@geti-inspect/hooks';
+import {
+    Cell,
+    Column,
+    Flex,
+    Heading,
+    IllustratedMessage,
+    Row,
+    TableBody,
+    TableHeader,
+    TableView,
+    Text,
+    View,
+} from '@geti/ui';
+import { sortBy } from 'lodash-es';
+import { useDateFormatter } from 'react-aria';
+
+import { useCompletedModels } from '../../../hooks/use-completed-models.hook';
+import { useProjectTrainingJobs } from '../../../hooks/use-project-trainingJobs.hook';
+import type { ModelData } from '../../../hooks/utils';
+import { useRefreshModelsOnJobUpdates } from '../dataset/dataset-status-panel.component';
+import { formatSize } from '../utils';
+import { ModelActionsMenu } from './model-actions-menu.component';
+import { ModelStatusBadges } from './model-status-badges.component';
+
+import classes from './models-view.module.scss';
+
+export const ModelsView = () => {
+    const { data: pipeline } = usePipeline();
+    const { jobs = [] } = useProjectTrainingJobs();
+
+    const dateFormatter = useDateFormatter({ dateStyle: 'medium', timeStyle: 'short' });
+    const selectedModelId = pipeline.model?.id;
+    const models = useCompletedModels();
+
+    useRefreshModelsOnJobUpdates(jobs);
+
+    const completedModelsJobsIDs = new Set(models.map((model) => model.job?.id));
+
+    const nonCompletedJobs = jobs
+        .filter((job) => !completedModelsJobsIDs.has(job.id))
+        .map((job): ModelData => {
+            const name = String(job.payload['model_name']);
+
+            const start = job.start_time ? new Date(job.start_time) : new Date();
+            const timestamp = dateFormatter.format(start);
+            return {
+                id: job.id!,
+                name,
+                status: job.status === 'pending' ? 'Training' : job.status === 'running' ? 'Training' : 'Failed',
+                architecture: name,
+                timestamp,
+                startTime: start.getTime(),
+                progress: job.progress ?? 0,
+                durationInSeconds: null,
+                job,
+                sizeBytes: null,
+            };
+        });
+
+    const showModels = sortBy([...nonCompletedJobs, ...models], (model) => -model.startTime);
+
+    const tableSelectedKeys = useMemo(() => {
+        if (selectedModelId === undefined) {
+            return new Set<string>();
+        }
+
+        return new Set<string>([selectedModelId]);
+    }, [selectedModelId]);
+
+    return (
+        <View backgroundColor='gray-100' height='100%'>
+            {/* Models Table */}
+            <TableView
+                aria-label='Models'
+                overflowMode='wrap'
+                selectionStyle='highlight'
+                selectionMode='single'
+                selectedKeys={tableSelectedKeys}
+                UNSAFE_className={classes.table}
+                renderEmptyState={() => (
+                    <IllustratedMessage>
+                        <Heading>No models in training</Heading>
+                        <Text>Start a new training to see models here.</Text>
+                    </IllustratedMessage>
+                )}
+            >
+                <TableHeader>
+                    <Column width='2fr'>MODEL NAME</Column>
+                    <Column align='end' width='1fr'>
+                        MODEL SIZE
+                    </Column>
+                    <Column aria-label='Model actions' width='0fr'>
+                        {' '}
+                    </Column>
+                </TableHeader>
+                <TableBody>
+                    {showModels.map((model) => (
+                        <Row key={model.id}>
+                            <Cell>
+                                <Flex alignItems='start' gap='size-50' direction='column'>
+                                    <Flex alignItems='end' gap='size-75'>
+                                        <Text marginTop={'size-25'} UNSAFE_className={classes.modelName}>
+                                            {model.name}
+                                        </Text>
+                                        <ModelStatusBadges
+                                            isSelected={selectedModelId === model.id}
+                                            jobStatus={model.job?.status}
+                                        />
+                                    </Flex>
+                                    <Text UNSAFE_className={classes.modelTimestamp}>{model.timestamp}</Text>
+                                </Flex>
+                            </Cell>
+                            <Cell>
+                                <Text UNSAFE_className={classes.modelSize}>{formatSize(model.sizeBytes)}</Text>
+                            </Cell>
+                            <Cell>
+                                <Flex justifyContent='end' alignItems='center'>
+                                    <Flex alignItems='center' gap='size-200'>
+                                        <ModelActionsMenu model={model} selectedModelId={selectedModelId} />
+                                    </Flex>
+                                </Flex>
+                            </Cell>
+                        </Row>
+                    ))}
+                </TableBody>
+            </TableView>
+        </View>
+    );
+};
