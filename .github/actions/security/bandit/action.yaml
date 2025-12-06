@@ -88,7 +88,7 @@ runs:
   using: composite
   steps:
     - name: Set up Python
-      uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+      uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
         python-version: "3.10"
 
@@ -163,13 +163,13 @@ runs:
       # Upload results after full scope analysis
     - name: Upload reports
       if: hashFiles('bandit-report.*') != '' # if any report is available
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: bandit-results
         path: bandit-report.*
         retention-days: 7
     - name: Upload sarif
       if: hashFiles('bandit-report.sarif') != '' # if SARIF is available, upload it
-      uses: github/codeql-action/upload-sarif@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
+      uses: github/codeql-action/upload-sarif@cf1bb45a277cb3c205638b2cd5c984db1c46a412 # v4.31.7
       with:
         sarif_file: bandit-report.sarif
