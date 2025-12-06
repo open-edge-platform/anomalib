@@ -12,10 +12,13 @@ import pyarrow.parquet as pq
 from loguru import logger
 from PIL import Image
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from db import get_async_db_session_ctx
 from db.schema import ModelDB
 from pydantic_models import DatasetSnapshot
+from pydantic_models.base import Pagination
+from pydantic_models.dataset_snapshot import DatasetSnapshotList
 from repositories import DatasetSnapshotRepository, MediaRepository, ProjectRepository
 from repositories.binary_repo import DatasetSnapshotBinaryRepository, ImageBinaryRepository
 
@@ -31,25 +34,22 @@ class DatasetSnapshotService:
 
         async with get_async_db_session_ctx() as session:
             media_repo = MediaRepository(session, project_id=project_id)
-
             image_bin_repo = ImageBinaryRepository(project_id=project_id)
-            items = await media_repo.get_all()
+            data_rows = []
+            async for item in media_repo.get_all_streaming():
+                # Read bytes
+                try:
+                    img_bytes = await image_bin_repo.read_file(item.filename)
+                except FileNotFoundError:
+                    logger.error(f"Image file {item.filename} missing for media item `{item.id}`, skipping")
+                    continue
 
-        data_rows = []
-        for item in items:
-            # Read bytes
-            try:
-                img_bytes = await image_bin_repo.read_file(item.filename)
-            except FileNotFoundError:
-                logger.error(f"Image file {item.filename} missing for media item `{item.id}`, skipping")
-                continue
-
-            data_rows.append({
-                "image": img_bytes,
-                "is_anomalous": item.is_anomalous,
-                "filename": item.filename,  # Virtual path, useful for debugging
-                # "mask": ... # TODO: Add mask support if we have masks
-            })
+                data_rows.append({
+                    "image": img_bytes,
+                    "is_anomalous": item.is_anomalous,
+                    "filename": item.filename,  # Virtual path, useful for debugging
+                    # "mask": ... # TODO: Add mask support if we have masks
+                })
 
         # Create Table
         if not data_rows:
@@ -60,7 +60,7 @@ class DatasetSnapshotService:
                 ("is_anomalous", pa.bool_()),
                 ("filename", pa.string()),
             ])
-            table = pa.Table.from_pydict({}, schema=schema)
+            table = pa.Table.from_pydict({"image": [], "is_anomalous": [], "filename": []}, schema=schema)
         else:
             # Convert to PyArrow Table
             pydict = {
@@ -160,6 +160,23 @@ class DatasetSnapshotService:
             except Exception as e:
                 logger.error(f"Error deleting snapshot file {snapshot.filename}: {e}")
 
+    @classmethod
+    async def delete_project_snapshots_db(cls, session: AsyncSession, project_id: UUID, commit: bool = False) -> None:
+        """Delete all snapshots associated with a project from the database."""
+        snapshot_repo = DatasetSnapshotRepository(session, project_id=project_id)
+        await snapshot_repo.delete_all(commit=commit)
+
+    @classmethod
+    async def cleanup_project_snapshot_files(cls, project_id: UUID) -> None:
+        """Cleanup snapshot files for a project."""
+        try:
+            # Cleanup project folder (removes all files at once)
+            snapshot_bin_repo = DatasetSnapshotBinaryRepository(project_id=project_id)
+            await snapshot_bin_repo.delete_project_folder()
+            logger.info(f"Cleaned up snapshot files for project {project_id}")
+        except Exception as e:
+            logger.warning(f"Failed to cleanup snapshot files for project {project_id}: {e}")
+
     @staticmethod
     def extract_snapshot_to_path(snapshot_path: str, temp_dir: str) -> None:
         """Extract images from Parquet snapshot to a temporary directory structure."""
@@ -209,11 +226,21 @@ class DatasetSnapshotService:
             yield temp_dir
 
     @staticmethod
-    async def list_snapshots(project_id: UUID) -> list[DatasetSnapshot]:
+    async def list_snapshots(project_id: UUID, limit: int, offset: int) -> DatasetSnapshotList:
         """List all dataset snapshots for a project."""
         async with get_async_db_session_ctx() as session:
-            snapshot_repo = DatasetSnapshotRepository(session, project_id=project_id)
-            return await snapshot_repo.get_all()
+            repo = DatasetSnapshotRepository(session, project_id=project_id)
+            total = await repo.get_all_count()
+            items = await repo.get_all_pagination(limit=limit, offset=offset)
+        return DatasetSnapshotList(
+            snapshots=items,
+            pagination=Pagination(
+                limit=limit,
+                offset=offset,
+                count=len(items),
+                total=total,
+            ),
+        )
 
     @staticmethod
     async def get_snapshot(project_id: UUID, snapshot_id: UUID) -> DatasetSnapshot:

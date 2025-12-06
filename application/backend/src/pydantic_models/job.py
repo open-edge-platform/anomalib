@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, computed_field, field_serializer
 
-from pydantic_models.base import BaseIDModel
+from pydantic_models.base import BaseIDModel, Pagination
 
 
 class JobType(StrEnum):
@@ -44,6 +44,7 @@ class Job(BaseIDModel):
 
 class JobList(BaseModel):
     jobs: list[Job]
+    pagination: Pagination
 
 
 class JobSubmitted(BaseModel):

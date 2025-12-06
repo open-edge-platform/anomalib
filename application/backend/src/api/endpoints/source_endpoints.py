@@ -7,15 +7,15 @@ from typing import Annotated
 from uuid import UUID
 
 import yaml
-from fastapi import APIRouter, Body, Depends, File, UploadFile, status
+from fastapi import APIRouter, Body, Depends, File, Query, UploadFile, status
 from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse, Response
 from sqlalchemy.exc import IntegrityError
 
-from api.dependencies import get_configuration_service, get_project_id, get_source_id
+from api.dependencies import PaginationLimit, get_configuration_service, get_project_id, get_source_id
 from pydantic_models import Source, SourceType
-from pydantic_models.source import SourceAdapter, SourceCreate, SourceCreateAdapter
+from pydantic_models.source import SourceAdapter, SourceCreate, SourceCreateAdapter, SourceList
 from services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
 router = APIRouter(prefix="/api/projects/{project_id}/sources", tags=["Sources"])
@@ -126,15 +126,21 @@ async def create_source(
 @router.get(
     "",
     responses={
-        status.HTTP_200_OK: {"description": "List of available source configurations", "model": list[Source]},
+        status.HTTP_200_OK: {"description": "List of available source configurations", "model": SourceList},
     },
 )
 async def list_sources(
     project_id: Annotated[UUID, Depends(get_project_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
-) -> list[Source]:
+    limit: Annotated[int, Depends(PaginationLimit())],
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> SourceList:
     """List the available sources"""
-    return await configuration_service.list_sources(project_id)
+    return await configuration_service.list_sources(
+        project_id=project_id,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @router.get(

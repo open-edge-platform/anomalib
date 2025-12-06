@@ -6,7 +6,7 @@ import { useProjectIdentifier } from '@geti-inspect/hooks';
 
 export const useTrainedModels = () => {
     const { projectId } = useProjectIdentifier();
-    const { data } = $api.useQuery('get', '/api/projects/{project_id}/models', {
+    const { data } = $api.useSuspenseQuery('get', '/api/projects/{project_id}/models', {
         params: {
             path: {
                 project_id: projectId,
@@ -14,5 +14,5 @@ export const useTrainedModels = () => {
         },
     });
 
-    return data?.models.map((model) => ({ id: model.id, name: model.name })) || [];
+    return data.models;
 };

@@ -20,7 +20,7 @@ def _get_trainable_models() -> TrainableModelList:  # pragma: no cover
     the model names are returned. Descriptions can be added manually in the
     ``_MODEL_DESCRIPTIONS`` mapping below.
     """
-    model_names = sorted(list_models(case="snake"))
+    model_names = sorted(list_models(case="pascal"))
 
     return TrainableModelList(trainable_models=model_names)
 

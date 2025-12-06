@@ -4,10 +4,10 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, status
+from fastapi import APIRouter, Body, Depends, Query, status
 from sse_starlette import EventSourceResponse
 
-from api.dependencies import get_job_id, get_job_service
+from api.dependencies import PaginationLimit, get_job_id, get_job_service
 from api.endpoints import API_PREFIX
 from pydantic_models import JobList
 from pydantic_models.job import JobCancelled, JobSubmitted, TrainJobPayload
@@ -21,9 +21,13 @@ job_router = APIRouter(
 
 
 @job_router.get("", response_model_exclude_none=True)
-async def get_jobs(job_service: Annotated[JobService, Depends(get_job_service)]) -> JobList:
+async def get_jobs(
+    job_service: Annotated[JobService, Depends(get_job_service)],
+    limit: Annotated[int, Depends(PaginationLimit())],
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> JobList:
     """Endpoint to get list of all jobs"""
-    return await job_service.get_job_list()
+    return await job_service.get_job_list(limit=limit, offset=offset)
 
 
 @job_router.post(":train")

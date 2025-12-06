@@ -5,7 +5,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from pydantic_models.base import BaseIDNameModel
+from pydantic_models.base import BaseIDNameModel, Pagination
 
 
 class Project(BaseIDNameModel):
@@ -18,3 +18,4 @@ class ProjectUpdate(BaseModel):
 
 class ProjectList(BaseModel):
     projects: list[Project]
+    pagination: Pagination

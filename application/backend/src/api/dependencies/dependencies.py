@@ -1,3 +1,5 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 from functools import lru_cache
 from typing import Annotated
 from uuid import UUID
@@ -103,8 +105,11 @@ def is_valid_uuid(identifier: str) -> bool:
     """
     Check if a given string identifier is formatted as a valid UUID
 
-    :param identifier: String to check
-    :return: True if valid UUID, False otherwise
+    Args:
+        identifier: String to check
+
+    Returns:
+        True if valid UUID, False otherwise
     """
     try:
         UUID(identifier)

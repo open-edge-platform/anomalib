@@ -40,3 +40,12 @@ class NoRequiredIDs(BaseModel):
 
     project_id: SkipJsonSchema[UUID] = Field(exclude=True, default=UUID("00000000-0000-0000-0000-000000000000"))
     id: SkipJsonSchema[UUID] = Field(exclude=True, default_factory=uuid4)
+
+
+class Pagination(BaseModel):
+    """Pagination model."""
+
+    offset: int  # index of the first item returned (0-based)
+    limit: int  # number of items requested per page
+    count: int  # number of items actually returned (can be less than the limit if at the end)
+    total: int  # total number of items available

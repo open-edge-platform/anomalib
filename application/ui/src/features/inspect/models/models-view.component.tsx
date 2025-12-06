@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 
-import { $api } from '@geti-inspect/api';
-import { usePipeline, useProjectIdentifier, useSetModelToPipeline } from '@geti-inspect/hooks';
+import { usePipeline } from '@geti-inspect/hooks';
 import {
     Cell,
     Column,
@@ -18,63 +17,25 @@ import {
 import { sortBy } from 'lodash-es';
 import { useDateFormatter } from 'react-aria';
 
-import { useProjectTrainingJobs, useRefreshModelsOnJobUpdates } from '../dataset/dataset-status-panel.component';
+import { useCompletedModels } from '../../../hooks/use-completed-models.hook';
+import { useProjectTrainingJobs } from '../../../hooks/use-project-trainingJobs.hook';
+import type { ModelData } from '../../../hooks/utils';
+import { useRefreshModelsOnJobUpdates } from '../dataset/dataset-status-panel.component';
 import { formatSize } from '../utils';
 import { ModelActionsMenu } from './model-actions-menu.component';
 import { ModelStatusBadges } from './model-status-badges.component';
-import { ModelData } from './model-types';
 
 import classes from './models-view.module.scss';
-
-const useModels = () => {
-    const { projectId } = useProjectIdentifier();
-    const modelsQuery = $api.useSuspenseQuery('get', '/api/projects/{project_id}/models', {
-        params: { path: { project_id: projectId } },
-    });
-    const models = modelsQuery.data.models;
-
-    return models;
-};
 
 export const ModelsView = () => {
     const { data: pipeline } = usePipeline();
     const { jobs = [] } = useProjectTrainingJobs();
-    const setModelToPipelineMutation = useSetModelToPipeline();
+
     const dateFormatter = useDateFormatter({ dateStyle: 'medium', timeStyle: 'short' });
     const selectedModelId = pipeline.model?.id;
+    const models = useCompletedModels();
+
     useRefreshModelsOnJobUpdates(jobs);
-
-    const models = useModels()
-        .filter((model) => model.is_ready)
-        .map((model): ModelData | null => {
-            const job = jobs.find(({ id }) => id === model.train_job_id);
-            if (job === undefined) {
-                return null;
-            }
-
-            let timestamp = '';
-            let durationInSeconds = 0;
-            const start = job.start_time ? new Date(job.start_time) : new Date();
-            if (job) {
-                const end = job.end_time ? new Date(job.end_time) : new Date();
-                durationInSeconds = Math.floor((end.getTime() - start.getTime()) / 1000);
-                timestamp = dateFormatter.format(start);
-            }
-
-            return {
-                id: model.id!,
-                name: model.name!,
-                status: 'Completed',
-                architecture: model.name!,
-                startTime: start.getTime(),
-                timestamp,
-                durationInSeconds,
-                progress: 1.0,
-                job,
-                sizeBytes: model.size ?? null,
-            };
-        })
-        .filter((model): model is ModelData => model !== null);
 
     const completedModelsJobsIDs = new Set(models.map((model) => model.job?.id));
 
@@ -109,10 +70,6 @@ export const ModelsView = () => {
         return new Set<string>([selectedModelId]);
     }, [selectedModelId]);
 
-    const handleSetModel = (modelId?: string) => {
-        setModelToPipelineMutation(modelId);
-    };
-
     return (
         <View backgroundColor='gray-100' height='100%'>
             {/* Models Table */}
@@ -122,22 +79,6 @@ export const ModelsView = () => {
                 selectionStyle='highlight'
                 selectionMode='single'
                 selectedKeys={tableSelectedKeys}
-                onSelectionChange={(key) => {
-                    if (typeof key === 'string') {
-                        return;
-                    }
-
-                    const selectedId = key.values().next().value;
-                    if (selectedId === selectedModelId) {
-                        return;
-                    }
-
-                    const selectedModel = models.find((model) => model.id === selectedId);
-
-                    if (selectedModel?.status === 'Completed') {
-                        handleSetModel(selectedModel.id);
-                    }
-                }}
                 UNSAFE_className={classes.table}
                 renderEmptyState={() => (
                     <IllustratedMessage>
@@ -178,11 +119,7 @@ export const ModelsView = () => {
                             <Cell>
                                 <Flex justifyContent='end' alignItems='center'>
                                     <Flex alignItems='center' gap='size-200'>
-                                        <ModelActionsMenu
-                                            model={model}
-                                            selectedModelId={selectedModelId}
-                                            onSetSelectedModelId={handleSetModel}
-                                        />
+                                        <ModelActionsMenu model={model} selectedModelId={selectedModelId} />
                                     </Flex>
                                 </Flex>
                             </Cell>

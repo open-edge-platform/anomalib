@@ -244,27 +244,35 @@ class TestConfigurationService:
 
     def test_list_sources(self, fxt_configuration_service, fxt_source_repository, fxt_source, fxt_project):
         """Test listing sources."""
-        fxt_source_repository.get_all.return_value = [fxt_source]
+        fxt_source_repository.get_all_count = AsyncMock(return_value=1)
+        fxt_source_repository.get_all_pagination = AsyncMock(return_value=[fxt_source])
 
         with patch("services.configuration_service.SourceRepository") as mock_repo_class:
             mock_repo_class.return_value = fxt_source_repository
 
-            result = asyncio.run(fxt_configuration_service.list_sources(fxt_project.id))
+            result = asyncio.run(fxt_configuration_service.list_sources(fxt_project.id, limit=20, offset=0))
 
-        assert result == [fxt_source]
-        fxt_source_repository.get_all.assert_called_once()
+        assert result.sources == [fxt_source]
+        assert result.pagination.total == 1
+        assert result.pagination.count == 1
+        fxt_source_repository.get_all_count.assert_called_once()
+        fxt_source_repository.get_all_pagination.assert_called_once_with(limit=20, offset=0)
 
     def test_list_sinks(self, fxt_configuration_service, fxt_sink_repository, fxt_sink, fxt_project):
         """Test listing sinks."""
-        fxt_sink_repository.get_all.return_value = [fxt_sink]
+        fxt_sink_repository.get_all_count = AsyncMock(return_value=1)
+        fxt_sink_repository.get_all_pagination = AsyncMock(return_value=[fxt_sink])
 
         with patch("services.configuration_service.SinkRepository") as mock_repo_class:
             mock_repo_class.return_value = fxt_sink_repository
 
-            result = asyncio.run(fxt_configuration_service.list_sinks(fxt_project.id))
+            result = asyncio.run(fxt_configuration_service.list_sinks(fxt_project.id, limit=20, offset=0))
 
-        assert result == [fxt_sink]
-        fxt_sink_repository.get_all.assert_called_once()
+        assert result.sinks == [fxt_sink]
+        assert result.pagination.total == 1
+        assert result.pagination.count == 1
+        fxt_sink_repository.get_all_count.assert_called_once()
+        fxt_sink_repository.get_all_pagination.assert_called_once_with(limit=20, offset=0)
 
     def test_get_source_by_id_success(self, fxt_configuration_service, fxt_source_repository, fxt_source, fxt_project):
         """Test getting source by ID successfully."""

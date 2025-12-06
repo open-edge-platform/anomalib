@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from pydantic_models.base import BaseIDModel
+from pydantic_models.base import BaseIDModel, Pagination
 
 
 class Subset(StrEnum):
@@ -37,3 +37,4 @@ class Media(BaseIDModel):
 
 class MediaList(BaseModel):
     media: list[Media]
+    pagination: Pagination

@@ -327,8 +327,8 @@ class TrainingService:
         any orphan in-progress training jobs are marked as failed.
         """
         query = {"status": JobStatus.RUNNING, "type": JobType.TRAINING}
-        running_jobs = await JobService.get_job_list(extra_filters=query)
-        for job in running_jobs.jobs:
+        running_jobs = JobService.get_job_list_streaming(extra_filters=query)
+        async for job in running_jobs:
             logger.warning(f"Aborting orphan training job with id: {job.id}")
             await JobService.update_job_status(
                 job_id=job.id,
