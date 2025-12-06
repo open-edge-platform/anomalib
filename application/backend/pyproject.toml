@@ -16,8 +16,6 @@ dependencies = [
     "openvino==2025.2.0",
     "pydantic-settings~=2.10.1",
     "aiortc~=1.13.0",
-    "anomalib[full]",
-    "torchmetrics>=1.8.2",
     "opencv-python-headless~=4.12",
     "watchdog==6.0.0",
     "uvloop==0.21.0",
@@ -51,8 +49,30 @@ mqtt = [
     "paho-mqtt~=2.1.0",
 ]
 
+# Explicit versions are needed as we can't propagate extra dependencies to anomalib
+cpu = ["anomalib[cpu,full]"]
+cu124 = ["anomalib[cu124,full]"]
+xpu = ["anomalib[xpu,full]"]
+
+[tool.uv]
+conflicts = [
+    [
+        { extra = "cpu" },
+        { extra = "cu124" },
+        { extra = "xpu" },
+    ],
+    # redeclare library conflicts to workaround bug with uv dependency resolution
+    # For details, see: https://github.com/astral-sh/uv/issues/9942
+    [
+        { package = "anomalib", extra = "cpu" },
+        { package = "anomalib", extra = "cu124" },
+        { package = "anomalib", extra = "xpu" },
+    ],
+]
+
 [tool.uv.sources]
 anomalib = { path = "../../", editable = true }
+
 
 [tool.ruff]
 extend = "../../pyproject.toml"
