@@ -2,10 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from api.endpoints.active_pipeline_endpoints import router as active_pipeline_router
 from api.endpoints.capture_endpoints import router as capture_router
@@ -20,6 +22,7 @@ from api.endpoints.snapshot_endpoints import router as snapshot_router
 from api.endpoints.source_endpoints import router as source_router
 from api.endpoints.trainable_models_endpoints import router as trainable_model_router
 from api.endpoints.webrtc import router as webrtc_router
+from api.endpoints.webui_endpoints import webui_router
 from core.lifecycle import lifespan
 from settings import get_settings
 
@@ -57,10 +60,21 @@ app.include_router(device_router)
 app.include_router(capture_router)
 app.include_router(snapshot_router)
 
+settings = get_settings()
+
+# In docker deployment, the UI is built and served statically
+if (
+    settings.static_files_dir
+    and Path(settings.static_files_dir).is_dir()
+    and (Path(settings.static_files_dir) / "index.html").exists()
+):
+    static_dir = Path(settings.static_files_dir)
+    app.mount("/static", StaticFiles(directory=static_dir / "static"), name="static")
+    app.include_router(webui_router)
+
 
 def main() -> None:
     """Main function to run the Geti Inspect server"""
-    settings = get_settings()
     uvicorn_port = int(os.environ.get("HTTP_SERVER_PORT", settings.port))
     uvicorn.run("main:app", loop="uvloop", host=settings.host, port=uvicorn_port, log_config=None)
 

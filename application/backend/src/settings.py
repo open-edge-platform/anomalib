@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     environment: Literal["dev", "prod"] = "dev"
     data_dir: Path = Field(default=Path("data"), alias="DATA_DIR")
     log_dir: Path = Field(default=Path("logs"), alias="LOG_DIR")
+    static_files_dir: str | None = Field(default=None, alias="STATIC_FILES_DIR")
 
     # Server
     host: str = Field(default="0.0.0.0", alias="HOST")  # noqa: S104
@@ -48,7 +49,7 @@ class Settings(BaseSettings):
     @property
     def database_url(self) -> str:
         """Get database URL"""
-        return f"sqlite+aiosqlite:///./{self.data_dir / self.database_file}?journal_mode=WAL"
+        return f"sqlite+aiosqlite:///{self.data_dir / self.database_file}?journal_mode=WAL"
 
     @property
     def sync_database_url(self) -> str:

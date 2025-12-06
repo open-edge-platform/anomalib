@@ -15,11 +15,10 @@ COPY --link application/ui/tsconfig.json ./tsconfig.json
 COPY --link application/ui/rsbuild.config.ts ./rsbuild.config.ts
 COPY --link application/ui/src ./src
 
-ENV PUBLIC_API_BASE_URL=""
+ARG PUBLIC_API_BASE_URL=""
 ENV PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL}
 
 FROM web-ui-base AS web-ui
-
 
 RUN npm run build
 
@@ -42,16 +41,20 @@ RUN apt-get update \
 libgl1 \
 libglib2.0-0 \
 g++ \
-nginx=1.26.* \
 && rm -rf /var/lib/apt/lists/* \
 && apt-get clean
 
 ENV PATH=/app/.venv/bin:$PATH
 WORKDIR /app
+
+ARG STATIC_FILES_DIR="/app/application/ui/"
+ENV STATIC_FILES_DIR=${STATIC_FILES_DIR}
+ENV DATA_DIR="/app/data"
+ENV LOG_DIR="/app/logs"
 ENV PYTHONPATH=/app/application/backend
 
-COPY --chown=non-root:non-root application/.packaging/docker/nginx.conf /etc/nginx/nginx.conf
-COPY --chown=non-root:non-root --from=web-ui /home/app/web_ui/dist /usr/share/nginx/html
+COPY --chown=non-root:non-root --from=web-ui /home/app/web_ui/dist ${STATIC_FILES_DIR}
+COPY --chown=non-root:non-root application/backend/run.sh /app/application/backend/run.sh
 
 # Copy anomalib source code (pyproject.toml depends on README and LICENSE as well)
 COPY --chown=non-root:non-root  src ./src
@@ -62,12 +65,6 @@ COPY --chown=non-root:non-root README.md ./README.md
 # Copy backend application
 COPY --chown=non-root:non-root application/backend /app/application/backend
 
-# Create nginx directories and set ownership for non-root user
-RUN mkdir -p /var/lib/nginx/body /var/lib/nginx/proxy /var/lib/nginx/fastcgi \
-/var/lib/nginx/uwsgi /var/lib/nginx/scgi /var/run/nginx \
-&& chown -R non-root:non-root /var/lib/nginx /var/run/nginx /var/log/nginx \
-&& chmod -R 755 /var/lib/nginx /var/run/nginx /var/log/nginx
-
 # Create data and logs directories with write permissions for mounted volumes
 RUN mkdir -p /app/data /app/logs \
  && chown -R non-root:non-root /app
@@ -77,15 +74,16 @@ RUN mkdir -p /app/data /app/logs \
 # Geti Inspect CPU version
 #------------------------------------------
 FROM geti-inspect-base AS geti-inspect-cpu
+
 USER non-root
 WORKDIR /app/application/backend
 
 RUN --mount=type=cache,target=/home/non-root/.cache/uv,uid=10001,gid=10001 \
     uv sync --frozen --no-dev --extra cpu
 
-EXPOSE 80
+EXPOSE 8000
 
-CMD ["sh", "-c", "nginx && exec uv run src/main.py"]
+CMD ["sh", "-c", "exec ./run.sh"]
 
 #------------------------------------------
 # Geti Inspect CUDA version
@@ -116,9 +114,9 @@ WORKDIR /app/application/backend
 RUN --mount=type=cache,target=/home/non-root/.cache/uv,uid=10001,gid=10001 \
     uv sync --frozen --no-dev --extra cu124
 
-EXPOSE 80
+EXPOSE 8000
 
-CMD ["sh", "-c", "nginx && exec uv run src/main.py"]
+CMD ["sh", "-c", "exec ./run.sh"]
 
 #------------------------------------------
 # Geti Inspect XPU version
@@ -149,6 +147,6 @@ WORKDIR /app/application/backend
 RUN --mount=type=cache,target=/home/non-root/.cache/uv,uid=10001,gid=10001 \
     uv sync --frozen --no-dev --extra xpu
 
-EXPOSE 80
+EXPOSE 8000
 
-CMD ["sh", "-c", "nginx && exec uv run src/main.py"]
+CMD ["sh", "-c", "exec ./run.sh"]
