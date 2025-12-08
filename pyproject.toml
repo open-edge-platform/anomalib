@@ -36,7 +36,7 @@ dependencies = [
     "docstring_parser",     # CLI help-formatter
     "rich_argparse",        # CLI help-formatter
     # Torch and Lightning dependencies
-    "lightning>=2.2",
+    "lightning>=2.6",
     "torchmetrics>=1.8.2",
     "lightning-utilities",
     # Deep learning models and utilities
@@ -58,7 +58,7 @@ dependencies = [
 
 [project.optional-dependencies]
 # Model-specific optional dependencies
-openvino = ["openvino>=2024.0", "nncf>=2.10.0", "onnx>=1.16.0"]
+openvino = ["openvino>=2024.0", "nncf>=2.10.0", "onnx>=1.16.0", "onnxscript"]
 clip = [
     # NOTE: open-clip-torch throws the following error on v2.26.1
     #   torch.onnx.errors.UnsupportedOperatorError: Exporting the operator
@@ -66,7 +66,7 @@ clip = [
     "open-clip-torch>=2.23.0,<2.26.1",
 ]
 vlm = ["ollama>=0.4.0", "openai", "python-dotenv", "transformers"]
-video = ["av>=10.0.0"]
+video = ["av>=10.0.0", "requests"]
 loggers = [
     "comet-ml>=3.31.7",
     "gradio>=4",
@@ -125,7 +125,7 @@ rocm = [
     "pytorch-triton-rocm ; sys_platform == 'linux'",
 ]
 xpu = [
-    "torch>=2.4.0,<=2.8.0",
+    "torch>=2.4.0", # Note : Last tested with torch+xpu (2.9.1)
     "torchvision>=0.19.0",
     "pytorch-triton-xpu ; sys_platform == 'linux' or sys_platform == 'win32'",
 ]

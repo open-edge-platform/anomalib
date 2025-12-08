@@ -29,7 +29,7 @@
   // if necessary, add supported releases branches here
   // it is possible to enable/disable specific upgrades per branch with
   // `matchBaseBranches` in specific rule
-  baseBranches: ["main"],
+  baseBranches: ["main", "feature/geti-inspect"],
 
   enabledManagers: ["github-actions", "pep621", "custom.regex"],
 
@@ -40,9 +40,17 @@
   packageRules: [
     // weekly dependencies upgrades
     {
+      matchBaseBranches: ["main"],
       enabled: true,
       matchManagers: ["pep621"],
       schedule: ["* * * * 0"], // weekly
+    },
+
+    // Disable non-security upgrades for pypi, except lock file update
+    {
+      matchBaseBranches: ["feature/geti-inspect"],
+      enabled: false,
+      matchDatasources: ["pypi"],
     },
 
     // Python version is upgraded manually

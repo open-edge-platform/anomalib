@@ -407,9 +407,15 @@ class Engine:
         self._setup_trainer(model)
         if model.learning_type in {LearningType.ZERO_SHOT, LearningType.FEW_SHOT}:
             # if the model is zero-shot or few-shot, we only need to run validate for normalization and thresholding
-            self.trainer.validate(model, val_dataloaders, datamodule=datamodule, ckpt_path=ckpt_path)
+            self.trainer.validate(
+                model,
+                val_dataloaders,
+                datamodule=datamodule,
+                ckpt_path=ckpt_path,
+                weights_only=False,
+            )
         else:
-            self.trainer.fit(model, train_dataloaders, val_dataloaders, datamodule, ckpt_path)
+            self.trainer.fit(model, train_dataloaders, val_dataloaders, datamodule, ckpt_path, weights_only=False)
 
     def validate(
         self,
@@ -457,7 +463,7 @@ class Engine:
             ckpt_path = Path(ckpt_path).resolve()
         if model:
             self._setup_trainer(model)
-        return self.trainer.validate(model, dataloaders, ckpt_path, verbose, datamodule)
+        return self.trainer.validate(model, dataloaders, ckpt_path, verbose, datamodule, weights_only=False)
 
     def test(
         self,
@@ -551,7 +557,7 @@ class Engine:
         if self._should_run_validation(model or self.model, ckpt_path):
             logger.info("Running validation before testing to collect normalization metrics and/or thresholds.")
             self.trainer.validate(model, dataloaders, None, verbose=False, datamodule=datamodule)
-        return self.trainer.test(model, dataloaders, ckpt_path, verbose, datamodule)
+        return self.trainer.test(model, dataloaders, ckpt_path, verbose, datamodule, weights_only=False)
 
     def predict(
         self,
@@ -658,9 +664,10 @@ class Engine:
                 ckpt_path=None,
                 verbose=False,
                 datamodule=datamodule,
+                weights_only=False,
             )
 
-        return self.trainer.predict(model, dataloaders, datamodule, return_predictions, ckpt_path)
+        return self.trainer.predict(model, dataloaders, datamodule, return_predictions, ckpt_path, weights_only=False)
 
     def train(
         self,
@@ -716,8 +723,14 @@ class Engine:
             # if the model is zero-shot or few-shot, we only need to run validate for normalization and thresholding
             self.trainer.validate(model, val_dataloaders, None, verbose=False, datamodule=datamodule)
         else:
-            self.trainer.fit(model, train_dataloaders, val_dataloaders, datamodule, ckpt_path)
-        return self.trainer.test(model, test_dataloaders, ckpt_path=ckpt_path, datamodule=datamodule)
+            self.trainer.fit(model, train_dataloaders, val_dataloaders, datamodule, ckpt_path, weights_only=False)
+        return self.trainer.test(
+            model,
+            test_dataloaders,
+            ckpt_path=ckpt_path,
+            datamodule=datamodule,
+            weights_only=False,
+        )
 
     def export(
         self,
@@ -729,6 +742,7 @@ class Engine:
         compression_type: CompressionType | None = None,
         datamodule: AnomalibDataModule | None = None,
         metric: Metric | str | None = None,
+        max_drop: float = 0.01,
         ov_args: dict[str, Any] | None = None,  # deprecated
         ov_kwargs: dict[str, Any] | None = None,
         onnx_kwargs: dict[str, Any] | None = None,
@@ -753,9 +767,14 @@ class Engine:
                 (OpenVINO export only).
                 Defaults to ``None``.
             metric (Metric | str | None, optional): Metric to measure quality loss when quantizing.
-                Must be provided if ``CompressionType.INT8_ACQ`` is selected and must return higher value for better
-                performance of the model (OpenVINO export only).
+                Only used for ``CompressionType.INT8_ACQ`` (OpenVINO export only).
+                If not provided for INT8_ACQ, defaults to F1Score at image level.
+                Must return higher value for better performance of the model.
                 Defaults to ``None``.
+            max_drop (float, optional): Maximum acceptable accuracy drop during quantization.
+                Only used for ``CompressionType.INT8_ACQ`` (OpenVINO export only).
+                Value should be between 0 and 1 (e.g., 0.01 means 1% drop is acceptable).
+                Defaults to ``0.01``.
             ov_args (dict[str, Any] | None, optional): Deprecated. Use ov_kwargs instead.
                 This is optional and used only for OpenVINO's model optimizer.
                 Defaults to None.
@@ -816,10 +835,29 @@ class Engine:
         self._setup_trainer(model)
         if ckpt_path:
             ckpt_path = Path(ckpt_path).resolve()
-            model = model.__class__.load_from_checkpoint(ckpt_path)
+            model = model.__class__.load_from_checkpoint(ckpt_path, weights_only=False)
 
         if export_root is None:
             export_root = Path(self.trainer.default_root_dir)
+
+        # Warn if max_drop is provided but not used
+        if max_drop != 0.01 and compression_type != CompressionType.INT8_ACQ:
+            warnings.warn(
+                f"max_drop parameter is only used for CompressionType.INT8_ACQ but got {compression_type}. "
+                "The parameter will be ignored.",
+                UserWarning,
+                stacklevel=2,
+            )
+
+        # Set default metric for INT8_ACQ if not provided
+        if metric is None and compression_type == CompressionType.INT8_ACQ:
+            from anomalib.metrics import F1Score
+
+            metric = F1Score(fields=["pred_label", "gt_label"])
+            logger.info(
+                "No metric provided for INT8_ACQ quantization. "
+                "Using default: F1Score at image level (fields=['pred_label', 'gt_label']).",
+            )
 
         exported_model_path: Path | None = None
         if export_type == ExportType.TORCH:
@@ -842,6 +880,7 @@ class Engine:
                 compression_type=compression_type,
                 datamodule=datamodule,
                 metric=metric,
+                max_drop=max_drop,
                 ov_kwargs=ov_kwargs,
                 onnx_kwargs=onnx_kwargs,
             )
