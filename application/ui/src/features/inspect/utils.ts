@@ -1,5 +1,7 @@
 import { isString } from 'lodash-es';
 
+import { MediaItem } from './dataset/types';
+
 export const removeUnderscore = (text: string) => {
     return text.replaceAll('_', ' ');
 };
@@ -48,3 +50,6 @@ export const formatSize = (bytes: number | null | undefined) => {
 };
 
 export const isNonEmptyString = (value: unknown): value is string => isString(value) && value !== '';
+
+export const getThumbnailUrl = (mediaItem: MediaItem) =>
+    `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail`;

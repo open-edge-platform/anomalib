@@ -1,8 +1,9 @@
 import { Selection, Size, View } from '@geti/ui';
-import { MediaThumbnail } from 'src/components/media-thumbnail/media-thumbnail.component';
-import { GridMediaItem } from 'src/components/virtualizer-grid-layout/grid-media-item/grid-media-item.component';
-import { VirtualizerGridLayout } from 'src/components/virtualizer-grid-layout/virtualizer-grid-layout.component';
+import { getThumbnailUrl } from 'src/features/inspect/utils';
 
+import { GridMediaItem } from '../../../../..//components/virtualizer-grid-layout/grid-media-item/grid-media-item.component';
+import { MediaThumbnail } from '../../../../../components/media-thumbnail/media-thumbnail.component';
+import { VirtualizerGridLayout } from '../../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 import { MediaItem } from '../../types';
 
 interface SidebarItemsProps {
@@ -18,9 +19,6 @@ const layoutOptions = {
     maxItemSize: new Size(120, 120),
     preserveAspectRatio: true,
 };
-
-const getThumbnailUrl = (mediaItem: MediaItem) =>
-    `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail`;
 
 export const SidebarItems = ({ mediaItems, selectedMediaItem, onSelectedMediaItem }: SidebarItemsProps) => {
     const selectedIndex = mediaItems.findIndex((item) => item.id === selectedMediaItem.id);
