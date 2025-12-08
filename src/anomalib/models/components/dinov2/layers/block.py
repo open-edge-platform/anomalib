@@ -12,7 +12,6 @@ This module implements:
 - Causal attention blocks (`CausalAttentionBlock`)
 """
 
-import logging
 from collections.abc import Callable
 
 import torch
@@ -22,8 +21,6 @@ from .attention import Attention
 from .drop_path import DropPath
 from .layer_scale import LayerScale
 from .mlp import Mlp
-
-logger = logging.getLogger("dinov2")
 
 
 class Block(nn.Module):
@@ -49,6 +46,9 @@ class Block(nn.Module):
         ffn_layer: Feed-forward layer factory.
     """
 
+    # Threshold for using optimized stochastic depth implementation
+    STOCHASTIC_DEPTH_THRESHOLD = 0.1
+
     def __init__(
         self,
         dim: int,
@@ -68,8 +68,8 @@ class Block(nn.Module):
     ) -> None:
         super().__init__()
 
-        self.norm1: nn.Module = norm_layer(dim)
-        self.attn: nn.Module = attn_class(
+        self.norm1 = norm_layer(dim)
+        self.attn = attn_class(
             dim,
             num_heads=num_heads,
             qkv_bias=qkv_bias,
@@ -77,22 +77,22 @@ class Block(nn.Module):
             attn_drop=attn_drop,
             proj_drop=drop,
         )
-        self.ls1: nn.Module = LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
-        self.drop_path1: nn.Module = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
+        self.ls1 = LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
+        self.drop_path1 = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
 
-        self.norm2: nn.Module = norm_layer(dim)
+        self.norm2 = norm_layer(dim)
         mlp_hidden_dim = int(dim * mlp_ratio)
-        self.mlp: nn.Module = ffn_layer(
+        self.mlp = ffn_layer(
             in_features=dim,
             hidden_features=mlp_hidden_dim,
             act_layer=act_layer,
             drop=drop,
             bias=ffn_bias,
         )
-        self.ls2: nn.Module = LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
-        self.drop_path2: nn.Module = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
+        self.ls2 = LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
+        self.drop_path2 = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
 
-        self.sample_drop_ratio: float = drop_path
+        self.sample_drop_ratio = drop_path
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Apply attention and MLP residual blocks with optional stochastic depth."""
@@ -103,7 +103,7 @@ class Block(nn.Module):
         def ffn_residual_func(inp: torch.Tensor) -> torch.Tensor:
             return self.ls2(self.mlp(self.norm2(inp)))
 
-        if self.training and self.sample_drop_ratio > 0.1:
+        if self.training and self.sample_drop_ratio > self.STOCHASTIC_DEPTH_THRESHOLD:
             x = drop_add_residual_stochastic_depth(
                 x,
                 residual_func=attn_residual_func,
@@ -116,7 +116,7 @@ class Block(nn.Module):
             )
         elif self.training and self.sample_drop_ratio > 0.0:
             x = x + self.drop_path1(attn_residual_func(x))
-            x = x + self.drop_path1(ffn_residual_func(x))  # FIXME: drop_path2  # noqa: FIX001, TD001, TD002, TD003
+            x = x + self.drop_path2(ffn_residual_func(x))
         else:
             x = x + attn_residual_func(x)
             x = x + ffn_residual_func(x)
@@ -153,27 +153,27 @@ class CausalAttentionBlock(nn.Module):
     ) -> None:
         super().__init__()
 
-        self.dim: int = dim
-        self.is_causal: bool = is_causal
-        self.ls1: nn.Module = LayerScale(dim, init_values=ls_init_value) if ls_init_value else nn.Identity()
-        self.attention_norm: nn.Module = norm_layer(dim)
-        self.attention: Attention = Attention(
+        self.dim = dim
+        self.is_causal = is_causal
+        self.ls1 = LayerScale(dim, init_values=ls_init_value) if ls_init_value else nn.Identity()
+        self.attention_norm = norm_layer(dim)
+        self.attention = Attention(
             dim,
             num_heads,
             attn_drop=dropout_prob,
             proj_drop=dropout_prob,
         )
 
-        self.ffn_norm: nn.Module = norm_layer(dim)
+        self.ffn_norm = norm_layer(dim)
         ffn_hidden_dim = int(dim * ffn_ratio)
-        self.feed_forward: Mlp = Mlp(
+        self.feed_forward = Mlp(
             in_features=dim,
             hidden_features=ffn_hidden_dim,
             drop=dropout_prob,
             act_layer=act_layer,
         )
 
-        self.ls2: nn.Module = LayerScale(dim, init_values=ls_init_value) if ls_init_value else nn.Identity()
+        self.ls2 = LayerScale(dim, init_values=ls_init_value) if ls_init_value else nn.Identity()
 
     def init_weights(
         self,

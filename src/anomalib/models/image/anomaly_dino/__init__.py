@@ -5,7 +5,7 @@
 
 This module implements AnomalyDINO. A memory-bank model for anomaly detection
 that utilizes DINOv2-Small as its backbone. At inference time it uses kNN
-to search for anomalous patches. The image anomaly score is dependent on the worse
+to search for anomalous patches. The image anomaly score is dependent on the worst
 99th percentile of the pixel-wise anomaly score.
 
 The model has optional masking to remove noisy background components,
