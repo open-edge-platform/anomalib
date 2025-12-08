@@ -11,7 +11,7 @@ import type { SchemaCompressionType, SchemaExportType } from 'src/api/openapi-sp
 import { Onnx, OpenVino, PyTorch } from 'src/assets/icons';
 
 import type { ModelData } from '../../../hooks/utils';
-import { useExportStatus } from '../footer/adapters';
+import { useExportStatus } from '../footer/status-bar/adapters/use-export-status';
 import { downloadBlob, sanitizeFilename } from '../utils';
 
 import classes from './export-model-dialog.module.scss';

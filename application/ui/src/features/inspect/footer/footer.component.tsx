@@ -8,8 +8,9 @@ import { Loading, View } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { useCompletedModels } from '../../../hooks/use-completed-models.hook';
-import { ConnectionStatusAdapter, TrainingStatusAdapter } from './adapters';
-import { StatusBar } from './status-bar';
+import { ConnectionStatusAdapter } from './status-bar/adapters/connection-status.adapter';
+import { TrainingStatusAdapter } from './status-bar/adapters/training-status.adapter';
+import { StatusBar } from './status-bar/status-bar.component';
 
 const useDefaultModel = () => {
     const models = useCompletedModels();

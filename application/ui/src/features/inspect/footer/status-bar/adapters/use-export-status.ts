@@ -3,7 +3,7 @@
 
 import { useCallback } from 'react';
 
-import { useStatusBar } from '../status-bar';
+import { useStatusBar } from '../status-bar-context';
 
 export const useExportStatus = () => {
     const { setStatus } = useStatusBar();

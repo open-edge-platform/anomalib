@@ -5,7 +5,7 @@ import { ReactNode } from 'react';
 
 import { act, renderHook } from '@testing-library/react';
 
-import { StatusBarProvider, useStatusBar } from '../status-bar';
+import { StatusBarProvider, useStatusBar } from '../status-bar-context';
 import { useExportStatus } from './use-export-status';
 
 const wrapper = ({ children }: { children: ReactNode }) => <StatusBarProvider>{children}</StatusBarProvider>;

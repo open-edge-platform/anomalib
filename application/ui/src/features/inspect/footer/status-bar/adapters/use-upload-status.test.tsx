@@ -5,7 +5,7 @@ import { ReactNode } from 'react';
 
 import { act, renderHook } from '@testing-library/react';
 
-import { StatusBarProvider, useStatusBar } from '../status-bar';
+import { StatusBarProvider, useStatusBar } from '../status-bar-context';
 import { useUploadStatus } from './use-upload-status';
 
 const wrapper = ({ children }: { children: ReactNode }) => <StatusBarProvider>{children}</StatusBarProvider>;
@@ -40,7 +40,7 @@ describe('useUploadStatus', () => {
         expect(status?.variant).toBe('info');
     });
 
-    it('updateProgress updates percentage and detail', () => {
+    it('incrementProgress updates percentage and detail', () => {
         const { result } = renderHook(
             () => ({
                 uploadStatus: useUploadStatus(),
@@ -54,7 +54,10 @@ describe('useUploadStatus', () => {
         });
 
         act(() => {
-            result.current.uploadStatus.updateProgress({ completed: 5, total: 10, failed: 0 });
+            // Simulate 5 successful uploads
+            for (let i = 0; i < 5; i++) {
+                result.current.uploadStatus.incrementProgress(true);
+            }
         });
 
         const status = result.current.statusBar.activeStatus;
@@ -62,7 +65,7 @@ describe('useUploadStatus', () => {
         expect(status?.progress).toBe(50);
     });
 
-    it('updateProgress shows warning variant when failures > 0', () => {
+    it('incrementProgress shows warning variant when failures > 0', () => {
         const { result } = renderHook(
             () => ({
                 uploadStatus: useUploadStatus(),
@@ -76,7 +79,13 @@ describe('useUploadStatus', () => {
         });
 
         act(() => {
-            result.current.uploadStatus.updateProgress({ completed: 5, total: 10, failed: 2 });
+            // Simulate 3 successful and 2 failed uploads
+            for (let i = 0; i < 3; i++) {
+                result.current.uploadStatus.incrementProgress(true);
+            }
+            for (let i = 0; i < 2; i++) {
+                result.current.uploadStatus.incrementProgress(false);
+            }
         });
 
         const status = result.current.statusBar.activeStatus;
@@ -98,7 +107,7 @@ describe('useUploadStatus', () => {
         });
 
         act(() => {
-            result.current.uploadStatus.completeUpload(true, 0);
+            result.current.uploadStatus.completeUpload();
         });
 
         expect(result.current.statusBar.activeStatus?.variant).toBe('success');

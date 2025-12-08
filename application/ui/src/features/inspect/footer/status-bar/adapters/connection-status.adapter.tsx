@@ -3,8 +3,9 @@
 
 import { useEffect } from 'react';
 
-import { useWebRTCConnection } from '../../../../components/stream/web-rtc-connection-provider';
-import { ConnectionStatus, useStatusBar } from '../status-bar';
+import { useWebRTCConnection } from '../../../../../components/stream/web-rtc-connection-provider';
+import { useStatusBar } from '../status-bar-context';
+import type { ConnectionStatus } from '../status-bar.interface';
 
 const CONNECTION_STATUS_MAP: Record<string, ConnectionStatus> = {
     connected: 'connected',

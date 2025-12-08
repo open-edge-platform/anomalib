@@ -7,7 +7,7 @@ import { $api } from '@geti-inspect/api';
 import { SchemaJob as Job } from '@geti-inspect/api/spec';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 
-import { useStatusBar } from '../status-bar';
+import { useStatusBar } from '../status-bar-context';
 
 export const TrainingStatusAdapter = () => {
     const { setStatus, removeStatus } = useStatusBar();

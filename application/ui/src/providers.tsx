@@ -9,7 +9,7 @@ import { MemoryRouter as Router } from 'react-router-dom';
 
 import { WebRTCConnectionProvider } from './components/stream/web-rtc-connection-provider';
 import { ZoomProvider } from './components/zoom/zoom';
-import { StatusBarProvider } from './features/inspect/footer/status-bar';
+import { StatusBarProvider } from './features/inspect/footer/status-bar/status-bar-context';
 import { queryClient } from './query-client/query-client';
 import { router } from './routes/router';
 

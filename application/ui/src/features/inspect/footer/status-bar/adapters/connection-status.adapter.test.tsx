@@ -5,11 +5,11 @@ import { ReactNode } from 'react';
 
 import { renderHook } from '@testing-library/react';
 
-import { useWebRTCConnection } from '../../../../components/stream/web-rtc-connection-provider';
-import { StatusBarProvider, useStatusBar } from '../status-bar';
+import { useWebRTCConnection } from '../../../../../components/stream/web-rtc-connection-provider';
+import { StatusBarProvider, useStatusBar } from '../status-bar-context';
 import { ConnectionStatusAdapter } from './connection-status.adapter';
 
-vi.mock('../../../../components/stream/web-rtc-connection-provider', () => ({
+vi.mock('../../../../../components/stream/web-rtc-connection-provider', () => ({
     useWebRTCConnection: vi.fn(),
 }));
 

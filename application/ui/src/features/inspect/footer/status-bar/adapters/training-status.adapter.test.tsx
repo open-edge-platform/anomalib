@@ -9,10 +9,10 @@ import { HttpResponse } from 'msw';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 
-import { http } from '../../../../api/utils';
-import { getMockedPagination } from '../../../../../mocks/mock-pagination';
-import { server } from '../../../../msw-node-setup';
-import { StatusBarProvider, useStatusBar } from '../status-bar';
+import { http } from '../../../../../api/utils';
+import { getMockedPagination } from '../../../../../../mocks/mock-pagination';
+import { server } from '../../../../../msw-node-setup';
+import { StatusBarProvider, useStatusBar } from '../status-bar-context';
 import { TrainingStatusAdapter } from './training-status.adapter';
 
 const wrapper = ({ children }: { children: ReactNode }) => (
