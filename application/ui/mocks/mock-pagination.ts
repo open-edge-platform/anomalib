@@ -8,4 +8,4 @@ export const getMockedPagination = (overrides?: Partial<SchemaPagination>): Sche
         total: 0,
         ...overrides,
     };
-}
+};

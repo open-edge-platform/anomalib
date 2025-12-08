@@ -13,7 +13,7 @@ import { REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING } from './utils';
 export const UploadImages = () => {
     const { projectId } = useProjectIdentifier();
     const queryClient = useQueryClient();
-    const { startUpload, incrementProgress, completeUpload, progress } = useUploadStatus();
+    const { startUpload, incrementProgress, completeUpload } = useUploadStatus();
 
     const captureImageMutation = $api.useMutation('post', '/api/projects/{project_id}/images', {
         onSuccess: () => incrementProgress(true),
