@@ -85,10 +85,10 @@ class PatchEmbed(nn.Module):
 
         if h % patch_h != 0:
             msg = f"Input image height {h} must be divisible by patch height {patch_h}"
-            raise AssertionError(msg)
+            raise ValueError(msg)
         if w % patch_w != 0:
             msg = f"Input image width {w} must be divisible by patch width {patch_w}"
-            raise AssertionError(msg)
+            raise ValueError(msg)
 
         x = self.proj(x)  # (B, D, H', W')
         h_out, w_out = x.shape[2], x.shape[3]

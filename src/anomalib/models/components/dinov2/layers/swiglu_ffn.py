@@ -123,7 +123,7 @@ class SwiGLUFFNAligned(nn.Module):
         drop: float = 0.0,  # noqa: ARG002
         bias: bool = True,
         align_to: int = 8,
-        device=None,  # noqa: ANN001
+        device: torch.device | str | None = None,
     ) -> None:
         super().__init__()
 

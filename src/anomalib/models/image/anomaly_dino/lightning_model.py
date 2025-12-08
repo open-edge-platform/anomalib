@@ -179,8 +179,10 @@ class AnomalyDINO(MemoryBankMixin, AnomalibModule):
         elif precision == PrecisionType.FLOAT32:
             self.model = self.model.float()
         else:
-            msg = f"""Unsupported precision type: {precision}.
-            Supported types are: {PrecisionType.FLOAT16}, {PrecisionType.FLOAT32}."""
+            msg = (
+                f"Unsupported precision type: {precision}. "
+                f"Supported types are: {PrecisionType.FLOAT16}, {PrecisionType.FLOAT32}."
+            )
             raise ValueError(msg)
 
     @classmethod
