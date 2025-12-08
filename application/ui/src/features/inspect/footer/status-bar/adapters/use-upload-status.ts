@@ -29,10 +29,6 @@ export const useUploadStatus = () => {
                 progress: 0,
                 variant: 'info',
                 isCancellable: false,
-                onCancel: () => {
-                    abortControllerRef.current?.abort();
-                    removeStatus('batch-upload');
-                },
             });
         },
         [setStatus, removeStatus]
@@ -59,10 +55,6 @@ export const useUploadStatus = () => {
                 progress: percent,
                 variant: newProgress.failed > 0 ? 'warning' : 'info',
                 isCancellable: false,
-                onCancel: () => {
-                    abortControllerRef.current?.abort();
-                    removeStatus('batch-upload');
-                },
             });
         },
         [setStatus, removeStatus]
