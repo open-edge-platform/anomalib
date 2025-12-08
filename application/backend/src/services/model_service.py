@@ -253,6 +253,7 @@ class ModelService:
         image_bytes: bytes,
         cached_models: dict[UUID, OpenVINOInferencer] | None = None,
         device: str | None = None,
+        is_bgr: bool = False,
     ) -> PredictionResponse:
         """Run prediction on an image using the specified model.
 
@@ -264,6 +265,7 @@ class ModelService:
             image_bytes: Raw image bytes from uploaded file
             cached_models: Optional dict to cache loaded models (for performance)
             device: Optional string indicating the device to use for inference
+            is_bgr: Whether the image is in BGR format
 
         Returns:
             PredictionResponse: Structured prediction results
@@ -285,20 +287,19 @@ class ModelService:
 
         # Run entire prediction pipeline in a single thread
         # This includes image processing, model inference, and result processing
-        response_data = await asyncio.to_thread(cls._run_prediction_pipeline, inference_model, image_bytes)
+        response_data = await asyncio.to_thread(cls._run_prediction_pipeline, inference_model, image_bytes, is_bgr)
 
         return PredictionResponse(**response_data)
 
     @staticmethod
-    def _run_prediction_pipeline(inference_model: OpenVINOInferencer, image_bytes: bytes) -> dict:
+    def _run_prediction_pipeline(inference_model: OpenVINOInferencer, image_bytes: bytes, is_bgr: bool = False) -> dict:
         """Run the complete prediction pipeline in a single thread."""
         # Process image
         npd = np.frombuffer(image_bytes, np.uint8)
-        bgr_image = cv2.imdecode(npd, -1)
-        if bgr_image is None:
+        image = cv2.imdecode(npd, -1)
+        if image is None:
             raise ValueError("Failed to decode image")
-
-        numpy_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
+        numpy_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) if is_bgr else image
 
         # Run prediction
         pred = inference_model.predict(numpy_image)
