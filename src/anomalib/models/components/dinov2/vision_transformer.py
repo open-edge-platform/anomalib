@@ -174,7 +174,7 @@ class DinoVisionTransformer(nn.Module):
         self.register_tokens: nn.Parameter | None = (
             nn.Parameter(torch.zeros(1, num_register_tokens, embed_dim)) if num_register_tokens else None
         )
-        # nosemgrep: trailofbits.python.numpy-in-pytorch-modules.numpy-in-pytorch-modules
+
         dpr = [drop_path_rate] * depth if drop_path_uniform else np.linspace(0, drop_path_rate, depth).tolist()
 
         if ffn_layer == "mlp":
