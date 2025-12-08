@@ -6,6 +6,7 @@ import { GridMediaItem } from '../../../../..//components/virtualizer-grid-layou
 import { MediaThumbnail } from '../../../../../components/media-thumbnail/media-thumbnail.component';
 import { VirtualizerGridLayout } from '../../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 import { DeleteMediaItem } from '../../delete-dataset-item/delete-dataset-item.component';
+import { DownloadDatasetItem } from '../../download-dataset-item/download-dataset-item.component';
 import { MediaItem } from '../../types';
 
 interface SidebarItemsProps {
@@ -52,18 +53,19 @@ export const SidebarItems = ({
                 layoutOptions={layoutOptions}
                 scrollToIndex={selectedIndex}
                 onSelectionChange={handleSelectionChange}
-                contentItem={(item) => (
+                contentItem={(mediaItem) => (
                     <GridMediaItem
                         contentElement={() => (
                             <MediaThumbnail
-                                alt={item.filename}
-                                url={getThumbnailUrl(item)}
-                                onClick={() => onSelectedMediaItem(item.id ?? null)}
+                                alt={mediaItem.filename}
+                                url={getThumbnailUrl(mediaItem)}
+                                onClick={() => onSelectedMediaItem(mediaItem.id ?? null)}
                             />
                         )}
                         topRightElement={() => (
-                            <DeleteMediaItem itemsIds={[String(item.id)]} onDeleted={handleDeletedItem} />
+                            <DeleteMediaItem itemsIds={[String(mediaItem.id)]} onDeleted={handleDeletedItem} />
                         )}
+                        bottomLeftElement={() => <DownloadDatasetItem mediaItem={mediaItem} />}
                     />
                 )}
             />
