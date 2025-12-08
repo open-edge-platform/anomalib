@@ -31,7 +31,7 @@ export const useUploadStatus = () => {
                 isCancellable: false,
             });
         },
-        [setStatus, removeStatus]
+        [setStatus]
     );
 
     const isAborted = useCallback(() => {
@@ -57,7 +57,7 @@ export const useUploadStatus = () => {
                 isCancellable: false,
             });
         },
-        [setStatus, removeStatus]
+        [setStatus]
     );
 
     const incrementProgress = useCallback(
