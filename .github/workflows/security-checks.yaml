@@ -101,8 +101,8 @@ jobs:
     uses: ./.github/workflows/_reusable-security-scan.yaml
     with:
       # For scheduled runs, use full scan configuration
-      tools: ${{ (github.event_name == 'schedule'|| github.event_name == 'push') && 'bandit,clamav,semgrep,trivy,zizmor' || inputs.tools }}
-      scan-scope: ${{ (github.event_name == 'schedule'|| github.event_name == 'push') && 'all' || inputs.scan-scope }}
-      severity-level: ${{ (github.event_name == 'schedule'|| github.event_name == 'push') && 'LOW' || inputs.severity-level }}
-      confidence-level: ${{ (github.event_name == 'schedule'|| github.event_name == 'push') && 'LOW' || inputs.confidence-level }}
+      tools: ${{ inputs.tools }}
+      scan-scope: ${{ inputs.scan-scope }}
+      severity-level: ${{ inputs.severity-level }}
+      confidence-level: ${{ inputs.confidence-level }}
       fail-on-findings: false # reports only
