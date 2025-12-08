@@ -16,8 +16,8 @@ services:
     restart: unless-stopped
     build:
       # Use root directory as context to build the image
-      context: ../../..
-      dockerfile: application/.packaging/docker/Dockerfile
+      context: ../..
+      dockerfile: application/docker/Dockerfile
       target: geti-inspect-${AI_DEVICE:-cpu}
       <<: *proxies
     working_dir: /app/application/backend
