@@ -99,7 +99,6 @@ jobs:
     with:
       test-type: "integration"
       runner: "self-hosted"
-      timeout: 60
       enable-cache: "false"
     secrets:
       codecov-token: ${{ secrets.CODECOV_TOKEN }}

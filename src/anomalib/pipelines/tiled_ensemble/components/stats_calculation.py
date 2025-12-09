@@ -119,7 +119,7 @@ class StatisticsJobGenerator(JobGenerator):
         self,
         args: dict | None = None,
         prev_stage_result: list[Any] | None = None,
-    ) -> Generator[StatisticsJob, None, None]:
+    ) -> Generator[StatisticsJob]:
         """Return a generator producing a single stats calculating job.
 
         Args:

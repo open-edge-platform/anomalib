@@ -139,7 +139,7 @@ class SmoothingJobGenerator(JobGenerator):
         self,
         args: dict | None = None,
         prev_stage_result: list[Any] | None = None,
-    ) -> Generator[SmoothingJob, None, None]:
+    ) -> Generator[SmoothingJob]:
         """Return a generator producing a single seam smoothing job.
 
         Args:

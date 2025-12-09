@@ -328,10 +328,12 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
         """
         image_size = image_size or (256, 256)
         return PreProcessor(
-            transform=Compose([
-                Resize(image_size, antialias=True),
-                Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            ]),
+            transform=Compose(
+                [
+                    Resize(image_size, antialias=True),
+                    Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                ],
+            ),
         )
 
     def configure_post_processor(self) -> PostProcessor | None:

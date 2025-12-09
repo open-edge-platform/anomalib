@@ -256,10 +256,12 @@ class WinClip(AnomalibModule):
         if image_size is not None:
             logger.warning("Image size is not used in WinCLIP. The input image size is determined by the model.")
 
-        transform = Compose([
-            Resize((240, 240), antialias=True, interpolation=InterpolationMode.BICUBIC),
-            Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711)),
-        ])
+        transform = Compose(
+            [
+                Resize((240, 240), antialias=True, interpolation=InterpolationMode.BICUBIC),
+                Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711)),
+            ],
+        )
         return PreProcessor(transform=transform)
 
     @staticmethod

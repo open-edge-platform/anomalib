@@ -32,11 +32,13 @@ class TestTabular(_TestAnomalibImageDatamodule):
             num_workers=0,
         )
         datamodule_.setup()
-        return pd.concat([
-            datamodule_.train_data.samples,
-            datamodule_.test_data.samples,
-            datamodule_.val_data.samples,
-        ])
+        return pd.concat(
+            [
+                datamodule_.train_data.samples,
+                datamodule_.test_data.samples,
+                datamodule_.val_data.samples,
+            ],
+        )
 
     @pytest.fixture(
         params=[
