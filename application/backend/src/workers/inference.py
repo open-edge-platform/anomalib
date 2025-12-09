@@ -193,7 +193,6 @@ class InferenceWorker(BaseProcessWorker):
                 self._loaded_model.model,
                 image_bytes,
                 self._cached_models,  # type: ignore[arg-type]
-                is_bgr=True,
             )
         except Exception as e:
             logger.error(f"Inference failed: {e}", exc_info=True)
