@@ -3,16 +3,11 @@
 
 import { useState } from 'react';
 
-import { $api, fetchClient } from '@geti-inspect/api';
-import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Button, ButtonGroup, Content, Dialog, Divider, Flex, Heading, Item, Picker, Text, type Key } from '@geti/ui';
-import { useMutation } from '@tanstack/react-query';
 import type { SchemaCompressionType, SchemaExportType } from 'src/api/openapi-spec';
 import { Onnx, OpenVino, PyTorch } from 'src/assets/icons';
 
 import type { ModelData } from '../../../hooks/utils';
-import { useExportStatus } from '../footer/status-bar/adapters/use-export-status';
-import { downloadBlob, sanitizeFilename } from '../utils';
 
 import classes from './export-model-dialog.module.scss';
 
@@ -30,61 +25,21 @@ const COMPRESSION_OPTIONS: { id: SchemaCompressionType | 'none'; name: string }[
     { id: 'int8_acq', name: 'INT8 ACQ' },
 ];
 
+export interface ExportOptions {
+    format: SchemaExportType;
+    formatLabel: string;
+    compression: SchemaCompressionType | null;
+}
+
 interface ExportModelDialogProps {
     model: ModelData;
     close: () => void;
+    onExport: (options: ExportOptions) => void;
 }
 
-export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
-    const { projectId } = useProjectIdentifier();
-    const { data: project } = $api.useSuspenseQuery('get', '/api/projects/{project_id}', {
-        params: { path: { project_id: projectId } },
-    });
+export const ExportModelDialog = ({ model, close, onExport }: ExportModelDialogProps) => {
     const [selectedFormat, setSelectedFormat] = useState<SchemaExportType>('openvino');
     const [selectedCompression, setSelectedCompression] = useState<SchemaCompressionType | 'none'>('none');
-    const { startExport, completeExport } = useExportStatus();
-
-    const exportMutation = useMutation({
-        mutationFn: async () => {
-            const compression = selectedCompression === 'none' ? null : selectedCompression;
-
-            const formatLabel = EXPORT_FORMATS.find((f) => f.id === selectedFormat)?.name ?? selectedFormat;
-            startExport(model.name, formatLabel);
-
-            const response = await fetchClient.POST('/api/projects/{project_id}/models/{model_id}:export', {
-                params: {
-                    path: {
-                        project_id: projectId,
-                        model_id: model.id,
-                    },
-                },
-                body: {
-                    format: selectedFormat,
-                    compression,
-                },
-                parseAs: 'blob',
-            });
-
-            if (response.error) {
-                throw new Error('Export failed');
-            }
-
-            const blob = response.data as Blob;
-            const compressionSuffix = compression ? `_${compression}` : '';
-            const sanitizedProjectName = sanitizeFilename(project.name);
-            const sanitizedModelName = sanitizeFilename(model.name);
-            const filename = `${sanitizedProjectName}_${sanitizedModelName}_${selectedFormat}${compressionSuffix}.zip`;
-
-            return { blob, filename };
-        },
-        onSuccess: ({ blob, filename }) => {
-            completeExport(true);
-            downloadBlob(blob, filename);
-        },
-        onError: () => {
-            completeExport(false);
-        },
-    });
 
     const handleFormatChange = (value: string) => {
         const format = value as SchemaExportType;
@@ -101,7 +56,10 @@ export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
     };
 
     const handleExport = () => {
-        exportMutation.mutate();
+        const formatLabel = EXPORT_FORMATS.find((f) => f.id === selectedFormat)?.name ?? selectedFormat;
+        const compression = selectedCompression === 'none' ? null : selectedCompression;
+
+        onExport({ format: selectedFormat, formatLabel, compression });
         close();
     };
 
