@@ -1,17 +1,20 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 
-const sourcesItemsLimit = 20;
+const modelItemsLimit = 50;
 
-export const useGetSources = () => {
+export const useGetModels = () => {
     const { projectId } = useProjectIdentifier();
 
     const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = $api.useInfiniteQuery(
         'get',
-        '/api/projects/{project_id}/sources',
+        '/api/projects/{project_id}/models',
         {
             params: {
-                query: { offset: 0, limit: sourcesItemsLimit },
+                query: { offset: 0, limit: modelItemsLimit },
                 path: { project_id: projectId },
             },
         },
@@ -28,12 +31,12 @@ export const useGetSources = () => {
                     return undefined;
                 }
 
-                return pagination.offset + sourcesItemsLimit;
+                return pagination.offset + modelItemsLimit;
             },
         }
     );
 
-    const sources = data?.pages.flatMap((page) => page.sources) ?? [];
+    const models = data?.pages.flatMap((page) => page.models) ?? [];
 
-    return { sources, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage };
+    return { models, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage };
 };

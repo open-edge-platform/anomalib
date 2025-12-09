@@ -2,6 +2,7 @@
     width: 100%;
     cursor: pointer;
     display: flex;
+    flex: none;
     border-style: dashed;
     gap: var(--spectrum-global-dimension-size-65);
     padding: var(--spectrum-global-dimension-size-250);
