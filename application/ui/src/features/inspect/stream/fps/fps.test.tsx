@@ -37,12 +37,13 @@ describe('Fps', () => {
             </QueryClientProvider>
         );
     };
+
     it('renders FPS value when metrics are available', async () => {
         const metricsConfig = cloneDeep(getMockedMetrics({}));
-        metricsConfig.inference.throughput.avg_requests_per_second = 25;
+        metricsConfig.inference.latency.latest_ms = 25;
 
         renderFps({ metricsConfig });
-        expect(await screen.findByText(/25/)).toBeVisible();
+        expect(await screen.findByText(/40/)).toBeVisible();
     });
 
     it('renders nothing if metrics are missing', async () => {
