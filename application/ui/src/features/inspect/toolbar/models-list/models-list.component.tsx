@@ -2,22 +2,21 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { usePatchPipeline, usePipeline, useProjectIdentifier } from '@geti-inspect/hooks';
-import { Button, Content, Flex, IllustratedMessage, Loading } from '@geti/ui';
+import { Button, Content, IllustratedMessage } from '@geti/ui';
 import { clsx } from 'clsx';
 import { isEmpty } from 'lodash-es';
 import { NotFound } from 'packages/ui/icons';
 
 import { useGetModels } from '../../../..//hooks/use-get-models.hook';
-import { useListEnd } from '../../../../hooks/use-list-end.hook';
+import { LoadMoreList } from '../load-more-list/load-more-list.component';
 
 import classes from './model-list.module.scss';
 
 export const ModelsList = () => {
-    const { models, isLoading, isFetchingNextPage, fetchNextPage } = useGetModels();
+    const { models, isLoading, hasNextPage, fetchNextPage } = useGetModels();
     const { projectId } = useProjectIdentifier();
     const patchPipeline = usePatchPipeline(projectId);
     const { data: pipeline } = usePipeline();
-    const sentinelRef = useListEnd({ onEndReached: fetchNextPage, disabled: isLoading });
 
     const selectedModelId = pipeline.model?.id;
     const modelsIds = models.map((model) => model.id).filter(Boolean) as string[];
@@ -30,11 +29,11 @@ export const ModelsList = () => {
     };
 
     if (isEmpty(modelsIds)) {
-        return renderEmptyState();
+        return <EmptyState />;
     }
 
     return (
-        <Flex direction='column' gap='size-100' maxHeight={'60vh'} ref={sentinelRef}>
+        <LoadMoreList isLoading={isLoading} hasNextPage={hasNextPage} onLoadMore={fetchNextPage}>
             {models.map((model) => (
                 <Button
                     key={model.id}
@@ -48,17 +47,15 @@ export const ModelsList = () => {
                     {model.name}
                 </Button>
             ))}
-
-            {isFetchingNextPage && <Loading mode='inline' size='S' />}
-        </Flex>
+        </LoadMoreList>
     );
 };
 
-function renderEmptyState() {
+const EmptyState = () => {
     return (
         <IllustratedMessage>
             <NotFound />
             <Content>No models trained yet</Content>
         </IllustratedMessage>
     );
-}
+};

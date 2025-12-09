@@ -1,12 +1,12 @@
-import { Button, Flex, Loading, Text } from '@geti/ui';
+import { Button, Flex, Text } from '@geti/ui';
 import { Add as AddIcon } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 import { isEqual } from 'lodash-es';
 
 import { StatusTag } from '../../../../../components/status-tag/status-tag.component';
-import { useListEnd } from '../../../../../hooks/use-list-end.hook';
 import { usePipeline } from '../../../../../hooks/use-pipeline.hook';
 import { removeUnderscore } from '../../../utils';
+import { LoadMoreList } from '../../load-more-list/load-more-list.component';
 import { SinkConfig } from '../utils';
 import { SettingsList } from './settings-list/settings-list.component';
 import { SinkIcon } from './sink-icon/sink-icon.component';
@@ -17,6 +17,7 @@ import classes from './sink-list.module.scss';
 type SinksListProps = {
     sinks: SinkConfig[];
     isLoading: boolean;
+    hasNextPage: boolean;
     onLoadMore: () => void;
     onAddSink: () => void;
     onEditSink: (config: SinkConfig) => void;
@@ -64,20 +65,12 @@ const SinkListItem = ({ sink, isConnected, onEditSink }: SinksListItemProps) => 
     );
 };
 
-export const SinkList = ({ sinks, isLoading, onLoadMore, onAddSink, onEditSink }: SinksListProps) => {
+export const SinkList = ({ sinks, isLoading, hasNextPage, onLoadMore, onAddSink, onEditSink }: SinksListProps) => {
     const pipeline = usePipeline();
     const currentSinkId = pipeline.data.sink?.id;
 
-    const sentinelRef = useListEnd({ onEndReached: onLoadMore, disabled: isLoading });
-
     return (
-        <Flex
-            gap={'size-200'}
-            direction={'column'}
-            maxHeight={'60vh'}
-            ref={sentinelRef}
-            UNSAFE_style={{ overflow: 'auto' }}
-        >
+        <LoadMoreList isLoading={isLoading} hasNextPage={hasNextPage} onLoadMore={onLoadMore}>
             <Button variant='secondary' height={'size-800'} UNSAFE_className={classes.addSink} onPress={onAddSink}>
                 <AddIcon /> Add new sink
             </Button>
@@ -90,8 +83,6 @@ export const SinkList = ({ sinks, isLoading, onLoadMore, onAddSink, onEditSink }
                     onEditSink={onEditSink}
                 />
             ))}
-
-            {isLoading && <Loading mode='inline' size='S' />}
-        </Flex>
+        </LoadMoreList>
     );
 };

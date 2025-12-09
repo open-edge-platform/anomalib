@@ -29,6 +29,14 @@ type MediaPreviewProps = {
     onSelectedMediaItem: (mediaItem: string | null) => void;
 };
 
+const layoutOptions = {
+    maxColumns: 1,
+    minSpace: new Size(8, 8),
+    minItemSize: new Size(120, 120),
+    maxItemSize: new Size(120, 120),
+    preserveAspectRatio: true,
+};
+
 export const MediaPreview = ({ mediaItems, selectedMediaItem, onClose, onSelectedMediaItem }: MediaPreviewProps) => {
     const { data: inferenceResult } = useMediaItemInference(selectedMediaItem);
 
@@ -57,14 +65,8 @@ export const MediaPreview = ({ mediaItems, selectedMediaItem, onClose, onSelecte
 
                     <View gridArea={'sidebar'}>
                         <SidebarItems
-                            layoutOptions={{
-                                maxColumns: 1,
-                                minSpace: new Size(8, 8),
-                                minItemSize: new Size(120, 120),
-                                maxItemSize: new Size(120, 120),
-                                preserveAspectRatio: true,
-                            }}
                             mediaItems={mediaItems}
+                            layoutOptions={layoutOptions}
                             selectedMediaItem={selectedMediaItem}
                             onSelectedMediaItem={onSelectedMediaItem}
                         />

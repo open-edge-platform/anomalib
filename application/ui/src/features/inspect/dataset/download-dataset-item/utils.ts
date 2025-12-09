@@ -9,5 +9,5 @@ export const downloadFile = (url: string, name?: string) => {
     link.hidden = true;
     link.click();
 
-    link.remove();
+    setTimeout(() => link.remove(), 100);
 };

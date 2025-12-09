@@ -2,13 +2,13 @@ import { useEffect, useRef } from 'react';
 
 import { useUnwrapDOMRef } from 'packages/ui';
 
-interface useListEndOptions {
+interface UseListEndOptions {
     onEndReached: () => void;
     rootMargin?: number;
     disabled?: boolean;
 }
 
-export function useListEnd({ onEndReached, rootMargin = 100, disabled = false }: useListEndOptions) {
+export const useListEnd = ({ onEndReached, rootMargin = 100, disabled = false }: UseListEndOptions) => {
     const sentinelRef = useRef(null);
     const unWrapSentinelRef = useUnwrapDOMRef(sentinelRef);
 
@@ -32,4 +32,4 @@ export function useListEnd({ onEndReached, rootMargin = 100, disabled = false }:
     }, [onEndReached, rootMargin, disabled, unWrapSentinelRef]);
 
     return sentinelRef;
-}
+};

@@ -12,20 +12,20 @@ import { getMockedMediaItem } from '../../../../../../mocks/mock-media-item';
 import { MediaItem } from '../../types';
 import { SidebarItems } from './sidebar-items.component';
 
-describe('SidebarItems', () => {
-    const mockMediaItems: MediaItem[] = [
-        getMockedMediaItem({ id: '1', filename: 'image1.jpg', project_id: '123' }),
-        getMockedMediaItem({ id: '2', filename: 'image2.jpg', project_id: '123' }),
-        getMockedMediaItem({ id: '3', filename: 'image3.jpg', project_id: '123' }),
-    ];
+const mockMediaItems: MediaItem[] = [
+    getMockedMediaItem({ id: '1', filename: 'image1.jpg', project_id: '123' }),
+    getMockedMediaItem({ id: '2', filename: 'image2.jpg', project_id: '123' }),
+    getMockedMediaItem({ id: '3', filename: 'image3.jpg', project_id: '123' }),
+];
 
+describe('SidebarItems', () => {
     const renderApp = ({
-        mediaItems = mockMediaItems,
-        selectedMediaItem = mockMediaItems[0],
+        mediaItems,
+        selectedMediaItem,
         onSelectedMediaItem = vi.fn(),
     }: {
-        mediaItems?: MediaItem[];
-        selectedMediaItem?: MediaItem;
+        mediaItems: MediaItem[];
+        selectedMediaItem: MediaItem;
         onSelectedMediaItem?: (mediaItem: string | null) => void;
     }) => {
         server.use(
@@ -68,7 +68,7 @@ describe('SidebarItems', () => {
         const onSelectedMediaItem = vi.fn();
         const selectedMediaItem = mockMediaItems[0];
 
-        renderApp({ onSelectedMediaItem });
+        renderApp({ mediaItems: mockMediaItems, selectedMediaItem, onSelectedMediaItem });
 
         const image = await screen.findByAltText(selectedMediaItem.filename);
         await userEvent.click(image);
@@ -90,7 +90,7 @@ describe('SidebarItems', () => {
             const nextMediaItem = mockMediaItems[1];
             const selectedMediaItem = mockMediaItems[0];
 
-            renderApp({ selectedMediaItem, onSelectedMediaItem });
+            renderApp({ mediaItems: mockMediaItems, selectedMediaItem, onSelectedMediaItem });
 
             await screen.findByAltText(selectedMediaItem.filename);
 
@@ -108,7 +108,7 @@ describe('SidebarItems', () => {
             const nextMediaItem = mockMediaItems[1];
             const selectedMediaItem = mockMediaItems[2];
 
-            renderApp({ selectedMediaItem, onSelectedMediaItem });
+            renderApp({ mediaItems: mockMediaItems, selectedMediaItem, onSelectedMediaItem });
 
             await screen.findByAltText(selectedMediaItem.filename);
 
@@ -125,7 +125,7 @@ describe('SidebarItems', () => {
         it('does not change selection when non-selected item is deleted', async () => {
             const onSelectedMediaItem = vi.fn();
             const selectedMediaItem = mockMediaItems[0];
-            renderApp({ selectedMediaItem, onSelectedMediaItem });
+            renderApp({ mediaItems: mockMediaItems, selectedMediaItem, onSelectedMediaItem });
 
             await screen.findByAltText(selectedMediaItem.filename);
 
@@ -162,8 +162,10 @@ describe('SidebarItems', () => {
 
         it('selects previous item when selected middle item is deleted', async () => {
             const onSelectedMediaItem = vi.fn();
+            const prevMediaItem = mockMediaItems[0];
+            const selectedMediaItem = mockMediaItems[1];
 
-            renderApp({ selectedMediaItem: mockMediaItems[1], onSelectedMediaItem });
+            renderApp({ mediaItems: mockMediaItems, selectedMediaItem, onSelectedMediaItem });
 
             await screen.findByAltText('image2.jpg');
 
@@ -174,7 +176,7 @@ describe('SidebarItems', () => {
             await userEvent.click(screen.getByRole('button', { name: /confirm/i }));
 
             await waitFor(() => {
-                expect(onSelectedMediaItem).toHaveBeenCalledWith('3');
+                expect(onSelectedMediaItem).toHaveBeenCalledWith(prevMediaItem.id);
             });
         });
 
@@ -189,7 +191,7 @@ describe('SidebarItems', () => {
                 })
             );
 
-            renderApp({});
+            renderApp({ mediaItems: mockMediaItems, selectedMediaItem: mockMediaItems[0] });
 
             await screen.findByAltText('image1.jpg');
 
@@ -212,7 +214,7 @@ describe('SidebarItems', () => {
 
         it('handles selected item not in media items list', async () => {
             const selectedItem = getMockedMediaItem({ id: '999', filename: 'missing.jpg', project_id: '123' });
-            renderApp({ selectedMediaItem: selectedItem });
+            renderApp({ mediaItems: mockMediaItems, selectedMediaItem: selectedItem });
 
             expect(await screen.findByAltText('image1.jpg')).toBeInTheDocument();
         });

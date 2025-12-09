@@ -35,8 +35,7 @@ export const SidebarItems = ({
     const handleDeletedItem = (deletedIds: string[]) => {
         if (deletedIds.includes(String(selectedMediaItem.id))) {
             const nextIndex = selectedIndex + 1;
-            const isLastItemDeleted = nextIndex >= mediaItems.length;
-            const newSelectedIndex = isLastItemDeleted ? selectedIndex - 1 : nextIndex;
+            const newSelectedIndex = nextIndex < mediaItems.length - 1 ? nextIndex : selectedIndex - 1;
             const newSelectedItem = mediaItems[newSelectedIndex];
 
             onSelectedMediaItem(newSelectedItem?.id ?? null);

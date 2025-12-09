@@ -1,7 +1,7 @@
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 
-const sinksItemsLimit = 4;
+const sinksItemsLimit = 2;
 
 export const useGetSinks = () => {
     const { projectId } = useProjectIdentifier();
