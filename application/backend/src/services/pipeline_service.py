@@ -74,7 +74,7 @@ class PipelineService:
                 await self._notify_pipeline_changed()
                 # Intentionally call activate_model on status change regardless of whether a model exists.
                 self._model_service.activate_model()
-            if updated.inference_device != pipeline.inference_device:
+            if updated.inference_device != pipeline.inference_device or updated.overlay != pipeline.overlay:
                 # reload model on device change
                 self._model_service.activate_model()
             return updated
