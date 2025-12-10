@@ -23,7 +23,7 @@ export const PipelineSwitch = () => {
                 isSelected={hasOverlay}
                 isDisabled={patchPipeline.isPending || isPipelineStopped}
             >
-                Enabled
+                Overlay
             </Switch>
         </Flex>
     );
