@@ -25,8 +25,11 @@ import { SidebarItems } from './sidebar-items/sidebar-items.component';
 type MediaPreviewProps = {
     mediaItems: MediaItem[];
     selectedMediaItem: MediaItem;
+    hasNextPage: boolean;
+    isLoadingMore: boolean;
     onClose: () => void;
-    onSelectedMediaItem: (mediaItem: string | null) => void;
+    loadMore: () => void;
+    onSelectedMediaItem: (mediaItem: string | null) => Promise<URLSearchParams>;
 };
 
 const layoutOptions = {
@@ -37,7 +40,15 @@ const layoutOptions = {
     preserveAspectRatio: true,
 };
 
-export const MediaPreview = ({ mediaItems, selectedMediaItem, onClose, onSelectedMediaItem }: MediaPreviewProps) => {
+export const MediaPreview = ({
+    mediaItems,
+    hasNextPage,
+    isLoadingMore,
+    selectedMediaItem,
+    loadMore,
+    onClose,
+    onSelectedMediaItem,
+}: MediaPreviewProps) => {
     const { data: inferenceResult } = useMediaItemInference(selectedMediaItem);
 
     return (
@@ -66,8 +77,11 @@ export const MediaPreview = ({ mediaItems, selectedMediaItem, onClose, onSelecte
                     <View gridArea={'sidebar'}>
                         <SidebarItems
                             mediaItems={mediaItems}
+                            hasNextPage={hasNextPage}
+                            isLoadingMore={isLoadingMore}
                             layoutOptions={layoutOptions}
                             selectedMediaItem={selectedMediaItem}
+                            loadMore={loadMore}
                             onSelectedMediaItem={onSelectedMediaItem}
                         />
                     </View>
