@@ -120,7 +120,7 @@ class ModelService:
             await repo.delete_by_id(model_id)
 
             if train_job_id:
-                    await job_repo.delete_by_id(train_job_id)
+                await job_repo.delete_by_id(train_job_id)
 
     @classmethod
     async def delete_project_models_db(cls, session: AsyncSession, project_id: UUID, commit: bool = False) -> None:

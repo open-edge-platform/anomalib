@@ -151,7 +151,9 @@ class TestModelService:
         )
         mock_binary_repo.delete_model_folder.assert_called_once()
 
-    def test_delete_model_also_deletes_training_job(self, fxt_model_service, fxt_model_repository, fxt_model, fxt_project):
+    def test_delete_model_also_deletes_training_job(
+        self, fxt_model_service, fxt_model_repository, fxt_model, fxt_project
+    ):
         """Test that deleting a model also deletes its associated training job."""
         from uuid import uuid4
 
