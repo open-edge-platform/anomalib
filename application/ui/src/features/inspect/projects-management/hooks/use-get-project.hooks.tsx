@@ -1,18 +1,14 @@
 import { $api } from '@geti-inspect/api';
-import { useProjectIdentifier } from '@geti-inspect/hooks';
 
-const sinksItemsLimit = 20;
+const projectsItemsLimit = 20;
 
-export const useGetSinks = () => {
-    const { projectId } = useProjectIdentifier();
-
+export const useGetProjects = () => {
     const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = $api.useInfiniteQuery(
         'get',
-        '/api/projects/{project_id}/sinks',
+        '/api/projects',
         {
             params: {
-                query: { offset: 0, limit: sinksItemsLimit },
-                path: { project_id: projectId },
+                query: { offset: 0, limit: projectsItemsLimit },
             },
         },
         {
@@ -28,12 +24,12 @@ export const useGetSinks = () => {
                     return undefined;
                 }
 
-                return pagination.offset + sinksItemsLimit;
+                return pagination.offset + projectsItemsLimit;
             },
         }
     );
 
-    const sinks = data?.pages.flatMap((page) => page.sinks) ?? [];
+    const projects = data?.pages.flatMap((page) => page.projects) ?? [];
 
-    return { sinks, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage };
+    return { projects, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage };
 };

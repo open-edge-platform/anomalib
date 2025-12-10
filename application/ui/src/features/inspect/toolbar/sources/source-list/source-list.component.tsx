@@ -3,10 +3,10 @@ import { Add as AddIcon } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 import { isEqual } from 'lodash-es';
 
+import { LoadMoreList } from '../../../../../components/load-more-list/load-more-list.component';
 import { StatusTag } from '../../../../../components/status-tag/status-tag.component';
 import { usePipeline } from '../../../../../hooks/use-pipeline.hook';
 import { removeUnderscore } from '../../../utils';
-import { LoadMoreList } from '../../load-more-list/load-more-list.component';
 import { SourceMenu } from '../source-menu/source-menu.component';
 import { SourceConfig } from '../util';
 import { SettingsList } from './settings-list/settings-list.component';

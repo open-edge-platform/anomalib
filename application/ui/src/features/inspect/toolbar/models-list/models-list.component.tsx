@@ -8,7 +8,7 @@ import { isEmpty } from 'lodash-es';
 import { NotFound } from 'packages/ui/icons';
 
 import { useGetModels } from '../../../..//hooks/use-get-models.hook';
-import { LoadMoreList } from '../load-more-list/load-more-list.component';
+import { LoadMoreList } from '../../../../components/load-more-list/load-more-list.component';
 
 import classes from './model-list.module.scss';
 
