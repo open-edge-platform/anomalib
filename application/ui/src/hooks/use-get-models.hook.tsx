@@ -1,17 +1,20 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 
-const sinksItemsLimit = 2;
+const modelItemsLimit = 50;
 
-export const useGetSinks = () => {
+export const useGetModels = () => {
     const { projectId } = useProjectIdentifier();
 
     const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = $api.useInfiniteQuery(
         'get',
-        '/api/projects/{project_id}/sinks',
+        '/api/projects/{project_id}/models',
         {
             params: {
-                query: { offset: 0, limit: sinksItemsLimit },
+                query: { offset: 0, limit: modelItemsLimit },
                 path: { project_id: projectId },
             },
         },
@@ -28,12 +31,12 @@ export const useGetSinks = () => {
                     return undefined;
                 }
 
-                return pagination.offset + sinksItemsLimit;
+                return pagination.offset + modelItemsLimit;
             },
         }
     );
 
-    const sinks = data?.pages.flatMap((page) => page.sinks) ?? [];
+    const models = data?.pages.flatMap((page) => page.models) ?? [];
 
-    return { sinks, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage };
+    return { models, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage };
 };

@@ -2,17 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { usePatchPipeline, usePipeline, useProjectIdentifier } from '@geti-inspect/hooks';
-import { Button, Content, Flex, IllustratedMessage } from '@geti/ui';
+import { Button, Content, IllustratedMessage } from '@geti/ui';
 import { clsx } from 'clsx';
 import { isEmpty } from 'lodash-es';
 import { NotFound } from 'packages/ui/icons';
 
-import { useTrainedModels } from '../../../../hooks/use-trained-models';
+import { useGetModels } from '../../../..//hooks/use-get-models.hook';
+import { LoadMoreList } from '../load-more-list/load-more-list.component';
 
 import classes from './model-list.module.scss';
 
 export const ModelsList = () => {
-    const models = useTrainedModels();
+    const { models, isLoading, hasNextPage, fetchNextPage } = useGetModels();
     const { projectId } = useProjectIdentifier();
     const patchPipeline = usePatchPipeline(projectId);
     const { data: pipeline } = usePipeline();
@@ -28,11 +29,11 @@ export const ModelsList = () => {
     };
 
     if (isEmpty(modelsIds)) {
-        return renderEmptyState();
+        return <EmptyState />;
     }
 
     return (
-        <Flex direction='column' gap='size-100'>
+        <LoadMoreList isLoading={isLoading} hasNextPage={hasNextPage} onLoadMore={fetchNextPage}>
             {models.map((model) => (
                 <Button
                     key={model.id}
@@ -46,15 +47,15 @@ export const ModelsList = () => {
                     {model.name}
                 </Button>
             ))}
-        </Flex>
+        </LoadMoreList>
     );
 };
 
-function renderEmptyState() {
+const EmptyState = () => {
     return (
         <IllustratedMessage>
             <NotFound />
             <Content>No models trained yet</Content>
         </IllustratedMessage>
     );
-}
+};

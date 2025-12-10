@@ -14,7 +14,7 @@ import { SinkOptions } from './sink-options.component';
 import { SinkConfig } from './utils';
 
 export const SinkActions = () => {
-    const { sinks, isFetchingNextPage, isLoading, fetchNextPage } = useGetSinks();
+    const { sinks, isFetchingNextPage, isLoading, hasNextPage, fetchNextPage } = useGetSinks();
     const [view, setView] = useState<'list' | 'options' | 'edit'>('list');
     const [currentSink, setCurrentSink] = useState<SinkConfig | null>(null);
 
@@ -43,6 +43,7 @@ export const SinkActions = () => {
         return (
             <SinkList
                 sinks={sinks}
+                hasNextPage={hasNextPage}
                 isLoading={isFetchingNextPage}
                 onLoadMore={fetchNextPage}
                 onAddSink={handleAddSinks}

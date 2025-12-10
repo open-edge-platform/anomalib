@@ -1,11 +1,12 @@
+import { Button, Flex, Text } from '@geti/ui';
 import { Add as AddIcon } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 import { isEqual } from 'lodash-es';
-import { Button, Flex, Loading, Text, View, VirtualizedListLayout } from 'packages/ui';
 
 import { StatusTag } from '../../../../../components/status-tag/status-tag.component';
 import { usePipeline } from '../../../../../hooks/use-pipeline.hook';
 import { removeUnderscore } from '../../../utils';
+import { LoadMoreList } from '../../load-more-list/load-more-list.component';
 import { SinkConfig } from '../utils';
 import { SettingsList } from './settings-list/settings-list.component';
 import { SinkIcon } from './sink-icon/sink-icon.component';
@@ -16,6 +17,7 @@ import classes from './sink-list.module.scss';
 type SinksListProps = {
     sinks: SinkConfig[];
     isLoading: boolean;
+    hasNextPage: boolean;
     onLoadMore: () => void;
     onAddSink: () => void;
     onEditSink: (config: SinkConfig) => void;
@@ -63,35 +65,24 @@ const SinkListItem = ({ sink, isConnected, onEditSink }: SinksListItemProps) => 
     );
 };
 
-export const SinkList = ({ sinks, isLoading, onLoadMore, onAddSink, onEditSink }: SinksListProps) => {
+export const SinkList = ({ sinks, isLoading, hasNextPage, onLoadMore, onAddSink, onEditSink }: SinksListProps) => {
     const pipeline = usePipeline();
     const currentSinkId = pipeline.data.sink?.id;
 
     return (
-        <Flex direction={'column'} gap={'size-200'} height={'100%'}>
+        <LoadMoreList isLoading={isLoading} hasNextPage={hasNextPage} onLoadMore={onLoadMore}>
             <Button variant='secondary' height={'size-800'} UNSAFE_className={classes.addSink} onPress={onAddSink}>
                 <AddIcon /> Add new sink
             </Button>
 
-            <View height={'size-3600'}>
-                <VirtualizedListLayout
-                    items={sinks}
-                    isLoading={isLoading}
-                    onLoadMore={onLoadMore}
-                    ariaLabel='sinks list'
-                    layoutOptions={{ gap: 10 }}
-                    idFormatter={(sink: SinkConfig) => String(sink.id)}
-                    textValueFormatter={(sink: SinkConfig) => sink.name}
-                    renderLoading={() => <Loading mode={'inline'} size='S' />}
-                    renderItem={(sink: SinkConfig) => (
-                        <SinkListItem
-                            sink={sink}
-                            isConnected={isEqual(currentSinkId, sink.id)}
-                            onEditSink={onEditSink}
-                        />
-                    )}
+            {sinks.map((sink) => (
+                <SinkListItem
+                    key={sink.id}
+                    sink={sink}
+                    isConnected={isEqual(currentSinkId, sink.id)}
+                    onEditSink={onEditSink}
                 />
-            </View>
-        </Flex>
+            ))}
+        </LoadMoreList>
     );
 };

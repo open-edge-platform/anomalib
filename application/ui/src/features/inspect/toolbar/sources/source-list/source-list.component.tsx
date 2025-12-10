@@ -1,11 +1,12 @@
+import { Button, Flex, Text } from '@geti/ui';
 import { Add as AddIcon } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 import { isEqual } from 'lodash-es';
-import { Button, Flex, Loading, Text, View, VirtualizedListLayout } from 'packages/ui';
 
 import { StatusTag } from '../../../../../components/status-tag/status-tag.component';
 import { usePipeline } from '../../../../../hooks/use-pipeline.hook';
 import { removeUnderscore } from '../../../utils';
+import { LoadMoreList } from '../../load-more-list/load-more-list.component';
 import { SourceMenu } from '../source-menu/source-menu.component';
 import { SourceConfig } from '../util';
 import { SettingsList } from './settings-list/settings-list.component';
@@ -16,6 +17,7 @@ import classes from './source-list.module.scss';
 type SourcesListProps = {
     sources: SourceConfig[];
     isLoading: boolean;
+    hasNextPage: boolean;
     onLoadMore: () => void;
     onAddSource: () => void;
     onEditSource: (config: SourceConfig) => void;
@@ -63,35 +65,31 @@ const SourceListItem = ({ source, isConnected, onEditSource }: SourceListItemPro
     );
 };
 
-export const SourcesList = ({ sources, isLoading, onLoadMore, onAddSource, onEditSource }: SourcesListProps) => {
+export const SourcesList = ({
+    sources,
+    isLoading,
+    hasNextPage,
+    onLoadMore,
+    onAddSource,
+    onEditSource,
+}: SourcesListProps) => {
     const pipeline = usePipeline();
     const currentSourceId = pipeline.data.source?.id;
 
     return (
-        <Flex direction={'column'} gap={'size-200'} height={'100%'}>
+        <LoadMoreList isLoading={isLoading} hasNextPage={hasNextPage} onLoadMore={onLoadMore}>
             <Button variant='secondary' height={'size-800'} UNSAFE_className={classes.addSource} onPress={onAddSource}>
                 <AddIcon /> Add new source
             </Button>
 
-            <View height={'size-3600'}>
-                <VirtualizedListLayout
-                    items={sources}
-                    isLoading={isLoading}
-                    onLoadMore={onLoadMore}
-                    ariaLabel='sources list'
-                    layoutOptions={{ gap: 10 }}
-                    idFormatter={(source: SourceConfig) => String(source.id)}
-                    textValueFormatter={(source: SourceConfig) => source.name}
-                    renderLoading={() => <Loading mode={'inline'} size='S' />}
-                    renderItem={(source: SourceConfig) => (
-                        <SourceListItem
-                            source={source}
-                            isConnected={isEqual(currentSourceId, source.id)}
-                            onEditSource={onEditSource}
-                        />
-                    )}
+            {sources.map((source) => (
+                <SourceListItem
+                    key={source.id}
+                    source={source}
+                    isConnected={isEqual(currentSourceId, source.id)}
+                    onEditSource={onEditSource}
                 />
-            </View>
-        </Flex>
+            ))}
+        </LoadMoreList>
     );
 };

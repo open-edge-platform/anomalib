@@ -48,7 +48,7 @@ export const VirtualizerGridLayout = <T extends { id?: string }>({
         gap: layoutOptions.minSpace?.height ?? MIN_SPACE,
         scrollToIndex,
         callback: (top) => {
-            ref.current?.scrollTo({ top, behavior: 'smooth' });
+            ref.current?.scrollTo?.({ top, behavior: 'smooth' });
         },
     });
 

@@ -1,7 +1,19 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, ButtonGroup, Content, Dialog, dimensionValue, Divider, Grid, Header, Heading, View } from '@geti/ui';
+import {
+    Button,
+    ButtonGroup,
+    Content,
+    Dialog,
+    dimensionValue,
+    Divider,
+    Grid,
+    Header,
+    Heading,
+    Size,
+    View,
+} from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { MediaItem } from '../types';
@@ -15,6 +27,14 @@ type MediaPreviewProps = {
     selectedMediaItem: MediaItem;
     onClose: () => void;
     onSelectedMediaItem: (mediaItem: string | null) => void;
+};
+
+const layoutOptions = {
+    maxColumns: 1,
+    minSpace: new Size(8, 8),
+    minItemSize: new Size(120, 120),
+    maxItemSize: new Size(120, 120),
+    preserveAspectRatio: true,
 };
 
 export const MediaPreview = ({ mediaItems, selectedMediaItem, onClose, onSelectedMediaItem }: MediaPreviewProps) => {
@@ -46,6 +66,7 @@ export const MediaPreview = ({ mediaItems, selectedMediaItem, onClose, onSelecte
                     <View gridArea={'sidebar'}>
                         <SidebarItems
                             mediaItems={mediaItems}
+                            layoutOptions={layoutOptions}
                             selectedMediaItem={selectedMediaItem}
                             onSelectedMediaItem={onSelectedMediaItem}
                         />

@@ -10,6 +10,7 @@ import { getThumbnailUrl } from '../utils';
 import { DatasetItemPlaceholder } from './dataset-item-placeholder/dataset-item-placeholder.component';
 import { getPlaceholderItem, isPlaceholderItem } from './dataset-item-placeholder/util';
 import { DeleteMediaItem } from './delete-dataset-item/delete-dataset-item.component';
+import { DownloadDatasetItem } from './download-dataset-item/download-dataset-item.component';
 import { useGetMediaItems } from './hooks/use-get-media-items.hook';
 import { MediaPreview } from './media-preview/media-preview.component';
 import { InferenceOpacityProvider } from './media-preview/providers/inference-opacity-provider.component';
@@ -77,6 +78,7 @@ export const DatasetList = () => {
                                         onDeleted={() => setSelectedMediaItem(null)}
                                     />
                                 )}
+                                bottomLeftElement={() => <DownloadDatasetItem mediaItem={mediaItem} />}
                             />
                         )
                     }

@@ -90,3 +90,8 @@ svg {
 [class$='Tabs-selectionIndicator'] {
     background: var(--energy-blue);
 }
+
+/* Increase the modal’s opaque background when a modal is opened inside another modal. */
+[data-testid='underlay'] {
+    z-index: 2 !important;
+}
