@@ -40,7 +40,7 @@ g++ \
 && rm -rf /var/lib/apt/lists/* \
 && apt-get clean
 
-RUN groupadd -f render && usermod -aG render $(whoami)
+RUN groupadd -f render && groupadd -f video && usermod -aG render,video $(whoami)
 
 ENV PATH=/app/.venv/bin:$PATH
 WORKDIR /app

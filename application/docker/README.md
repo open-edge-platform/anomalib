@@ -4,7 +4,7 @@
 
 ```bash
 cd application/docker
-docker compose up
+VIDEO_GROUP_ID=$(getent group video | cut -d: -f3) docker compose up
 ```
 
 ## To create XPU build
