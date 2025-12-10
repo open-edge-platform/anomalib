@@ -3,7 +3,7 @@
 ## To create CPU build
 
 ```bash
-cd application/.packaging/docker
+cd application/docker
 docker compose up
 ```
 
@@ -13,7 +13,7 @@ docker compose up
 > You need to first set the `RENDER_GROUP_ID` environment variable to match your host system's render group ID.
 
 ```bash
-cd application/.packaging/docker
+cd application/docker
 RENDER_GROUP_ID=$(getent group render | cut -d: -f3) AI_DEVICE=xpu docker compose up
 ```
 
@@ -23,6 +23,6 @@ RENDER_GROUP_ID=$(getent group render | cut -d: -f3) AI_DEVICE=xpu docker compos
 > You need to uncomment the `deploy:` section in the `docker-compose.yml` file to enable GPU support.
 
 ```bash
-cd application/.packaging/docker
+cd application/docker
 AI_DEVICE=cuda docker compose up
 ```

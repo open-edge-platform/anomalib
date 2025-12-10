@@ -28,9 +28,9 @@ services:
     #   - "${RENDER_GROUP_ID}" # This is needed to allow access to the 'render' group for torch XPU support
     volumes:
       # Persist database and uploaded data
-      - backend-data:/app/data
+      - /backend/data:/app/data
       # Persist logs
-      - backend-logs:/app/logs
+      - /backend/logs:/app/logs
     ports:
       - "8000:8000"
     # Increase file descriptor limits
@@ -50,9 +50,3 @@ services:
     privileged: true
     devices:
       - /dev:/dev
-
-volumes:
-  backend-data:
-    driver: local
-  backend-logs:
-    driver: local

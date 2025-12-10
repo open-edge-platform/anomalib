@@ -32,10 +32,6 @@ ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 ENV UV_PYTHON_DOWNLOADS=0
 
 
-# Create non-root user and group
-RUN groupadd --gid 10001 non-root && \
-useradd --uid 10001 --gid 10001 --create-home --shell /bin/bash non-root
-
 RUN apt-get update \
 && apt-get install -y --no-install-recommends \
 libgl1 \
@@ -43,6 +39,8 @@ libglib2.0-0 \
 g++ \
 && rm -rf /var/lib/apt/lists/* \
 && apt-get clean
+
+RUN groupadd -f render && usermod -aG render $(whoami)
 
 ENV PATH=/app/.venv/bin:$PATH
 WORKDIR /app
@@ -53,21 +51,20 @@ ENV DATA_DIR="/app/data"
 ENV LOG_DIR="/app/logs"
 ENV PYTHONPATH=/app/application/backend
 
-COPY --chown=non-root:non-root --from=web-ui /home/app/web_ui/dist ${STATIC_FILES_DIR}
-COPY --chown=non-root:non-root application/backend/run.sh /app/application/backend/run.sh
+COPY --link --from=web-ui /home/app/web_ui/dist ${STATIC_FILES_DIR}
+COPY  application/backend/run.sh /app/application/backend/run.sh
 
 # Copy anomalib source code (pyproject.toml depends on README and LICENSE as well)
-COPY --chown=non-root:non-root  src ./src
-COPY --chown=non-root:non-root  pyproject.toml uv.lock ./
-COPY --chown=non-root:non-root LICENSE ./LICENSE
-COPY --chown=non-root:non-root README.md ./README.md
+COPY --link src ./src
+COPY --link pyproject.toml uv.lock ./
+COPY --link LICENSE ./LICENSE
+COPY --link README.md ./README.md
 
 # Copy backend application
-COPY --chown=non-root:non-root application/backend /app/application/backend
+COPY --link application/backend /app/application/backend
 
 # Create data and logs directories with write permissions for mounted volumes
-RUN mkdir -p /app/data /app/logs \
- && chown -R non-root:non-root /app
+RUN mkdir -p /app/data /app/logs
 
 
 #------------------------------------------
@@ -75,11 +72,10 @@ RUN mkdir -p /app/data /app/logs \
 #------------------------------------------
 FROM geti-inspect-base AS geti-inspect-cpu
 
-USER non-root
 WORKDIR /app/application/backend
 
-RUN --mount=type=cache,target=/home/non-root/.cache/uv,uid=10001,gid=10001 \
-    uv sync --frozen --no-dev --extra cpu
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --extra cpu
 
 EXPOSE 8000
 
@@ -108,11 +104,10 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-USER non-root
 WORKDIR /app/application/backend
 
-RUN --mount=type=cache,target=/home/non-root/.cache/uv,uid=10001,gid=10001 \
-    uv sync --frozen --no-dev --extra cu124
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --extra cu124
 
 EXPOSE 8000
 
@@ -139,13 +134,12 @@ RUN apt-get update \
  && apt-get remove -y wget gpg \
  && apt-get clean
 
-RUN groupadd -f render && usermod -aG render non-root
 
-USER non-root
+
 WORKDIR /app/application/backend
 
-RUN --mount=type=cache,target=/home/non-root/.cache/uv,uid=10001,gid=10001 \
-    uv sync --frozen --no-dev --extra xpu
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --extra xpu
 
 EXPOSE 8000
 
