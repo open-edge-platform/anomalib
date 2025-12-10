@@ -6,11 +6,13 @@ import {
     Button,
     ButtonGroup,
     Content,
+    ContextualHelp,
     Dialog,
     Divider,
     Flex,
     Heading,
     Item,
+    Link,
     Picker,
     Text,
     toast,
@@ -24,6 +26,9 @@ import type { ModelData } from '../../../hooks/utils';
 import { downloadBlob, sanitizeFilename } from '../utils';
 
 import classes from './export-model-dialog.module.scss';
+
+const openvinoDocsUrl =
+    'https://docs.openvino.ai/2025/openvino-workflow/model-optimization-guide/quantizing-models-post-training.html';
 
 const EXPORT_FORMATS: { id: SchemaExportType; name: string; Icon: React.FC<React.SVGProps<SVGSVGElement>> }[] = [
     { id: 'openvino', name: 'OpenVINO', Icon: OpenVino },
@@ -143,6 +148,41 @@ export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
                             selectedKey={selectedCompression}
                             onSelectionChange={handleCompressionChange}
                             width='100%'
+                            contextualHelp={
+                                <ContextualHelp>
+                                    <Heading>Compression Types</Heading>
+                                    <Content>
+                                        <Flex direction='column' gap='size-100'>
+                                            <Text>
+                                                <strong>FP16:</strong> Weight compression to FP16 precision. All weights
+                                                are converted to FP16.
+                                            </Text>
+                                            <Text>
+                                                <strong>INT8:</strong> Weight compression to INT8 precision. All weights
+                                                are quantized to INT8, but are dequantized to floating point before
+                                                inference.
+                                            </Text>
+                                            <Text>
+                                                <strong>INT8_PTQ:</strong> Full integer post-training quantization to
+                                                INT8 precision. All weights and operations are quantized to INT8.
+                                                Inference is performed in INT8 precision.
+                                            </Text>
+                                            <Text>
+                                                <strong>INT8_ACQ:</strong> Accuracy-control quantization to INT8
+                                                precision. Weights and operations are quantized to INT8, except those
+                                                that would degrade model quality beyond an acceptable threshold.
+                                                Inference uses mixed precision.
+                                            </Text>
+                                            <Text>
+                                                More info:{' '}
+                                                <Link href={openvinoDocsUrl} target='_blank' rel='noopener noreferrer'>
+                                                    OpenVINO Quantization Documentation
+                                                </Link>
+                                            </Text>
+                                        </Flex>
+                                    </Content>
+                                </ContextualHelp>
+                            }
                         >
                             {(item) => <Item key={item.id}>{item.name}</Item>}
                         </Picker>
