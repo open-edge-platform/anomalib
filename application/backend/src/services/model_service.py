@@ -25,7 +25,7 @@ from db import get_async_db_session_ctx
 from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
 from pydantic_models.base import Pagination
 from pydantic_models.model import ExportParameters
-from repositories import ModelRepository
+from repositories import JobRepository, ModelRepository
 from repositories.binary_repo import ModelBinaryRepository, ModelExportBinaryRepository
 from services import ResourceNotFoundError
 from services.dataset_snapshot_service import DatasetSnapshotService
@@ -112,9 +112,15 @@ class ModelService:
         ds_snapshot_id = model.dataset_snapshot_id
         await DatasetSnapshotService.delete_snapshot_if_unused(snapshot_id=ds_snapshot_id, project_id=project_id)
 
+        train_job_id = model.train_job_id
+
         async with get_async_db_session_ctx() as session:
             repo = ModelRepository(session, project_id=project_id)
+            job_repo = JobRepository(session)
             await repo.delete_by_id(model_id)
+
+            if train_job_id:
+                    await job_repo.delete_by_id(train_job_id)
 
     @classmethod
     async def delete_project_models_db(cls, session: AsyncSession, project_id: UUID, commit: bool = False) -> None:
