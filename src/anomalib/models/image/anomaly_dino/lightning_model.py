@@ -92,7 +92,7 @@ class AnomalyDINO(MemoryBankMixin, AnomalibModule):
             should we subsample. Defaults to ``0.1``
         precision (str | PrecisionType, optional): Precision type for model computations.
             Can be either a string (``"float32"``, ``"float16"``) or a :class:`PrecisionType` enum value.
-            Defaults to ``"float32"``.
+            Defaults to ``PrecisionType.FLOAT32``.
         pre_processor (PreProcessor | bool, optional): Pre-processor instance or
             bool flag to enable default preprocessing. Defaults to ``True``.
         post_processor (PostProcessor | bool, optional): Post-processor instance or
@@ -154,7 +154,7 @@ class AnomalyDINO(MemoryBankMixin, AnomalibModule):
         masking: bool = False,
         coreset_subsampling: bool = False,
         sampling_ratio: float = 0.1,
-        precision: str | PrecisionType = PrecisionType.FLOAT32.value,
+        precision: str | PrecisionType = PrecisionType.FLOAT32,
         pre_processor: nn.Module | bool = True,
         post_processor: nn.Module | bool = True,
         evaluator: Evaluator | bool = True,
@@ -173,6 +173,10 @@ class AnomalyDINO(MemoryBankMixin, AnomalibModule):
             coreset_subsampling=coreset_subsampling,
             sampling_ratio=sampling_ratio,
         )
+
+        # Convert string to PrecisionType enum if needed
+        if isinstance(precision, str):
+            precision = PrecisionType(precision.lower())
 
         if precision == PrecisionType.FLOAT16:
             self.model = self.model.half()
