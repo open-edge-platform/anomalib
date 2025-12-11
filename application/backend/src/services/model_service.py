@@ -116,10 +116,10 @@ class ModelService:
 
         async with get_async_db_session_ctx() as session:
             repo = ModelRepository(session, project_id=project_id)
-            job_repo = JobRepository(session)
             await repo.delete_by_id(model_id)
 
             if train_job_id:
+                job_repo = JobRepository(session)
                 await job_repo.delete_by_id(train_job_id)
 
     @classmethod
