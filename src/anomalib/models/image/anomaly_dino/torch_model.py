@@ -76,7 +76,7 @@ class AnomalyDINOModel(DynamicBufferMixin, nn.Module):
 
         # Load DINOv2 backbone
         if not encoder_name.startswith("dinov2"):
-            err_str = f"Encoder must be dinov2, got {encoder_name}"
+            err_str = f"Encoder name must start with 'dinov2', got '{encoder_name}'"
             raise ValueError(err_str)
         self.feature_encoder = DinoV2Loader.from_name(self.encoder_name)
         self.feature_encoder.eval()
