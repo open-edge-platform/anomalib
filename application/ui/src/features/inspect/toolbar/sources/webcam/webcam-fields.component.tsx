@@ -43,11 +43,19 @@ export const WebcamFields = ({ defaultState }: WebcamFieldsProps) => {
             <TextField isHidden label='id' name='id' defaultValue={defaultState?.id} />
             <TextField isHidden label='project_id' name='project_id' defaultValue={defaultState.project_id} />
             <TextField isHidden label='name' name='name' value={name} />
-            <TextField width={'100%'} label='Name' name='name_display' value={name} onChange={handleNameChange} />
+            <TextField
+                isRequired
+                width='100%'
+                label='Name'
+                name='name_display'
+                value={name}
+                onChange={handleNameChange}
+            />
 
             <Flex alignItems='end' gap='size-200'>
                 <Picker
                     flex='1'
+                    isRequired
                     label='Camera'
                     name='device_id'
                     items={devices}

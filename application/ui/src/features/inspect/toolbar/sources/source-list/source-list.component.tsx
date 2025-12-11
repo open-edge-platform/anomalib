@@ -35,9 +35,7 @@ const SourceListItem = ({ source, isConnected, onEditSource }: SourceListItemPro
             key={source.id}
             gap='size-200'
             direction='column'
-            UNSAFE_className={clsx(classes.card, {
-                [classes.activeCard]: isConnected,
-            })}
+            UNSAFE_className={clsx(classes.card, { [classes.activeCard]: isConnected })}
         >
             <Flex alignItems={'center'} gap={'size-200'}>
                 <SourceIcon type={source.source_type} />

@@ -17,7 +17,7 @@ export const LocalFolderFields = ({ defaultState }: LocalFolderFieldsProps) => {
             <TextField isHidden label='project_id' name='project_id' defaultValue={defaultState.project_id} />
 
             <Flex direction={'row'} gap='size-200'>
-                <TextField label='Name' name='name' defaultValue={defaultState.name} />
+                <TextField isRequired label='Name' name='name' defaultValue={defaultState.name} />
                 <NumberField
                     label='Rate Limit'
                     name='rate_limit'
@@ -29,9 +29,10 @@ export const LocalFolderFields = ({ defaultState }: LocalFolderFieldsProps) => {
 
             <Flex direction='row' gap='size-200'>
                 <TextField
+                    isRequired
                     width={'100%'}
-                    label='Folder Path'
-                    name='folder_path'
+                    label={'Folder Path'}
+                    name={'folder_path'}
                     defaultValue={defaultState.folder_path}
                 />
 
