@@ -453,7 +453,12 @@ class DinoVisionTransformer(nn.Module):
         if is_training:
             return ret
         if isinstance(ret, list):
-            msg = "forward() received list output in inference mode"
+            msg = (
+                "forward() received a list output in inference mode. "
+                "List outputs are only supported in training mode (is_training=True). "
+                "Inference mode requires a single tensor output. "
+                "If you intended to get multiple outputs, please set is_training=True."
+            )
             raise TypeError(msg)
         # inference: ret is a dict for non-list input
         return self.head(ret["x_norm_clstoken"])  # type: ignore[misc]
