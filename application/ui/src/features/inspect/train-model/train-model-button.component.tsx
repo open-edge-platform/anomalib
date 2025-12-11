@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Button, DialogTrigger } from '@geti/ui';
@@ -20,9 +22,17 @@ export const TrainModelButton = () => {
     const isDisabled = useIsTrainingButtonDisabled();
 
     return (
-        <DialogTrigger type='modal'>
-            <Button isDisabled={isDisabled}>Train model</Button>
-            {(close) => <TrainModelDialog close={close} />}
-        </DialogTrigger>
+        <Suspense
+            fallback={
+                <Button isDisabled isPending>
+                    Train model
+                </Button>
+            }
+        >
+            <DialogTrigger type='modal'>
+                <Button isDisabled={isDisabled}>Train model</Button>
+                {(close) => <TrainModelDialog close={close} />}
+            </DialogTrigger>
+        </Suspense>
     );
 };

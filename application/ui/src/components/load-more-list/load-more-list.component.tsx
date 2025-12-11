@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-import { Button, Flex } from '@geti/ui';
+import { Button, dimensionValue, Flex } from '@geti/ui';
 import { useListEnd } from 'src/hooks/use-list-end.hook';
 
 type LoadMoreListProps = {
@@ -11,10 +11,15 @@ type LoadMoreListProps = {
 };
 
 export const LoadMoreList = ({ children, isLoading, hasNextPage, onLoadMore }: LoadMoreListProps) => {
-    const sentinelRef = useListEnd({ onEndReached: onLoadMore, disabled: isLoading });
+    const sentinelRef = useListEnd({ onEndReached: onLoadMore, disabled: isLoading || !hasNextPage });
 
     return (
-        <Flex gap={'size-200'} direction={'column'} maxHeight={'60vh'} UNSAFE_style={{ overflow: 'auto' }}>
+        <Flex
+            gap={'size-200'}
+            maxHeight={'60vh'}
+            direction={'column'}
+            UNSAFE_style={{ overflow: 'auto', padding: dimensionValue('size-10') }}
+        >
             {children}
 
             {hasNextPage && (

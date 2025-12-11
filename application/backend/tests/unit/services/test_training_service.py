@@ -231,7 +231,7 @@ class TestTrainingService:
         with patch("services.training_service.asyncio.to_thread") as mock_to_thread:
             # Mock the training to succeed first, setting export_path, then fail
             def mock_train_model(
-                cls, model, synchronization_parameters: ProgressSyncParams, device=None, dataset_root=None
+                cls, model, synchronization_parameters: ProgressSyncParams, device=None, dataset_root=None, max_epochs=1
             ):
                 model.export_path = "/path/to/model"
                 raise Exception("Training failed")
@@ -263,7 +263,7 @@ class TestTrainingService:
         # Call the method
         with patch.object(TrainingService, "_compute_export_size", return_value=123):
             result = TrainingService._train_model(
-                fxt_model, synchronization_parameters=ProgressSyncParams(), dataset_root="/tmp/dataset"
+                fxt_model, synchronization_parameters=ProgressSyncParams(), dataset_root="/tmp/dataset", max_epochs=42
             )
 
         # Verify the result
@@ -282,7 +282,7 @@ class TestTrainingService:
         assert call_args[1]["default_root_dir"] == "/path/to/model"
         assert "logger" in call_args[1]
         assert len(call_args[1]["logger"]) == 2  # trackio and tensorboard
-        assert call_args[1]["max_epochs"] == 10
+        assert call_args[1]["max_epochs"] == 42
 
         fxt_mock_anomalib_components["engine"].fit.assert_called_once_with(
             model=fxt_mock_anomalib_components["anomalib_model"], datamodule=fxt_mock_anomalib_components["folder"]
@@ -332,7 +332,7 @@ class TestTrainingService:
         sync_params.set_cancel_training_event()
 
         result = TrainingService._train_model(
-            fxt_model, synchronization_parameters=sync_params, dataset_root="/tmp/dataset"
+            fxt_model, synchronization_parameters=sync_params, dataset_root="/tmp/dataset", max_epochs=1
         )
 
         assert result is None

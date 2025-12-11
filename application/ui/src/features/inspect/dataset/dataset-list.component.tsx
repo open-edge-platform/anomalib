@@ -1,7 +1,6 @@
 import { DialogContainer, Flex, Heading, Selection, Size, View } from '@geti/ui';
 import { isNil } from 'lodash-es';
 import isEmpty from 'lodash-es/isEmpty';
-import { useQueryState } from 'nuqs';
 import { MediaThumbnail } from 'src/components/media-thumbnail/media-thumbnail.component';
 import { GridMediaItem } from 'src/components/virtualizer-grid-layout/grid-media-item/grid-media-item.component';
 import { VirtualizerGridLayout } from 'src/components/virtualizer-grid-layout/virtualizer-grid-layout.component';
@@ -12,6 +11,7 @@ import { getPlaceholderItem, isPlaceholderItem } from './dataset-item-placeholde
 import { DeleteMediaItem } from './delete-dataset-item/delete-dataset-item.component';
 import { DownloadDatasetItem } from './download-dataset-item/download-dataset-item.component';
 import { useGetMediaItems } from './hooks/use-get-media-items.hook';
+import { useSelectedMediaItem } from './hooks/use-selected-media-item.hook';
 import { MediaPreview } from './media-preview/media-preview.component';
 import { InferenceOpacityProvider } from './media-preview/providers/inference-opacity-provider.component';
 import { MediaItem } from './types';
@@ -25,10 +25,8 @@ const layoutOptions = {
 };
 
 export const DatasetList = () => {
-    const { mediaItems, isFetchingNextPage, fetchNextPage } = useGetMediaItems();
-    const [selectedMediaItemId, setSelectedMediaItem] = useQueryState('selectedMediaItem');
-    //TODO: revisit implementation when dataset loading is paginated
-    const selectedMediaItem = mediaItems.find((item) => item.id === selectedMediaItemId);
+    const [selectedMediaItem, setSelectedMediaItemId] = useSelectedMediaItem();
+    const { mediaItems, isFetchingNextPage, hasNextPage, fetchNextPage } = useGetMediaItems();
 
     const mediaItemsToRender = [
         ...mediaItems,
@@ -43,7 +41,7 @@ export const DatasetList = () => {
         const itemId = String(firstKey);
 
         if (!isNil(firstKey) && !isPlaceholderItem(itemId)) {
-            setSelectedMediaItem(itemId);
+            setSelectedMediaItemId(itemId);
         }
     };
 
@@ -58,7 +56,7 @@ export const DatasetList = () => {
                     selectionMode='single'
                     layoutOptions={layoutOptions}
                     isLoadingMore={isFetchingNextPage}
-                    onLoadMore={fetchNextPage}
+                    onLoadMore={() => hasNextPage && fetchNextPage()}
                     onSelectionChange={handleSelectionChange}
                     contentItem={(mediaItem) =>
                         mediaItem.filename === 'placeholder' ? (
@@ -69,13 +67,13 @@ export const DatasetList = () => {
                                     <MediaThumbnail
                                         alt={mediaItem.filename}
                                         url={getThumbnailUrl(mediaItem)}
-                                        onClick={() => setSelectedMediaItem(mediaItem.id ?? null)}
+                                        onClick={() => setSelectedMediaItemId(mediaItem.id ?? null)}
                                     />
                                 )}
                                 topRightElement={() => (
                                     <DeleteMediaItem
                                         itemsIds={[String(mediaItem.id)]}
-                                        onDeleted={() => setSelectedMediaItem(null)}
+                                        onDeleted={() => setSelectedMediaItemId(null)}
                                     />
                                 )}
                                 bottomLeftElement={() => <DownloadDatasetItem mediaItem={mediaItem} />}
@@ -85,14 +83,17 @@ export const DatasetList = () => {
                 />
             </View>
 
-            <DialogContainer onDismiss={() => setSelectedMediaItem(null)}>
+            <DialogContainer onDismiss={() => setSelectedMediaItemId(null)}>
                 {!isEmpty(selectedMediaItem) && (
                     <InferenceOpacityProvider>
                         <MediaPreview
                             mediaItems={mediaItems}
+                            loadMore={fetchNextPage}
+                            hasNextPage={hasNextPage}
+                            isLoadingMore={isFetchingNextPage}
                             selectedMediaItem={selectedMediaItem}
-                            onClose={() => setSelectedMediaItem(null)}
-                            onSelectedMediaItem={setSelectedMediaItem}
+                            onClose={() => setSelectedMediaItemId(null)}
+                            onSelectedMediaItem={setSelectedMediaItemId}
                         />
                     </InferenceOpacityProvider>
                 )}

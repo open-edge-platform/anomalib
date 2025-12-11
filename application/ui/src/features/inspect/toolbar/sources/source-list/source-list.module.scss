@@ -15,7 +15,8 @@
 }
 
 .activeCard {
-    border-left: var(--spectrum-global-dimension-size-50) solid var(--aqua);
+    background: var(--selection-dark-blue);
+    border: var(--spectrum-global-dimension-size-25) solid var(--energy-blue);
 }
 
 .title {

@@ -11,7 +11,7 @@ interface SettingsListProps {
 const CameraDeviceDisplay = ({ deviceId }: { deviceId: number }) => {
     const { data: cameraDevices, isLoading } = $api.useQuery('get', '/api/devices/camera');
     const devices = cameraDevices?.devices ?? [];
-    const device = devices.find((d) => d.index === deviceId);
+    const device = devices.find(({ index }) => index === deviceId);
 
     if (isLoading) {
         return <span>Loading...</span>;

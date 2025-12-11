@@ -44,7 +44,7 @@ class BaseOpenCVStream(VideoStream, ABC):
         ret, frame = self.cap.read()
         if not ret:
             return self._handle_read_failure()
-        return frame
+        return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     def _handle_read_failure(self) -> np.ndarray:
         """Handle frame read failure. Override in subclasses for specific behavior."""

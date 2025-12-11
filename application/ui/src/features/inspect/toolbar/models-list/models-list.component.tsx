@@ -8,7 +8,7 @@ import { isEmpty } from 'lodash-es';
 import { NotFound } from 'packages/ui/icons';
 
 import { useGetModels } from '../../../..//hooks/use-get-models.hook';
-import { LoadMoreList } from '../load-more-list/load-more-list.component';
+import { LoadMoreList } from '../../../../components/load-more-list/load-more-list.component';
 
 import classes from './model-list.module.scss';
 
@@ -42,7 +42,7 @@ export const ModelsList = () => {
                     height={'size-800'}
                     isPending={patchPipeline.isPending}
                     isDisabled={patchPipeline.isPending}
-                    UNSAFE_className={clsx(classes.option, { [classes.active]: model.id === selectedModelId })}
+                    UNSAFE_className={clsx(classes.option, { [classes.activeCard]: model.id === selectedModelId })}
                 >
                     {model.name}
                 </Button>

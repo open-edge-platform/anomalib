@@ -26,7 +26,7 @@ describe('SidebarItems', () => {
     }: {
         mediaItems: MediaItem[];
         selectedMediaItem: MediaItem;
-        onSelectedMediaItem?: (mediaItem: string | null) => void;
+        onSelectedMediaItem?: (mediaItem: string | null) => Promise<URLSearchParams>;
     }) => {
         server.use(
             http.get('/api/projects/{project_id}/images/{media_id}/thumbnail', () =>
@@ -53,6 +53,9 @@ describe('SidebarItems', () => {
                                         mediaItems={mediaItems}
                                         selectedMediaItem={selectedMediaItem}
                                         onSelectedMediaItem={onSelectedMediaItem}
+                                        hasNextPage={false}
+                                        isLoadingMore={false}
+                                        loadMore={vi.fn()}
                                     />
                                 }
                             />
