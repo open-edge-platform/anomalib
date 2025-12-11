@@ -1,9 +1,9 @@
 import { usePatchPipeline, usePipeline, useProjectIdentifier } from '@geti-inspect/hooks';
 import { Flex, Switch } from '@geti/ui';
 
-import classes from './pipeline-switch.module.scss';
+import classes from './anomaly-map.module.scss';
 
-export const PipelineSwitch = () => {
+export const AnomalyMap = () => {
     const { projectId } = useProjectIdentifier();
     const patchPipeline = usePatchPipeline(projectId);
     const { data: pipeline } = usePipeline();
@@ -23,7 +23,7 @@ export const PipelineSwitch = () => {
                 isSelected={hasOverlay}
                 isDisabled={patchPipeline.isPending || isPipelineStopped}
             >
-                Overlay
+                Anomaly Map
             </Switch>
         </Flex>
     );

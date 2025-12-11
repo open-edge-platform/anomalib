@@ -8,9 +8,9 @@ import { http } from 'src/api/utils';
 import { server } from 'src/msw-node-setup';
 
 import { getMockedPipeline } from '../../../../../mocks/mock-pipeline';
-import { PipelineSwitch } from './pipeline-switch.component';
+import { AnomalyMap } from './anomaly-map.component';
 
-describe('PipelineSwitch', () => {
+describe('AnomalyMap', () => {
     const renderApp = ({ pipelineConfig = {} }: { pipelineConfig?: Partial<SchemaPipeline> } = {}) => {
         server.use(
             http.get('/api/projects/{project_id}/pipeline', () => {
@@ -25,7 +25,7 @@ describe('PipelineSwitch', () => {
             <QueryClientProvider client={new QueryClient()}>
                 <MemoryRouter initialEntries={['/projects/123/inspect']}>
                     <Routes>
-                        <Route path='/projects/:projectId/inspect' element={<PipelineSwitch />} />
+                        <Route path='/projects/:projectId/inspect' element={<AnomalyMap />} />
                     </Routes>
                 </MemoryRouter>
             </QueryClientProvider>

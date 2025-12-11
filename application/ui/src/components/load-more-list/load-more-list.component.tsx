@@ -11,7 +11,7 @@ type LoadMoreListProps = {
 };
 
 export const LoadMoreList = ({ children, isLoading, hasNextPage, onLoadMore }: LoadMoreListProps) => {
-    const sentinelRef = useListEnd({ onEndReached: onLoadMore, disabled: isLoading });
+    const sentinelRef = useListEnd({ onEndReached: onLoadMore, disabled: isLoading || !hasNextPage });
 
     return (
         <Flex

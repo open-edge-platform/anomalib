@@ -5,9 +5,9 @@ import { usePipeline } from '@geti-inspect/hooks';
 import { dimensionValue, Divider, Flex, View } from '@geti/ui';
 import { isNil } from 'lodash-es';
 
+import { AnomalyMap } from './anomaly-map/anomaly-map.component';
 import { InferenceDevices } from './inference-devices/inference-devices.component';
 import { PipelineConfiguration } from './pipeline-configuration.component';
-import { PipelineSwitch } from './pipeline-switch/pipeline-switch.component';
 
 export const Toolbar = () => {
     const { data: pipeline } = usePipeline();
@@ -21,19 +21,18 @@ export const Toolbar = () => {
             backgroundColor={'gray-100'}
             UNSAFE_style={{ fontSize: dimensionValue('size-150'), color: 'var(--spectrum-global-color-gray-800)' }}
         >
-            <Flex height='100%' gap='size-200' alignItems={'center'}>
-                <Flex marginStart='auto' alignItems={'center'} gap={'size-200'}>
+            <Flex height='100%' gap='size-200' alignItems={'center'} justifyContent={'space-between'}>
+                <Flex gap={'size-200'}>
                     {hasModel && (
                         <>
-                            <Divider size={'S'} orientation={'vertical'} />
                             <InferenceDevices />
+                            <Divider size={'S'} orientation={'vertical'} />
+                            <AnomalyMap />
                         </>
                     )}
-                    <Divider size={'S'} orientation={'vertical'} />
-                    <PipelineConfiguration />
-                    <Divider size={'S'} orientation={'vertical'} />
-                    <PipelineSwitch />
                 </Flex>
+
+                <PipelineConfiguration />
             </Flex>
         </View>
     );
