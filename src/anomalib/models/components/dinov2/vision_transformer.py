@@ -186,7 +186,10 @@ class DinoVisionTransformer(nn.Module):
 
             ffn_layer = f
         elif isinstance(ffn_layer, str):
-            raise NotImplementedError
+            raise NotImplementedError(
+                f"Unsupported ffn_layer string value '{ffn_layer}'. Supported values are: "
+                "'mlp', 'swiglu', 'swiglufused', 'identity'."
+            )
         # else assume callable
 
         blocks_list: list[nn.Module] = [
