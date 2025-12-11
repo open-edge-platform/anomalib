@@ -174,9 +174,7 @@ class AnomalyDINO(MemoryBankMixin, AnomalibModule):
             sampling_ratio=sampling_ratio,
         )
 
-        # Convert string to PrecisionType enum if needed
-        if isinstance(precision, str):
-            precision = PrecisionType(precision.lower())
+        precision = PrecisionType(precision)
 
         if precision == PrecisionType.FLOAT16:
             self.model = self.model.half()
