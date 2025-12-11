@@ -57,7 +57,7 @@ export const PipelineConfiguration = () => {
                             </Item>
                             <Item key='model'>
                                 <View marginTop={'size-200'}>
-                                    <Suspense fallback={<Loading size='M' />}>
+                                    <Suspense fallback={<Loading size='S' />}>
                                         <ModelsList />
                                     </Suspense>
                                 </View>
