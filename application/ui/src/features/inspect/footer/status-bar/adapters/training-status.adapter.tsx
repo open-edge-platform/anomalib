@@ -7,7 +7,6 @@ import { $api } from '@geti-inspect/api';
 import { SchemaJob as Job } from '@geti-inspect/api/spec';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { queryOptions, experimental_streamedQuery as streamedQuery, useQuery } from '@tanstack/react-query';
-import { last } from 'lodash-es';
 import { fetchSSE } from 'src/api/fetch-sse';
 
 import { useStatusBar } from '../status-bar-context';
@@ -40,14 +39,14 @@ export const TrainingStatusAdapter = () => {
         queryOptions({
             queryKey: ['get', '/api/jobs/{job_id}/progress', trainingJob?.id],
             queryFn: streamedQuery({
-                queryFn: () => fetchSSE(`/api/jobs/${trainingJob?.id}/progress`),
+                queryFn: () => fetchSSE<JobProgress>(`/api/jobs/${trainingJob?.id}/progress`),
             }),
             enabled: !!trainingJob?.id,
             staleTime: Infinity,
         })
     );
 
-    const latestProgress = last(progressData) as JobProgress | undefined;
+    const latestProgress = progressData?.at(-1);
     const progress = latestProgress?.progress ?? trainingJob?.progress;
     const message = latestProgress?.message ?? trainingJob?.message;
 
