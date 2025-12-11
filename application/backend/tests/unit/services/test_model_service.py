@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import uuid4
 
 import numpy as np
 import openvino.properties.hint as ov_hints
@@ -155,8 +156,6 @@ class TestModelService:
         self, fxt_model_service, fxt_model_repository, fxt_model, fxt_project
     ):
         """Test that deleting a model also deletes its associated training job."""
-        from uuid import uuid4
-
         fxt_model_repository.delete_by_id.return_value = None
         fxt_model_repository.get_by_id.return_value = fxt_model
         fxt_model.train_job_id = uuid4()
