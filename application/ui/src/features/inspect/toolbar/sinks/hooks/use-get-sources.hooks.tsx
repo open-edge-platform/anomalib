@@ -1,7 +1,7 @@
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 
-const sourcesItemsLimit = 2;
+const sourcesItemsLimit = 20;
 
 export const useGetSources = () => {
     const { projectId } = useProjectIdentifier();

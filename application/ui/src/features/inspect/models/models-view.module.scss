@@ -48,7 +48,7 @@
 }
 
 .table :global([class*='spectrum-Table']) {
-    --spectrum-table-row-background-color-selected: #0c1e29;
+    --spectrum-table-row-background-color-selected: var(--selection-dark-blue);
     --spectrum-table-background-color: var(--spectrum-global-color-gray-75);
     --spectrum-table-row-background-color-selected-hover: var(--spectrum-table-row-background-color-hover);
     --spectrum-table-row-background-color-hover: var(--spectrum-global-color-gray-300);

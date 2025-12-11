@@ -67,6 +67,7 @@ class TrainingService:
         device = job.payload.get("device")
         snapshot_id_ = job.payload.get("dataset_snapshot_id")
         snapshot_id = UUID(snapshot_id_) if snapshot_id_ else None
+        max_epochs = job.payload.get("max_epochs", 200)
 
         if model_name is None:
             raise ValueError(f"Job {job.id} payload must contain 'model_name'")
@@ -105,6 +106,7 @@ class TrainingService:
                     model=model,
                     device=device,
                     synchronization_parameters=synchronization_parameters,
+                    max_epochs=max_epochs,
                     dataset_root=dataset_root,
                 )
 
@@ -155,6 +157,7 @@ class TrainingService:
         model: Model,
         synchronization_parameters: ProgressSyncParams,
         dataset_root: str,
+        max_epochs: int,
         device: str | None = None,
     ) -> Model | None:
         """
@@ -208,7 +211,7 @@ class TrainingService:
             default_root_dir=model.export_path,
             logger=[trackio, tensorboard],
             devices=[0],  # Only single GPU training is supported for now
-            max_epochs=10,
+            max_epochs=max_epochs,
             callbacks=[GetiInspectProgressCallback(synchronization_parameters)],
             accelerator=training_device,
         )

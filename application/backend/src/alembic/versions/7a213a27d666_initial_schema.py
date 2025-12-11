@@ -136,6 +136,7 @@ def upgrade() -> None:
         sa.Column("sink_id", sa.Text(), nullable=True),
         sa.Column("model_id", sa.Text(), nullable=True),
         sa.Column("inference_device", sa.String(length=64), nullable=True),
+        sa.Column("overlay", sa.Boolean(), nullable=True),
         sa.Column("is_running", sa.Boolean(), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False),
         sa.Column("data_collection_policies", sa.JSON(), nullable=False),

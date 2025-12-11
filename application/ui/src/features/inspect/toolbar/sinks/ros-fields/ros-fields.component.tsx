@@ -14,7 +14,7 @@ export const RosFields = ({ defaultState }: RosFieldsProps) => {
             <TextField isHidden label='project_id' name='project_id' defaultValue={defaultState.project_id} />
 
             <Flex direction='row' gap='size-200' justifyContent='space-between'>
-                <TextField flex='1' label='Name' name='name' defaultValue={defaultState.name} />
+                <TextField isRequired flex='1' label='Name' name='name' defaultValue={defaultState.name} />
                 <NumberField
                     label='Rate Limit'
                     name='rate_limit'

@@ -14,7 +14,7 @@ export const WebhookFields = ({ defaultState }: WebhookFieldsProps) => {
             <Flex direction={'row'} gap='size-200'>
                 <TextField isHidden label='id' name='id' defaultValue={defaultState.id} />
                 <TextField isHidden label='project_id' name='project_id' defaultValue={defaultState.project_id} />
-                <TextField flex='1' label='Name' name='name' defaultValue={defaultState.name} />
+                <TextField isRequired flex='1' label='Name' name='name' defaultValue={defaultState.name} />
                 <NumberField
                     label='Rate Limit'
                     name='rate_limit'
@@ -33,7 +33,13 @@ export const WebhookFields = ({ defaultState }: WebhookFieldsProps) => {
                 <NumberField label='Timeout' name='timeout' minValue={0} step={1} defaultValue={defaultState.timeout} />
             </Flex>
 
-            <TextField width={'100%'} label='Webhook URL' name='webhook_url' defaultValue={defaultState.webhook_url} />
+            <TextField
+                isRequired
+                width={'100%'}
+                label='Webhook URL'
+                name='webhook_url'
+                defaultValue={defaultState.webhook_url}
+            />
 
             <OutputFormats config={defaultState.output_formats} />
 

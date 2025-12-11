@@ -11,15 +11,21 @@ import { MediaItem } from '../../types';
 
 interface SidebarItemsProps {
     mediaItems: MediaItem[];
+    hasNextPage: boolean;
+    isLoadingMore: boolean;
     selectedMediaItem: MediaItem;
     layoutOptions: GridLayoutOptions;
-    onSelectedMediaItem: (mediaItem: string | null) => void;
+    loadMore: () => void;
+    onSelectedMediaItem: (mediaItem: string | null) => Promise<URLSearchParams>;
 }
 
 export const SidebarItems = ({
     mediaItems,
+    hasNextPage,
+    isLoadingMore,
     layoutOptions,
     selectedMediaItem,
+    loadMore,
     onSelectedMediaItem,
 }: SidebarItemsProps) => {
     const selectedIndex = mediaItems.findIndex((item) => item.id === selectedMediaItem.id);
@@ -52,6 +58,8 @@ export const SidebarItems = ({
                 layoutOptions={layoutOptions}
                 scrollToIndex={selectedIndex}
                 onSelectionChange={handleSelectionChange}
+                isLoadingMore={isLoadingMore}
+                onLoadMore={() => hasNextPage && loadMore()}
                 contentItem={(mediaItem) => (
                     <GridMediaItem
                         contentElement={() => (
