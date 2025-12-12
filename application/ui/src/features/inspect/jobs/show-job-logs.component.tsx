@@ -19,12 +19,16 @@ import { LogsIcon } from '@geti/ui/icons';
 import { queryOptions, experimental_streamedQuery as streamedQuery, useQuery } from '@tanstack/react-query';
 import { fetchSSE } from 'src/api/fetch-sse';
 
+interface LogLine {
+    text: string;
+}
+
 const JobLogsDialogContent = ({ jobId }: { jobId: string }) => {
     const query = useQuery(
         queryOptions({
             queryKey: ['get', '/api/jobs/{job_id}/logs', jobId],
             queryFn: streamedQuery({
-                queryFn: () => fetchSSE(`/api/jobs/${jobId}/logs`),
+                queryFn: () => fetchSSE<LogLine>(`/api/jobs/${jobId}/logs`),
             }),
             staleTime: Infinity,
         })

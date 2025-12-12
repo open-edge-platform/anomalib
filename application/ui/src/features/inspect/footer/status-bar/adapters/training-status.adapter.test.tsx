@@ -15,6 +15,18 @@ import { server } from '../../../../../msw-node-setup';
 import { StatusBarProvider, useStatusBar } from '../status-bar-context';
 import { TrainingStatusAdapter } from './training-status.adapter';
 
+interface SSEIterator {
+    [Symbol.asyncIterator](): AsyncGenerator<{ progress: number; message: string }>;
+}
+
+const mockFetchSSE = vi.fn<(url: string) => SSEIterator>((_url: string) => ({
+    async *[Symbol.asyncIterator]() {},
+}));
+
+vi.mock('src/api/fetch-sse', () => ({
+    fetchSSE: (url: string) => mockFetchSSE(url),
+}));
+
 const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={new QueryClient()}>
         <MemoryRouter initialEntries={['/projects/test-project/inspect']}>
@@ -179,6 +191,41 @@ describe('TrainingStatusAdapter', () => {
 
         await waitFor(() => {
             expect(cancelJobSpy).toHaveBeenCalledWith('job-5');
+        });
+    });
+
+    it('uses SSE progress data when available', async () => {
+        const trainingJob = {
+            id: 'job-6',
+            project_id: 'test-project',
+            type: 'training' as const,
+            status: 'running' as const,
+            progress: 10,
+            message: 'From API',
+            payload: { model_name: 'Patchcore' },
+        };
+
+        mockFetchSSE.mockReturnValue({
+            async *[Symbol.asyncIterator]() {
+                yield { progress: 75, message: 'Stage: train' };
+            },
+        });
+
+        server.use(
+            http.get('/api/jobs', ({ response }) =>
+                response(200).json({ jobs: [trainingJob], pagination: getMockedPagination() })
+            )
+        );
+
+        const { result } = renderHook(() => useStatusBar(), { wrapper });
+
+        await waitFor(() => {
+            expect(result.current.activeStatus).toEqual(
+                expect.objectContaining({
+                    progress: 75,
+                    detail: 'Stage: train',
+                })
+            );
         });
     });
 });
