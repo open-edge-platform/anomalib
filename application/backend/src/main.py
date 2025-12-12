@@ -1,6 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import multiprocessing as mp
+
+if mp.get_start_method(allow_none=True) != "spawn":
+    mp.set_start_method("spawn", force=True)
+
 import os
 
 import uvicorn

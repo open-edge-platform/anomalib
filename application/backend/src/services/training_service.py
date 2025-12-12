@@ -9,6 +9,7 @@ from anomalib.data import Folder
 from anomalib.data.utils import ValSplitMode
 from anomalib.deploy import ExportType
 from anomalib.engine import Engine
+from anomalib.engine.strategy.xpu_single import SingleXPUStrategy
 from anomalib.loggers import AnomalibTensorBoardLogger
 from anomalib.metrics import AUROC, F1Score
 from anomalib.metrics.evaluator import Evaluator
@@ -231,6 +232,7 @@ class TrainingService:
                 EarlyStopping(monitor="pixel_AUROC", mode="max", patience=5),
             ],
             accelerator=training_device,
+            **({"strategy": SingleXPUStrategy()} if training_device == "xpu" else {}),
         )
 
         # Execute training and export
