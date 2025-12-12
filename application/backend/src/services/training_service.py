@@ -10,7 +10,10 @@ from anomalib.data.utils import ValSplitMode
 from anomalib.deploy import ExportType
 from anomalib.engine import Engine
 from anomalib.loggers import AnomalibTensorBoardLogger
+from anomalib.metrics import AUROC, F1Score
+from anomalib.metrics.evaluator import Evaluator
 from anomalib.models import get_model
+from lightning.pytorch.callbacks import EarlyStopping
 from loguru import logger
 
 from pydantic_models import Job, JobStatus, JobType, Model
@@ -203,7 +206,18 @@ class TrainingService:
         )
 
         # Initialize anomalib model and engine
-        anomalib_model = get_model(model=model.name)
+        anomalib_model = get_model(
+            model=model.name,
+            evaluator=Evaluator(
+                val_metrics=[AUROC(fields=["anomaly_map", "gt_mask"], prefix="pixel_", strict=False)],
+                test_metrics=[
+                    AUROC(fields=["pred_score", "gt_label"], prefix="image_"),
+                    F1Score(fields=["pred_label", "gt_label"], prefix="image_"),
+                    AUROC(fields=["anomaly_map", "gt_mask"], prefix="pixel_", strict=False),
+                    F1Score(fields=["pred_mask", "gt_mask"], prefix="pixel_", strict=False),
+                ],
+            ),
+        )
 
         trackio = TrackioLogger(project=str(model.project_id), name=model.name)
         tensorboard = AnomalibTensorBoardLogger(save_dir=global_log_config.tensorboard_log_path, name=name)
@@ -212,7 +226,10 @@ class TrainingService:
             logger=[trackio, tensorboard],
             devices=[0],  # Only single GPU training is supported for now
             max_epochs=max_epochs,
-            callbacks=[GetiInspectProgressCallback(synchronization_parameters)],
+            callbacks=[
+                GetiInspectProgressCallback(synchronization_parameters),
+                EarlyStopping(monitor="pixel_AUROC", mode="max", patience=5),
+            ],
             accelerator=training_device,
         )
 
