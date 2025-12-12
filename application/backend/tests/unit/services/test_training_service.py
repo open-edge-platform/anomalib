@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
@@ -274,7 +274,7 @@ class TestTrainingService:
 
         # Verify all components were called correctly
         fxt_mock_anomalib_components["folder_class"].assert_called_once()
-        fxt_mock_anomalib_components["get_model"].assert_called_once_with(model=fxt_model.name)
+        fxt_mock_anomalib_components["get_model"].assert_called_once_with(model=fxt_model.name, evaluator=ANY)
 
         # Verify Engine was called with expected parameters
         fxt_mock_anomalib_components["engine_class"].assert_called_once()
