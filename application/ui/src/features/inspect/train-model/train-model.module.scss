@@ -89,3 +89,72 @@
 .selected {
     color: var(--energy-blue);
 }
+
+// Badge styles
+.badge {
+    line-height: calc(var(--spectrum-global-dimension-size-175));
+    padding-inline: var(--spectrum-global-dimension-static-size-75);
+    display: inline-flex;
+    align-items: center;
+    padding: var(--spectrum-global-dimension-static-size-25) var(--spectrum-global-dimension-static-size-75);
+    gap: var(--spectrum-global-dimension-static-size-25);
+    svg {
+        padding-inline-start: var(--spectrum-global-dimension-size-25) !important;
+        padding-inline-end: var(--spectrum-global-dimension-size-25) !important;
+    }
+}
+
+.badge[class*='spectrum-Badge--info'] {
+    gap: var(--spectrum-global-dimension-static-size-50);
+    padding: var(--spectrum-global-dimension-static-size-50) var(--spectrum-global-dimension-static-size-75);
+    background-color: var(--spectrum-accent-background-color-default) !important;
+    color: var(--spectrum-global-color-gray-50) !important;
+}
+
+// Training time icon
+.trainingTimeIcon {
+    display: flex;
+    align-items: center;
+    width: var(--spectrum-global-dimension-size-300);
+    height: var(--spectrum-global-dimension-size-300);
+    color: var(--energy-blue);
+    stroke: var(--energy-blue);
+
+    svg {
+        width: 100%;
+        height: 100%;
+    }
+}
+
+// License badge
+.licenseBadge {
+    background-color: white !important;
+    color: black !important;
+    font-weight: 500;
+}
+
+// Model family badge colors
+.modelFamilyPatchBased {
+    background-color: #4a90e2 !important;
+    color: var(--spectrum-global-color-gray-50) !important;
+}
+
+.modelFamilyMemoryBank {
+    background-color: #7b68ee !important;
+    color: var(--spectrum-global-color-gray-50) !important;
+}
+
+.modelFamilyStudentTeacher {
+    background-color: #50c878 !important;
+    color: var(--spectrum-global-color-gray-50) !important;
+}
+
+.modelFamilyReconstruction {
+    background-color: #ff6b6b !important;
+    color: var(--spectrum-global-color-gray-50) !important;
+}
+
+.modelFamilyDistributionMap {
+    background-color: #ffa500 !important;
+    color: var(--spectrum-global-color-gray-50) !important;
+}
