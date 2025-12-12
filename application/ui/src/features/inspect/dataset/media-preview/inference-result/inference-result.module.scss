@@ -1,7 +1,8 @@
-.img,
-.inferenceImage {
-    height: 100%;
+.img {
     width: 100%;
+    height: 100%;
+    margin: auto;
+    display: block;
     object-fit: contain;
 }
 
@@ -11,12 +12,12 @@
 }
 
 .inferenceImage {
-    left: 0px;
-    right: 0px;
-    width: 100%;
-    height: 100%;
     position: absolute;
-    object-fit: cover;
+
+    img {
+        width: 100%;
+        height: 100%;
+    }
 }
 
 .label {
