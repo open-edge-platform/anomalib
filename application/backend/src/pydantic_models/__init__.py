@@ -10,7 +10,7 @@ from .pipeline import Pipeline, PipelineStatus
 from .project import Project, ProjectList, ProjectUpdate
 from .sink import DisconnectedSinkConfig, OutputFormat, Sink, SinkType
 from .source import DisconnectedSourceConfig, Source, SourceType
-from .trainable_model import TrainableModelList
+from .trainable_model import ModelFamily, ModelInfo, TrainableModelList, TrainingTime
 
 __all__ = [
     "DatasetSnapshot",
@@ -26,6 +26,8 @@ __all__ = [
     "Media",
     "MediaList",
     "Model",
+    "ModelFamily",
+    "ModelInfo",
     "ModelList",
     "OutputFormat",
     "Pipeline",
@@ -42,4 +44,5 @@ __all__ = [
     "SourceType",
     "TimeWindow",
     "TrainableModelList",
+    "TrainingTime",
 ]

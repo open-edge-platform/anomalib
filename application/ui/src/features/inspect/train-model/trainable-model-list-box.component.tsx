@@ -1,6 +1,9 @@
+import { Badge } from '@adobe/react-spectrum';
 import { $api } from '@geti-inspect/api';
-import { Flex, Grid, Heading, minmax, Radio, repeat, View } from '@geti/ui';
+import { SchemaModelFamily as ModelFamily, SchemaTrainingTime as TrainingTime } from '@geti-inspect/api/spec';
+import { Flex, Grid, Heading, minmax, Radio, repeat, Text, View } from '@geti/ui';
 import { clsx } from 'clsx';
+import { Coffee, Cycle, Walk } from 'src/assets/icons';
 
 import classes from './train-model.module.scss';
 
@@ -10,111 +13,67 @@ const useTrainableModels = () => {
         gcTime: Infinity,
     });
 
-    return data.trainable_models.map((model) => ({ id: model, name: model }));
+    return data.trainable_models.map((model) => ({
+        id: model.name, // use the name as id
+        name: model.name,
+        training_time: model.training_time,
+        model_family: model.model_family,
+        recommended: model.recommended,
+        license: model.license,
+    }));
 };
 
-type Ratings = 'LOW' | 'MEDIUM' | 'HIGH';
-
-const RateColorPalette = {
-    LOW: 'var(--energy-blue-tint2)',
-    MEDIUM: 'var(--energy-blue-tint1)',
-    HIGH: 'var(--energy-blue)',
-    EMPTY: 'var(--spectrum-global-color-gray-500)',
-};
-
-const RateColors = {
-    LOW: [RateColorPalette.LOW, RateColorPalette.EMPTY, RateColorPalette.EMPTY],
-    MEDIUM: [RateColorPalette.LOW, RateColorPalette.MEDIUM, RateColorPalette.EMPTY],
-    HIGH: [RateColorPalette.LOW, RateColorPalette.MEDIUM, RateColorPalette.HIGH],
-};
-const RATE_LABELS = Object.keys(RateColors);
-
-interface AttributeRatingProps {
+interface TrainableModel {
+    id: string;
     name: string;
-    rating: Ratings;
-}
-
-const AttributeRating = ({ name, rating }: AttributeRatingProps) => {
-    return (
-        <div aria-label={`Attribute rating for ${name} is ${rating}`} style={{ height: '100%' }}>
-            <Flex direction={'column'} gap={'size-100'} justifyContent={'space-between'} height={'100%'}>
-                <Heading margin={0} UNSAFE_className={classes.attributeRatingTitle}>
-                    {name}
-                </Heading>
-                <Flex alignItems={'center'} gap={'size-100'}>
-                    {RateColors[rating].map((color, idx) => (
-                        <View
-                            key={`rate-${RATE_LABELS[idx]}`}
-                            UNSAFE_className={classes.rate}
-                            UNSAFE_style={{
-                                backgroundColor: color,
-                            }}
-                        />
-                    ))}
-                </Flex>
-            </Flex>
-        </div>
-    );
-};
-
-enum PerformanceCategory {
-    OTHER = 'other',
-    SPEED = 'speed',
-    BALANCE = 'balance',
-    ACCURACY = 'accuracy',
-}
-
-type SupportedAlgorithmStatsValues = 1 | 2 | 3;
-
-interface SupportedAlgorithm {
-    name: string;
-    modelTemplateId: string;
-    performanceCategory: PerformanceCategory;
-    performanceRatings: {
-        accuracy: SupportedAlgorithmStatsValues;
-        inferenceSpeed: SupportedAlgorithmStatsValues;
-        trainingTime: SupportedAlgorithmStatsValues;
-    };
+    training_time: TrainingTime;
+    model_family: ModelFamily[];
+    recommended: boolean;
     license: string;
 }
 
-interface TemplateRatingProps {
-    ratings: {
-        inferenceSpeed: Ratings;
-        trainingTime: Ratings;
-        accuracy: Ratings;
-    };
-}
-
-const TemplateRating = ({ ratings }: TemplateRatingProps) => {
-    return (
-        <Grid columns={repeat(3, '1fr')} justifyContent={'space-evenly'} gap={'size-250'}>
-            <AttributeRating name={'Inference speed'} rating={ratings.inferenceSpeed} />
-            <AttributeRating name={'Training time'} rating={ratings.trainingTime} />
-            <AttributeRating name={'Accuracy'} rating={ratings.accuracy} />
-        </Grid>
-    );
+const MODEL_FAMILY_COLORS: Record<ModelFamily, string> = {
+    patch_based: classes.modelFamilyPatchBased,
+    memory_bank: classes.modelFamilyMemoryBank,
+    student_teacher: classes.modelFamilyStudentTeacher,
+    reconstruction_based: classes.modelFamilyReconstruction,
+    distribution_map: classes.modelFamilyDistributionMap,
 };
 
-type PerformanceRating = SupportedAlgorithm['performanceRatings'][keyof SupportedAlgorithm['performanceRatings']];
+/**
+ * Get the name of a model family.
+ * @param modelFamily - Name in snake_case.
+ * @returns Name in title case for example 'Patch Based' from 'patch_based'.
+ */
+const getModelFamilyName = (modelFamily: ModelFamily) => {
+    let parts = modelFamily.split('_');
+    return parts.map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+};
 
-const RATING_MAP: Record<PerformanceRating, Ratings> = {
-    1: 'LOW',
-    2: 'MEDIUM',
-    3: 'HIGH',
+const TrainingTimeIcon = ({ trainingTime }: { trainingTime: TrainingTime }) => {
+    switch (trainingTime) {
+        case 'coffee':
+            return <Coffee />;
+        case 'walk':
+            return <Walk />;
+        case 'cycle':
+            return <Cycle />;
+        default:
+            return null;
+    }
 };
 
 interface ModelProps {
-    algorithm: SupportedAlgorithm;
+    model: TrainableModel;
     isSelected?: boolean;
 }
 
-const Model = ({ algorithm, isSelected = false }: ModelProps) => {
-    const { name, modelTemplateId, performanceRatings } = algorithm;
+const Model = ({ model, isSelected = false }: ModelProps) => {
+    const { name, id, training_time, model_family, recommended, license } = model;
 
     return (
         <label
-            htmlFor={`select-model-${algorithm.modelTemplateId}`}
+            htmlFor={`select-model-${id}`}
             aria-label={isSelected ? 'Selected card' : 'Not selected card'}
             className={[classes.selectableCard, isSelected ? classes.selectableCardSelected : ''].join(' ')}
         >
@@ -129,11 +88,21 @@ const Model = ({ algorithm, isSelected = false }: ModelProps) => {
                 backgroundColor={'gray-200'}
                 UNSAFE_className={isSelected ? classes.selectedHeader : ''}
             >
-                <Flex alignItems={'center'} gap={'size-50'} marginBottom='size-50'>
-                    <Radio value={modelTemplateId} aria-label={name} id={`select-model-${algorithm.modelTemplateId}`}>
+                <Flex alignItems={'center'} justifyContent={'space-between'} gap={'size-50'} marginBottom={'size-50'}>
+                    <Radio value={id} aria-label={name} id={`select-model-${id}`}>
                         <Heading UNSAFE_className={clsx({ [classes.selected]: isSelected })}>{name}</Heading>
                     </Radio>
+                    <Badge variant='neutral' UNSAFE_className={classes.licenseBadge}>
+                        {license}
+                    </Badge>
                 </Flex>
+                {recommended && (
+                    <Flex>
+                        <Badge variant='info' UNSAFE_className={classes.badge}>
+                            ★ Recommended
+                        </Badge>
+                    </Flex>
+                )}
             </View>
             <View
                 flex={1}
@@ -149,14 +118,24 @@ const Model = ({ algorithm, isSelected = false }: ModelProps) => {
                     isSelected ? classes.selectedDescription : '',
                 ].join(' ')}
             >
-                <Flex direction={'column'} gap={'size-200'}>
-                    <TemplateRating
-                        ratings={{
-                            accuracy: RATING_MAP[performanceRatings.accuracy],
-                            trainingTime: RATING_MAP[performanceRatings.trainingTime],
-                            inferenceSpeed: RATING_MAP[performanceRatings.inferenceSpeed],
-                        }}
-                    />
+                <Flex direction={'column'} gap={'size-200'} justifyContent={'space-between'} height={'100%'}>
+                    <Flex alignItems={'center'} gap={'size-100'}>
+                        <Text>Training time:</Text>
+                        <View UNSAFE_className={classes.trainingTimeIcon}>
+                            <TrainingTimeIcon trainingTime={training_time} />
+                        </View>
+                    </Flex>
+                    <Flex alignItems={'center'} gap={'size-100'} wrap marginTop={'size-200'}>
+                        {model_family.map((family) => (
+                            <Badge
+                                key={family}
+                                variant='neutral'
+                                UNSAFE_className={clsx(classes.badge, MODEL_FAMILY_COLORS[family])}
+                            >
+                                {getModelFamilyName(family)}
+                            </Badge>
+                        ))}
+                    </Flex>
                 </Flex>
             </View>
         </label>
@@ -170,27 +149,12 @@ interface ModelTypesListProps {
 export const TrainableModelListBox = ({ selectedModelTemplateId }: ModelTypesListProps) => {
     const trainableModels = useTrainableModels();
 
-    // NOTE: we will need to update the trainable models endpoint to return more info
-    const models = trainableModels.map((model) => {
-        return {
-            modelTemplateId: model.id,
-            name: model.name,
-            license: 'Apache 2.0',
-            performanceRatings: {
-                accuracy: 1,
-                inferenceSpeed: 1,
-                trainingTime: 1,
-            },
-            performanceCategory: PerformanceCategory.OTHER,
-        } satisfies SupportedAlgorithm;
-    });
-
     return (
         <Grid columns={repeat('auto-fit', minmax('size-3400', '1fr'))} gap={'size-250'}>
-            {models.map((algorithm) => {
-                const isSelected = selectedModelTemplateId === algorithm.modelTemplateId;
+            {trainableModels.map((model) => {
+                const isSelected = selectedModelTemplateId === model.id;
 
-                return <Model key={algorithm.modelTemplateId} algorithm={algorithm} isSelected={isSelected} />;
+                return <Model key={model.id} model={model} isSelected={isSelected} />;
             })}
         </Grid>
     );
