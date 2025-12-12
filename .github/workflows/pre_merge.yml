@@ -34,7 +34,7 @@ jobs:
       - name: Install Tox
         run: pip install tox
       - name: Code quality checks
-        run: tox -e pre-commit
+        run: tox -e prek
   Pre-Merge-Checks:
     runs-on: [self-hosted, linux, x64, anomalib]
     needs: Code-Quality-Checks

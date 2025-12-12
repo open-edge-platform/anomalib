@@ -1,6 +1,9 @@
 default_language_version:
   node: 24.2.0
 
+# We use a different CI setup for geti-inspect
+exclude: ^application/
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
@@ -11,6 +14,7 @@ repos:
         exclude: "docs/source/examples"
       - id: check-yaml
       - id: check-added-large-files
+        exclude: '(^|/).*\.lock$' # Exclude lock files (uv.lock, package-lock.json, etc.)
       - id: debug-statements
       - id: detect-private-key
 
@@ -72,6 +76,7 @@ repos:
     rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
+        exclude: ^app/ui/
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.45.0

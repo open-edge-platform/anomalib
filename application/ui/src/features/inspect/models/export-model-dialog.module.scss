@@ -1,0 +1,41 @@
+.label {
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    color: var(--spectrum-global-color-gray-700);
+}
+
+.formatGroup {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spectrum-global-dimension-size-200);
+}
+
+.formatOption {
+    padding: var(--spectrum-global-dimension-size-150);
+    border-radius: var(--spectrum-alias-border-radius-regular);
+    background-color: var(--spectrum-global-color-gray-75);
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease;
+
+    &:hover {
+        background-color: var(--spectrum-global-color-gray-100);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--spectrum-global-color-blue-500);
+        outline-offset: 2px;
+    }
+}
+
+.formatOptionSelected {
+    border-color: var(--spectrum-global-color-blue-500);
+    background-color: var(--spectrum-global-color-gray-100);
+}
+
+.formatIcon {
+    width: var(--spectrum-global-dimension-size-800);
+    height: var(--spectrum-global-dimension-size-400);
+    display: block;
+}
