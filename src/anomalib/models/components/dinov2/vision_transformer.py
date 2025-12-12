@@ -186,9 +186,10 @@ class DinoVisionTransformer(nn.Module):
 
             ffn_layer = f
         elif isinstance(ffn_layer, str):
+            err_msg = f"Unsupported ffn_layer string value '{ffn_layer}'."
+            "Supported values are: 'mlp', 'swiglu', 'swiglufused', 'identity'."
             raise NotImplementedError(
-                f"Unsupported ffn_layer string value '{ffn_layer}'. Supported values are: "
-                "'mlp', 'swiglu', 'swiglufused', 'identity'."
+                err_msg,
             )
         # else assume callable
 
@@ -255,7 +256,8 @@ class DinoVisionTransformer(nn.Module):
         h0 = h // self.patch_size
         m = int(math.sqrt(n_pos))
         if n_pos != m * m:
-            raise ValueError(f"Expected {m * m} positional embeddings but got {n_pos}")
+            err_msg = f"Expected {m * m} positional embeddings but got {n_pos}"
+            raise ValueError(err_msg)
 
         kwargs: dict[str, object] = {}
         if self.interpolate_offset:
