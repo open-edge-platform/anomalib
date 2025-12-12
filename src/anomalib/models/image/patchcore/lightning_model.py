@@ -166,7 +166,8 @@ class Patchcore(MemoryBankMixin, AnomalibModule):
         )
         self.coreset_sampling_ratio = coreset_sampling_ratio
 
-        precision = PrecisionType(precision)
+        if isinstance(precision, str):
+            precision = PrecisionType(precision.lower())
 
         if precision == PrecisionType.FLOAT16:
             self.model = self.model.half()
