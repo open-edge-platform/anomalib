@@ -108,6 +108,20 @@ class GetiInspectProgressCallback(Callback):
         del pl_module, batch, batch_idx  # unused
         self._check_cancel_training(trainer)
 
+    def on_train_batch_end(
+        self, trainer: Trainer, pl_module: LightningModule, outputs: Any, batch: Any, batch_idx: int
+    ) -> None:
+        """Called when a training batch ends. Sends granular progress updates within each epoch."""
+        del pl_module, outputs, batch  # unused
+        if trainer.state.stage is not None and trainer.max_epochs is not None and trainer.max_epochs > 0:
+            total_batches = trainer.num_training_batches
+            if total_batches and total_batches > 0:
+                epoch_progress = trainer.current_epoch / trainer.max_epochs
+                batch_progress = (batch_idx + 1) / total_batches / trainer.max_epochs
+                progress = epoch_progress + batch_progress
+                self._send_progress(progress, trainer.state.stage.value)
+        self._check_cancel_training(trainer)
+
     def on_train_epoch_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Called when a training epoch ends."""
         del pl_module  # unused
