@@ -46,7 +46,7 @@ const MODEL_FAMILY_COLORS: Record<ModelFamily, string> = {
  * @returns Name in title case for example 'Patch Based' from 'patch_based'.
  */
 const getModelFamilyName = (modelFamily: ModelFamily) => {
-    let parts = modelFamily.split('_');
+    const parts = modelFamily.split('_');
     return parts.map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
 };
 
