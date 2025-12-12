@@ -13,6 +13,10 @@ export const getImageDimensions = (img: HTMLImageElement) => {
     const naturalWidth = img.naturalWidth;
     const naturalHeight = img.naturalHeight;
 
+    if (naturalHeight === 0 || containerHeight === 0) {
+        return { top: 0, left: 0, width: 0, height: 0 };
+    }
+
     const imageRatio = naturalWidth / naturalHeight;
     const containerRatio = containerWidth / containerHeight;
 

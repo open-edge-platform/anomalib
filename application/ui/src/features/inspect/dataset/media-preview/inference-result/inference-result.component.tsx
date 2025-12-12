@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { SchemaPredictionResponse } from '@geti-inspect/api/spec';
 import { DimensionValue, Responsive, View } from '@geti/ui';
@@ -21,6 +21,7 @@ interface InferenceResultProps {
 const labelHeight: Responsive<DimensionValue> = 'size-350';
 
 export const InferenceResult = ({ selectedMediaItem, inferenceResult }: InferenceResultProps) => {
+    const imageRef = useRef(null);
     const { inferenceOpacity } = useInference();
     const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0, left: 0, top: 0 });
 
@@ -28,8 +29,19 @@ export const InferenceResult = ({ selectedMediaItem, inferenceResult }: Inferenc
         setImageDimensions(getImageDimensions(imageElement));
     };
 
+    useEffect(() => {
+        if (!imageRef.current) return;
+
+        const observer = new ResizeObserver(([entry]) => {
+            handleImageLoaded(entry.target as HTMLImageElement);
+        });
+
+        observer.observe(imageRef.current);
+        return () => observer.disconnect();
+    }, []);
+
     return (
-        <>
+        <View height={'100%'} paddingTop={labelHeight}>
             {inferenceResult && (
                 <View
                     height={labelHeight}
@@ -42,8 +54,9 @@ export const InferenceResult = ({ selectedMediaItem, inferenceResult }: Inferenc
                 </View>
             )}
 
-            <View width={'100%'} height={'100%'} position={'relative'} marginTop={labelHeight}>
+            <View width={'100%'} height={'100%'} position={'relative'}>
                 <img
+                    ref={imageRef}
                     alt={selectedMediaItem.filename}
                     className={clsx(classes.img)}
                     src={`/api/projects/${selectedMediaItem.project_id}/images/${selectedMediaItem.id}/full`}
@@ -54,16 +67,16 @@ export const InferenceResult = ({ selectedMediaItem, inferenceResult }: Inferenc
                     {isNonEmptyString(inferenceResult?.anomaly_map) && (
                         <motion.img
                             exit={{ opacity: 0 }}
-                            style={imageDimensions}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: inferenceOpacity }}
                             className={clsx(classes.inferenceImage)}
+                            style={{ ...imageDimensions }}
                             src={`data:image/png;base64,${inferenceResult.anomaly_map}`}
                             alt={`${selectedMediaItem.filename} inference`}
                         />
                     )}
                 </AnimatePresence>
             </View>
-        </>
+        </View>
     );
 };
