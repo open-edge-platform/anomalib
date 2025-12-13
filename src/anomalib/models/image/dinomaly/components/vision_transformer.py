@@ -23,7 +23,8 @@ from timm.layers.patch_embed import PatchEmbed
 from torch import nn
 from torch.nn.init import trunc_normal_
 
-from anomalib.models.image.dinomaly.components.layers import Block, DinomalyMLP, MemEffAttention
+from anomalib.models.components.dinov2.layers import MemEffAttention
+from anomalib.models.image.dinomaly.components.layers import Block, DinomalyMLP
 
 logger = logging.getLogger("dinov2")
 

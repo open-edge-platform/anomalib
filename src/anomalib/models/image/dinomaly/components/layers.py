@@ -16,52 +16,12 @@ from collections.abc import Callable
 from typing import Any
 
 import torch
-from timm.layers.drop import DropPath
-from timm.models.vision_transformer import Attention, LayerScale
 from torch import Tensor, nn
 from torch.nn import functional as F  # noqa: N812
 
+from anomalib.models.components.dinov2.layers import Attention, DropPath, LayerScale, MemEffAttention
+
 logger = logging.getLogger("dinov2")
-
-
-class MemEffAttention(Attention):
-    """Memory-efficient attention from the dinov2 implementation with a small change.
-
-    Reference:
-    https://github.com/facebookresearch/dinov2/blob/592541c8d842042bb5ab29a49433f73b544522d5/dinov2/eval/segmentation_m2f/models/backbones/vit.py#L159
-
-    Instead of using xformers's memory_efficient_attention() method, which requires adding a new dependency to anomalib,
-    this implementation uses the scaled dot product from torch.
-    """
-
-    def forward(self, x: Tensor, attn_bias: Tensor | None = None) -> Tensor:
-        """Compute memory-efficient attention using PyTorch's scaled dot product attention.
-
-        Args:
-            x: Input tensor of shape (batch_size, seq_len, embed_dim).
-            attn_bias: Optional attention bias mask. Default: None.
-
-        Returns:
-            Output tensor of shape (batch_size, seq_len, embed_dim).
-        """
-        batch_size, seq_len, embed_dim = x.shape
-        qkv = self.qkv(x).reshape(batch_size, seq_len, 3, self.num_heads, embed_dim // self.num_heads)
-
-        q, k, v = qkv.unbind(2)
-
-        # Use PyTorch's native scaled dot product attention for memory efficiency.
-        # Replaced xformers's memory_efficient_attention() method with pytorch's scaled
-        # dot product.
-        x = F.scaled_dot_product_attention(
-            q.transpose(1, 2),
-            k.transpose(1, 2),
-            v.transpose(1, 2),
-            attn_mask=attn_bias,
-        )
-        x = x.transpose(1, 2).reshape(batch_size, seq_len, embed_dim)
-
-        x = self.proj(x)
-        return self.proj_drop(x)
 
 
 class LinearAttention(nn.Module):
