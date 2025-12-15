@@ -16,7 +16,7 @@ services:
     restart: unless-stopped
     build:
       # Use root directory as context to build the image
-      context: ../..
+      context: ../../
       dockerfile: application/docker/Dockerfile
       target: geti-inspect-${AI_DEVICE:-cpu}
       <<: *proxies
@@ -29,9 +29,9 @@ services:
       - "${VIDEO_GROUP_ID}"  # This is needed to allow access to video devices (webcams)
     volumes:
       # Persist database and uploaded data
-      - /backend/data:/app/data
+      - ./backend/data:/app/data
       # Persist logs
-      - /backend/logs:/app/logs
+      - ./backend/logs:/app/logs
     ports:
       - "8000:8000"
     # Increase file descriptor limits

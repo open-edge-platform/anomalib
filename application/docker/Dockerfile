@@ -7,16 +7,12 @@ WORKDIR /home/app/web_ui/
 
 COPY --link application/ui/package.json ./package.json
 COPY --link application/ui/package-lock.json ./package-lock.json
-COPY --link application/ui/packages ./packages
 RUN npm ci --audit=false --ignore-scripts
 
 
 COPY --link application/ui/tsconfig.json ./tsconfig.json
 COPY --link application/ui/rsbuild.config.ts ./rsbuild.config.ts
 COPY --link application/ui/src ./src
-
-ARG PUBLIC_API_BASE_URL=""
-ENV PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL}
 
 FROM web-ui-base AS web-ui
 
@@ -40,7 +36,7 @@ g++ \
 && rm -rf /var/lib/apt/lists/* \
 && apt-get clean
 
-RUN groupadd -f render && groupadd -f video && usermod -aG render,video $(whoami)
+# RUN groupadd -f render && groupadd -f video && usermod -aG render,video $(whoami)
 
 ENV PATH=/app/.venv/bin:$PATH
 WORKDIR /app
