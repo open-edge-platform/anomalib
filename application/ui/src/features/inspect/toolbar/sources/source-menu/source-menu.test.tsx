@@ -66,30 +66,12 @@ describe('SourceMenu', () => {
             expect(pipelinePatchSpy).not.toHaveBeenCalled();
         });
 
-        it('success with isConnected true - calls pipeline patch', async () => {
-            const pipelinePatchSpy = configRequests();
-
+        it('disabled when source is connected', async () => {
             renderApp({ name, isConnected: true });
 
             await userEvent.click(screen.getByRole('button', { name: /source menu/i }));
-            await userEvent.click(screen.getByRole('menuitem', { name: /Remove/i }));
 
-            await expect(await screen.findByLabelText('toast')).toHaveTextContent(
-                `${name} has been removed successfully!`
-            );
-
-            expect(pipelinePatchSpy).toHaveBeenCalled();
-        });
-
-        it('error', async () => {
-            configRequests(500);
-
-            renderApp({ name, isConnected: true });
-
-            await userEvent.click(screen.getByRole('button', { name: /source menu/i }));
-            await userEvent.click(screen.getByRole('menuitem', { name: /Remove/i }));
-
-            expect(await screen.findByLabelText('toast')).toHaveTextContent(`Failed to remove "${name}".`);
+            expect(screen.getByRole('menuitem', { name: /Remove/i })).toHaveAttribute('aria-disabled', 'true');
         });
     });
 

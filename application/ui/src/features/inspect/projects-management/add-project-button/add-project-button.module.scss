@@ -1,0 +1,8 @@
+.addProjectButton {
+    color: var(--spectrum-global-color-gray-900);
+
+    & span[class*='spectrum-ActionButton-label'] {
+        text-align: start;
+        margin-left: var(--spectrum-global-dimension-size-100) !important;
+    }
+}

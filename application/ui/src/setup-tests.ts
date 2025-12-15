@@ -43,3 +43,20 @@ window.ResizeObserver = class ResizeObserver {
         // empty
     }
 };
+
+class MockIntersectionObserver {
+    root = null;
+    rootMargin = '0px';
+    thresholds = [];
+
+    constructor() {}
+
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords(): IntersectionObserverEntry[] {
+        return [];
+    }
+}
+
+window.IntersectionObserver = MockIntersectionObserver;

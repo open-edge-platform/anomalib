@@ -17,10 +17,11 @@ export const VideoFileFields = ({ defaultState }: VideoFileFieldsProps) => {
         <Flex direction='column' gap='size-200'>
             <TextField isHidden label='id' name='id' defaultValue={defaultState?.id} />
             <TextField isHidden label='project_id' name='project_id' defaultValue={defaultState.project_id} />
-            <TextField width='100%' label='Name' name='name' defaultValue={defaultState.name} />
+            <TextField isRequired width='100%' label='Name' name='name' defaultValue={defaultState.name} />
 
             <Flex direction='row' gap='size-200'>
                 <TextField
+                    isRequired
                     width='100%'
                     name='video_path'
                     label='Video file path'

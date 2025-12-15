@@ -10,7 +10,10 @@ from anomalib.data.utils import ValSplitMode
 from anomalib.deploy import ExportType
 from anomalib.engine import Engine
 from anomalib.loggers import AnomalibTensorBoardLogger
+from anomalib.metrics import AUROC, F1Score
+from anomalib.metrics.evaluator import Evaluator
 from anomalib.models import get_model
+from lightning.pytorch.callbacks import EarlyStopping
 from loguru import logger
 
 from pydantic_models import Job, JobStatus, JobType, Model
@@ -67,6 +70,7 @@ class TrainingService:
         device = job.payload.get("device")
         snapshot_id_ = job.payload.get("dataset_snapshot_id")
         snapshot_id = UUID(snapshot_id_) if snapshot_id_ else None
+        max_epochs = job.payload.get("max_epochs", 200)
 
         if model_name is None:
             raise ValueError(f"Job {job.id} payload must contain 'model_name'")
@@ -105,6 +109,7 @@ class TrainingService:
                     model=model,
                     device=device,
                     synchronization_parameters=synchronization_parameters,
+                    max_epochs=max_epochs,
                     dataset_root=dataset_root,
                 )
 
@@ -155,6 +160,7 @@ class TrainingService:
         model: Model,
         synchronization_parameters: ProgressSyncParams,
         dataset_root: str,
+        max_epochs: int,
         device: str | None = None,
     ) -> Model | None:
         """
@@ -200,7 +206,18 @@ class TrainingService:
         )
 
         # Initialize anomalib model and engine
-        anomalib_model = get_model(model=model.name)
+        anomalib_model = get_model(
+            model=model.name,
+            evaluator=Evaluator(
+                val_metrics=[AUROC(fields=["anomaly_map", "gt_mask"], prefix="pixel_", strict=False)],
+                test_metrics=[
+                    AUROC(fields=["pred_score", "gt_label"], prefix="image_"),
+                    F1Score(fields=["pred_label", "gt_label"], prefix="image_"),
+                    AUROC(fields=["anomaly_map", "gt_mask"], prefix="pixel_", strict=False),
+                    F1Score(fields=["pred_mask", "gt_mask"], prefix="pixel_", strict=False),
+                ],
+            ),
+        )
 
         trackio = TrackioLogger(project=str(model.project_id), name=model.name)
         tensorboard = AnomalibTensorBoardLogger(save_dir=global_log_config.tensorboard_log_path, name=name)
@@ -208,8 +225,11 @@ class TrainingService:
             default_root_dir=model.export_path,
             logger=[trackio, tensorboard],
             devices=[0],  # Only single GPU training is supported for now
-            max_epochs=10,
-            callbacks=[GetiInspectProgressCallback(synchronization_parameters)],
+            max_epochs=max_epochs,
+            callbacks=[
+                GetiInspectProgressCallback(synchronization_parameters),
+                EarlyStopping(monitor="pixel_AUROC", mode="max", patience=5),
+            ],
             accelerator=training_device,
         )
 
@@ -327,8 +347,8 @@ class TrainingService:
         any orphan in-progress training jobs are marked as failed.
         """
         query = {"status": JobStatus.RUNNING, "type": JobType.TRAINING}
-        running_jobs = await JobService.get_job_list(extra_filters=query)
-        for job in running_jobs.jobs:
+        running_jobs = JobService.get_job_list_streaming(extra_filters=query)
+        async for job in running_jobs:
             logger.warning(f"Aborting orphan training job with id: {job.id}")
             await JobService.update_job_status(
                 job_id=job.id,

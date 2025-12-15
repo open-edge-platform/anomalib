@@ -12,6 +12,7 @@ from loguru import logger
 
 if TYPE_CHECKING:
     import multiprocessing as mp
+    from collections.abc import Callable
     from multiprocessing.synchronize import Event as EventClass
     from multiprocessing.synchronize import Lock
 
@@ -57,6 +58,7 @@ class InferenceWorker(BaseProcessWorker):
         self._cached_models: dict[Any, object] = {}
         self._model_check_interval: float = 5.0  # seconds between model refresh checks
         self._is_passthrough_mode: bool = False
+        self._overlay = True
 
     def setup(self) -> None:
         super().setup()
@@ -71,6 +73,7 @@ class InferenceWorker(BaseProcessWorker):
                 self._is_passthrough_mode = pipeline is None or (
                     pipeline.status.is_active and not pipeline.status.is_running
                 )
+                self._overlay = pipeline.overlay if pipeline and pipeline.overlay is not None else self._overlay
                 logger.info(f"Passthrough mode {'activated' if self._is_passthrough_mode else 'disabled'}.")
                 if pipeline is None or pipeline.model is None:
                     return None
@@ -223,7 +226,11 @@ class InferenceWorker(BaseProcessWorker):
             raise RuntimeError("Inference failed or model became unavailable")
 
         # Build visualization
-        vis_frame: np.ndarray = Visualizer.overlay_predictions(frame, prediction_response)
+        overlays: list[Callable] = []
+        if self._overlay:
+            overlays.append(Visualizer.overlay_anomaly_heatmap)
+        overlays.append(Visualizer.draw_prediction_label)
+        vis_frame: np.ndarray = Visualizer.overlay_predictions(frame, prediction_response, *overlays)
 
         # Package inference data
         stream_data.inference_data = InferenceData(

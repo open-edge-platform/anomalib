@@ -6,9 +6,9 @@ from os import getenv
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import Field, TypeAdapter
+from pydantic import BaseModel, Field, TypeAdapter
 
-from pydantic_models.base import BaseIDNameModel, NoRequiredIDs
+from pydantic_models.base import BaseIDNameModel, NoRequiredIDs, Pagination
 
 MQTT_USERNAME = "MQTT_USERNAME"
 MQTT_PASSWORD = "MQTT_PASSWORD"  # noqa: S105
@@ -154,6 +154,12 @@ Sink = Annotated[
 ]
 
 SinkAdapter: TypeAdapter[Sink] = TypeAdapter(Sink)
+
+
+class SinkList(BaseModel):
+    sinks: list[Sink]
+    pagination: Pagination
+
 
 # ---------------------------------
 # Creation Schemas (POST requests)

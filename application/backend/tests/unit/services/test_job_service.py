@@ -22,6 +22,8 @@ def fxt_job_repository():
     mock_repo.get_by_id = AsyncMock()
     mock_repo.get_one = AsyncMock()
     mock_repo.get_all = AsyncMock()
+    mock_repo.get_all_count = AsyncMock()
+    mock_repo.get_all_pagination = AsyncMock()
     mock_repo.save = AsyncMock()
     mock_repo.update = AsyncMock()
     mock_repo.delete_by_id = AsyncMock()
@@ -42,15 +44,18 @@ def mock_db_context():
 class TestJobService:
     def test_get_job_list(self, fxt_job_repository, fxt_job_list):
         """Test getting job list."""
-        fxt_job_repository.get_all.return_value = fxt_job_list.jobs
+        fxt_job_repository.get_all_count.return_value = len(fxt_job_list.jobs)
+        fxt_job_repository.get_all_pagination.return_value = fxt_job_list.jobs
 
         with patch("services.job_service.JobRepository") as mock_repo_class:
             mock_repo_class.return_value = fxt_job_repository
 
-            result = asyncio.run(JobService.get_job_list())
+            result = asyncio.run(JobService.get_job_list(limit=20, offset=0))
 
-        assert result == fxt_job_list
-        fxt_job_repository.get_all.assert_called_once()
+        assert result.jobs == fxt_job_list.jobs
+        assert result.pagination.total == len(fxt_job_list.jobs)
+        fxt_job_repository.get_all_count.assert_called_once()
+        fxt_job_repository.get_all_pagination.assert_called_once_with(limit=20, offset=0, extra_filters=None)
 
     @pytest.mark.parametrize(
         "job_exists,expected_result",

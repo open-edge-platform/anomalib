@@ -9,6 +9,7 @@ from sse_starlette import ServerSentEvent
 from api.dependencies import get_job_service
 from main import app
 from pydantic_models import JobList
+from pydantic_models.base import Pagination
 from services import JobService
 
 
@@ -20,21 +21,27 @@ def fxt_job_service() -> MagicMock:
 
 
 def test_get_jobs(fxt_client, fxt_job_service, fxt_job):
-    fxt_job_service.get_job_list.return_value = JobList(jobs=[fxt_job])
+    fxt_job_service.get_job_list.return_value = JobList(
+        jobs=[fxt_job],
+        pagination=Pagination(offset=0, limit=20, count=1, total=1),
+    )
 
     response = fxt_client.get("/api/jobs")
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["jobs"]) == 1
-    fxt_job_service.get_job_list.assert_called_once()
+    fxt_job_service.get_job_list.assert_called_once_with(limit=20, offset=0)
 
 
 def test_get_jobs_empty(fxt_client, fxt_job_service, fxt_job):
-    fxt_job_service.get_job_list.return_value = JobList(jobs=[])
+    fxt_job_service.get_job_list.return_value = JobList(
+        jobs=[],
+        pagination=Pagination(offset=0, limit=20, count=0, total=0),
+    )
 
     response = fxt_client.get("/api/jobs")
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["jobs"]) == 0
-    fxt_job_service.get_job_list.assert_called_once()
+    fxt_job_service.get_job_list.assert_called_once_with(limit=20, offset=0)
 
 
 def test_get_job_logs_success(fxt_client, fxt_job_service, fxt_job):

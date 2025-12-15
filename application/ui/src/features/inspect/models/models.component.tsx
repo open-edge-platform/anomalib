@@ -16,7 +16,7 @@ export const Models = () => {
                     </Flex>
                 </Flex>
             </Heading>
-            <Suspense fallback={<Loading mode={'inline'} />}>
+            <Suspense fallback={<Loading mode={'inline'} size='S' />}>
                 <Flex direction={'column'} height={'100%'} gap={'size-300'}>
                     <ModelsView />
                 </Flex>

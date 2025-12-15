@@ -1,7 +1,6 @@
 import { $api } from '@geti-inspect/api';
 import { Flex, Grid, Heading, minmax, Radio, repeat, View } from '@geti/ui';
 import { clsx } from 'clsx';
-import { capitalize } from 'lodash-es';
 
 import classes from './train-model.module.scss';
 
@@ -175,7 +174,7 @@ export const TrainableModelListBox = ({ selectedModelTemplateId }: ModelTypesLis
     const models = trainableModels.map((model) => {
         return {
             modelTemplateId: model.id,
-            name: capitalize(model.name),
+            name: model.name,
             license: 'Apache 2.0',
             performanceRatings: {
                 accuracy: 1,

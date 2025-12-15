@@ -11,6 +11,7 @@ type OutputFormatsProps = {
 export const OutputFormats = ({ config = [] }: OutputFormatsProps) => {
     return (
         <CheckboxGroup
+            isRequired
             label='Output Formats'
             name='output_formats'
             defaultValue={config}

@@ -327,7 +327,7 @@ class CustomHelpFormatter(RichHelpFormatter, DefaultHelpFormatter):
             elif self.verbosity_level == 1:
                 actions = [action for action in actions if action.dest in REQUIRED_ARGUMENTS[self.subcommand]]
 
-        super().add_usage(usage, actions, *args, **kwargs)
+        super(RichHelpFormatter, self).add_usage(usage, actions, *args, **kwargs)
 
     def add_argument(self, action: argparse.Action) -> None:
         """Add an argument to the help formatter.

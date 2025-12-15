@@ -7,15 +7,15 @@ from typing import Annotated
 from uuid import UUID
 
 import yaml
-from fastapi import APIRouter, Body, Depends, File, UploadFile, status
+from fastapi import APIRouter, Body, Depends, File, Query, UploadFile, status
 from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse, Response
 from sqlalchemy.exc import IntegrityError
 
-from api.dependencies import get_configuration_service, get_project_id, get_sink_id
+from api.dependencies import PaginationLimit, get_configuration_service, get_project_id, get_sink_id
 from pydantic_models import Sink, SinkType
-from pydantic_models.sink import SinkAdapter, SinkCreate, SinkCreateAdapter
+from pydantic_models.sink import SinkAdapter, SinkCreate, SinkCreateAdapter, SinkList
 from services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
 router = APIRouter(prefix="/api/projects/{project_id}/sinks", tags=["Sinks"])
@@ -112,15 +112,21 @@ async def create_sink(
 @router.get(
     "",
     responses={
-        status.HTTP_200_OK: {"description": "List of available sink configurations", "model": list[Sink]},
+        status.HTTP_200_OK: {"description": "List of available sink configurations", "model": SinkList},
     },
 )
 async def list_sinks(
     project_id: Annotated[UUID, Depends(get_project_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
-) -> list[Sink]:
+    limit: Annotated[int, Depends(PaginationLimit())],
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> SinkList:
     """List the available sinks"""
-    return await configuration_service.list_sinks(project_id)
+    return await configuration_service.list_sinks(
+        project_id=project_id,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @router.get(

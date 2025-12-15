@@ -4,7 +4,8 @@
     --background-inverse: #3c3e42;
     --coral: #ff5662;
     --energy-blue-light: #7bdeff;
-    --energy-blue: rgb(0, 199, 253);
+    --energy-blue: #00c7fd;
+    --selection-dark-blue: #0c1e29;
 
     --daisy-shade: rgb(237, 178, 0); /* #edb200 */
     --brand-daisy: #fec91b;
@@ -85,4 +86,13 @@ svg {
 
 [data-sonner-toaster] {
     font-family: var(--spectrum-global-font-family-base) !important;
+}
+
+[class$='Tabs-selectionIndicator'] {
+    background: var(--energy-blue);
+}
+
+/* Increase the modal’s opaque background when a modal is opened inside another modal. */
+[data-testid='underlay'] {
+    z-index: 2 !important;
 }

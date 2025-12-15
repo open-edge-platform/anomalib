@@ -7,7 +7,7 @@ from .media import ImageExtension, Media, MediaList
 from .metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, TimeWindow
 from .model import Model, ModelList, PredictionLabel, PredictionResponse
 from .pipeline import Pipeline, PipelineStatus
-from .project import Project, ProjectList
+from .project import Project, ProjectList, ProjectUpdate
 from .sink import DisconnectedSinkConfig, OutputFormat, Sink, SinkType
 from .source import DisconnectedSourceConfig, Source, SourceType
 from .trainable_model import TrainableModelList
@@ -35,6 +35,7 @@ __all__ = [
     "PredictionResponse",
     "Project",
     "ProjectList",
+    "ProjectUpdate",
     "Sink",
     "SinkType",
     "Source",

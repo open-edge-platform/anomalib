@@ -8,7 +8,6 @@ import { server } from 'src/msw-node-setup';
 
 import { getMockedPipeline } from '../../../../mocks/mock-pipeline';
 import { useWebRTCConnection, WebRTCConnectionState } from '../../../components/stream/web-rtc-connection-provider';
-import { InferenceProvider } from '../inference-provider.component';
 import { MainContent } from './main-content.component';
 import { SOURCE_MESSAGE } from './source-sink-message/source-sink-message.component';
 
@@ -51,14 +50,7 @@ describe('MainContent', () => {
                 <ZoomProvider>
                     <MemoryRouter initialEntries={['/projects/123/inspect']}>
                         <Routes>
-                            <Route
-                                path='/projects/:projectId/inspect'
-                                element={
-                                    <InferenceProvider>
-                                        <MainContent />
-                                    </InferenceProvider>
-                                }
-                            />
+                            <Route path='/projects/:projectId/inspect' element={<MainContent />} />
                         </Routes>
                     </MemoryRouter>
                 </ZoomProvider>

@@ -65,13 +65,6 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
 
     const handleDelete = async () => {
         try {
-            if (isConnected) {
-                await updatePipeline.mutateAsync({
-                    params: { path: { project_id: projectId } },
-                    body: { source_id: null },
-                });
-            }
-
             await removeSource.mutateAsync({ params: { path: { project_id: projectId, source_id: id } } });
 
             toast({
@@ -91,7 +84,7 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
             <ActionButton isQuiet aria-label='source menu'>
                 <MoreMenu />
             </ActionButton>
-            <Menu onAction={handleOnAction} disabledKeys={isConnected ? ['connect'] : []}>
+            <Menu onAction={handleOnAction} disabledKeys={isConnected ? ['connect', 'remove'] : []}>
                 <Item key='connect'>Connect</Item>
                 <Item key='edit'>Edit</Item>
                 <Item key='remove'>Remove</Item>

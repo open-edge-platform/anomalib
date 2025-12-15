@@ -1,35 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-import { usePipeline } from '@geti-inspect/hooks';
+import { SchemaPredictionResponse } from '@geti-inspect/api/spec';
 import { dimensionValue, Flex, View } from '@geti/ui';
 import { clsx } from 'clsx';
 import { AnimatePresence, motion } from 'motion/react';
+import { isNonEmptyString } from 'src/features/inspect/utils';
 
-import { useInference } from '../../../inference-provider.component';
 import { MediaItem } from '../../types';
+import { useInference } from '../providers/inference-opacity-provider.component';
 import { LabelScore } from './label-score.component';
 
 import classes from './inference-result.module.scss';
 
 interface InferenceResultProps {
     selectedMediaItem: MediaItem;
+    inferenceResult: SchemaPredictionResponse | undefined;
 }
 
-export const InferenceResult = ({ selectedMediaItem }: InferenceResultProps) => {
-    const { data: pipeline } = usePipeline();
+export const InferenceResult = ({ selectedMediaItem, inferenceResult }: InferenceResultProps) => {
+    const { inferenceOpacity } = useInference();
     const [isVerticalImage, setIsVerticalImage] = useState(false);
-    const { inferenceOpacity, inferenceResult, onInference, resetInference } = useInference();
-    const selectedModelId = pipeline?.model?.id;
 
-    useEffect(() => {
-        return () => {
-            resetInference();
-        };
-    }, [resetInference]);
-
-    const handleInference = async (imageElement: HTMLImageElement) => {
+    const handleImageOrientation = (imageElement: HTMLImageElement) => {
         setIsVerticalImage(imageElement.clientHeight > imageElement.clientWidth);
-        selectedModelId && onInference(selectedMediaItem, selectedModelId);
     };
 
     return (
@@ -47,11 +40,11 @@ export const InferenceResult = ({ selectedMediaItem }: InferenceResultProps) => 
                         alt={selectedMediaItem.filename}
                         className={clsx(classes.img, { [classes.verticalImg]: isVerticalImage })}
                         src={`/api/projects/${selectedMediaItem.project_id}/images/${selectedMediaItem.id}/full`}
-                        onLoad={({ target }) => handleInference(target as HTMLImageElement)}
+                        onLoad={({ target }) => handleImageOrientation(target as HTMLImageElement)}
                     />
 
                     <AnimatePresence>
-                        {inferenceResult !== undefined && (
+                        {isNonEmptyString(inferenceResult?.anomaly_map) && (
                             <>
                                 <motion.img
                                     exit={{ opacity: 0 }}

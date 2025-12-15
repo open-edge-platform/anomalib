@@ -1,28 +1,33 @@
-import { Selection, Size, View } from '@geti/ui';
-import { MediaThumbnail } from 'src/components/media-thumbnail/media-thumbnail.component';
-import { GridMediaItem } from 'src/components/virtualizer-grid-layout/grid-media-item/grid-media-item.component';
-import { VirtualizerGridLayout } from 'src/components/virtualizer-grid-layout/virtualizer-grid-layout.component';
+import { Selection, View } from '@geti/ui';
+import { GridLayoutOptions } from 'react-aria-components';
+import { getThumbnailUrl } from 'src/features/inspect/utils';
 
+import { GridMediaItem } from '../../../../..//components/virtualizer-grid-layout/grid-media-item/grid-media-item.component';
+import { MediaThumbnail } from '../../../../../components/media-thumbnail/media-thumbnail.component';
+import { VirtualizerGridLayout } from '../../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
+import { DeleteMediaItem } from '../../delete-dataset-item/delete-dataset-item.component';
+import { DownloadDatasetItem } from '../../download-dataset-item/download-dataset-item.component';
 import { MediaItem } from '../../types';
 
 interface SidebarItemsProps {
     mediaItems: MediaItem[];
+    hasNextPage: boolean;
+    isLoadingMore: boolean;
     selectedMediaItem: MediaItem;
-    onSelectedMediaItem: (mediaItem: string | null) => void;
+    layoutOptions: GridLayoutOptions;
+    loadMore: () => void;
+    onSelectedMediaItem: (mediaItem: string | null) => Promise<URLSearchParams>;
 }
 
-const layoutOptions = {
-    maxColumns: 1,
-    minSpace: new Size(8, 8),
-    minItemSize: new Size(120, 120),
-    maxItemSize: new Size(120, 120),
-    preserveAspectRatio: true,
-};
-
-const getThumbnailUrl = (mediaItem: MediaItem) =>
-    `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail`;
-
-export const SidebarItems = ({ mediaItems, selectedMediaItem, onSelectedMediaItem }: SidebarItemsProps) => {
+export const SidebarItems = ({
+    mediaItems,
+    hasNextPage,
+    isLoadingMore,
+    layoutOptions,
+    selectedMediaItem,
+    loadMore,
+    onSelectedMediaItem,
+}: SidebarItemsProps) => {
     const selectedIndex = mediaItems.findIndex((item) => item.id === selectedMediaItem.id);
 
     const handleSelectionChange = (newKeys: Selection) => {
@@ -31,6 +36,16 @@ export const SidebarItems = ({ mediaItems, selectedMediaItem, onSelectedMediaIte
         const mediaItem = mediaItems.find((item) => item.id === firstKey);
 
         onSelectedMediaItem(mediaItem?.id ?? null);
+    };
+
+    const handleDeletedItem = (deletedIds: string[]) => {
+        if (deletedIds.includes(String(selectedMediaItem.id))) {
+            const nextIndex = selectedIndex + 1;
+            const newSelectedIndex = nextIndex < mediaItems.length - 1 ? nextIndex : selectedIndex - 1;
+            const newSelectedItem = mediaItems[newSelectedIndex];
+
+            onSelectedMediaItem(newSelectedItem?.id ?? null);
+        }
     };
 
     return (
@@ -43,15 +58,21 @@ export const SidebarItems = ({ mediaItems, selectedMediaItem, onSelectedMediaIte
                 layoutOptions={layoutOptions}
                 scrollToIndex={selectedIndex}
                 onSelectionChange={handleSelectionChange}
-                contentItem={(item) => (
+                isLoadingMore={isLoadingMore}
+                onLoadMore={() => hasNextPage && loadMore()}
+                contentItem={(mediaItem) => (
                     <GridMediaItem
                         contentElement={() => (
                             <MediaThumbnail
-                                alt={item.filename}
-                                url={getThumbnailUrl(item)}
-                                onClick={() => onSelectedMediaItem(item.id ?? null)}
+                                alt={mediaItem.filename}
+                                url={getThumbnailUrl(mediaItem)}
+                                onClick={() => onSelectedMediaItem(mediaItem.id ?? null)}
                             />
                         )}
+                        topRightElement={() => (
+                            <DeleteMediaItem itemsIds={[String(mediaItem.id)]} onDeleted={handleDeletedItem} />
+                        )}
+                        bottomLeftElement={() => <DownloadDatasetItem mediaItem={mediaItem} />}
                     />
                 )}
             />

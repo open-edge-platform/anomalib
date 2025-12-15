@@ -12,6 +12,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_async_db_session_ctx
 from pydantic_models import Sink, Source
+from pydantic_models.base import Pagination
+from pydantic_models.sink import SinkList
+from pydantic_models.source import SourceList
 from repositories import PipelineRepository, SinkRepository, SourceRepository
 from services import ActivePipelineService
 from services.exceptions import ResourceNotFoundError, ResourceType
@@ -55,17 +58,40 @@ class ConfigurationService:
         if active_pipeline and str(getattr(active_pipeline, field)) == str(config_id):
             notify_fn()
 
-    async def list_sources(self, project_id: UUID) -> list[Source]:
+    @staticmethod
+    async def list_sources(project_id: UUID, limit: int, offset: int) -> SourceList:
         async with get_async_db_session_ctx() as db:
             source_repo = SourceRepository(db, project_id=project_id)
-            return await source_repo.get_all()
+            total = await source_repo.get_all_count()
+            items = await source_repo.get_all_pagination(limit=limit, offset=offset)
+        return SourceList(
+            sources=items,
+            pagination=Pagination(
+                limit=limit,
+                offset=offset,
+                count=len(items),
+                total=total,
+            ),
+        )
 
-    async def list_sinks(self, project_id: UUID) -> list[Sink]:
+    @staticmethod
+    async def list_sinks(project_id: UUID, limit: int, offset: int) -> SinkList:
         async with get_async_db_session_ctx() as db:
             sink_repo = SinkRepository(db, project_id=project_id)
-            return await sink_repo.get_all()
+            total = await sink_repo.get_all_count()
+            items = await sink_repo.get_all_pagination(limit=limit, offset=offset)
+        return SinkList(
+            sinks=items,
+            pagination=Pagination(
+                limit=limit,
+                offset=offset,
+                count=len(items),
+                total=total,
+            ),
+        )
 
-    async def get_source_by_id(self, source_id: UUID, project_id: UUID, db: AsyncSession | None = None) -> Source:
+    @staticmethod
+    async def get_source_by_id(source_id: UUID, project_id: UUID, db: AsyncSession | None = None) -> Source:
         if db is None:
             async with get_async_db_session_ctx() as db_session:
                 source_repo = SourceRepository(db_session, project_id=project_id)
@@ -77,7 +103,8 @@ class ConfigurationService:
             raise ResourceNotFoundError(ResourceType.SOURCE, str(source_id))
         return source
 
-    async def get_sink_by_id(self, sink_id: UUID, project_id: UUID, db: AsyncSession | None = None) -> Sink:
+    @staticmethod
+    async def get_sink_by_id(sink_id: UUID, project_id: UUID, db: AsyncSession | None = None) -> Sink:
         if db is None:
             async with get_async_db_session_ctx() as db_session:
                 sink_repo = SinkRepository(db_session, project_id=project_id)
@@ -89,12 +116,14 @@ class ConfigurationService:
             raise ResourceNotFoundError(ResourceType.SINK, str(sink_id))
         return sink
 
-    async def create_source(self, source: Source) -> Source:
+    @staticmethod
+    async def create_source(source: Source) -> Source:
         async with get_async_db_session_ctx() as db:
             source_repo = SourceRepository(db, project_id=source.project_id)
             return await source_repo.save(source)
 
-    async def create_sink(self, sink: Sink) -> Sink:
+    @staticmethod
+    async def create_sink(sink: Sink) -> Sink:
         async with get_async_db_session_ctx() as db:
             sink_repo = SinkRepository(db, project_id=sink.project_id)
             return await sink_repo.save(sink)
@@ -126,3 +155,15 @@ class ConfigurationService:
             sink = await self.get_sink_by_id(sink_id, project_id, db)
             sink_repo = SinkRepository(db, project_id=project_id)
             await sink_repo.delete_by_id(sink.id)
+
+    @staticmethod
+    async def delete_project_source_db(session: AsyncSession, project_id: UUID, commit: bool = False) -> None:
+        """Delete all sources associated with a project from the database."""
+        source_repo = SourceRepository(session, project_id=project_id)
+        await source_repo.delete_all(commit=commit)
+
+    @staticmethod
+    async def delete_project_sink_db(session: AsyncSession, project_id: UUID, commit: bool = False) -> None:
+        """Delete all sinks associated with a project from the database."""
+        sink_repo = SinkRepository(session, project_id=project_id)
+        await sink_repo.delete_all(commit=commit)

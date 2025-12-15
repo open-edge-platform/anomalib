@@ -1,8 +1,9 @@
+import { Button, Flex, Text } from '@geti/ui';
 import { Add as AddIcon } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 import { isEqual } from 'lodash-es';
-import { Button, Flex, Text } from 'packages/ui';
 
+import { LoadMoreList } from '../../../../../components/load-more-list/load-more-list.component';
 import { StatusTag } from '../../../../../components/status-tag/status-tag.component';
 import { usePipeline } from '../../../../../hooks/use-pipeline.hook';
 import { removeUnderscore } from '../../../utils';
@@ -15,6 +16,9 @@ import classes from './sink-list.module.scss';
 
 type SinksListProps = {
     sinks: SinkConfig[];
+    isLoading: boolean;
+    hasNextPage: boolean;
+    onLoadMore: () => void;
     onAddSink: () => void;
     onEditSink: (config: SinkConfig) => void;
 };
@@ -61,13 +65,13 @@ const SinkListItem = ({ sink, isConnected, onEditSink }: SinksListItemProps) => 
     );
 };
 
-export const SinkList = ({ sinks, onAddSink, onEditSink }: SinksListProps) => {
+export const SinkList = ({ sinks, isLoading, hasNextPage, onLoadMore, onAddSink, onEditSink }: SinksListProps) => {
     const pipeline = usePipeline();
     const currentSinkId = pipeline.data.sink?.id;
 
     return (
-        <Flex gap={'size-200'} direction={'column'}>
-            <Button variant='secondary' UNSAFE_className={classes.addSink} onPress={onAddSink}>
+        <LoadMoreList isLoading={isLoading} hasNextPage={hasNextPage} onLoadMore={onLoadMore}>
+            <Button variant='secondary' height={'size-800'} UNSAFE_className={classes.addSink} onPress={onAddSink}>
                 <AddIcon /> Add new sink
             </Button>
 
@@ -79,6 +83,6 @@ export const SinkList = ({ sinks, onAddSink, onEditSink }: SinksListProps) => {
                     onEditSink={onEditSink}
                 />
             ))}
-        </Flex>
+        </LoadMoreList>
     );
 };

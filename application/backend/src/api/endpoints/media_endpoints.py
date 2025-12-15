@@ -5,10 +5,10 @@ from typing import Annotated
 from uuid import UUID
 
 import anyio
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, UploadFile, status
 from fastapi.responses import FileResponse
 
-from api.dependencies import get_media_id, get_media_service, get_project_id
+from api.dependencies import PaginationLimit, get_media_id, get_media_service, get_project_id
 from api.endpoints import API_PREFIX
 from api.media_rest_validator import MediaRestValidator
 from pydantic_models import Media, MediaList
@@ -31,9 +31,11 @@ media_router = APIRouter(
 async def get_media_list(
     media_service: Annotated[MediaService, Depends(get_media_service)],
     project_id: Annotated[UUID, Depends(get_project_id)],
+    limit: Annotated[int, Depends(PaginationLimit())],
+    offset: Annotated[int, Query(ge=0)] = 0,
 ) -> MediaList:
     """Endpoint to get list of all media"""
-    return await media_service.get_media_list(project_id=project_id)
+    return await media_service.get_media_list(project_id=project_id, limit=limit, offset=offset)
 
 
 @media_router.get(

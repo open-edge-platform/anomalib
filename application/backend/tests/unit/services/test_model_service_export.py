@@ -1,5 +1,4 @@
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
@@ -31,17 +30,15 @@ def mock_model_service():
 
 @pytest.mark.asyncio
 @patch("services.model_service.ModelService.get_model_by_id")
+@patch("services.model_service.ModelExportBinaryRepository")
+@patch("services.model_service.anyio.Path")
 @patch("services.model_service.ModelBinaryRepository")
-@patch("services.model_service.Engine")
-@patch("services.model_service.get_model")
-@patch("services.model_service.shutil.make_archive")
 @patch("services.model_service.asyncio.to_thread")
 async def test_export_model_success(
     mock_to_thread,
-    mock_make_archive,
-    mock_get_model,
-    mock_engine_cls,
-    mock_binary_repo_cls,
+    mock_model_binary_repo_cls,
+    mock_anyio_path_cls,
+    mock_model_export_repo_cls,
     mock_get_model_by_id,
     mock_model_service,
     mock_model,
@@ -54,7 +51,18 @@ async def test_export_model_success(
     # Setup binary repo mock
     mock_binary_repo = MagicMock()
     mock_binary_repo.model_folder_path = str(tmp_path)
-    mock_binary_repo_cls.return_value = mock_binary_repo
+    mock_model_binary_repo_cls.return_value = mock_binary_repo
+
+    # Setup export repo mock
+    mock_export_repo = MagicMock()
+    export_zip_str = str(tmp_path / "exports" / "Padim.zip")
+    mock_export_repo.get_model_export_path.return_value = export_zip_str
+    mock_model_export_repo_cls.return_value = mock_export_repo
+
+    # anyio.Path mock for export zip path handling
+    mock_anyio_path = MagicMock()
+    mock_anyio_path.exists = AsyncMock(return_value=False)
+    mock_anyio_path_cls.return_value = mock_anyio_path
 
     # Create dummy checkpoint file
     ckpt_dir = tmp_path / "weights" / "lightning"
@@ -65,20 +73,15 @@ async def test_export_model_success(
     export_params = ExportParameters(format=ExportType.OPENVINO, compression=CompressionType.FP16)
 
     # Setup to_thread result to match expected return
-    expected_zip_path = (
-        Path("data/exports")
-        / str(mock_model.id)
-        / mock_model.name.title()
-        / f"{mock_model.project_id}-{mock_model.name}"
-        / f"{mock_model.name}_{export_params.format.value}_{export_params.compression.value}.zip"
-    )
-    mock_to_thread.return_value = expected_zip_path
+    mock_to_thread.return_value = mock_anyio_path
 
     # Call method
     result = await mock_model_service.export_model(mock_model.project_id, mock_model.id, export_params)
 
     # Verify results
-    assert result == expected_zip_path
+    assert result == mock_anyio_path
+    mock_model_export_repo_cls.assert_called_once_with(project_id=mock_model.project_id, model_id=mock_model.id)
+    mock_anyio_path_cls.assert_called_once_with(export_zip_str)
     mock_to_thread.assert_called_once()
 
 
@@ -96,16 +99,32 @@ async def test_export_model_not_found(mock_get_model_by_id, mock_model_service):
 
 @pytest.mark.asyncio
 @patch("services.model_service.ModelService.get_model_by_id")
+@patch("services.model_service.ModelExportBinaryRepository")
+@patch("services.model_service.anyio.Path")
 @patch("services.model_service.ModelBinaryRepository")
 async def test_export_model_ckpt_not_found(
-    mock_binary_repo_cls, mock_get_model_by_id, mock_model_service, mock_model, tmp_path
+    mock_model_binary_repo_cls,
+    mock_anyio_path_cls,
+    mock_model_export_repo_cls,
+    mock_get_model_by_id,
+    mock_model_service,
+    mock_model,
+    tmp_path,
 ):
     """Test export when checkpoint file is missing."""
     mock_get_model_by_id.return_value = mock_model
 
     mock_binary_repo = MagicMock()
     mock_binary_repo.model_folder_path = str(tmp_path)
-    mock_binary_repo_cls.return_value = mock_binary_repo
+    mock_model_binary_repo_cls.return_value = mock_binary_repo
+
+    mock_export_repo = MagicMock()
+    mock_export_repo.get_model_export_path.return_value = str(tmp_path / "exports" / "Padim.zip")
+    mock_model_export_repo_cls.return_value = mock_export_repo
+
+    mock_export_path = MagicMock()
+    mock_export_path.exists = AsyncMock(return_value=False)
+    mock_anyio_path_cls.return_value = mock_export_path
 
     # Checkpoint file intentionally omitted to test error handling
 
@@ -117,24 +136,31 @@ async def test_export_model_ckpt_not_found(
 
 @pytest.mark.asyncio
 @patch("services.model_service.ModelService.get_model_by_id")
-async def test_export_model_cached_logic(mock_get_model_by_id, mock_model_service, mock_model):
+@patch("services.model_service.ModelExportBinaryRepository")
+@patch("services.model_service.anyio.Path")
+@patch("services.model_service.asyncio.to_thread")
+async def test_export_model_cached_logic(
+    mock_to_thread,
+    mock_anyio_path_cls,
+    mock_model_export_repo_cls,
+    mock_get_model_by_id,
+    mock_model_service,
+    mock_model,
+):
     """Test that cached export is returned if it exists."""
     mock_get_model_by_id.return_value = mock_model
 
     export_params = ExportParameters(format=ExportType.OPENVINO)
 
-    with patch("services.model_service.Path") as mock_path_cls:
-        # Setup the mock path chain
-        mock_path_instance = MagicMock()
-        mock_path_cls.return_value = mock_path_instance
+    mock_export_repo = MagicMock()
+    mock_export_repo.get_model_export_path.return_value = "/tmp/export.zip"
+    mock_model_export_repo_cls.return_value = mock_export_repo
 
-        # Mock / operators
-        mock_path_instance.__truediv__.return_value = mock_path_instance
+    mock_export_path = MagicMock()
+    mock_export_path.exists = AsyncMock(return_value=True)
+    mock_anyio_path_cls.return_value = mock_export_path
 
-        # Verify existence check returns True
-        mock_path_instance.exists.return_value = True
+    await mock_model_service.export_model(mock_model.project_id, mock_model.id, export_params)
 
-        result = await mock_model_service.export_model(mock_model.project_id, mock_model.id, export_params)
-
-        # Should return the path immediately without calling run_export
-        assert result == mock_path_instance
+    # Should return the cached path immediately without triggering export
+    mock_to_thread.assert_not_called()

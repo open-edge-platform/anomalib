@@ -103,6 +103,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Text(), nullable=False),
         sa.Column("project_id", sa.String(), nullable=False),
         sa.Column("filename", sa.Text(), nullable=False),
+        sa.Column("count", sa.Integer(), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -135,6 +136,7 @@ def upgrade() -> None:
         sa.Column("sink_id", sa.Text(), nullable=True),
         sa.Column("model_id", sa.Text(), nullable=True),
         sa.Column("inference_device", sa.String(length=64), nullable=True),
+        sa.Column("overlay", sa.Boolean(), nullable=True),
         sa.Column("is_running", sa.Boolean(), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False),
         sa.Column("data_collection_policies", sa.JSON(), nullable=False),

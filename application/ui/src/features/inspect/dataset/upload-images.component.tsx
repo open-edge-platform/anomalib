@@ -1,18 +1,28 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Button, FileTrigger, toast } from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
 
+import { useUploadStatus } from '../footer/status-bar/adapters/use-upload-status';
 import { TrainModelButton } from '../train-model/train-model-button.component';
 import { REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING } from './utils';
 
 export const UploadImages = () => {
     const { projectId } = useProjectIdentifier();
     const queryClient = useQueryClient();
+    const { startUpload, incrementProgress, completeUpload } = useUploadStatus();
 
-    const captureImageMutation = $api.useMutation('post', '/api/projects/{project_id}/images');
+    const captureImageMutation = $api.useMutation('post', '/api/projects/{project_id}/images', {
+        onSuccess: () => incrementProgress(true),
+        onError: () => incrementProgress(false),
+    });
 
     const handleAddMediaItem = async (files: File[]) => {
+        startUpload(files.length);
+
         const uploadPromises = files.map((file) => {
             const formData = new FormData();
             formData.append('file', file);
@@ -24,10 +34,9 @@ export const UploadImages = () => {
             });
         });
 
-        const promises = await Promise.allSettled(uploadPromises);
+        await Promise.allSettled(uploadPromises);
 
-        const succeeded = promises.filter((result) => result.status === 'fulfilled').length;
-        const failed = promises.filter((result) => result.status === 'rejected').length;
+        completeUpload();
 
         const imagesOptions = $api.queryOptions('get', '/api/projects/{project_id}/images', {
             params: { path: { project_id: projectId } },
@@ -43,18 +52,6 @@ export const UploadImages = () => {
                 duration: Infinity,
                 actionButtons: [<TrainModelButton key='train' />],
                 position: 'bottom-left',
-            });
-            return;
-        }
-
-        if (failed === 0) {
-            toast({ type: 'success', message: `Uploaded ${succeeded} item(s)` });
-        } else if (succeeded === 0) {
-            toast({ type: 'error', message: `Failed to upload ${failed} item(s)` });
-        } else {
-            toast({
-                type: 'warning',
-                message: `Uploaded ${succeeded} item(s), ${failed} failed`,
             });
         }
     };

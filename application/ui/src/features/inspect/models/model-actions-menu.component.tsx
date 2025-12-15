@@ -1,23 +1,30 @@
 import { useState } from 'react';
 
 import { $api } from '@geti-inspect/api';
-import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { usePatchPipeline, useProjectIdentifier } from '@geti-inspect/hooks';
 import { ActionButton, AlertDialog, DialogContainer, Item, Menu, MenuTrigger, toast, type Key } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 
+import type { ModelData } from '../../../hooks/utils';
 import { JobLogsDialog } from '../jobs/show-job-logs.component';
-import type { ModelData } from './model-types';
+import { ExportModelDialog, type ExportOptions } from './export-model-dialog.component';
+import { useExportModel } from './hooks/use-export-model.hook';
 
 interface ModelActionsMenuProps {
     model: ModelData;
     selectedModelId: string | undefined;
-    onSetSelectedModelId: (modelId: string | undefined) => void;
 }
 
-export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId }: ModelActionsMenuProps) => {
+type DialogType = 'logs' | 'delete' | 'export' | null;
+
+export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuProps) => {
     const { projectId } = useProjectIdentifier();
-    const [isLogsDialogOpen, setIsLogsDialogOpen] = useState(false);
-    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const { data: project } = $api.useSuspenseQuery('get', '/api/projects/{project_id}', {
+        params: { path: { project_id: projectId } },
+    });
+    const patchPipeline = usePatchPipeline(projectId);
+    const [openDialog, setOpenDialog] = useState<DialogType>(null);
+    const exportModel = useExportModel();
 
     const cancelJobMutation = $api.useMutation('post', '/api/jobs/{job_id}:cancel');
     const deleteModelMutation = $api.useMutation('delete', '/api/projects/{project_id}/models/{model_id}', {
@@ -31,8 +38,10 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
     });
 
     const hasJobActions = Boolean(model.job?.id);
-    const canDeleteModel = model.status === 'Completed' && model.id !== selectedModelId;
-    const shouldShowMenu = hasJobActions || canDeleteModel;
+    const hasCompletedStatus = model.status === 'Completed';
+    const canDeleteModel = hasCompletedStatus && model.id !== selectedModelId;
+    const canExportModel = hasCompletedStatus;
+    const shouldShowMenu = hasJobActions || canDeleteModel || canExportModel;
 
     if (!shouldShowMenu) {
         return null;
@@ -45,6 +54,9 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
     if (deleteModelMutation.isPending) {
         disabledMenuKeys.push('delete');
     }
+    if (model.id === selectedModelId || patchPipeline.isPending) {
+        disabledMenuKeys.push('activate');
+    }
 
     const handleCancelJob = () => {
         if (!model.job?.id) {
@@ -52,13 +64,7 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
         }
 
         void cancelJobMutation.mutateAsync(
-            {
-                params: {
-                    path: {
-                        job_id: model.job.id,
-                    },
-                },
-            },
+            { params: { path: { job_id: model.job.id } } },
             {
                 onError: () => {
                     toast({ type: 'error', message: 'Failed to cancel training job.' });
@@ -67,20 +73,17 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
         );
     };
 
+    const handleSetModel = (modelId?: string) => {
+        patchPipeline.mutateAsync({ params: { path: { project_id: projectId } }, body: { model_id: modelId } });
+    };
+
     const handleDeleteModel = () => {
         void deleteModelMutation.mutateAsync(
-            {
-                params: {
-                    path: {
-                        project_id: projectId,
-                        model_id: model.id,
-                    },
-                },
-            },
+            { params: { path: { project_id: projectId, model_id: model.id } } },
             {
                 onSuccess: () => {
                     if (selectedModelId === model.id) {
-                        onSetSelectedModelId(undefined);
+                        handleSetModel(undefined);
                     }
 
                     toast({ type: 'success', message: `Model "${model.name}" has been deleted.` });
@@ -89,7 +92,7 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
                     toast({ type: 'error', message: `Failed to delete "${model.name}".` });
                 },
                 onSettled: () => {
-                    setIsDeleteDialogOpen(false);
+                    setOpenDialog(null);
                 },
             }
         );
@@ -105,32 +108,40 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
                     disabledKeys={disabledMenuKeys}
                     onAction={(actionKey) => {
                         if (actionKey === 'logs' && model.job?.id) {
-                            setIsLogsDialogOpen(true);
+                            setOpenDialog('logs');
                         }
                         if (actionKey === 'cancel' && model.job?.id) {
                             void handleCancelJob();
                         }
+                        if (actionKey === 'export' && canExportModel) {
+                            setOpenDialog('export');
+                        }
                         if (actionKey === 'delete' && canDeleteModel) {
-                            setIsDeleteDialogOpen(true);
+                            setOpenDialog('delete');
+                        }
+                        if (actionKey === 'activate' && hasCompletedStatus) {
+                            handleSetModel(model.id);
                         }
                     }}
                 >
+                    {hasCompletedStatus ? <Item key='activate'>Activate</Item> : null}
                     {hasJobActions ? <Item key='logs'>View logs</Item> : null}
                     {model.job?.status === 'pending' || model.job?.status === 'running' ? (
                         <Item key='cancel'>Cancel training</Item>
                     ) : null}
+                    {canExportModel ? <Item key='export'>Export model</Item> : null}
                     {canDeleteModel ? <Item key='delete'>Delete model</Item> : null}
                 </Menu>
             </MenuTrigger>
 
-            <DialogContainer type='fullscreen' onDismiss={() => setIsLogsDialogOpen(false)}>
-                {isLogsDialogOpen && model.job?.id ? (
-                    <JobLogsDialog close={() => setIsLogsDialogOpen(false)} jobId={model.job.id} />
+            <DialogContainer type='fullscreen' onDismiss={() => setOpenDialog(null)}>
+                {openDialog === 'logs' && model.job?.id ? (
+                    <JobLogsDialog close={() => setOpenDialog(null)} jobId={model.job.id} />
                 ) : null}
             </DialogContainer>
 
-            <DialogContainer onDismiss={() => setIsDeleteDialogOpen(false)}>
-                {!isDeleteDialogOpen || !canDeleteModel ? null : (
+            <DialogContainer onDismiss={() => setOpenDialog(null)}>
+                {openDialog === 'delete' && canDeleteModel ? (
                     <AlertDialog
                         variant='destructive'
                         cancelLabel='Cancel'
@@ -143,7 +154,27 @@ export const ModelActionsMenu = ({ model, selectedModelId, onSetSelectedModelId 
                     >
                         Deleting a model removes any exported artifacts and cannot be undone.
                     </AlertDialog>
-                )}
+                ) : null}
+            </DialogContainer>
+
+            <DialogContainer onDismiss={() => setOpenDialog(null)}>
+                {openDialog === 'export' && canExportModel ? (
+                    <ExportModelDialog
+                        model={model}
+                        close={() => setOpenDialog(null)}
+                        onExport={(options: ExportOptions) => {
+                            exportModel.mutate({
+                                projectId,
+                                projectName: project.name,
+                                modelId: model.id,
+                                modelName: model.name,
+                                format: options.format,
+                                formatLabel: options.formatLabel,
+                                compression: options.compression,
+                            });
+                        }}
+                    />
+                ) : null}
             </DialogContainer>
         </>
     );

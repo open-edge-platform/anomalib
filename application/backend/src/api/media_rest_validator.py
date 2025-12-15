@@ -18,11 +18,17 @@ class MediaRestValidator:
         """
         Validates a request to upload an image, if the file is not present, returns None.
 
-        :param request: FastAPI request that was made to upload the file
-        :param file: uploaded image file
-        :raises InvalidMediaException if the file name is empty or the file extension is
-        not in the supported file extensions
-        :raises PayloadTooLargeException when the total size of the request exceeds 8GB
+        Args:
+            request: FastAPI request that was made to upload the file
+            file: uploaded image file
+
+        Raises:
+            InvalidMediaException: if the file name is empty or the file extension is
+                not in the supported file extensions
+            PayloadTooLargeException: when the total size of the request exceeds 8GB
+
+        Returns:
+            UploadFile if valid, None if file is not present
         """
         if file is None:
             return None

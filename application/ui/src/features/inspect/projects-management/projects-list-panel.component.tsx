@@ -5,8 +5,6 @@
 
 import { useState } from 'react';
 
-import { $api } from '@geti-inspect/api';
-import { useProjectIdentifier } from '@geti-inspect/hooks';
 import {
     ActionButton,
     ButtonGroup,
@@ -18,12 +16,12 @@ import {
     Header,
     Heading,
     PhotoPlaceholder,
-    Text,
     View,
 } from '@geti/ui';
-import { AddCircle } from '@geti/ui/icons';
-import { v4 as uuid } from 'uuid';
 
+import { AddProjectButton } from './add-project-button/add-project-button.component';
+import { useGetProjects } from './hooks/use-get-project.hooks';
+import { useSelectedProject } from './hooks/use-selected-project.hook';
 import { ProjectsList } from './projects-list.component';
 
 import styles from './projects-list.module.scss';
@@ -44,54 +42,11 @@ const SelectedProjectButton = ({ name, id }: SelectedProjectProps) => {
     );
 };
 
-interface AddProjectProps {
-    onSetProjectInEdition: (projectId: string) => void;
-    projectsCount: number;
-}
-
-const AddProjectButton = ({ onSetProjectInEdition, projectsCount }: AddProjectProps) => {
-    const addProjectMutation = $api.useMutation('post', '/api/projects', {
-        meta: {
-            invalidates: [['get', '/api/projects']],
-        },
-    });
-
-    const addProject = () => {
-        const newProjectId = uuid();
-        const newProjectName = `Project #${projectsCount + 1}`;
-
-        addProjectMutation.mutate({
-            body: {
-                id: newProjectId,
-                name: newProjectName,
-            },
-        });
-
-        onSetProjectInEdition(newProjectId);
-    };
-
-    return (
-        <ActionButton
-            isQuiet
-            width={'100%'}
-            marginStart={'size-100'}
-            marginEnd={'size-350'}
-            UNSAFE_className={styles.addProjectButton}
-            onPress={addProject}
-        >
-            <AddCircle />
-            <Text marginX='size-50'>Add project</Text>
-        </ActionButton>
-    );
-};
-
 export const ProjectsListPanel = () => {
-    const { projectId } = useProjectIdentifier();
-    const { data } = $api.useSuspenseQuery('get', '/api/projects');
-
+    const selectedProject = useSelectedProject();
     const [projectInEdition, setProjectInEdition] = useState<string | null>(null);
+    const { projects, isFetchingNextPage, hasNextPage, fetchNextPage } = useGetProjects();
 
-    const selectedProject = data.projects.find((project) => project.id === projectId);
     const selectedProjectName = selectedProject?.name ?? '';
 
     return (
@@ -115,7 +70,10 @@ export const ProjectsListPanel = () => {
                 <Content>
                     <Divider size={'S'} marginY={'size-200'} />
                     <ProjectsList
-                        projects={data.projects}
+                        projects={projects}
+                        isLoading={isFetchingNextPage}
+                        hasNextPage={hasNextPage}
+                        onLoadMore={fetchNextPage}
                         projectIdInEdition={projectInEdition}
                         setProjectInEdition={setProjectInEdition}
                     />
@@ -123,10 +81,7 @@ export const ProjectsListPanel = () => {
                 </Content>
 
                 <ButtonGroup UNSAFE_className={styles.panelButtons}>
-                    <AddProjectButton
-                        onSetProjectInEdition={setProjectInEdition}
-                        projectsCount={data.projects.length}
-                    />
+                    <AddProjectButton onSetProjectInEdition={setProjectInEdition} projectsCount={projects.length} />
                 </ButtonGroup>
             </Dialog>
         </DialogTrigger>
