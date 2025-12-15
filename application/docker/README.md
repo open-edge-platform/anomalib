@@ -2,27 +2,47 @@
 
 ## To create CPU build
 
+### Build the container
+
 ```bash
 cd application/docker
-VIDEO_GROUP_ID=$(getent group video | cut -d: -f3) docker compose up
+docker compose build
+```
+
+### Start the container
+
+```bash
+cd application/docker
+compose up
 ```
 
 ## To create XPU build
 
-> [!NOTE]
-> You need to first set the `RENDER_GROUP_ID` environment variable to match your host system's render group ID.
+### Build the container
 
 ```bash
 cd application/docker
-RENDER_GROUP_ID=$(getent group render | cut -d: -f3) AI_DEVICE=xpu docker compose up
+AI_DEVICE=xpu docker compose build
+```
+
+### Start the container
+
+```bash
+cd application/docker
+AI_DEVICE=xpu docker compose up
 ```
 
 ## To create CUDA build
 
-> [!NOTE]
-> You need to uncomment the `deploy:` section in the `docker-compose.yml` file to enable GPU support.
+### Build the container
 
 ```bash
 cd application/docker
-AI_DEVICE=cuda docker compose up
+docker compose -f docker-compose.cuda.yaml up
+```
+### Start the container
+
+```bash
+cd application/docker
+docker compose -f docker-compose.cuda.yaml up
 ```

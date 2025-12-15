@@ -5,9 +5,13 @@ FROM node:24-alpine3.22@sha256:3e843c608bb5232f39ecb2b25e41214b958b0795914707374
 
 WORKDIR /home/app/web_ui/
 
+# Install git for degit
+RUN apk add --no-cache git
+
+
 COPY --link application/ui/package.json ./package.json
 COPY --link application/ui/package-lock.json ./package-lock.json
-RUN npm ci --audit=false --ignore-scripts
+RUN npm ci --audit=false
 
 
 COPY --link application/ui/tsconfig.json ./tsconfig.json
@@ -35,8 +39,6 @@ libglib2.0-0 \
 g++ \
 && rm -rf /var/lib/apt/lists/* \
 && apt-get clean
-
-# RUN groupadd -f render && groupadd -f video && usermod -aG render,video $(whoami)
 
 ENV PATH=/app/.venv/bin:$PATH
 WORKDIR /app
