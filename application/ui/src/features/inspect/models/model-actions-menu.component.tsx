@@ -7,7 +7,8 @@ import { MoreMenu } from '@geti/ui/icons';
 
 import type { ModelData } from '../../../hooks/utils';
 import { JobLogsDialog } from '../jobs/show-job-logs.component';
-import { ExportModelDialog } from './export-model-dialog.component';
+import { ExportModelDialog, type ExportOptions } from './export-model-dialog.component';
+import { useExportModel } from './hooks/use-export-model.hook';
 
 interface ModelActionsMenuProps {
     model: ModelData;
@@ -18,8 +19,12 @@ type DialogType = 'logs' | 'delete' | 'export' | null;
 
 export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuProps) => {
     const { projectId } = useProjectIdentifier();
+    const { data: project } = $api.useSuspenseQuery('get', '/api/projects/{project_id}', {
+        params: { path: { project_id: projectId } },
+    });
     const patchPipeline = usePatchPipeline(projectId);
     const [openDialog, setOpenDialog] = useState<DialogType>(null);
+    const exportModel = useExportModel();
 
     const cancelJobMutation = $api.useMutation('post', '/api/jobs/{job_id}:cancel');
     const deleteModelMutation = $api.useMutation('delete', '/api/projects/{project_id}/models/{model_id}', {
@@ -154,7 +159,21 @@ export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuPro
 
             <DialogContainer onDismiss={() => setOpenDialog(null)}>
                 {openDialog === 'export' && canExportModel ? (
-                    <ExportModelDialog model={model} close={() => setOpenDialog(null)} />
+                    <ExportModelDialog
+                        model={model}
+                        close={() => setOpenDialog(null)}
+                        onExport={(options: ExportOptions) => {
+                            exportModel.mutate({
+                                projectId,
+                                projectName: project.name,
+                                modelId: model.id,
+                                modelName: model.name,
+                                format: options.format,
+                                formatLabel: options.formatLabel,
+                                compression: options.compression,
+                            });
+                        }}
+                    />
                 ) : null}
             </DialogContainer>
         </>

@@ -98,6 +98,7 @@ class ImagesFolderStream(VideoStream):
             if image is None:
                 # Image cannot be loaded
                 return None
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
             return StreamData(
                 frame_data=image,
                 timestamp=os.path.getmtime(file),

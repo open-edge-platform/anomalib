@@ -9,6 +9,7 @@
     }
 }
 
-.active {
-    border-left: var(--spectrum-global-dimension-size-50) solid var(--aqua) !important;
+.activeCard {
+    background: var(--selection-dark-blue) !important;
+    border: var(--spectrum-global-dimension-size-25) solid var(--energy-blue) !important;
 }

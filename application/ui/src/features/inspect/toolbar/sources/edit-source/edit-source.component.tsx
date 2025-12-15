@@ -42,7 +42,7 @@ export const EditSource = <T extends SourceConfig>({
     });
 
     return (
-        <Form action={submitAction}>
+        <Form validationBehavior={'native'} action={submitAction}>
             <Flex gap={'size-100'} alignItems={'center'} marginTop={'0px'} justifyContent={'space-between'}>
                 <ActionButton isQuiet onPress={onBackToList}>
                     <Back />

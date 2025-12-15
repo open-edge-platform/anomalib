@@ -294,11 +294,9 @@ class ModelService:
         """Run the complete prediction pipeline in a single thread."""
         # Process image
         npd = np.frombuffer(image_bytes, np.uint8)
-        bgr_image = cv2.imdecode(npd, -1)
-        if bgr_image is None:
+        numpy_image = cv2.imdecode(npd, -1)
+        if numpy_image is None:
             raise ValueError("Failed to decode image")
-
-        numpy_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
 
         # Run prediction
         pred = inference_model.predict(numpy_image)

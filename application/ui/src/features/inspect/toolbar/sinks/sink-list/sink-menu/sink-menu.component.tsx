@@ -61,13 +61,6 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
 
     const handleDelete = async () => {
         try {
-            if (isConnected) {
-                await updatePipeline.mutateAsync({
-                    params: { path: { project_id: projectId } },
-                    body: { sink_id: null },
-                });
-            }
-
             await removeSink.mutateAsync({ params: { path: { sink_id: id, project_id: projectId } } });
 
             toast({
@@ -87,7 +80,7 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
             <ActionButton isQuiet aria-label='sink menu'>
                 <MoreMenu />
             </ActionButton>
-            <Menu onAction={handleOnAction} disabledKeys={isConnected ? ['connect'] : []}>
+            <Menu onAction={handleOnAction} disabledKeys={isConnected ? ['connect', 'remove'] : []}>
                 <Item key='connect'>Connect</Item>
                 <Item key='edit'>Edit</Item>
                 <Item key='remove'>Remove</Item>

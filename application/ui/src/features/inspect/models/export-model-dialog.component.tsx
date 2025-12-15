@@ -1,29 +1,32 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { useState } from 'react';
 
-import { $api, fetchClient } from '@geti-inspect/api';
-import { useProjectIdentifier } from '@geti-inspect/hooks';
 import {
     Button,
     ButtonGroup,
     Content,
+    ContextualHelp,
     Dialog,
     Divider,
     Flex,
     Heading,
     Item,
+    Link,
     Picker,
     Text,
-    toast,
     type Key,
 } from '@geti/ui';
-import { useMutation } from '@tanstack/react-query';
 import type { SchemaCompressionType, SchemaExportType } from 'src/api/openapi-spec';
 import { Onnx, OpenVino, PyTorch } from 'src/assets/icons';
 
 import type { ModelData } from '../../../hooks/utils';
-import { downloadBlob, sanitizeFilename } from '../utils';
 
 import classes from './export-model-dialog.module.scss';
+
+const openvinoDocsUrl =
+    'https://docs.openvino.ai/2025/openvino-workflow/model-optimization-guide/quantizing-models-post-training.html';
 
 const EXPORT_FORMATS: { id: SchemaExportType; name: string; Icon: React.FC<React.SVGProps<SVGSVGElement>> }[] = [
     { id: 'openvino', name: 'OpenVINO', Icon: OpenVino },
@@ -39,58 +42,21 @@ const COMPRESSION_OPTIONS: { id: SchemaCompressionType | 'none'; name: string }[
     { id: 'int8_acq', name: 'INT8 ACQ' },
 ];
 
+export interface ExportOptions {
+    format: SchemaExportType;
+    formatLabel: string;
+    compression: SchemaCompressionType | null;
+}
+
 interface ExportModelDialogProps {
     model: ModelData;
     close: () => void;
+    onExport: (options: ExportOptions) => void;
 }
 
-export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
-    const { projectId } = useProjectIdentifier();
-    const { data: project } = $api.useSuspenseQuery('get', '/api/projects/{project_id}', {
-        params: { path: { project_id: projectId } },
-    });
+export const ExportModelDialog = ({ model, close, onExport }: ExportModelDialogProps) => {
     const [selectedFormat, setSelectedFormat] = useState<SchemaExportType>('openvino');
     const [selectedCompression, setSelectedCompression] = useState<SchemaCompressionType | 'none'>('none');
-
-    const exportMutation = useMutation({
-        mutationFn: async () => {
-            const compression = selectedCompression === 'none' ? null : selectedCompression;
-
-            const response = await fetchClient.POST('/api/projects/{project_id}/models/{model_id}:export', {
-                params: {
-                    path: {
-                        project_id: projectId,
-                        model_id: model.id,
-                    },
-                },
-                body: {
-                    format: selectedFormat,
-                    compression,
-                },
-                parseAs: 'blob',
-            });
-
-            if (response.error) {
-                throw new Error('Export failed');
-            }
-
-            const blob = response.data as Blob;
-            const compressionSuffix = compression ? `_${compression}` : '';
-            const sanitizedProjectName = sanitizeFilename(project.name);
-            const sanitizedModelName = sanitizeFilename(model.name);
-            const filename = `${sanitizedProjectName}_${sanitizedModelName}_${selectedFormat}${compressionSuffix}.zip`;
-
-            return { blob, filename };
-        },
-        onSuccess: ({ blob, filename }) => {
-            downloadBlob(blob, filename);
-            toast({ type: 'success', message: `Model "${model.name}" exported successfully.` });
-            close();
-        },
-        onError: () => {
-            toast({ type: 'error', message: `Failed to export model "${model.name}".` });
-        },
-    });
 
     const handleFormatChange = (value: string) => {
         const format = value as SchemaExportType;
@@ -104,6 +70,14 @@ export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
     const handleCompressionChange = (key: Key | null) => {
         if (key === null) return;
         setSelectedCompression(key as SchemaCompressionType | 'none');
+    };
+
+    const handleExport = () => {
+        const formatLabel = EXPORT_FORMATS.find((f) => f.id === selectedFormat)?.name ?? selectedFormat;
+        const compression = selectedCompression === 'none' ? null : selectedCompression;
+
+        onExport({ format: selectedFormat, formatLabel, compression });
+        close();
     };
 
     return (
@@ -143,6 +117,41 @@ export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
                             selectedKey={selectedCompression}
                             onSelectionChange={handleCompressionChange}
                             width='100%'
+                            contextualHelp={
+                                <ContextualHelp>
+                                    <Heading>Compression Types</Heading>
+                                    <Content>
+                                        <Flex direction='column' gap='size-100'>
+                                            <Text>
+                                                <strong>FP16:</strong> Weight compression to FP16 precision. All weights
+                                                are converted to FP16.
+                                            </Text>
+                                            <Text>
+                                                <strong>INT8:</strong> Weight compression to INT8 precision. All weights
+                                                are quantized to INT8, but are dequantized to floating point before
+                                                inference.
+                                            </Text>
+                                            <Text>
+                                                <strong>INT8_PTQ:</strong> Full integer post-training quantization to
+                                                INT8 precision. All weights and operations are quantized to INT8.
+                                                Inference is performed in INT8 precision.
+                                            </Text>
+                                            <Text>
+                                                <strong>INT8_ACQ:</strong> Accuracy-control quantization to INT8
+                                                precision. Weights and operations are quantized to INT8, except those
+                                                that would degrade model quality beyond an acceptable threshold.
+                                                Inference uses mixed precision.
+                                            </Text>
+                                            <Text>
+                                                More info:{' '}
+                                                <Link href={openvinoDocsUrl} target='_blank' rel='noopener noreferrer'>
+                                                    OpenVINO Quantization Documentation
+                                                </Link>
+                                            </Text>
+                                        </Flex>
+                                    </Content>
+                                </ContextualHelp>
+                            }
                         >
                             {(item) => <Item key={item.id}>{item.name}</Item>}
                         </Picker>
@@ -150,15 +159,10 @@ export const ExportModelDialog = ({ model, close }: ExportModelDialogProps) => {
                 </Flex>
             </Content>
             <ButtonGroup>
-                <Button variant='secondary' onPress={close} isDisabled={exportMutation.isPending}>
+                <Button variant='secondary' onPress={close}>
                     Cancel
                 </Button>
-                <Button
-                    variant='accent'
-                    onPress={() => exportMutation.mutate()}
-                    isPending={exportMutation.isPending}
-                    isDisabled={exportMutation.isPending}
-                >
+                <Button variant='accent' onPress={handleExport}>
                     Export
                 </Button>
             </ButtonGroup>

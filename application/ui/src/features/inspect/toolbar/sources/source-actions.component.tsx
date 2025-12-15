@@ -14,9 +14,9 @@ import { SourceOptions } from './source-options.component';
 import { SourceConfig } from './util';
 
 export const SourceActions = () => {
-    const { sources, isFetchingNextPage, isLoading, fetchNextPage } = useGetSources();
     const [view, setView] = useState<'list' | 'options' | 'edit'>('list');
     const [currentSource, setCurrentSource] = useState<SourceConfig | null>(null);
+    const { sources, isFetchingNextPage, isLoading, hasNextPage, fetchNextPage } = useGetSources();
 
     const handleShowList = () => {
         setView('list');
@@ -44,6 +44,7 @@ export const SourceActions = () => {
             <SourcesList
                 sources={sources}
                 isLoading={isFetchingNextPage}
+                hasNextPage={hasNextPage}
                 onLoadMore={fetchNextPage}
                 onAddSource={handleAddSource}
                 onEditSource={handleEditSource}

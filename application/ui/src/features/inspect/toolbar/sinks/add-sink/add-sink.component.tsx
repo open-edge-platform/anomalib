@@ -27,7 +27,7 @@ export const AddSink = <T extends SinkConfig>({ config, onSaved, bodyFormatter, 
     });
 
     return (
-        <Form action={submitAction}>
+        <Form validationBehavior={'native'} action={submitAction}>
             <>{componentFields(state)}</>
 
             <Button type='submit' isDisabled={isPending} UNSAFE_style={{ maxWidth: 'fit-content' }}>

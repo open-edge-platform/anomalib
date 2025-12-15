@@ -19,10 +19,12 @@ export const Fps = ({ projectId }: FpsProp) => {
         'get',
         '/api/projects/{project_id}/pipeline/metrics',
         { params: { path: { project_id: projectId } } },
-        { enabled: isRunning }
+        { enabled: isRunning, refetchInterval: 2_000 }
     );
 
-    const requestsPerSecond = metrics?.inference.throughput.avg_requests_per_second;
+    const requestsPerSecond = metrics?.inference.latency.latest_ms
+        ? 1000 / metrics.inference.latency.latest_ms
+        : undefined;
 
     if (isEmpty(metrics) || isNil(requestsPerSecond)) {
         return null;

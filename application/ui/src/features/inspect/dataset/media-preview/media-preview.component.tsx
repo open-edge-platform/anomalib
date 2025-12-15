@@ -1,7 +1,19 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, ButtonGroup, Content, Dialog, dimensionValue, Divider, Grid, Header, Heading, View } from '@geti/ui';
+import {
+    Button,
+    ButtonGroup,
+    Content,
+    Dialog,
+    dimensionValue,
+    Divider,
+    Grid,
+    Header,
+    Heading,
+    Size,
+    View,
+} from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { MediaItem } from '../types';
@@ -13,11 +25,30 @@ import { SidebarItems } from './sidebar-items/sidebar-items.component';
 type MediaPreviewProps = {
     mediaItems: MediaItem[];
     selectedMediaItem: MediaItem;
+    hasNextPage: boolean;
+    isLoadingMore: boolean;
     onClose: () => void;
-    onSelectedMediaItem: (mediaItem: string | null) => void;
+    loadMore: () => void;
+    onSelectedMediaItem: (mediaItem: string | null) => Promise<URLSearchParams>;
 };
 
-export const MediaPreview = ({ mediaItems, selectedMediaItem, onClose, onSelectedMediaItem }: MediaPreviewProps) => {
+const layoutOptions = {
+    maxColumns: 1,
+    minSpace: new Size(8, 8),
+    minItemSize: new Size(120, 120),
+    maxItemSize: new Size(120, 120),
+    preserveAspectRatio: true,
+};
+
+export const MediaPreview = ({
+    mediaItems,
+    hasNextPage,
+    isLoadingMore,
+    selectedMediaItem,
+    loadMore,
+    onClose,
+    onSelectedMediaItem,
+}: MediaPreviewProps) => {
     const { data: inferenceResult } = useMediaItemInference(selectedMediaItem);
 
     return (
@@ -46,7 +77,11 @@ export const MediaPreview = ({ mediaItems, selectedMediaItem, onClose, onSelecte
                     <View gridArea={'sidebar'}>
                         <SidebarItems
                             mediaItems={mediaItems}
+                            hasNextPage={hasNextPage}
+                            isLoadingMore={isLoadingMore}
+                            layoutOptions={layoutOptions}
                             selectedMediaItem={selectedMediaItem}
+                            loadMore={loadMore}
                             onSelectedMediaItem={onSelectedMediaItem}
                         />
                     </View>

@@ -12,8 +12,14 @@ export const MqttFields = ({ defaultState }: MqttFieldsProps) => {
         <Flex direction='column' gap='size-200'>
             <TextField isHidden label='id' name='id' defaultValue={defaultState.id} />
             <TextField isHidden label='project_id' name='project_id' defaultValue={defaultState.project_id} />
-            <TextField width='100%' label='Name' name='name' defaultValue={defaultState.name} />
-            <TextField width='100%' label='Broker Host' name='broker_host' defaultValue={defaultState.broker_host} />
+            <TextField isRequired width='100%' label='Name' name='name' defaultValue={defaultState.name} />
+            <TextField
+                isRequired
+                width='100%'
+                label='Broker Host'
+                name='broker_host'
+                defaultValue={defaultState.broker_host}
+            />
 
             <Flex direction='row' gap='size-200'>
                 <TextField flex='1' label='Topic' name='topic' defaultValue={defaultState.topic} />

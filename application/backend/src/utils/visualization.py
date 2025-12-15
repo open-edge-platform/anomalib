@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 from loguru import logger
 
-from pydantic_models import PredictionResponse
+from pydantic_models import PredictionLabel, PredictionResponse
 
 
 class Visualizer:
@@ -46,7 +46,7 @@ class Visualizer:
     def overlay_anomaly_heatmap(
         base_image: np.ndarray,
         prediction: PredictionResponse,
-        threshold_value: int = 128,
+        threshold: float = 0.5,
         alpha: float = 0.25,
     ) -> np.ndarray:
         """Overlay the anomaly heatmap onto the image.
@@ -58,45 +58,30 @@ class Visualizer:
         - Blend onto the base image using alpha
         """
         try:
-            anomaly_map_base64 = prediction.anomaly_map
-            result = base_image.copy()
-            try:
-                anomaly_png_bytes = base64.b64decode(anomaly_map_base64)
-                anomaly_np = np.frombuffer(anomaly_png_bytes, dtype=np.uint8)
-                anomaly_img = cv2.imdecode(anomaly_np, cv2.IMREAD_UNCHANGED)
-            except Exception:
-                return result
+            # Decode anomaly map
+            anomaly_bytes = base64.b64decode(prediction.anomaly_map)
+            anomaly_img = cv2.imdecode(np.frombuffer(anomaly_bytes, dtype=np.uint8), cv2.IMREAD_GRAYSCALE)
 
             if anomaly_img is None:
-                return result
+                return base_image
 
-            try:
-                if anomaly_img.ndim == 3 and anomaly_img.shape[2] > 1:
-                    anomaly_gray = cv2.cvtColor(anomaly_img, cv2.COLOR_BGR2GRAY)
-                else:
-                    anomaly_gray = anomaly_img
+            # Resize to match base image
+            h, w = base_image.shape[:2]
+            anomaly_gray = cv2.resize(anomaly_img, (w, h))
 
-                if anomaly_gray.dtype != np.uint8:
-                    anomaly_gray = anomaly_gray.astype(np.uint8)
+            # Apply colormap and create threshold mask
+            heatmap = cv2.applyColorMap(anomaly_gray, cv2.COLORMAP_JET)
+            mask = anomaly_gray >= (threshold * 255)
 
-                heatmap = cv2.applyColorMap(anomaly_gray, cv2.COLORMAP_JET)
-                heatmap_resized = cv2.resize(heatmap, (result.shape[1], result.shape[0]))
+            # Create masked heatmap (only show where above threshold)
+            masked_heatmap = np.zeros_like(heatmap)
+            masked_heatmap[mask] = heatmap[mask]
 
-                mask_gray = cv2.resize(anomaly_gray, (result.shape[1], result.shape[0]))
-                mask_bool = mask_gray >= threshold_value
-
-                masked_heatmap = np.zeros_like(heatmap_resized)
-                try:
-                    masked_heatmap[mask_bool] = heatmap_resized[mask_bool]
-                except Exception as e:
-                    logger.debug(f"Failed to apply heatmap mask: {e}")
-
-                result = cv2.addWeighted(result, 1.0, masked_heatmap, alpha, 0)
-            except Exception as e:
-                logger.debug(f"Failed to overlay heatmap: {e}")
-            return result
+            # Blend onto base image
+            result = base_image.copy()
+            return cv2.addWeighted(result, 1.0, masked_heatmap, alpha, 0)
         except Exception as e:
-            logger.debug(f"Failed in overlay_anomaly_heatmap: {e}")
+            logger.debug(f"Failed to overlay heatmap: {e}")
             return base_image
 
     @staticmethod
@@ -104,20 +89,27 @@ class Visualizer:
         base_image: np.ndarray,
         prediction: PredictionResponse,
         *,
-        position: tuple[int, int] = (10, 20),
-        font_scale: float = 2.0,
-        thickness: int = 3,
-        text_color: tuple[int, int, int] = (0, 255, 0),
-        background_color: tuple[int, int, int] = (0, 0, 0),
+        position: tuple[int, int] = (5, 5),
+        font_scale: float = 1.0,
+        thickness: int = 2,
     ) -> np.ndarray:
         """Draw the prediction label with a background rectangle for readability."""
+        alpha = 0.85
+        text_color = (36, 37, 40)
+        green = (139, 174, 70)
+        red = (255, 86, 98)
+        background_color: tuple[int, int, int] = green if prediction.label == PredictionLabel.NORMAL else red
         try:
-            label_text = f"{prediction.label.value} ({prediction.score:.3f})"
+            label_text = f"{prediction.label.value} {int(prediction.score * 100)}%"
             result = base_image.copy()
             font = cv2.FONT_HERSHEY_SIMPLEX
             (text_w, text_h), _ = cv2.getTextSize(label_text, font, font_scale, thickness)
             x, y = position[0], position[1] + text_h
-            cv2.rectangle(result, (x - 8, y - text_h - 8), (x - 8 + text_w + 16, y + 8), background_color, -1)
+            # Create overlay for transparent background
+            overlay = result.copy()
+            cv2.rectangle(overlay, (x - 8, y - text_h - 8), (x - 8 + text_w + 16, y + 8), background_color[::-1], -1)
+            result = cv2.addWeighted(result, 1.0 - alpha, overlay, alpha, 0)
+
             cv2.putText(result, label_text, (x, y), font, font_scale, text_color, thickness, cv2.LINE_AA)
             return result
         except Exception as e:

@@ -35,7 +35,7 @@ export const AddSource = <T extends SourceConfig>({
     });
 
     return (
-        <Form action={submitAction}>
+        <Form validationBehavior={'native'} action={submitAction}>
             <Flex gap={'size-200'} direction={'column'}>
                 <>{componentFields(state)}</>
 

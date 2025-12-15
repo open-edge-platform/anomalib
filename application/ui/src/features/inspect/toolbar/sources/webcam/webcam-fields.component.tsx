@@ -1,11 +1,12 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { $api } from '@geti-inspect/api';
 import { ActionButton, Flex, Item, Key, Loading, Picker, TextField } from '@geti/ui';
 import { Refresh } from '@geti/ui/icons';
+import { isEmpty } from 'lodash-es';
 
 import { WebcamSourceConfig } from '../util';
 
@@ -14,9 +15,10 @@ type WebcamFieldsProps = {
 };
 
 export const WebcamFields = ({ defaultState }: WebcamFieldsProps) => {
-    const { data: cameraDevices, isLoading, isRefetching, refetch } = $api.useQuery('get', '/api/devices/camera');
     const [name, setName] = useState(defaultState.name);
-    const [isModified, setIsModified] = useState(false);
+    const isSystemName = useRef(isEmpty(defaultState.name));
+
+    const { data: cameraDevices, isLoading, isRefetching, refetch } = $api.useQuery('get', '/api/devices/camera');
 
     const devices = (cameraDevices?.devices ?? []).map((device) => ({
         id: device.index,
@@ -25,18 +27,13 @@ export const WebcamFields = ({ defaultState }: WebcamFieldsProps) => {
 
     const handleNameChange = (value: string) => {
         setName(value);
-        setIsModified(true);
+        isSystemName.current = false;
     };
 
     const handleSelectionChange = (key: Key | null) => {
-        if (key === null) {
-            return;
-        }
+        const device = devices.find(({ id }) => id === Number(key));
 
-        const device = devices.find((d) => d.id === Number(key));
-
-        // if user modifies the name field, don't override it
-        if (device && (!isModified || !name?.trim())) {
+        if (device && isSystemName.current) {
             setName(device.name);
         }
     };
@@ -46,24 +43,33 @@ export const WebcamFields = ({ defaultState }: WebcamFieldsProps) => {
             <TextField isHidden label='id' name='id' defaultValue={defaultState?.id} />
             <TextField isHidden label='project_id' name='project_id' defaultValue={defaultState.project_id} />
             <TextField isHidden label='name' name='name' value={name} />
-            <TextField width={'100%'} label='Name' name='name_display' value={name} onChange={handleNameChange} />
+            <TextField
+                isRequired
+                width='100%'
+                label='Name'
+                name='name_display'
+                value={name}
+                onChange={handleNameChange}
+            />
 
             <Flex alignItems='end' gap='size-200'>
                 <Picker
                     flex='1'
+                    isRequired
                     label='Camera'
                     name='device_id'
                     items={devices}
                     isLoading={isLoading}
-                    defaultSelectedKey={defaultState.device_id}
+                    aria-label='Camera list'
+                    defaultSelectedKey={String(defaultState.device_id)}
                     onSelectionChange={handleSelectionChange}
                 >
                     {(item) => <Item key={item.id}>{item.name}</Item>}
                 </Picker>
 
                 <ActionButton
-                    onPress={() => refetch()}
                     isQuiet
+                    onPress={() => refetch()}
                     aria-label='Refresh Cameras'
                     isDisabled={isLoading || isRefetching}
                 >
