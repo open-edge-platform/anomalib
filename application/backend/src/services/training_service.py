@@ -9,6 +9,7 @@ from anomalib.data import Folder
 from anomalib.data.utils import ValSplitMode
 from anomalib.deploy import ExportType
 from anomalib.engine import Engine
+from anomalib.engine.strategy.xpu_single import SingleXPUStrategy
 from anomalib.loggers import AnomalibTensorBoardLogger
 from anomalib.metrics import AUROC, F1Score
 from anomalib.metrics.evaluator import Evaluator
@@ -23,7 +24,6 @@ from services.dataset_snapshot_service import DatasetSnapshotService
 from services.job_service import JobService
 from utils.callbacks import GetiInspectProgressCallback, ProgressSyncParams
 from utils.devices import Devices
-from utils.experiment_loggers import TrackioLogger
 
 
 class TrainingService:
@@ -219,11 +219,13 @@ class TrainingService:
             ),
         )
 
-        trackio = TrackioLogger(project=str(model.project_id), name=model.name)
         tensorboard = AnomalibTensorBoardLogger(save_dir=global_log_config.tensorboard_log_path, name=name)
+        kwargs = {}
+        if training_device == "xpu":
+            kwargs["strategy"] = SingleXPUStrategy()
         engine = Engine(
             default_root_dir=model.export_path,
-            logger=[trackio, tensorboard],
+            logger=[tensorboard],
             devices=[0],  # Only single GPU training is supported for now
             max_epochs=max_epochs,
             callbacks=[
@@ -231,6 +233,7 @@ class TrainingService:
                 EarlyStopping(monitor="pixel_AUROC", mode="max", patience=5),
             ],
             accelerator=training_device,
+            **kwargs,
         )
 
         # Execute training and export
