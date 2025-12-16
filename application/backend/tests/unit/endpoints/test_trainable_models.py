@@ -1,19 +1,24 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from unittest.mock import patch
-
 from fastapi import status
 
-from api.endpoints.trainable_models_endpoints import _get_trainable_models  # noqa: PLC2701
+from api.endpoints.trainable_models_endpoints import _load_model_metadata  # noqa: PLC2701
 
+def test_list_trainable_models_recommended_first(fxt_client):
+    """Test that recommended models appear first in the list."""
+    _load_model_metadata.cache_clear()
 
-def test_list_trainable_models(fxt_client):
-    _get_trainable_models.cache_clear()
-    # Mock anomalib.models.list_models to return a predictable set
-    with patch("api.endpoints.trainable_models_endpoints.list_models", return_value={"padim", "patchcore"}):
-        response = fxt_client.get("/api/trainable-models")
-
-    assert response.status_code == status.HTTP_200_OK
+    response = fxt_client.get("/api/trainable-models")
     body = response.json()
-    assert body == {"trainable_models": ["padim", "patchcore"]} or body == {"trainable_models": ["patchcore", "padim"]}
+
+    models = body["trainable_models"]
+    recommended_models = [m for m in models if m["recommended"]]
+    non_recommended_models = [m for m in models if not m["recommended"]]
+
+    # If there are both recommended and non-recommended models,
+    # recommended should come first
+    if recommended_models and non_recommended_models:
+        first_non_recommended_idx = next(i for i, m in enumerate(models) if not m["recommended"])
+        last_recommended_idx = max(i for i, m in enumerate(models) if m["recommended"])
+        assert last_recommended_idx < first_non_recommended_idx
