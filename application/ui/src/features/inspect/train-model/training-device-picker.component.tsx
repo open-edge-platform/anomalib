@@ -32,18 +32,12 @@ export const useTrainingDevice = (): UseTrainingDeviceResult => {
         const preferredDevice = selectPreferredDevice(devices);
 
         if (selectedDevice === null) {
-            if (preferredDevice !== null || devices.length > 0) {
-                setSelectedDevice(preferredDevice ?? devices[0]);
-            }
+            setSelectedDevice(preferredDevice ?? devices[0]);
             return;
         }
 
         if (!devices.includes(selectedDevice)) {
-            if (preferredDevice !== null || devices.length > 0) {
-                setSelectedDevice(preferredDevice ?? devices[0]);
-            } else {
-                setSelectedDevice(null);
-            }
+            setSelectedDevice(preferredDevice ?? devices[0]);
         }
     }, [devices, hasDevices, selectedDevice]);
 
