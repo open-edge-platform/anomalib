@@ -2,12 +2,26 @@ import { Suspense, useState } from 'react';
 
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
-import { Button, ButtonGroup, Content, Dialog, Divider, Flex, Heading, Loading, RadioGroup, View } from '@geti/ui';
+import {
+    Button,
+    ButtonGroup,
+    Content,
+    ContextualHelp,
+    Dialog,
+    Divider,
+    Flex,
+    Heading,
+    Loading,
+    NumberField,
+    RadioGroup,
+    Text,
+    View,
+} from '@geti/ui';
 import { useSearchParams } from 'react-router-dom';
 import { toast as sonnerToast } from 'sonner';
 
-import { TrainModelDevicePicker } from './train-model-device-picker.component';
 import { TrainableModelListBox } from './trainable-model-list-box.component';
+import { TrainingDevicePicker, useTrainingDevice } from './training-device-picker.component';
 
 import classes from './train-model.module.scss';
 
@@ -17,7 +31,11 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
     const startTrainingMutation = $api.useMutation('post', '/api/jobs:train', {
         meta: { invalidates: [['get', '/api/jobs']] },
     });
-    const { data: availableDevices } = $api.useSuspenseQuery('get', '/api/devices/training');
+
+    const { selectedDevice, setSelectedDevice, devices } = useTrainingDevice();
+    const [selectedModel, setSelectedModel] = useState<string | null>(null);
+    const [maxEpochs, setMaxEpochs] = useState<number>(200);
+
     const startTraining = async () => {
         if (selectedModel === null || selectedDevice === null) {
             return;
@@ -28,6 +46,7 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
                 project_id: projectId,
                 model_name: selectedModel,
                 device: selectedDevice,
+                max_epochs: maxEpochs,
             },
         });
 
@@ -37,8 +56,6 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
         searchParams.set('mode', 'Models');
         setSearchParams(searchParams);
     };
-    const [selectedModel, setSelectedModel] = useState<string | null>(null);
-    const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
 
     const isStartDisabled = selectedModel === null || selectedDevice === null || startTrainingMutation.isPending;
 
@@ -56,15 +73,21 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
                     minWidth={'60vw'}
                 >
                     <Flex direction='column' gap='size-300'>
-                        <TrainModelDevicePicker
-                            devices={availableDevices.devices ?? []}
-                            selectedDevice={selectedDevice}
-                            onSelect={setSelectedDevice}
-                        />
                         <Flex direction='column' gap='size-150'>
-                            <Heading level={4} margin={0}>
-                                Select model template
-                            </Heading>
+                            <Flex alignItems='center' gap='size-100'>
+                                <Heading level={4} margin={0}>
+                                    Select model
+                                </Heading>
+                                <ContextualHelp variant='info'>
+                                    <Heading>Recommended models</Heading>
+                                    <Content>
+                                        <Text>
+                                            Recommended models consistently provide strong accuracy with a practical
+                                            balance of training and inference efficiency.
+                                        </Text>
+                                    </Content>
+                                </ContextualHelp>
+                            </Flex>
                             <RadioGroup
                                 isEmphasized
                                 aria-label={`Select a model to train`}
@@ -80,6 +103,42 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
                                     <TrainableModelListBox selectedModelTemplateId={selectedModel} />
                                 </Suspense>
                             </RadioGroup>
+                        </Flex>
+                        <Flex direction='column' gap='size-150'>
+                            <Heading level={4} margin={0}>
+                                Training device
+                            </Heading>
+                            <TrainingDevicePicker
+                                selectedDevice={selectedDevice}
+                                onDeviceChange={setSelectedDevice}
+                                devices={devices}
+                            />
+                        </Flex>
+                        <Flex direction='column' gap='size-150'>
+                            <Flex alignItems='center' gap='size-100'>
+                                <Heading level={4} margin={0}>
+                                    Max epochs
+                                </Heading>
+                                <ContextualHelp variant='info'>
+                                    <Heading>Max epochs</Heading>
+                                    <Content>
+                                        <Text>
+                                            Maximum number of training epochs. Some models (e.g., PaDiM, PatchCore) only
+                                            require a single pass through the training data and will override this value
+                                            to 1 epoch.
+                                        </Text>
+                                    </Content>
+                                </ContextualHelp>
+                            </Flex>
+                            <NumberField
+                                aria-label='Maximum number of training epochs'
+                                value={maxEpochs}
+                                onChange={setMaxEpochs}
+                                minValue={1}
+                                maxValue={10000}
+                                width='size-1000'
+                                hideStepper
+                            />
                         </Flex>
                     </Flex>
                 </View>
