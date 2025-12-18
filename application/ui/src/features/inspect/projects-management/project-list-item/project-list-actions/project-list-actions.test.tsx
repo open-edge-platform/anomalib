@@ -16,7 +16,7 @@ const renderWithProviders = (ui: React.ReactElement, { route = '/projects/projec
             <ThemeProvider>
                 <MemoryRouter initialEntries={[route]}>
                     <Routes>
-                        <Route path='/projects/:projectId/in' element={ui} />
+                        <Route path='/projects/:projectId/inspect' element={ui} />
                     </Routes>
                 </MemoryRouter>
             </ThemeProvider>

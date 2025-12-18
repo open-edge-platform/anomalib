@@ -29,7 +29,7 @@ const ProjectImage = ({ projectId, projectName, size }: ProjectThumbnailProps & 
             />
         );
     }
-    return <PhotoPlaceholder name={projectName} indicator={projectId ?? projectName} height={size} width={size} />;
+    return <PhotoPlaceholder name={projectName} indicator={projectId} height={size} width={size} />;
 };
 
 export const ProjectThumbnail = ({ projectId, projectName, size = 'size-300' }: ProjectThumbnailProps) => {
