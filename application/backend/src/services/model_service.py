@@ -335,6 +335,10 @@ class ModelService:
         if numpy_image is None:
             raise ValueError("Failed to decode image")
 
+        # Remove alpha channel
+        if len(numpy_image.shape) == 3 and numpy_image.shape[-1] == 4:
+            numpy_image = cv2.cvtColor(numpy_image, cv2.COLOR_RGBA2RGB)
+
         # Run prediction
         pred = inference_model.predict(numpy_image)
 
