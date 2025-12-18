@@ -4,7 +4,6 @@
 import { Content, ContextualHelp, Flex, Heading, Link, Radio, Text } from '@geti/ui';
 import { clsx } from 'clsx';
 
-import { ModelMetricsDisplay } from './model-metrics-display.component';
 import { ModelTag } from './model-tag.component';
 import { FAMILY_DISPLAY_NAMES, type ModelFamily, type TrainableModel } from './types';
 
@@ -50,7 +49,12 @@ export const TrainableModelCard = ({ model, isSelected }: TrainableModelCardProp
                 </Flex>
 
                 <Flex direction='column' gap='size-100'>
-                    <ModelMetricsDisplay metrics={model.metrics} parameters={model.parameters} />
+                    <Flex direction='row' alignItems='baseline' gap='size-100'>
+                        <Heading margin={0} UNSAFE_className={classes.attributeRatingTitle}>
+                            Params
+                        </Heading>
+                        <Text UNSAFE_className={classes.attributeRatingValue}>{model.parameters}M</Text>
+                    </Flex>
 
                     <Flex alignItems='center' justifyContent='space-between'>
                         <Text UNSAFE_className={classes.modelLicense}>{model.license}</Text>

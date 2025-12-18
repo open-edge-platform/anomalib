@@ -12,7 +12,6 @@ import {
     Flex,
     Heading,
     Loading,
-    NumberField,
     RadioGroup,
     Text,
     View,
@@ -34,7 +33,6 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
 
     const { selectedDevice, setSelectedDevice, devices } = useTrainingDevice();
     const [selectedModel, setSelectedModel] = useState<string | null>(null);
-    const [maxEpochs, setMaxEpochs] = useState<number>(200);
 
     const startTraining = async () => {
         if (selectedModel === null || selectedDevice === null) {
@@ -46,7 +44,6 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
                 project_id: projectId,
                 model_name: selectedModel,
                 device: selectedDevice,
-                max_epochs: maxEpochs,
             },
         });
 
@@ -112,32 +109,6 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
                                 selectedDevice={selectedDevice}
                                 onDeviceChange={setSelectedDevice}
                                 devices={devices}
-                            />
-                        </Flex>
-                        <Flex direction='column' gap='size-150'>
-                            <Flex alignItems='center' gap='size-100'>
-                                <Heading level={4} margin={0}>
-                                    Max epochs
-                                </Heading>
-                                <ContextualHelp variant='info'>
-                                    <Heading>Max epochs</Heading>
-                                    <Content>
-                                        <Text>
-                                            Maximum number of training epochs. Some models (e.g., PaDiM, PatchCore) only
-                                            require a single pass through the training data and will override this value
-                                            to 1 epoch.
-                                        </Text>
-                                    </Content>
-                                </ContextualHelp>
-                            </Flex>
-                            <NumberField
-                                aria-label='Maximum number of training epochs'
-                                value={maxEpochs}
-                                onChange={setMaxEpochs}
-                                minValue={1}
-                                maxValue={10000}
-                                width='size-1000'
-                                hideStepper
                             />
                         </Flex>
                     </Flex>
