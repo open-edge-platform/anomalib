@@ -1,0 +1,15 @@
+.folderIcon {
+    width: var(--spectrum-global-dimension-size-400);
+    min-width: auto;
+    border-radius: 4px;
+    padding: 0px;
+    background-color: var(--spectrum-accent-background-color-default);
+
+    svg {
+        stroke: var(--spectrum-global-color-gray-50);
+    }
+
+    &:hover {
+        background-color: var(--spectrum-accent-background-color-hover);
+    }
+}
