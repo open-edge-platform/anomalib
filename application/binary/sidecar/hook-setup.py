@@ -3,10 +3,15 @@
 
 """Runtime setup hook for environment configuration."""
 
+import multiprocessing as mp
 import os
 import pathlib
 import platform
 import sys
+
+# CRITICAL: Must call freeze_support() FIRST in runtime hook to prevent
+# worker processes from executing this setup code in PyInstaller builds
+mp.freeze_support()
 
 system = platform.system()
 print("Setup Hook: Detected operating system:", system)

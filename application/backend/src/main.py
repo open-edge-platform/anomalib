@@ -4,6 +4,11 @@
 import multiprocessing as mp
 import os
 
+# This is needed at the very top of the file to prevent worker processes
+# from executing module-level code and setup hooks in PyInstaller builds
+if __name__ == "__main__":
+    mp.freeze_support()
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -74,5 +79,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    mp.freeze_support()
     main()

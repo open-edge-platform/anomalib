@@ -29,6 +29,14 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 tmp_ret = collect_all("torchvision")
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
+# Collect openvino (required for model export and conversion)
+tmp_ret = collect_all("openvino")
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+
+# Collect onnx (required for model format used in OpenVINO conversion)
+tmp_ret = collect_all("onnx")
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+
 # Collect trackio; as for some reason it also needs package.json
 tmp_ret = collect_all("trackio")
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
@@ -80,6 +88,19 @@ a = Analysis(
     noarchive=False,
     optimize=0,
 )
+
+# Filter out problematic TBB binaries from Analysis binaries (macOS only)
+# These have malformed Mach-O headers and cause install_name_tool/codesign failures
+# Keep libtbb.12.dylib (core library needed by OpenVINO), but exclude optional bind/malloc libs
+import platform
+import os
+if platform.system() == "Darwin":
+    # Exclude only the problematic TBB bind and malloc libraries, keep the core libtbb
+    problematic_tbb_libs = ['libtbbbind', 'libtbbmalloc']
+    a.binaries = [binary for binary in a.binaries 
+                  if not any(os.path.basename(binary[0]).startswith(lib) 
+                            for lib in problematic_tbb_libs)]
+
 pyz = PYZ(a.pure)
 
 exe = EXE(
