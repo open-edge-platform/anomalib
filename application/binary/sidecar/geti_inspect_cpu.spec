@@ -63,7 +63,7 @@ a = Analysis(
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=['hook-multiprocessing.py', 'hook-matplotlib.py', 'hook-setup.py'],
+    runtime_hooks=["hook-setup.py"],
     excludes=[
         "comet_ml",
         "open_clip",
