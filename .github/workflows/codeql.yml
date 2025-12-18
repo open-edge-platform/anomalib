@@ -19,7 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       security-events: write # required to publish sarif
-
     strategy:
       fail-fast: false
       matrix:
@@ -28,20 +27,26 @@ jobs:
             build-mode: none
           - language: python
             build-mode: none
-
+          - language: javascript-typescript
+            build-mode: none
+    # FIXME: Temporary restriction: do not run for javascript-typescript, unless on push and PR for geti-inspect feature branch.
+    # This prevents JavaScript/TypeScript CodeQL analysis (job failure) on unrelated branches and should be removed once feature/geti-inspect will be merged into the main
     steps:
       - name: Harden the runner (audit all outbound calls)
+        if: matrix.language != 'javascript-typescript' || (github.event_name != 'schedule' && (contains(github.ref, 'feature/geti-inspect') || contains(github.base_ref, 'feature/geti-inspect')))
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           egress-policy: audit
 
       - name: Checkout repository
+        if: matrix.language != 'javascript-typescript' || (github.event_name != 'schedule' && (contains(github.ref, 'feature/geti-inspect') || contains(github.base_ref, 'feature/geti-inspect')))
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
+        if: matrix.language != 'javascript-typescript' || (github.event_name != 'schedule' && (contains(github.ref, 'feature/geti-inspect') || contains(github.base_ref, 'feature/geti-inspect')))
         uses: github/codeql-action/init@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
         with:
           languages: ${{ matrix.language }}
@@ -49,6 +54,7 @@ jobs:
           queries: security-extended
 
       - name: Perform CodeQL Analysis
+        if: matrix.language != 'javascript-typescript' || (github.event_name != 'schedule' && (contains(github.ref, 'feature/geti-inspect') || contains(github.base_ref, 'feature/geti-inspect')))
         uses: github/codeql-action/analyze@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
         with:
           category: "/language:${{matrix.language}}"
