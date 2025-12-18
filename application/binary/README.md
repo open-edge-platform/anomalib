@@ -1,7 +1,20 @@
-# Tauri + React + Typescript
+# Geti Inspect Application
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+## Architecture
 
-## Recommended IDE Setup
+The backend is converted to a single binary using pyinstaller. This is added to the tauri application as a sidecar.
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+
+## Folder Structure
+
+```bash
+binary/
+├── sidecar/ # The sidecar is built here
+├── tauri/ # The tauri application is built here
+```
+
+
+## Building the sidecar
+
+```bash
+uv run

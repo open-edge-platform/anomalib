@@ -62,7 +62,12 @@ app.include_router(capture_router)
 app.include_router(snapshot_router)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Main function to run the application"""
     settings = get_settings()
     uvicorn_port = int(os.environ.get("HTTP_SERVER_PORT", settings.port))
     uvicorn.run("main:app", loop="uvloop", host=settings.host, port=uvicorn_port, log_config=None)
+
+
+if __name__ == "__main__":
+    main()
