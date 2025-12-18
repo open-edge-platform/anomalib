@@ -6,15 +6,22 @@ import { useEffect } from 'react';
 import { $api } from '@geti-inspect/api';
 import { SchemaJob as Job } from '@geti-inspect/api/spec';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { queryOptions, experimental_streamedQuery as streamedQuery, useQuery } from '@tanstack/react-query';
+import { fetchSSE } from 'src/api/fetch-sse';
 
 import { useStatusBar } from '../status-bar-context';
+
+interface JobProgress {
+    progress: number;
+    message: string;
+}
 
 export const TrainingStatusAdapter = () => {
     const { setStatus, removeStatus } = useStatusBar();
     const { projectId } = useProjectIdentifier();
 
     const { data: jobsData } = $api.useQuery('get', '/api/jobs', undefined, {
-        refetchInterval: 5000,
+        refetchInterval: 10000,
     });
 
     const { mutate: cancelJob } = $api.useMutation('post', '/api/jobs/{job_id}:cancel', {
@@ -27,6 +34,21 @@ export const TrainingStatusAdapter = () => {
             job.type === 'training' &&
             (job.status === 'running' || job.status === 'pending')
     );
+
+    const { data: progressData } = useQuery(
+        queryOptions({
+            queryKey: ['get', '/api/jobs/{job_id}/progress', trainingJob?.id],
+            queryFn: streamedQuery({
+                queryFn: () => fetchSSE<JobProgress>(`/api/jobs/${trainingJob?.id}/progress`),
+            }),
+            enabled: !!trainingJob?.id,
+            staleTime: Infinity,
+        })
+    );
+
+    const latestProgress = progressData?.at(-1);
+    const progress = latestProgress?.progress ?? trainingJob?.progress;
+    const message = latestProgress?.message ?? trainingJob?.message;
 
     useEffect(() => {
         if (!trainingJob) {
@@ -43,8 +65,8 @@ export const TrainingStatusAdapter = () => {
             id: 'training',
             type: 'training',
             message: `Training ${trainingJob.payload.model_name}...`,
-            detail: trainingJob.message,
-            progress: trainingJob.progress,
+            detail: message,
+            progress,
             variant: 'info',
             isCancellable: true,
             onCancel: () => {
@@ -57,8 +79,8 @@ export const TrainingStatusAdapter = () => {
     }, [
         trainingJob?.id,
         trainingJob?.payload.model_name,
-        trainingJob?.message,
-        trainingJob?.progress,
+        message,
+        progress,
         trainingJob?.status,
         setStatus,
         removeStatus,

@@ -65,6 +65,8 @@ app.include_router(snapshot_router)
 
 def main() -> None:
     """Main function to run the application"""
+    if mp.get_start_method(allow_none=True) != "spawn":
+        mp.set_start_method("spawn", force=True)
 
     settings = get_settings()
     uvicorn_port = int(os.environ.get("HTTP_SERVER_PORT", settings.port))
