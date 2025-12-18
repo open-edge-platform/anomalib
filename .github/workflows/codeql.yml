@@ -29,8 +29,8 @@ jobs:
             build-mode: none
           - language: javascript-typescript
             build-mode: none
-    # FIXME: do not run for javascript-typescript, unless on push and PR for geti-inspect feature branch
-    # This prevents JavaScript/TypeScript CodeQL analysis (job failure) on unrelated branches
+    # FIXME: Temporary restriction: do not run for javascript-typescript, unless on push and PR for geti-inspect feature branch.
+    # This prevents JavaScript/TypeScript CodeQL analysis (job failure) on unrelated branches and should be removed once feature/geti-inspect will be merged into the main
     steps:
       - name: Harden the runner (audit all outbound calls)
         if: matrix.language != 'javascript-typescript' || (github.event_name != 'schedule' && (contains(github.ref, 'feature/geti-inspect') || contains(github.base_ref, 'feature/geti-inspect')))
