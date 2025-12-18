@@ -10,7 +10,7 @@ import { vi } from 'vitest';
 
 import { ProjectActions } from './project-list-actions.component';
 
-const renderWithProviders = (ui: React.ReactElement, { route = '/projects/project-123' } = {}) => {
+const renderWithProviders = (ui: React.ReactElement, { route = '/projects/project-123/inspect' } = {}) => {
     return render(
         <QueryClientProvider client={new QueryClient()}>
             <ThemeProvider>
@@ -83,7 +83,7 @@ describe('ProjectActions', () => {
 
     it('disables delete option when project is the currently active project', async () => {
         renderWithProviders(<ProjectActions {...defaultProps} projectId='project-123' />, {
-            route: '/projects/project-123',
+            route: '/projects/project-123/inspect',
         });
 
         await userEvent.click(screen.getByRole('button', { name: /project actions/i }));
