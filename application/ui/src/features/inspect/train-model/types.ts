@@ -1,0 +1,27 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import type { SchemaModelFamily, SchemaPerformanceMetrics, SchemaTrainableModel } from '@geti-inspect/api/spec';
+
+export type ModelFamily = SchemaModelFamily;
+export type PerformanceMetrics = SchemaPerformanceMetrics;
+export type TrainableModel = SchemaTrainableModel;
+
+export type MetricRating = 'LOW' | 'MEDIUM' | 'HIGH';
+
+export const METRIC_RATING_MAP: Record<1 | 2 | 3, MetricRating> = {
+    1: 'LOW',
+    2: 'MEDIUM',
+    3: 'HIGH',
+};
+
+export const FAMILY_DISPLAY_NAMES: Record<ModelFamily, string> = {
+    memory_bank: 'Memory Bank',
+    distribution: 'Distribution',
+    reconstruction: 'Reconstruction',
+    student_teacher: 'Student-Teacher',
+    gan_based: 'GAN-based',
+    transformer: 'Transformer',
+    foundation: 'Foundation',
+    other: 'Other',
+};
