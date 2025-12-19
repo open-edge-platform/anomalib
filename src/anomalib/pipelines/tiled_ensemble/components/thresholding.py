@@ -92,7 +92,7 @@ class ThresholdingJobGenerator(JobGenerator):
         self,
         args: dict | None = None,
         prev_stage_result: list[Any] | None = None,
-    ) -> Generator[ThresholdingJob, None, None]:
+    ) -> Generator[ThresholdingJob]:
         """Return a generator producing a single thresholding job.
 
         Args:
