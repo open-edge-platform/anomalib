@@ -15,13 +15,13 @@ import {
     Flex,
     Header,
     Heading,
-    PhotoPlaceholder,
     View,
 } from '@geti/ui';
 
 import { AddProjectButton } from './add-project-button/add-project-button.component';
 import { useGetProjects } from './hooks/use-get-project.hooks';
 import { useSelectedProject } from './hooks/use-selected-project.hook';
+import { ProjectThumbnail } from './project-thumbnail/project-thumbnail.component';
 import { ProjectsList } from './projects-list.component';
 
 import styles from './projects-list.module.scss';
@@ -36,7 +36,7 @@ const SelectedProjectButton = ({ name, id }: SelectedProjectProps) => {
         <ActionButton aria-label={`Selected project ${name}`} isQuiet height={'max-content'} staticColor='white'>
             <View margin={'size-50'}>{name}</View>
             <View margin='size-50'>
-                <PhotoPlaceholder name={name} indicator={id ?? name} height={'size-400'} width={'size-400'} />
+                <ProjectThumbnail projectId={id} projectName={name} size='size-400' />
             </View>
         </ActionButton>
     );
@@ -56,11 +56,10 @@ export const ProjectsListPanel = () => {
             <Dialog width={'size-4600'} UNSAFE_className={styles.dialog}>
                 <Header>
                     <Flex direction={'column'} justifyContent={'center'} width={'100%'} alignItems={'center'}>
-                        <PhotoPlaceholder
-                            name={selectedProjectName}
-                            indicator={selectedProject?.id ?? selectedProjectName}
-                            height={'size-1000'}
-                            width={'size-1000'}
+                        <ProjectThumbnail
+                            projectId={selectedProject?.id}
+                            projectName={selectedProjectName}
+                            size='size-1000'
                         />
                         <Heading level={2} marginBottom={0}>
                             {selectedProjectName}
