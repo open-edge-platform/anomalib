@@ -252,6 +252,8 @@ class TrainingService:
         if synchronization_parameters.cancel_training_event.is_set():
             return None
 
+        synchronization_parameters.message = "exporting model"
+
         export_path = engine.export(
             model=anomalib_model,
             export_type=export_format,
