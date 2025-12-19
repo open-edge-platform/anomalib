@@ -9,14 +9,6 @@ running experiments in parallel across multiple GPUs when available.
 
 Example:
     >>> from anomalib.pipelines import Benchmark
-    >>> from anomalib.data import MVTecAD
-    >>> from anomalib.models import Padim, Patchcore
-
-    >>> # Initialize benchmark with models and datasets
-    >>> benchmark = Benchmark(
-    ...     models=[Padim(), Patchcore()],
-    ...     datasets=[MVTecAD(category="bottle"), MVTecAD(category="cable")]
-    ... )
 
     >>> # Run benchmark
     >>> results = benchmark.run()
