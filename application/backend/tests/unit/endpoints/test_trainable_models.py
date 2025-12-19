@@ -1,9 +1,9 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from fastapi import status
 
 from api.endpoints.trainable_models_endpoints import _load_model_metadata  # noqa: PLC2701
+
 
 def test_list_trainable_models_recommended_first(fxt_client):
     """Test that recommended models appear first in the list."""
