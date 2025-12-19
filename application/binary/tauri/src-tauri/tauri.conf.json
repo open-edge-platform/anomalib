@@ -1,20 +1,20 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "binary",
+  "productName": "geti_inspect",
   "version": "0.1.0",
-  "identifier": "com.geti.inspect.app",
+  "identifier": "com.geti.inspect",
   "build": {
-    "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run build",
-    "frontendDist": "../dist"
+    "beforeDevCommand": "cd ../../ui && npm start",
+    "devUrl": "http://localhost:3000",
+    "beforeBuildCommand": "cd ../../ui && npm run build",
+    "frontendDist": "../../../ui/dist"
   },
   "app": {
     "windows": [
       {
-        "title": "binary",
-        "width": 800,
-        "height": 600
+        "title": "Geti Inspect",
+        "width": 1000,
+        "height": 800
       }
     ],
     "security": {
@@ -24,6 +24,9 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "externalBin": [
+      "../../sidecar/dist/geti-inspect-backend"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
