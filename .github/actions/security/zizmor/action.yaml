@@ -66,7 +66,7 @@ runs:
   using: composite
   steps:
     - name: Install uv
-      uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+      uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
       with:
         enable-cache: true
         activate-environment: true
@@ -76,7 +76,7 @@ runs:
     - name: Get changed files
       if: inputs.scan-scope == 'changed'
       id: changed-files
-      uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
+      uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
       with:
         files: .github/**
 
@@ -137,13 +137,13 @@ runs:
       # Upload results after full scope analysis
     - name: Upload reports
       if: hashFiles('zizmor-report.*') != '' # if any report is available
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
       with:
         name: zizmor-results
         path: zizmor-report.*
         retention-days: 7
     - name: Upload sarif
       if: hashFiles('zizmor-report.sarif') != '' # if SARIF is available, upload it
-      uses: github/codeql-action/upload-sarif@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
+      uses: github/codeql-action/upload-sarif@5d4e8d1aca955e8d8589aabd499c5cae939e33c7 # v4.31.9
       with:
         sarif_file: zizmor-report.sarif
