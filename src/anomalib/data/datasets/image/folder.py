@@ -249,7 +249,8 @@ def make_folder_dataset(
 
         # make sure all every rgb image has a corresponding mask image.
         if not (
-            samples.loc[samples.label_index == LabelName.ABNORMAL]
+            samples
+            .loc[samples.label_index == LabelName.ABNORMAL]
             .apply(lambda x: Path(x.image_path).stem in Path(x.mask_path).stem, axis=1)
             .all()
         ):

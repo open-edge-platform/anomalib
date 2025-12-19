@@ -19,7 +19,6 @@ from collections.abc import Callable
 from functools import partial
 
 import torch
-import torch.utils.checkpoint
 from timm.layers.patch_embed import PatchEmbed
 from torch import nn
 from torch.nn.init import trunc_normal_

@@ -121,7 +121,8 @@ class LinearAttention(nn.Module):
         """
         batch_size, seq_len, embed_dim = x.shape
         qkv = (
-            self.qkv(x)
+            self
+            .qkv(x)
             .reshape(batch_size, seq_len, 3, self.num_heads, embed_dim // self.num_heads)
             .permute(2, 0, 3, 1, 4)
         )
