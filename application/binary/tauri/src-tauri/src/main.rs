@@ -1,7 +1,7 @@
 use std::process::Command as StdCommand;
 use std::sync::Mutex;
-use tauri::{AppHandle,  Manager, State, WindowEvent};
-use tauri_plugin_shell::process::{CommandChild};
+use tauri::{AppHandle, Manager, State, WindowEvent};
+use tauri_plugin_shell::process::CommandChild;
 use tauri_plugin_shell::ShellExt;
 
 const BACKEND_SIDECAR: &str = "geti-inspect-backend";
@@ -27,13 +27,17 @@ async fn start_server(app: AppHandle, state: State<'_, APIManagerState>) -> Resu
     let (_, child) = {
         app.shell()
             .sidecar(BACKEND_SIDECAR)
-            .map_err(|e| format!("failed to create `{}` sidecar command: {}", BACKEND_SIDECAR, e))?
+            .map_err(|e| {
+                format!(
+                    "failed to create `{}` sidecar command: {}",
+                    BACKEND_SIDECAR, e
+                )
+            })?
             .spawn()
             .map_err(|e| format!("Failed to spawn backend: {}", e))?
     };
 
     println!("geti_inspect process spawned successfully");
-
 
     *child_lock = Some(child);
     println!("geti_inspect backend started successfully");
