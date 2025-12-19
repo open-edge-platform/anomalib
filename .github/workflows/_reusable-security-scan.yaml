@@ -79,7 +79,7 @@ jobs:
     if: contains(inputs.tools, 'bandit')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           persist-credentials: false
       - name: Run Bandit scan
@@ -94,12 +94,12 @@ jobs:
     if: contains(inputs.tools, 'semgrep')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           persist-credentials: false
           fetch-depth: 0
       - name: Run Semgrep scan
-        uses: open-edge-platform/geti-ci/actions/semgrep@c36768f9b38f17ddbc9ebf803c0f8bc064ab1653
+        uses: open-edge-platform/geti-ci/actions/semgrep@d30e32248aa6bd06adeda7129b50a38bdbceca12
         with:
           scan-scope: ${{ inputs.scan-scope }}
           severity: ${{ inputs.severity-level }}
@@ -109,7 +109,7 @@ jobs:
     if: contains(inputs.tools, 'trivy')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           fetch-depth: 0 # Required for changed files detection
           persist-credentials: false
@@ -131,7 +131,7 @@ jobs:
     if: contains(inputs.tools, 'clamav')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           persist-credentials: false
       - name: Run ClamAV scan
@@ -144,7 +144,7 @@ jobs:
     if: contains(inputs.tools, 'zizmor')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           persist-credentials: false
       - name: Run Zizmor scan
@@ -176,7 +176,7 @@ jobs:
 
       # Download artifacts with error handling
       - name: Download all results
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         continue-on-error: true # Don't fail if some tools didn't generate results
         with:
           pattern: "*-results"
@@ -186,7 +186,7 @@ jobs:
       # Only upload if there are files
       - name: Upload combined results
         if: hashFiles('all-results/**/*') != ''
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: security-scan-results
           path: all-results
