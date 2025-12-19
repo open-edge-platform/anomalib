@@ -90,9 +90,6 @@ jobs:
           name: ${{ inputs.artifact-name }}
           path: dist
       - name: Publish to PyPI
-<<<<<<< HEAD
-        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
-=======
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ inputs.is-prerelease && secrets.test-pypi-token || secrets.pypi-token }}
@@ -100,7 +97,6 @@ jobs:
         run: |
           pip install --upgrade pip twine
           twine upload dist/*
->>>>>>> chore(deps): update github actions (#2983)
       - uses: softprops/action-gh-release@62c96d0c4e8a889135c1f3a25910db8dbe0e85f7 # v2.3.4
         with:
           tag_name: ${{ inputs.version }}
