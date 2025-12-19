@@ -5,7 +5,7 @@
 
 import { $api } from '@geti-inspect/api';
 import { SchemaProjectList } from '@geti-inspect/api/spec';
-import { Flex, PhotoPlaceholder, Text } from '@geti/ui';
+import { Flex, Text } from '@geti/ui';
 import { clsx } from 'clsx';
 import { useNavigate } from 'react-router';
 
@@ -73,16 +73,7 @@ export const ProjectListItem = ({
                     />
                 ) : (
                     <Flex alignItems={'center'} gap={'size-100'}>
-                        {project.id ? (
-                            <ProjectThumbnail projectId={project.id} projectName={project.name} />
-                        ) : (
-                            <PhotoPlaceholder
-                                name={project.name}
-                                indicator={project.id ?? project.name}
-                                height={'size-300'}
-                                width={'size-300'}
-                            />
-                        )}
+                        <ProjectThumbnail projectId={project.id} projectName={project.name} />
                         <Text>{project.name}</Text>
                     </Flex>
                 )}
