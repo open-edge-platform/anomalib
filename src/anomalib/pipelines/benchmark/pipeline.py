@@ -33,10 +33,24 @@ Configuration:
 Example:
     Run the benchmark with a config file:
     
-    >>> from anomalib.pipelines import Benchmark
+    Programmatically with explicit config path:
+    
+    >>> from benchmark.pipeline import Benchmark
     >>> from argparse import Namespace
-    >>> args = Namespace(config="config.yaml")
+    >>> args = Namespace(config="src/config.yaml") 
     >>> results = Benchmark().run(args)
+    
+    Or via command line arguments (no args passed):
+    
+    >>> from benchmark.pipeline import Benchmark
+    >>> # This will parse sys.argv looking for --config argument
+    >>> results = Benchmark().run()  
+    
+    Which expects the script to be called as:
+    
+    .. code-block:: bash
+    
+        python script.py --config src/config.yaml
 
 The pipeline handles setting up appropriate runners based on available hardware,
 using parallel execution when multiple GPUs are available and serial execution
