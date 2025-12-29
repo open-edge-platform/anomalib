@@ -7,11 +7,36 @@ This module provides functionality for running benchmarking experiments that eva
 and compare multiple anomaly detection models. The benchmarking pipeline supports
 running experiments in parallel across multiple GPUs when available.
 
-Example:
-    >>> from anomalib.pipelines import Benchmark
+Configuration:
+    The benchmark pipeline is configured via a YAML file passed through the --config
+    command line argument. The config uses jsonargparse conventions with 
+    ``class_path`` and ``init_args`` for object instantiation.
+    
+    Example config structure::
+    
+        accelerator:
+          - cpu
+        benchmark:
+          seed: 42
+          model:
+            grid:
+              - class_path: Patchcore
+          data:
+            class_path: MVTecAD
+            init_args:
+              category:
+                grid:
+                  - bottle
+              
+    The ``grid`` key creates multiple jobs for each combination of values.
 
-    >>> # Run benchmark
-    >>> results = benchmark.run()
+Example:
+    Run the benchmark with a config file:
+    
+    >>> from anomalib.pipelines import Benchmark
+    >>> from argparse import Namespace
+    >>> args = Namespace(config="config.yaml")
+    >>> results = Benchmark().run(args)
 
 The pipeline handles setting up appropriate runners based on available hardware,
 using parallel execution when multiple GPUs are available and serial execution
