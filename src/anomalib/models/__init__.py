@@ -255,6 +255,7 @@ def get_model(model: DictConfig | str | dict | Namespace, *args, **kwdargs) -> A
 
         >>> model = get_model("padim")
         >>> model = get_model("efficient_ad")
+        >>> model = get_model("patchcore", num_neighbors=10)
 
         Get model using dictionary config:
 
