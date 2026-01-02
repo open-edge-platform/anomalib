@@ -214,16 +214,20 @@ class Patchcore(MemoryBankMixin, AnomalibModule):
             if center_crop_size[0] > image_size[0] or center_crop_size[1] > image_size[1]:
                 msg = f"Center crop size {center_crop_size} cannot be larger than image size {image_size}."
                 raise ValueError(msg)
-            transform = Compose([
-                Resize(image_size, antialias=True),
-                CenterCrop(center_crop_size),
-                Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            ])
+            transform = Compose(
+                [
+                    Resize(image_size, antialias=True),
+                    CenterCrop(center_crop_size),
+                    Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                ],
+            )
         else:
-            transform = Compose([
-                Resize(image_size, antialias=True),
-                Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            ])
+            transform = Compose(
+                [
+                    Resize(image_size, antialias=True),
+                    Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                ],
+            )
 
         return PreProcessor(transform=transform)
 
