@@ -1,7 +1,25 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""AutoVI Dataset Loader.
+"""AutoVI Dataset.
+
+AutoVI is a genuine industrial production dataset for unsupervised anomaly detection.
+This dataset can be found at https://zenodo.org/records/10459003.
+This loader only supports AutoVI's first edition (1.0.0).
+
+License:
+Copyright © 2023-2024 Renault Group
+
+This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+To view a copy of the license, visit https://creativecommons.org/licenses/by-nc-sa/4.0/.
+For using the data in a way that falls under the commercial use clause of the license, please contact us.
+
+Attribution:
+Please use the following for citing the dataset in scientific work:
+Carvalho, P., Lafou, M., Durupt, A., Leblanc, A., & Grandvalet, Y. (2024).
+The Automotive Visual Inspection Dataset (AutoVI):
+A Genuine Industrial Production Dataset for Unsupervised Anomaly Detection [Dataset].
+https://doi.org/10.5281/zenodo.10459003
 
 This module provides PyTorch Dataset implementation for datasets with the custom
 structure where masks are nested in numbered folders.
@@ -21,9 +39,8 @@ Dataset Structure:
             └── ####/
                 └── ####.png
 
-License:
-    Adapted from MVTec AD dataset loader
-    Original: Apache-2.0 License
+
+Adapted from MVTec AD dataset loader
 """
 
 from collections.abc import Sequence
