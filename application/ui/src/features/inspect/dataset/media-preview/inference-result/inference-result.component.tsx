@@ -1,5 +1,3 @@
-import { useRef } from 'react';
-
 import { SchemaPredictionResponse } from '@geti-inspect/api/spec';
 import { DimensionValue, Responsive, View } from '@geti/ui';
 import { clsx } from 'clsx';
@@ -22,7 +20,6 @@ interface InferenceResultProps {
 const labelHeight: Responsive<DimensionValue> = 'size-350';
 
 export const InferenceResult = ({ selectedMediaItem, inferenceResult }: InferenceResultProps) => {
-    const imageRef = useRef(null);
     const { inferenceOpacity } = useInference();
 
     const size = {
@@ -52,7 +49,6 @@ export const InferenceResult = ({ selectedMediaItem, inferenceResult }: Inferenc
 
                     <View width={'100%'} height={'100%'} position={'relative'}>
                         <img
-                            ref={imageRef}
                             alt={selectedMediaItem.filename}
                             src={`/api/projects/${selectedMediaItem.project_id}/images/${selectedMediaItem.id}/full`}
                         />
@@ -60,10 +56,11 @@ export const InferenceResult = ({ selectedMediaItem, inferenceResult }: Inferenc
                         {isNonEmptyString(inferenceResult?.anomaly_map) && (
                             <motion.img
                                 exit={{ opacity: 0 }}
+                                width={size.width}
+                                height={size.height}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: inferenceOpacity }}
                                 className={clsx(classes.inferenceImage)}
-                                style={{ position: 'absolute', left: 0, ...size }}
                                 src={`data:image/png;base64,${inferenceResult.anomaly_map}`}
                                 alt={`${selectedMediaItem.filename} inference`}
                             />
