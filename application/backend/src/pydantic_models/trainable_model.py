@@ -19,6 +19,15 @@ class ModelFamily(StrEnum):
     OTHER = "other"
 
 
+class License(StrEnum):
+    """Model license type."""
+
+    APACHE_2_0 = "Apache-2.0"
+    MIT = "MIT"
+    CC_BY_4_0 = "CC-BY-4.0"
+    CC_BY_NC_4_0 = "CC-BY-NC-4.0"
+
+
 class PerformanceMetrics(BaseModel):
     """Relative performance scores (1=low, 2=medium, 3=high). Null if not benchmarked."""
 
@@ -31,10 +40,10 @@ class TrainableModel(BaseModel):
 
     id: str = Field(description="Model identifier used in training API (snake_case)")
     name: str = Field(description="Human-readable model name")
-    description: str | None = Field(default=None, description="Brief model description")
-    family: ModelFamily | list[ModelFamily] = Field(default=ModelFamily.OTHER, description="Model architecture family")
+    description: str = Field(description="Brief model description")
+    family: list[ModelFamily] = Field(default_factory=list, description="Model architecture family")
     recommended: bool = Field(default=False, description="Whether model is recommended for new users")
-    license: str = Field(default="Apache-2.0")
+    license: License = Field(default=License.APACHE_2_0, description="Model license type")
     docs_url: str | None = Field(default=None, description="Link to model documentation")
     metrics: PerformanceMetrics = Field(default_factory=PerformanceMetrics)
     parameters: float | None = Field(default=None, description="Model parameters in millions")
