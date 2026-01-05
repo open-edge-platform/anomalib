@@ -24,7 +24,6 @@ from services.dataset_snapshot_service import DatasetSnapshotService
 from services.job_service import JobService
 from utils.callbacks import GetiInspectProgressCallback, ProgressSyncParams
 from utils.devices import Devices
-from utils.experiment_loggers import TrackioLogger
 
 
 class TrainingService:
@@ -220,11 +219,10 @@ class TrainingService:
             ),
         )
 
-        trackio = TrackioLogger(project=str(model.project_id), name=model.name)
         tensorboard = AnomalibTensorBoardLogger(save_dir=global_log_config.tensorboard_log_path, name=name)
         engine = Engine(
             default_root_dir=model.export_path,
-            logger=[trackio, tensorboard],
+            logger=[tensorboard],
             devices=[0],  # Only single GPU training is supported for now
             max_epochs=max_epochs,
             callbacks=[
