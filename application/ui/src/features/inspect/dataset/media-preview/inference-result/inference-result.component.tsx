@@ -1,15 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 
 import { SchemaPredictionResponse } from '@geti-inspect/api/spec';
 import { DimensionValue, Responsive, View } from '@geti/ui';
 import { clsx } from 'clsx';
-import { AnimatePresence, motion } from 'motion/react';
+import { motion } from 'motion/react';
+import { ZoomProvider } from 'src/components/zoom/zoom';
+import { ZoomTransform } from 'src/components/zoom/zoom-transform';
 import { isNonEmptyString } from 'src/features/inspect/utils';
 
 import { MediaItem } from '../../types';
 import { useInference } from '../providers/inference-opacity-provider.component';
 import { LabelScore } from './label-score.component';
-import { getImageDimensions } from './util';
 
 import classes from './inference-result.module.scss';
 
@@ -23,60 +24,53 @@ const labelHeight: Responsive<DimensionValue> = 'size-350';
 export const InferenceResult = ({ selectedMediaItem, inferenceResult }: InferenceResultProps) => {
     const imageRef = useRef(null);
     const { inferenceOpacity } = useInference();
-    const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0, left: 0, top: 0 });
 
-    const handleImageLoaded = (imageElement: HTMLImageElement) => {
-        setImageDimensions(getImageDimensions(imageElement));
+    const size = {
+        width: selectedMediaItem.width,
+        height: selectedMediaItem.height,
     };
 
-    useEffect(() => {
-        if (!imageRef.current) return;
-
-        const observer = new ResizeObserver(([entry]) => {
-            handleImageLoaded(entry.target as HTMLImageElement);
-        });
-
-        observer.observe(imageRef.current);
-        return () => observer.disconnect();
-    }, []);
-
     return (
-        <View height={'100%'} paddingTop={labelHeight}>
-            {inferenceResult && (
-                <View
-                    height={labelHeight}
-                    position={'absolute'}
-                    maxWidth={'size-1600'}
-                    top={imageDimensions.top}
-                    left={imageDimensions.left}
-                >
-                    <LabelScore label={inferenceResult.label} score={inferenceResult.score} />
-                </View>
-            )}
-
-            <View width={'100%'} height={'100%'} position={'relative'}>
-                <img
-                    ref={imageRef}
-                    alt={selectedMediaItem.filename}
-                    className={clsx(classes.img)}
-                    src={`/api/projects/${selectedMediaItem.project_id}/images/${selectedMediaItem.id}/full`}
-                    onLoad={({ target }) => handleImageLoaded(target as HTMLImageElement)}
-                />
-
-                <AnimatePresence>
-                    {isNonEmptyString(inferenceResult?.anomaly_map) && (
-                        <motion.img
-                            exit={{ opacity: 0 }}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: inferenceOpacity }}
-                            className={clsx(classes.inferenceImage)}
-                            style={{ ...imageDimensions }}
-                            src={`data:image/png;base64,${inferenceResult.anomaly_map}`}
-                            alt={`${selectedMediaItem.filename} inference`}
-                        />
+        <ZoomProvider>
+            <ZoomTransform target={size}>
+                <View height={'100%'} paddingTop={labelHeight}>
+                    {inferenceResult && (
+                        <View
+                            top={0}
+                            left={0}
+                            height={labelHeight}
+                            position={'absolute'}
+                            maxWidth={'size-1600'}
+                            UNSAFE_style={{
+                                transform: `scale(calc(1 / var(--zoom-scale)))`,
+                                transformOrigin: 'left bottom',
+                            }}
+                        >
+                            <LabelScore label={inferenceResult.label} score={inferenceResult.score} />
+                        </View>
                     )}
-                </AnimatePresence>
-            </View>
-        </View>
+
+                    <View width={'100%'} height={'100%'} position={'relative'}>
+                        <img
+                            ref={imageRef}
+                            alt={selectedMediaItem.filename}
+                            src={`/api/projects/${selectedMediaItem.project_id}/images/${selectedMediaItem.id}/full`}
+                        />
+
+                        {isNonEmptyString(inferenceResult?.anomaly_map) && (
+                            <motion.img
+                                exit={{ opacity: 0 }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: inferenceOpacity }}
+                                className={clsx(classes.inferenceImage)}
+                                style={{ position: 'absolute', left: 0, ...size }}
+                                src={`data:image/png;base64,${inferenceResult.anomaly_map}`}
+                                alt={`${selectedMediaItem.filename} inference`}
+                            />
+                        )}
+                    </View>
+                </View>
+            </ZoomTransform>
+        </ZoomProvider>
     );
 };
