@@ -78,7 +78,7 @@ export const ProjectListItem = ({
                     </Flex>
                 )}
 
-                {project.id ? (
+                {isNonEmptyString(project.id) ? (
                     <ProjectActions
                         projectId={project.id}
                         projectName={project.name}
