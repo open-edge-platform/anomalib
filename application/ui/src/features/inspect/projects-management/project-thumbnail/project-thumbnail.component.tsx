@@ -4,6 +4,8 @@
 import { $api } from '@geti-inspect/api';
 import { Image, PhotoPlaceholder } from '@geti/ui';
 
+import { isNonEmptyString } from '../../utils';
+
 interface ProjectThumbnailProps {
     projectId?: string;
     projectName: string;
