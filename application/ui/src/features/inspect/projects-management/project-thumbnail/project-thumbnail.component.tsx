@@ -17,7 +17,7 @@ const ProjectImage = ({ projectId, projectName, size }: ProjectThumbnailProps & 
 
     const firstMedia = mediaList?.media?.[0];
 
-    if (firstMedia?.id) {
+    if (isNonEmptyString(firstMedia?.id)) {
         return (
             <Image
                 src={`/api/projects/${projectId}/images/${firstMedia.id}/thumbnail`}
