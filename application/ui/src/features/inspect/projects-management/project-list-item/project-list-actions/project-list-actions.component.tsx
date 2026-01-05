@@ -85,7 +85,8 @@ export const ProjectActions = ({ projectId, projectName, isLastProject, onRename
                         isPrimaryActionDisabled={deleteProjectMutation.isPending}
                         onPrimaryAction={handleDeleteProject}
                     >
-                        Deleting a project will remove all associated data including images, models, and configurations. This action cannot be undone.
+                        Deleting a project will remove all associated data including images, models, and configurations.
+                        This action cannot be undone.
                     </AlertDialog>
                 ) : null}
             </DialogContainer>

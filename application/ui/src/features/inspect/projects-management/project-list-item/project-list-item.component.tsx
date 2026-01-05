@@ -10,6 +10,7 @@ import { clsx } from 'clsx';
 import { useNavigate } from 'react-router';
 
 import { paths } from '../../../../routes/paths';
+import { isNonEmptyString } from '../../utils';
 import { ProjectThumbnail } from '../project-thumbnail/project-thumbnail.component';
 import { ProjectEdition } from './project-edition/project-edition.component';
 import { ProjectActions } from './project-list-actions/project-list-actions.component';
