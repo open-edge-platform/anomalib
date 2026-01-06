@@ -32,9 +32,10 @@ export const Fps = ({ projectId }: FpsProp) => {
 
     return (
         <View
-            position={'absolute'}
             top={'size-200'}
             right={'size-200'}
+            zIndex={1}
+            position={'absolute'}
             backgroundColor={'gray-100'}
             UNSAFE_style={{
                 fontSize: dimensionValue('size-130'),
