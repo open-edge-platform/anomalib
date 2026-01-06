@@ -353,10 +353,12 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
             "items": [],
         }
         for file_name in file_names:
-            annotations["items"].append({
-                "annotations": [{"label_id": 1 if "abnormal" in str(file_name) else 0}],
-                "image": {"path": file_name.name},
-            })
+            annotations["items"].append(
+                {
+                    "annotations": [{"label_id": 1 if "abnormal" in str(file_name) else 0}],
+                    "image": {"path": file_name.name},
+                },
+            )
         with annotation_file.open("w") as f:
             json.dump(annotations, f)
 
@@ -568,13 +570,15 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
             image_generator.save_image(image_path, image)
 
             # Add to metadata - note: these are relative paths from category dir
-            metadata["train"].append({
-                "image_path": filename,
-                "mask_path": "",
-                "anomaly_class": "OK",
-                "camera_view": "C0",
-                "timestamp": "0000",
-            })
+            metadata["train"].append(
+                {
+                    "image_path": filename,
+                    "mask_path": "",
+                    "anomaly_class": "OK",
+                    "camera_view": "C0",
+                    "timestamp": "0000",
+                },
+            )
 
         # Generate abnormal test images with masks
         for i in range(self.num_test):
@@ -595,13 +599,15 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
             image_generator.save_image(mask_path, mask)
 
             # Add to metadata - note: these are relative paths from category dir
-            metadata["test"].append({
-                "image_path": filename,
-                "mask_path": mask_filename,
-                "anomaly_class": "NG",
-                "camera_view": "C0",
-                "timestamp": "0000",
-            })
+            metadata["test"].append(
+                {
+                    "image_path": filename,
+                    "mask_path": mask_filename,
+                    "anomaly_class": "NG",
+                    "camera_view": "C0",
+                    "timestamp": "0000",
+                },
+            )
 
         # Save metadata JSON file
         json_path = jsons_dir / f"{category}.json"

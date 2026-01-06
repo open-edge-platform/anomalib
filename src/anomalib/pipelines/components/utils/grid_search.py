@@ -36,7 +36,7 @@ from typing import Any
 from anomalib.utils.config import convert_valuesview_to_tuple, flatten_dict, to_nested_dict
 
 
-def get_iterator_from_grid_dict(container: dict) -> Generator[dict, Any, None]:
+def get_iterator_from_grid_dict(container: dict) -> Generator[dict, Any]:
     """Yields an iterator based on the grid search arguments.
 
     Args:

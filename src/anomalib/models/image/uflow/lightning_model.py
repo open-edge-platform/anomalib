@@ -190,10 +190,12 @@ class Uflow(AnomalibModule):
         """
         if image_size is not None:
             logger.warning("Image size is not used in UFlow. The input image size is determined by the model.")
-        transform = Compose([
-            Resize((448, 448), antialias=True),
-            Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
+        transform = Compose(
+            [
+                Resize((448, 448), antialias=True),
+                Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ],
+        )
         return PreProcessor(transform=transform)
 
     def configure_optimizers(self) -> tuple[list[LightningOptimizer], list[LRScheduler]]:

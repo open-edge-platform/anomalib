@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
 
 
 @contextmanager
-def handle_mac(metric: "_F1AdaptiveThreshold") -> Generator[None, None, None]:
+def handle_mac(metric: "_F1AdaptiveThreshold") -> Generator[None]:
     """Temporarily move tensors to CPU on macOS/MPS and restore after.
 
     This context manager checks whether the provided metric instance has

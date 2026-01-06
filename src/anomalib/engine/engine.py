@@ -365,6 +365,7 @@ class Engine:
         val_dataloaders: EVAL_DATALOADERS | None = None,
         datamodule: AnomalibDataModule | None = None,
         ckpt_path: str | Path | None = None,
+        **kwargs,  # noqa: ARG002
     ) -> None:
         """Fit the model using the trainer.
 
@@ -379,6 +380,7 @@ class Engine:
                 Defaults to None.
             ckpt_path (str | None, optional): Checkpoint path. If provided, the model will be loaded from this path.
                 Defaults to None.
+            **kwargs: Additional arguments passed to PyTorch Lightning Trainer's fit method.
 
         CLI Usage:
             1. you can pick a model, and you can run through the MVTec dataset.
@@ -415,7 +417,14 @@ class Engine:
                 weights_only=False,
             )
         else:
-            self.trainer.fit(model, train_dataloaders, val_dataloaders, datamodule, ckpt_path, weights_only=False)
+            self.trainer.fit(
+                model,
+                train_dataloaders,
+                val_dataloaders,
+                datamodule,
+                ckpt_path,
+                weights_only=False,
+            )
 
     def validate(
         self,
@@ -424,6 +433,7 @@ class Engine:
         ckpt_path: str | Path | None = None,
         verbose: bool = True,
         datamodule: AnomalibDataModule | None = None,
+        **kwargs,  # noqa: ARG002
     ) -> _EVALUATE_OUTPUT | None:
         """Validate the model using the trainer.
 
@@ -441,6 +451,7 @@ class Engine:
                 AnomalibDataModule` that defines the
                 :class:`~lightning.pytorch.core.hooks.DataHooks.val_dataloader` hook.
                 Defaults to None.
+            **kwargs: Additional arguments passed to PyTorch Lightning Trainer's validate method.
 
         Returns:
             _EVALUATE_OUTPUT | None: Validation results.
@@ -472,6 +483,7 @@ class Engine:
         ckpt_path: str | Path | None = None,
         verbose: bool = True,
         datamodule: AnomalibDataModule | None = None,
+        **kwargs,  # noqa: ARG002
     ) -> _EVALUATE_OUTPUT:
         """Test the model using the trainer.
 
@@ -497,6 +509,7 @@ class Engine:
                 A :class:`~lightning.pytorch.core.datamodule.AnomalibDataModule` that defines
                 the :class:`~lightning.pytorch.core.hooks.DataHooks.test_dataloader` hook.
                 Defaults to None.
+            **kwargs: Additional arguments passed to PyTorch Lightning Trainer's test method.
 
         Returns:
             _EVALUATE_OUTPUT: A List of dictionaries containing the test results. 1 dict per dataloader.
@@ -556,7 +569,7 @@ class Engine:
 
         if self._should_run_validation(model or self.model, ckpt_path):
             logger.info("Running validation before testing to collect normalization metrics and/or thresholds.")
-            self.trainer.validate(model, dataloaders, None, verbose=False, datamodule=datamodule)
+            self.trainer.validate(model, dataloaders, None, verbose=False, datamodule=datamodule, weights_only=False)
         return self.trainer.test(model, dataloaders, ckpt_path, verbose, datamodule, weights_only=False)
 
     def predict(
@@ -568,6 +581,7 @@ class Engine:
         return_predictions: bool | None = None,
         ckpt_path: str | Path | None = None,
         data_path: str | Path | None = None,
+        **kwargs,  # noqa: ARG002
     ) -> _PREDICT_OUTPUT | None:
         """Predict using the model using the trainer.
 
@@ -601,6 +615,7 @@ class Engine:
             data_path (str | Path | None):
                 Path to the image or folder containing images to generate predictions for.
                 Defaults to None.
+            **kwargs: Additional arguments passed to PyTorch Lightning Trainer's predict method.
 
         Returns:
             _PREDICT_OUTPUT | None: Predictions.
@@ -747,6 +762,7 @@ class Engine:
         ov_kwargs: dict[str, Any] | None = None,
         onnx_kwargs: dict[str, Any] | None = None,
         ckpt_path: str | Path | None = None,
+        **kwargs,  # noqa: ARG002
     ) -> Path | None:
         r"""Export the model in PyTorch, ONNX or OpenVINO format.
 
@@ -785,6 +801,7 @@ class Engine:
                 See https://pytorch.org/docs/stable/onnx.html#torch.onnx.export for details.
                 Defaults to ``None``.
             ckpt_path (str | Path | None): Checkpoint path. If provided, the model will be loaded from this path.
+            **kwargs: Additional arguments.
 
         Returns:
             Path: Path to the exported model.

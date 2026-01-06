@@ -20,8 +20,6 @@ from torchvision.tv_tensors import Mask
 
 from anomalib.data.dataclasses.generic import ImageT, _GenericBatch, _GenericItem
 
-NumpyT = TypeVar("NumpyT")
-
 
 class InferenceBatch(NamedTuple):
     """Batch for use in torch and inference models.
@@ -41,6 +39,9 @@ class InferenceBatch(NamedTuple):
     pred_label: torch.Tensor | None = None
     anomaly_map: torch.Tensor | None = None
     pred_mask: torch.Tensor | None = None
+
+
+NumpyT = TypeVar("NumpyT")
 
 
 @dataclass

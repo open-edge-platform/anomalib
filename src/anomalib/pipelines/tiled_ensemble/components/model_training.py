@@ -146,7 +146,7 @@ class TrainModelJobGenerator(JobGenerator):
         self,
         args: dict | None = None,
         prev_stage_result: PREV_STAGE_RESULT = None,
-    ) -> Generator[TrainModelJob, None, None]:
+    ) -> Generator[TrainModelJob]:
         """Generate training jobs for each tile location.
 
         Args:
