@@ -9,11 +9,11 @@ running experiments in parallel across multiple GPUs when available.
 
 Configuration:
     The benchmark pipeline is configured via a YAML file passed through the --config
-    command line argument. The config uses jsonargparse conventions with 
+    command line argument. The config uses jsonargparse conventions with
     ``class_path`` and ``init_args`` for object instantiation.
-    
+
     Example config structure::
-    
+
         accelerator:
           - cpu
         benchmark:
@@ -27,29 +27,29 @@ Configuration:
               category:
                 grid:
                   - bottle
-              
+
     The ``grid`` key creates multiple jobs for each combination of values.
 
 Example:
     Run the benchmark with a config file:
-    
+
     Programmatically with explicit config path:
-    
+
     >>> from benchmark.pipeline import Benchmark
     >>> from argparse import Namespace
-    >>> args = Namespace(config="src/config.yaml") 
+    >>> args = Namespace(config="src/config.yaml")
     >>> results = Benchmark().run(args)
-    
+
     Or via command line arguments (no args passed):
-    
+
     >>> from benchmark.pipeline import Benchmark
     >>> # This will parse sys.argv looking for --config argument
-    >>> results = Benchmark().run()  
-    
+    >>> results = Benchmark().run()
+
     Which expects the script to be called as:
-    
+
     .. code-block:: bash
-    
+
         python script.py --config src/config.yaml
 
 The pipeline handles setting up appropriate runners based on available hardware,
