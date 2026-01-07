@@ -49,6 +49,10 @@ Track and measure execution times during training.
    :show-inheritance:
 ```
 
+:::{note}
+ModelCheckpoint is automatically disabled when using `Engine(barebones=True)` for lightweight training without checkpoint overhead.
+:::
+
 (graph-logger)=
 
 ## {octicon}`graph` Graph Logger
