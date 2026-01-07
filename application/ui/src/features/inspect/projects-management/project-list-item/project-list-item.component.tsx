@@ -5,11 +5,13 @@
 
 import { $api } from '@geti-inspect/api';
 import { SchemaProjectList } from '@geti-inspect/api/spec';
-import { Flex, PhotoPlaceholder, Text } from '@geti/ui';
+import { Flex, Text } from '@geti/ui';
 import { clsx } from 'clsx';
 import { useNavigate } from 'react-router';
 
 import { paths } from '../../../../routes/paths';
+import { isNonEmptyString } from '../../utils';
+import { ProjectThumbnail } from '../project-thumbnail/project-thumbnail.component';
 import { ProjectEdition } from './project-edition/project-edition.component';
 import { ProjectActions } from './project-list-actions/project-list-actions.component';
 
@@ -21,10 +23,17 @@ interface ProjectListItemProps {
     project: Project;
     isActive: boolean;
     isInEditMode: boolean;
+    isLastProject: boolean;
     setProjectInEdition: (projectId: string | null) => void;
 }
 
-export const ProjectListItem = ({ project, isActive, isInEditMode, setProjectInEdition }: ProjectListItemProps) => {
+export const ProjectListItem = ({
+    project,
+    isActive,
+    isInEditMode,
+    isLastProject,
+    setProjectInEdition,
+}: ProjectListItemProps) => {
     const navigate = useNavigate();
 
     const updateProject = $api.useMutation('patch', '/api/projects/{project_id}', {
@@ -65,17 +74,19 @@ export const ProjectListItem = ({ project, isActive, isInEditMode, setProjectInE
                     />
                 ) : (
                     <Flex alignItems={'center'} gap={'size-100'}>
-                        <PhotoPlaceholder
-                            name={project.name}
-                            indicator={project.id ?? project.name}
-                            height={'size-300'}
-                            width={'size-300'}
-                        />
+                        <ProjectThumbnail projectId={project.id} projectName={project.name} />
                         <Text>{project.name}</Text>
                     </Flex>
                 )}
 
-                <ProjectActions onRename={() => setProjectInEdition(project.id ?? null)} />
+                {isNonEmptyString(project.id) ? (
+                    <ProjectActions
+                        projectId={project.id}
+                        projectName={project.name}
+                        isLastProject={isLastProject}
+                        onRename={() => setProjectInEdition(project.id ?? null)}
+                    />
+                ) : null}
             </Flex>
         </li>
     );

@@ -32,6 +32,8 @@ export const ProjectsList = ({
         return projectIdInEdition === projectId;
     };
 
+    const isLastProject = projects.length <= 1;
+
     return (
         <LoadMoreList isLoading={isLoading} hasNextPage={hasNextPage} onLoadMore={onLoadMore}>
             <ul className={styles.projectList}>
@@ -42,6 +44,7 @@ export const ProjectsList = ({
                         setProjectInEdition={setProjectInEdition}
                         isInEditMode={isInEditionMode(project.id)}
                         isActive={currentProjectId === project.id}
+                        isLastProject={isLastProject}
                     />
                 ))}
             </ul>
