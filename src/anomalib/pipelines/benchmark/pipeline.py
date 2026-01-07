@@ -7,19 +7,50 @@ This module provides functionality for running benchmarking experiments that eva
 and compare multiple anomaly detection models. The benchmarking pipeline supports
 running experiments in parallel across multiple GPUs when available.
 
+Configuration:
+    The benchmark pipeline is configured via a YAML file passed through the --config
+    command line argument. The config uses jsonargparse conventions with
+    ``class_path`` and ``init_args`` for object instantiation.
+
+    Example config structure::
+
+        accelerator:
+          - cpu
+        benchmark:
+          seed: 42
+          model:
+            grid:
+              - class_path: Patchcore
+          data:
+            class_path: MVTecAD
+            init_args:
+              category:
+                grid:
+                  - bottle
+
+    The ``grid`` key creates multiple jobs for each combination of values.
+
 Example:
-    >>> from anomalib.pipelines import Benchmark
-    >>> from anomalib.data import MVTecAD
-    >>> from anomalib.models import Padim, Patchcore
+    Run the benchmark with a config file:
 
-    >>> # Initialize benchmark with models and datasets
-    >>> benchmark = Benchmark(
-    ...     models=[Padim(), Patchcore()],
-    ...     datasets=[MVTecAD(category="bottle"), MVTecAD(category="cable")]
-    ... )
+    Programmatically with explicit config path:
 
-    >>> # Run benchmark
-    >>> results = benchmark.run()
+    >>> from benchmark.pipeline import Benchmark
+    >>> from argparse import Namespace
+    >>> args = Namespace(config="src/config.yaml")
+    >>> results = Benchmark().run(args)
+
+    Or via command line arguments (no args passed):
+
+    >>> from benchmark.pipeline import Benchmark
+    >>> # This will parse sys.argv looking for --config argument
+    >>> results = Benchmark().run()
+
+    Which expects the script to be called as:
+
+    .. code-block:: bash
+
+        python script.py --config src/config.yaml
 
 The pipeline handles setting up appropriate runners based on available hardware,
 using parallel execution when multiple GPUs are available and serial execution

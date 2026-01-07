@@ -48,6 +48,8 @@
 name: Security Checks
 
 on:
+  push:
+    branches: ["main", "feature/**"]
   schedule:
     # Run security checks every day at 2 AM UTC
     - cron: "0 2 * * *"
@@ -59,10 +61,10 @@ on:
         required: true
         type: choice
         options:
-          - "bandit,semgrep,trivy,zizmor" # Default set
-          - "bandit,clamav,semgrep,trivy,zizmor" # Full set
-          - "bandit,semgrep" # Minimal set
-        default: "bandit,semgrep,trivy"
+          - "bandit,semgrep"
+          - "bandit,semgrep,trivy,zizmor"
+          - "bandit,clamav,semgrep,trivy,zizmor"
+        default: "bandit,clamav,semgrep,trivy,zizmor"
       scan-scope:
         description: "Scan scope"
         required: true
@@ -99,8 +101,8 @@ jobs:
     uses: ./.github/workflows/_reusable-security-scan.yaml
     with:
       # For scheduled runs, use full scan configuration
-      tools: ${{ github.event_name == 'schedule' && 'bandit,clamav,semgrep,trivy,zizmor' || inputs.tools }}
-      scan-scope: ${{ github.event_name == 'schedule' && 'all' || inputs.scan-scope }}
-      severity-level: ${{ github.event_name == 'schedule' && 'LOW' || inputs.severity-level }}
-      confidence-level: ${{ github.event_name == 'schedule' && 'LOW' || inputs.confidence-level }}
+      tools: ${{ inputs.tools || 'bandit,clamav,semgrep,trivy,zizmor' }}
+      scan-scope: ${{ inputs.scan-scope || 'all' }}
+      severity-level: ${{ inputs.severity-level || 'LOW' }}
+      confidence-level: ${{ inputs.confidence-level || 'LOW' }}
       fail-on-findings: false # reports only

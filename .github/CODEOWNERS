@@ -6,12 +6,14 @@
 * @samet-akcay @ashwinvaidya17 @rajeshgangireddy
 
 # CI/CD
-/.ci/                                                       @ashwinvaidya17 @samet-akcay @AlexanderBarabanov
 /.devcontainer                                              @ashwinvaidya17
 /.github                                                    @ashwinvaidya17
 /.dockerignore                                              @ashwinvaidya17
-/.github/workflows/                                         @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
-/SECURITY.md                                                @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
+/.github/workflows/                                         @open-edge-platform/geti-ci-maintain
+/.github/actions/                                           @open-edge-platform/geti-ci-maintain
+/SECURITY.md                                                @open-edge-platform/geti-ci-maintain
+/.semgrepignore                                             @open-edge-platform/geti-ci-maintain
+/.github/renovate.json5                                     @open-edge-platform/geti-ci-maintain
 
 # Docs
 /docs                                                       @samet-akcay

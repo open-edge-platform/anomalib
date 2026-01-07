@@ -63,7 +63,7 @@ class AnomalibDataModule(LightningDataModule, ABC):
         train_batch_size (int): Batch size used by the train dataloader.
         eval_batch_size (int): Batch size used by the val and test dataloaders.
         num_workers (int): Number of workers used by the train, val and test dataloaders.
-        train_augmentations (Transform | None): Augmentations to apply dto the training images
+        train_augmentations (Transform | None): Augmentations to apply to the training images
             Defaults to ``None``.
         val_augmentations (Transform | None): Augmentations to apply to the validation images.
             Defaults to ``None``.
