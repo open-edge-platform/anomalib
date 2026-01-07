@@ -5,7 +5,7 @@ import { Content, ContextualHelp, Flex, Heading, Link, Radio, Text } from '@geti
 import { clsx } from 'clsx';
 
 import { ModelTag } from './model-tag.component';
-import { FAMILY_DISPLAY_NAMES, type ModelFamily, type TrainableModel } from './types';
+import { FAMILY_DISPLAY_NAMES, type TrainableModel } from './types';
 
 import classes from './train-model.module.scss';
 
@@ -15,8 +15,6 @@ interface TrainableModelCardProps {
 }
 
 export const TrainableModelCard = ({ model, isSelected }: TrainableModelCardProps) => {
-    const families: ModelFamily[] = Array.isArray(model.family) ? model.family : [model.family];
-
     return (
         <label
             htmlFor={`select-model-${model.id}`}
@@ -43,7 +41,7 @@ export const TrainableModelCard = ({ model, isSelected }: TrainableModelCardProp
 
                 <Flex gap='size-75' wrap='wrap' flex={1}>
                     {model.recommended && <ModelTag label='Recommended' variant='recommended' />}
-                    {families.map((family) => (
+                    {model.family?.map((family) => (
                         <ModelTag key={family} label={FAMILY_DISPLAY_NAMES[family]} variant='info' />
                     ))}
                 </Flex>

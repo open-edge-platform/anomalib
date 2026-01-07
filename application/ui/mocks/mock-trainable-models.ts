@@ -12,10 +12,6 @@ export const getMockedTrainableModel = (partial: Partial<SchemaTrainableModel> =
     docs_url: 'https://anomalib.readthedocs.io/',
     recommended: true,
     parameters: 27,
-    metrics: {
-        training: 3,
-        inference: 2,
-    },
     ...partial,
 });
 

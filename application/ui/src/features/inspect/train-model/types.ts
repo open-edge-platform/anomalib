@@ -1,10 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { SchemaModelFamily, SchemaPerformanceMetrics, SchemaTrainableModel } from '@geti-inspect/api/spec';
+import type { SchemaModelFamily, SchemaTrainableModel } from '@geti-inspect/api/spec';
 
 export type ModelFamily = SchemaModelFamily;
-export type PerformanceMetrics = SchemaPerformanceMetrics;
 export type TrainableModel = SchemaTrainableModel;
 
 export type MetricRating = 'LOW' | 'MEDIUM' | 'HIGH';
