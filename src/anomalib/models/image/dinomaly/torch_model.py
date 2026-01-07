@@ -12,7 +12,6 @@ See Also:
         Dinomaly Lightning model.
 """
 
-import math
 from functools import partial
 
 import torch
@@ -219,7 +218,7 @@ class DinomalyModel(nn.Module):
                 continue
             if i in self.target_layers:
                 encoder_features.append(x)
- 
+
         if self.remove_class_token:
             encoder_features = [e[:, 1 + self.encoder.num_register_tokens :, :] for e in encoder_features]
 
@@ -378,7 +377,8 @@ class DinomalyModel(nn.Module):
     def _process_features_for_spatial_output(
         self,
         features: list[torch.Tensor],
-        h_patches: int, w_patches: int
+        h_patches: int,
+        w_patches: int,
     ) -> list[torch.Tensor]:
         """Process features for spatial output by removing tokens and reshaping.
 
