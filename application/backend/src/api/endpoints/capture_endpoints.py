@@ -45,17 +45,14 @@ async def capture(
             detail="No frame available to capture. Please make sure the stream is active.",
         ) from e
 
-    image = stream_data.frame_data
-    # Convert BGR to RGB if needed
-    if image.ndim == 3 and image.shape[2] == 3:
-        image = image[..., ::-1]
-
-    media = await media_service.upload_image(project_id=project_id, image=image, is_anomalous=False, extension=".png")
+    media = await media_service.upload_image(
+        project_id=project_id, image=stream_data.frame_data, is_anomalous=False, extension=".png"
+    )
 
     background_tasks.add_task(
         media_service.generate_thumbnail,
         project_id=project_id,
         media_id=media.id,
-        image=image,
+        image=stream_data.frame_data,
     )
     return media
