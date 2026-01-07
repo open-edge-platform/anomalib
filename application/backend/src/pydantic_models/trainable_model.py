@@ -27,6 +27,7 @@ class License(StrEnum):
     CC_BY_4_0 = "CC-BY-4.0"
     CC_BY_NC_4_0 = "CC-BY-NC-4.0"
 
+
 class TrainableModel(BaseModel):
     """Metadata for a trainable model template."""
 

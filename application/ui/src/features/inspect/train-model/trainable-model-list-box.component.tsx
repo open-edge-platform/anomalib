@@ -8,7 +8,6 @@ import { Button, Flex, Grid, minmax, repeat } from '@geti/ui';
 import { ChevronDownLight, ChevronUpLight } from '@geti/ui/icons';
 
 import { TrainableModelCard } from './trainable-model-card.component';
-import type { TrainableModel } from './types';
 
 interface TrainableModelListBoxProps {
     selectedModelTemplateId: string | null;
@@ -19,7 +18,7 @@ export const TrainableModelListBox = ({ selectedModelTemplateId }: TrainableMode
 
     const { data } = $api.useSuspenseQuery('get', '/api/trainable-models');
 
-    const models = data.trainable_models as TrainableModel[];
+    const models = data.trainable_models;
     const recommendedModels = models.filter((m) => m.recommended);
     const otherModels = models.filter((m) => !m.recommended);
 
