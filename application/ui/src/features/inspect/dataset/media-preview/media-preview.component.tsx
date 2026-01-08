@@ -70,7 +70,7 @@ export const MediaPreview = ({
                     UNSAFE_style={{ padding: dimensionValue('size-125') }}
                     areas={['canvas sidebar', 'canvas sidebar']}
                 >
-                    <View gridArea={'canvas'} overflow={'hidden'}>
+                    <View position={'relative'} gridArea={'canvas'} overflow={'hidden'}>
                         <InferenceResult selectedMediaItem={selectedMediaItem} inferenceResult={inferenceResult} />
                     </View>
 
