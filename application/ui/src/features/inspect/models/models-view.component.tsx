@@ -27,7 +27,11 @@ import { ModelStatusBadges } from './model-status-badges.component';
 
 import classes from './models-view.module.scss';
 
-export const ModelsView = () => {
+interface ModelsViewProps {
+    onModelSelect: (modelId: string) => void;
+}
+
+export const ModelsView = ({ onModelSelect }: ModelsViewProps) => {
     const { data: pipeline } = usePipeline();
     const { jobs = [] } = useProjectTrainingJobs();
 
@@ -102,9 +106,20 @@ export const ModelsView = () => {
                             <Cell>
                                 <Flex alignItems='start' gap='size-50' direction='column'>
                                     <Flex alignItems='end' gap='size-75'>
-                                        <Text marginTop={'size-25'} UNSAFE_className={classes.modelName}>
-                                            {model.name}
-                                        </Text>
+                                        {model.status === 'Completed' ? (
+                                            <span
+                                                role='button'
+                                                tabIndex={0}
+                                                onClick={() => onModelSelect(model.id)}
+                                                className={classes.modelNameClickable}
+                                            >
+                                                {model.name}
+                                            </span>
+                                        ) : (
+                                            <Text marginTop={'size-25'} UNSAFE_className={classes.modelName}>
+                                                {model.name}
+                                            </Text>
+                                        )}
                                         <ModelStatusBadges
                                             isSelected={selectedModelId === model.id}
                                             jobStatus={model.job?.status}
