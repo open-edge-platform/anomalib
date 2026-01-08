@@ -165,7 +165,7 @@ export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuPro
                         primaryActionLabel={deleteModelMutation.isPending ? 'Deleting...' : 'Delete model'}
                         isPrimaryActionDisabled={deleteModelMutation.isPending}
                         onPrimaryAction={() => {
-                            void handleDeleteModel();
+                            handleDeleteModel();
                         }}
                     >
                         Deleting a model removes any exported artifacts and cannot be undone.
@@ -202,7 +202,7 @@ export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuPro
                         primaryActionLabel={patchPipeline.isPending ? 'Activating...' : 'Activate'}
                         isPrimaryActionDisabled={patchPipeline.isPending}
                         onPrimaryAction={() => {
-                            void handleActivateModel();
+                            handleActivateModel();
                         }}
                     >
                         This model will be used for inference in the pipeline. The current active model will be
