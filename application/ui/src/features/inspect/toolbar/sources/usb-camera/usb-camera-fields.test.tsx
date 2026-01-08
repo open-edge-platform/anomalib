@@ -8,19 +8,19 @@ import { http } from 'src/api/utils';
 import { server } from 'src/msw-node-setup';
 import { TestProviders } from 'src/providers';
 
-import { WebcamSourceConfig } from '../util';
-import { WebcamFields } from './webcam-fields.component';
+import { UsbCameraSourceConfig } from '../util';
+import { UsbCameraFields } from './usb-camera-fields.component';
 
-const getMockState = (props: Partial<WebcamSourceConfig> = {}): WebcamSourceConfig => ({
+const getMockState = (props: Partial<UsbCameraSourceConfig> = {}): UsbCameraSourceConfig => ({
     id: 'test-id',
     name: 'Test Camera',
     device_id: 0,
     project_id: 'test-project',
-    source_type: 'webcam' as const,
+    source_type: 'usb_camera' as const,
     ...props,
 });
 
-describe('WebcamFields', () => {
+describe('UsbCameraFields', () => {
     const mockCameraDevices = {
         devices: [
             { index: 0, name: 'Camera 0' },
@@ -29,7 +29,7 @@ describe('WebcamFields', () => {
         ],
     };
 
-    const renderComponent = (state: WebcamSourceConfig) => {
+    const renderComponent = (state: UsbCameraSourceConfig) => {
         server.use(
             http.get('/api/devices/camera', () => {
                 return HttpResponse.json(mockCameraDevices);
@@ -38,7 +38,7 @@ describe('WebcamFields', () => {
 
         return render(
             <TestProviders>
-                <WebcamFields defaultState={state} />
+                <UsbCameraFields defaultState={state} />
             </TestProviders>
         );
     };
