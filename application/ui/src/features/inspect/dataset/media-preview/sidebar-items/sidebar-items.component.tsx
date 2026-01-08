@@ -1,6 +1,6 @@
 import { Selection, View } from '@geti/ui';
 import { GridLayoutOptions } from 'react-aria-components';
-import { getThumbnailUrl } from 'src/features/inspect/utils';
+import { getThumbnailUrl, isNonEmptyString } from 'src/features/inspect/utils';
 
 import { GridMediaItem } from '../../../../..//components/virtualizer-grid-layout/grid-media-item/grid-media-item.component';
 import { MediaThumbnail } from '../../../../../components/media-thumbnail/media-thumbnail.component';
@@ -35,7 +35,7 @@ export const SidebarItems = ({
         const firstKey = updatedSelectedKeys.values().next().value;
         const mediaItem = mediaItems.find((item) => item.id === firstKey);
 
-        onSelectedMediaItem(mediaItem?.id ?? null);
+        isNonEmptyString(mediaItem?.id) && onSelectedMediaItem(mediaItem.id);
     };
 
     const handleDeletedItem = (deletedIds: string[]) => {
