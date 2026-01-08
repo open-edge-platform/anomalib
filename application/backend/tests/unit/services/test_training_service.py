@@ -281,7 +281,7 @@ class TestTrainingService:
         call_args = fxt_mock_anomalib_components["engine_class"].call_args
         assert call_args[1]["default_root_dir"] == "/path/to/model"
         assert "logger" in call_args[1]
-        assert len(call_args[1]["logger"]) == 2  # trackio and tensorboard
+        assert len(call_args[1]["logger"]) == 1  # tensorboard
         assert call_args[1]["max_epochs"] == 42
 
         fxt_mock_anomalib_components["engine"].fit.assert_called_once_with(
