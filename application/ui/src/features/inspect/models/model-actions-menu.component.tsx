@@ -15,7 +15,7 @@ interface ModelActionsMenuProps {
     selectedModelId: string | undefined;
 }
 
-type DialogType = 'logs' | 'delete' | 'export' | null;
+type DialogType = 'logs' | 'delete' | 'export' | 'activate' | null;
 
 export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuProps) => {
     const { projectId } = useProjectIdentifier();
@@ -73,23 +73,39 @@ export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuPro
         );
     };
 
-    const handleSetModel = (modelId?: string) => {
-        patchPipeline.mutateAsync({ params: { path: { project_id: projectId } }, body: { model_id: modelId } });
-    };
-
     const handleDeleteModel = () => {
         void deleteModelMutation.mutateAsync(
             { params: { path: { project_id: projectId, model_id: model.id } } },
             {
                 onSuccess: () => {
                     if (selectedModelId === model.id) {
-                        handleSetModel(undefined);
+                        patchPipeline.mutateAsync({
+                            params: { path: { project_id: projectId } },
+                            body: { model_id: undefined },
+                        });
                     }
 
                     toast({ type: 'success', message: `Model "${model.name}" has been deleted.` });
                 },
                 onError: () => {
                     toast({ type: 'error', message: `Failed to delete "${model.name}".` });
+                },
+                onSettled: () => {
+                    setOpenDialog(null);
+                },
+            }
+        );
+    };
+
+    const handleActivateModel = () => {
+        void patchPipeline.mutateAsync(
+            { params: { path: { project_id: projectId } }, body: { model_id: model.id } },
+            {
+                onSuccess: () => {
+                    toast({ type: 'success', message: `Model "${model.name}" is now active.` });
+                },
+                onError: () => {
+                    toast({ type: 'error', message: `Failed to activate "${model.name}".` });
                 },
                 onSettled: () => {
                     setOpenDialog(null);
@@ -119,8 +135,8 @@ export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuPro
                         if (actionKey === 'delete' && canDeleteModel) {
                             setOpenDialog('delete');
                         }
-                        if (actionKey === 'activate' && hasCompletedStatus) {
-                            handleSetModel(model.id);
+                        if (actionKey === 'activate' && hasCompletedStatus && model.id !== selectedModelId) {
+                            setOpenDialog('activate');
                         }
                     }}
                 >
@@ -174,6 +190,24 @@ export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuPro
                             });
                         }}
                     />
+                ) : null}
+            </DialogContainer>
+
+            <DialogContainer onDismiss={() => setOpenDialog(null)}>
+                {openDialog === 'activate' && hasCompletedStatus ? (
+                    <AlertDialog
+                        variant='confirmation'
+                        cancelLabel='Cancel'
+                        title={`Activate model "${model.name}"?`}
+                        primaryActionLabel={patchPipeline.isPending ? 'Activating...' : 'Activate'}
+                        isPrimaryActionDisabled={patchPipeline.isPending}
+                        onPrimaryAction={() => {
+                            void handleActivateModel();
+                        }}
+                    >
+                        This model will be used for inference in the pipeline. The current active model will be
+                        replaced.
+                    </AlertDialog>
                 ) : null}
             </DialogContainer>
         </>
