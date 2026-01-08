@@ -34,14 +34,6 @@ services:
       nofile:
         soft: 65536
         hard: 65536
-    # Uncomment the following lines to enable GPU support (NVIDIA GPUs only)
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: all
-    #           capabilities: [gpu]
     # Map all host devices to provide access to webcams and other attached devices
     privileged: true
     devices:
