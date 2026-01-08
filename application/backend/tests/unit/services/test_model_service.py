@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import uuid4
 
 import numpy as np
 import openvino.properties.hint as ov_hints
@@ -150,6 +151,31 @@ class TestModelService:
             snapshot_id=fxt_model.dataset_snapshot_id, project_id=fxt_project.id
         )
         mock_binary_repo.delete_model_folder.assert_called_once()
+
+    def test_delete_model_also_deletes_training_job(
+        self, fxt_model_service, fxt_model_repository, fxt_model, fxt_project
+    ):
+        """Test that deleting a model also deletes its associated training job."""
+        fxt_model_repository.delete_by_id.return_value = None
+        fxt_model_repository.get_by_id.return_value = fxt_model
+        fxt_model.train_job_id = uuid4()
+
+        with (
+            patch("services.model_service.ModelRepository") as mock_repo_class,
+            patch("services.model_service.JobRepository") as mock_job_repo_class,
+            patch("services.model_service.DatasetSnapshotService") as mock_snapshot_service,
+            patch("services.model_service.ModelBinaryRepository") as mock_binary_repo_class,
+        ):
+            mock_repo_class.return_value = fxt_model_repository
+            mock_job_repo = MagicMock()
+            mock_job_repo.delete_by_id = AsyncMock()
+            mock_job_repo_class.return_value = mock_job_repo
+            mock_binary_repo_class.return_value.delete_model_folder = AsyncMock()
+            mock_snapshot_service.delete_snapshot_if_unused = AsyncMock()
+
+            asyncio.run(fxt_model_service.delete_model(fxt_project.id, fxt_model.id))
+
+        mock_job_repo.delete_by_id.assert_called_once_with(fxt_model.train_job_id)
 
     def test_load_inference_model_success(self, fxt_model_service, fxt_model, fxt_openvino_inferencer):
         """Test loading inference model successfully."""

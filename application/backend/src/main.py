@@ -76,11 +76,11 @@ if (
 
 def main() -> None:
     """Main function to run the Geti Inspect server"""
-    if mp.get_start_method(allow_none=True) != "spawn":
-        mp.set_start_method("spawn", force=True)
     uvicorn_port = int(os.environ.get("HTTP_SERVER_PORT", settings.port))
     uvicorn.run("main:app", loop="uvloop", host=settings.host, port=uvicorn_port, log_config=None)
 
 
 if __name__ == "__main__":
+    if mp.get_start_method(allow_none=True) != "spawn":
+        mp.set_start_method("spawn", force=True)
     main()

@@ -3,6 +3,7 @@
 import asyncio
 import base64
 import io
+import os
 import shutil
 import tempfile
 from dataclasses import dataclass
@@ -14,7 +15,8 @@ import anyio
 import cv2
 import numpy as np
 import openvino.properties.hint as ov_hints
-from anomalib.deploy import ExportType, OpenVINOInferencer
+from anomalib.data import AnomalibDataModule, Folder
+from anomalib.deploy import CompressionType, ExportType, OpenVINOInferencer
 from anomalib.engine import Engine
 from anomalib.models import get_model
 from loguru import logger
@@ -25,7 +27,7 @@ from db import get_async_db_session_ctx
 from pydantic_models import Model, ModelList, PredictionLabel, PredictionResponse
 from pydantic_models.base import Pagination
 from pydantic_models.model import ExportParameters
-from repositories import ModelRepository
+from repositories import JobRepository, ModelRepository
 from repositories.binary_repo import ModelBinaryRepository, ModelExportBinaryRepository
 from services import ResourceNotFoundError
 from services.dataset_snapshot_service import DatasetSnapshotService
@@ -112,9 +114,15 @@ class ModelService:
         ds_snapshot_id = model.dataset_snapshot_id
         await DatasetSnapshotService.delete_snapshot_if_unused(snapshot_id=ds_snapshot_id, project_id=project_id)
 
+        train_job_id = model.train_job_id
+
         async with get_async_db_session_ctx() as session:
             repo = ModelRepository(session, project_id=project_id)
             await repo.delete_by_id(model_id)
+
+            if train_job_id:
+                job_repo = JobRepository(session)
+                await job_repo.delete_by_id(train_job_id)
 
     @classmethod
     async def delete_project_models_db(cls, session: AsyncSession, project_id: UUID, commit: bool = False) -> None:
@@ -184,18 +192,46 @@ class ModelService:
             if not ckpt_path.exists():
                 raise FileNotFoundError(f"Model checkpoint not found at {ckpt_path}")
 
-        # Run export in thread (CPU intensive)
+        if export_parameters.compression in {CompressionType.INT8_PTQ, CompressionType.INT8_ACQ}:
+            # We need reference images for INT8_PTQ and INT8_ACQ quantization.
+            # Use the dataset snapshot to create a temporary datamodule.
+            datamodule_name = "export-datamodule"
+            async with DatasetSnapshotService.use_snapshot_as_folder(
+                snapshot_id=model.dataset_snapshot_id,
+                project_id=project_id,
+            ) as dataset_path:
+                datamodule = Folder(
+                    name=datamodule_name,
+                    normal_dir=os.path.join(dataset_path, "normal"),
+                )
+                datamodule.setup()
+
+                return await asyncio.to_thread(
+                    self._run_export,
+                    model_name=model.name,
+                    ckpt_path=ckpt_path,
+                    export_parameters=export_parameters,
+                    export_zip_path=Path(export_zip_path),
+                    datamodule=datamodule,
+                )
+
+        # No datamodule needed for other compression types
         return await asyncio.to_thread(
             self._run_export,
             model_name=model.name,
             ckpt_path=ckpt_path,
             export_parameters=export_parameters,
             export_zip_path=Path(export_zip_path),
+            datamodule=None,
         )
 
     @staticmethod
     def _run_export(
-        model_name: str, ckpt_path: Path, export_parameters: ExportParameters, export_zip_path: Path
+        model_name: str,
+        ckpt_path: Path,
+        export_parameters: ExportParameters,
+        export_zip_path: Path,
+        datamodule: AnomalibDataModule | None = None,
     ) -> Path:
         """Run the export process in a separate thread."""
         # Setup engine
@@ -212,6 +248,7 @@ class ModelService:
                 export_root=temp_path,
                 ckpt_path=str(ckpt_path),
                 compression_type=export_parameters.compression,
+                datamodule=datamodule,
             )
 
             # Create zip archive
@@ -297,6 +334,10 @@ class ModelService:
         numpy_image = cv2.imdecode(npd, -1)
         if numpy_image is None:
             raise ValueError("Failed to decode image")
+
+        # Remove alpha channel
+        if len(numpy_image.shape) == 3 and numpy_image.shape[-1] == 4:
+            numpy_image = cv2.cvtColor(numpy_image, cv2.COLOR_RGBA2RGB)
 
         # Run prediction
         pred = inference_model.predict(numpy_image)

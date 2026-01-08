@@ -106,14 +106,14 @@ jobs:
       version-changed: ${{ steps.bump.outputs.version_changed }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           fetch-depth: 0
           token: ${{ secrets.github-token }}
           persist-credentials: true
 
       - name: Set up Python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6
         with:
           python-version: ${{ inputs.python-version }}
           cache: pip
@@ -173,7 +173,7 @@ jobs:
 
       - name: Create Pull Request
         if: steps.check-bump.outputs.version_needs_bump == 'true' && inputs.create-pr && !inputs.dry-run
-        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        uses: peter-evans/create-pull-request@98357b18bf14b5342f975ff684046ec3b2a07725 # v8.0.0
         with:
           token: ${{ secrets.github-token }}
           commit-message: "chore(release): bump version to ${{ steps.bump.outputs.new_version }}"

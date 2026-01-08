@@ -1,7 +1,7 @@
 // Connect to an SSE endpoint and yield its messages
-export function fetchSSE(url: string) {
+export function fetchSSE<T = unknown>(url: string) {
     return {
-        async *[Symbol.asyncIterator]() {
+        async *[Symbol.asyncIterator](): AsyncGenerator<T> {
             const eventSource = new EventSource(url);
 
             try {
