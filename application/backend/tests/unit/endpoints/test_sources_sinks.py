@@ -14,7 +14,7 @@ from api.dependencies import get_configuration_service
 from main import app
 from pydantic_models.base import Pagination
 from pydantic_models.sink import FolderSinkConfig, MqttSinkConfig, OutputFormat, SinkList, SinkType
-from pydantic_models.source import SourceList, SourceType, VideoFileSourceConfig, WebcamSourceConfig
+from pydantic_models.source import SourceList, SourceType, VideoFileSourceConfig, UsbCameraSourceConfig
 from services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 from services.exceptions import ResourceType
 
@@ -38,12 +38,12 @@ def fxt_folder_sink(fxt_project) -> FolderSinkConfig:
 
 
 @pytest.fixture
-def fxt_webcam_source(fxt_project) -> WebcamSourceConfig:
-    return WebcamSourceConfig(
+def fxt_usb_camera_source(fxt_project) -> UsbCameraSourceConfig:
+    return UsbCameraSourceConfig(
         id=uuid4(),
         project_id=fxt_project.id,
-        source_type=SourceType.WEBCAM,
-        name="Test Webcam Source",
+        source_type=SourceType.USB_CAMERA,
+        name="Test USB Camera Source",
         device_id=1,
     )
 
@@ -348,7 +348,7 @@ class TestSourceAndSinkEndpoints:
                 "fxt_webcam_source",
                 ConfigApiPath.SOURCES,
                 "get_source_by_id",
-                "device_id: 1\nname: Test Webcam Source\nsource_type: webcam\n",
+                "device_id: 1\nname: Test USB Camera Source\nsource_type: usb_camera\n",
             ),
             (
                 "fxt_folder_sink",

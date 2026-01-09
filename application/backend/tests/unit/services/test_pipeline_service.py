@@ -10,7 +10,7 @@ import pytest
 from pydantic_models import Pipeline, PipelineStatus
 from pydantic_models.model import Model
 from pydantic_models.sink import FolderSinkConfig, MqttSinkConfig
-from pydantic_models.source import VideoFileSourceConfig, WebcamSourceConfig
+from pydantic_models.source import VideoFileSourceConfig, UsbCameraSourceConfig
 from repositories import PipelineRepository
 from services import ActivePipelineService, ModelService, ResourceNotFoundError
 from services.metrics_service import MetricsService
@@ -210,10 +210,10 @@ class TestPipelineService:
         self, fxt_pipeline_service, fxt_pipeline, fxt_pipeline_repository, fxt_condition
     ):
         """Test updating running pipeline with source change."""
-        new_source = WebcamSourceConfig(
+        new_source = UsbCameraSourceConfig(
             id=uuid.uuid4(),
             project_id=fxt_pipeline.project_id,
-            source_type="webcam",
+            source_type="usb_camera",
             name="New Source",
             device_id=0,
         )
