@@ -3,11 +3,11 @@ import { ImageFolderFields } from './image-folder/image-folder-fields.component'
 import { imageFolderBodyFormatter } from './image-folder/utils';
 import { IpCameraFields } from './ip-camera/ip-camera-fields.component';
 import { ipCameraBodyFormatter } from './ip-camera/utils';
+import { UsbCameraFields } from './usb-camera/usb-camera-fields.component';
+import { usbCameraBodyFormatter } from './usb-camera/utils';
 import { ImagesFolderSourceConfig, SourceConfig, VideoFileSourceConfig } from './util';
 import { videoFileBodyFormatter } from './video-file/utils';
 import { VideoFileFields } from './video-file/video-file-fields.component';
-import { webcamBodyFormatter } from './webcam/utils';
-import { WebcamFields } from './webcam/webcam-fields.component';
 
 interface EditSourceFormProps {
     config: SourceConfig;
@@ -16,14 +16,14 @@ interface EditSourceFormProps {
 }
 
 export const EditSourceForm = ({ config, onSaved, onBackToList }: EditSourceFormProps) => {
-    if (config.source_type === 'webcam') {
+    if (config.source_type === 'usb_camera') {
         return (
             <EditSource
                 onSaved={onSaved}
                 config={config}
                 onBackToList={onBackToList}
-                componentFields={(state) => <WebcamFields defaultState={state} />}
-                bodyFormatter={webcamBodyFormatter}
+                componentFields={(state) => <UsbCameraFields defaultState={state} />}
+                bodyFormatter={usbCameraBodyFormatter}
             />
         );
     }
