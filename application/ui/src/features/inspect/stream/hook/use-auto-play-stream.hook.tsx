@@ -18,7 +18,6 @@ export const useAutoPlayStream = () => {
     const { start, status } = useWebRTCConnection();
     const { projectId } = useProjectIdentifier();
 
-    const hasSink = isNonEmptyString(pipeline?.sink?.id);
     const hasModel = isNonEmptyString(pipeline?.model?.id);
     const hasSource = isNonEmptyString(pipeline?.source?.id);
     const isRunning = pipeline?.status === 'running';
