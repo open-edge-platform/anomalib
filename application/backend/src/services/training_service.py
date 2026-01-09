@@ -220,6 +220,9 @@ class TrainingService:
         )
 
         tensorboard = AnomalibTensorBoardLogger(save_dir=global_log_config.tensorboard_log_path, name=name)
+        kwargs = {}
+        if training_device == "xpu":
+            kwargs["strategy"] = SingleXPUStrategy()
         engine = Engine(
             default_root_dir=model.export_path,
             logger=[tensorboard],
@@ -230,7 +233,7 @@ class TrainingService:
                 EarlyStopping(monitor="pixel_AUROC", mode="max", patience=5),
             ],
             accelerator=training_device,
-            **({"strategy": SingleXPUStrategy()} if training_device == "xpu" else {}),
+            **kwargs,
         )
 
         # Execute training and export
