@@ -77,7 +77,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 📚 Add log for Tiled Ensemble PR by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/2683
 - 📚 Adding Zizmor and minor refactor by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/2685
 - 📚 Add `issue-management` workflow by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2746
-- 🚀 Add Tabular datamodule by @manuelkonrad in https://github.com/openvinotoolkit/anomalib/pull/2713
+- 🚀 Add Tabular datamodule by @manuelkonrad in https://github.com/open-edge-platform/anomalib/pull/2713
 - 🚀 Implement type-safe deprecation decorator with version support by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2771
 - 🚀 Add conventional commit enforcement and automation by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2773
 - 🚀 Enable Visualization for NumPy Input/Output by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2764
