@@ -3,17 +3,17 @@ import { ReactNode } from 'react';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 
 import { ReactComponent as IpCameraIcon } from '../../../../assets/icons/ip-camera.svg';
+import { ReactComponent as UsbCameraIcon } from '../../../../assets/icons/usb-camera.svg';
 import { ReactComponent as Video } from '../../../../assets/icons/video-file.svg';
-import { ReactComponent as WebcamIcon } from '../../../../assets/icons/webcam.svg';
 import { DisclosureGroup } from '../../../../components/disclosure-group/disclosure-group.component';
 import { AddSource } from './add-source/add-source.component';
 import { IpCameraFields } from './ip-camera/ip-camera-fields.component';
 import { getIpCameraInitialConfig, ipCameraBodyFormatter } from './ip-camera/utils';
-import { IPCameraSourceConfig, VideoFileSourceConfig, WebcamSourceConfig } from './util';
+import { UsbCameraFields } from './usb-camera/usb-camera-fields.component';
+import { getUsbCameraInitialConfig, usbCameraBodyFormatter } from './usb-camera/utils';
+import { IPCameraSourceConfig, UsbCameraSourceConfig, VideoFileSourceConfig } from './util';
 import { getVideoFileInitialConfig, videoFileBodyFormatter } from './video-file/utils';
 import { VideoFileFields } from './video-file/video-file-fields.component';
-import { getWebcamInitialConfig, webcamBodyFormatter } from './webcam/utils';
-import { WebcamFields } from './webcam/webcam-fields.component';
 
 interface SourceOptionsProps {
     onSaved: () => void;
@@ -32,15 +32,17 @@ export const SourceOptions = ({ hasHeader, children, onSaved }: SourceOptionsPro
                 defaultActiveInput={null}
                 items={[
                     {
-                        label: 'Webcam',
-                        value: 'webcam',
-                        icon: <WebcamIcon width={'24px'} />,
+                        label: 'USB Camera',
+                        value: 'usb_camera',
+                        icon: <UsbCameraIcon width={'24px'} />,
                         content: (
                             <AddSource
                                 onSaved={onSaved}
-                                config={getWebcamInitialConfig(projectId)}
-                                componentFields={(state: WebcamSourceConfig) => <WebcamFields defaultState={state} />}
-                                bodyFormatter={webcamBodyFormatter}
+                                config={getUsbCameraInitialConfig(projectId)}
+                                componentFields={(state: UsbCameraSourceConfig) => (
+                                    <UsbCameraFields defaultState={state} />
+                                )}
+                                bodyFormatter={usbCameraBodyFormatter}
                             />
                         ),
                     },

@@ -8,13 +8,13 @@ import { ActionButton, Flex, Item, Key, Loading, Picker, TextField } from '@geti
 import { Refresh } from '@geti/ui/icons';
 import { isEmpty } from 'lodash-es';
 
-import { WebcamSourceConfig } from '../util';
+import { UsbCameraSourceConfig } from '../util';
 
-type WebcamFieldsProps = {
-    defaultState: WebcamSourceConfig;
+type UsbCameraFieldsProps = {
+    defaultState: UsbCameraSourceConfig;
 };
 
-export const WebcamFields = ({ defaultState }: WebcamFieldsProps) => {
+export const UsbCameraFields = ({ defaultState }: UsbCameraFieldsProps) => {
     const [name, setName] = useState(defaultState.name);
     const isSystemName = useRef(isEmpty(defaultState.name));
 

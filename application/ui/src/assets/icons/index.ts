@@ -19,7 +19,7 @@ export { ReactComponent as Stats } from './stats.svg';
 export { ReactComponent as SuccessIcon } from './success-icon.svg';
 export { ReactComponent as ThreeDotsCircle } from './three-dots-circle.svg';
 export { ReactComponent as VideoFile } from './video-file.svg';
-export { ReactComponent as Webcam } from './webcam.svg';
+export { ReactComponent as UsbCamera } from './usb-camera.svg';
 export { ReactComponent as Webhook } from './webhook.svg';
 export { ReactComponent as Image } from './image.svg';
 export { ReactComponent as Fireworks } from './fire-works.svg';
