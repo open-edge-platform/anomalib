@@ -10,7 +10,7 @@ const useTrainableModels = () => {
         gcTime: Infinity,
     });
 
-    return data.trainable_models.map((model) => ({ id: model, name: model }));
+    return data.trainable_models.map((model) => ({ id: model.name, name: model.name }));
 };
 
 type Ratings = 'LOW' | 'MEDIUM' | 'HIGH';
