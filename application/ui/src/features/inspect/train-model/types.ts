@@ -6,14 +6,6 @@ import type { SchemaModelFamily, SchemaTrainableModel } from '@geti-inspect/api/
 export type ModelFamily = SchemaModelFamily;
 export type TrainableModel = SchemaTrainableModel;
 
-export type MetricRating = 'LOW' | 'MEDIUM' | 'HIGH';
-
-export const METRIC_RATING_MAP: Record<1 | 2 | 3, MetricRating> = {
-    1: 'LOW',
-    2: 'MEDIUM',
-    3: 'HIGH',
-};
-
 export const FAMILY_DISPLAY_NAMES: Record<ModelFamily, string> = {
     memory_bank: 'Memory Bank',
     distribution: 'Distribution',
