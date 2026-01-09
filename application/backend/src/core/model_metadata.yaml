@@ -32,9 +32,6 @@
   recommended: true
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/patchcore.html
-  metrics:
-    training: 2 # 203.5s avg
-    inference: 2 # 84.6 FPS
   parameters: 24.9
   supported: true
 
@@ -45,9 +42,6 @@
   recommended: true
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/fre.html
-  metrics:
-    training: 2 # 169.5s avg
-    inference: 3 # 174.0 FPS
   parameters: 23
   supported: true
 
@@ -58,9 +52,6 @@
   recommended: true
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/dinomaly.html
-  metrics:
-    training: 1 # 844.6s avg
-    inference: 1 # 40.6 FPS
   parameters: 147
   supported: true
 
@@ -75,9 +66,6 @@
   recommended: false
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/cfa.html
-  metrics:
-    training: 1 # 570.5s avg
-    inference: 2 # 86.0 FPS
   parameters: 31.3
   supported: true
 
@@ -88,9 +76,6 @@
   recommended: false
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/dfm.html
-  metrics:
-    training: 3 # 8.3s avg
-    inference: 3 # 153.5 FPS
   parameters: 8.5
   supported: true
 
@@ -101,9 +86,6 @@
   recommended: false
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/dfkde.html
-  metrics:
-    training: 3 # 6.5s avg
-    inference: 3 # 232.8 FPS
   parameters: 11.2
   supported: false
 
@@ -115,9 +97,6 @@
   recommended: false
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/padim.html
-  metrics:
-    training: 3 # 8.4s avg
-    inference: 3 # 284.1 FPS
   parameters: 2.8
   supported: true
 
@@ -132,9 +111,6 @@
   recommended: false
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/fastflow.html
-  metrics:
-    training: 2 # 185.4s avg
-    inference: 2 # 56.9 FPS
   parameters: 7.7
   supported: true
 
@@ -145,9 +121,6 @@
   recommended: false
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/cflow.html
-  metrics:
-    training: 1 # 4647.3s avg
-    inference: null
   parameters: 236
   supported: false
 
@@ -158,9 +131,6 @@
   recommended: false
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/csflow.html
-  metrics:
-    training: 1 # 784.2s avg
-    inference: 1 # 12.5 FPS
   parameters: 305
   supported: false
 
@@ -171,9 +141,6 @@
   recommended: false
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/uflow.html
-  metrics:
-    training: 1 # 4181.8s avg
-    inference: 1 # 8.3 FPS
   parameters: 422
   supported: false
 
@@ -188,9 +155,6 @@
   recommended: false
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/efficient_ad.html
-  metrics:
-    training: 1 # 844.9s avg
-    inference: null
   parameters: 8.1
   supported: false
 
@@ -201,9 +165,6 @@
   recommended: false
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/reverse_distillation.html
-  metrics:
-    training: 1 # 501.6s avg
-    inference: 2 # 69.7 FPS
   parameters: 89
   supported: true
 
@@ -214,9 +175,6 @@
   recommended: false
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/stfpm.html
-  metrics:
-    training: 2 # 145.2s avg
-    inference: 3 # 182.0 FPS
   parameters: 5.6
   supported: false
 
@@ -226,9 +184,6 @@
   family: [student_teacher]
   recommended: false
   license: Apache-2.0
-  metrics:
-    training: null
-    inference: null
   parameters: null
   supported: false
 
@@ -243,9 +198,6 @@
   recommended: false
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/draem.html
-  metrics:
-    training: null
-    inference: null
   parameters: null
   supported: false
 
@@ -256,9 +208,6 @@
   recommended: false
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/dsr.html
-  metrics:
-    training: 1 # 405.8s
-    inference: 1 # 49.8 FPS
   parameters: null
   supported: false
 
@@ -269,9 +218,6 @@
   recommended: false
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/supersimplenet.html
-  metrics:
-    training: 1 # 1017.6s avg
-    inference: 2 # 95.3 FPS
   parameters: 33.7
   supported: true
 
@@ -286,9 +232,6 @@
   recommended: false
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/ganomaly.html
-  metrics:
-    training: 1 # 351.9s
-    inference: 3 # 231.3 FPS
   parameters: 188
   supported: false
 
@@ -303,9 +246,6 @@
   recommended: false
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/winclip.html
-  metrics:
-    training: 3 # 29.3s
-    inference: null
   parameters: null
   supported: false
 
@@ -316,9 +256,6 @@
   recommended: false
   license: Apache-2.0
   docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/vlm_ad.html
-  metrics:
-    training: null
-    inference: null
   parameters: null
   supported: false
 
@@ -332,9 +269,6 @@
   family: [other]
   recommended: false
   license: Apache-2.0
-  metrics:
-    training: null
-    inference: null
   parameters: null
   supported: false
 
@@ -344,8 +278,5 @@
   family: [other]
   recommended: false
   license: Apache-2.0
-  metrics:
-    training: null
-    inference: null
   parameters: null
   supported: false
