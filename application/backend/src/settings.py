@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     # Proxy settings
     no_proxy: str = Field(default="localhost,127.0.0.1,::1", alias="no_proxy")
 
+    # WebRTC
+    ice_servers: list[dict] = Field(default=[], alias="ICE_SERVERS")
+    webrtc_advertise_ip: str | None = Field(default=None, alias="WEBRTC_ADVERTISE_IP")
+
     @property
     def database_url(self) -> str:
         """Get database URL"""

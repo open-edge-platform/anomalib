@@ -172,3 +172,8 @@ async def get_webrtc_manager(request: Request) -> WebRTCManager:
 async def get_device_name(device: Annotated[str | None, Form()] = None) -> str | None:
     """Converts the device name to uppercase if provided"""
     return device.upper() if device is not None else None
+
+
+def get_ice_servers(request: Request) -> list[dict]:
+    """Provides the ICE servers from settings."""
+    return request.app.state.settings.ice_servers
