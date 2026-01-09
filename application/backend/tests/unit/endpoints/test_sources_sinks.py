@@ -85,7 +85,7 @@ class TestSourceAndSinkEndpoints:
     @pytest.mark.parametrize(
         "fixture_name, api_path, create_method",
         [
-            ("fxt_webcam_source", ConfigApiPath.SOURCES, "create_source"),
+            ("fxt_usb_camera_source", ConfigApiPath.SOURCES, "create_source"),
             ("fxt_folder_sink", ConfigApiPath.SINKS, "create_sink"),
         ],
     )
@@ -121,7 +121,7 @@ class TestSourceAndSinkEndpoints:
     @pytest.mark.parametrize(
         "resource_type, api_path, fixture_name, create_method",
         [
-            (ResourceType.SOURCE, ConfigApiPath.SOURCES, "fxt_webcam_source", "create_source"),
+            (ResourceType.SOURCE, ConfigApiPath.SOURCES, "fxt_usb_camera_source", "create_source"),
             (ResourceType.SINK, ConfigApiPath.SINKS, "fxt_folder_sink", "create_sink"),
         ],
     )
@@ -142,7 +142,7 @@ class TestSourceAndSinkEndpoints:
     @pytest.mark.parametrize(
         "fixtures, api_path, list_method",
         [
-            (["fxt_webcam_source", "fxt_video_source"], ConfigApiPath.SOURCES, "list_sources"),
+            (["fxt_usb_camera_source", "fxt_video_source"], ConfigApiPath.SOURCES, "list_sources"),
             (["fxt_folder_sink", "fxt_mqtt_sink"], ConfigApiPath.SINKS, "list_sinks"),
         ],
     )
@@ -172,7 +172,7 @@ class TestSourceAndSinkEndpoints:
     @pytest.mark.parametrize(
         "fixture_name, api_path, get_method",
         [
-            ("fxt_webcam_source", ConfigApiPath.SOURCES, "get_source_by_id"),
+            ("fxt_usb_camera_source", ConfigApiPath.SOURCES, "get_source_by_id"),
             ("fxt_folder_sink", ConfigApiPath.SINKS, "get_sink_by_id"),
         ],
     )
@@ -215,7 +215,7 @@ class TestSourceAndSinkEndpoints:
     @pytest.mark.parametrize(
         "fixture_name, api_path, update_method, update_data",
         [
-            ("fxt_webcam_source", ConfigApiPath.SOURCES, "update_source", {"device_id": 5}),
+            ("fxt_usb_camera_source", ConfigApiPath.SOURCES, "update_source", {"device_id": 5}),
             ("fxt_folder_sink", ConfigApiPath.SINKS, "update_sink", {"folder_path": "/new/path"}),
         ],
     )
@@ -254,7 +254,7 @@ class TestSourceAndSinkEndpoints:
     @pytest.mark.parametrize(
         "fixture_name, api_path, update_method, update_data",
         [
-            ("fxt_webcam_source", ConfigApiPath.SOURCES, "update_source", {"source_type": "folder"}),
+            ("fxt_usb_camera_source", ConfigApiPath.SOURCES, "update_source", {"source_type": "folder"}),
             ("fxt_folder_sink", ConfigApiPath.SINKS, "update_sink", {"sink_type": "mqtt"}),
         ],
     )
@@ -273,7 +273,7 @@ class TestSourceAndSinkEndpoints:
     @pytest.mark.parametrize(
         "fixture_name, api_path, delete_method",
         [
-            ("fxt_webcam_source", ConfigApiPath.SOURCES, "delete_source_by_id"),
+            ("fxt_usb_camera_source", ConfigApiPath.SOURCES, "delete_source_by_id"),
             ("fxt_folder_sink", ConfigApiPath.SINKS, "delete_sink_by_id"),
         ],
     )
@@ -324,7 +324,7 @@ class TestSourceAndSinkEndpoints:
     @pytest.mark.parametrize(
         "fixture_name, api_path, delete_method, resource_type",
         [
-            ("fxt_webcam_source", ConfigApiPath.SOURCES, "delete_source_by_id", ResourceType.SOURCE),
+            ("fxt_usb_camera_source", ConfigApiPath.SOURCES, "delete_source_by_id", ResourceType.SOURCE),
             ("fxt_folder_sink", ConfigApiPath.SINKS, "delete_sink_by_id", ResourceType.SINK),
         ],
     )
@@ -345,7 +345,7 @@ class TestSourceAndSinkEndpoints:
         "fixture_name,api_path,get_method, expected_yaml",
         [
             (
-                "fxt_webcam_source",
+                "fxt_usb_camera_source",
                 ConfigApiPath.SOURCES,
                 "get_source_by_id",
                 "device_id: 1\nname: Test USB Camera Source\nsource_type: usb_camera\n",
@@ -377,7 +377,7 @@ class TestSourceAndSinkEndpoints:
     @pytest.mark.parametrize(
         "fixture_name,api_path, create_method",
         [
-            ("fxt_webcam_source", ConfigApiPath.SOURCES, "create_source"),
+            ("fxt_usb_camera_source", ConfigApiPath.SOURCES, "create_source"),
             ("fxt_folder_sink", ConfigApiPath.SINKS, "create_sink"),
         ],
     )
