@@ -1,7 +1,7 @@
 // Copyright (C) 2024-2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Key, useEffect, useState } from 'react';
+import { Key, useState } from 'react';
 
 import { $api } from '@geti-inspect/api';
 import { Heading, InlineAlert, Item, Link, Picker, Text } from '@geti/ui';
@@ -17,29 +17,13 @@ interface UseTrainingDeviceResult {
 export const useTrainingDevice = (): UseTrainingDeviceResult => {
     const { data: availableDevices } = $api.useSuspenseQuery('get', '/api/devices/training');
     const devices = availableDevices.devices;
-    const hasDevices = devices.length > 0;
 
-    const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (!hasDevices) {
-            if (selectedDevice !== null) {
-                setSelectedDevice(null);
-            }
-            return;
+    const [selectedDevice, setSelectedDevice] = useState<string | null>(() => {
+        if (devices.length === 0) {
+            return null;
         }
-
-        const preferredDevice = selectPreferredDevice(devices);
-
-        if (selectedDevice === null) {
-            setSelectedDevice(preferredDevice ?? devices[0]);
-            return;
-        }
-
-        if (!devices.includes(selectedDevice)) {
-            setSelectedDevice(preferredDevice ?? devices[0]);
-        }
-    }, [devices, hasDevices, selectedDevice]);
+        return selectPreferredDevice(devices) ?? devices[0];
+    });
 
     return {
         selectedDevice,
@@ -64,7 +48,8 @@ export const TrainingDevicePicker = ({ selectedDevice, onDeviceChange, devices }
             <InlineAlert variant='notice'>
                 <Heading level={5}>No training devices detected</Heading>
                 <Text>
-                    Connect an available device to start a training job. If you believe this is an error,{' '}
+                    Geti Inspect was unable to discover any compatible training hardware. If you believe this is an
+                    error,{' '}
                     <Link
                         isQuiet
                         href='https://github.com/open-edge-platform/anomalib/issues'
