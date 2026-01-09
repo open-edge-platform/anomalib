@@ -25,7 +25,7 @@ class WebRTCSettings:
 class WebRTCManager:
     """Manager for handling WebRTC connections."""
 
-    async def _wait_for_ice_gathering_complete(self, pc: RTCPeerConnection, timeout_s: float = 10.0) -> None:
+    async def _wait_for_ice_gathering_complete(self, pc: RTCPeerConnection, timeout_s: float = 15.0) -> None:
         """Wait until ICE gathering is complete.
 
         This project does not implement trickle ICE (candidate exchange after SDP),
