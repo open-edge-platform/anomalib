@@ -547,6 +547,7 @@ dev = [
     { name = "notebook" },
     { name = "ollama" },
     { name = "onnx" },
+    { name = "onnxscript" },
     { name = "open-clip-torch" },
     { name = "openai" },
     { name = "openvino", version = "2025.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.13' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
@@ -561,6 +562,7 @@ dev = [
     { name = "pytest-timeout" },
     { name = "pytest-xdist" },
     { name = "python-dotenv" },
+    { name = "requests" },
     { name = "sphinx" },
     { name = "sphinx-autodoc-typehints" },
     { name = "sphinx-book-theme" },
@@ -594,11 +596,13 @@ full = [
     { name = "notebook" },
     { name = "ollama" },
     { name = "onnx" },
+    { name = "onnxscript" },
     { name = "open-clip-torch" },
     { name = "openai" },
     { name = "openvino", version = "2025.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.13' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "openvino", version = "2025.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.13' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "python-dotenv" },
+    { name = "requests" },
     { name = "tensorboard" },
     { name = "transformers" },
     { name = "wandb" },
@@ -619,6 +623,7 @@ notebooks = [
 openvino = [
     { name = "nncf" },
     { name = "onnx" },
+    { name = "onnxscript" },
     { name = "openvino", version = "2025.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.13' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "openvino", version = "2025.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.13' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
 ]
@@ -646,6 +651,7 @@ test = [
 video = [
     { name = "av", version = "14.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.13' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "av", version = "16.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.13' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
+    { name = "requests" },
 ]
 vlm = [
     { name = "ollama" },
@@ -689,7 +695,7 @@ requires-dist = [
     { name = "ipywidgets", marker = "extra == 'notebooks'" },
     { name = "jsonargparse", extras = ["signatures"], specifier = ">=4.27.7" },
     { name = "kornia", specifier = ">=0.6.6" },
-    { name = "lightning", specifier = ">=2.2" },
+    { name = "lightning", specifier = ">=2.6" },
     { name = "lightning-utilities" },
     { name = "matplotlib", specifier = ">=3.4.3" },
     { name = "mlflow", marker = "extra == 'dev'", specifier = ">=1.0.0" },
@@ -712,6 +718,9 @@ requires-dist = [
     { name = "onnx", marker = "extra == 'dev'", specifier = ">=1.16.0" },
     { name = "onnx", marker = "extra == 'full'", specifier = ">=1.16.0" },
     { name = "onnx", marker = "extra == 'openvino'", specifier = ">=1.16.0" },
+    { name = "onnxscript", marker = "extra == 'dev'" },
+    { name = "onnxscript", marker = "extra == 'full'" },
+    { name = "onnxscript", marker = "extra == 'openvino'" },
     { name = "open-clip-torch", marker = "extra == 'clip'", specifier = ">=2.23.0,<2.26.1" },
     { name = "open-clip-torch", marker = "extra == 'dev'", specifier = ">=2.23.0,<2.26.1" },
     { name = "open-clip-torch", marker = "extra == 'full'", specifier = ">=2.23.0,<2.26.1" },
@@ -747,6 +756,9 @@ requires-dist = [
     { name = "python-dotenv", marker = "extra == 'vlm'" },
     { name = "pytorch-triton-rocm", marker = "sys_platform == 'linux' and extra == 'rocm'", index = "https://download.pytorch.org/whl/rocm6.1", conflict = { package = "anomalib", extra = "rocm" } },
     { name = "pytorch-triton-xpu", marker = "(sys_platform == 'linux' and extra == 'xpu') or (sys_platform == 'win32' and extra == 'xpu')", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "anomalib", extra = "xpu" } },
+    { name = "requests", marker = "extra == 'dev'" },
+    { name = "requests", marker = "extra == 'full'" },
+    { name = "requests", marker = "extra == 'video'" },
     { name = "rich", specifier = ">=13.5.2" },
     { name = "rich-argparse" },
     { name = "scikit-image" },
@@ -772,7 +784,7 @@ requires-dist = [
     { name = "torch", marker = "extra == 'cu124'", specifier = ">=2.4.0,<=2.8.0", index = "https://download.pytorch.org/whl/cu124", conflict = { package = "anomalib", extra = "cu124" } },
     { name = "torch", marker = "extra == 'cu130'", specifier = ">=2.4.0", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "anomalib", extra = "cu130" } },
     { name = "torch", marker = "extra == 'rocm'", specifier = ">=2.4.0,<=2.8.0", index = "https://download.pytorch.org/whl/rocm6.1", conflict = { package = "anomalib", extra = "rocm" } },
-    { name = "torch", marker = "extra == 'xpu'", specifier = ">=2.4.0,<=2.8.0", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "anomalib", extra = "xpu" } },
+    { name = "torch", marker = "extra == 'xpu'", specifier = ">=2.4.0", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "anomalib", extra = "xpu" } },
     { name = "torchmetrics", specifier = ">=1.8.2" },
     { name = "torchvision", marker = "extra == 'cpu'", specifier = ">=0.19.0", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "anomalib", extra = "cpu" } },
     { name = "torchvision", marker = "extra == 'cu118'", specifier = ">=0.19.0", index = "https://download.pytorch.org/whl/cu118", conflict = { package = "anomalib", extra = "cu118" } },
@@ -4111,7 +4123,7 @@ wheels = [
 
 [[package]]
 name = "lightning"
-version = "2.5.5"
+version = "2.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fsspec", extra = ["http"] },
@@ -4133,9 +4145,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0f/dd/86bb3bebadcdbc6e6e5a63657f0a03f74cd065b5ea965896679f76fec0b4/lightning-2.5.5.tar.gz", hash = "sha256:4d3d66c5b1481364a7e6a1ce8ddde1777a04fa740a3145ec218a9941aed7dd30", size = 640770, upload-time = "2025-09-05T16:01:21.026Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1a/d5/892ea38816925b3511493e87b0b32494122bf8a20e66f4f2cd2667f95625/lightning-2.6.0.tar.gz", hash = "sha256:881841716b59c1837ae0c562c2e64fea9bcf49ef9de3867bd1f868557ec23d04", size = 656539, upload-time = "2025-11-28T09:34:25.069Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2e/d0/4b4fbafc3b18df91207a6e46782d9fd1905f9f45cb2c3b8dfbb239aef781/lightning-2.5.5-py3-none-any.whl", hash = "sha256:69eb248beadd7b600bf48eff00a0ec8af171ec7a678d23787c4aedf12e225e8f", size = 828490, upload-time = "2025-09-05T16:01:17.845Z" },
+    { url = "https://files.pythonhosted.org/packages/d6/e9/36b340c7ec01dad6f034481e98fc9fc0133307beb05c714c0542af98bbde/lightning-2.6.0-py3-none-any.whl", hash = "sha256:f1a13a48909960a3454518486f113fae4fadb2db0e28e9c50d8d38d46c9dc3d6", size = 845956, upload-time = "2025-11-28T09:34:23.273Z" },
 ]
 
 [[package]]
@@ -5748,6 +5760,38 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/8e/a4/8f3d51e3a095d42cdf2039a590cff06d024f2a10efbd0b1a2a6b3825f019/onnx-1.19.1-cp313-cp313t-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:1975860c3e720db25d37f1619976582828264bdcc64fa7511c321ac4fc01add3", size = 18221126, upload-time = "2025-10-10T04:01:09.77Z" },
     { url = "https://files.pythonhosted.org/packages/4f/0d/f9d6c2237083f1aac14b37f0b03b0d81f1147a8e2af0c3828165e0a6a67b/onnx-1.19.1-cp313-cp313t-win_amd64.whl", hash = "sha256:9807d0e181f6070ee3a6276166acdc571575d1bd522fc7e89dba16fd6e7ffed9", size = 16465560, upload-time = "2025-10-10T04:01:13.212Z" },
     { url = "https://files.pythonhosted.org/packages/36/70/8418a58faa7d606d6a92cab69ae8d361b3b3969bf7e7e9a65a86d5d1b674/onnx-1.19.1-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:b6ee83e6929d75005482d9f304c502ac7c9b8d6db153aa6b484dae74d0f28570", size = 18042812, upload-time = "2025-10-10T04:01:15.919Z" },
+]
+
+[[package]]
+name = "onnx-ir"
+version = "0.1.14"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "ml-dtypes" },
+    { name = "numpy" },
+    { name = "onnx" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a5/5b/ebd083a5c3d25ce9f95b34a11b3a492cdcf7831bf127c0f64429a4e83961/onnx_ir-0.1.14.tar.gz", hash = "sha256:bd69e3b5821046d5d7c9d0fdd023f8e1d0cc9a62cbee986fa0e5ab2b1602d7ae", size = 120732, upload-time = "2026-01-07T01:19:47.777Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/53/d1/bd9a5007448b4599a80143b0b5ccc78e9c46176e5e1bee81f6d3da68d217/onnx_ir-0.1.14-py3-none-any.whl", hash = "sha256:89b212fa7840981c5db5dc478190f1b7369536297c3c6eae68fb1c2237dd2554", size = 139128, upload-time = "2026-01-07T01:19:46.403Z" },
+]
+
+[[package]]
+name = "onnxscript"
+version = "0.5.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "ml-dtypes" },
+    { name = "numpy" },
+    { name = "onnx" },
+    { name = "onnx-ir" },
+    { name = "packaging" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2c/f8/358a7d982ea51bc1b0c264f29c08adf096c62ba9f258ba13c954b41c46f5/onnxscript-0.5.7.tar.gz", hash = "sha256:480d572451bc233ed7f742b5005cb0c899594b2fdc28e15167dab26f7fd777ad", size = 596306, upload-time = "2025-12-16T20:47:15.762Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f6/ec/1656ea93be1e50baf429c20603dce249fa3571f3a180407cee79b1afa013/onnxscript-0.5.7-py3-none-any.whl", hash = "sha256:f94a66059c56d13b44908e9b7fd9dae4b4faa6681c784f3fd4c29cfa863e454e", size = 693353, upload-time = "2025-12-16T20:47:17.897Z" },
 ]
 
 [[package]]
