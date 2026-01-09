@@ -42,7 +42,9 @@ class DispatchingWorker(BaseThreadWorker):
         self._destinations: list[Dispatcher] = []
 
     def _reset_sink_if_needed(self, sink_config: Sink) -> None:
-        if not self._prev_sink_config or sink_config != self._prev_sink_config:
+        if sink_config.sink_type is SinkType.DISCONNECTED:
+            self._destinations = []
+        elif not self._prev_sink_config or sink_config != self._prev_sink_config:
             logger.debug(f"Sink config changed from {self._prev_sink_config} to {sink_config}")
             self._destinations = DispatchService.get_destinations(output_configs=[sink_config])
             self._prev_sink_config = copy.deepcopy(sink_config)
@@ -79,9 +81,7 @@ class DispatchingWorker(BaseThreadWorker):
 
             sink_config = self._active_pipeline_service.sink_config
             if sink_config.sink_type == SinkType.DISCONNECTED:
-                logger.trace("No sink available... retrying in 1 second")
-                await asyncio.sleep(1)
-                continue
+                logger.debug("No sink available due to ephemeral inference")
 
             self._reset_sink_if_needed(sink_config)
 
