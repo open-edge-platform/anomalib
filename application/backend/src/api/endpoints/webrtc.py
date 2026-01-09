@@ -23,9 +23,11 @@ router = APIRouter(prefix="/api/webrtc", tags=["WebRTC"])
 )
 async def create_webrtc_offer(offer: Offer, webrtc_manager: Annotated[WebRTCManager, Depends(get_webrtc)]) -> Answer:
     """Create a WebRTC offer"""
+    print(f"DEBUG_PRINT: Received WebRTC offer endpoint hit. Offer ID: {offer.webrtc_id}")
     try:
         return await webrtc_manager.handle_offer(offer)
     except Exception as e:
+        print(f"DEBUG_PRINT: Error in create_webrtc_offer: {e}")
         logger.error(f"Error processing WebRTC offer: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 

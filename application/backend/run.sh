@@ -29,6 +29,12 @@ UV_CMD=${UV_CMD:-uv run}
 export PYTHONUNBUFFERED=1
 export PYTHONPATH=.:src
 
+# WebRTC Configuration
+# Force advertise the LAN IP to ensure Firefox can connect
+export WEBRTC_ADVERTISE_IP=${WEBRTC_ADVERTISE_IP:-10.246.19.196}
+# Ensure at least STUN is available
+export ICE_SERVERS=${ICE_SERVERS:-'[{"urls":"stun:stun.l.google.com:19302"}]'}
+
 if [[ "$SEED_DB" == "true" ]]; then
   echo "Seeding the database..."
   $UV_CMD src/cli.py init-db
