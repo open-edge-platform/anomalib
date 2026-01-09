@@ -14,7 +14,7 @@ from api.dependencies import get_configuration_service
 from main import app
 from pydantic_models.base import Pagination
 from pydantic_models.sink import FolderSinkConfig, MqttSinkConfig, OutputFormat, SinkList, SinkType
-from pydantic_models.source import SourceList, SourceType, VideoFileSourceConfig, UsbCameraSourceConfig
+from pydantic_models.source import SourceList, SourceType, UsbCameraSourceConfig, VideoFileSourceConfig
 from services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 from services.exceptions import ResourceType
 

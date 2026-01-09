@@ -10,7 +10,7 @@ import pytest
 from pydantic_models import Pipeline, PipelineStatus
 from pydantic_models.model import Model
 from pydantic_models.sink import FolderSinkConfig, MqttSinkConfig
-from pydantic_models.source import VideoFileSourceConfig, UsbCameraSourceConfig
+from pydantic_models.source import UsbCameraSourceConfig, VideoFileSourceConfig
 from repositories import PipelineRepository
 from services import ActivePipelineService, ModelService, ResourceNotFoundError
 from services.metrics_service import MetricsService
