@@ -46,7 +46,7 @@ class WebRTCManager:
 
             msg = (
                 f"WebRTC {offer.webrtc_id}: ICE candidate gathered: "
-                f"{candidate.protocol} {candidate.ip}:{candidate.port} {candidate.transport} type={candidate.type}"
+                f"{candidate.protocol} {candidate.ip}:{candidate.port} type={candidate.type}"
             )
             logger.debug(msg)
 
