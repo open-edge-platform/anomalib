@@ -4,6 +4,7 @@ import { usePipeline } from '@geti-inspect/hooks';
 import {
     Cell,
     Column,
+    Content,
     Flex,
     Heading,
     IllustratedMessage,
@@ -14,6 +15,7 @@ import {
     Text,
     View,
 } from '@geti/ui';
+import { NotFound } from '@geti/ui/icons';
 import { sortBy } from 'lodash-es';
 import { useDateFormatter } from 'react-aria';
 
@@ -59,6 +61,7 @@ export const ModelsView = ({ onModelSelect }: ModelsViewProps) => {
                 startTime: start.getTime(),
                 progress: job.progress ?? 0,
                 durationInSeconds: null,
+                backbone: null,
                 job,
                 sizeBytes: null,
             };
@@ -82,12 +85,14 @@ export const ModelsView = ({ onModelSelect }: ModelsViewProps) => {
                 overflowMode='wrap'
                 selectionStyle='highlight'
                 selectionMode='single'
+                minHeight={showModels.length === 0 ? 'size-3600' : 'auto'}
                 selectedKeys={tableSelectedKeys}
                 UNSAFE_className={classes.table}
                 renderEmptyState={() => (
                     <IllustratedMessage>
-                        <Heading>No models in training</Heading>
-                        <Text>Start a new training to see models here.</Text>
+                        <NotFound />
+                        <Heading>No models yet</Heading>
+                        <Content>Train a model to see it here.</Content>
                     </IllustratedMessage>
                 )}
             >
@@ -100,8 +105,8 @@ export const ModelsView = ({ onModelSelect }: ModelsViewProps) => {
                         {' '}
                     </Column>
                 </TableHeader>
-                <TableBody>
-                    {showModels.map((model) => (
+                <TableBody items={showModels}>
+                    {(model) => (
                         <Row key={model.id}>
                             <Cell>
                                 <Flex alignItems='start' gap='size-50' direction='column'>
@@ -139,7 +144,7 @@ export const ModelsView = ({ onModelSelect }: ModelsViewProps) => {
                                 </Flex>
                             </Cell>
                         </Row>
-                    ))}
+                    )}
                 </TableBody>
             </TableView>
         </View>

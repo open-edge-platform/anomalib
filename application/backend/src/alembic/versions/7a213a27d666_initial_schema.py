@@ -122,6 +122,7 @@ def upgrade() -> None:
         sa.Column("train_job_id", sa.String(), nullable=False),
         sa.Column("size", sa.BigInteger(), nullable=True),
         sa.Column("dataset_snapshot_id", sa.String(), nullable=False),
+        sa.Column("backbone", sa.String(length=64), nullable=True),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"]),
         sa.ForeignKeyConstraint(["train_job_id"], ["jobs.id"], ondelete="RESTRICT"),
         sa.ForeignKeyConstraint(["dataset_snapshot_id"], ["dataset_snapshot.id"], ondelete="RESTRICT"),
