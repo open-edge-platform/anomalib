@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from aiortc import RTCConfiguration, RTCPeerConnection, RTCSessionDescription
+from aiortc.rtcicetransport import RTCIceCandidate
 from loguru import logger
 
 from pydantic_models.webrtc import Answer, InputData, Offer
@@ -36,12 +37,30 @@ class WebRTCManager:
         pc = RTCPeerConnection(configuration=self._settings.config)
         self._pcs[offer.webrtc_id] = pc
 
+        @pc.on("icecandidate")
+        def ice_candidate(candidate: RTCIceCandidate | None) -> None:  # pragma: no cover (callback)
+            # This app does not implement trickle ICE, but logging candidates is very useful for debugging.
+            if candidate is None:
+                logger.debug(f"WebRTC {offer.webrtc_id}: ICE gathering complete (end-of-candidates).")
+                return
+
+            msg = (
+                f"WebRTC {offer.webrtc_id}: ICE candidate gathered: "
+                f"{candidate.protocol} {candidate.ip}:{candidate.port} {candidate.transport} type={candidate.type}"
+            )
+            logger.debug(msg)
+
+        @pc.on("iceconnectionstatechange")
+        async def ice_connection_state_change() -> None:  # pragma: no cover (callback)
+            logger.debug("WebRTC {}: ICE connection state: {}", offer.webrtc_id, pc.iceConnectionState)
+
         # Add video track
         track = InferenceVideoStreamTrack(self._stream_queue)
         pc.addTrack(track)
 
         @pc.on("connectionstatechange")
         async def connection_state_change() -> None:
+            logger.debug("WebRTC {}: Connection state: {}", offer.webrtc_id, pc.connectionState)
             if pc.connectionState in {"failed", "closed"}:
                 await self.cleanup_connection(offer.webrtc_id)
 

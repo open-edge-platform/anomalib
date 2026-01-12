@@ -74,9 +74,13 @@ export class WebRTCConnection {
             this.setupPeerConnection();
 
             await this.createAndSetOffer();
-            await this.waitForIceGathering();
-
+            try {
+                await this.waitForIceGathering();
+            } catch (e) {
+                console.warn('ICE gathering timed out or failed, proceeding anyway:', e);
+            }
             const data = await this.sendOffer();
+            console.log('DEBUG: Offer sent, response received:', data);
 
             if (!this.handleOfferResponse(data)) return;
 
