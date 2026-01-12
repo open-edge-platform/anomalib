@@ -1,13 +1,18 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
+
 import os
 from enum import StrEnum
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from anomalib.deploy import CompressionType, ExportType
 from pydantic import BaseModel, Field, model_validator
 
 from pydantic_models.base import BaseIDNameModel, Pagination
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 
 class PredictionLabel(StrEnum):
@@ -70,7 +75,7 @@ class PredictionResponse(BaseModel):
     score: float = Field(ge=0.0, le=1.0, description="Confidence score between 0 and 1")
 
     @model_validator(mode="after")
-    def validate_score_range(self) -> "PredictionResponse":
+    def validate_score_range(self) -> PredictionResponse:
         """Ensure score is within valid range [0, 1] and handle edge cases."""
         if not (0.0 <= self.score <= 1.0):
             raise ValueError(f"Score must be between 0.0 and 1.0, got {self.score}")
@@ -99,7 +104,7 @@ class ExportParameters(BaseModel):
     )
 
     @model_validator(mode="after")
-    def validate_compression(self) -> "ExportParameters":
+    def validate_compression(self) -> ExportParameters:
         """Ensure compression is only set for OpenVINO format."""
         if self.format != ExportType.OPENVINO and self.compression is not None:
             raise ValueError("Compression can only be set when format is OpenVINO")

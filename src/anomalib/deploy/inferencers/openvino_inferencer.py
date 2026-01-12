@@ -49,6 +49,8 @@ Example:
     0.86
 """
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -180,7 +182,7 @@ class OpenVINOInferencer:
         return image
 
     @staticmethod
-    def post_process(predictions: "OVDict") -> dict:
+    def post_process(predictions: OVDict) -> dict:
         """Convert OpenVINO predictions to dictionary.
 
         Args:
