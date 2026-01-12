@@ -2,22 +2,6 @@
     font-size: 1.1rem;
 }
 
-.modelNameClickable {
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: color 0.15s ease;
-
-    &:hover {
-        color: var(--spectrum-global-color-gray-900);
-    }
-
-    &:focus-visible {
-        outline: 2px solid var(--spectrum-global-color-blue-500);
-        outline-offset: 2px;
-        border-radius: 2px;
-    }
-}
-
 .modelTimestamp {
     font-size: 0.85rem;
     color: var(--spectrum-global-color-gray-500);

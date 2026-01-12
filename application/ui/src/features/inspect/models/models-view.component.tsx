@@ -8,6 +8,7 @@ import {
     Flex,
     Heading,
     IllustratedMessage,
+    Link,
     Row,
     TableBody,
     TableHeader,
@@ -112,14 +113,14 @@ export const ModelsView = ({ onModelSelect }: ModelsViewProps) => {
                                 <Flex alignItems='start' gap='size-50' direction='column'>
                                     <Flex alignItems='end' gap='size-75'>
                                         {model.status === 'Completed' ? (
-                                            <span
-                                                role='button'
-                                                tabIndex={0}
-                                                onClick={() => onModelSelect(model.id)}
-                                                className={classes.modelNameClickable}
+                                            <Link
+                                                variant='secondary'
+                                                onPress={() => onModelSelect(model.id)}
+                                                isQuiet
+                                                UNSAFE_className={classes.modelName}
                                             >
                                                 {model.name}
-                                            </span>
+                                            </Link>
                                         ) : (
                                             <Text marginTop={'size-25'} UNSAFE_className={classes.modelName}>
                                                 {model.name}

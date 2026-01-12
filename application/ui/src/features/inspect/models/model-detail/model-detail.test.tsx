@@ -3,12 +3,13 @@
 
 import { ReactNode } from 'react';
 
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fetchClient } from '@geti-inspect/api';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { getMockedModelData } from 'mocks/mock-model';
 import { getMockedPagination } from 'mocks/mock-pagination';
 import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { getMockedProject } from 'mocks/mock-project';
 import { StatusBarProvider } from 'src/features/inspect/footer/status-bar/status-bar-context';
-import type { ModelData } from 'src/hooks/utils';
 import { TestProviders } from 'src/providers';
 import { queryClient } from 'src/query-client/query-client';
 
@@ -19,21 +20,6 @@ const projectId = 'test-project-id';
 vi.mock('src/hooks/use-project-identifier.hook', () => ({
     useProjectIdentifier: () => ({ projectId }),
 }));
-
-const createMockModel = (overrides: Partial<ModelData> = {}): ModelData => ({
-    id: 'model-1',
-    name: 'PatchCore',
-    status: 'Completed',
-    architecture: 'PatchCore',
-    timestamp: 'Dec 18, 2025, 10:30 AM',
-    backbone: 'resnet50',
-    startTime: Date.now() - 3600000,
-    progress: 100,
-    durationInSeconds: 120,
-    sizeBytes: 52428800,
-    job: undefined,
-    ...overrides,
-});
 
 const mockedProject = getMockedProject();
 const mockedPipeline = getMockedPipeline();
@@ -65,78 +51,47 @@ describe('ModelDetail', () => {
     });
 
     describe('Model Information', () => {
-        it('displays model name', () => {
-            const model = createMockModel();
-            const onBack = vi.fn();
-
+        it('displays model details and information grid', () => {
+            const model = getMockedModelData();
             render(
                 <TestWrapper>
-                    <ModelDetail model={model} isActiveModel={false} onBack={onBack} />
+                    <ModelDetail model={model} isActiveModel={false} onBack={vi.fn()} />
                 </TestWrapper>
             );
 
             expect(screen.getAllByText('PatchCore').length).toBeGreaterThan(0);
+            expect(screen.getByText('Training Date')).toBeInTheDocument();
+            expect(screen.getByText('Model Size')).toBeInTheDocument();
+            expect(screen.getByText('Training Duration')).toBeInTheDocument();
+            expect(screen.getByText('Model Backbone')).toBeInTheDocument();
         });
 
-        it('displays Active badge for active model', () => {
-            const model = createMockModel();
-            const onBack = vi.fn();
-
+        it('displays Active badge when isActiveModel is true', () => {
+            const model = getMockedModelData();
             render(
                 <TestWrapper>
-                    <ModelDetail model={model} isActiveModel={true} onBack={onBack} />
+                    <ModelDetail model={model} isActiveModel={true} onBack={vi.fn()} />
                 </TestWrapper>
             );
 
             expect(screen.getByText('Active')).toBeInTheDocument();
         });
 
-        it('does not display Active badge for non-active model', () => {
-            const model = createMockModel();
-            const onBack = vi.fn();
-
+        it('does not display Active badge when isActiveModel is false', () => {
+            const model = getMockedModelData();
             render(
                 <TestWrapper>
-                    <ModelDetail model={model} isActiveModel={false} onBack={onBack} />
+                    <ModelDetail model={model} isActiveModel={false} onBack={vi.fn()} />
                 </TestWrapper>
             );
 
             expect(screen.queryByText('Active')).not.toBeInTheDocument();
         });
-
-        it('displays model information grid', () => {
-            const model = createMockModel();
-            const onBack = vi.fn();
-
-            render(
-                <TestWrapper>
-                    <ModelDetail model={model} isActiveModel={false} onBack={onBack} />
-                </TestWrapper>
-            );
-
-            expect(screen.getByText('Training Date')).toBeInTheDocument();
-            expect(screen.getByText('Model Size')).toBeInTheDocument();
-            expect(screen.getByText('Training Duration')).toBeInTheDocument();
-            expect(screen.getByText('Architecture')).toBeInTheDocument();
-        });
     });
 
     describe('Navigation', () => {
-        it('displays back button', () => {
-            const model = createMockModel();
-            const onBack = vi.fn();
-
-            render(
-                <TestWrapper>
-                    <ModelDetail model={model} isActiveModel={false} onBack={onBack} />
-                </TestWrapper>
-            );
-
-            expect(screen.getByText('Back to Models')).toBeInTheDocument();
-        });
-
         it('calls onBack when back button is clicked', () => {
-            const model = createMockModel();
+            const model = getMockedModelData();
             const onBack = vi.fn();
 
             render(
@@ -145,51 +100,49 @@ describe('ModelDetail', () => {
                 </TestWrapper>
             );
 
-            fireEvent.click(screen.getByText('Back to Models'));
+            const backButton = screen.getByText('Back to Models');
+            expect(backButton).toBeInTheDocument();
+            fireEvent.click(backButton);
             expect(onBack).toHaveBeenCalledTimes(1);
         });
     });
 
     describe('Export Section', () => {
-        it('displays export format options', () => {
-            const model = createMockModel();
-            const onBack = vi.fn();
+        it('calls export endpoint when Export button is clicked', async () => {
+            const model = getMockedModelData();
+            const exportSpy = vi
+                .spyOn(fetchClient, 'POST')
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                .mockResolvedValue({ data: new Blob(), error: undefined } as any);
 
             render(
                 <TestWrapper>
-                    <ModelDetail model={model} isActiveModel={false} onBack={onBack} />
+                    <ModelDetail model={model} isActiveModel={false} onBack={vi.fn()} />
                 </TestWrapper>
             );
 
-            expect(screen.getByText('Export Format')).toBeInTheDocument();
             expect(screen.getByRole('radiogroup', { name: 'Select export format' })).toBeInTheDocument();
-        });
+            fireEvent.click(screen.getByLabelText('Select compression type'));
+            fireEvent.click(screen.getByRole('option', { name: 'INT8' }));
+            fireEvent.click(screen.getByRole('button', { name: 'Export' }));
 
-        it('displays Export button', () => {
-            const model = createMockModel();
-            const onBack = vi.fn();
-
-            render(
-                <TestWrapper>
-                    <ModelDetail model={model} isActiveModel={false} onBack={onBack} />
-                </TestWrapper>
-            );
-
-            expect(screen.getByRole('button', { name: 'Export' })).toBeInTheDocument();
-        });
-
-        it('shows compression options when OpenVINO format is selected', () => {
-            const model = createMockModel();
-            const onBack = vi.fn();
-
-            render(
-                <TestWrapper>
-                    <ModelDetail model={model} isActiveModel={false} onBack={onBack} />
-                </TestWrapper>
-            );
-
-            // OpenVINO is selected by default
-            expect(screen.getAllByText('Compression (optional)').length).toBeGreaterThan(0);
+            await waitFor(() => {
+                expect(exportSpy).toHaveBeenCalledWith(
+                    '/api/projects/{project_id}/models/{model_id}:export',
+                    expect.objectContaining({
+                        params: {
+                            path: {
+                                project_id: projectId,
+                                model_id: model.id,
+                            },
+                        },
+                        body: {
+                            format: 'openvino',
+                            compression: 'int8',
+                        },
+                    })
+                );
+            });
         });
     });
 });

@@ -128,7 +128,7 @@ export const ModelDetail = ({ model, isActiveModel, onBack }: ModelDetailProps) 
                             </div>
                             {model.backbone && (
                                 <div className={classes.infoItem}>
-                                    <span className={classes.infoLabel}>Model backbone</span>
+                                    <span className={classes.infoLabel}>Model Backbone</span>
                                     <span className={classes.infoValue}>{model.backbone}</span>
                                 </div>
                             )}
@@ -164,6 +164,7 @@ export const ModelDetail = ({ model, isActiveModel, onBack }: ModelDetailProps) 
                             {selectedFormat === 'openvino' && (
                                 <Picker
                                     label='Compression (optional)'
+                                    aria-label='Select compression type'
                                     items={COMPRESSION_OPTIONS}
                                     selectedKey={selectedCompression}
                                     onSelectionChange={handleCompressionChange}
