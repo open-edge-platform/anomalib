@@ -248,7 +248,7 @@ class TrainingService:
                 break
 
         if isinstance(getattr(anomalib_model.model, "backbone", None), str):
-            model.backbone = anomalib_model.model.backbone # type: ignore[assignment] # backbone is str here
+            model.backbone = anomalib_model.model.backbone  # type: ignore[assignment] # backbone is str here
 
         if synchronization_parameters.cancel_training_event.is_set():
             return None
@@ -327,7 +327,7 @@ class TrainingService:
             backbone = getattr(inner_model, "backbone", None)
             if backbone is None:
                 return None
-            elif isinstance(backbone, str):
+            if isinstance(backbone, str):
                 logger.debug(f"Extracted backbone name: {backbone}")
                 return backbone
 
