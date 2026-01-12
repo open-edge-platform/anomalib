@@ -307,36 +307,6 @@ class TrainingService:
 
         return sum(iter_file_sizes())
 
-    @staticmethod
-    def _extract_backbone_name(anomalib_model: object) -> str | None:
-        """
-        Extract the backbone/feature extractor name from an anomalib model.
-
-        Args:
-            anomalib_model: The trained anomalib model instance
-
-        Returns:
-            The backbone name as a string, or None if not available
-        """
-        try:
-            # Try to get the backbone from model.model.backbone
-            inner_model = getattr(anomalib_model, "model", None)
-            if inner_model is None:
-                return None
-
-            backbone = getattr(inner_model, "backbone", None)
-            if backbone is None:
-                return None
-            if isinstance(backbone, str):
-                logger.debug(f"Extracted backbone name: {backbone}")
-                return backbone
-
-            logger.warning("Failed to extract backbone name: backbone is not a string")
-            return None
-        except Exception as e:
-            logger.warning(f"Failed to extract backbone name: {e}")
-            return None
-
     @classmethod
     async def _sync_progress_with_db(
         cls,
