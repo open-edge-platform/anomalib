@@ -51,7 +51,7 @@ class WebRTCManager:
             logger.debug(msg)
 
         @pc.on("iceconnectionstatechange")
-        async def ice_connection_state_change() -> None:  # pragma: no cover (callback)
+        async def on_ice_connection_state_change() -> None:  # pragma: no cover (callback)
             logger.debug("WebRTC {}: ICE connection state: {}", offer.webrtc_id, pc.iceConnectionState)
 
         # Add video track
