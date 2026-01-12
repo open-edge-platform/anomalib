@@ -46,7 +46,7 @@ def config_changed_condition():
 def mock_config():
     """Mock configuration fixture"""
     config = Mock(spec=Source)
-    config.source_type = SourceType.WEBCAM
+    config.source_type = SourceType.USB_CAMERA
     config.device_id = 0
     return config
 
