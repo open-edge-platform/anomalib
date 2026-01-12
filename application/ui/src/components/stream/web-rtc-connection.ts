@@ -83,7 +83,6 @@ export class WebRTCConnection {
 
             if (!this.handleOfferResponse(data)) return;
 
-            await this.updateConfThreshold(0.5); // Initial confidence threshold
             this.setupConnectionStateListener();
         } catch (err) {
             clearTimeout(this.timeoutId);
