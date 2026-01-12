@@ -59,7 +59,7 @@ class WebRTCManager:
         pc.addTrack(track)
 
         @pc.on("connectionstatechange")
-        async def connection_state_change() -> None:
+        async def on_connection_state_change() -> None:
             logger.debug("WebRTC {}: Connection state: {}", offer.webrtc_id, pc.connectionState)
             if pc.connectionState in {"failed", "closed"}:
                 await self.cleanup_connection(offer.webrtc_id)
