@@ -46,7 +46,7 @@ class Visualizer:
     def overlay_anomaly_heatmap(
         base_image: np.ndarray,
         prediction: PredictionResponse,
-        alpha: float = 0.5,
+        alpha: float = 0.5,  # TODO: make it configurable by the user
     ) -> np.ndarray:
         """Overlay the anomaly heatmap onto the image using alpha compositing."""
         try:
