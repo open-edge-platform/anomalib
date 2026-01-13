@@ -60,6 +60,7 @@ class ModelDB(Base):
     export_path: Mapped[str] = mapped_column(Text, nullable=False)
     is_ready: Mapped[bool] = mapped_column(Boolean, nullable=False)
     size: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    backbone: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     train_job_id: Mapped[str] = mapped_column(ForeignKey("jobs.id", ondelete="RESTRICT"))
     dataset_snapshot_id: Mapped[str] = mapped_column(ForeignKey("dataset_snapshot.id", ondelete="RESTRICT"))

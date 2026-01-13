@@ -53,3 +53,19 @@ export const isNonEmptyString = (value: unknown): value is string => isString(va
 
 export const getThumbnailUrl = (mediaItem: MediaItem) =>
     `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail`;
+
+export const formatDuration = (seconds: number | null): string | null => {
+    if (seconds === null) return null;
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+    }
+    if (minutes > 0) {
+        return `${minutes}m ${secs}s`;
+    }
+    return `${secs}s`;
+};
