@@ -40,6 +40,7 @@ export const useCompletedModels = () => {
                 progress: 1.0,
                 job,
                 sizeBytes: model.size ?? null,
+                backbone: model.backbone ?? null,
             };
         })
         .filter((model): model is ModelData => model !== null);

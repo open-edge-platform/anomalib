@@ -247,6 +247,9 @@ class TrainingService:
                 model.threshold = threshold.item()
                 break
 
+        if isinstance(getattr(anomalib_model.model, "backbone", None), str):
+            model.backbone = anomalib_model.model.backbone  # type: ignore[assignment] # backbone is str here
+
         if synchronization_parameters.cancel_training_event.is_set():
             return None
 
