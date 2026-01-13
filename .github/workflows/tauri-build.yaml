@@ -1,0 +1,149 @@
+# Tauri Application Build Workflow
+#
+# This workflow builds the Geti Inspect Tauri application for Linux
+# and uploads the AppImage as an artifact.
+#
+# Key Features:
+# - Builds Python backend sidecar using PyInstaller
+# - Builds UI frontend
+# - Creates Tauri AppImage for Linux
+# - Uploads artifacts for distribution
+#
+# Process Stages:
+# 1. Setup:
+#    - Install system dependencies for Tauri/AppImage
+#    - Setup Python environment for backend
+#    - Setup Node.js for frontend
+#
+# 2. Build Sidecar:
+#    - Install Python dependencies
+#    - Build backend binary with PyInstaller
+#
+# 3. Build UI:
+#    - Install npm dependencies
+#    - Build frontend assets
+#
+# 4. Build Tauri:
+#    - Build Tauri application
+#    - Generate AppImage
+#
+# 5. Upload:
+#    - Upload AppImage as artifact
+
+name: Tauri Build (Linux)
+
+on:
+  push:
+    branches: ["main", "feature/**"]
+    paths:
+      - "application/**"
+      - ".github/workflows/tauri-build.yaml"
+  pull_request:
+    branches: ["main", "feature/**"]
+    paths:
+      - "application/**"
+      - ".github/workflows/tauri-build.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: false
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            libfuse2
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            application/binary/tauri/src-tauri/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Build Python sidecar
+        working-directory: application/backend
+        run: |
+          uv sync --no-dev
+          source .venv/bin/activate
+          cd ../binary/sidecar
+          uv run --active --with pyinstaller pyinstaller geti_inspect_cpu.spec
+          # Rename binary with target triple
+          TARGET_TRIPLE=$(rustc -Vv | grep host | cut -f2 -d' ')
+          mv dist/geti-inspect-backend/geti-inspect-backend "dist/geti-inspect-backend/geti-inspect-backend-${TARGET_TRIPLE}"
+
+      - name: Install UI dependencies
+        working-directory: application/ui
+        run: npm ci
+
+      - name: Build UI
+        working-directory: application/ui
+        run: npm run build
+
+      - name: Install Tauri dependencies
+        working-directory: application/binary/tauri
+        run: npm ci
+
+      - name: Build Tauri AppImage
+        working-directory: application/binary/tauri
+        run: |
+          # Update tauri.conf.json to build AppImage
+          npx tauri build --bundles appimage
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ""
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: geti-inspect-linux-appimage
+          path: application/binary/tauri/src-tauri/target/release/bundle/appimage/*.AppImage
+          retention-days: 30
+          if-no-files-found: error
