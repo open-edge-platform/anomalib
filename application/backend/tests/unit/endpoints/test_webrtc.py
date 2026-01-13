@@ -64,7 +64,10 @@ class TestWebRTCEndpoints:
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_get_webrtc_config_empty(self, fxt_client):
-        app.dependency_overrides[get_ice_servers] = list
+        def _empty_ice_servers():
+            return []
+
+        app.dependency_overrides[get_ice_servers] = _empty_ice_servers
         resp = fxt_client.get("/api/webrtc/config")
         assert resp.status_code == status.HTTP_200_OK
         assert resp.json() == {"iceServers": []}
