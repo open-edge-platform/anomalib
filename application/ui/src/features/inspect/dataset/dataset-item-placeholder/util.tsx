@@ -17,3 +17,7 @@ export const getPlaceholderItem = (index: number): MediaItem => {
         height: 0,
     };
 };
+
+export const getPlaceholderKeys = (count: number): string[] => {
+    return Array.from({ length: count }, (_, index) => `${PLACEHOLDER_FILENAME}-${index}`);
+};
