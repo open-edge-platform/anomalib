@@ -16,7 +16,8 @@ dependencies = [
     "openvino==2025.2.0",
     "pydantic-settings~=2.10.1",
     "aiortc~=1.13.0",
-    "anomalib[full]",
+    "anomalib[openvino]", # we don't need all the optional dependencies
+    "tensorboard",
     "torchmetrics>=1.8.2",
     "opencv-python-headless~=4.12",
     "watchdog==6.0.0",

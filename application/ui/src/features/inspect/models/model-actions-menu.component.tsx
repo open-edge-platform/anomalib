@@ -179,6 +179,24 @@ export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuPro
                     </AlertDialog>
                 ) : null}
             </DialogContainer>
+
+            <DialogContainer onDismiss={() => setOpenDialog(null)}>
+                {openDialog === 'activate' && hasCompletedStatus ? (
+                    <AlertDialog
+                        variant='confirmation'
+                        cancelLabel='Cancel'
+                        title={`Activate model "${model.name}"?`}
+                        primaryActionLabel={patchPipeline.isPending ? 'Activating...' : 'Activate'}
+                        isPrimaryActionDisabled={patchPipeline.isPending}
+                        onPrimaryAction={() => {
+                            handleActivateModel();
+                        }}
+                    >
+                        This model will be used for inference in the pipeline. The current active model will be
+                        replaced.
+                    </AlertDialog>
+                ) : null}
+            </DialogContainer>
         </>
     );
 };

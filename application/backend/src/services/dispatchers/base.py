@@ -1,17 +1,21 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
+
 import asyncio
 import base64
 import time
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import cv2
-import numpy as np
-from anomalib.data import NumpyImageBatch as PredictionResult
 
 from pydantic_models import OutputFormat, Sink
+
+if TYPE_CHECKING:
+    import numpy as np
+    from anomalib.data import NumpyImageBatch as PredictionResult
 
 
 def numpy_to_base64(image: np.ndarray, fmt: str = ".jpg") -> str:
