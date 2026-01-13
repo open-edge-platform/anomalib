@@ -71,7 +71,7 @@ app.include_router(snapshot_router)
 
 
 def main() -> None:
-    """Main function to run the application"""
+    """Initialize multiprocessing and start the uvicorn server."""
     if mp.get_start_method(allow_none=True) != "spawn":
         mp.set_start_method("spawn", force=True)
 
