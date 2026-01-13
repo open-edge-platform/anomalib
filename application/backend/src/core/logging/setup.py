@@ -12,6 +12,7 @@ Provides centralized logging using loguru with:
 
 import logging
 import os
+import sys
 from typing import TYPE_CHECKING
 
 from core.logging.handlers import InterceptHandler
@@ -52,6 +53,9 @@ def setup_logging(config: LogConfig | None = None) -> None:
 
     # overwrite global log_config
     global_log_config = config
+
+    logger.remove()
+    logger.add(sys.stderr, level=global_log_config.level)
 
     for worker_name, log_file in global_log_config.worker_log_info.items():
 

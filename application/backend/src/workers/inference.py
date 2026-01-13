@@ -74,7 +74,7 @@ class InferenceWorker(BaseProcessWorker):
                     pipeline.status.is_active and not pipeline.status.is_running
                 )
                 self._overlay = pipeline.overlay if pipeline and pipeline.overlay is not None else self._overlay
-                logger.info(f"Passthrough mode {'activated' if self._is_passthrough_mode else 'disabled'}.")
+                logger.debug(f"Passthrough mode {'activated' if self._is_passthrough_mode else 'disabled'}.")
                 if pipeline is None or pipeline.model is None:
                     return None
 

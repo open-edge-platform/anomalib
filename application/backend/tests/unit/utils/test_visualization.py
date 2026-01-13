@@ -18,7 +18,7 @@ def _rgba_png_base64(rgba: np.ndarray) -> str:
     if rgba.ndim != 3 or rgba.shape[2] != 4:
         raise ValueError("Expected (H, W, 4) RGBA image")
 
-    im = Image.fromarray(rgba, mode="RGBA")
+    im = Image.fromarray(rgba)
     with io.BytesIO() as buf:
         im.save(buf, format="PNG")
         return base64.b64encode(buf.getvalue()).decode("utf-8")
