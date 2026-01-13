@@ -76,7 +76,7 @@ class DispatchingWorker(BaseThreadWorker):
                 try:
                     self._rtc_stream_queue.put(stream_data.frame_data, block=False)
                 except queue.Full:
-                    logger.debug("Visualization queue is full; skipping")
+                    logger.trace("Visualization queue is full; skipping")
                 continue
 
             sink_config = self._active_pipeline_service.sink_config
@@ -110,4 +110,4 @@ class DispatchingWorker(BaseThreadWorker):
                 try:
                     self._rtc_stream_queue.put(image_with_visualization, block=False)
                 except queue.Full:
-                    logger.debug("Visualization queue is full; skipping")
+                    logger.trace("Visualization queue is full; skipping")
