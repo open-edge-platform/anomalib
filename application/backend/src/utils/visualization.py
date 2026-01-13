@@ -46,40 +46,25 @@ class Visualizer:
     def overlay_anomaly_heatmap(
         base_image: np.ndarray,
         prediction: PredictionResponse,
-        threshold: float = 0.5,
-        alpha: float = 0.25,
+        alpha: float = 0.5,
     ) -> np.ndarray:
-        """Overlay the anomaly heatmap onto the image.
-
-        Steps:
-        - Decode base64 anomaly map to an image
-        - Convert to grayscale if needed, ensure uint8
-        - Apply JET colormap and threshold mask
-        - Blend onto the base image using alpha
-        """
+        """Overlay the anomaly heatmap onto the image using alpha compositing."""
         try:
-            # Decode anomaly map
             anomaly_bytes = base64.b64decode(prediction.anomaly_map)
-            anomaly_img = cv2.imdecode(np.frombuffer(anomaly_bytes, dtype=np.uint8), cv2.IMREAD_GRAYSCALE)
-
-            if anomaly_img is None:
+            overlay = cv2.imdecode(np.frombuffer(anomaly_bytes, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+            if overlay is None or overlay.shape[-1] != 4:
                 return base_image
 
-            # Resize to match base image
             h, w = base_image.shape[:2]
-            anomaly_gray = cv2.resize(anomaly_img, (w, h))
+            if overlay.shape[:2] != (h, w):
+                overlay = cv2.resize(overlay, (w, h))
 
-            # Apply colormap and create threshold mask
-            heatmap = cv2.applyColorMap(anomaly_gray, cv2.COLORMAP_JET)
-            mask = anomaly_gray >= (threshold * 255)
+            # Extract RGB (converted from BGR) and alpha channels
+            overlay_rgb = cv2.cvtColor(overlay[:, :, :3], cv2.COLOR_BGR2RGB)
+            overlay_alpha = (overlay[:, :, 3:4] / 255.0) * alpha
 
-            # Create masked heatmap (only show where above threshold)
-            masked_heatmap = np.zeros_like(heatmap)
-            masked_heatmap[mask] = heatmap[mask]
-
-            # Blend onto base image
-            result = base_image.copy()
-            return cv2.addWeighted(result, 1.0, masked_heatmap, alpha, 0)
+            # Alpha composite
+            return (overlay_rgb * overlay_alpha + base_image * (1 - overlay_alpha)).astype(np.uint8)
         except Exception as e:
             logger.debug(f"Failed to overlay heatmap: {e}")
             return base_image
@@ -107,7 +92,7 @@ class Visualizer:
             x, y = position[0], position[1] + text_h
             # Create overlay for transparent background
             overlay = result.copy()
-            cv2.rectangle(overlay, (x - 8, y - text_h - 8), (x - 8 + text_w + 16, y + 8), background_color[::-1], -1)
+            cv2.rectangle(overlay, (x - 8, y - text_h - 8), (x - 8 + text_w + 16, y + 8), background_color, -1)
             result = cv2.addWeighted(result, 1.0 - alpha, overlay, alpha, 0)
 
             cv2.putText(result, label_text, (x, y), font, font_scale, text_color, thickness, cv2.LINE_AA)

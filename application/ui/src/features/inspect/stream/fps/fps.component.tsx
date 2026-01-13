@@ -10,10 +10,14 @@ interface FpsProp {
     projectId: string;
 }
 
+const formatter = new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0
+});
+
 export const Fps = ({ projectId }: FpsProp) => {
     const { data: pipeline } = usePipeline();
     const isRunning = pipeline?.status === 'running';
-    const formatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 
     const { data: metrics } = $api.useQuery(
         'get',
