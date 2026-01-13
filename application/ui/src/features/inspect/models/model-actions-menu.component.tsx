@@ -7,24 +7,18 @@ import { MoreMenu } from '@geti/ui/icons';
 
 import type { ModelData } from '../../../hooks/utils';
 import { JobLogsDialog } from '../jobs/show-job-logs.component';
-import { ExportModelDialog, type ExportOptions } from './export-model-dialog.component';
-import { useExportModel } from './hooks/use-export-model.hook';
 
 interface ModelActionsMenuProps {
     model: ModelData;
     selectedModelId: string | undefined;
 }
 
-type DialogType = 'logs' | 'delete' | 'export' | 'activate' | null;
+type DialogType = 'logs' | 'delete' | 'activate' | null;
 
 export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuProps) => {
     const { projectId } = useProjectIdentifier();
-    const { data: project } = $api.useSuspenseQuery('get', '/api/projects/{project_id}', {
-        params: { path: { project_id: projectId } },
-    });
     const patchPipeline = usePatchPipeline(projectId);
     const [openDialog, setOpenDialog] = useState<DialogType>(null);
-    const exportModel = useExportModel();
 
     const cancelJobMutation = $api.useMutation('post', '/api/jobs/{job_id}:cancel');
     const deleteModelMutation = $api.useMutation('delete', '/api/projects/{project_id}/models/{model_id}', {
@@ -40,8 +34,7 @@ export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuPro
     const hasJobActions = Boolean(model.job?.id);
     const hasCompletedStatus = model.status === 'Completed';
     const canDeleteModel = hasCompletedStatus && model.id !== selectedModelId;
-    const canExportModel = hasCompletedStatus;
-    const shouldShowMenu = hasJobActions || canDeleteModel || canExportModel;
+    const shouldShowMenu = hasJobActions || canDeleteModel;
 
     if (!shouldShowMenu) {
         return null;
@@ -129,9 +122,6 @@ export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuPro
                         if (actionKey === 'cancel' && model.job?.id) {
                             void handleCancelJob();
                         }
-                        if (actionKey === 'export' && canExportModel) {
-                            setOpenDialog('export');
-                        }
                         if (actionKey === 'delete' && canDeleteModel) {
                             setOpenDialog('delete');
                         }
@@ -145,7 +135,6 @@ export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuPro
                     {model.job?.status === 'pending' || model.job?.status === 'running' ? (
                         <Item key='cancel'>Cancel training</Item>
                     ) : null}
-                    {canExportModel ? <Item key='export'>Export model</Item> : null}
                     {canDeleteModel ? <Item key='delete'>Delete model</Item> : null}
                 </Menu>
             </MenuTrigger>
@@ -170,26 +159,6 @@ export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuPro
                     >
                         Deleting a model removes any exported artifacts and cannot be undone.
                     </AlertDialog>
-                ) : null}
-            </DialogContainer>
-
-            <DialogContainer onDismiss={() => setOpenDialog(null)}>
-                {openDialog === 'export' && canExportModel ? (
-                    <ExportModelDialog
-                        model={model}
-                        close={() => setOpenDialog(null)}
-                        onExport={(options: ExportOptions) => {
-                            exportModel.mutate({
-                                projectId,
-                                projectName: project.name,
-                                modelId: model.id,
-                                modelName: model.name,
-                                format: options.format,
-                                formatLabel: options.formatLabel,
-                                compression: options.compression,
-                            });
-                        }}
-                    />
                 ) : null}
             </DialogContainer>
 
