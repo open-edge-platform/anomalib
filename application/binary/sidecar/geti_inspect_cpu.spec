@@ -4,6 +4,7 @@ from PyInstaller.utils.hooks import collect_all, collect_data_files
 datas = [
     ('../../backend/src/alembic', 'src/alembic'),  # Alembic migration scripts
     ('../../backend/src/alembic.ini', 'src'),  # Alembic configuration
+    ('../../backend/src/core/model_metadata.yaml', 'core'),  # Model metadata
 ]
 binaries = []
 hiddenimports = [
@@ -33,34 +34,33 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 tmp_ret = collect_all("openvino")
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
+# Manually add critical OpenVINO components that collect_all sometimes misses
+import openvino
+from pathlib import Path
+import glob
+openvino_path = Path(openvino.__file__).parent
+libs_dir = openvino_path / 'libs'
+
+if libs_dir.exists():
+    # Add IR frontend - critical for loading .xml models
+    ir_frontend_libs = list(libs_dir.glob('libopenvino_ir_frontend.*.dylib'))
+    if ir_frontend_libs:
+        binaries.append((str(ir_frontend_libs[0]), '.'))
+        print(f"Adding IR frontend: {ir_frontend_libs[0].name}")
+    else:
+        print(f"WARNING: IR frontend not found in {libs_dir}")
+    
+    # Add OpenVINO plugins (AUTO, CPU, hetero, auto_batch) - required for device selection
+    plugin_libs = list(libs_dir.glob('libopenvino_*_plugin.so'))
+    for plugin in plugin_libs:
+        binaries.append((str(plugin), '.'))
+        print(f"Adding OpenVINO plugin: {plugin.name}")
+else:
+    print(f"WARNING: OpenVINO libs directory not found at {libs_dir}")
+
 # Collect onnx (required for model format used in OpenVINO conversion)
 tmp_ret = collect_all("onnx")
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
-
-# Collect trackio; as for some reason it also needs package.json
-tmp_ret = collect_all("trackio")
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
-
-# Collect gradio and gradio_client (needed by trackio, requires source .py files)
-tmp_ret = collect_all("gradio")
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
-
-tmp_ret = collect_all("gradio_client")
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
-
-# Collect safehttpx (needed by gradio)
-tmp_ret = collect_all("safehttpx")
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
-
-# Collect groovy (needed by gradio)
-tmp_ret = collect_all("groovy")
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
-
-# Collect rfc3987_syntax data files (needed by jsonschema)
-try:
-    datas += collect_data_files("rfc3987_syntax")
-except Exception:
-    pass
 
 
 a = Analysis(
@@ -73,8 +73,6 @@ a = Analysis(
     hooksconfig={},
     runtime_hooks=["hook-setup.py"],
     excludes=[
-        "comet_ml",
-        "open_clip",
         "tkinter",
         "torch.utils.benchmark",
         "torch.testing._internal",
@@ -84,12 +82,13 @@ a = Analysis(
         "pdbpp",
         "IPython",
         "ipdb",
+        "pyinstaller",
     ],
     noarchive=False,
     optimize=0,
 )
 
-# Filter out problematic TBB binaries from Analysis binaries (macOS only)
+# Filter out problematic TBB binaries from Analysis (macOS only)
 # These have malformed Mach-O headers and cause install_name_tool/codesign failures
 # Keep libtbb.12.dylib (core library needed by OpenVINO), but exclude optional bind/malloc libs
 import platform
@@ -97,19 +96,23 @@ import os
 if platform.system() == "Darwin":
     # Exclude only the problematic TBB bind and malloc libraries, keep the core libtbb
     problematic_tbb_libs = ['libtbbbind', 'libtbbmalloc']
-    a.binaries = [binary for binary in a.binaries 
-                  if not any(os.path.basename(binary[0]).startswith(lib) 
-                            for lib in problematic_tbb_libs)]
+    
+    def is_problematic_tbb(name):
+        basename = os.path.basename(name)
+        return any(basename.startswith(lib) for lib in problematic_tbb_libs)
+    
+    # Filter from binaries
+    a.binaries = [b for b in a.binaries if not is_problematic_tbb(b[0])]
+    # Filter from datas (symlinks/data files can end up here too)
+    a.datas = [d for d in a.datas if not is_problematic_tbb(d[0])]
 
 pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
     [],
+    exclude_binaries=True,
     name="geti-inspect-backend",
     debug=False,
     bootloader_ignore_signals=False,
@@ -123,4 +126,16 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+)
+
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name="geti-inspect-backend",
 )

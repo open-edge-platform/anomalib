@@ -3,23 +3,5 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "windows": ["main"],
-  "permissions": [
-    "core:default",
-    "opener:default",
-    {
-      "identifier": "shell:allow-execute",
-      "scope": [{ "name": "geti-inspect-backend", "sidecar": true }]
-    },
-    "shell:default",
-    {
-      "identifier": "shell:allow-spawn",
-      "scope": [{ "name": "geti-inspect-backend", "sidecar": true }]
-    },
-    {
-      "identifier": "core:webview:allow-internal-toggle-devtools"
-    },
-    {
-      "identifier": "shell:allow-kill"
-    }
-  ]
+  "permissions": ["core:default"]
 }

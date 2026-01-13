@@ -1,10 +1,10 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "geti_inspect",
+  "productName": "Geti Inspect",
   "version": "0.1.0",
   "identifier": "com.geti.inspect",
   "build": {
-    "beforeDevCommand": "cd ../../ui && npm start",
+    "beforeDevCommand": "cd ../../ui && npm start & mkdir -p ../src-tauri/target/debug && ln -sfn ../../../../sidecar/dist/geti-inspect-backend/_internal ../src-tauri/target/debug/_internal",
     "devUrl": "http://localhost:3000",
     "beforeBuildCommand": "cd ../../ui && npm run build",
     "frontendDist": "../../../ui/dist"
@@ -14,7 +14,9 @@
       {
         "title": "Geti Inspect",
         "width": 1000,
-        "height": 800
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false
       }
     ],
     "security": {
@@ -23,10 +25,11 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["app"],
     "externalBin": [
-      "../../sidecar/dist/geti-inspect-backend"
+      "../../sidecar/dist/geti-inspect-backend/geti-inspect-backend"
     ],
+    "resources": ["../../sidecar/dist/geti-inspect-backend/_internal"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

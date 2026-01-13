@@ -1,12 +1,14 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import multiprocessing as mp
 import os
+import sys
 
 # This is needed at the very top of the file to prevent worker processes
 # from executing module-level code and setup hooks in PyInstaller builds
-if __name__ == "__main__":
+if getattr(sys, "frozen", False) and __name__ == "__main__":
+    import multiprocessing as mp
+
     mp.freeze_support()
 
 import uvicorn
