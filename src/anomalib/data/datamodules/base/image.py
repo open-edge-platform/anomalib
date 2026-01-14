@@ -25,20 +25,19 @@ Example:
         ... )
 """
 
+from __future__ import annotations
+
 import copy
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from lightning.pytorch import LightningDataModule
+from lightning.pytorch.core.datamodule import LightningDataModule
 from lightning.pytorch.trainer.states import TrainerFn
-from lightning.pytorch.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
 from torch.utils.data.dataloader import DataLoader
 from torchvision.transforms.v2 import Compose, Resize, Transform
 
-from anomalib import TaskType
-from anomalib.data.datasets.base.image import AnomalibDataset
 from anomalib.data.transforms.utils import extract_transforms_by_type
 from anomalib.data.utils import TestSplitMode, ValSplitMode, random_split, split_by_label
 from anomalib.data.utils.synthetic import SyntheticAnomalyDataset
@@ -47,7 +46,11 @@ from anomalib.utils.attrs import get_nested_attr
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from lightning.pytorch.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
     from pandas import DataFrame
+
+    from anomalib import TaskType
+    from anomalib.data.datasets.base.image import AnomalibDataset
 
 
 logger = logging.getLogger(__name__)
@@ -415,10 +418,10 @@ class AnomalibDataModule(LightningDataModule, ABC):
 
     @classmethod
     def from_config(
-        cls: type["AnomalibDataModule"],
+        cls: type[AnomalibDataModule],
         config_path: str | Path,
         **kwargs,
-    ) -> "AnomalibDataModule":
+    ) -> AnomalibDataModule:
         """Create datamodule instance from config file.
 
         Args:

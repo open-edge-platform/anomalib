@@ -1,11 +1,14 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from dataclasses import dataclass
-from typing import Any
+from __future__ import annotations
 
-import numpy as np
-from anomalib.data import NumpyImageBatch as PredictionResult
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    import numpy as np
+    from anomalib.data import NumpyImageBatch as PredictionResult
 
 
 @dataclass(kw_only=True)

@@ -1,16 +1,21 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+from __future__ import annotations
 
 import os
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import cv2
-import numpy as np
-from anomalib.data import NumpyImageBatch as PredictionResult
 from loguru import logger
 
 from pydantic_models.sink import FolderSinkConfig, OutputFormat
 from services.dispatchers.base import BaseDispatcher
+
+if TYPE_CHECKING:
+    import numpy as np
+    from anomalib.data import NumpyImageBatch as PredictionResult
 
 
 class FolderDispatcher(BaseDispatcher):

@@ -68,10 +68,9 @@ class TrainingService:
         project_id = job.project_id
         model_name = job.payload.get("model_name")
         device = job.payload.get("device")
-        snapshot_id_ = job.payload.get("dataset_snapshot_id")
-        snapshot_id = UUID(snapshot_id_) if snapshot_id_ else None
-        max_epochs = job.payload.get("max_epochs", 200)
-
+        snapshot_id = UUID(snapshot_id_str) if (snapshot_id_str := job.payload.get("dataset_snapshot_id")) else None
+        # UI can return None
+        max_epochs: int = payload_epochs if (payload_epochs := job.payload.get("max_epochs")) is not None else 200
         if model_name is None:
             raise ValueError(f"Job {job.id} payload must contain 'model_name'")
 
