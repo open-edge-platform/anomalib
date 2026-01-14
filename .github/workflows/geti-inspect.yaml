@@ -39,13 +39,10 @@ jobs:
         with:
           version: "0.9.18"
 
-      - name: Install system dependencies
+      - name: Install OpenCV dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgl1 libglib2.0-0 libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libswscale-dev libswresample-dev libavfilter-dev pkg-config
-
-      - name: Install build tools
-        run: sudo apt-get install -y build-essential pkg-config
+          sudo apt-get install -y libgl1 libglib2.0-0
 
       - name: Prepare venv and install Python dependencies
         working-directory: application/backend
@@ -84,14 +81,6 @@ jobs:
         uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
         with:
           version: "0.9.18"
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libswscale-dev libswresample-dev libavfilter-dev pkg-config
-
-      - name: Install build tools
-        run: sudo apt-get install -y build-essential pkg-config
 
       - name: Prepare venv and install Python dependencies
         working-directory: application/backend
