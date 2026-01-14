@@ -113,6 +113,7 @@ jobs:
         working-directory: application/binary/tauri
         run: |
           # Update tauri.conf.json to build AppImage
+          export APPIMAGE_EXTRACT_AND_RUN=1
           npx tauri build --bundles appimage
         env:
           TAURI_SIGNING_PRIVATE_KEY: ""
