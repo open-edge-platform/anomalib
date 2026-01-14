@@ -11,4 +11,5 @@ export interface ModelData {
     progress: number;
     job: SchemaJob | undefined;
     sizeBytes: number | null;
+    backbone: string | null;
 }

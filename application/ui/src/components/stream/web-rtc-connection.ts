@@ -1,3 +1,8 @@
+// Copyright (C) 2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import { v4 as uuid } from 'uuid';
+
 import { fetchClient } from '../../api/client';
 
 export type WebRTCConnectionStatus = 'idle' | 'connecting' | 'connected' | 'disconnected' | 'failed';
@@ -34,8 +39,7 @@ export class WebRTCConnection {
     private timeoutId?: ReturnType<typeof setTimeout>;
 
     constructor() {
-        // TODO: replace with uuid
-        this.webrtcId = Math.random().toString(36).substring(7);
+        this.webrtcId = uuid();
     }
 
     public getStatus(): WebRTCConnectionStatus {
@@ -57,7 +61,11 @@ export class WebRTCConnection {
         }
 
         this.updateStatus('connecting');
-        this.peerConnection = new RTCPeerConnection();
+        const iceServers = await this.fetchIceServers();
+        const rtcConfig: RTCConfiguration = {
+            iceServers,
+        };
+        this.peerConnection = new RTCPeerConnection(rtcConfig);
         this.timeoutId = setTimeout(() => {
             console.warn('Connection is taking longer than usual. Are you on a VPN?');
         }, CONNECTION_TIMEOUT);
@@ -66,8 +74,11 @@ export class WebRTCConnection {
             this.setupPeerConnection();
 
             await this.createAndSetOffer();
-            await this.waitForIceGathering();
-
+            try {
+                await this.waitForIceGathering();
+            } catch (e) {
+                console.warn('ICE gathering timed out or failed, proceeding anyway:', e);
+            }
             const data = await this.sendOffer();
 
             if (!this.handleOfferResponse(data)) return;
@@ -76,9 +87,11 @@ export class WebRTCConnection {
         } catch (err) {
             clearTimeout(this.timeoutId);
             console.error('Error setting up WebRTC:', err);
+
             this.emit({ type: 'error', error: err as Error });
             this.updateStatus('failed');
-            this.stop();
+
+            await this.stop();
         }
 
         if (this.peerConnection) {
@@ -105,21 +118,26 @@ export class WebRTCConnection {
     }
 
     private async waitForIceGathering(): Promise<void> {
-        await new Promise<void>((resolve) => {
-            if (!this.peerConnection || this.peerConnection.iceGatheringState === 'complete') {
-                resolve();
-                return;
-            }
-
-            const checkState = () => {
-                if (this.peerConnection && this.peerConnection.iceGatheringState === 'complete') {
-                    this.peerConnection.removeEventListener('icegatheringstatechange', checkState);
+        await Promise.race([
+            new Promise<void>((resolve) => {
+                if (!this.peerConnection || this.peerConnection.iceGatheringState === 'complete') {
                     resolve();
+                    return;
                 }
-            };
 
-            this.peerConnection?.addEventListener('icegatheringstatechange', checkState);
-        });
+                const checkState = () => {
+                    if (this.peerConnection && this.peerConnection.iceGatheringState === 'complete') {
+                        this.peerConnection.removeEventListener('icegatheringstatechange', checkState);
+                        resolve();
+                    }
+                };
+
+                this.peerConnection?.addEventListener('icegatheringstatechange', checkState);
+            }),
+            new Promise<void>((_, reject) =>
+                setTimeout(() => reject(new Error('ICE gathering timed out')), CONNECTION_TIMEOUT)
+            ),
+        ]);
     }
 
     private async sendOffer(): Promise<SessionData | undefined> {
@@ -242,6 +260,30 @@ export class WebRTCConnection {
         if (this.status !== newStatus) {
             this.status = newStatus;
             this.emit({ type: 'status_change', status: newStatus });
+        }
+    }
+
+    private updateConfThreshold(value: number) {
+        return fetchClient.POST('/api/webrtc/input_hook', {
+            body: {
+                conf_threshold: value,
+                webrtc_id: this.webrtcId,
+            },
+        });
+    }
+
+    private async fetchIceServers() {
+        try {
+            const { data } = await fetchClient.GET('/api/webrtc/config');
+            if (!data) {
+                console.warn('No ICE server data received.');
+                return [];
+            }
+            console.info('ICE servers:', data.iceServers);
+            return data.iceServers as RTCIceServer[];
+        } catch (err) {
+            console.error('Error fetching ICE servers:', err);
+            return [];
         }
     }
 }
