@@ -3,26 +3,21 @@
 
 import { Flex, Text, Tooltip, TooltipTrigger, View } from '@geti/ui';
 
-import { LogEntry as LogEntryType, LOG_LEVEL_COLORS, LogLevelName } from './log-types';
+import { LOG_LEVEL_COLORS, LogEntry as LogEntryType, LogLevelName } from './log-types';
 
 import styles from './log-viewer.module.scss';
 
-interface LogLevelBadgeProps {
+interface LogLevelTextProps {
     level: LogLevelName;
 }
 
-const LogLevelBadge = ({ level }: LogLevelBadgeProps) => {
+const LogLevelText = ({ level }: LogLevelTextProps) => {
     const color = LOG_LEVEL_COLORS[level] ?? LOG_LEVEL_COLORS.INFO;
 
     return (
-        <View
-            UNSAFE_className={styles.levelBadge}
-            UNSAFE_style={{
-                backgroundColor: color,
-            }}
-        >
-            <Text UNSAFE_className={styles.levelText}>{level}</Text>
-        </View>
+        <Text UNSAFE_className={styles.levelTextOnly} UNSAFE_style={{ color }}>
+            {level}
+        </Text>
     );
 };
 
@@ -141,12 +136,11 @@ export const LogEntryComponent = ({ entry }: LogEntryProps) => {
     const { record } = entry;
 
     return (
-        <Flex UNSAFE_className={styles.logEntry} gap='size-100' alignItems='flex-start'>
-            <LogLevelBadge level={record.level.name} />
+        <Flex UNSAFE_className={styles.logEntry} gap='size-75' alignItems='flex-start'>
             <LogTimestamp timestamp={record.time.timestamp} repr={record.time.repr} />
+            <LogLevelText level={record.level.name} />
             <LogSource module={record.module} func={record.function} line={record.line} />
             <LogMessage message={record.message} level={record.level.name} />
         </Flex>
     );
 };
-

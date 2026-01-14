@@ -14,7 +14,6 @@ import {
     Heading,
     Icon,
     Loading,
-    View,
 } from '@geti/ui';
 import { LogsIcon } from '@geti/ui/icons';
 import { queryOptions, experimental_streamedQuery as streamedQuery, useQuery } from '@tanstack/react-query';
@@ -57,25 +56,10 @@ const JobLogsDialogContent = ({ jobId }: { jobId: string }) => {
 
 export const JobLogsDialog = ({ close, jobId }: { close: () => void; jobId: string }) => {
     return (
-        <Dialog
-            UNSAFE_style={{
-                display: 'flex',
-                flexDirection: 'column',
-                height: '100%',
-                maxHeight: '100%',
-            }}
-        >
+        <Dialog>
             <Heading>Job Logs</Heading>
             <Divider />
-            <Content
-                UNSAFE_style={{
-                    flex: 1,
-                    minHeight: 0,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    overflow: 'hidden',
-                }}
-            >
+            <Content>
                 <Suspense fallback={<Loading mode='inline' />}>
                     <JobLogsDialogContent jobId={jobId} />
                 </Suspense>
@@ -91,15 +75,13 @@ export const JobLogsDialog = ({ close, jobId }: { close: () => void; jobId: stri
 
 export const ShowJobLogs = ({ jobId }: { jobId: string }) => {
     return (
-        <View>
-            <DialogTrigger type='fullscreen'>
-                <ActionButton aria-label='View job logs'>
-                    <Icon>
-                        <LogsIcon />
-                    </Icon>
-                </ActionButton>
-                {(close) => <JobLogsDialog close={close} jobId={jobId} />}
-            </DialogTrigger>
-        </View>
+        <DialogTrigger type='fullscreen'>
+            <ActionButton aria-label='View job logs'>
+                <Icon>
+                    <LogsIcon />
+                </Icon>
+            </ActionButton>
+            {(close) => <JobLogsDialog close={close} jobId={jobId} />}
+        </DialogTrigger>
     );
 };

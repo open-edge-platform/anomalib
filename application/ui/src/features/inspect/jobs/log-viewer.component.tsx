@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Flex, Text, View } from '@geti/ui';
 
@@ -49,12 +49,21 @@ const filterLogs = (logs: LogEntry[], filters: LogFilters): LogEntry[] => {
 
 export const LogViewer = ({ logs, isLoading }: LogViewerProps) => {
     const [filters, setFilters] = useState<LogFilters>(DEFAULT_LOG_FILTERS);
+    const [autoScroll, setAutoScroll] = useState(true);
+    const logsContainerRef = useRef<HTMLDivElement | null>(null);
 
     const filteredLogs = useMemo(() => filterLogs(logs, filters), [logs, filters]);
 
     const handleFiltersChange = (newFilters: LogFilters) => {
         setFilters(newFilters);
     };
+
+    useEffect(() => {
+        if (!autoScroll || !logsContainerRef.current) {
+            return;
+        }
+        logsContainerRef.current.scrollTop = logsContainerRef.current.scrollHeight;
+    }, [autoScroll, filteredLogs.length]);
 
     return (
         <View UNSAFE_className={styles.logViewer}>
@@ -64,9 +73,11 @@ export const LogViewer = ({ logs, isLoading }: LogViewerProps) => {
                 totalCount={logs.length}
                 filteredCount={filteredLogs.length}
                 filteredLogs={filteredLogs}
+                autoScroll={autoScroll}
+                onAutoScrollChange={setAutoScroll}
             />
 
-            <View UNSAFE_className={styles.logsContainer}>
+            <div className={styles.logsContainer} ref={logsContainerRef}>
                 {filteredLogs.length === 0 ? (
                     <Flex UNSAFE_className={styles.emptyState}>
                         {isLoading ? (
@@ -84,8 +95,7 @@ export const LogViewer = ({ logs, isLoading }: LogViewerProps) => {
                         ))}
                     </View>
                 )}
-            </View>
+            </div>
         </View>
     );
 };
-

@@ -18,10 +18,10 @@ export const LOG_LEVELS: LogLevelName[] = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 
 
 export const LOG_LEVEL_COLORS: Record<LogLevelName, string> = {
     DEBUG: 'var(--spectrum-global-color-gray-600)',
-    INFO: 'var(--spectrum-global-color-blue-600)',
+    INFO: '#ffffff',
     WARNING: 'var(--spectrum-global-color-orange-600)',
     ERROR: 'var(--spectrum-global-color-red-600)',
-    SUCCESS: 'var(--spectrum-global-color-green-600)',
+    SUCCESS: '#4ade80',
     CRITICAL: 'var(--spectrum-global-color-magenta-600)',
 };
 
@@ -74,4 +74,3 @@ export const DEFAULT_LOG_FILTERS: LogFilters = {
     startTime: null,
     endTime: null,
 };
-

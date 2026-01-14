@@ -4,9 +4,8 @@
 .logViewer {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    min-height: 0; // Important for proper flex shrinking
-    gap: var(--spectrum-global-dimension-size-150);
+    height: 75vh;
+    gap: var(--spectrum-global-dimension-size-100);
 }
 
 .filtersContainer {
@@ -126,21 +125,22 @@
 
 .logsContainer {
     flex: 1;
-    min-height: 0; // Critical for proper scrolling in flex container
+    min-height: 0;
     overflow-y: auto;
     background: var(--spectrum-global-color-gray-75);
     border-radius: var(--spectrum-global-dimension-size-50);
 }
 
 .logsInner {
-    padding: var(--spectrum-global-dimension-size-100);
+    padding: var(--spectrum-global-dimension-size-50);
 }
 
 .logEntry {
-    padding: var(--spectrum-global-dimension-size-75) var(--spectrum-global-dimension-size-100);
-    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+    padding: var(--spectrum-global-dimension-size-50) var(--spectrum-global-dimension-size-75);
+    border-bottom: 1px solid var(--spectrum-global-color-gray-100);
     font-family: var(--spectrum-global-font-family-code);
     font-size: var(--spectrum-global-dimension-font-size-75);
+    line-height: 1.3;
 
     &:last-child {
         border-bottom: none;
@@ -151,22 +151,11 @@
     }
 }
 
-.levelBadge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 56px;
-    padding: 2px 6px;
-    border-radius: 3px;
-    flex-shrink: 0;
-}
-
-.levelText {
-    color: white;
-    font-size: 10px;
-    font-weight: 600;
+.levelTextOnly {
+    min-width: 64px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
 }
 
 .timestamp {
@@ -178,6 +167,8 @@
     color: var(--spectrum-global-color-gray-700);
     font-size: var(--spectrum-global-dimension-font-size-75);
     font-family: var(--spectrum-global-font-family-code);
+    min-width: 80px;
+    display: inline-block;
 }
 
 .source {
@@ -190,6 +181,7 @@
     font-size: var(--spectrum-global-dimension-font-size-75);
     font-family: var(--spectrum-global-font-family-code);
     white-space: nowrap;
+    min-width: 180px;
 }
 
 .message {
@@ -211,7 +203,7 @@
 
 .messagePre {
     margin: 0;
-    padding: var(--spectrum-global-dimension-size-50);
+    padding: var(--spectrum-global-dimension-size-25);
     background: var(--spectrum-global-color-gray-100);
     border-radius: var(--spectrum-global-dimension-size-50);
     font-size: var(--spectrum-global-dimension-font-size-50);
@@ -230,4 +222,8 @@
     min-height: 120px;
     gap: var(--spectrum-global-dimension-size-100);
     color: var(--spectrum-global-color-gray-600);
+}
+
+.autoScroll {
+    font-size: var(--spectrum-global-dimension-font-size-75);
 }

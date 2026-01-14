@@ -3,7 +3,19 @@
 
 import { useState } from 'react';
 
-import { ActionButton, Dialog, DialogTrigger, Flex, Icon, SearchField, Text, Tooltip, TooltipTrigger, View } from '@geti/ui';
+import {
+    ActionButton,
+    Checkbox,
+    Dialog,
+    DialogTrigger,
+    Flex,
+    Icon,
+    SearchField,
+    Text,
+    Tooltip,
+    TooltipTrigger,
+    View,
+} from '@geti/ui';
 import { Copy, Filter } from '@geti/ui/icons';
 
 import { LOG_LEVEL_COLORS, LOG_LEVELS, LogEntry, LogFilters as LogFiltersType, LogLevelName } from './log-types';
@@ -58,11 +70,7 @@ const LevelDropdown = ({ selectedLevels, onLevelChange, onSelectAll, onClearAll 
                     </span>
                 </Text>
             </ActionButton>
-            <Dialog
-                width='auto'
-                UNSAFE_className={styles.levelDropdownDialog}
-                UNSAFE_style={{ padding: 0 }}
-            >
+            <Dialog width='auto' UNSAFE_className={styles.levelDropdownDialog} UNSAFE_style={{ padding: 0 }}>
                 <div className={styles.levelPopoverContent}>
                     {LOG_LEVELS.map((level) => (
                         <LevelCheckboxItem
@@ -73,18 +81,10 @@ const LevelDropdown = ({ selectedLevels, onLevelChange, onSelectAll, onClearAll 
                         />
                     ))}
                     <div className={styles.levelPopoverActions}>
-                        <button
-                            onClick={onSelectAll}
-                            disabled={allSelected}
-                            className={styles.levelQuickButton}
-                        >
+                        <button onClick={onSelectAll} disabled={allSelected} className={styles.levelQuickButton}>
                             All
                         </button>
-                        <button
-                            onClick={onClearAll}
-                            disabled={noneSelected}
-                            className={styles.levelQuickButton}
-                        >
+                        <button onClick={onClearAll} disabled={noneSelected} className={styles.levelQuickButton}>
                             None
                         </button>
                     </div>
@@ -107,9 +107,19 @@ interface LogFiltersProps {
     totalCount: number;
     filteredCount: number;
     filteredLogs: LogEntry[];
+    autoScroll: boolean;
+    onAutoScrollChange: (value: boolean) => void;
 }
 
-export const LogFiltersComponent = ({ filters, onFiltersChange, totalCount, filteredCount, filteredLogs }: LogFiltersProps) => {
+export const LogFiltersComponent = ({
+    filters,
+    onFiltersChange,
+    totalCount,
+    filteredCount,
+    filteredLogs,
+    autoScroll,
+    onAutoScrollChange,
+}: LogFiltersProps) => {
     const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle');
 
     const handleCopyLogs = async () => {
@@ -171,6 +181,10 @@ export const LogFiltersComponent = ({ filters, onFiltersChange, totalCount, filt
                     onSelectAll={handleSelectAll}
                     onClearAll={handleClearAll}
                 />
+
+                <Checkbox isSelected={autoScroll} onChange={onAutoScrollChange} UNSAFE_className={styles.autoScroll}>
+                    Auto-scroll
+                </Checkbox>
 
                 <TooltipTrigger delay={300}>
                     <ActionButton
