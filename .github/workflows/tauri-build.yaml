@@ -1,17 +1,17 @@
 # Tauri Application Build Workflow
 #
 # This workflow builds the Geti Inspect Tauri application for Linux
-# and uploads the AppImage as an artifact.
+# and uploads the .deb package as an artifact.
 #
 # Key Features:
 # - Builds Python backend sidecar using PyInstaller
 # - Builds UI frontend
-# - Creates Tauri AppImage for Linux
+# - Creates Tauri .deb package for Linux
 # - Uploads artifacts for distribution
 #
 # Process Stages:
 # 1. Setup:
-#    - Install system dependencies for Tauri/AppImage
+#    - Install system dependencies for Tauri/deb
 #    - Setup Python environment for backend
 #    - Setup Node.js for frontend
 #
@@ -25,10 +25,10 @@
 #
 # 4. Build Tauri:
 #    - Build Tauri application
-#    - Generate AppImage
+#    - Generate .deb package
 #
 # 5. Upload:
-#    - Upload AppImage as artifact
+#    - Upload .deb package as artifact
 
 name: Tauri Build (Linux)
 
@@ -109,19 +109,18 @@ jobs:
         working-directory: application/binary/tauri
         run: npm ci
 
-      - name: Build Tauri AppImage
+      - name: Build Tauri .deb package
         working-directory: application/binary/tauri
         run: |
-          # Update tauri.conf.json to build AppImage
-          npx tauri build --bundles appimage -v
+          npx tauri build --bundles deb -v
         env:
           TAURI_SIGNING_PRIVATE_KEY: ""
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
 
-      - name: Upload AppImage artifact
+      - name: Upload .deb artifact
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
-          name: geti-inspect-linux-appimage
-          path: application/binary/tauri/src-tauri/target/release/bundle/appimage/*.AppImage
+          name: geti-inspect-linux-deb
+          path: application/binary/tauri/src-tauri/target/release/bundle/deb/*.deb
           retention-days: 30
           if-no-files-found: error
