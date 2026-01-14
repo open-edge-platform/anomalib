@@ -1,4 +1,7 @@
-import { Suspense } from 'react';
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import { Suspense, useMemo } from 'react';
 
 import {
     ActionButton,
@@ -8,56 +11,74 @@ import {
     Dialog,
     DialogTrigger,
     Divider,
-    Flex,
     Heading,
     Icon,
     Loading,
-    Text,
     View,
 } from '@geti/ui';
 import { LogsIcon } from '@geti/ui/icons';
 import { queryOptions, experimental_streamedQuery as streamedQuery, useQuery } from '@tanstack/react-query';
 import { fetchSSE } from 'src/api/fetch-sse';
 
-interface LogLine {
-    text: string;
-}
+import { LogEntry } from './log-types';
+import { LogViewer } from './log-viewer.component';
 
 const JobLogsDialogContent = ({ jobId }: { jobId: string }) => {
     const query = useQuery(
         queryOptions({
             queryKey: ['get', '/api/jobs/{job_id}/logs', jobId],
             queryFn: streamedQuery({
-                queryFn: () => fetchSSE<LogLine>(`/api/jobs/${jobId}/logs`),
+                queryFn: () => fetchSSE<LogEntry>(`/api/jobs/${jobId}/logs`),
             }),
             staleTime: Infinity,
         })
     );
 
-    return (
-        <Flex direction='column' gap='size-25'>
-            {query.data?.map((line, idx) => <Text key={idx}> {line.text}</Text>)}
-        </Flex>
-    );
+    // Filter out any malformed log entries and ensure we have valid LogEntry objects
+    const validLogs = useMemo(() => {
+        if (!query.data) return [];
+
+        return query.data.filter((entry): entry is LogEntry => {
+            return (
+                entry !== null &&
+                typeof entry === 'object' &&
+                'record' in entry &&
+                entry.record !== null &&
+                typeof entry.record === 'object' &&
+                'level' in entry.record &&
+                'time' in entry.record &&
+                'message' in entry.record
+            );
+        });
+    }, [query.data]);
+
+    return <LogViewer logs={validLogs} isLoading={query.isLoading} />;
 };
 
 export const JobLogsDialog = ({ close, jobId }: { close: () => void; jobId: string }) => {
     return (
-        <Dialog>
-            <Heading>Logs</Heading>
+        <Dialog
+            UNSAFE_style={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+                maxHeight: '100%',
+            }}
+        >
+            <Heading>Job Logs</Heading>
             <Divider />
-            <Content>
-                <View
-                    padding='size-200'
-                    backgroundColor={'gray-50'}
-                    UNSAFE_style={{
-                        fontSize: 'var(--spectrum-global-dimension-static-size-130)',
-                    }}
-                >
-                    <Suspense fallback={<Loading mode='inline' />}>
-                        <JobLogsDialogContent jobId={jobId} />
-                    </Suspense>
-                </View>
+            <Content
+                UNSAFE_style={{
+                    flex: 1,
+                    minHeight: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'hidden',
+                }}
+            >
+                <Suspense fallback={<Loading mode='inline' />}>
+                    <JobLogsDialogContent jobId={jobId} />
+                </Suspense>
             </Content>
             <ButtonGroup>
                 <Button variant='secondary' onPress={close}>
@@ -72,7 +93,7 @@ export const ShowJobLogs = ({ jobId }: { jobId: string }) => {
     return (
         <View>
             <DialogTrigger type='fullscreen'>
-                <ActionButton>
+                <ActionButton aria-label='View job logs'>
                     <Icon>
                         <LogsIcon />
                     </Icon>
