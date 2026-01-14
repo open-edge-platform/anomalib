@@ -6,7 +6,7 @@
   "build": {
     "beforeDevCommand": "cd ../../ui && npm start & mkdir -p ../src-tauri/target/debug && ln -sfn ../../../../sidecar/dist/geti-inspect-backend/_internal ../src-tauri/target/debug/_internal",
     "devUrl": "http://localhost:3000",
-    "beforeBuildCommand": "cd ../../ui && npm run build",
+    "beforeBuildCommand": "cd ../../ui && npm ci && npm run build",
     "frontendDist": "../../../ui/dist"
   },
   "app": {

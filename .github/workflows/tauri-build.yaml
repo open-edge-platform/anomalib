@@ -105,14 +105,6 @@ jobs:
           TARGET_TRIPLE=$(rustc -Vv | grep host | cut -f2 -d' ')
           mv dist/geti-inspect-backend/geti-inspect-backend "dist/geti-inspect-backend/geti-inspect-backend-${TARGET_TRIPLE}"
 
-      - name: Install UI dependencies
-        working-directory: application/ui
-        run: npm ci
-
-      - name: Build UI
-        working-directory: application/ui
-        run: npm run build
-
       - name: Install Tauri dependencies
         working-directory: application/binary/tauri
         run: npm ci
