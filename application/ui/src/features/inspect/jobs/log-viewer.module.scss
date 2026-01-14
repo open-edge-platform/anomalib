@@ -1,4 +1,4 @@
-// Copyright (C) 2026 Intel Corporation
+// Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 .logViewer {
@@ -186,8 +186,7 @@
 }
 
 .sourceText {
-    /* Loguru-like cyan for location text */
-    color: #22d3ee;
+    color: var(--spectrum-global-color-gray-600);
     font-size: var(--spectrum-global-dimension-font-size-75);
     font-family: var(--spectrum-global-font-family-code);
     white-space: nowrap;
@@ -199,37 +198,9 @@
 }
 
 .messageText {
+    color: var(--spectrum-global-color-gray-900);
     font-size: var(--spectrum-global-dimension-font-size-75);
     word-break: break-word;
-}
-
-/* Log level text colors (loguru-inspired) */
-.logEntry[data-level='trace'] .messageText {
-    color: #06b6d4;
-}
-
-.logEntry[data-level='debug'] .messageText {
-    color: #9ca3af;
-}
-
-.logEntry[data-level='info'] .messageText {
-    color: #e5e7eb;
-}
-
-.logEntry[data-level='success'] .messageText {
-    color: #22c55e;
-}
-
-.logEntry[data-level='warning'] .messageText {
-    color: #eab308;
-}
-
-.logEntry[data-level='error'] .messageText {
-    color: #ef4444;
-}
-
-.logEntry[data-level='critical'] .messageText {
-    color: #fecdd3; /* light text on strong red badge */
 }
 
 .messagePreformatted {

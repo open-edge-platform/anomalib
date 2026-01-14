@@ -1,4 +1,4 @@
-// Copyright (C) 2026 Intel Corporation
+// Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { Flex, Text, Tooltip, TooltipTrigger, View } from '@geti/ui';
@@ -13,18 +13,12 @@ interface LogLevelBadgeProps {
 
 const LogLevelBadge = ({ level }: LogLevelBadgeProps) => {
     const color = LOG_LEVEL_COLORS[level] ?? LOG_LEVEL_COLORS.INFO;
-    const isCritical = level === 'CRITICAL';
 
     return (
         <View
             UNSAFE_className={styles.levelBadge}
-            data-level={level.toLowerCase()}
             UNSAFE_style={{
                 backgroundColor: color,
-                // CRITICAL gets extra emphasis
-                ...(isCritical && {
-                    boxShadow: '0 0 0 2px rgba(220, 38, 38, 0.3)',
-                }),
             }}
         >
             <Text UNSAFE_className={styles.levelText}>{level}</Text>
@@ -102,11 +96,19 @@ const LogSource = ({ module, func, line }: LogSourceProps) => {
     );
 };
 
+const getMessageColor = (level: LogLevelName): string => {
+    if (level === 'INFO') return '#ffffff';
+    if (level === 'DEBUG') return 'var(--spectrum-global-color-gray-500)';
+    return LOG_LEVEL_COLORS[level] ?? LOG_LEVEL_COLORS.INFO;
+};
+
 interface LogMessageProps {
     message: string;
+    level: LogLevelName;
 }
 
-const LogMessage = ({ message }: LogMessageProps) => {
+const LogMessage = ({ message, level }: LogMessageProps) => {
+    const color = getMessageColor(level);
     // Check if message contains table-like content (box drawing chars) or multi-line
     const isMultiLine = message.includes('\n');
     const hasTableChars = /[┏┓┗┛┃━┣┫┳┻╋│─├┤┬┴┼]/.test(message);
@@ -115,14 +117,18 @@ const LogMessage = ({ message }: LogMessageProps) => {
     if (isFormattedContent) {
         return (
             <View UNSAFE_className={styles.messagePreformatted}>
-                <pre className={styles.messagePre}>{message}</pre>
+                <pre className={styles.messagePre} style={{ color }}>
+                    {message}
+                </pre>
             </View>
         );
     }
 
     return (
         <View UNSAFE_className={styles.message}>
-            <Text UNSAFE_className={styles.messageText}>{message}</Text>
+            <Text UNSAFE_className={styles.messageText} UNSAFE_style={{ color }}>
+                {message}
+            </Text>
         </View>
     );
 };
@@ -135,16 +141,11 @@ export const LogEntryComponent = ({ entry }: LogEntryProps) => {
     const { record } = entry;
 
     return (
-        <Flex
-            UNSAFE_className={styles.logEntry}
-            gap='size-100'
-            alignItems='start'
-            data-level={record.level.name.toLowerCase()}
-        >
+        <Flex UNSAFE_className={styles.logEntry} gap='size-100' alignItems='flex-start'>
             <LogLevelBadge level={record.level.name} />
             <LogTimestamp timestamp={record.time.timestamp} repr={record.time.repr} />
             <LogSource module={record.module} func={record.function} line={record.line} />
-            <LogMessage message={record.message} />
+            <LogMessage message={record.message} level={record.level.name} />
         </Flex>
     );
 };

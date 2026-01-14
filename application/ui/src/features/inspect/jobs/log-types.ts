@@ -1,4 +1,4 @@
-// Copyright (C) 2026 Intel Corporation
+// Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 export interface LogTime {
@@ -12,19 +12,17 @@ export interface LogLevel {
     icon: string;
 }
 
-export type LogLevelName = 'TRACE' | 'DEBUG' | 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR' | 'CRITICAL';
+export type LogLevelName = 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'SUCCESS' | 'CRITICAL';
 
-export const LOG_LEVELS: LogLevelName[] = ['TRACE', 'DEBUG', 'INFO', 'SUCCESS', 'WARNING', 'ERROR', 'CRITICAL'];
+export const LOG_LEVELS: LogLevelName[] = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'SUCCESS', 'CRITICAL'];
 
-// Loguru-inspired color palette
 export const LOG_LEVEL_COLORS: Record<LogLevelName, string> = {
-    TRACE: '#06b6d4',    // Cyan
-    DEBUG: '#6b7280',    // Gray (swapped with INFO)
-    INFO: '#3b82f6',     // Blue (swapped with DEBUG)
-    SUCCESS: '#22c55e',  // Green
-    WARNING: '#eab308',  // Yellow
-    ERROR: '#ef4444',    // Red
-    CRITICAL: '#dc2626', // Red with special styling
+    DEBUG: 'var(--spectrum-global-color-gray-600)',
+    INFO: 'var(--spectrum-global-color-blue-600)',
+    WARNING: 'var(--spectrum-global-color-orange-600)',
+    ERROR: 'var(--spectrum-global-color-red-600)',
+    SUCCESS: 'var(--spectrum-global-color-green-600)',
+    CRITICAL: 'var(--spectrum-global-color-magenta-600)',
 };
 
 export interface LogProcess {
