@@ -63,6 +63,7 @@ export const ModelDetail = ({ model, isActiveModel, onBack }: ModelDetailProps) 
     const [selectedCompression, setSelectedCompression] = useState<SchemaCompressionType | 'none'>('none');
 
     const exportModel = useExportModel();
+    const isExportPending = exportModel.isPending || exportModel.isExporting(model.id);
 
     const handleFormatChange = (value: string) => {
         const format = value as SchemaExportType;
@@ -217,9 +218,9 @@ export const ModelDetail = ({ model, isActiveModel, onBack }: ModelDetailProps) 
                                 marginStart={'auto'}
                                 variant='accent'
                                 onPress={() => handleExport()}
-                                isPending={exportModel.isPending}
+                                isPending={isExportPending}
                             >
-                                {exportModel.isPending ? 'Exporting...' : 'Export'}
+                                Export
                             </Button>
                         </Flex>
                     </Flex>

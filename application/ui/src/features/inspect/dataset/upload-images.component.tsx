@@ -1,6 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { startTransition } from 'react';
+
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Button, FileTrigger, toast } from '@geti/ui';
@@ -21,7 +23,9 @@ export const UploadImages = () => {
     });
 
     const handleAddMediaItem = async (files: File[]) => {
-        startUpload(files.length);
+        startTransition(() => {
+            startUpload(files.length);
+        });
 
         const uploadPromises = files.map((file) => {
             const formData = new FormData();
