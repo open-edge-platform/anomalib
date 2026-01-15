@@ -136,7 +136,7 @@ export const LogEntryComponent = ({ entry }: LogEntryProps) => {
     const { record } = entry;
 
     return (
-        <Flex UNSAFE_className={styles.logEntry} gap='size-75' alignItems='flex-start'>
+        <Flex UNSAFE_className={styles.logEntry} gap='size-75' alignItems='start'>
             <LogTimestamp timestamp={record.time.timestamp} repr={record.time.repr} />
             <LogLevelText level={record.level.name} />
             <LogSource module={record.module} func={record.function} line={record.line} />
