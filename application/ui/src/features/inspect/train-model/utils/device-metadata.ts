@@ -1,4 +1,4 @@
-export interface DeviceMetadata {
+interface DeviceMetadata {
     label: string;
     description?: string;
 }

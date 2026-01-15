@@ -21,6 +21,7 @@ configs/
 │   └── visa.yaml
 └── model
     ├── ai_vad.yaml
+    ├── anomaly_dino.yaml
     ├── cfa.yaml
     ├── cflow.yaml
     ├── csflow.yaml

@@ -7,7 +7,7 @@ import { VirtualizerGridLayout } from 'src/components/virtualizer-grid-layout/vi
 
 import { getThumbnailUrl } from '../utils';
 import { DatasetItemPlaceholder } from './dataset-item-placeholder/dataset-item-placeholder.component';
-import { getPlaceholderItem, isPlaceholderItem } from './dataset-item-placeholder/util';
+import { getPlaceholderItem, getPlaceholderKeys, isPlaceholderItem } from './dataset-item-placeholder/util';
 import { DeleteMediaItem } from './delete-dataset-item/delete-dataset-item.component';
 import { DownloadDatasetItem } from './download-dataset-item/download-dataset-item.component';
 import { useGetMediaItems } from './hooks/use-get-media-items.hook';
@@ -28,11 +28,12 @@ export const DatasetList = () => {
     const [selectedMediaItem, setSelectedMediaItemId] = useSelectedMediaItem();
     const { mediaItems, isFetchingNextPage, hasNextPage, fetchNextPage } = useGetMediaItems();
 
+    const placeholderCount = Math.max(0, REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING - mediaItems.length);
+    const placeholderKeys = getPlaceholderKeys(placeholderCount);
+
     const mediaItemsToRender = [
         ...mediaItems,
-        ...Array.from({
-            length: Math.max(0, REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING - mediaItems.length),
-        }).map((_, index): MediaItem => getPlaceholderItem(index)),
+        ...Array.from({ length: placeholderCount }).map((_, index): MediaItem => getPlaceholderItem(index)),
     ];
 
     const handleSelectionChange = (newKeys: Selection) => {
@@ -54,6 +55,7 @@ export const DatasetList = () => {
                     items={mediaItemsToRender}
                     ariaLabel='sidebar-items'
                     selectionMode='single'
+                    disabledKeys={placeholderKeys}
                     layoutOptions={layoutOptions}
                     isLoadingMore={isFetchingNextPage}
                     onLoadMore={() => hasNextPage && fetchNextPage()}

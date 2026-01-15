@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Logging configuration and utilities for the application.
@@ -12,6 +12,7 @@ Provides centralized logging using loguru with:
 
 import logging
 import os
+import sys
 from typing import TYPE_CHECKING
 
 from core.logging.handlers import InterceptHandler
@@ -19,6 +20,8 @@ from core.logging.log_config import LogConfig
 
 if TYPE_CHECKING:
     from loguru import Record
+
+import pathlib
 
 from loguru import logger
 
@@ -53,6 +56,9 @@ def setup_logging(config: LogConfig | None = None) -> None:
     # overwrite global log_config
     global_log_config = config
 
+    logger.remove()
+    logger.add(sys.stderr, level=global_log_config.level)
+
     for worker_name, log_file in global_log_config.worker_log_info.items():
 
         def worker_log_filter(record: "Record", worker: str | None = worker_name) -> bool:
@@ -61,7 +67,7 @@ def setup_logging(config: LogConfig | None = None) -> None:
         log_path = os.path.join(config.log_folder, log_file)
 
         try:
-            os.makedirs(os.path.dirname(log_path), exist_ok=True)
+            pathlib.Path(os.path.dirname(log_path)).mkdir(exist_ok=True, parents=True)
         except OSError as e:
             logger.warning(f"Failed to create log directory {log_path}: {e}")
             continue

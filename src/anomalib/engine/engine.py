@@ -310,9 +310,10 @@ class Engine:
         """Set up callbacks for the trainer."""
         callbacks: list[Callback] = []
 
-        # Add ModelCheckpoint if it is not in the callbacks list.
+        # Add ModelCheckpoint if it is not in the callbacks list and barebones is not enabled.
         has_checkpoint_callback = any(isinstance(c, ModelCheckpoint) for c in self._cache.args["callbacks"])
-        if has_checkpoint_callback is False:
+        is_barebones = self._cache.args.get("barebones", False)
+        if has_checkpoint_callback is False and not is_barebones:
             callbacks.append(
                 ModelCheckpoint(
                     dirpath=self._cache.args["default_root_dir"] / "weights" / "lightning",
@@ -557,7 +558,21 @@ class Engine:
         if self._should_run_validation(model or self.model, ckpt_path):
             logger.info("Running validation before testing to collect normalization metrics and/or thresholds.")
             self.trainer.validate(model, dataloaders, None, verbose=False, datamodule=datamodule)
-        return self.trainer.test(model, dataloaders, ckpt_path, verbose, datamodule, weights_only=False)
+
+        results = self.trainer.test(model, dataloaders, ckpt_path, verbose, datamodule, weights_only=False)
+
+        # In barebones mode, PyTorch Lightning may return empty results dict despite having logged metrics.
+        # Inject logged_metrics into results to ensure metrics are available in the return value.
+        if (
+            self.trainer.barebones
+            and results
+            and isinstance(results, list)
+            and not results[0]
+            and self.trainer.logged_metrics
+        ):
+            results[0] = {k: v.item() if hasattr(v, "item") else v for k, v in self.trainer.logged_metrics.items()}
+
+        return results
 
     def predict(
         self,

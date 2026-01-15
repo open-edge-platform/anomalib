@@ -8,7 +8,7 @@ import type { SchemaCompressionType, SchemaExportType } from 'src/api/openapi-sp
 import { useExportStatus } from '../../footer/status-bar/adapters/use-export-status';
 import { downloadBlob, sanitizeFilename } from '../../utils';
 
-export interface ExportModelParams {
+interface ExportModelParams {
     projectId: string;
     projectName: string;
     modelId: string;
@@ -19,13 +19,13 @@ export interface ExportModelParams {
 }
 
 export const useExportModel = () => {
-    const { startExport, completeExport } = useExportStatus();
+    const { startExport, completeExport, isExporting } = useExportStatus();
 
-    return useMutation({
+    const mutation = useMutation({
         mutationFn: async (params: ExportModelParams) => {
             const { projectId, projectName, modelId, modelName, format, formatLabel, compression } = params;
 
-            startExport(modelName, formatLabel);
+            startExport(modelId, modelName, formatLabel);
 
             const response = await fetchClient.POST('/api/projects/{project_id}/models/{model_id}:export', {
                 params: {
@@ -51,14 +51,16 @@ export const useExportModel = () => {
             const sanitizedModelName = sanitizeFilename(modelName);
             const filename = `${sanitizedProjectName}_${sanitizedModelName}_${format}${compressionSuffix}.zip`;
 
-            return { blob, filename };
+            return { blob, filename, modelId };
         },
-        onSuccess: ({ blob, filename }) => {
-            completeExport(true);
+        onSuccess: ({ blob, filename, modelId }) => {
+            completeExport(modelId, true);
             downloadBlob(blob, filename);
         },
-        onError: () => {
-            completeExport(false);
+        onError: (_error, variables) => {
+            completeExport(variables.modelId, false);
         },
     });
+
+    return { ...mutation, isExporting };
 };

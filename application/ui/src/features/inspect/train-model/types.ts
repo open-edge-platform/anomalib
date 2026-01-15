@@ -3,7 +3,7 @@
 
 import type { SchemaModelFamily, SchemaTrainableModel } from '@geti-inspect/api/spec';
 
-export type ModelFamily = SchemaModelFamily;
+type ModelFamily = SchemaModelFamily;
 export type TrainableModel = SchemaTrainableModel;
 
 export const FAMILY_DISPLAY_NAMES: Record<ModelFamily, string> = {

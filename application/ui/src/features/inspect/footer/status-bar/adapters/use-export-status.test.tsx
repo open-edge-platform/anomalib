@@ -29,7 +29,7 @@ describe('useExportStatus', () => {
         );
 
         act(() => {
-            result.current.exportStatus.startExport('MyModel', 'OpenVINO');
+            result.current.exportStatus.startExport('123', 'MyModel', 'OpenVINO');
         });
 
         const status = result.current.statusBar.activeStatus;
@@ -49,11 +49,11 @@ describe('useExportStatus', () => {
         );
 
         act(() => {
-            result.current.exportStatus.startExport('MyModel', 'OpenVINO');
+            result.current.exportStatus.startExport('123', 'MyModel', 'OpenVINO');
         });
 
         act(() => {
-            result.current.exportStatus.completeExport(true);
+            result.current.exportStatus.completeExport('123', true);
         });
 
         expect(result.current.statusBar.activeStatus?.variant).toBe('success');
@@ -76,11 +76,11 @@ describe('useExportStatus', () => {
         );
 
         act(() => {
-            result.current.exportStatus.startExport('MyModel', 'OpenVINO');
+            result.current.exportStatus.startExport('123', 'MyModel', 'OpenVINO');
         });
 
         act(() => {
-            result.current.exportStatus.completeExport(false);
+            result.current.exportStatus.completeExport('123', false);
         });
 
         expect(result.current.statusBar.activeStatus?.variant).toBe('error');

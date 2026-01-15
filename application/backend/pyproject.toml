@@ -19,6 +19,7 @@ dependencies = [
     "psutil~=7.0.0",
     "pyarrow~=21.0.0",
     "pydantic-settings~=2.10.1",
+    "requests",
     "sqlalchemy[asyncio]~=2.0",
     "sse-starlette~=3.0",
     "tensorboard",
