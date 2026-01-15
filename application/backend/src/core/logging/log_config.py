@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import os
@@ -20,7 +20,7 @@ class LogConfig:
 
     rotation: str = "10 MB"
     retention: str = "10 days"
-    level: str = "DEBUG"
+    level: str = "DEBUG" if settings.debug else "INFO"
     serialize: bool = True
     log_folder: Path = settings.log_dir
     # Mapping of worker classes to their dedicated log files

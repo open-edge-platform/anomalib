@@ -112,7 +112,7 @@ class ActivePipelineService:
                 self._sink = DisconnectedSinkConfig()
                 return
 
-            logger.info(f"Configuration loaded from database: {self._pipeline}")
+            logger.debug(f"Configuration loaded from database: {self._pipeline}")
 
             source = self._pipeline.source
             if source is not None:
