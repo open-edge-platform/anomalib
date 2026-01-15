@@ -1,0 +1,35 @@
+.img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.verticalImg {
+    width: auto;
+    height: 100%;
+}
+
+.inferenceImage {
+    left: 0;
+    position: absolute;
+
+    img {
+        width: 100%;
+        height: 100%;
+    }
+}
+
+.label {
+    padding: var(--spectrum-global-dimension-size-65);
+    color: var(--spectrum-global-color-gray-50);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    font-weight: 500;
+}
+
+.labelNormal {
+    background-color: var(--brand-moss);
+}
+
+.labelAnomalous {
+    background-color: var(--brand-coral-cobalt);
+}

@@ -1,0 +1,10 @@
+{
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@geti-inspect/test-fixtures": ["./fixtures"]
+        }
+    },
+    "include": ["./"]
+}

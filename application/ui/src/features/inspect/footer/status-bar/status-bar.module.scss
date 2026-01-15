@@ -1,0 +1,163 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+.statusBar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: var(--spectrum-global-dimension-size-400);
+    background: var(--spectrum-global-color-gray-100);
+    overflow: hidden;
+}
+
+.progressFill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: var(--progress, 0%);
+    transition:
+        width 0.3s ease-out,
+        background-color 0.3s ease;
+    z-index: 0;
+
+    &.info {
+        background: var(--spectrum-global-color-blue-400);
+    }
+    &.success {
+        background: var(--spectrum-global-color-green-500);
+    }
+    &.warning {
+        background: var(--spectrum-global-color-orange-400);
+    }
+    &.error {
+        background: var(--spectrum-global-color-red-400);
+    }
+
+    // Subtle right edge shadow for depth
+    &::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 12px;
+        background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.15));
+    }
+}
+
+.progressFill.indeterminate {
+    width: 100%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.contentWrapper {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.connectionSlot {
+    display: flex;
+    align-items: center;
+    gap: var(--spectrum-global-dimension-size-75);
+    padding: 0 var(--spectrum-global-dimension-size-150);
+    flex-shrink: 0;
+    border-right: 1px solid var(--spectrum-global-color-gray-200);
+    height: 100%;
+
+    // Adjust border when on colored background
+    .hasBackground & {
+        border-right-color: rgba(255, 255, 255, 0.2);
+    }
+}
+
+.connectionDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+
+    &.connected {
+        background: var(--spectrum-global-color-green-500);
+    }
+    &.connecting {
+        background: var(--spectrum-global-color-yellow-500);
+    }
+    &.disconnected,
+    &.failed {
+        background: var(--spectrum-global-color-red-500);
+    }
+
+    &.neutral {
+        background: var(--spectrum-global-color-gray-900);
+    }
+}
+
+.connectionText {
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    color: var(--spectrum-global-color-gray-700);
+    white-space: nowrap;
+
+    .hasBackground & {
+        color: var(--spectrum-global-color-gray-900);
+    }
+}
+
+.mainStatusArea {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 var(--spectrum-global-dimension-size-200);
+    gap: var(--spectrum-global-dimension-size-150);
+}
+
+.message {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    .hasBackground & {
+        color: var(--spectrum-global-color-gray-900);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+}
+
+.detail {
+    flex-shrink: 0;
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    opacity: 0.8;
+
+    .hasBackground & {
+        color: var(--spectrum-global-color-gray-900);
+    }
+}
+
+.cancelButton {
+    flex-shrink: 0;
+    margin-left: auto;
+
+    .hasBackground & {
+        color: var(--spectrum-global-color-gray-900);
+    }
+}
+
+.idleMessage {
+    color: var(--spectrum-global-color-gray-700);
+}

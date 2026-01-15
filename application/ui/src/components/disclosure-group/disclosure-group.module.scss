@@ -1,0 +1,17 @@
+.disclosure {
+    background-color: var(--spectrum-global-color-gray-75);
+    border: var(--spectrum-alias-border-size-thin) solid var(--spectrum-global-color-gray-200) !important;
+    border-radius: var(--spectrum-alias-border-radius-regular);
+}
+
+.selected {
+    border: var(--spectrum-alias-border-size-thick) solid var(--energy-blue) !important;
+}
+
+.disclosureTitleContainer {
+    width: 100%;
+}
+
+.disclosureTitle {
+    font-size: var(--spectrum-global-dimension-font-size-75);
+}

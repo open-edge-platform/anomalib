@@ -1,0 +1,9 @@
+.header {
+    background-color: var(--spectrum-global-color-gray-200);
+}
+
+.container {
+    --scalar-background-1: var(--spectrum-global-color-gray-50);
+    background: var(--scalar-background-1);
+    overflow: hidden;
+}
