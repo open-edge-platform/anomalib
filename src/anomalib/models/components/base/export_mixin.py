@@ -446,9 +446,13 @@ class ExportMixin:
                     pred_score=torch.from_numpy(ov_model_output["pred_score"]).squeeze(),
                     pred_label=torch.from_numpy(ov_model_output["pred_label"]).squeeze(),
                     gt_label=batch["gt_label"],
-                    anomaly_map=torch.from_numpy(ov_model_output["anomaly_map"]),
-                    pred_mask=torch.from_numpy(ov_model_output["pred_mask"]),
-                    gt_mask=batch["gt_mask"][:, None, :, :],  # Make shape the same format as pred_mask
+                    anomaly_map=torch.from_numpy(ov_model_output["anomaly_map"])
+                    if "anomaly_map" in ov_model_output
+                    else None,
+                    pred_mask=torch.from_numpy(ov_model_output["pred_mask"])
+                    if "pred_mask" in ov_model_output
+                    else None,
+                    gt_mask=batch["gt_mask"][:, None, :, :] if "gt_mask" in batch else None,
                 )
                 metric.update(result_batch)
 

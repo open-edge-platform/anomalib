@@ -42,6 +42,13 @@ Custom folder-based dataset organization.
 Surface defect detection in electrical commutators.
 :::
 
+:::{grid-item-card} MPDD
+:link: anomalib.data.datamodules.image.MPDD
+:link-type: doc
+
+Metal parts defect detection dataset for visual defect detection in manufacturing
+:::
+
 :::{grid-item-card} MVTecAD
 :link: anomalib.data.datamodules.image.MVTecAD
 :link-type: doc
@@ -96,7 +103,7 @@ Visual Anomaly dataset.
 
 ```{eval-rst}
 .. automodule:: anomalib.data
-   :members: BMAD, BTech, Datumaro, Folder, Kolektor, MVTecAD, MVTecAD2, MVTecLOCO, RealIAD, Tabular, VAD, Visa
+   :members: BMAD, BTech, Datumaro, Folder, Kolektor, MPDD, MVTecAD, MVTecAD2, MVTecLOCO, RealIAD, Tabular, VAD, Visa
    :undoc-members:
    :show-inheritance:
 ```

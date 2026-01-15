@@ -28,6 +28,7 @@ Example:
 
 Available Models:
     - :class:`AiVad`: AI-based Video Anomaly Detection
+    - :class:`Fuvas`: Few-shot Unsupervised Video Anomaly Segmentation
 """
 
 from .ai_vad import AiVad
