@@ -1,9 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import platform
 from collections import defaultdict
 from functools import lru_cache
 from typing import TypedDict
 
+import cv2
 import cv2_enumerate_cameras
 import openvino as ov
 from lightning.pytorch.accelerators import AcceleratorRegistry
@@ -29,7 +31,14 @@ class Devices:
         """
         names_count: dict[str, int] = defaultdict(int)
         cameras: list[CameraInfo] = []
-        for cam in cv2_enumerate_cameras.enumerate_cameras():
+        if platform.system() == "Windows":
+            enumerate_cameras = cv2_enumerate_cameras.enumerate_cameras(cv2.CAP_MSMF)
+        elif platform.system() == "Linux":
+            enumerate_cameras = cv2_enumerate_cameras.enumerate_cameras(cv2.CAP_V4L2)
+        else:
+            enumerate_cameras = cv2_enumerate_cameras.enumerate_cameras()
+
+        for cam in enumerate_cameras:
             duplicate_count = names_count[cam.name]
             duplicate_suffix = f" ({duplicate_count})" if duplicate_count > 0 else ""
             unique_camera_name = f"{cam.name}{duplicate_suffix}"
