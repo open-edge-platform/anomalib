@@ -56,7 +56,7 @@ from lightning.pytorch.utilities.types import STEP_OUTPUT
 from torch import nn
 from torchvision.transforms.v2 import CenterCrop, Compose, Normalize, Resize
 
-from anomalib import LearningType
+from anomalib import LearningType, PrecisionType
 from anomalib.data import Batch
 from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule, MemoryBankMixin
@@ -105,6 +105,7 @@ class Patchcore(MemoryBankMixin, AnomalibModule):
         visualizer (Visualizer | bool, optional): Visualizer instance or bool flag.
             Defaults to ``True``.
 
+
     Example:
         >>> from anomalib.data import MVTecAD
         >>> from anomalib.models import Patchcore
@@ -115,7 +116,8 @@ class Patchcore(MemoryBankMixin, AnomalibModule):
         >>> model = Patchcore(
         ...     backbone="wide_resnet50_2",
         ...     layers=["layer2", "layer3"],
-        ...     coreset_sampling_ratio=0.1
+        ...     coreset_sampling_ratio=0.1,
+        ...     precision="float32",
         ... )
 
         >>> # Train using the Engine

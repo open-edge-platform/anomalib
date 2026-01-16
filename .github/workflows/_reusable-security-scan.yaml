@@ -95,12 +95,15 @@ jobs:
     runs-on: ubuntu-latest
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     container:
       image: returntocorp/semgrep@sha256:ee3c01c9d33a975209d6bcda050520a45366d79e2919c15baca4014e8634a9ac # v1.124.0
 >>>>>>> chore(deps): update github actions (#2983)
 =======
 >>>>>>> chore(deps): lock file maintenance (#3014)
+=======
+>>>>>>> upstream/main
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:

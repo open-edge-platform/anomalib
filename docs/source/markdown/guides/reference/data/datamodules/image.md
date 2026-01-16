@@ -103,11 +103,7 @@ Visual Anomaly dataset.
 
 ```{eval-rst}
 .. automodule:: anomalib.data
-<<<<<<< HEAD
-   :members: BMAD, BTech, Datumaro, Folder, Kolektor, MVTecAD, MVTecAD2, MVTecLOCO, RealIAD, Tabular, VAD, Visa
-=======
    :members: BMAD, BTech, Datumaro, Folder, Kolektor, MPDD, MVTecAD, MVTecAD2, MVTecLOCO, RealIAD, Tabular, VAD, Visa
->>>>>>> upstream/main
    :undoc-members:
    :show-inheritance:
 ```
