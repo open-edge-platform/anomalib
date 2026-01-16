@@ -26,7 +26,7 @@ class Devices:
     """Utility class for device-related operations."""
 
     @staticmethod
-    def get_webcam_devices() -> list[CameraInfo]:
+    def get_camera_devices() -> list[CameraInfo]:
         """
         Get list of available webcam devices.
         If duplicate names are present, append a suffix to make them unique.

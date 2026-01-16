@@ -17,7 +17,7 @@ class TestDevices:
         mock_cam.name = "Linux Camera"
         mock_enumerate.return_value = [mock_cam]
 
-        cameras = Devices.get_webcam_devices()
+        cameras = Devices.get_camera_devices()
 
         assert len(cameras) == 1
         assert cameras[0]["index"] == 1
@@ -35,6 +35,6 @@ class TestDevices:
             return cam
 
         mock_enumerate.return_value = [build_cam(0, "nikon"), build_cam(1, "nikon")]
-        cameras = Devices.get_webcam_devices()
+        cameras = Devices.get_camera_devices()
         assert [cam["name"] for cam in cameras] == ["nikon", "nikon (1)"]
         assert [cam["index"] for cam in cameras] == [0, 1]
