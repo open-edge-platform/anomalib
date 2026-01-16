@@ -28,8 +28,7 @@ class Devices:
     def get_camera_devices() -> list[CameraInfo]:
         """
         Get list of available webcam devices.
-        If duplicate names are present, append a suffix to make them unique.
-        Example: ["camera", "camera"] -> ["camera", "camera (1)"]
+        Camera names are formatted as "<camera_name> [<index>]".
 
         Returns:
             list[CameraInfo]: List of dictionaries containing camera index and name.
