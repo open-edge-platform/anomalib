@@ -27,7 +27,7 @@ class Devices:
     @staticmethod
     def get_camera_devices() -> list[CameraInfo]:
         """
-        Get list of available webcam devices.
+        Get list of available camera devices.
         Camera names are formatted as "<camera_name> [<index>]".
 
         Returns:
