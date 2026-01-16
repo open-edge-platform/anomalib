@@ -69,9 +69,13 @@ class ImageDataFormat(str, Enum):
     """
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     ADAM_3D = "adam_3d"
 =======
 >>>>>>> 🚀 feat(data): BMAD dataset (#3000)
+=======
+    ADAM_3D = "adam_3d"
+>>>>>>> 🚀 feat(dataset): add 3D-ADAM dataset to Anomalib (#3003)
     BMAD = "bmad"
     BTECH = "btech"
     DATUMARO = "datumaro"
@@ -91,9 +95,13 @@ class ImageDataFormat(str, Enum):
 
 __all__ = [
 <<<<<<< HEAD
+<<<<<<< HEAD
     "ADAM_3D",
 =======
 >>>>>>> 🚀 feat(data): BMAD dataset (#3000)
+=======
+    "ADAM_3D",
+>>>>>>> 🚀 feat(dataset): add 3D-ADAM dataset to Anomalib (#3003)
     "BMAD",
     "BTech",
     "Datumaro",
