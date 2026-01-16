@@ -10,6 +10,12 @@ import cv2_enumerate_cameras
 import openvino as ov
 from lightning.pytorch.accelerators import AcceleratorRegistry
 
+CV2_BACKENDS = {
+    "Windows": cv2.CAP_MSMF,
+    "Linux": cv2.CAP_V4L2,
+    "Darwin": cv2.CAP_AVFOUNDATION,
+}
+
 
 class CameraInfo(TypedDict):
     index: int
@@ -29,21 +35,18 @@ class Devices:
         Returns:
             list[CameraInfo]: List of dictionaries containing camera index and name.
         """
-        names_count: dict[str, int] = defaultdict(int)
-        cameras: list[CameraInfo] = []
-        if platform.system() == "Windows":
-            enumerate_cameras = cv2_enumerate_cameras.enumerate_cameras(cv2.CAP_MSMF)
-        elif platform.system() == "Linux":
-            enumerate_cameras = cv2_enumerate_cameras.enumerate_cameras(cv2.CAP_V4L2)
-        else:
-            enumerate_cameras = cv2_enumerate_cameras.enumerate_cameras()
+        if (backend := CV2_BACKENDS.get(platform.system())) is None:
+            raise RuntimeError(f"Unsupported platform: {platform.system()}")
 
-        for cam in enumerate_cameras:
-            duplicate_count = names_count[cam.name]
-            duplicate_suffix = f" ({duplicate_count})" if duplicate_count > 0 else ""
-            unique_camera_name = f"{cam.name}{duplicate_suffix}"
-            names_count[cam.name] += 1
-            cameras.append(CameraInfo(index=cam.index, name=unique_camera_name))
+        cameras: list[CameraInfo] = []
+        name_counts: dict[str, int] = defaultdict(int)
+
+        for cam in cv2_enumerate_cameras.enumerate_cameras(backend):
+            name = cam.name
+            if count := name_counts[name]:
+                name = f"{name} ({count})"
+            name_counts[cam.name] += 1
+            cameras.append(CameraInfo(index=cam.index, name=name))
         return cameras
 
     @staticmethod
