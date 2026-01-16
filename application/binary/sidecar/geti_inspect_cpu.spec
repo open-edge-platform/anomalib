@@ -43,7 +43,14 @@ libs_dir = openvino_path / 'libs'
 
 if libs_dir.exists():
     # Add IR frontend - critical for loading .xml models
-    ir_frontend_libs = list(libs_dir.glob('libopenvino_ir_frontend.*.dylib'))
+    ir_frontend_libs = []
+    for pattern in (
+        'libopenvino_ir_frontend.*.dylib',  # macOS
+        'libopenvino_ir_frontend*.so',      # Linux
+        'openvino_ir_frontend*.dll',        # Windows
+    ):
+        ir_frontend_libs.extend(libs_dir.glob(pattern))
+    ir_frontend_libs = list(ir_frontend_libs)
     if ir_frontend_libs:
         binaries.append((str(ir_frontend_libs[0]), '.'))
         print(f"Adding IR frontend: {ir_frontend_libs[0].name}")
@@ -51,7 +58,13 @@ if libs_dir.exists():
         print(f"WARNING: IR frontend not found in {libs_dir}")
     
     # Add OpenVINO plugins (AUTO, CPU, hetero, auto_batch) - required for device selection
-    plugin_libs = list(libs_dir.glob('libopenvino_*_plugin.so'))
+    plugin_libs = []
+    for pattern in (
+        'libopenvino_*_plugin.so',
+        'openvino_*_plugin.dll',
+    ):
+        plugin_libs.extend(libs_dir.glob(pattern))
+    plugin_libs = list(plugin_libs)
     for plugin in plugin_libs:
         binaries.append((str(plugin), '.'))
         print(f"Adding OpenVINO plugin: {plugin.name}")

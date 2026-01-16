@@ -23,6 +23,17 @@ source .venv/bin/activate
 cd ../binary/sidecar
 uv run --active --with pyinstaller pyinstaller geti_inspect_cpu.spec # since env can clash with root anomalib env
 mv dist/geti-inspect-backend/geti-inspect-backend dist/geti-inspect-backend/geti-inspect-backend-$(rustc -Vv | grep host | cut -f2 -d' ')
-cd ../tauri
-npx tauri build
+cd ../tauri/src-tauri
+```
+
+MacOS
+
+```bash
+npx tauri build --bundles dmg -v
+```
+
+Linux
+
+```bash
+npx tauri build --bundles deb -v
 ```
