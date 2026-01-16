@@ -27,7 +27,7 @@ async def get_training_devices() -> DeviceList:
 
 @device_router.get("/camera")
 async def get_camera_devices() -> CameraList:
-    """Endpoint to get list of available webcam devices."""
+    """Endpoint to get list of available camera devices."""
     try:
         result = Devices.get_camera_devices()
     except RuntimeError as e:
