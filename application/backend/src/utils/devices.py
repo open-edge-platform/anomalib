@@ -1,13 +1,12 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import platform
-from collections import defaultdict
 from functools import lru_cache
 from typing import TypedDict
 
 import cv2
-import cv2_enumerate_cameras
 import openvino as ov
+from cv2_enumerate_cameras import enumerate_cameras
 from lightning.pytorch.accelerators import AcceleratorRegistry
 
 CV2_BACKENDS = {
@@ -38,16 +37,7 @@ class Devices:
         if (backend := CV2_BACKENDS.get(platform.system())) is None:
             raise RuntimeError(f"Unsupported platform: {platform.system()}")
 
-        cameras: list[CameraInfo] = []
-        name_counts: dict[str, int] = defaultdict(int)
-
-        for cam in cv2_enumerate_cameras.enumerate_cameras(backend):
-            name = cam.name
-            if count := name_counts[name]:
-                name = f"{name} ({count})"
-            name_counts[cam.name] += 1
-            cameras.append(CameraInfo(index=cam.index, name=name))
-        return cameras
+        return [CameraInfo(index=cam.index, name=f"{cam.name} [{cam.index}]") for cam in enumerate_cameras(backend)]
 
     @staticmethod
     @lru_cache
