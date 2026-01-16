@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "com.geti.inspect",
   "build": {
-    "beforeDevCommand": "cd ../../ui && npm start & mkdir -p ../src-tauri/target/debug && ln -sfn ../../../../sidecar/dist/geti-inspect-backend/_internal ../src-tauri/target/debug/_internal",
+    "beforeDevCommand": "cd ../../ui && mkdir -p ../src-tauri/target/debug && ln -sfn ../../../../sidecar/dist/geti-inspect-backend/_internal ../src-tauri/target/debug/_internal && npm start",
     "devUrl": "http://localhost:3000",
     "beforeBuildCommand": "cd ../../ui && npm ci && npm run build",
     "frontendDist": "../../../ui/dist"
