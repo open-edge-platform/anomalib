@@ -25,7 +25,7 @@ dependencies = [
     "tensorboard",
     "torchmetrics>=1.8.2",
     "uvicorn~=0.17",
-    "uvloop==0.21.0",
+    "uvloop==0.22.1",
     "watchdog==6.0.0",
 ]
 
