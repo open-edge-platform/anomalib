@@ -42,7 +42,7 @@ dev = [
 ]
 lint = [
     "ruff~=0.11.2",
-    "mypy==1.16.1",
+    "mypy==1.19.1",
     "types-requests~=2.32.4",
     "types-PyYAML~=6.0.12",
 ]
