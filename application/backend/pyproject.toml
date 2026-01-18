@@ -5,7 +5,7 @@ description = "Geti inspect server"
 requires-python = ">=3.13"
 
 dependencies = [
-    "aiofiles==24.1.0",
+    "aiofiles==25.1.0",
     "aiortc>=1.13.0",
     "aiosqlite~=0.21",
     "alembic~=1.16.4",
