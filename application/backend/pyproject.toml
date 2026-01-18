@@ -16,7 +16,7 @@ dependencies = [
     "loguru==0.7.3",
     "openvino==2025.2.0",
     "opencv-python-headless~=4.12",
-    "psutil~=7.0.0",
+    "psutil~=7.2.1",
     "pyarrow~=21.0.0",
     "pydantic-settings~=2.10.1",
     "requests",
