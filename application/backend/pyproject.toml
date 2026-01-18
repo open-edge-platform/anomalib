@@ -31,7 +31,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "pytest~=8.3",
+    "pytest~=9.0",
     "prek",
     "pdbpp~=0.10",
     "flaky~=3.8",
