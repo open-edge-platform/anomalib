@@ -78,8 +78,14 @@ fn main() {
     app.run(move |_app_handle, event| {
         if let RunEvent::Exit = event {
             if let Some(mut child) = exit_handle.lock().unwrap().take() {
-                let _ = child.kill();
-                log::info!("Backend terminated");
+                match child.kill() {
+                    Ok(()) => {
+                        log::info!("Backend terminated");
+                    }
+                    Err(e) => {
+                        log::error!("Failed to terminate backend: {}", e);
+                    }
+                }
             }
         }
     });
