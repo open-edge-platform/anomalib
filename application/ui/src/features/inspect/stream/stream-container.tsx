@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useProjectIdentifier } from '@geti-inspect/hooks';
-import { Button, Flex, Loading, View } from '@geti/ui';
-import { Play } from '@geti/ui/icons';
+import { Button, Flex, Loading, Text, View } from '@geti/ui';
+import { Play, Refresh } from '@geti/ui/icons';
 import { isEmpty } from 'lodash-es';
 import { useActivatePipeline, usePipeline } from 'src/hooks/use-pipeline.hook';
 
@@ -16,7 +16,7 @@ import classes from './stream-container.module.scss';
 export const StreamContainer = () => {
     const { projectId } = useProjectIdentifier();
     const { data: pipeline } = usePipeline();
-    const { start, status } = useWebRTCConnection();
+    const { start, stop, status } = useWebRTCConnection();
     const activePipeline = useActivatePipeline({ onSuccess: start });
 
     useAutoPlayStream();
@@ -25,6 +25,25 @@ export const StreamContainer = () => {
 
     const handleStart = () => {
         activePipeline.mutate({ params: { path: { project_id: projectId } } });
+    };
+
+    const handleReconnect = async () => {
+        try {
+            // Stop the old connection first to clean it up
+            await stop();
+            // Wait a bit for cleanup to complete and status to update to 'idle'
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            
+            // If pipeline is already running, just start the WebRTC connection directly
+            // Otherwise, activate the pipeline which will start WebRTC via onSuccess callback
+            if (pipeline?.status === 'running') {
+                await start();
+            } else {
+                activePipeline.mutate({ params: { path: { project_id: projectId } } });
+            }
+        } catch (error) {
+            console.error('Failed to reconnect stream:', error);
+        }
     };
 
     return (
@@ -54,6 +73,23 @@ export const StreamContainer = () => {
                 <View backgroundColor={'gray-200'} width='90%' height='90%'>
                     <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
                         <Loading mode='inline' />
+                    </Flex>
+                </View>
+            )}
+
+            {(status === 'disconnected' || status === 'failed') && (
+                <View backgroundColor={'gray-200'} width='90%' height='90%'>
+                    <Flex alignItems={'center'} justifyContent={'center'} height='100%' direction='column' gap='size-200'>
+                        <Text>Stream disconnected</Text>
+                        <Button
+                            onPress={handleReconnect}
+                            aria-label={'Reconnect stream'}
+                            isDisabled={status === 'connecting'}
+                            variant='primary'
+                        >
+                            <Refresh />
+                            Reconnect
+                        </Button>
                     </Flex>
                 </View>
             )}
