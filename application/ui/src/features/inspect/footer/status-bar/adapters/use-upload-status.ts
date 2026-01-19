@@ -9,84 +9,79 @@ interface UploadProgress {
     completed: number;
     total: number;
     failed: number;
+    batchId: number;
 }
 
-const INITIAL_PROGRESS: UploadProgress = { completed: 0, total: 0, failed: 0 };
+const INITIAL_PROGRESS: UploadProgress = { completed: 0, total: 0, failed: 0, batchId: 0 };
 
 export const useUploadStatus = () => {
     const { setStatus, removeStatus } = useStatusBar();
     const abortControllerRef = useRef<AbortController | null>(null);
     const [progress, setProgress] = useState<UploadProgress>(INITIAL_PROGRESS);
 
-    const processed = progress.completed + progress.failed;
-    const isUploading = progress.total > 0 && processed < progress.total;
-    const isCompleted = progress.total > 0 && processed === progress.total;
-
     useEffect(() => {
-        if (!isUploading) return;
+        const { failed, completed, total, batchId } = progress;
+        const processed = completed + failed;
 
-        const percent = Math.round((processed / progress.total) * 100);
-        const detail =
-            progress.failed > 0
-                ? `${processed} / ${progress.total} (${progress.failed} failed)`
-                : `${processed} / ${progress.total}`;
+        if (total > 0 && processed < total) {
+            const percent = Math.round((processed / total) * 100);
+            const detail = failed > 0 ? `${processed} / ${total} (${failed} failed)` : `${processed} / ${total}`;
 
-        setStatus({
-            id: 'batch-upload',
-            type: 'upload',
-            message: 'Uploading images',
-            detail,
-            progress: percent,
-            variant: progress.failed > 0 ? 'warning' : 'info',
-            isCancellable: false,
-        });
-    }, [isUploading, processed, progress.total, progress.failed, setStatus]);
-
-    useEffect(() => {
-        if (!isCompleted) return;
-
-        const { failed, completed, total } = progress;
-        const allFailed = completed === 0 && failed > 0;
-
-        if (failed === 0) {
             setStatus({
                 id: 'batch-upload',
                 type: 'upload',
-                message: 'Upload complete ✓',
-                variant: 'success',
-                progress: 100,
+                message: 'Uploading images',
+                detail,
+                progress: percent,
+                variant: progress.failed > 0 ? 'warning' : 'info',
                 isCancellable: false,
-                autoRemoveDelay: 3000,
             });
-        } else if (allFailed) {
-            setStatus({
-                id: 'batch-upload',
-                type: 'upload',
-                message: 'Upload failed',
-                progress: 100,
-                variant: 'error',
-                isCancellable: false,
-                autoRemoveDelay: 3000,
-            });
-        } else {
-            setStatus({
-                id: 'batch-upload',
-                type: 'upload',
-                message: `Upload complete (${failed} of ${total} failed)`,
-                variant: 'warning',
-                progress: 100,
-                isCancellable: false,
-                autoRemoveDelay: 5000,
-            });
+        } else if (total > 0 && processed === total) {
+            const allFailed = completed === 0 && failed > 0;
+
+            if (failed === 0) {
+                setStatus({
+                    id: 'batch-upload',
+                    type: 'upload',
+                    message: 'Upload complete ✓',
+                    variant: 'success',
+                    progress: 100,
+                    isCancellable: false,
+                    autoRemoveDelay: 3000,
+                });
+            } else if (allFailed) {
+                setStatus({
+                    id: 'batch-upload',
+                    type: 'upload',
+                    message: 'Upload failed',
+                    progress: 100,
+                    variant: 'error',
+                    isCancellable: false,
+                    autoRemoveDelay: 3000,
+                });
+            } else {
+                setStatus({
+                    id: 'batch-upload',
+                    type: 'upload',
+                    message: `Upload complete (${failed} of ${total} failed)`,
+                    variant: 'warning',
+                    progress: 100,
+                    isCancellable: false,
+                    autoRemoveDelay: 5000,
+                });
+            }
+
+            setProgress((current) => (current.batchId === batchId ? INITIAL_PROGRESS : current));
         }
+    }, [progress, setStatus]);
 
-        setProgress(INITIAL_PROGRESS);
-    }, [isCompleted, progress, setStatus]);
+    const batchIdRef = useRef(0);
 
     const startUpload = useCallback(
         (total: number) => {
             abortControllerRef.current = new AbortController();
-            setProgress({ completed: 0, total, failed: 0 });
+            batchIdRef.current += 1;
+            setProgress({ completed: 0, total, failed: 0, batchId: batchIdRef.current });
 
             setStatus({
                 id: 'batch-upload',
