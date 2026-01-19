@@ -23,8 +23,7 @@ fn backend_filename() -> &'static str {
 /// Spawns the side-car in the same folder as this executable.
 fn spawn_backend() -> std::io::Result<Child> {
     // Locate the Tauri executable, then its parent folder
-    let exe_path =
-        env::current_exe().expect("Failed to get Geti Inspect executable path");
+    let exe_path = env::current_exe().expect("Failed to get Geti Inspect executable path");
     let exe_dir = exe_path
         .parent()
         .expect("Failed to get parent directory of Geti Inspect executable");

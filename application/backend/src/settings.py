@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     host: str = Field(default="0.0.0.0", alias="HOST")  # noqa: S104
     port: int = Field(default=8000, alias="PORT")
 
+    # CORS
+    cors_origins: str = Field(
+        default="http://localhost:3000",
+        alias="CORS_ORIGINS",
+    )
+
     # Database
     database_file: str = Field(default="geti_inspect.db", alias="DATABASE_FILE", description="Database filename")
     db_echo: bool = Field(default=False, alias="DB_ECHO")
