@@ -13,6 +13,8 @@ import { Stream } from './stream';
 
 import classes from './stream-container.module.scss';
 
+const RECONNECT_CLEANUP_DELAY_MS = 300; // Delay to allow WebRTC connection cleanup to complete before reconnecting
+
 export const StreamContainer = () => {
     const { projectId } = useProjectIdentifier();
     const { data: pipeline } = usePipeline();
@@ -31,8 +33,8 @@ export const StreamContainer = () => {
         try {
             // Stop the old connection first to clean it up
             await stop();
-            // Wait a bit for cleanup to complete and status to update to 'idle'
-            await new Promise((resolve) => setTimeout(resolve, 300));
+            // Wait for cleanup to complete and status to update to 'idle'
+            await new Promise((resolve) => setTimeout(resolve, RECONNECT_CLEANUP_DELAY_MS));
             
             // If pipeline is already running, just start the WebRTC connection directly
             // Otherwise, activate the pipeline which will start WebRTC via onSuccess callback
