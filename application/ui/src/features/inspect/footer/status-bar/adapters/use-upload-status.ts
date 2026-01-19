@@ -33,7 +33,7 @@ export const useUploadStatus = () => {
                 message: 'Uploading images',
                 detail,
                 progress: percent,
-                variant: progress.failed > 0 ? 'warning' : 'info',
+                variant: failed > 0 ? 'warning' : 'info',
                 isCancellable: false,
             });
         } else if (total > 0 && processed === total) {
