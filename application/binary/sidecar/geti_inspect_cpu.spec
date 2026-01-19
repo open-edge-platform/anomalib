@@ -1,12 +1,22 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all, collect_data_files
-
+import platform
+import glob
 datas = [
     ('../../backend/src/alembic', 'src/alembic'),  # Alembic migration scripts
     ('../../backend/src/alembic.ini', 'src'),  # Alembic configuration
     ('../../backend/src/core/model_metadata.yaml', 'core'),  # Model metadata
 ]
-binaries = []
+
+# Add all binaries
+## Linux/MacOS
+if platform.system() == "Linux":
+    binaries = [(so, '.') for so in glob.glob('../../backend/.venv/lib/**/*.so.*', recursive=True)]
+elif platform.system() == "Darwin":
+    binaries = [(so, '.') for so in glob.glob('../../backend/.venv/lib/**/*.dylib', recursive=True)]
+else:
+    binaries = [(dll, '.') for dll in glob.glob('../../backend/.venv/lib/**/*.dll', recursive=True)]
+
 hiddenimports = [
     "aiosqlite",
     "rfc3987_syntax",
@@ -33,43 +43,6 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 # Collect openvino (required for model export and conversion)
 tmp_ret = collect_all("openvino")
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
-
-# Manually add critical OpenVINO components that collect_all sometimes misses
-import openvino
-from pathlib import Path
-import glob
-openvino_path = Path(openvino.__file__).parent
-libs_dir = openvino_path / 'libs'
-
-if libs_dir.exists():
-    # Add IR frontend - critical for loading .xml models
-    ir_frontend_libs = []
-    for pattern in (
-        'libopenvino_ir_frontend.*.dylib',  # macOS
-        'libopenvino_ir_frontend*.so',      # Linux
-        'openvino_ir_frontend*.dll',        # Windows
-    ):
-        ir_frontend_libs.extend(libs_dir.glob(pattern))
-    ir_frontend_libs = list(ir_frontend_libs)
-    if ir_frontend_libs:
-        binaries.append((str(ir_frontend_libs[0]), '.'))
-        print(f"Adding IR frontend: {ir_frontend_libs[0].name}")
-    else:
-        print(f"WARNING: IR frontend not found in {libs_dir}")
-    
-    # Add OpenVINO plugins (AUTO, CPU, hetero, auto_batch) - required for device selection
-    plugin_libs = []
-    for pattern in (
-        'libopenvino_*_plugin.so',
-        'openvino_*_plugin.dll',
-    ):
-        plugin_libs.extend(libs_dir.glob(pattern))
-    plugin_libs = list(plugin_libs)
-    for plugin in plugin_libs:
-        binaries.append((str(plugin), '.'))
-        print(f"Adding OpenVINO plugin: {plugin.name}")
-else:
-    print(f"WARNING: OpenVINO libs directory not found at {libs_dir}")
 
 # Collect onnx (required for model format used in OpenVINO conversion)
 tmp_ret = collect_all("onnx")
