@@ -19,12 +19,17 @@ export const getWebhookInitialConfig = (project_id: string): WebhookSinkConfig =
     timeout: 0,
     project_id,
     sink_type: 'webhook',
-    rate_limit: 0,
+    rate_limit: 1,
     webhook_url: '',
     http_method: WebhookHttpMethod.POST,
     output_formats: [],
     headers: {},
 });
+
+const parseRateLimit = (value: FormDataEntryValue | null): number | null => {
+    if (!value || value === '') return null;
+    return Number(value);
+};
 
 export const webhookBodyFormatter = (formData: FormData): WebhookSinkConfig => ({
     id: String(formData.get('id')),
@@ -32,7 +37,7 @@ export const webhookBodyFormatter = (formData: FormData): WebhookSinkConfig => (
     headers: getObjectFromFormData(formData.getAll('headers-keys'), formData.getAll('headers-values')),
     timeout: Number(formData.get('timeout')),
     sink_type: 'webhook',
-    rate_limit: Number(formData.get('rate_limit')),
+    rate_limit: parseRateLimit(formData.get('rate_limit')),
     webhook_url: String(formData.get('webhook_url')),
     http_method: formData.get('http_method') as WebhookHttpMethod,
     output_formats: formData.getAll('output_formats') as SinkOutputFormats,
