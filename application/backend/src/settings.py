@@ -53,6 +53,11 @@ class Settings(BaseSettings):
     webrtc_advertise_ip: str | None = Field(default=None, alias="WEBRTC_ADVERTISE_IP")
 
     @property
+    def cors_allowed_origins(self) -> list[str]:
+        """Get CORS allowed origins as a list"""
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+    @property
     def database_url(self) -> str:
         """Get database URL"""
         return f"sqlite+aiosqlite:///./{self.data_dir / self.database_file}?journal_mode=WAL"

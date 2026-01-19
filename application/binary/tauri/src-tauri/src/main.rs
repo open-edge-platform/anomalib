@@ -34,7 +34,7 @@ fn spawn_backend() -> std::io::Result<Child> {
 
     log::info!("▶ Looking for backend side-car at {:?}", backend_path);
     let mut command = Command::new(&backend_path);
-    command.env("CORS_ORIGINS", "http://tauri.localhost");
+    command.env("CORS_ORIGINS", "http://tauri.localhost,tauri://localhost");
 
     #[cfg(all(windows, not(debug_assertions)))]
     {
