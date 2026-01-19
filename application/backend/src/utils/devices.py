@@ -1,12 +1,19 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from collections import defaultdict
+import platform
 from functools import lru_cache
 from typing import TypedDict
 
-import cv2_enumerate_cameras
+import cv2
 import openvino as ov
+from cv2_enumerate_cameras import enumerate_cameras
 from lightning.pytorch.accelerators import AcceleratorRegistry
+
+CV2_BACKENDS = {
+    "Windows": cv2.CAP_MSMF,
+    "Linux": cv2.CAP_V4L2,
+    "Darwin": cv2.CAP_AVFOUNDATION,
+}
 
 
 class CameraInfo(TypedDict):
@@ -18,24 +25,18 @@ class Devices:
     """Utility class for device-related operations."""
 
     @staticmethod
-    def get_webcam_devices() -> list[CameraInfo]:
+    def get_camera_devices() -> list[CameraInfo]:
         """
-        Get list of available webcam devices.
-        If duplicate names are present, append a suffix to make them unique.
-        Example: ["camera", "camera"] -> ["camera", "camera (1)"]
+        Get list of available camera devices.
+        Camera names are formatted as "<camera_name> [<index>]".
 
         Returns:
             list[CameraInfo]: List of dictionaries containing camera index and name.
         """
-        names_count: dict[str, int] = defaultdict(int)
-        cameras: list[CameraInfo] = []
-        for cam in cv2_enumerate_cameras.enumerate_cameras():
-            duplicate_count = names_count[cam.name]
-            duplicate_suffix = f" ({duplicate_count})" if duplicate_count > 0 else ""
-            unique_camera_name = f"{cam.name}{duplicate_suffix}"
-            names_count[cam.name] += 1
-            cameras.append(CameraInfo(index=cam.index, name=unique_camera_name))
-        return cameras
+        if (backend := CV2_BACKENDS.get(platform.system())) is None:
+            raise RuntimeError(f"Unsupported platform: {platform.system()}")
+
+        return [CameraInfo(index=cam.index, name=f"{cam.name} [{cam.index}]") for cam in enumerate_cameras(backend)]
 
     @staticmethod
     @lru_cache
