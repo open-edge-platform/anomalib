@@ -10,7 +10,7 @@ dependencies = [
     "aiosqlite~=0.21",
     "alembic~=1.16.4",
     "anomalib[openvino]",
-    "cv2-enumerate-cameras==1.3.1",
+    "cv2-enumerate-cameras==1.3.3",
     "fastapi[standard]~=0.116",
     "jsonschema>=4.18.0a10",
     "loguru==0.7.3",
