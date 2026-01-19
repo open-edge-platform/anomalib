@@ -27,16 +27,6 @@ export const LocalFolderFields = ({ defaultState }: LocalFolderFieldsProps) => {
                     name={'folder_path'}
                     defaultValue={defaultState.folder_path}
                 />
-
-                <Flex
-                    alignSelf={'end'}
-                    height={'size-400'}
-                    alignItems={'center'}
-                    justifyContent={'center'}
-                    UNSAFE_className={classes.folderIcon}
-                >
-                    <FolderIcon />
-                </Flex>
             </Flex>
 
             <RateLimitField defaultValue={defaultState.rate_limit} />
