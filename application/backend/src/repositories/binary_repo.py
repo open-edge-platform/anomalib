@@ -12,7 +12,7 @@ from anomalib.deploy import ExportType
 
 from pydantic_models.model import ExportParameters
 
-STORAGE_ROOT_PATH = "data"
+STORAGE_ROOT_PATH = os.getenv("DATA_DIR", "data")
 
 
 class FileType(StrEnum):
