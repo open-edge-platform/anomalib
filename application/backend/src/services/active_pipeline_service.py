@@ -118,9 +118,7 @@ class ActivePipelineService:
             if source is not None:
                 self._source = source
 
-            sink = self._pipeline.sink
-            if sink is not None:
-                self._sink = sink
+            self._sink = self._pipeline.sink or DisconnectedSinkConfig()
 
     def _reload_config_daemon_routine(self) -> None:
         """

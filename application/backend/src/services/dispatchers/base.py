@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 import cv2
+from loguru import logger
 
 from pydantic_models import OutputFormat, Sink
 
@@ -91,6 +92,7 @@ class BaseDispatcher(metaclass=ABCMeta):
 
         return payload
 
+    @logger.catch
     async def dispatch(
         self,
         original_image: np.ndarray,
