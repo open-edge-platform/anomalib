@@ -1,0 +1,3 @@
+# Ignore exported model files but keep this directory
+*
+!.gitignore

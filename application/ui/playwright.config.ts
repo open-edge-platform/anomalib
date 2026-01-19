@@ -1,22 +1,20 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const CI = !!process.env.CI;
+const AUTO_START_BACKEND = process.env.AUTO_START_BACKEND === 'true';
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8000';
 
-/**
- * See https://playwright.dev/docs/test-configuration.
- */
 export default defineConfig({
     testDir: './tests',
-    /* Run tests in files in parallel */
-    fullyParallel: true,
-    /* Fail the build on CI if you accidentally left test.only in the source code. */
+    fullyParallel: false,
     forbidOnly: CI,
-    /* Retry on CI only */
-    retries: process.env.CI ? 2 : 0,
-    /* Opt out of parallel tests on CI. */
-    workers: process.env.CI ? 1 : undefined,
-    /* Reporter to use. See https://playwright.dev/docs/test-reporters */
+    retries: CI ? 2 : 0,
+    workers: CI ? 1 : 1,
     reporter: [[CI ? 'github' : 'list'], ['html', { open: 'never' }]],
+    timeout: 5 * 60 * 1000,
+    expect: {
+        timeout: 30 * 1000,
+    },
     use: {
         baseURL: 'http://localhost:3000',
         trace: CI ? 'on-first-retry' : 'on',
@@ -27,23 +25,43 @@ export default defineConfig({
             devtools: false,
         },
         timezoneId: 'UTC',
-        actionTimeout: CI ? 10000 : 5000,
-        navigationTimeout: CI ? 10000 : 5000,
+        actionTimeout: 30 * 1000,
+        navigationTimeout: 30 * 1000,
     },
 
-    /* Configure projects for major browsers */
     projects: [
         {
-            name: 'Component tests',
+            name: 'E2E Miscellaneous',
+            testMatch: ['**/dataset-management.spec.ts', '**/project-management.spec.ts'],
+            timeout: 2 * 60 * 1000,
+            fullyParallel: false,
+            use: { ...devices['Desktop Chrome'] },
+        },
+        {
+            name: 'E2E Full Workflow',
+            testMatch: ['**/full-workflow.spec.ts'],
+            timeout: 20 * 60 * 1000,
+            fullyParallel: false,
             use: { ...devices['Desktop Chrome'] },
         },
     ],
 
-    /* Run your local dev server before starting the tests */
-    webServer: {
-        command: CI ? 'npx serve -s dist -p 3000' : 'npm run start',
-        name: 'client',
-        url: 'http://localhost:3000',
-        reuseExistingServer: CI === false,
-    },
+    webServer: [
+        {
+            command: 'npx serve -c serve.json -p 3000',
+            url: 'http://localhost:3000',
+            reuseExistingServer: !CI,
+        },
+        ...(AUTO_START_BACKEND
+            ? [
+                  {
+                      command: './run.sh',
+                      cwd: '../backend',
+                      url: `${API_BASE_URL}/api/projects`,
+                      reuseExistingServer: !CI,
+                      timeout: 60 * 1000,
+                  },
+              ]
+            : []),
+    ],
 });

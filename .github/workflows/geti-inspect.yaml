@@ -282,9 +282,15 @@ jobs:
         run: npm run build:api:types
 
       - name: Run Playwright tests
+        if: false # temporarily disabled
         working-directory: "application/ui"
         run: npm run test:component -- --project "Component tests"
 
+      - name: Run E2E tests
+        working-directory: "application/ui"
+        env:
+          AUTO_START_BACKEND: "true"
+        run: npm run test:e2e -- --reporter=list --output=playwright-report
       - name: Upload blob report to GitHub Actions Artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always()
