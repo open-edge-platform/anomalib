@@ -92,7 +92,7 @@ export const StreamContainer = () => {
                         <Button
                             onPress={handleReconnect}
                             aria-label={'Reconnect stream'}
-                            isDisabled={status === 'connecting'}
+                            isDisabled={activePipeline.isPending}
                             variant='primary'
                         >
                             <Refresh />
