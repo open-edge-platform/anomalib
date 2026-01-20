@@ -1,11 +1,8 @@
 import { Flex, TextField } from '@geti/ui';
 
-import { ReactComponent as FolderIcon } from '../../../../../assets/icons/folder.svg';
 import { OutputFormats } from '../output-formats/output-formats.component';
 import { RateLimitField } from '../rate-limit-field/rate-limit-field.component';
 import { LocalFolderSinkConfig } from '../utils';
-
-import classes from './local-folder-fields.module.scss';
 
 interface LocalFolderFieldsProps {
     defaultState: LocalFolderSinkConfig;
