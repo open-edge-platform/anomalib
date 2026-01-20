@@ -8,3 +8,12 @@ export const API_BASE_URL = import.meta.env.PUBLIC_API_BASE_URL || '';
 export const fetchClient = createFetchClient<paths>({ baseUrl: API_BASE_URL });
 
 export const $api = createClient(fetchClient);
+
+/**
+ * Constructs a full API URL by prepending the API_BASE_URL to a relative path.
+ * This is needed for direct fetch calls, EventSource, and img src attributes
+ * that don't go through the fetchClient. Otherwise if you look at network console,
+ * you will see localhost:3000/api instead of localhost:8000/api and this breaks in
+ * tauri application.
+ */
+export const getApiUrl = (path: string): string => `${API_BASE_URL}${path}`;

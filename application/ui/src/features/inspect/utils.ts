@@ -1,5 +1,7 @@
 import { isString } from 'lodash-es';
 
+import { getApiUrl } from 'src/api/client';
+
 import { MediaItem } from './dataset/types';
 
 export const removeUnderscore = (text: string) => {
@@ -52,7 +54,7 @@ export const formatSize = (bytes: number | null | undefined) => {
 export const isNonEmptyString = (value: unknown): value is string => isString(value) && value !== '';
 
 export const getThumbnailUrl = (mediaItem: MediaItem) =>
-    `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail`;
+    getApiUrl(`/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail`);
 
 export const formatDuration = (seconds: number | null): string | null => {
     if (seconds === null) return null;
