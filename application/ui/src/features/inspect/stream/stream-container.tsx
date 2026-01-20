@@ -35,7 +35,7 @@ export const StreamContainer = () => {
             await stop();
             // Wait for cleanup to complete and status to update to 'idle'
             await new Promise((resolve) => setTimeout(resolve, RECONNECT_CLEANUP_DELAY_MS));
-            
+
             // If pipeline is already running, just start the WebRTC connection directly
             // Otherwise, activate the pipeline which will start WebRTC via onSuccess callback
             if (pipeline?.status === 'running') {
@@ -81,7 +81,13 @@ export const StreamContainer = () => {
 
             {(status === 'disconnected' || status === 'failed') && (
                 <View backgroundColor={'gray-200'} width='90%' height='90%'>
-                    <Flex alignItems={'center'} justifyContent={'center'} height='100%' direction='column' gap='size-200'>
+                    <Flex
+                        alignItems={'center'}
+                        justifyContent={'center'}
+                        height='100%'
+                        direction='column'
+                        gap='size-200'
+                    >
                         <Text>Stream disconnected</Text>
                         <Button
                             onPress={handleReconnect}

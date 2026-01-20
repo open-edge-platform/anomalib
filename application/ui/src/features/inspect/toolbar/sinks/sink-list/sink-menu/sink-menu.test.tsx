@@ -85,7 +85,7 @@ describe('SinkMenu', () => {
             renderApp({ name });
 
             await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
-            await userEvent.click(screen.getByRole('menuitem', { name: /Connect/i }));
+            await userEvent.click(screen.getByRole('menuitem', { name: /^Connect$/i }));
 
             await expect(await screen.findByLabelText('toast')).toHaveTextContent(
                 `Successfully connected to "${name}"`
@@ -98,7 +98,7 @@ describe('SinkMenu', () => {
             renderApp({ name });
 
             await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
-            await userEvent.click(screen.getByRole('menuitem', { name: /Connect/i }));
+            await userEvent.click(screen.getByRole('menuitem', { name: /^Connect$/i }));
 
             await expect(await screen.findByLabelText('toast')).toHaveTextContent(`Failed to connect to "${name}"`);
         });
@@ -108,7 +108,7 @@ describe('SinkMenu', () => {
 
             await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
 
-            expect(screen.getByRole('menuitem', { name: /Connect/i })).toHaveAttribute('aria-disabled', 'true');
+            expect(screen.getByRole('menuitem', { name: /^Connect$/i })).toHaveAttribute('aria-disabled', 'true');
         });
     });
 
@@ -139,9 +139,7 @@ describe('SinkMenu', () => {
             await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
             await userEvent.click(screen.getByRole('menuitem', { name: /Disconnect/i }));
 
-            await expect(await screen.findByLabelText('toast')).toHaveTextContent(
-                `Failed to disconnect "${name}".`
-            );
+            await expect(await screen.findByLabelText('toast')).toHaveTextContent(`Failed to disconnect "${name}".`);
         });
 
         it('disabled when sink is not connected', async () => {

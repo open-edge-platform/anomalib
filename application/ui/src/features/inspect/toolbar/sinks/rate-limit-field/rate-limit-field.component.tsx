@@ -43,4 +43,3 @@ export const RateLimitField = ({ defaultValue }: RateLimitFieldProps) => {
         </Flex>
     );
 };
-
