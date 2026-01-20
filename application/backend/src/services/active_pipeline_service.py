@@ -13,8 +13,7 @@ from repositories import PipelineRepository
 
 
 class ActivePipelineService:
-    """
-    A service used in workers for loading pipeline-based application configuration from SQLite database.
+    """A service used in workers for loading pipeline-based application configuration from SQLite database.
 
     This service handles loading and monitoring configuration changes based on the active pipeline.
     The configuration is built from Source -> Pipeline -> Sinks relationships.
@@ -32,10 +31,11 @@ class ActivePipelineService:
 
     @classmethod
     async def create(
-        cls, config_changed_condition: ConditionClass | None = None, start_daemon: bool = False
+        cls,
+        config_changed_condition: ConditionClass | None = None,
+        start_daemon: bool = False,
     ) -> "ActivePipelineService":
-        """
-        Factory method to create and initialize the service asynchronously.
+        """Factory method to create and initialize the service asynchronously.
 
         Args:
             config_changed_condition: Multiprocessing Condition object for getting configuration
@@ -53,10 +53,11 @@ class ActivePipelineService:
         return instance
 
     async def _initialize(
-        self, config_changed_condition: ConditionClass | None = None, start_daemon: bool = False
+        self,
+        config_changed_condition: ConditionClass | None = None,
+        start_daemon: bool = False,
     ) -> None:
-        """
-        Initialize the service asynchronously.
+        """Initialize the service asynchronously.
 
         Args:
             config_changed_condition: Multiprocessing Condition object for getting configuration
@@ -78,7 +79,9 @@ class ActivePipelineService:
             self._event_loop = asyncio.get_running_loop()
 
             self._config_reload_daemon = Thread(
-                target=self._reload_config_daemon_routine, name="Config reloader", daemon=True
+                target=self._reload_config_daemon_routine,
+                name="Config reloader",
+                daemon=True,
             )
             self._config_reload_daemon.start()
         elif self.config_changed_condition is None:
@@ -87,8 +90,7 @@ class ActivePipelineService:
             logger.debug("Child process detected but no config_changed_condition provided - skipping daemon thread")
 
     async def reload(self) -> None:
-        """
-        Reload the application configuration from the database.
+        """Reload the application configuration from the database.
 
         This method must be called from an async context and will await
         the configuration reload operation.
@@ -96,8 +98,7 @@ class ActivePipelineService:
         await self._load_app_config()
 
     async def _load_app_config(self) -> None:
-        """
-        Load application configuration from the database.
+        """Load application configuration from the database.
 
         This method loads the active pipeline configuration and updates the
         internal source and sink configurations accordingly.
@@ -112,7 +113,7 @@ class ActivePipelineService:
                 self._sink = DisconnectedSinkConfig()
                 return
 
-            logger.info(f"Configuration loaded from database: {self._pipeline}")
+            logger.debug(f"Configuration loaded from database: {self._pipeline}")
 
             source = self._pipeline.source
             if source is not None:
@@ -123,8 +124,7 @@ class ActivePipelineService:
                 self._sink = sink
 
     def _reload_config_daemon_routine(self) -> None:
-        """
-        Daemon thread routine to monitor configuration changes and reload when necessary.
+        """Daemon thread routine to monitor configuration changes and reload when necessary.
 
         This method runs in a separate thread and waits for configuration change
         notifications. When changes are detected, it schedules the async reload
@@ -146,8 +146,7 @@ class ActivePipelineService:
 
     @property
     def source_config(self) -> Source:
-        """
-        Get the current source configuration.
+        """Get the current source configuration.
 
         Returns:
             Source: The current source configuration.
@@ -156,8 +155,7 @@ class ActivePipelineService:
 
     @property
     def sink_config(self) -> Sink:
-        """
-        Get the current sink configuration.
+        """Get the current sink configuration.
 
         Returns:
             Sink: The current sink configuration.

@@ -4,9 +4,11 @@ import { usePipeline } from '@geti-inspect/hooks';
 import {
     Cell,
     Column,
+    Content,
     Flex,
     Heading,
     IllustratedMessage,
+    Link,
     Row,
     TableBody,
     TableHeader,
@@ -14,6 +16,7 @@ import {
     Text,
     View,
 } from '@geti/ui';
+import { NotFound } from '@geti/ui/icons';
 import { sortBy } from 'lodash-es';
 import { useDateFormatter } from 'react-aria';
 
@@ -27,7 +30,11 @@ import { ModelStatusBadges } from './model-status-badges.component';
 
 import classes from './models-view.module.scss';
 
-export const ModelsView = () => {
+interface ModelsViewProps {
+    onModelSelect: (modelId: string) => void;
+}
+
+export const ModelsView = ({ onModelSelect }: ModelsViewProps) => {
     const { data: pipeline } = usePipeline();
     const { jobs = [] } = useProjectTrainingJobs();
 
@@ -55,6 +62,7 @@ export const ModelsView = () => {
                 startTime: start.getTime(),
                 progress: job.progress ?? 0,
                 durationInSeconds: null,
+                backbone: null,
                 job,
                 sizeBytes: null,
             };
@@ -78,12 +86,14 @@ export const ModelsView = () => {
                 overflowMode='wrap'
                 selectionStyle='highlight'
                 selectionMode='single'
+                minHeight={showModels.length === 0 ? 'size-3600' : 'auto'}
                 selectedKeys={tableSelectedKeys}
                 UNSAFE_className={classes.table}
                 renderEmptyState={() => (
                     <IllustratedMessage>
-                        <Heading>No models in training</Heading>
-                        <Text>Start a new training to see models here.</Text>
+                        <NotFound />
+                        <Heading>No models yet</Heading>
+                        <Content>Train a model to see it here.</Content>
                     </IllustratedMessage>
                 )}
             >
@@ -96,15 +106,26 @@ export const ModelsView = () => {
                         {' '}
                     </Column>
                 </TableHeader>
-                <TableBody>
-                    {showModels.map((model) => (
+                <TableBody items={showModels}>
+                    {(model) => (
                         <Row key={model.id}>
                             <Cell>
                                 <Flex alignItems='start' gap='size-50' direction='column'>
                                     <Flex alignItems='end' gap='size-75'>
-                                        <Text marginTop={'size-25'} UNSAFE_className={classes.modelName}>
-                                            {model.name}
-                                        </Text>
+                                        {model.status === 'Completed' ? (
+                                            <Link
+                                                variant='secondary'
+                                                onPress={() => onModelSelect(model.id)}
+                                                isQuiet
+                                                UNSAFE_className={classes.modelName}
+                                            >
+                                                {model.name}
+                                            </Link>
+                                        ) : (
+                                            <Text marginTop={'size-25'} UNSAFE_className={classes.modelName}>
+                                                {model.name}
+                                            </Text>
+                                        )}
                                         <ModelStatusBadges
                                             isSelected={selectedModelId === model.id}
                                             jobStatus={model.job?.status}
@@ -124,7 +145,7 @@ export const ModelsView = () => {
                                 </Flex>
                             </Cell>
                         </Row>
-                    ))}
+                    )}
                 </TableBody>
             </TableView>
         </View>

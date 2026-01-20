@@ -1,12 +1,12 @@
-import { ImagesFolder, IpCamera, VideoFile, Webcam } from '@geti-inspect/icons';
+import { ImagesFolder, IpCamera, UsbCamera, VideoFile } from '@geti-inspect/icons';
 
 interface SourceIconProps {
     type: string;
 }
 
 export const SourceIcon = ({ type }: SourceIconProps) => {
-    if (type === 'webcam') {
-        return <Webcam />;
+    if (type === 'usb_camera') {
+        return <UsbCamera />;
     }
 
     if (type === 'ip_camera') {

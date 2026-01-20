@@ -1,13 +1,13 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+from __future__ import annotations
 
 import json
 import threading
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import numpy as np
-from anomalib.data import NumpyImageBatch as PredictionResult
 from loguru import logger
 
 from pydantic_models.sink import MqttSinkConfig
@@ -17,6 +17,10 @@ try:
     import paho.mqtt.client as mqtt
 except ImportError:
     mqtt = None  # type: ignore[assignment]
+
+if TYPE_CHECKING:
+    import numpy as np
+    from anomalib.data import NumpyImageBatch as PredictionResult
 
 
 MAX_RETRIES = 3
@@ -28,11 +32,10 @@ class MqttDispatcher(BaseDispatcher):
     def __init__(
         self,
         output_config: MqttSinkConfig,
-        mqtt_client: "mqtt.Client | None" = None,
+        mqtt_client: mqtt.Client | None = None,
         track_messages: bool | None = False,
     ) -> None:
-        """
-        Initialize the MqttDispatcher.
+        """Initialize the MqttDispatcher.
 
         Args:
             output_config: Configuration for the MQTT destination
@@ -61,7 +64,7 @@ class MqttDispatcher(BaseDispatcher):
         self.client = mqtt_client or self._create_default_client()
         self._connect()
 
-    def _create_default_client(self) -> "mqtt.Client":
+    def _create_default_client(self) -> mqtt.Client:
         client_id = f"dispatcher_{int(time.time())}"
         client = mqtt.Client(client_id=client_id)
         client.on_connect = self._on_connect
@@ -74,7 +77,10 @@ class MqttDispatcher(BaseDispatcher):
         for attempt in range(MAX_RETRIES):
             try:
                 logger.info(
-                    "Connecting to MQTT broker at %s:%s (attempt %s)", self.broker_host, self.broker_port, attempt + 1
+                    "Connecting to MQTT broker at %s:%s (attempt %s)",
+                    self.broker_host,
+                    self.broker_port,
+                    attempt + 1,
                 )
                 self.client.connect(self.broker_host, self.broker_port)
                 self.client.loop_start()
@@ -86,7 +92,7 @@ class MqttDispatcher(BaseDispatcher):
                 time.sleep(RETRY_DELAY * (attempt + 1))
         raise ConnectionError("Failed to connect to MQTT broker")
 
-    def _on_connect(self, _client: "mqtt.Client", _userdata: Any, _flags: dict[str, int], rc: int):
+    def _on_connect(self, _client: mqtt.Client, _userdata: Any, _flags: dict[str, int], rc: int):
         if rc == 0:
             self._connected = True
             self._connection_event.set()
@@ -94,7 +100,7 @@ class MqttDispatcher(BaseDispatcher):
         else:
             logger.error(f"MQTT connect failed with code {rc}")
 
-    def _on_disconnect(self, _client: "mqtt.Client", _userdata: Any, rc: int):
+    def _on_disconnect(self, _client: mqtt.Client, _userdata: Any, rc: int):
         self._connected = False
         self._connection_event.clear()
         logger.warning(f"MQTT disconnected (rc={rc})")

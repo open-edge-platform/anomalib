@@ -5,13 +5,15 @@ import { useCallback } from 'react';
 
 import { useStatusBar } from '../status-bar-context';
 
+const getExportStatusId = (modelId: string) => `export-${modelId}`;
+
 export const useExportStatus = () => {
-    const { setStatus } = useStatusBar();
+    const { setStatus, statuses } = useStatusBar();
 
     const startExport = useCallback(
-        (modelName: string, format: string) => {
+        (modelId: string, modelName: string, format: string) => {
             setStatus({
-                id: 'export',
+                id: getExportStatusId(modelId),
                 type: 'export',
                 message: `Exporting ${modelName}...`,
                 detail: `(${format})`,
@@ -23,10 +25,10 @@ export const useExportStatus = () => {
     );
 
     const completeExport = useCallback(
-        (success: boolean) => {
+        (modelId: string, success: boolean) => {
             if (success) {
                 setStatus({
-                    id: 'export',
+                    id: getExportStatusId(modelId),
                     type: 'export',
                     message: 'Export complete ✓',
                     variant: 'success',
@@ -36,7 +38,7 @@ export const useExportStatus = () => {
                 });
             } else {
                 setStatus({
-                    id: 'export',
+                    id: getExportStatusId(modelId),
                     type: 'export',
                     message: 'Export failed',
                     variant: 'error',
@@ -49,5 +51,13 @@ export const useExportStatus = () => {
         [setStatus]
     );
 
-    return { startExport, completeExport };
+    const isExporting = useCallback(
+        (modelId: string) => {
+            const status = statuses.get(getExportStatusId(modelId));
+            return status?.variant === 'info';
+        },
+        [statuses]
+    );
+
+    return { startExport, completeExport, isExporting };
 };

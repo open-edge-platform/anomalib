@@ -7,6 +7,7 @@ import pytest
 from fastapi import status
 
 from api.dependencies import get_webrtc_manager
+from api.dependencies.dependencies import get_ice_servers
 from main import app
 from pydantic_models.webrtc import Answer, InputData, Offer
 from webrtc.manager import WebRTCManager
@@ -61,3 +62,26 @@ class TestWebRTCEndpoints:
     def test_webrtc_input_hook_invalid_payload(self, fxt_client, fxt_webrtc_manager):
         resp = fxt_client.post("/api/webrtc/input_hook", json={"wrong": "field"})
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_get_webrtc_config_empty(self, fxt_client):
+        def _empty_ice_servers():
+            return []
+
+        app.dependency_overrides[get_ice_servers] = _empty_ice_servers
+        resp = fxt_client.get("/api/webrtc/config")
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.json() == {"iceServers": []}
+
+    def test_get_webrtc_config_with_servers(self, fxt_client):
+        app.dependency_overrides[get_ice_servers] = lambda: [
+            {"urls": "turn:192.168.1.100:443?transport=tcp", "username": "user", "credential": "password"},
+            {"urls": "stun:stun.example.com:3478"},
+        ]
+        resp = fxt_client.get("/api/webrtc/config")
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.json() == {
+            "iceServers": [
+                {"urls": "turn:192.168.1.100:443?transport=tcp", "username": "user", "credential": "password"},
+                {"urls": "stun:stun.example.com:3478", "username": None, "credential": None},
+            ],
+        }

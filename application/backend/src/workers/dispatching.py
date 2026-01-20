@@ -17,8 +17,7 @@ from workers.base import BaseThreadWorker
 
 
 class DispatchingWorker(BaseThreadWorker):
-    """
-    A thread that pulls predictions from the queue and dispatches them to the configured outputs
+    """A thread that pulls predictions from the queue and dispatches them to the configured outputs
     and WebRTC visualization stream.
     """
 
@@ -52,7 +51,8 @@ class DispatchingWorker(BaseThreadWorker):
     @logger.catch()
     async def run_loop(self) -> None:
         self._active_pipeline_service = await ActivePipelineService.create(
-            config_changed_condition=self._active_config_changed_condition, start_daemon=True
+            config_changed_condition=self._active_config_changed_condition,
+            start_daemon=True,
         )
 
         while not self.should_stop():
@@ -76,7 +76,7 @@ class DispatchingWorker(BaseThreadWorker):
                 try:
                     self._rtc_stream_queue.put(stream_data.frame_data, block=False)
                 except queue.Full:
-                    logger.debug("Visualization queue is full; skipping")
+                    logger.trace("Visualization queue is full; skipping")
                 continue
 
             sink_config = self._active_pipeline_service.sink_config
@@ -104,10 +104,10 @@ class DispatchingWorker(BaseThreadWorker):
                             original_image=stream_data.frame_data,
                             image_with_visualization=image_with_visualization,
                             predictions=prediction,
-                        )
+                        ),
                     )
                 # Dispatch to WebRTC stream
                 try:
                     self._rtc_stream_queue.put(image_with_visualization, block=False)
                 except queue.Full:
-                    logger.debug("Visualization queue is full; skipping")
+                    logger.trace("Visualization queue is full; skipping")

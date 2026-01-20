@@ -53,8 +53,7 @@ def get_metrics_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)])
 
 
 async def get_active_pipeline_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)]) -> ActivePipelineService:
-    """
-    Provides an ActivePipelineService instance for managing the active pipeline.
+    """Provides an ActivePipelineService instance for managing the active pipeline.
 
     This dependency is designed for use in FastAPI endpoints and creates a service
     without the daemon thread. For worker processes, create ActivePipelineService
@@ -102,8 +101,7 @@ def get_pipeline_metrics_service(
 
 
 def is_valid_uuid(identifier: str) -> bool:
-    """
-    Check if a given string identifier is formatted as a valid UUID
+    """Check if a given string identifier is formatted as a valid UUID
 
     Args:
         identifier: String to check
@@ -172,3 +170,8 @@ async def get_webrtc_manager(request: Request) -> WebRTCManager:
 async def get_device_name(device: Annotated[str | None, Form()] = None) -> str | None:
     """Converts the device name to uppercase if provided"""
     return device.upper() if device is not None else None
+
+
+def get_ice_servers(request: Request) -> list[dict]:
+    """Provides the ICE servers from settings."""
+    return request.app.state.settings.ice_servers

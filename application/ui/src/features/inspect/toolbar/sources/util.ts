@@ -5,14 +5,14 @@ import { components } from 'src/api/openapi-spec';
 
 export type ImagesFolderSourceConfig = components['schemas']['ImagesFolderSourceConfig'];
 export type IPCameraSourceConfig = components['schemas']['IPCameraSourceConfig'];
-export type WebcamSourceConfig = components['schemas']['WebcamSourceConfig'];
+export type UsbCameraSourceConfig = components['schemas']['UsbCameraSourceConfig'];
 export type VideoFileSourceConfig = components['schemas']['VideoFileSourceConfig'];
 export type DisconnectedSourceConfig = components['schemas']['DisconnectedSourceConfig'];
 
 export type SourceConfig =
     | ImagesFolderSourceConfig
     | IPCameraSourceConfig
-    | WebcamSourceConfig
+    | UsbCameraSourceConfig
     | VideoFileSourceConfig
     | DisconnectedSourceConfig;
 

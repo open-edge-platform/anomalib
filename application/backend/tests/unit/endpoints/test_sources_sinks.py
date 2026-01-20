@@ -14,7 +14,7 @@ from api.dependencies import get_configuration_service
 from main import app
 from pydantic_models.base import Pagination
 from pydantic_models.sink import FolderSinkConfig, MqttSinkConfig, OutputFormat, SinkList, SinkType
-from pydantic_models.source import SourceList, SourceType, VideoFileSourceConfig, WebcamSourceConfig
+from pydantic_models.source import SourceList, SourceType, UsbCameraSourceConfig, VideoFileSourceConfig
 from services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 from services.exceptions import ResourceType
 
@@ -38,12 +38,12 @@ def fxt_folder_sink(fxt_project) -> FolderSinkConfig:
 
 
 @pytest.fixture
-def fxt_webcam_source(fxt_project) -> WebcamSourceConfig:
-    return WebcamSourceConfig(
+def fxt_usb_camera_source(fxt_project) -> UsbCameraSourceConfig:
+    return UsbCameraSourceConfig(
         id=uuid4(),
         project_id=fxt_project.id,
-        source_type=SourceType.WEBCAM,
-        name="Test Webcam Source",
+        source_type=SourceType.USB_CAMERA,
+        name="Test USB Camera Source",
         device_id=1,
     )
 
@@ -85,19 +85,27 @@ class TestSourceAndSinkEndpoints:
     @pytest.mark.parametrize(
         "fixture_name, api_path, create_method",
         [
-            ("fxt_webcam_source", ConfigApiPath.SOURCES, "create_source"),
+            ("fxt_usb_camera_source", ConfigApiPath.SOURCES, "create_source"),
             ("fxt_folder_sink", ConfigApiPath.SINKS, "create_sink"),
         ],
     )
     def test_create_config_success(
-        self, fixture_name, api_path, create_method, fxt_config_service, fxt_client, fxt_project, request
+        self,
+        fixture_name,
+        api_path,
+        create_method,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
+        request,
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
         getattr(fxt_config_service, create_method).return_value = fxt_config
 
         response = fxt_client.post(
-            f"/api/projects/{fxt_project.id}/{api_path}", json=fxt_config.model_dump(exclude={"id", "project_id"})
+            f"/api/projects/{fxt_project.id}/{api_path}",
+            json=fxt_config.model_dump(exclude={"id", "project_id"}),
         )
 
         assert response.status_code == status.HTTP_201_CREATED
@@ -121,19 +129,29 @@ class TestSourceAndSinkEndpoints:
     @pytest.mark.parametrize(
         "resource_type, api_path, fixture_name, create_method",
         [
-            (ResourceType.SOURCE, ConfigApiPath.SOURCES, "fxt_webcam_source", "create_source"),
+            (ResourceType.SOURCE, ConfigApiPath.SOURCES, "fxt_usb_camera_source", "create_source"),
             (ResourceType.SINK, ConfigApiPath.SINKS, "fxt_folder_sink", "create_sink"),
         ],
     )
     def test_create_config_exists(
-        self, resource_type, api_path, fixture_name, create_method, fxt_config_service, fxt_client, fxt_project, request
+        self,
+        resource_type,
+        api_path,
+        fixture_name,
+        create_method,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
+        request,
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         getattr(fxt_config_service, create_method).side_effect = ResourceAlreadyExistsError(
-            resource_type=resource_type, resource_name="New Config"
+            resource_type=resource_type,
+            resource_name="New Config",
         )
         response = fxt_client.post(
-            f"/api/projects/{fxt_project.id}/{api_path}", json=fxt_config.model_dump(exclude={"id", "project_id"})
+            f"/api/projects/{fxt_project.id}/{api_path}",
+            json=fxt_config.model_dump(exclude={"id", "project_id"}),
         )
 
         assert response.status_code == status.HTTP_409_CONFLICT
@@ -142,7 +160,7 @@ class TestSourceAndSinkEndpoints:
     @pytest.mark.parametrize(
         "fixtures, api_path, list_method",
         [
-            (["fxt_webcam_source", "fxt_video_source"], ConfigApiPath.SOURCES, "list_sources"),
+            (["fxt_usb_camera_source", "fxt_video_source"], ConfigApiPath.SOURCES, "list_sources"),
             (["fxt_folder_sink", "fxt_mqtt_sink"], ConfigApiPath.SINKS, "list_sinks"),
         ],
     )
@@ -172,12 +190,19 @@ class TestSourceAndSinkEndpoints:
     @pytest.mark.parametrize(
         "fixture_name, api_path, get_method",
         [
-            ("fxt_webcam_source", ConfigApiPath.SOURCES, "get_source_by_id"),
+            ("fxt_usb_camera_source", ConfigApiPath.SOURCES, "get_source_by_id"),
             ("fxt_folder_sink", ConfigApiPath.SINKS, "get_sink_by_id"),
         ],
     )
     def test_get_config_success(
-        self, fixture_name, api_path, get_method, fxt_config_service, fxt_client, fxt_project, request
+        self,
+        fixture_name,
+        api_path,
+        get_method,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
+        request,
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
@@ -197,12 +222,18 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_get_config_not_found(
-        self, resource_type, api_path, get_method, fxt_config_service, fxt_client, fxt_project
+        self,
+        resource_type,
+        api_path,
+        get_method,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
     ):
         config_id = uuid4()
         getattr(fxt_config_service, get_method).side_effect = ResourceNotFoundError(resource_type, str(config_id))
 
-        response = fxt_client.get(f"/api/projects/{fxt_project.id}/{api_path}/{str(config_id)}")
+        response = fxt_client.get(f"/api/projects/{fxt_project.id}/{api_path}/{config_id!s}")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         getattr(fxt_config_service, get_method).assert_called_once_with(config_id, fxt_project.id)
@@ -215,12 +246,20 @@ class TestSourceAndSinkEndpoints:
     @pytest.mark.parametrize(
         "fixture_name, api_path, update_method, update_data",
         [
-            ("fxt_webcam_source", ConfigApiPath.SOURCES, "update_source", {"device_id": 5}),
+            ("fxt_usb_camera_source", ConfigApiPath.SOURCES, "update_source", {"device_id": 5}),
             ("fxt_folder_sink", ConfigApiPath.SINKS, "update_sink", {"folder_path": "/new/path"}),
         ],
     )
     def test_update_sink_success(
-        self, fixture_name, api_path, update_method, update_data, fxt_config_service, fxt_client, fxt_project, request
+        self,
+        fixture_name,
+        api_path,
+        update_method,
+        update_data,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
+        request,
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
@@ -242,7 +281,13 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_update_config_not_found(
-        self, api_path, update_method, resource_type, fxt_config_service, fxt_client, fxt_project
+        self,
+        api_path,
+        update_method,
+        resource_type,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
     ):
         config_id = str(uuid4())
         getattr(fxt_config_service, update_method).side_effect = ResourceNotFoundError(resource_type, config_id)
@@ -254,12 +299,20 @@ class TestSourceAndSinkEndpoints:
     @pytest.mark.parametrize(
         "fixture_name, api_path, update_method, update_data",
         [
-            ("fxt_webcam_source", ConfigApiPath.SOURCES, "update_source", {"source_type": "folder"}),
+            ("fxt_usb_camera_source", ConfigApiPath.SOURCES, "update_source", {"source_type": "folder"}),
             ("fxt_folder_sink", ConfigApiPath.SINKS, "update_sink", {"sink_type": "mqtt"}),
         ],
     )
     def test_update_config_type_forbidden(
-        self, fixture_name, api_path, update_method, update_data, fxt_config_service, fxt_client, fxt_project, request
+        self,
+        fixture_name,
+        api_path,
+        update_method,
+        update_data,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
+        request,
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
@@ -273,12 +326,19 @@ class TestSourceAndSinkEndpoints:
     @pytest.mark.parametrize(
         "fixture_name, api_path, delete_method",
         [
-            ("fxt_webcam_source", ConfigApiPath.SOURCES, "delete_source_by_id"),
+            ("fxt_usb_camera_source", ConfigApiPath.SOURCES, "delete_source_by_id"),
             ("fxt_folder_sink", ConfigApiPath.SINKS, "delete_sink_by_id"),
         ],
     )
     def test_delete_config_success(
-        self, fixture_name, api_path, delete_method, fxt_config_service, fxt_client, fxt_project, request
+        self,
+        fixture_name,
+        api_path,
+        delete_method,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
+        request,
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
@@ -312,7 +372,13 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_delete_config_not_found(
-        self, api_path, delete_method, resource_type, fxt_config_service, fxt_client, fxt_project
+        self,
+        api_path,
+        delete_method,
+        resource_type,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
     ):
         config_id = str(uuid4())
         getattr(fxt_config_service, delete_method).side_effect = ResourceNotFoundError(resource_type, config_id)
@@ -324,12 +390,20 @@ class TestSourceAndSinkEndpoints:
     @pytest.mark.parametrize(
         "fixture_name, api_path, delete_method, resource_type",
         [
-            ("fxt_webcam_source", ConfigApiPath.SOURCES, "delete_source_by_id", ResourceType.SOURCE),
+            ("fxt_usb_camera_source", ConfigApiPath.SOURCES, "delete_source_by_id", ResourceType.SOURCE),
             ("fxt_folder_sink", ConfigApiPath.SINKS, "delete_sink_by_id", ResourceType.SINK),
         ],
     )
     def test_delete_config_in_use(
-        self, fixture_name, api_path, delete_method, resource_type, fxt_config_service, fxt_client, fxt_project, request
+        self,
+        fixture_name,
+        api_path,
+        delete_method,
+        resource_type,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
+        request,
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
@@ -345,10 +419,10 @@ class TestSourceAndSinkEndpoints:
         "fixture_name,api_path,get_method, expected_yaml",
         [
             (
-                "fxt_webcam_source",
+                "fxt_usb_camera_source",
                 ConfigApiPath.SOURCES,
                 "get_source_by_id",
-                "device_id: 1\nname: Test Webcam Source\nsource_type: webcam\n",
+                "device_id: 1\nname: Test USB Camera Source\nsource_type: usb_camera\n",
             ),
             (
                 "fxt_folder_sink",
@@ -360,7 +434,15 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_export_config_success(
-        self, fixture_name, api_path, get_method, expected_yaml, fxt_config_service, fxt_client, fxt_project, request
+        self,
+        fixture_name,
+        api_path,
+        get_method,
+        expected_yaml,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
+        request,
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
@@ -377,12 +459,19 @@ class TestSourceAndSinkEndpoints:
     @pytest.mark.parametrize(
         "fixture_name,api_path, create_method",
         [
-            ("fxt_webcam_source", ConfigApiPath.SOURCES, "create_source"),
+            ("fxt_usb_camera_source", ConfigApiPath.SOURCES, "create_source"),
             ("fxt_folder_sink", ConfigApiPath.SINKS, "create_sink"),
         ],
     )
     def test_import_config_success(
-        self, fixture_name, api_path, create_method, fxt_config_service, fxt_client, fxt_project, request
+        self,
+        fixture_name,
+        api_path,
+        create_method,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
+        request,
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         sink_data = fxt_config.model_dump(exclude={"id", "project_id"}, mode="json")

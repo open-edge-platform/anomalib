@@ -28,13 +28,6 @@ class License(StrEnum):
     CC_BY_NC_4_0 = "CC-BY-NC-4.0"
 
 
-class PerformanceMetrics(BaseModel):
-    """Relative performance scores (1=low, 2=medium, 3=high). Null if not benchmarked."""
-
-    training: int | None = Field(default=None, ge=1, le=3, description="Training speed score (3=fastest)")
-    inference: int | None = Field(default=None, ge=1, le=3, description="Inference speed score (3=fastest)")
-
-
 class TrainableModel(BaseModel):
     """Metadata for a trainable model template."""
 
@@ -45,7 +38,6 @@ class TrainableModel(BaseModel):
     recommended: bool = Field(default=False, description="Whether model is recommended for new users")
     license: License = Field(default=License.APACHE_2_0, description="Model license type")
     docs_url: str | None = Field(default=None, description="Link to model documentation")
-    metrics: PerformanceMetrics = Field(default_factory=PerformanceMetrics)
     parameters: float | None = Field(default=None, description="Model parameters in millions")
 
 

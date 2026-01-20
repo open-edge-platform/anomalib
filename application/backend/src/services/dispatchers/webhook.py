@@ -1,19 +1,23 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """This module contains the WebhookDispatcher class for dispatching images and predictions to a webhook endpoint."""
 
-from typing import Any
+from __future__ import annotations
 
-import numpy as np
+from typing import TYPE_CHECKING, Any
+
 import requests
-from anomalib.data import NumpyImageBatch as PredictionResult
 from loguru import logger
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from pydantic_models.sink import WebhookSinkConfig
 from services.dispatchers.base import BaseDispatcher
+
+if TYPE_CHECKING:
+    import numpy as np
+    from anomalib.data import NumpyImageBatch as PredictionResult
 
 MAX_RETRIES = 3
 BACKOFF_FACTOR = 0.3
@@ -22,8 +26,8 @@ RETRY_ON_STATUS = [500, 502, 503, 504]
 
 class WebhookDispatcher(BaseDispatcher):
     def __init__(self, output_config: WebhookSinkConfig) -> None:
-        """
-        Initialize the WebhookDispatcher.
+        """Initialize the WebhookDispatcher.
+
         Args:
             output_config: Configuration for the webhook-based output destination
         """
@@ -46,7 +50,11 @@ class WebhookDispatcher(BaseDispatcher):
     def __send_to_webhook(self, payload: dict[str, Any]) -> None:
         logger.debug(f"Sending payload to webhook at {self.webhook_url}")
         response = self.session.request(
-            self.http_method, self.webhook_url, headers=self.headers, json=payload, timeout=self.timeout
+            self.http_method,
+            self.webhook_url,
+            headers=self.headers,
+            json=payload,
+            timeout=self.timeout,
         )
         response.raise_for_status()
         logger.debug(f"Response from webhook: {response.text}")

@@ -51,7 +51,7 @@ export const SettingsList = ({ source }: SettingsListProps) => {
         );
     }
 
-    if (source.source_type === 'webcam') {
+    if (source.source_type === 'usb_camera') {
         return <CameraDeviceDisplay deviceId={source.device_id} />;
     }
 

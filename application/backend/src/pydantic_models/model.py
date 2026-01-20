@@ -18,8 +18,7 @@ class PredictionLabel(StrEnum):
 
 
 class Model(BaseIDNameModel):
-    """
-    Base model schema that includes common fields for all models.
+    """Base model schema that includes common fields for all models.
     This can be extended by other schemas to include additional fields.
     """
 
@@ -31,6 +30,7 @@ class Model(BaseIDNameModel):
     dataset_snapshot_id: UUID = Field(description="ID of the dataset snapshot used for training")
     train_job_id: UUID = Field(description="ID of the training job for this model")
     size: int | None = Field(default=None, ge=0, description="Total size in bytes of exported model artifacts")
+    backbone: str | None = Field(default=None, description="Name of the backbone/feature extractor used by the model")
 
     @property
     def weights_path(self) -> str:
@@ -52,8 +52,9 @@ class Model(BaseIDNameModel):
                 "threshold": 0.5,
                 "train_job_id": "0db0c16d-0d3c-4e0e-bc5a-ca710579e549",
                 "size": 12345678,
-            }
-        }
+                "backbone": "wide_resnet50_2",
+            },
+        },
     }
 
 
@@ -84,8 +85,8 @@ class PredictionResponse(BaseModel):
                 ),
                 "label": "Normal",
                 "score": 0.23,
-            }
-        }
+            },
+        },
     }
 
 
