@@ -102,10 +102,22 @@ const formatAcceleratorInfo = (accelerators: AcceleratorInfo): string[] => {
     return lines;
 };
 
+const sanitizeDescription = (description: string): string => {
+    // Remove non-printable control characters except for common whitespace
+    const cleaned = description.replace(/[^\x09\x0A\x0D\x20-\x7E\xA0-\uFFFF]/g, '');
+    const trimmed = cleaned.trim();
+    const MAX_LENGTH = 4000;
+    if (trimmed.length <= MAX_LENGTH) {
+        return trimmed;
+    }
+    return `${trimmed.slice(0, MAX_LENGTH)}\n\n[description truncated]`;
+};
+
 const createGitHubIssueUrl = (systemInfo: SystemInfo, issueType: IssueType, description: string): string => {
     const isBug = issueType === 'bug';
     const title = isBug ? '[Bug]: ' : '[Feature]: ';
     const labels = isBug ? ['bug', 'Geti Inspect'] : ['enhancement', 'Geti Inspect'];
+    const sanitizedDescription = sanitizeDescription(description);
 
     const { libraries, accelerators } = systemInfo;
 
@@ -135,7 +147,7 @@ ${libraryLines.map((line) => `- ${line}`).join('\n')}
 ${acceleratorLines.map((line) => `- ${line}`).join('\n')}
 
 ## ${isBug ? 'Bug Description' : 'Feature Description'}
-${description || '_Please describe the issue or feature request_'}
+${sanitizedDescription || '_Please describe the issue or feature request_'}
 `;
 
     const params = new URLSearchParams({
