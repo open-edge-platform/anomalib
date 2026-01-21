@@ -34,6 +34,8 @@ class ConfigurationService:
 
     def _notify_sink_changed(self) -> None:
         """Notify that sink configuration has changed by reloading the active pipeline service."""
+        with self._config_changed_condition:
+            self._config_changed_condition.notify_all()
         try:
             # Try to get the current event loop
             loop = asyncio.get_running_loop()

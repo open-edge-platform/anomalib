@@ -64,8 +64,14 @@ class PipelineService:
             if pipeline.source != updated.source:
                 self._notify_source_changed()
             if pipeline.status.is_running and updated.status.is_running:
-                if pipeline.sink and pipeline.sink.id != updated.sink.id:  # type: ignore[union-attr] # sink is always there for running pipeline
-                    await self._notify_sink_changed()
+                # source/sink changed or disconnected
+                old_source_id = pipeline.source.id if pipeline.source else None
+                new_source_id = updated.source.id if updated.source else None
+                old_sink_id = pipeline.sink.id if pipeline.sink else None
+                new_sink_id = updated.sink.id if updated.sink else None
+                if old_source_id != new_source_id or old_sink_id != new_sink_id:
+                    await self._notify_pipeline_changed()
+
                 # If the active model changes while running, notify inference to reload
                 if pipeline.model.id != updated.model.id:  # type: ignore[union-attr]
                     self._model_service.activate_model()

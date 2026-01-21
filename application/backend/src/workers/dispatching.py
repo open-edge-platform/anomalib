@@ -44,8 +44,9 @@ class DispatchingWorker(BaseThreadWorker):
     def _reset_sink_if_needed(self, sink_config: Sink) -> None:
         if sink_config.sink_type is SinkType.DISCONNECTED:
             self._destinations = []
+            self._prev_sink_config = copy.deepcopy(sink_config)
         elif not self._prev_sink_config or sink_config != self._prev_sink_config:
-            logger.debug(f"Sink config changed from {self._prev_sink_config} to {sink_config}")
+            logger.info(f"Sink config changed from {self._prev_sink_config} to {sink_config}")
             self._destinations = DispatchService.get_destinations(output_configs=[sink_config])
             self._prev_sink_config = copy.deepcopy(sink_config)
 
@@ -97,17 +98,22 @@ class DispatchingWorker(BaseThreadWorker):
             image_with_visualization = inference_data.visualized_prediction
             prediction = inference_data.prediction
             # Postprocess and dispatch results
-            async with asyncio.TaskGroup() as task_group:
-                for destination in self._destinations:
-                    task_group.create_task(
-                        destination.dispatch(
-                            original_image=stream_data.frame_data,
-                            image_with_visualization=image_with_visualization,
-                            predictions=prediction,
+            # Dispatch to WebRTC stream
+            try:
+                self._rtc_stream_queue.put(image_with_visualization, block=False)
+            except queue.Full:
+                logger.trace("Visualization queue is full; skipping")
+
+            # Dispatch to other destinations
+            try:
+                async with asyncio.TaskGroup() as task_group:
+                    for destination in self._destinations:
+                        task_group.create_task(
+                            destination.dispatch(
+                                original_image=stream_data.frame_data,
+                                image_with_visualization=image_with_visualization,
+                                predictions=prediction,
+                            )
                         )
-                    )
-                # Dispatch to WebRTC stream
-                try:
-                    self._rtc_stream_queue.put(image_with_visualization, block=False)
-                except queue.Full:
-                    logger.trace("Visualization queue is full; skipping")
+            except Exception as e:
+                logger.error(f"One or more errors occurred during dispatch: {e}")

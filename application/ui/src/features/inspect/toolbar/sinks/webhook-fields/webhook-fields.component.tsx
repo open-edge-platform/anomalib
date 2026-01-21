@@ -1,6 +1,7 @@
 import { Flex, Item, NumberField, Picker, TextField } from '@geti/ui';
 
 import { OutputFormats } from '../output-formats/output-formats.component';
+import { RateLimitField } from '../rate-limit-field/rate-limit-field.component';
 import { WebhookHttpMethod, WebhookSinkConfig } from '../utils';
 import { HeaderKeyValueBuilder } from './header-key-value-builder.component';
 
@@ -11,18 +12,9 @@ interface WebhookFieldsProps {
 export const WebhookFields = ({ defaultState }: WebhookFieldsProps) => {
     return (
         <Flex direction='column' gap='size-200'>
-            <Flex direction={'row'} gap='size-200'>
-                <TextField isHidden label='id' name='id' defaultValue={defaultState.id} />
-                <TextField isHidden label='project_id' name='project_id' defaultValue={defaultState.project_id} />
-                <TextField isRequired flex='1' label='Name' name='name' defaultValue={defaultState.name} />
-                <NumberField
-                    label='Rate Limit'
-                    name='rate_limit'
-                    minValue={0}
-                    step={0.1}
-                    defaultValue={defaultState.rate_limit ?? undefined}
-                />
-            </Flex>
+            <TextField isHidden label='id' name='id' defaultValue={defaultState.id} />
+            <TextField isHidden label='project_id' name='project_id' defaultValue={defaultState.project_id} />
+            <TextField isRequired label='Name' name='name' defaultValue={defaultState.name} />
 
             <Flex direction={'row'} gap='size-200'>
                 <Picker name='http_method' flex='1' label='HTTP Method' defaultSelectedKey={defaultState.http_method}>
@@ -40,6 +32,8 @@ export const WebhookFields = ({ defaultState }: WebhookFieldsProps) => {
                 name='webhook_url'
                 defaultValue={defaultState.webhook_url}
             />
+
+            <RateLimitField defaultValue={defaultState.rate_limit} />
 
             <OutputFormats config={defaultState.output_formats} />
 
