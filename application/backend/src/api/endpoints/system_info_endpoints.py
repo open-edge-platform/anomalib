@@ -7,7 +7,7 @@ import io
 import platform
 import zipfile
 from datetime import datetime
-from importlib.metadata import version
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 from fastapi import APIRouter
@@ -103,12 +103,15 @@ def _get_package_version(package_name: str) -> str:
     """Safely get version of an installed package.
 
     Args:
-        package_name: Name of the package to check.
+        package_name: Name of the package to check. If the package is not installed, return N/A.
 
     Returns:
         Version string if package is installed
     """
-    return version(package_name)
+    try:
+        return version(package_name)
+    except PackageNotFoundError:
+        return "N/A"
 
 
 def _get_library_versions() -> LibraryVersions:
@@ -193,7 +196,9 @@ def _get_logs() -> list[LogFile]:
     result = []
     for log_name in log_files:
         log_path = logs_dir / log_name
-        with open(log_path, encoding="utf-8") as f:
+        if not log_path.is_file():
+            continue
+        with log_path.open(encoding="utf-8") as f:
             content = f.read()
             if content:
                 result.append(LogFile(name=log_name, content=content))

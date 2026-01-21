@@ -1,8 +1,9 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { fetchClient } from '@geti-inspect/api';
+import { useCallback, useState } from 'react';
 
+import { fetchClient } from '@geti-inspect/api';
 import {
     ActionButton,
     Button,
@@ -22,7 +23,6 @@ import {
     View,
 } from '@geti/ui';
 import { DownloadIcon, ExternalLinkIcon, HelpIcon } from '@geti/ui/icons';
-import { useCallback, useState } from 'react';
 
 import { downloadBlob } from '../utils';
 
@@ -238,13 +238,11 @@ const FeedbackDialogContent = ({ close }: FeedbackDialogContentProps) => {
                     />
 
                     {issueType === 'bug' && (
-                        <View
-                            backgroundColor='gray-100'
-                            padding='size-150'
-                            borderRadius='regular'
-                        >
+                        <View backgroundColor='gray-100' padding='size-150' borderRadius='regular'>
                             <Flex direction='row' alignItems='center' justifyContent='space-between' gap='size-100'>
-                                <Text UNSAFE_style={{ fontSize: '12px', color: 'var(--spectrum-global-color-gray-700)' }}>
+                                <Text
+                                    UNSAFE_style={{ fontSize: '12px', color: 'var(--spectrum-global-color-gray-700)' }}
+                                >
                                     Optionally download and attach application logs to help diagnose the issue.
                                 </Text>
                                 <Button
