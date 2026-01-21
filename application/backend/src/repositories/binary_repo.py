@@ -11,7 +11,6 @@ from enum import StrEnum
 from functools import cached_property
 from typing import TYPE_CHECKING
 
-from pydantic_models.model import ExportParameters
 from settings import get_settings
 
 if TYPE_CHECKING:
@@ -19,6 +18,7 @@ if TYPE_CHECKING:
 
     from anomalib.deploy import ExportType
 
+    from pydantic_models.model import ExportParameters
     from settings import Settings
 
 settings: Settings = get_settings()
