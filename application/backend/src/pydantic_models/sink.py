@@ -31,7 +31,7 @@ class OutputFormat(StrEnum):
 class BaseSinkConfig(BaseIDNameModel):
     project_id: UUID
     output_formats: list[OutputFormat]
-    rate_limit: float | None = None  # Rate limit in Hz, None means no limit
+    rate_limit: float | None = Field(default=None, ge=0.0, description="Rate limit in Hz, None means no limit")
 
 
 class DisconnectedSinkConfig(BaseSinkConfig):
