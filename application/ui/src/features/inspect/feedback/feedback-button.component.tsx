@@ -255,9 +255,7 @@ const FeedbackDialogContent = ({ close }: FeedbackDialogContentProps) => {
                             UNSAFE_style={{ color: 'var(--spectrum-global-color-red-700)' }}
                         >
                             <Text>
-                                {error instanceof Error
-                                    ? error.message
-                                    : 'An error occurred. Please try again.'}
+                                {error instanceof Error ? error.message : 'An error occurred. Please try again.'}
                             </Text>
                         </View>
                     )}
