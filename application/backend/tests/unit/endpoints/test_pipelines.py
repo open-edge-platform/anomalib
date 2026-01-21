@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from datetime import UTC, datetime
@@ -77,7 +77,8 @@ class TestPipelineEndpoints:
 
     def test_update_pipeline_status(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
         response = fxt_client.patch(
-            f"/api/projects/{fxt_pipeline.project_id}/pipeline", json={"status": PipelineStatus.IDLE}
+            f"/api/projects/{fxt_pipeline.project_id}/pipeline",
+            json={"status": PipelineStatus.IDLE},
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -142,7 +143,7 @@ class TestPipelineEndpoints:
                     "loc": ("name",),
                     "msg": "Field required",
                     "input": {},
-                }
+                },
             ],
         )
 
@@ -152,7 +153,10 @@ class TestPipelineEndpoints:
         fxt_pipeline_service.activate_pipeline.assert_called_once_with(fxt_pipeline.project_id, set_running=True)
 
     def test_enable_pipeline_with_active_pipeline_different_project(
-        self, fxt_pipeline, fxt_pipeline_service, fxt_client
+        self,
+        fxt_pipeline,
+        fxt_pipeline_service,
+        fxt_client,
     ):
         """Test enabling a pipeline when another pipeline from a different project is already active."""
         other_project_id = uuid4()
@@ -258,7 +262,8 @@ class TestPipelineEndpoints:
         fxt_pipeline_service.activate_pipeline.assert_called_once_with(fxt_pipeline.project_id, set_running=True)
         # activate_pipeline internally calls update_pipeline when re-enabling
         fxt_pipeline_service.update_pipeline.assert_called_once_with(
-            fxt_pipeline.project_id, {"status": PipelineStatus.RUNNING}
+            fxt_pipeline.project_id,
+            {"status": PipelineStatus.RUNNING},
         )
 
     def test_get_pipeline_metrics_success(self, fxt_pipeline, fxt_pipeline_metrics_service, fxt_client):
@@ -268,7 +273,9 @@ class TestPipelineEndpoints:
             inference=InferenceMetrics(
                 latency=LatencyMetrics(avg_ms=100.5, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0),
                 throughput=ThroughputMetrics(
-                    avg_requests_per_second=30.0, total_requests=1800, max_requests_per_second=45.0
+                    avg_requests_per_second=30.0,
+                    total_requests=1800,
+                    max_requests_per_second=45.0,
                 ),
             ),
         )
@@ -299,7 +306,7 @@ class TestPipelineEndpoints:
     def test_get_pipeline_metrics_pipeline_not_running(self, fxt_pipeline, fxt_pipeline_metrics_service, fxt_client):
         """Test metrics endpoint when pipeline is not in running state."""
         fxt_pipeline_metrics_service.get_pipeline_metrics.side_effect = ValueError(
-            "Cannot get metrics for a pipeline that is not running."
+            "Cannot get metrics for a pipeline that is not running.",
         )
 
         response = fxt_client.get(f"/api/projects/{fxt_pipeline.project_id}/pipeline/metrics")
@@ -310,11 +317,15 @@ class TestPipelineEndpoints:
 
     @pytest.mark.parametrize("invalid_time_window", [0, -1, 3601, 7200])
     def test_get_pipeline_metrics_invalid_time_window(
-        self, invalid_time_window, fxt_pipeline, fxt_pipeline_metrics_service, fxt_client
+        self,
+        invalid_time_window,
+        fxt_pipeline,
+        fxt_pipeline_metrics_service,
+        fxt_client,
     ):
         """Test metrics endpoint with invalid time window values."""
         response = fxt_client.get(
-            f"/api/projects/{fxt_pipeline.project_id}/pipeline/metrics?time_window={invalid_time_window}"
+            f"/api/projects/{fxt_pipeline.project_id}/pipeline/metrics?time_window={invalid_time_window}",
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -323,7 +334,11 @@ class TestPipelineEndpoints:
 
     @pytest.mark.parametrize("valid_time_window", [1, 30, 300, 1800, 3600])
     def test_get_pipeline_metrics_valid_time_windows(
-        self, valid_time_window, fxt_pipeline, fxt_pipeline_metrics_service, fxt_client
+        self,
+        valid_time_window,
+        fxt_pipeline,
+        fxt_pipeline_metrics_service,
+        fxt_client,
     ):
         """Test metrics endpoint with various valid time window values."""
         mock_metrics = PipelineMetrics(
@@ -331,19 +346,22 @@ class TestPipelineEndpoints:
             inference=InferenceMetrics(
                 latency=LatencyMetrics(avg_ms=100.0, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0),
                 throughput=ThroughputMetrics(
-                    avg_requests_per_second=30.0, total_requests=1800, max_requests_per_second=45.0
+                    avg_requests_per_second=30.0,
+                    total_requests=1800,
+                    max_requests_per_second=45.0,
                 ),
             ),
         )
         fxt_pipeline_metrics_service.get_pipeline_metrics.return_value = mock_metrics
 
         response = fxt_client.get(
-            f"/api/projects/{fxt_pipeline.project_id}/pipeline/metrics?time_window={valid_time_window}"
+            f"/api/projects/{fxt_pipeline.project_id}/pipeline/metrics?time_window={valid_time_window}",
         )
 
         assert response.status_code == status.HTTP_200_OK
         fxt_pipeline_metrics_service.get_pipeline_metrics.assert_called_once_with(
-            fxt_pipeline.project_id, valid_time_window
+            fxt_pipeline.project_id,
+            valid_time_window,
         )
 
     def test_get_pipeline_metrics_no_data_available(self, fxt_pipeline, fxt_pipeline_metrics_service, fxt_client):
@@ -353,7 +371,9 @@ class TestPipelineEndpoints:
             inference=InferenceMetrics(
                 latency=LatencyMetrics(avg_ms=None, min_ms=None, max_ms=None, p95_ms=None, latest_ms=None),
                 throughput=ThroughputMetrics(
-                    avg_requests_per_second=None, total_requests=None, max_requests_per_second=None
+                    avg_requests_per_second=None,
+                    total_requests=None,
+                    max_requests_per_second=None,
                 ),
             ),
         )
@@ -379,7 +399,9 @@ class TestPipelineEndpoints:
             inference=InferenceMetrics(
                 latency=LatencyMetrics(avg_ms=100.5, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0),
                 throughput=ThroughputMetrics(
-                    avg_requests_per_second=30.0, total_requests=1800, max_requests_per_second=45.0
+                    avg_requests_per_second=30.0,
+                    total_requests=1800,
+                    max_requests_per_second=45.0,
                 ),
             ),
         )

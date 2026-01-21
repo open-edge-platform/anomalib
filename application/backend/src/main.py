@@ -36,15 +36,12 @@ import exception_handlers  # noqa: E402
 
 _ = exception_handlers  # to avoid import being removed by linters
 
+settings = get_settings()
 # TODO: check if middleware is required
 # Enable CORS for local test UI
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:9000",
-        "http://127.0.0.1:9000",
-    ],
+    allow_origins=settings.cors_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -65,10 +62,14 @@ app.include_router(snapshot_router)
 app.include_router(system_info_router)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Initialize multiprocessing and start the uvicorn server."""
     if mp.get_start_method(allow_none=True) != "spawn":
         mp.set_start_method("spawn", force=True)
 
-    settings = get_settings()
     uvicorn_port = int(os.environ.get("HTTP_SERVER_PORT", settings.port))
     uvicorn.run("main:app", loop="uvloop", host=settings.host, port=uvicorn_port, log_config=None)
+
+
+if __name__ == "__main__":
+    main()

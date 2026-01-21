@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import StrEnum
@@ -40,11 +40,13 @@ class Pipeline(BaseModel):
     sink: Sink | None = None  # None if disconnected
     model: Model | None = None  # None if no model is selected
     source_id: UUID | None = Field(
-        default=None, exclude=True
+        default=None,
+        exclude=True,
     )  # ID of the source, used for DB mapping, not exposed in API
     sink_id: UUID | None = Field(default=None, exclude=True)  # ID of the sink, used for DB mapping, not exposed in API
     model_id: UUID | None = Field(
-        default=None, exclude=True
+        default=None,
+        exclude=True,
     )  # ID of the model, used for DB mapping, not exposed in API
     status: PipelineStatus = PipelineStatus.IDLE  # Current status of the pipeline
     inference_device: str | None = Field(default=None)
@@ -79,7 +81,7 @@ class Pipeline(BaseModel):
                     "format": "openvino",
                 },
                 "status": "running",
-            }
+            },
         },
     )
 

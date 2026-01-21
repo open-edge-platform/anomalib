@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Lightning callback for sending progress to the frontend via the Plugin API."""
@@ -109,7 +109,12 @@ class GetiInspectProgressCallback(Callback):
         self._check_cancel_training(trainer)
 
     def on_train_batch_end(
-        self, trainer: Trainer, pl_module: LightningModule, outputs: Any, batch: Any, batch_idx: int
+        self,
+        trainer: Trainer,
+        pl_module: LightningModule,
+        outputs: Any,
+        batch: Any,
+        batch_idx: int,
     ) -> None:
         """Called when a training batch ends. Sends granular progress updates within each epoch."""
         del pl_module, outputs, batch  # unused
@@ -149,7 +154,12 @@ class GetiInspectProgressCallback(Callback):
         self._check_cancel_training(trainer)
 
     def on_validation_batch_start(
-        self, trainer: Trainer, pl_module: LightningModule, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self,
+        trainer: Trainer,
+        pl_module: LightningModule,
+        batch: Any,
+        batch_idx: int,
+        dataloader_idx: int = 0,
     ) -> None:
         """Called when a validation batch starts."""
         del pl_module, batch, batch_idx, dataloader_idx  # unused
@@ -176,7 +186,12 @@ class GetiInspectProgressCallback(Callback):
         self._check_cancel_training(trainer)
 
     def on_test_batch_start(
-        self, trainer: Trainer, pl_module: LightningModule, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self,
+        trainer: Trainer,
+        pl_module: LightningModule,
+        batch: Any,
+        batch_idx: int,
+        dataloader_idx: int = 0,
     ) -> None:
         """Called when a test batch starts."""
         del pl_module, batch, batch_idx, dataloader_idx  # unused
@@ -213,7 +228,12 @@ class GetiInspectProgressCallback(Callback):
         self._check_cancel_training(trainer)
 
     def on_predict_batch_start(
-        self, trainer: Trainer, pl_module: LightningModule, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self,
+        trainer: Trainer,
+        pl_module: LightningModule,
+        batch: Any,
+        batch_idx: int,
+        dataloader_idx: int = 0,
     ) -> None:
         """Called when a prediction batch starts."""
         del pl_module, batch, batch_idx, dataloader_idx  # unused

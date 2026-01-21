@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Endpoints for managing pipelines"""
@@ -95,7 +95,7 @@ async def update_pipeline(
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         status.HTTP_204_NO_CONTENT: {
-            "description": "Pipeline successfully set to run (also activates it if not already active)."
+            "description": "Pipeline successfully set to run (also activates it if not already active).",
         },
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
@@ -159,7 +159,7 @@ async def stop_pipeline(
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         status.HTTP_204_NO_CONTENT: {
-            "description": "Pipeline successfully activated (but not necessarily running yet)."
+            "description": "Pipeline successfully activated (but not necessarily running yet).",
         },
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
@@ -218,7 +218,8 @@ async def get_project_metrics(
     """
     if time_window <= 0 or time_window > 3600:  # Limit to 1 hour max
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Duration must be between 1 and 3600 seconds"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Duration must be between 1 and 3600 seconds",
         )
 
     try:

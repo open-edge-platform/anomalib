@@ -103,11 +103,13 @@ describe('useUploadStatus', () => {
         );
 
         act(() => {
-            result.current.uploadStatus.startUpload(10);
+            result.current.uploadStatus.startUpload(3);
         });
 
         act(() => {
-            result.current.uploadStatus.completeUpload();
+            result.current.uploadStatus.incrementProgress(true);
+            result.current.uploadStatus.incrementProgress(true);
+            result.current.uploadStatus.incrementProgress(true);
         });
 
         expect(result.current.statusBar.activeStatus?.variant).toBe('success');

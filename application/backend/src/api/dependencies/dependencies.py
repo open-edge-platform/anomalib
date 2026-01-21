@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from functools import lru_cache
 from typing import Annotated
@@ -53,8 +53,7 @@ def get_metrics_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)])
 
 
 async def get_active_pipeline_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)]) -> ActivePipelineService:
-    """
-    Provides an ActivePipelineService instance for managing the active pipeline.
+    """Provides an ActivePipelineService instance for managing the active pipeline.
 
     This dependency is designed for use in FastAPI endpoints and creates a service
     without the daemon thread. For worker processes, create ActivePipelineService
@@ -102,8 +101,7 @@ def get_pipeline_metrics_service(
 
 
 def is_valid_uuid(identifier: str) -> bool:
-    """
-    Check if a given string identifier is formatted as a valid UUID
+    """Check if a given string identifier is formatted as a valid UUID.
 
     Args:
         identifier: String to check

@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 import base64
@@ -166,7 +166,7 @@ class ModelService:
 
         bin_repo = ModelExportBinaryRepository(project_id=project_id, model_id=model_id)
         export_zip_path = anyio.Path(
-            bin_repo.get_model_export_path(model_name=model.name, export_params=export_parameters)
+            bin_repo.get_model_export_path(model_name=model.name, export_params=export_parameters),
         )
 
         # Cache check

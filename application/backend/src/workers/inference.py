@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
@@ -103,7 +103,7 @@ class InferenceWorker(BaseProcessWorker):
                     if new_model_id:
                         logger.info(
                             f"Model refresh daemon: Active model changed to "
-                            f"'{self._loaded_model.name}' ({new_model_id})"  # type: ignore[union-attr]
+                            f"'{self._loaded_model.name}' ({new_model_id})",  # type: ignore[union-attr]
                         )
                     else:
                         logger.info("Model refresh daemon: Switched to passthrough mode (no active model)")
@@ -132,7 +132,8 @@ class InferenceWorker(BaseProcessWorker):
                 # Preload the model for faster first inference
                 try:
                     inferencer = await ModelService.load_inference_model(
-                        self._loaded_model.model, device=self._loaded_model.device
+                        self._loaded_model.model,
+                        device=self._loaded_model.device,
                     )
                     self._cached_models[self._loaded_model.id] = inferencer
                     logger.info(
@@ -143,7 +144,7 @@ class InferenceWorker(BaseProcessWorker):
                     # Load model using the default device
                     logger.warning(
                         f"Device '{self._loaded_model.device}' not found; "
-                        f"loading model '{self._loaded_model.name}' ({self._loaded_model.id}) on default device"
+                        f"loading model '{self._loaded_model.name}' ({self._loaded_model.id}) on default device",
                     )
                     inferencer = await ModelService.load_inference_model(self._loaded_model.model)
                     self._cached_models[self._loaded_model.id] = inferencer
