@@ -8,7 +8,11 @@ export type DisconnectedSinkConfig = components['schemas']['DisconnectedSinkConf
 
 export type SinkOutputFormats = LocalFolderSinkConfig['output_formats'];
 
-export type SinkConfig = LocalFolderSinkConfig | MqttSinkConfig | WebhookSinkConfig | DisconnectedSinkConfig;
+export type SinkConfig =
+    | LocalFolderSinkConfig
+    | MqttSinkConfig
+    | WebhookSinkConfig
+    | DisconnectedSinkConfig;
 
 export enum SinkType {
     FOLDER = 'folder',
