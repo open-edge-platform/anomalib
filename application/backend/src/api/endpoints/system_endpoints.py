@@ -8,95 +8,21 @@ import platform
 import zipfile
 from datetime import datetime
 from importlib.metadata import PackageNotFoundError, version
-from pathlib import Path
 
+from anyio import Path as AsyncPath
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from loguru import logger
-from pydantic import BaseModel
 
 from api.endpoints import API_PREFIX
+from pydantic_models import AcceleratorInfo, LibraryVersions, SystemInfo
 from settings import get_settings
 
 system_info_router = APIRouter(
     prefix=API_PREFIX + "/system",
     tags=["System"],
 )
-
 settings = get_settings()
-
-
-class LibraryVersions(BaseModel):
-    """Version information for ML/DL libraries."""
-
-    python: str
-    pytorch: str | None = None
-    lightning: str | None = None
-    torchmetrics: str | None = None
-    openvino: str | None = None
-    onnx: str | None = None
-    anomalib: str | None = None
-
-
-class AcceleratorInfo(BaseModel):
-    """Information about hardware accelerators."""
-
-    cuda_available: bool = False
-    cuda_version: str | None = None
-    cudnn_version: str | None = None
-    gpu_name: str | None = None
-    xpu_available: bool = False
-    xpu_version: str | None = None
-    xpu_name: str | None = None
-
-
-class LogFile(BaseModel):
-    """A single log file's contents."""
-
-    name: str
-    content: str
-
-
-class SystemInfo(BaseModel):
-    """System information for feedback and diagnostics."""
-
-    os_name: str
-    os_version: str
-    platform: str
-    app_version: str
-    app_name: str
-    libraries: LibraryVersions
-    accelerators: AcceleratorInfo
-
-    model_config = {
-        "json_schema_extra": {
-            "example": {
-                "os_name": "Linux",
-                "os_version": "5.15.0-generic",
-                "platform": "Linux-5.15.0-generic-x86_64-with-glibc2.35",
-                "app_version": "0.1.0",
-                "app_name": "Geti Inspect",
-                "libraries": {
-                    "python": "3.11.0",
-                    "pytorch": "2.1.0",
-                    "lightning": "2.0.0",
-                    "torchmetrics": "1.0.0",
-                    "openvino": "2024.0.0",
-                    "onnx": "1.15.0",
-                    "anomalib": "1.0.0",
-                },
-                "accelerators": {
-                    "cuda_available": True,
-                    "cuda_version": "12.1",
-                    "cudnn_version": "8.9.0",
-                    "gpu_name": "NVIDIA GeForce RTX 3080",
-                    "xpu_available": False,
-                    "xpu_version": None,
-                    "xpu_name": None,
-                },
-            }
-        }
-    }
 
 
 def _get_package_version(package_name: str) -> str:
@@ -177,35 +103,6 @@ def _get_accelerator_info() -> AcceleratorInfo:
     return info
 
 
-def _get_logs() -> list[LogFile]:
-    """Get recent log entries from all application log files.
-
-
-    Returns:
-        List of LogFile objects containing log file names and their contents.
-    """
-    logs_dir = Path(settings.log_dir)
-    log_files = [
-        "app.log",
-        "training.log",
-        "inference.log",
-        "dispatching.log",
-        "stream_loader.log",
-    ]
-
-    result = []
-    for log_name in log_files:
-        log_path = logs_dir / log_name
-        if not log_path.is_file():
-            continue
-        with log_path.open(encoding="utf-8") as f:
-            content = f.read()
-            if content:
-                result.append(LogFile(name=log_name, content=content))
-
-    return result
-
-
 @system_info_router.get("/info")
 async def get_system_info() -> SystemInfo:
     """Get system information for feedback and diagnostics.
@@ -233,14 +130,20 @@ async def download_logs() -> StreamingResponse:
     Returns:
         StreamingResponse containing a zip file with all available logs.
     """
-    logs = _get_logs()
+    logs_dir = AsyncPath(settings.log_dir)
 
     # Create zip file in memory
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-        for log in logs:
-            zip_file.writestr(log.name, log.content)
+        # Zip the entire logs directory
+        async for entity in logs_dir.rglob("*"):
+            if await entity.is_file():
+                zip_file.write(
+                    str(entity),
+                    arcname=str(entity.relative_to(logs_dir.parent)),
+                )
 
+    # Seek to the beginning of the buffer before returning
     zip_buffer.seek(0)
 
     # Generate filename with timestamp
@@ -248,7 +151,7 @@ async def download_logs() -> StreamingResponse:
     filename = f"geti_inspect_logs_{timestamp}.zip"
 
     return StreamingResponse(
-        zip_buffer,
+        iter([zip_buffer.getvalue()]),
         media_type="application/zip",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )

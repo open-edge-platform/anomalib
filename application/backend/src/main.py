@@ -19,7 +19,7 @@ from api.endpoints.project_endpoints import project_router
 from api.endpoints.sink_endpoints import router as sink_router
 from api.endpoints.snapshot_endpoints import router as snapshot_router
 from api.endpoints.source_endpoints import router as source_router
-from api.endpoints.system_info_endpoints import system_info_router
+from api.endpoints.system_endpoints import system_info_router
 from api.endpoints.trainable_models_endpoints import router as trainable_model_router
 from api.endpoints.webrtc import router as webrtc_router
 from core.lifecycle import lifespan
