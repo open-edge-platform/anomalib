@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 
 import { fetchClient } from '@geti-inspect/api';
 import {
@@ -23,6 +23,7 @@ import {
     View,
 } from '@geti/ui';
 import { DownloadIcon, ExternalLinkIcon, HelpIcon } from '@geti/ui/icons';
+import { useMutation } from '@tanstack/react-query';
 
 import { downloadBlob } from '../utils';
 
@@ -160,6 +161,17 @@ const downloadLogs = async (): Promise<void> => {
     }
 };
 
+interface SubmitFeedbackParams {
+    issueType: IssueType;
+    description: string;
+}
+
+const submitFeedback = async ({ issueType, description }: SubmitFeedbackParams): Promise<void> => {
+    const systemInfo = await fetchSystemInfo();
+    const issueUrl = createGitHubIssueUrl(systemInfo, issueType, description);
+    window.open(issueUrl, '_blank', 'noopener,noreferrer');
+};
+
 interface FeedbackDialogContentProps {
     close: () => void;
 }
@@ -167,40 +179,17 @@ interface FeedbackDialogContentProps {
 const FeedbackDialogContent = ({ close }: FeedbackDialogContentProps) => {
     const [issueType, setIssueType] = useState<IssueType>('bug');
     const [description, setDescription] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [isDownloadingLogs, setIsDownloadingLogs] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
-    const handleSubmit = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
+    const submitMutation = useMutation({
+        mutationFn: submitFeedback,
+        onSuccess: () => close(),
+    });
 
-        try {
-            const systemInfo = await fetchSystemInfo();
-            const issueUrl = createGitHubIssueUrl(systemInfo, issueType, description);
-            window.open(issueUrl, '_blank', 'noopener,noreferrer');
-            close();
-        } catch (err) {
-            setError('Failed to gather system information. Please try again.');
-            console.error('Failed to fetch system info:', err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [issueType, description, close]);
+    const downloadLogsMutation = useMutation({
+        mutationFn: downloadLogs,
+    });
 
-    const handleDownloadLogs = useCallback(async () => {
-        setIsDownloadingLogs(true);
-        setError(null);
-
-        try {
-            await downloadLogs();
-        } catch (err) {
-            setError('Failed to download logs. Please try again.');
-            console.error('Failed to download logs:', err);
-        } finally {
-            setIsDownloadingLogs(false);
-        }
-    }, []);
+    const error = submitMutation.error || downloadLogsMutation.error;
 
     return (
         <>
@@ -247,9 +236,9 @@ const FeedbackDialogContent = ({ close }: FeedbackDialogContentProps) => {
                                 </Text>
                                 <Button
                                     variant='secondary'
-                                    onPress={handleDownloadLogs}
-                                    isPending={isDownloadingLogs}
-                                    isDisabled={isLoading}
+                                    onPress={() => downloadLogsMutation.mutate()}
+                                    isPending={downloadLogsMutation.isPending}
+                                    isDisabled={submitMutation.isPending}
                                 >
                                     <DownloadIcon size='S' />
                                     <Text>Download Logs</Text>
@@ -265,7 +254,11 @@ const FeedbackDialogContent = ({ close }: FeedbackDialogContentProps) => {
                             borderRadius='regular'
                             UNSAFE_style={{ color: 'var(--spectrum-global-color-red-700)' }}
                         >
-                            <Text>{error}</Text>
+                            <Text>
+                                {error instanceof Error
+                                    ? error.message
+                                    : 'An error occurred. Please try again.'}
+                            </Text>
                         </View>
                     )}
                 </Flex>
@@ -274,7 +267,11 @@ const FeedbackDialogContent = ({ close }: FeedbackDialogContentProps) => {
                 <Button variant='secondary' onPress={close}>
                     Cancel
                 </Button>
-                <Button variant='accent' onPress={handleSubmit} isPending={isLoading}>
+                <Button
+                    variant='accent'
+                    onPress={() => submitMutation.mutate({ issueType, description })}
+                    isPending={submitMutation.isPending}
+                >
                     <ExternalLinkIcon size='S' />
                     <Text>Open GitHub Issue</Text>
                 </Button>
