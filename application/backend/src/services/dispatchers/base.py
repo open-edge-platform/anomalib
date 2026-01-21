@@ -68,7 +68,10 @@ class BaseDispatcher(metaclass=ABCMeta):
         """
 
     def _create_payload(
-        self, original_image: np.ndarray, image_with_visualization: np.ndarray, predictions: PredictionResult
+        self,
+        original_image: np.ndarray,
+        image_with_visualization: np.ndarray,
+        predictions: PredictionResult,
     ) -> dict[str, Any]:
         """Create a JSON payload with the requested output formats."""
         PredictionResult: dict[str, Any] = {}

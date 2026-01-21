@@ -32,7 +32,9 @@ class ActivePipelineService:
 
     @classmethod
     async def create(
-        cls, config_changed_condition: ConditionClass | None = None, start_daemon: bool = False
+        cls,
+        config_changed_condition: ConditionClass | None = None,
+        start_daemon: bool = False,
     ) -> "ActivePipelineService":
         """
         Factory method to create and initialize the service asynchronously.
@@ -53,7 +55,9 @@ class ActivePipelineService:
         return instance
 
     async def _initialize(
-        self, config_changed_condition: ConditionClass | None = None, start_daemon: bool = False
+        self,
+        config_changed_condition: ConditionClass | None = None,
+        start_daemon: bool = False,
     ) -> None:
         """
         Initialize the service asynchronously.
@@ -78,7 +82,9 @@ class ActivePipelineService:
             self._event_loop = asyncio.get_running_loop()
 
             self._config_reload_daemon = Thread(
-                target=self._reload_config_daemon_routine, name="Config reloader", daemon=True
+                target=self._reload_config_daemon_routine,
+                name="Config reloader",
+                daemon=True,
             )
             self._config_reload_daemon.start()
         elif self.config_changed_condition is None:

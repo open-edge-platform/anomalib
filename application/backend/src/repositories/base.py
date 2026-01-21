@@ -106,7 +106,10 @@ class BaseRepository[ModelType, SchemaType](metaclass=abc.ABCMeta):
         return [self.from_schema(result) for result in scalars]
 
     async def get_all_streaming(
-        self, extra_filters: dict | None = None, expressions: list[Any] | None = None, batch_size: int = 100
+        self,
+        extra_filters: dict | None = None,
+        expressions: list[Any] | None = None,
+        batch_size: int = 100,
     ) -> AsyncGenerator[ModelType]:
         """
         Stream all records via a generator.

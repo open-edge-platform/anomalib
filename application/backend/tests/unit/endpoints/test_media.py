@@ -111,7 +111,8 @@ def test_delete_media_not_found(fxt_client, fxt_media_service):
     media_id = uuid4()
 
     fxt_media_service.delete_media.side_effect = ResourceNotFoundError(
-        resource_type=ResourceType.MEDIA, resource_id=str(media_id)
+        resource_type=ResourceType.MEDIA,
+        resource_id=str(media_id),
     )
 
     response = fxt_client.delete(f"/api/projects/{project_id}/images/{media_id}")

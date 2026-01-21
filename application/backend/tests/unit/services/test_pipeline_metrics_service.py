@@ -173,7 +173,8 @@ class TestPipelineMetricsService:
                 assert result.inference.throughput.avg_requests_per_second is not None
                 assert result.inference.throughput.total_requests is not None
                 fxt_metrics_service.get_latency_measurements.assert_called_once_with(
-                    model_id=pipeline.model_id, time_window=time_window
+                    model_id=pipeline.model_id,
+                    time_window=time_window,
                 )
             elif expected_metrics == "no_data":
                 assert result.inference.latency.avg_ms is None

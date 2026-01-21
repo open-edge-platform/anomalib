@@ -101,7 +101,13 @@ class TestJobServicePagination:
     )
     @pytest.mark.asyncio
     async def test_get_job_list_pagination(
-        self, fxt_test_db, fxt_jobs_in_db, limit, offset, expected_count, expected_start_index
+        self,
+        fxt_test_db,
+        fxt_jobs_in_db,
+        limit,
+        offset,
+        expected_count,
+        expected_start_index,
     ):
         """Test pagination with various limit/offset combinations."""
         result = await JobService.get_job_list(limit=limit, offset=offset)

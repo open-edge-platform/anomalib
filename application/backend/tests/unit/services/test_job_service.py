@@ -128,7 +128,8 @@ class TestJobService:
                 assert result.job_id == fxt_job.id
 
         fxt_job_repository.is_job_duplicate.assert_called_once_with(
-            project_id=fxt_job_payload.project_id, payload=fxt_job_payload
+            project_id=fxt_job_payload.project_id,
+            payload=fxt_job_payload,
         )
         if not is_duplicate:
             fxt_job_repository.save.assert_called_once()

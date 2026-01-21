@@ -84,7 +84,8 @@ UPDATE_SINK_BODY_EXAMPLES = {
 async def create_sink(
     project_id: Annotated[UUID, Depends(get_project_id)],
     sink_config: Annotated[
-        SinkCreate, Body(description=CREATE_SINK_BODY_DESCRIPTION, openapi_examples=CREATE_SINK_BODY_EXAMPLES)
+        SinkCreate,
+        Body(description=CREATE_SINK_BODY_DESCRIPTION, openapi_examples=CREATE_SINK_BODY_EXAMPLES),
     ],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Sink:

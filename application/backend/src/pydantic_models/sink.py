@@ -46,8 +46,8 @@ class DisconnectedSinkConfig(BaseSinkConfig):
                 "sink_type": "disconnected",
                 "name": "No Sink",
                 "id": "00000000-0000-0000-0000-000000000000",
-            }
-        }
+            },
+        },
     }
 
 
@@ -64,8 +64,8 @@ class FolderSinkConfig(BaseSinkConfig):
                 "folder_path": "/path/to/output",
                 "output_formats": ["image_original", "image_with_predictions", "predictions"],
                 "rate_limit": 0.2,
-            }
-        }
+            },
+        },
     }
 
 
@@ -87,8 +87,8 @@ class MqttSinkConfig(BaseSinkConfig):
                 "topic": "predictions",
                 "output_formats": ["predictions"],
                 "auth_required": True,
-            }
-        }
+            },
+        },
     }
 
     def get_credentials(self) -> tuple[str | None, str | None]:
@@ -117,8 +117,8 @@ class RosSinkConfig(BaseSinkConfig):
                 "name": "ROS2 Predictions Topic",
                 "topic": "/predictions",
                 "output_formats": ["predictions"],
-            }
-        }
+            },
+        },
     }
 
 
@@ -143,8 +143,8 @@ class WebhookSinkConfig(BaseSinkConfig):
                 "http_method": "PUT",
                 "headers": {"Authorization": "Bearer YOUR_TOKEN"},
                 "output_formats": ["predictions"],
-            }
-        }
+            },
+        },
     }
 
 

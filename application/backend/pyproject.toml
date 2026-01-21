@@ -64,10 +64,69 @@ exclude = [".venv*"]
 
 src = ["src"]
 
-lint.select = ["ARG", "E", "F", "I", "N", "UP", "YTT", "ASYNC", "S", "COM", "C4", "FA", "PIE", "PYI", "Q", "RSE", "RET", "SIM",
-    "TID", "TC", "PL", "RUF", "C90", "D103", "ANN001", "ANN201", "ANN205", "FAST"]
-lint.ignore = ["N801", "N805","N806","N807", "N818", "COM812", "RET503", "SIM108", "SIM105", "PLR2004",
-    "RUF010", "TC001",  "RUF012", "PLR6301", "RUF029"]
+lint.select = [
+    # --- Core & Standard Rules ---
+    "E",      # pycodestyle (Error)
+    "F",      # Pyflakes (General logic/syntax errors)
+    "I",      # isort (Import sorting)
+    "UP",     # pyupgrade (Upgrades syntax to newer Python versions)
+    "N",      # pep8-naming (Naming conventions)
+
+    # --- Type Hinting & Annotations ---
+    "ANN001", # Missing type annotation for function argument
+    "ANN201", # Missing return type annotation for public function
+    "ANN205", # Missing return type annotation for static method
+    "TC",     # flake8-type-checking (Type-check blocks)
+    "PYI",    # flake8-pyi (Stub file linting)
+    "FA",     # flake8-future-annotations (Future import for types)
+
+    # --- Security & Async ---
+    "S",      # flake8-bandit (Security testing)
+    "ASYNC",  # flake8-async (Async-specific linting)
+
+    # --- Best Practices & Simplification ---
+    "ARG",    # flake8-unused-arguments (Unused function arguments)
+    "C4",     # flake8-comprehensions (List/set/dict comprehension fixes)
+    "SIM",    # flake8-simplify (Simplify complex code)
+    "RET",    # flake8-return (Return statement consistency)
+    "PIE",    # flake8-pie (Miscellaneous linting)
+    "RUF",    # Ruff-specific rules
+    "PL",     # Pylint (Refactor, Error, Warning, Convention)
+
+    # --- Style & Formatting ---
+    "COM",    # flake8-commas (Trailing commas)
+    "Q",      # flake8-quotes (Consistent string quotes)
+    "C90",    # mccabe (Code complexity/Cyclomatic complexity)
+    "D103",   # pydocstyle (Missing docstring in public function)
+    "RSE",    # flake8-raise (Specifics on raising exceptions)
+    "TID",    # flake8-tidy-imports (Clean up messy imports)
+
+    # --- Ecosystem Specific ---
+    "FAST",   # FastAPI (Rules specific to FastAPI apps)
+    "YTT",    # flake8-2020 (Checks for system versioning issues)
+]
+lint.ignore = [
+    # --- Naming Conventions (pep8-naming) ---
+    "N801",   # Class name should use CapWords convention
+    "N805",   # First argument of a method should be named 'self'
+    "N806",   # Variable in a function should be lowercase
+    "N807",   # Function name should not start and end with '__'
+    "N818",   # Exception name should be named with an 'Error' suffix
+
+    # --- Code Simplification & Style ---
+    "SIM105", # Use contextlib.suppress instead of try-except-pass
+    "SIM108", # Use ternary operator instead of if-else block
+    "RET503", # Missing explicit return at the end of function
+
+    # --- Pylint Refactor (PLR) ---
+    "PLR2004", # Magic value used in comparison (e.g., status == 200)
+    "PLR6301", # Method could be a function/static (doesn't use 'self')
+
+    # --- Type Checking & Ruff Specifics ---
+    "RUF010", # Use explicit conversion flags (!r, !s) in f-strings
+    "RUF012", # Mutable class attributes should be annotated with ClassVar
+    "RUF029", # Unused 'async' keyword on a function
+]
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.pytest.ini_options]

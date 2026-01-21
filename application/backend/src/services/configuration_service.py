@@ -49,7 +49,10 @@ class ConfigurationService:
 
     @staticmethod
     async def _on_config_changed(
-        config_id: UUID, field: PipelineField, db: AsyncSession, notify_fn: Callable[[], None]
+        config_id: UUID,
+        field: PipelineField,
+        db: AsyncSession,
+        notify_fn: Callable[[], None],
     ) -> None:
         """Notify threads or child processes that the configuration has changed.
         Notification triggered only when the configuration is used by the active pipeline."""

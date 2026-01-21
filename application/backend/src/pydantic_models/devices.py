@@ -10,8 +10,8 @@ class DeviceList(BaseModel):
         "json_schema_extra": {
             "example": {
                 "devices": ["CPU", "XPU", "NPU"],
-            }
-        }
+            },
+        },
     }
 
 
@@ -30,7 +30,7 @@ class CameraList(BaseModel):
                     {"index": 1200, "name": "camera_name1"},
                     {"index": 1201, "name": "camera_name2"},
                     {"index": 1202, "name": "camera_name3"},
-                ]
-            }
-        }
+                ],
+            },
+        },
     }

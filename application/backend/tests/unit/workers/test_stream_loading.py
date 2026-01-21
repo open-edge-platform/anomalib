@@ -115,7 +115,12 @@ class TestStreamLoader:
             pass
 
     def test_queue_full_realtime(
-        self, frame_queue, mock_stream_data, stop_event, config_changed_condition, mock_services
+        self,
+        frame_queue,
+        mock_stream_data,
+        stop_event,
+        config_changed_condition,
+        mock_services,
     ):
         """Test that frames are discarded when queue is full for real-time streams"""
 

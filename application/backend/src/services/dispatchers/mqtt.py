@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
-from pydantic_models.sink import MqttSinkConfig
 from services.dispatchers.base import BaseDispatcher
 
 try:
@@ -21,6 +20,8 @@ except ImportError:
 if TYPE_CHECKING:
     import numpy as np
     from anomalib.data import NumpyImageBatch as PredictionResult
+
+    from pydantic_models.sink import MqttSinkConfig
 
 
 MAX_RETRIES = 3
@@ -78,7 +79,10 @@ class MqttDispatcher(BaseDispatcher):
         for attempt in range(MAX_RETRIES):
             try:
                 logger.info(
-                    "Connecting to MQTT broker at %s:%s (attempt %s)", self.broker_host, self.broker_port, attempt + 1
+                    "Connecting to MQTT broker at %s:%s (attempt %s)",
+                    self.broker_host,
+                    self.broker_port,
+                    attempt + 1,
                 )
                 self.client.connect(self.broker_host, self.broker_port)
                 self.client.loop_start()

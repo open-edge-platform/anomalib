@@ -27,8 +27,8 @@ class DatasetSnapshot(BaseIDModel):
                 "filename": "dataset_snapshot_123.parquet",
                 "count": 42,
                 "created_at": "2025-01-01T12:00:00",
-            }
-        }
+            },
+        },
     }
 
 

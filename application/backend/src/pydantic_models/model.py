@@ -54,8 +54,8 @@ class Model(BaseIDNameModel):
                 "train_job_id": "0db0c16d-0d3c-4e0e-bc5a-ca710579e549",
                 "size": 12345678,
                 "backbone": "wide_resnet50_2",
-            }
-        }
+            },
+        },
     }
 
 
@@ -86,8 +86,8 @@ class PredictionResponse(BaseModel):
                 ),
                 "label": "Normal",
                 "score": 0.23,
-            }
-        }
+            },
+        },
     }
 
 

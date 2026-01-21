@@ -57,6 +57,6 @@ class PipelineMetrics(BaseModel):
                         "max_requests_per_second": 85.2,
                     },
                 },
-            }
-        }
+            },
+        },
     }

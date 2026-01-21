@@ -83,5 +83,5 @@ class TestWebRTCEndpoints:
             "iceServers": [
                 {"urls": "turn:192.168.1.100:443?transport=tcp", "username": "user", "credential": "password"},
                 {"urls": "stun:stun.example.com:3478", "username": None, "credential": None},
-            ]
+            ],
         }

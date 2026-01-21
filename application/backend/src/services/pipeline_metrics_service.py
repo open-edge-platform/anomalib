@@ -68,7 +68,9 @@ class PipelineMetricsService:
         else:
             # No data available
             throughput_metrics = ThroughputMetrics(
-                avg_requests_per_second=None, total_requests=None, max_requests_per_second=None
+                avg_requests_per_second=None,
+                total_requests=None,
+                max_requests_per_second=None,
             )
 
         window = TimeWindow(start=start_time, end=end_time, time_window=time_window)

@@ -110,7 +110,9 @@ async def export_model(
     """Export a model to zip file."""
     try:
         zip_path = await model_service.export_model(
-            project_id=project_id, model_id=model_id, export_parameters=export_parameters
+            project_id=project_id,
+            model_id=model_id,
+            export_parameters=export_parameters,
         )
     except FileNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

@@ -102,7 +102,7 @@ class PipelineService:
         ):
             logger.info(
                 f"Activating already {active_pipeline.status.value.lower()} pipeline `{active_pipeline.id}`, "
-                f"no changes made."
+                f"no changes made.",
             )
             return active_pipeline
         new_status = PipelineStatus.RUNNING if set_running else PipelineStatus.ACTIVE

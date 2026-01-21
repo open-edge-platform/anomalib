@@ -28,7 +28,7 @@ def _validate_job_id(job_id: str | UUID) -> str | UUID:
         UUID(str(job_id))
     except ValueError as e:
         raise ValueError(
-            f"Invalid job_id '{job_id}'. Only alphanumeric characters, hyphens, and underscores are allowed."
+            f"Invalid job_id '{job_id}'. Only alphanumeric characters, hyphens, and underscores are allowed.",
         ) from e
     return job_id
 
