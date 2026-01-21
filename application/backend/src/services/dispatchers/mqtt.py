@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import threading
 import time
+from collections import deque
 from typing import TYPE_CHECKING, Any
 
 from loguru import logger
@@ -26,6 +27,7 @@ if TYPE_CHECKING:
 MAX_RETRIES = 3
 RETRY_DELAY = 1
 CONNECT_TIMEOUT = 10
+MAX_MESSAGES_BUFFER_SIZE = 1000  # max number of messages to store
 
 
 class MqttDispatcher(BaseDispatcher):
@@ -60,7 +62,7 @@ class MqttDispatcher(BaseDispatcher):
         self._connection_lock = threading.Lock()
         self._connection_event = threading.Event()
         self._track_messages = track_messages
-        self._published_messages: list[dict] = []
+        self._published_messages: deque[dict] = deque(maxlen=MAX_MESSAGES_BUFFER_SIZE)
 
         self.client = mqtt_client or self._create_default_client()
         self._connect()
@@ -119,7 +121,9 @@ class MqttDispatcher(BaseDispatcher):
             PredictionResult = self.client.publish(topic, json.dumps(payload))
             if PredictionResult.rc == mqtt.MQTT_ERR_SUCCESS and self._track_messages:
                 self._published_messages.append({"topic": topic, "payload": payload})
-            logger.error(f"Publish failed: {mqtt.error_string(PredictionResult.rc)}")
+                logger.debug(f"Published message to topic `{topic}`: {payload}")
+            elif PredictionResult.rc != mqtt.MQTT_ERR_SUCCESS:
+                logger.error(f"Publish failed: {mqtt.error_string(PredictionResult.rc)}")
         except ValueError:
             logger.error("Invalid payload for MQTT publish")
 
@@ -134,7 +138,7 @@ class MqttDispatcher(BaseDispatcher):
         self.__publish_message(self.topic, payload)
 
     def get_published_messages(self) -> list:
-        return self._published_messages.copy()
+        return list(self._published_messages)
 
     def clear_published_messages(self) -> None:
         self._published_messages.clear()

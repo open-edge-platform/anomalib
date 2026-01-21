@@ -131,7 +131,7 @@ class WebhookSinkConfig(BaseSinkConfig):
     webhook_url: str
     http_method: HttpMethod = "POST"
     headers: HttpHeaders | None = None
-    timeout: int = 10  # seconds
+    timeout: int = Field(default=10, gt=0, description="Request timeout in seconds")
 
     model_config = {
         "json_schema_extra": {

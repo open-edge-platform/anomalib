@@ -22,7 +22,7 @@ export const WebhookFields = ({ defaultState }: WebhookFieldsProps) => {
                     <Item key={WebhookHttpMethod.PATCH}>{WebhookHttpMethod.PATCH}</Item>
                     <Item key={WebhookHttpMethod.PUT}>{WebhookHttpMethod.PUT}</Item>
                 </Picker>
-                <NumberField label='Timeout' name='timeout' minValue={0} step={1} defaultValue={defaultState.timeout} />
+                <NumberField label='Timeout' name='timeout' minValue={1} step={1} defaultValue={defaultState.timeout} />
             </Flex>
 
             <TextField

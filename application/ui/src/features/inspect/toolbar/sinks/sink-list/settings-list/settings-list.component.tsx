@@ -75,17 +75,5 @@ export const SettingsList = ({ sink }: SettingsListProps) => {
         );
     }
 
-    if (sink.sink_type === 'ros') {
-        return (
-            <ul className={classes.list}>
-                <li>Topic: {sink.topic}</li>
-                <li>Rate limit: {sink.rate_limit}</li>
-                <li>
-                    Output formats: <OutputFormats outputFormats={sink.output_formats} />
-                </li>
-            </ul>
-        );
-    }
-
     return <></>;
 };
