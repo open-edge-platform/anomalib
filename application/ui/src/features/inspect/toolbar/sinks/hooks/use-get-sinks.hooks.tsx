@@ -1,6 +1,8 @@
 import { $api } from '@geti-inspect/api';
 import { useProjectIdentifier } from '@geti-inspect/hooks';
 
+import { SinkConfig } from '../utils';
+
 const sinksItemsLimit = 20;
 
 export const useGetSinks = () => {
@@ -33,7 +35,10 @@ export const useGetSinks = () => {
         }
     );
 
-    const sinks = data?.pages.flatMap((page) => page.sinks) ?? [];
+    // Filter out ROS sinks as they're not supported yet
+    const sinks = (data?.pages.flatMap((page) => page.sinks) ?? []).filter(
+        (sink): sink is SinkConfig => sink.sink_type !== 'ros'
+    );
 
     return { sinks, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage };
 };
