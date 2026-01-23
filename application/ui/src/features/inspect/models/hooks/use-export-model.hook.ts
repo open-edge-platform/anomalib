@@ -53,9 +53,9 @@ export const useExportModel = () => {
 
             return { blob, filename, modelId };
         },
-        onSuccess: ({ blob, filename, modelId }) => {
+        onSuccess: async ({ blob, filename, modelId }) => {
             completeExport(modelId, true);
-            downloadBlob(blob, filename);
+            await downloadBlob(blob, filename);
         },
         onError: (_error, variables) => {
             completeExport(variables.modelId, false);
