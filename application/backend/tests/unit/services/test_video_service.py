@@ -164,9 +164,15 @@ class TestVideoService:
         mock_path_instance = MagicMock()
         mock_path_instance.exists = AsyncMock(return_value=True)
 
+        mock_stats = MagicMock()
+        mock_stats.st_size = 12345
+        mock_stats.st_ctime = 1625077800.0  # Example timestamp
+
         with (
             patch("services.video_service.VideoBinaryRepository", return_value=mock_bin_repo),
             patch("services.video_service.anyio.Path", return_value=mock_path_instance),
+            patch("services.video_service._validate_filename", return_value=filename),
+            patch("services.video_service.os.stat", return_value=mock_stats),
         ):
             result = asyncio.run(fxt_video_service.get_video_by_filename(project_id=fxt_project, filename=filename))
 
