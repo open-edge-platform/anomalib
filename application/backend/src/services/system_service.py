@@ -124,8 +124,12 @@ class SystemService:
         """
         device_name = device_name.casefold()
         if for_training:
-            return device_name in [device.name.casefold() for device in cls.get_training_devices()]
-        return device_name in [device.name.casefold() for device in cls.get_inference_devices()]
+            training_devices_names = [device.name.casefold() for device in cls.get_training_devices()]
+            training_devices_types = [device.type.casefold() for device in cls.get_training_devices()]
+            return device_name in training_devices_names or device_name in training_devices_types
+        inference_devices_names = [device.name.casefold() for device in cls.get_inference_devices()]
+        inference_devices_types = [device.type.casefold() for device in cls.get_inference_devices()]
+        return device_name in inference_devices_names or device_name in inference_devices_types
 
     @classmethod
     def is_device_supported_for_inference(cls, device_name: str) -> bool:
