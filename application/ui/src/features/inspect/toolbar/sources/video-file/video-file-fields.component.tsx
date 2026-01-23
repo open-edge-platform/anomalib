@@ -8,8 +8,8 @@ import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Folder } from '@geti-inspect/icons';
 import {
     ActionButton,
-    Flex,
     FileTrigger,
+    Flex,
     Item,
     Key,
     Picker,
@@ -152,7 +152,11 @@ export const VideoFileFields = ({ defaultState }: VideoFileFieldsProps) => {
                             isDisabled={isUploading}
                             aria-label='Upload video file'
                         >
-                            {isUploading ? <ProgressCircle size='S' isIndeterminate aria-label='Uploading' /> : <Folder />}
+                            {isUploading ? (
+                                <ProgressCircle size='S' isIndeterminate aria-label='Uploading' />
+                            ) : (
+                                <Folder />
+                            )}
                         </ActionButton>
                     </FileTrigger>
                     <Tooltip>Upload new video</Tooltip>
