@@ -34,7 +34,14 @@ fn spawn_backend() -> std::io::Result<Child> {
 
     log::info!("▶ Looking for backend side-car at {:?}", backend_path);
     let mut command = Command::new(&backend_path);
-    command.env("CORS_ORIGINS", "http://tauri.localhost,tauri://localhost");
+    let mut cors_origins = "http://tauri.localhost,tauri://localhost".to_string();
+    
+    #[cfg(debug_assertions)]
+    {
+        cors_origins = format!("{},http://localhost:3000", cors_origins);
+    }
+    
+    command.env("CORS_ORIGINS", cors_origins);
 
     // On linux and MacOS, set Geti Inspect data directory to the user's home directory.
     #[cfg(not(windows))]
