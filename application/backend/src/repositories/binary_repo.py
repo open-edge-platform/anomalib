@@ -160,6 +160,12 @@ class ImageBinaryRepository(BinaryRepository):
 
 
 class VideoBinaryRepository(BinaryRepository):
+    """Binary repository for storing and retrieving video files for a project.
+
+    This repository manages video binaries under the project-specific ``videos``
+    directory. Use :meth:`get_full_path` to resolve a video filename to its
+    absolute path on the filesystem.
+    """
     def __init__(self, project_id: str | UUID):
         super().__init__(project_id=project_id, file_type=FileType.VIDEOS)
 
