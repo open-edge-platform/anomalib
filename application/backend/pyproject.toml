@@ -117,6 +117,7 @@ lint.ignore = [
     "SIM105", # Use contextlib.suppress instead of try-except-pass
     "SIM108", # Use ternary operator instead of if-else block
     "RET503", # Missing explicit return at the end of function
+    "COM812", # Missing trailing comma in a multi-line collection
 
     # --- Pylint Refactor (PLR) ---
     "PLR2004", # Magic value used in comparison (e.g., status == 200)
