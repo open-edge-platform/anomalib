@@ -42,10 +42,10 @@ export const downloadFile = async (url: string, name?: string): Promise<void> =>
         } catch (error) {
             console.error('Failed to save file via Tauri:', error);
             // Fallback to browser download if Tauri save fails
-            downloadFileBrowser(url, name);
+            downloadFileBrowser(fullUrl, name);
         }
     } else {
-        downloadFileBrowser(url, name);
+        downloadFileBrowser(fullUrl, name);
     }
 };
 
