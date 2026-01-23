@@ -3,8 +3,8 @@ from PyInstaller.utils.hooks import collect_all, collect_data_files
 import platform
 import glob
 datas = [
-    ('../../backend/src/alembic', 'src/alembic'),  # Alembic migration scripts
-    ('../../backend/src/alembic.ini', 'src'),  # Alembic configuration
+    ('../../backend/src/alembic', 'alembic'),  # Alembic migration scripts
+    ('../../backend/src/alembic.ini', '.'),  # Alembic configuration
     ('../../backend/src/core/model_metadata.yaml', 'core'),  # Model metadata
 ]
 

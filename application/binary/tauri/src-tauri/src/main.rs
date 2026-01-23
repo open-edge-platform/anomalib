@@ -43,19 +43,6 @@ fn spawn_backend() -> std::io::Result<Child> {
     
     command.env("CORS_ORIGINS", cors_origins);
 
-    // On linux and MacOS, set Geti Inspect data directory to the user's home directory.
-    #[cfg(not(windows))]
-    {
-        command.env(
-            "DATA_DIR",
-            format!("{}/.geti-inspect/data", env::var("HOME").unwrap()),
-        );
-        command.env(
-            "LOG_DIR",
-            format!("{}/.geti-inspect/logs", env::var("HOME").unwrap()),
-        );
-    }
-
     #[cfg(all(windows, not(debug_assertions)))]
     {
         use std::os::windows::process::CommandExt;

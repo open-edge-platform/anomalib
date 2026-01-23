@@ -23,8 +23,8 @@ if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
     print(f"Setup Hook: Running in PyInstaller bundle: {bundle_dir}")
 
     # Set alembic paths to point to bundled files
-    alembic_ini = os.path.join(bundle_dir, "src", "alembic.ini")
-    alembic_dir = os.path.join(bundle_dir, "src", "alembic")
+    alembic_ini = os.path.join(bundle_dir, "alembic.ini")
+    alembic_dir = os.path.join(bundle_dir, "alembic")
 
     # Verify files exist
     if pathlib.Path(alembic_ini).exists():
@@ -38,6 +38,18 @@ if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
         os.environ["ALEMBIC_SCRIPT_LOCATION"] = alembic_dir
     else:
         print(f"Setup Hook: WARNING - alembic directory not found at: {alembic_dir}")
+
+if system in ["Linux", "Darwin"]:
+    home_dir = os.path.expanduser("~")
+    app_data_dir = os.path.join(home_dir, ".geti_inspect")
+
+    data_dir = os.path.join(app_data_dir, "data")
+    print("Setup Hook: Setting data directory to:", data_dir)
+    os.environ["DATA_DIR"] = data_dir
+
+    logs_dir = os.path.join(app_data_dir, "logs")
+    print("Setup Hook: Setting logs directory to:", logs_dir)
+    os.environ["LOG_DIR"] = logs_dir
 
 if system == "Windows":
     local_app_data = os.getenv("LOCALAPPDATA")
@@ -61,7 +73,7 @@ if system == "Windows":
         app_data_folder = os.path.join(local_app_data, "Packages", package_family_name, "LocalState")
 
         print("Setup Hook: Using local state folder:", app_data_folder)
-        os.environ["DB_DATA_DIR"] = app_data_folder
+        os.environ["DATA_DIR"] = app_data_folder
 
         print("Setup Hook: Writing log to:", app_data_folder)
         os.environ["LOGS_DIR"] = app_data_folder
