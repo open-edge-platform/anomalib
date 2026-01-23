@@ -96,7 +96,7 @@ async def download_logs() -> StreamingResponse:
     zip_buffer.seek(0)
 
     # Generate filename with timestamp
-    # since this won't run in distributed setting, using local time zone
+    # since this won't run in distributed setting, using local timezone
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"geti_inspect_logs_{timestamp}.zip"
 
