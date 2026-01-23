@@ -189,7 +189,7 @@ class TrainingService:
         if device and not SystemService.is_device_supported_for_training(device):
             raise ValueError(
                 f"Device '{device}' is not supported for training. "
-                f"Supported devices: {', '.join([device.name for device in SystemService.get_training_devices()])}",
+                f"Supported devices: {', '.join([device.type for device in SystemService.get_training_devices()])}",
             )
 
         training_device = device or "auto"
