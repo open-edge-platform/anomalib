@@ -31,10 +31,11 @@ class TestSystemService:
 
     def test_get_devices_cpu_only(self, fxt_system_service: SystemService):
         """Test getting devices when only CPU is available"""
-        with patch("app.services.system_service.torch") as mock_torch:
+        with patch("services.system_service.torch") as mock_torch:
             # Simulate torch not being available
             mock_torch.xpu.is_available.return_value = False
             mock_torch.cuda.is_available.return_value = False
+            mock_torch.mps.is_available.return_value = False
 
             devices = fxt_system_service.get_devices()
 
@@ -45,7 +46,7 @@ class TestSystemService:
 
     def test_get_devices_with_xpu(self, fxt_system_service: SystemService):
         """Test getting devices when Intel XPU is available"""
-        with patch("app.services.system_service.torch") as mock_torch:
+        with patch("services.system_service.torch") as mock_torch:
             # Mock XPU device
             mock_dp = MagicMock()
             mock_dp.name = "Intel(R) Graphics [0x7d41]"
@@ -55,8 +56,9 @@ class TestSystemService:
             mock_torch.xpu.device_count.return_value = 1
             mock_torch.xpu.get_device_properties.return_value = mock_dp
 
-            # CUDA not available
+            # CUDA/MPS not available
             mock_torch.cuda.is_available.return_value = False
+            mock_torch.mps.is_available.return_value = False
 
             devices = fxt_system_service.get_devices()
 
@@ -67,9 +69,10 @@ class TestSystemService:
 
     def test_get_devices_with_cuda(self, fxt_system_service: SystemService):
         """Test getting devices when NVIDIA CUDA is available"""
-        with patch("app.services.system_service.torch") as mock_torch:
-            # XPU not available
+        with patch("services.system_service.torch") as mock_torch:
+            # XPU/MPS not available
             mock_torch.xpu.is_available.return_value = False
+            mock_torch.mps.is_available.return_value = False
 
             # Mock CUDA device
             mock_dp = MagicMock()
@@ -89,7 +92,7 @@ class TestSystemService:
 
     def test_get_devices_with_multiple_devices(self, fxt_system_service: SystemService):
         """Test getting devices when multiple GPUs are available"""
-        with patch("app.services.system_service.torch") as mock_torch:
+        with patch("services.system_service.torch") as mock_torch:
             # Mock XPU device
             mock_xpu_dp = MagicMock()
             mock_xpu_dp.name = "Intel(R) Graphics [0x7d41]"
@@ -108,9 +111,11 @@ class TestSystemService:
             mock_torch.cuda.device_count.return_value = 1
             mock_torch.cuda.get_device_properties.return_value = mock_cuda_dp
 
+            mock_torch.mps.is_available.return_value = True
+
             devices = fxt_system_service.get_devices()
 
-            assert len(devices) == 3
+            assert len(devices) == 4
 
     def test_validate_device_cpu_always_valid(self, fxt_system_service: SystemService):
         """Test that CPU device is always valid"""
@@ -122,7 +127,7 @@ class TestSystemService:
         mock_xpu_dp.name = "Intel XPU"
         mock_xpu_dp.total_memory = 36022263808
 
-        with patch("app.services.system_service.torch") as mock_torch:
+        with patch("services.system_service.torch") as mock_torch:
             mock_torch.xpu.is_available.return_value = True
             mock_torch.cuda.is_available.return_value = False
             mock_torch.xpu.device_count.return_value = 2
@@ -135,7 +140,7 @@ class TestSystemService:
 
     def test_validate_device_xpu_not_available(self, fxt_system_service: SystemService):
         """Test validating XPU device when not available"""
-        with patch("app.services.system_service.torch") as mock_torch:
+        with patch("services.system_service.torch") as mock_torch:
             mock_torch.xpu.is_available.return_value = False
             mock_torch.cuda.is_available.return_value = False
 
@@ -148,7 +153,7 @@ class TestSystemService:
         mock_cuda_dp.name = "NVIDIA GPU"
         mock_cuda_dp.total_memory = 25769803776
 
-        with patch("app.services.system_service.torch") as mock_torch:
+        with patch("services.system_service.torch") as mock_torch:
             mock_torch.xpu.is_available.return_value = False
             mock_torch.cuda.is_available.return_value = True
             mock_torch.cuda.device_count.return_value = 3
@@ -162,7 +167,7 @@ class TestSystemService:
 
     def test_validate_device_cuda_not_available(self, fxt_system_service: SystemService):
         """Test validating CUDA device when not available"""
-        with patch("app.services.system_service.torch") as mock_torch:
+        with patch("services.system_service.torch") as mock_torch:
             mock_torch.xpu.is_available.return_value = False
             mock_torch.cuda.is_available.return_value = False
 
@@ -171,7 +176,7 @@ class TestSystemService:
 
     def test_get_inference_devices_with_multiple_devices(self, fxt_system_service: SystemService):
         """Test getting inference devices when multiple GPUs are available"""
-        with patch("app.services.system_service.torch") as mock_torch:
+        with patch("services.system_service.torch") as mock_torch:
             # Mock XPU device
             mock_xpu_dp = MagicMock()
             mock_xpu_dp.name = "Intel(R) Graphics [0x7d41]"
@@ -197,7 +202,7 @@ class TestSystemService:
 
     def test_validate_device_invalid_type(self, fxt_system_service: SystemService):
         """Test validating invalid device types"""
-        with patch("app.services.system_service.torch") as mock_torch, pytest.raises(ValueError):
+        with patch("services.system_service.torch") as mock_torch, pytest.raises(ValueError):
             mock_torch.xpu.is_available.return_value = False
             mock_torch.cuda.is_available.return_value = False
 
@@ -213,7 +218,7 @@ class TestSystemService:
 
     def test_get_device_info(self, fxt_system_service: SystemService):
         """Test getting device info"""
-        with patch("app.services.system_service.torch") as mock_torch:
+        with patch("services.system_service.torch") as mock_torch:
             # Mock XPU device
             mock_xpu_dp = MagicMock()
             mock_xpu_dp.name = "Intel(R) Graphics [0x7d41]"
@@ -247,7 +252,7 @@ class TestSystemService:
 
     def test_get_camera_devices(self, fxt_system_service: SystemService):
         """Test getting camera devices"""
-        with patch("app.services.system_service.enumerate_cameras") as mock_enumerate_cameras:
+        with patch("services.system_service.enumerate_cameras") as mock_enumerate_cameras:
             # Mock camera device
             mock_camera = MagicMock()
             mock_camera.name = "Integrated Camera"
