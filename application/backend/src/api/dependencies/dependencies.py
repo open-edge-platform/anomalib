@@ -18,6 +18,7 @@ from services import (
 from services.metrics_service import MetricsService
 from services.model_service import ModelService
 from services.pipeline_metrics_service import PipelineMetricsService
+from services.system_service import SystemService
 from webrtc.manager import WebRTCManager
 
 
@@ -175,3 +176,8 @@ async def get_device_name(device: Annotated[str | None, Form()] = None) -> str |
 def get_ice_servers(request: Request) -> list[dict]:
     """Provides the ICE servers from settings."""
     return request.app.state.settings.ice_servers
+
+
+def get_system_service() -> SystemService:
+    """Provides a SystemService instance for system-level operations."""
+    return SystemService()

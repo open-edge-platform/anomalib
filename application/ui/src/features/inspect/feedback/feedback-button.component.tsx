@@ -22,7 +22,7 @@ import {
     TooltipTrigger,
     View,
 } from '@geti/ui';
-import { DownloadIcon, ExternalLinkIcon, HelpIcon } from '@geti/ui/icons';
+import { AcceptSmall, DownloadIcon, ExternalLinkIcon, HelpIcon } from '@geti/ui/icons';
 import { useMutation } from '@tanstack/react-query';
 
 import { downloadBlob } from '../utils';
@@ -37,16 +37,16 @@ interface LibraryVersions {
     openvino: string | null;
     onnx: string | null;
     anomalib: string | null;
+    cuda: string | null;
+    cudnn: string | null;
+    xpu_driver: string | null;
 }
 
-interface AcceleratorInfo {
-    cuda_available: boolean;
-    cuda_version: string | null;
-    cudnn_version: string | null;
-    gpu_name: string | null;
-    xpu_available: boolean;
-    xpu_version: string | null;
-    xpu_name: string | null;
+interface DeviceInfo {
+    type: string;
+    name: string;
+    memory: number | null;
+    index: number | null;
 }
 
 interface SystemInfo {
@@ -54,9 +54,8 @@ interface SystemInfo {
     os_version: string;
     platform: string;
     app_version: string;
-    app_name: string;
     libraries: LibraryVersions;
-    accelerators: AcceleratorInfo;
+    devices: DeviceInfo[];
 }
 
 type IssueType = 'bug' | 'feature';
@@ -75,28 +74,28 @@ const formatLibraryVersion = (name: string, version: string | null): string => {
     return version ? `${name}: ${version}` : `${name}: not installed`;
 };
 
-const formatAcceleratorInfo = (accelerators: AcceleratorInfo): string[] => {
+const formatDeviceInfo = (devices: DeviceInfo[], libraries: LibraryVersions): string[] => {
     const lines: string[] = [];
 
-    if (accelerators.cuda_available) {
-        lines.push(`CUDA: ${accelerators.cuda_version || 'available'}`);
-        if (accelerators.cudnn_version) {
-            lines.push(`cuDNN: ${accelerators.cudnn_version}`);
-        }
-        if (accelerators.gpu_name) {
-            lines.push(`GPU: ${accelerators.gpu_name}`);
-        }
+    for (const device of devices) {
+        const memoryStr = device.memory ? ` (${(device.memory / (1024 ** 3)).toFixed(1)} GB)` : '';
+        const indexStr = device.index !== null ? ` [${device.index}]` : '';
+        lines.push(`${device.type}${indexStr}: ${device.name}${memoryStr}`);
     }
 
-    if (accelerators.xpu_available) {
-        lines.push(`Intel XPU: ${accelerators.xpu_version || 'available'}`);
-        if (accelerators.xpu_name) {
-            lines.push(`Device: ${accelerators.xpu_name}`);
-        }
+    // Add driver/runtime versions from libraries
+    if (libraries.cuda) {
+        lines.push(`CUDA: ${libraries.cuda}`);
+    }
+    if (libraries.cudnn) {
+        lines.push(`cuDNN: ${libraries.cudnn}`);
+    }
+    if (libraries.xpu_driver) {
+        lines.push(`XPU Driver: ${libraries.xpu_driver}`);
     }
 
     if (lines.length === 0) {
-        lines.push('No GPU acceleration detected (CPU only)');
+        lines.push('No devices detected');
     }
 
     return lines;
@@ -119,7 +118,7 @@ const createGitHubIssueUrl = (systemInfo: SystemInfo, issueType: IssueType, desc
     const labels = isBug ? ['bug', 'Geti Inspect'] : ['enhancement', 'Geti Inspect'];
     const sanitizedDescription = sanitizeDescription(description);
 
-    const { libraries, accelerators } = systemInfo;
+    const { libraries, devices } = systemInfo;
 
     const libraryLines = [
         formatLibraryVersion('Python', libraries.python),
@@ -131,20 +130,20 @@ const createGitHubIssueUrl = (systemInfo: SystemInfo, issueType: IssueType, desc
         formatLibraryVersion('Anomalib', libraries.anomalib),
     ];
 
-    const acceleratorLines = formatAcceleratorInfo(accelerators);
+    const deviceLines = formatDeviceInfo(devices, libraries);
 
     const body = `## System Information
 
 ### Environment
 - **OS**: ${systemInfo.os_name} ${systemInfo.os_version}
 - **Platform**: ${systemInfo.platform}
-- **App**: ${systemInfo.app_name} v${systemInfo.app_version}
+- **App**: Geti Inspect v${systemInfo.app_version}
 
 ### Library Versions
 ${libraryLines.map((line) => `- ${line}`).join('\n')}
 
-### Hardware Acceleration
-${acceleratorLines.map((line) => `- ${line}`).join('\n')}
+### Devices
+${deviceLines.map((line) => `- ${line}`).join('\n')}
 
 ## ${isBug ? 'Bug Description' : 'Feature Description'}
 ${sanitizedDescription || '_Please describe the issue or feature request_'}
@@ -160,7 +159,7 @@ ${sanitizedDescription || '_Please describe the issue or feature request_'}
 };
 
 const downloadLogs = async (): Promise<void> => {
-    const response = await fetchClient.GET('/api/system/logs', {
+    const response = await fetchClient.POST('/api/system/logs:export', {
         parseAs: 'blob',
     });
 
@@ -240,22 +239,53 @@ const FeedbackDialogContent = ({ close }: FeedbackDialogContentProps) => {
 
                     {issueType === 'bug' && (
                         <View backgroundColor='gray-100' padding='size-150' borderRadius='regular'>
-                            <Flex direction='row' alignItems='center' justifyContent='space-between' gap='size-100'>
-                                <Text
-                                    UNSAFE_style={{ fontSize: '12px', color: 'var(--spectrum-global-color-gray-700)' }}
-                                >
-                                    Optionally download and attach application logs to help diagnose the issue.
-                                </Text>
-                                <Button
-                                    variant='secondary'
-                                    onPress={() => downloadLogsMutation.mutate()}
-                                    isPending={downloadLogsMutation.isPending}
-                                    isDisabled={submitMutation.isPending}
-                                >
-                                    <DownloadIcon size='S' />
-                                    <Text>Download Logs</Text>
-                                </Button>
-                            </Flex>
+                            {downloadLogsMutation.isSuccess ? (
+                                <Flex direction='column' gap='size-150'>
+                                    <Flex alignItems='center' gap='size-100'>
+                                        <AcceptSmall
+                                            UNSAFE_style={{ color: 'var(--spectrum-global-color-green-600)' }}
+                                        />
+                                        <Text
+                                            UNSAFE_style={{
+                                                fontSize: '12px',
+                                                color: 'var(--spectrum-global-color-green-700)',
+                                            }}
+                                        >
+                                            Logs downloaded! Remember to attach them to your GitHub issue.
+                                        </Text>
+                                    </Flex>
+                                    <Button
+                                        variant='secondary'
+                                        isQuiet
+                                        onPress={() => downloadLogsMutation.mutate()}
+                                        isPending={downloadLogsMutation.isPending}
+                                        isDisabled={submitMutation.isPending}
+                                    >
+                                        <DownloadIcon size='S' />
+                                        <Text>Download Again</Text>
+                                    </Button>
+                                </Flex>
+                            ) : (
+                                <Flex direction='row' alignItems='center' justifyContent='space-between' gap='size-100'>
+                                    <Text
+                                        UNSAFE_style={{
+                                            fontSize: '12px',
+                                            color: 'var(--spectrum-global-color-gray-700)',
+                                        }}
+                                    >
+                                        Optionally download and attach application logs to help diagnose the issue.
+                                    </Text>
+                                    <Button
+                                        variant='secondary'
+                                        onPress={() => downloadLogsMutation.mutate()}
+                                        isPending={downloadLogsMutation.isPending}
+                                        isDisabled={submitMutation.isPending}
+                                    >
+                                        <DownloadIcon size='S' />
+                                        <Text>Download Logs</Text>
+                                    </Button>
+                                </Flex>
+                            )}
                         </View>
                     )}
 
