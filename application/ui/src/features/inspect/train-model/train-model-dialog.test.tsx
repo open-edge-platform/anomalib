@@ -13,8 +13,10 @@ import { server } from 'src/msw-node-setup';
 
 import { TrainModelDialog } from './train-model-dialog.component';
 
+type DeviceType = 'cpu' | 'xpu' | 'cuda';
+
 interface MockDeviceInfo {
-    type: string;
+    type: DeviceType;
     name: string;
     memory: number | null;
     index: number | null;

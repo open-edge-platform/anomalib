@@ -22,7 +22,7 @@ import {
     TooltipTrigger,
     View,
 } from '@geti/ui';
-import { AcceptSmall, DownloadIcon, ExternalLinkIcon, HelpIcon } from '@geti/ui/icons';
+import { CheckmarkCircleOutline, DownloadIcon, ExternalLinkIcon, HelpIcon } from '@geti/ui/icons';
 import { useMutation } from '@tanstack/react-query';
 
 import { downloadBlob } from '../utils';
@@ -242,9 +242,7 @@ const FeedbackDialogContent = ({ close }: FeedbackDialogContentProps) => {
                             {downloadLogsMutation.isSuccess ? (
                                 <Flex direction='column' gap='size-150'>
                                     <Flex alignItems='center' gap='size-100'>
-                                        <AcceptSmall
-                                            UNSAFE_style={{ color: 'var(--spectrum-global-color-green-600)' }}
-                                        />
+                                        <CheckmarkCircleOutline size='S' color='positive' />
                                         <Text
                                             UNSAFE_style={{
                                                 fontSize: '12px',
@@ -261,7 +259,7 @@ const FeedbackDialogContent = ({ close }: FeedbackDialogContentProps) => {
                                         isPending={downloadLogsMutation.isPending}
                                         isDisabled={submitMutation.isPending}
                                     >
-                                        <DownloadIcon size='S' />
+                                        <DownloadIcon />
                                         <Text>Download Again</Text>
                                     </Button>
                                 </Flex>
@@ -281,7 +279,7 @@ const FeedbackDialogContent = ({ close }: FeedbackDialogContentProps) => {
                                         isPending={downloadLogsMutation.isPending}
                                         isDisabled={submitMutation.isPending}
                                     >
-                                        <DownloadIcon size='S' />
+                                        <DownloadIcon />
                                         <Text>Download Logs</Text>
                                     </Button>
                                 </Flex>
@@ -312,7 +310,7 @@ const FeedbackDialogContent = ({ close }: FeedbackDialogContentProps) => {
                     onPress={() => submitMutation.mutate({ issueType, description })}
                     isPending={submitMutation.isPending}
                 >
-                    <ExternalLinkIcon size='S' />
+                    <ExternalLinkIcon />
                     <Text>Open GitHub Issue</Text>
                 </Button>
             </ButtonGroup>
