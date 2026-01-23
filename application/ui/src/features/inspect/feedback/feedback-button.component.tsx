@@ -78,7 +78,7 @@ const formatDeviceInfo = (devices: DeviceInfo[], libraries: LibraryVersions): st
     const lines: string[] = [];
 
     for (const device of devices) {
-        const memoryStr = device.memory ? ` (${(device.memory / (1024 ** 3)).toFixed(1)} GB)` : '';
+        const memoryStr = device.memory ? ` (${(device.memory / 1024 ** 3).toFixed(1)} GB)` : '';
         const indexStr = device.index !== null ? ` [${device.index}]` : '';
         lines.push(`${device.type}${indexStr}: ${device.name}${memoryStr}`);
     }
