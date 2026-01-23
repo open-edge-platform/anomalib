@@ -18,6 +18,41 @@ from repositories.binary_repo import VideoBinaryRepository
 VALID_VIDEO_EXTENSIONS = {".mp4", ".avi", ".mov", ".mkv", ".webm"}
 
 
+def _validate_filename(filename: str, expected_folder: str) -> str:
+    """
+    Validate that a filename is safe and doesn't allow path traversal.
+
+    Args:
+        filename: The filename to validate.
+        expected_folder: The folder where the file should reside.
+
+    Returns:
+        The validated full path.
+
+    Raises:
+        ValueError: If the filename contains path traversal attempts or is invalid.
+    """
+    # Reject empty filenames
+    if not filename:
+        raise ValueError("Filename cannot be empty")
+
+    # Reject filenames with path separators or parent directory references
+    if os.path.sep in filename or (os.path.altsep and os.path.altsep in filename):
+        raise ValueError("Filename cannot contain path separators")
+    if ".." in filename:
+        raise ValueError("Filename cannot contain parent directory references")
+
+    # Build the full path and resolve to absolute path
+    full_path = os.path.realpath(os.path.join(expected_folder, filename))
+    expected_folder_resolved = os.path.realpath(expected_folder)
+
+    # Ensure the resolved path is within the expected folder
+    if not full_path.startswith(expected_folder_resolved + os.path.sep):
+        raise ValueError("Invalid filename: path traversal detected")
+
+    return full_path
+
+
 class VideoService:
     """Service for uploading, listing, and deleting video files."""
 
@@ -172,9 +207,14 @@ class VideoService:
 
         Returns:
             Video metadata if found, None otherwise.
+
+        Raises:
+            ValueError: If the filename contains path traversal attempts.
         """
         bin_repo = VideoBinaryRepository(project_id=project_id)
-        full_path = bin_repo.get_full_path(filename)
+
+        # Validate filename to prevent path traversal attacks
+        full_path = _validate_filename(filename, bin_repo.project_folder_path)
 
         if not await anyio.Path(full_path).exists():
             return None
@@ -199,9 +239,12 @@ class VideoService:
 
         Raises:
             FileNotFoundError: If the video file is not found.
+            ValueError: If the filename contains path traversal attempts.
         """
         bin_repo = VideoBinaryRepository(project_id=project_id)
-        full_path = bin_repo.get_full_path(filename)
+
+        # Validate filename to prevent path traversal attacks
+        full_path = _validate_filename(filename, bin_repo.project_folder_path)
 
         if not await anyio.Path(full_path).exists():
             raise FileNotFoundError(f"Video '{filename}' not found")
