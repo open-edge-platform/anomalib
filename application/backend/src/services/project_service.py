@@ -15,7 +15,7 @@ from services.job_service import JobService
 from services.media_service import MediaService
 from services.model_service import ModelService
 from services.pipeline_service import PipelineService
-from services.video_upload_service import VideoUploadService
+from services.video_service import VideoService
 
 
 class ProjectService:
@@ -123,6 +123,6 @@ class ProjectService:
         await MediaService.cleanup_project_media_files(project_id)
 
         # Cleanup Videos
-        await VideoUploadService.cleanup_project_videos(project_id)
+        await VideoService.cleanup_project_videos(project_id)
 
         logger.success(f"Deleted project {project_id} from database and filesystem.")

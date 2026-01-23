@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, 
 from api.dependencies import PaginationLimit, get_project_id
 from api.endpoints import API_PREFIX
 from pydantic_models import Video, VideoList
-from services import VideoUploadService
+from services import VideoService
 
 video_api_prefix_url = API_PREFIX + "/projects/{project_id}"
 router = APIRouter(
@@ -78,7 +78,7 @@ async def upload_video(
     video_bytes = await file.read()
 
     try:
-        return await VideoUploadService.upload_video(
+        return await VideoService.upload_video(
             project_id=project_id,
             video_bytes=video_bytes,
             original_filename=file.filename or "video.mp4",
@@ -104,7 +104,7 @@ async def list_videos(
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> VideoList:
     """List all uploaded videos for a project."""
-    return await VideoUploadService.list_videos(
+    return await VideoService.list_videos(
         project_id=project_id,
         limit=limit,
         offset=offset,
@@ -125,6 +125,6 @@ async def delete_video(
 ) -> None:
     """Delete an uploaded video by filename."""
     try:
-        await VideoUploadService.delete_video_by_filename(project_id=project_id, filename=filename)
+        await VideoService.delete_video_by_filename(project_id=project_id, filename=filename)
     except FileNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

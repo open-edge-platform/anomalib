@@ -17,8 +17,8 @@ from .model_service import ModelService
 from .pipeline_service import PipelineService
 from .project_service import ProjectService
 from .training_service import TrainingService
+from .video_service import VideoService
 from .video_stream_service import VideoStreamService
-from .video_upload_service import VideoUploadService
 
 __all__ = [
     "ActivePipelineConflictError",
@@ -35,6 +35,6 @@ __all__ = [
     "ResourceInUseError",
     "ResourceNotFoundError",
     "TrainingService",
+    "VideoService",
     "VideoStreamService",
-    "VideoUploadService",
 ]

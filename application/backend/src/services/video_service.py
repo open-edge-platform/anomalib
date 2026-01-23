@@ -18,7 +18,7 @@ from repositories.binary_repo import VideoBinaryRepository
 VALID_VIDEO_EXTENSIONS = {".mp4", ".avi", ".mov", ".mkv", ".webm"}
 
 
-class VideoUploadService:
+class VideoService:
     """Service for uploading, listing, and deleting video files."""
 
     @staticmethod
@@ -88,7 +88,7 @@ class VideoUploadService:
         folder_path = bin_repo.project_folder_path
 
         # Get unique filename (adds suffix if name already taken)
-        filename = VideoUploadService._get_unique_filename(folder_path, original_filename)
+        filename = VideoService._get_unique_filename(folder_path, original_filename)
 
         try:
             saved_path = await bin_repo.save_file(filename=filename, content=video_bytes)
@@ -105,7 +105,7 @@ class VideoUploadService:
             logger.error(f"Failed to save video file: {e}")
             # Attempt cleanup
             try:
-                await bin_repo.delete_file(filename)
+                await bin_repo.delete_file(filename=filename)
             except FileNotFoundError as e:
                 logger.debug(f"Nothing to cleanup: {e}")
             raise
@@ -206,7 +206,7 @@ class VideoUploadService:
         if not await anyio.Path(full_path).exists():
             raise FileNotFoundError(f"Video '{filename}' not found")
 
-        await bin_repo.delete_file(filename)
+        await bin_repo.delete_file(filename=filename)
         logger.info(f"Deleted video file: {filename}")
 
     @staticmethod
