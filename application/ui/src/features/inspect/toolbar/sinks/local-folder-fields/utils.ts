@@ -8,7 +8,7 @@ export const getLocalFolderInitialConfig = (project_id: string): LocalFolderSink
     project_id,
     sink_type: 'folder',
     rate_limit: 1,
-    folder_path: '',
+    folder_path: 'data/sinks/new_sink',
     output_formats: [],
 });
 
