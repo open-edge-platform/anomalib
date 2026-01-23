@@ -20,6 +20,7 @@ from api.endpoints.snapshot_endpoints import router as snapshot_router
 from api.endpoints.source_endpoints import router as source_router
 from api.endpoints.system_endpoints import system_router
 from api.endpoints.trainable_models_endpoints import router as trainable_model_router
+from api.endpoints.video_endpoints import router as video_router
 from api.endpoints.webrtc import router as webrtc_router
 from core.lifecycle import lifespan
 from settings import get_settings
@@ -58,6 +59,7 @@ app.include_router(trainable_model_router)
 app.include_router(capture_router)
 app.include_router(snapshot_router)
 app.include_router(system_router)
+app.include_router(video_router)
 
 
 def main() -> None:

@@ -29,6 +29,7 @@ class FileType(StrEnum):
     MODELS = "models"
     SNAPSHOTS = "snapshots"
     MODEL_EXPORTS = "model_exports"
+    VIDEOS = "videos"
 
 
 class BinaryRepository(metaclass=abc.ABCMeta):
@@ -153,6 +154,14 @@ class DatasetSnapshotBinaryRepository(BinaryRepository):
 class ImageBinaryRepository(BinaryRepository):
     def __init__(self, project_id: str | UUID):
         super().__init__(project_id=project_id, file_type=FileType.IMAGES)
+
+    def get_full_path(self, filename: str) -> str:
+        return os.path.join(self.project_folder_path, filename)
+
+
+class VideoBinaryRepository(BinaryRepository):
+    def __init__(self, project_id: str | UUID):
+        super().__init__(project_id=project_id, file_type=FileType.VIDEOS)
 
     def get_full_path(self, filename: str) -> str:
         return os.path.join(self.project_folder_path, filename)
