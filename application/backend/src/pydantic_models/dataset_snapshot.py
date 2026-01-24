@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from datetime import datetime
@@ -27,8 +27,8 @@ class DatasetSnapshot(BaseIDModel):
                 "filename": "dataset_snapshot_123.parquet",
                 "count": 42,
                 "created_at": "2025-01-01T12:00:00",
-            }
-        }
+            },
+        },
     }
 
 

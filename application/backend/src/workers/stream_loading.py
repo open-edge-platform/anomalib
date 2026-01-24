@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
@@ -7,19 +7,20 @@ import copy
 import queue
 from typing import TYPE_CHECKING
 
+import loguru
+from loguru import logger
+
+from pydantic_models import Source, SourceType
+from services import ActivePipelineService, VideoStreamService
+from workers.base import BaseProcessWorker
+
 if TYPE_CHECKING:
     import multiprocessing as mp
     from multiprocessing.synchronize import Condition as ConditionClass
     from multiprocessing.synchronize import Event as EventClass
 
-import loguru
-from loguru import logger
-
-from entities.stream_data import StreamData
-from entities.video_stream import VideoStream
-from pydantic_models import Source, SourceType
-from services import ActivePipelineService, VideoStreamService
-from workers.base import BaseProcessWorker
+    from entities.stream_data import StreamData
+    from entities.video_stream import VideoStream
 
 
 class StreamLoader(BaseProcessWorker):
@@ -53,7 +54,8 @@ class StreamLoader(BaseProcessWorker):
     @logger.catch()
     async def run_loop(self) -> None:
         self._active_pipeline_service = await ActivePipelineService.create(
-            config_changed_condition=self._config_changed_condition, start_daemon=True
+            config_changed_condition=self._config_changed_condition,
+            start_daemon=True,
         )
 
         while not self.should_stop():
@@ -77,7 +79,10 @@ class StreamLoader(BaseProcessWorker):
                     stream_data = self._video_stream.get_data()
                     if stream_data is not None:
                         _enqueue_frame_with_retry(
-                            self._frame_queue, stream_data, self._video_stream.is_real_time(), self._stop_event
+                            self._frame_queue,
+                            stream_data,
+                            self._video_stream.is_real_time(),
+                            self._stop_event,
                         )
                     else:
                         await asyncio.sleep(0.1)
@@ -96,7 +101,10 @@ class StreamLoader(BaseProcessWorker):
 
 
 def _enqueue_frame_with_retry(
-    frame_queue: mp.Queue, payload: StreamData, is_real_time: bool, stop_event: EventClass
+    frame_queue: mp.Queue,
+    payload: StreamData,
+    is_real_time: bool,
+    stop_event: EventClass,
 ) -> None:
     """Enqueue frame with retry logic for non-real-time streams"""
     while not stop_event.is_set():

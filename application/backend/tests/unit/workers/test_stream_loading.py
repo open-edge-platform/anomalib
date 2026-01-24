@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import multiprocessing as mp
@@ -115,7 +115,12 @@ class TestStreamLoader:
             pass
 
     def test_queue_full_realtime(
-        self, frame_queue, mock_stream_data, stop_event, config_changed_condition, mock_services
+        self,
+        frame_queue,
+        mock_stream_data,
+        stop_event,
+        config_changed_condition,
+        mock_services,
     ):
         """Test that frames are discarded when queue is full for real-time streams"""
 

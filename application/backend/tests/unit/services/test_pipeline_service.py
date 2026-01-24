@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 import uuid
@@ -199,7 +199,7 @@ class TestPipelineService:
             mock_repo_class.return_value = fxt_pipeline_repository
 
             result = asyncio.run(
-                fxt_pipeline_service.update_pipeline(fxt_pipeline.project_id, {"status": PipelineStatus.IDLE})
+                fxt_pipeline_service.update_pipeline(fxt_pipeline.project_id, {"status": PipelineStatus.IDLE}),
             )
 
         assert result == updated_pipeline
@@ -207,7 +207,11 @@ class TestPipelineService:
         fxt_pipeline_repository.update.assert_called_once_with(fxt_pipeline, {"status": PipelineStatus.IDLE})
 
     def test_update_pipeline_running_to_running_source_change(
-        self, fxt_pipeline_service, fxt_pipeline, fxt_pipeline_repository, fxt_condition
+        self,
+        fxt_pipeline_service,
+        fxt_pipeline,
+        fxt_pipeline_repository,
+        fxt_condition,
     ):
         """Test updating running pipeline with source change."""
         new_source = UsbCameraSourceConfig(
@@ -226,17 +230,20 @@ class TestPipelineService:
 
             result = asyncio.run(
                 fxt_pipeline_service.update_pipeline(
-                    fxt_pipeline.project_id, {"source": new_source, "source_id": new_source.id}
-                )
+                    fxt_pipeline.project_id,
+                    {"source": new_source, "source_id": new_source.id},
+                ),
             )
 
         assert result == updated_pipeline
-        fxt_condition.__enter__.assert_called_once()
-        fxt_condition.__exit__.assert_called_once()
-        fxt_condition.notify_all.assert_called_once()
+        fxt_condition.notify_all.assert_called()
 
     def test_update_pipeline_running_to_running_sink_change(
-        self, fxt_pipeline_service, fxt_pipeline, fxt_pipeline_repository, fxt_active_pipeline_service
+        self,
+        fxt_pipeline_service,
+        fxt_pipeline,
+        fxt_pipeline_repository,
+        fxt_active_pipeline_service,
     ):
         """Test updating running pipeline with sink change."""
         new_sink = MqttSinkConfig(
@@ -259,15 +266,20 @@ class TestPipelineService:
 
             result = asyncio.run(
                 fxt_pipeline_service.update_pipeline(
-                    fxt_pipeline.project_id, {"sink": new_sink, "sink_id": new_sink.id}
-                )
+                    fxt_pipeline.project_id,
+                    {"sink": new_sink, "sink_id": new_sink.id},
+                ),
             )
 
         assert result == updated_pipeline
         fxt_active_pipeline_service.reload.assert_called_once()
 
     def test_update_pipeline_running_to_running_model_change(
-        self, fxt_pipeline_service, fxt_pipeline, fxt_pipeline_repository, fxt_model_service
+        self,
+        fxt_pipeline_service,
+        fxt_pipeline,
+        fxt_pipeline_repository,
+        fxt_model_service,
     ):
         """Test updating running pipeline with model change."""
         new_model = Model(
@@ -287,8 +299,9 @@ class TestPipelineService:
 
             result = asyncio.run(
                 fxt_pipeline_service.update_pipeline(
-                    fxt_pipeline.project_id, {"model": new_model, "model_id": new_model.id}
-                )
+                    fxt_pipeline.project_id,
+                    {"model": new_model, "model_id": new_model.id},
+                ),
             )
 
         assert result == updated_pipeline
@@ -312,7 +325,7 @@ class TestPipelineService:
             mock_repo_class.return_value = fxt_pipeline_repository
 
             result = asyncio.run(
-                fxt_pipeline_service.update_pipeline(fxt_idle_pipeline.project_id, {"status": PipelineStatus.RUNNING})
+                fxt_pipeline_service.update_pipeline(fxt_idle_pipeline.project_id, {"status": PipelineStatus.RUNNING}),
             )
 
         assert result == updated_pipeline
@@ -343,8 +356,9 @@ class TestPipelineService:
 
             result = asyncio.run(
                 fxt_pipeline_service.update_pipeline(
-                    fxt_idle_pipeline.project_id, {"status": PipelineStatus.RUNNING, "model": fxt_model}
-                )
+                    fxt_idle_pipeline.project_id,
+                    {"status": PipelineStatus.RUNNING, "model": fxt_model},
+                ),
             )
 
         assert result == updated_pipeline

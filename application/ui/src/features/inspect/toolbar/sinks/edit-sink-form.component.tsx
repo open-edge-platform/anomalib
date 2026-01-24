@@ -3,8 +3,6 @@ import { LocalFolderFields } from './local-folder-fields/local-folder-fields.com
 import { localFolderBodyFormatter } from './local-folder-fields/utils';
 import { MqttFields } from './mqtt-fields/mqtt-fields.component';
 import { mqttBodyFormatter } from './mqtt-fields/utils';
-import { RosFields } from './ros-fields/ros-fields.component';
-import { rosBodyFormatter } from './ros-fields/utils';
 import { SinkConfig } from './utils';
 import { webhookBodyFormatter } from './webhook-fields/utils';
 import { WebhookFields } from './webhook-fields/webhook-fields.component';
@@ -48,18 +46,6 @@ export const EditSinkForm = ({ config, onSaved, onBackToList }: EditSinkFormProp
                 onBackToList={onBackToList}
                 componentFields={(state) => <MqttFields defaultState={state} />}
                 bodyFormatter={mqttBodyFormatter}
-            />
-        );
-    }
-
-    if (config.sink_type === 'ros') {
-        return (
-            <EditSink
-                config={config}
-                onSaved={onSaved}
-                onBackToList={onBackToList}
-                componentFields={(state) => <RosFields defaultState={state} />}
-                bodyFormatter={rosBodyFormatter}
             />
         );
     }

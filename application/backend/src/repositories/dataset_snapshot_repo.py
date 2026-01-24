@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from collections.abc import Callable
 from uuid import UUID
@@ -32,7 +32,7 @@ class DatasetSnapshotRepository(ProjectBaseRepository[DatasetSnapshot, DatasetSn
             sa.select(self.schema)
             .where(self.schema.project_id == self.project_id)
             .order_by(self.schema.created_at.desc())
-            .limit(1)
+            .limit(1),
         )
         snapshot_db = result.scalar_one_or_none()
         return self.from_schema(snapshot_db) if snapshot_db else None

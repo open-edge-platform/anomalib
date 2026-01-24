@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
@@ -34,6 +34,8 @@ class ConfigurationService:
 
     def _notify_sink_changed(self) -> None:
         """Notify that sink configuration has changed by reloading the active pipeline service."""
+        with self._config_changed_condition:
+            self._config_changed_condition.notify_all()
         try:
             # Try to get the current event loop
             loop = asyncio.get_running_loop()
@@ -49,7 +51,10 @@ class ConfigurationService:
 
     @staticmethod
     async def _on_config_changed(
-        config_id: UUID, field: PipelineField, db: AsyncSession, notify_fn: Callable[[], None]
+        config_id: UUID,
+        field: PipelineField,
+        db: AsyncSession,
+        notify_fn: Callable[[], None],
     ) -> None:
         """Notify threads or child processes that the configuration has changed.
         Notification triggered only when the configuration is used by the active pipeline."""

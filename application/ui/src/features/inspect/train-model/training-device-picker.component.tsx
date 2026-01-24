@@ -15,8 +15,8 @@ interface UseTrainingDeviceResult {
 }
 
 export const useTrainingDevice = (): UseTrainingDeviceResult => {
-    const { data: availableDevices } = $api.useSuspenseQuery('get', '/api/devices/training');
-    const devices = availableDevices.devices;
+    const { data: availableDevices } = $api.useSuspenseQuery('get', '/api/system/devices/training');
+    const devices = (availableDevices ?? []).map((device) => device.type.toUpperCase());
 
     const [selectedDevice, setSelectedDevice] = useState<string | null>(() => {
         if (devices.length === 0) {

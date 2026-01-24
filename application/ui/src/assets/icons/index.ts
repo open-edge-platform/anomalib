@@ -14,7 +14,6 @@ export { ReactComponent as Mqtt } from './mqtt.svg';
 export { ReactComponent as Onnx } from './onnx.svg';
 export { ReactComponent as OpenVino } from './openvino.svg';
 export { ReactComponent as PyTorch } from './pytorch.svg';
-export { ReactComponent as Ros } from './ros.svg';
 export { ReactComponent as Stats } from './stats.svg';
 export { ReactComponent as SuccessIcon } from './success-icon.svg';
 export { ReactComponent as ThreeDotsCircle } from './three-dots-circle.svg';

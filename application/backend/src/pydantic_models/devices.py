@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from pydantic import BaseModel
 
@@ -10,8 +10,8 @@ class DeviceList(BaseModel):
         "json_schema_extra": {
             "example": {
                 "devices": ["CPU", "XPU", "NPU"],
-            }
-        }
+            },
+        },
     }
 
 
@@ -30,7 +30,7 @@ class CameraList(BaseModel):
                     {"index": 1200, "name": "camera_name1"},
                     {"index": 1201, "name": "camera_name2"},
                     {"index": 1202, "name": "camera_name3"},
-                ]
-            }
-        }
+                ],
+            },
+        },
     }

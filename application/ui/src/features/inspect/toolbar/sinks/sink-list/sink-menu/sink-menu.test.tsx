@@ -85,7 +85,7 @@ describe('SinkMenu', () => {
             renderApp({ name });
 
             await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
-            await userEvent.click(screen.getByRole('menuitem', { name: /Connect/i }));
+            await userEvent.click(screen.getByRole('menuitem', { name: /^Connect$/i }));
 
             await expect(await screen.findByLabelText('toast')).toHaveTextContent(
                 `Successfully connected to "${name}"`
@@ -98,7 +98,7 @@ describe('SinkMenu', () => {
             renderApp({ name });
 
             await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
-            await userEvent.click(screen.getByRole('menuitem', { name: /Connect/i }));
+            await userEvent.click(screen.getByRole('menuitem', { name: /^Connect$/i }));
 
             await expect(await screen.findByLabelText('toast')).toHaveTextContent(`Failed to connect to "${name}"`);
         });
@@ -108,7 +108,46 @@ describe('SinkMenu', () => {
 
             await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
 
-            expect(screen.getByRole('menuitem', { name: /Connect/i })).toHaveAttribute('aria-disabled', 'true');
+            expect(screen.getByRole('menuitem', { name: /^Connect$/i })).toHaveAttribute('aria-disabled', 'true');
+        });
+    });
+
+    describe('disconnect', () => {
+        const name = 'test-name';
+        const configRequests = (status = 200) => {
+            server.use(http.patch('/api/projects/{project_id}/pipeline', () => HttpResponse.json({}, { status })));
+        };
+
+        it('success', async () => {
+            configRequests();
+
+            renderApp({ name, isConnected: true });
+
+            await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
+            await userEvent.click(screen.getByRole('menuitem', { name: /Disconnect/i }));
+
+            await expect(await screen.findByLabelText('toast')).toHaveTextContent(
+                `Successfully disconnected "${name}"`
+            );
+        });
+
+        it('error', async () => {
+            configRequests(500);
+
+            renderApp({ name, isConnected: true });
+
+            await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
+            await userEvent.click(screen.getByRole('menuitem', { name: /Disconnect/i }));
+
+            await expect(await screen.findByLabelText('toast')).toHaveTextContent(`Failed to disconnect "${name}".`);
+        });
+
+        it('disabled when sink is not connected', async () => {
+            renderApp({ name: 'test-name', isConnected: false });
+
+            await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
+
+            expect(screen.getByRole('menuitem', { name: /Disconnect/i })).toHaveAttribute('aria-disabled', 'true');
         });
     });
 });

@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -148,12 +148,17 @@ class TestModelService:
 
         fxt_model_repository.delete_by_id.assert_called_once_with(fxt_model.id)
         mock_snapshot_service.delete_snapshot_if_unused.assert_called_once_with(
-            snapshot_id=fxt_model.dataset_snapshot_id, project_id=fxt_project.id
+            snapshot_id=fxt_model.dataset_snapshot_id,
+            project_id=fxt_project.id,
         )
         mock_binary_repo.delete_model_folder.assert_called_once()
 
     def test_delete_model_also_deletes_training_job(
-        self, fxt_model_service, fxt_model_repository, fxt_model, fxt_project
+        self,
+        fxt_model_service,
+        fxt_model_repository,
+        fxt_model,
+        fxt_project,
     ):
         """Test that deleting a model also deletes its associated training job."""
         fxt_model_repository.delete_by_id.return_value = None
@@ -191,7 +196,8 @@ class TestModelService:
 
                 assert result == fxt_openvino_inferencer
                 mock_bin_repo.get_weights_file_path.assert_called_once_with(
-                    format=ExportType.OPENVINO, name="model.xml"
+                    format=ExportType.OPENVINO,
+                    name="model.xml",
                 )
                 mock_to_thread.assert_called_once_with(
                     OpenVINOInferencer,
@@ -211,7 +217,11 @@ class TestModelService:
 
     @pytest.mark.parametrize("device", ["CPU", "GPU", "AUTO"])
     def test_load_inference_model_with_different_devices(
-        self, fxt_model_service, fxt_model, fxt_openvino_inferencer, device
+        self,
+        fxt_model_service,
+        fxt_model,
+        fxt_openvino_inferencer,
+        device,
     ):
         """Test loading inference model with different devices."""
         with patch("services.model_service.ModelBinaryRepository") as mock_bin_repo_class:
@@ -233,7 +243,12 @@ class TestModelService:
                 )
 
     def test_predict_image_with_cached_model(
-        self, fxt_model_service, fxt_model, fxt_image_bytes, fxt_prediction_response, fxt_openvino_inferencer
+        self,
+        fxt_model_service,
+        fxt_model,
+        fxt_image_bytes,
+        fxt_prediction_response,
+        fxt_openvino_inferencer,
     ):
         """Test prediction with cached model."""
         cached_models = {fxt_model.id: fxt_openvino_inferencer}
@@ -253,7 +268,11 @@ class TestModelService:
             mock_pipeline.assert_called_once()
 
     def test_predict_image_without_cached_model(
-        self, fxt_model_service, fxt_model, fxt_image_bytes, fxt_openvino_inferencer
+        self,
+        fxt_model_service,
+        fxt_model,
+        fxt_image_bytes,
+        fxt_openvino_inferencer,
     ):
         """Test prediction without cached model."""
         with patch.object(fxt_model_service, "load_inference_model") as mock_load_model:
@@ -310,10 +329,12 @@ class TestModelService:
         """Test the prediction pipeline static method."""
         # Mock OpenCV functions to avoid actual image processing
         mock_imdecode.return_value = np.array(
-            [[[100, 100, 100], [200, 200, 200]], [[150, 150, 150], [250, 250, 250]]], dtype=np.uint8
+            [[[100, 100, 100], [200, 200, 200]], [[150, 150, 150], [250, 250, 250]]],
+            dtype=np.uint8,
         )
         mock_cvt_color.return_value = np.array(
-            [[[100, 100, 100, 255], [200, 200, 200, 255]], [[150, 150, 150, 255], [250, 250, 250, 255]]], dtype=np.uint8
+            [[[100, 100, 100, 255], [200, 200, 200, 255]], [[150, 150, 150, 255], [250, 250, 250, 255]]],
+            dtype=np.uint8,
         )
 
         # Create a test anomaly map
@@ -332,15 +353,21 @@ class TestModelService:
     @patch("services.model_service.cv2.imdecode")
     @patch("services.model_service.cv2.cvtColor")
     def test_run_prediction_pipeline_anomalous(
-        self, mock_cvt_color, mock_imdecode, fxt_openvino_inferencer, fxt_image_bytes
+        self,
+        mock_cvt_color,
+        mock_imdecode,
+        fxt_openvino_inferencer,
+        fxt_image_bytes,
     ):
         """Test the prediction pipeline with anomalous prediction."""
         # Mock OpenCV functions to avoid actual image processing
         mock_imdecode.return_value = np.array(
-            [[[100, 100, 100], [200, 200, 200]], [[150, 150, 150], [250, 250, 250]]], dtype=np.uint8
+            [[[100, 100, 100], [200, 200, 200]], [[150, 150, 150], [250, 250, 250]]],
+            dtype=np.uint8,
         )
         mock_cvt_color.return_value = np.array(
-            [[[100, 100, 100, 255], [200, 200, 200, 255]], [[150, 150, 150, 255], [250, 250, 250, 255]]], dtype=np.uint8
+            [[[100, 100, 100, 255], [200, 200, 200, 255]], [[150, 150, 150, 255], [250, 250, 250, 255]]],
+            dtype=np.uint8,
         )
 
         # Create a test anomaly map
@@ -375,10 +402,12 @@ class TestModelService:
         """Test prediction pipeline with advanced processing scenarios."""
         # Mock OpenCV functions
         mock_imdecode.return_value = np.array(
-            [[[100, 100, 100], [200, 200, 200]], [[150, 150, 150], [250, 250, 250]]], dtype=np.uint8
+            [[[100, 100, 100], [200, 200, 200]], [[150, 150, 150], [250, 250, 250]]],
+            dtype=np.uint8,
         )
         mock_cvt_color.return_value = np.array(
-            [[[100, 100, 100, 255], [200, 200, 200, 255]], [[150, 150, 150, 255], [250, 250, 250, 255]]], dtype=np.uint8
+            [[[100, 100, 100, 255], [200, 200, 200, 255]], [[150, 150, 150, 255], [250, 250, 250, 255]]],
+            dtype=np.uint8,
         )
 
         # Test with 4D anomaly map (should be squeezed to 2D)

@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 from typing import Any
@@ -162,10 +162,14 @@ class TestTrainingService:
             # Should be called twice: RUNNING then COMPLETED
             assert fxt_mock_job_service.update_job_status.call_count == 2
             fxt_mock_job_service.update_job_status.assert_any_call(
-                job_id=fxt_job.id, status=JobStatus.RUNNING, message="Training started"
+                job_id=fxt_job.id,
+                status=JobStatus.RUNNING,
+                message="Training started",
             )
             fxt_mock_job_service.update_job_status.assert_any_call(
-                job_id=fxt_job.id, status=JobStatus.COMPLETED, message="Training completed successfully"
+                job_id=fxt_job.id,
+                status=JobStatus.COMPLETED,
+                message="Training completed successfully",
             )
             fxt_mock_model_service.create_model.assert_called_once()
 
@@ -206,10 +210,14 @@ class TestTrainingService:
             # Should be called twice: RUNNING then FAILED
             assert fxt_mock_job_service.update_job_status.call_count == 2
             fxt_mock_job_service.update_job_status.assert_any_call(
-                job_id=fxt_job.id, status=JobStatus.RUNNING, message="Training started"
+                job_id=fxt_job.id,
+                status=JobStatus.RUNNING,
+                message="Training started",
             )
             fxt_mock_job_service.update_job_status.assert_any_call(
-                job_id=fxt_job.id, status=JobStatus.FAILED, message=f"Failed with exception: {expected_message}"
+                job_id=fxt_job.id,
+                status=JobStatus.FAILED,
+                message=f"Failed with exception: {expected_message}",
             )
 
     def test_train_pending_job_cleanup_on_failure(
@@ -231,7 +239,12 @@ class TestTrainingService:
         with patch("services.training_service.asyncio.to_thread") as mock_to_thread:
             # Mock the training to succeed first, setting export_path, then fail
             def mock_train_model(
-                cls, model, synchronization_parameters: ProgressSyncParams, device=None, dataset_root=None, max_epochs=1
+                cls,
+                model,
+                synchronization_parameters: ProgressSyncParams,
+                device=None,
+                dataset_root=None,
+                max_epochs=1,
             ):
                 model.export_path = "/path/to/model"
                 raise Exception("Training failed")
@@ -263,7 +276,10 @@ class TestTrainingService:
         # Call the method
         with patch.object(TrainingService, "_compute_export_size", return_value=123):
             result = TrainingService._train_model(
-                fxt_model, synchronization_parameters=ProgressSyncParams(), dataset_root="/tmp/dataset", max_epochs=42
+                fxt_model,
+                synchronization_parameters=ProgressSyncParams(),
+                dataset_root="/tmp/dataset",
+                max_epochs=42,
             )
 
         # Verify the result
@@ -285,7 +301,8 @@ class TestTrainingService:
         assert call_args[1]["max_epochs"] == 42
 
         fxt_mock_anomalib_components["engine"].fit.assert_called_once_with(
-            model=fxt_mock_anomalib_components["anomalib_model"], datamodule=fxt_mock_anomalib_components["folder"]
+            model=fxt_mock_anomalib_components["anomalib_model"],
+            datamodule=fxt_mock_anomalib_components["folder"],
         )
         fxt_mock_anomalib_components["engine"].export.assert_called_once()
 
@@ -315,10 +332,14 @@ class TestTrainingService:
 
         assert result is None
         fxt_mock_job_service.update_job_status.assert_any_call(
-            job_id=fxt_job.id, status=JobStatus.RUNNING, message="Training started"
+            job_id=fxt_job.id,
+            status=JobStatus.RUNNING,
+            message="Training started",
         )
         fxt_mock_job_service.update_job_status.assert_any_call(
-            job_id=fxt_job.id, status=JobStatus.CANCELED, message="Training cancelled by user"
+            job_id=fxt_job.id,
+            status=JobStatus.CANCELED,
+            message="Training cancelled by user",
         )
 
     def test_train_model_cancelled_before_start(
@@ -332,7 +353,10 @@ class TestTrainingService:
         sync_params.set_cancel_training_event()
 
         result = TrainingService._train_model(
-            fxt_model, synchronization_parameters=sync_params, dataset_root="/tmp/dataset", max_epochs=1
+            fxt_model,
+            synchronization_parameters=sync_params,
+            dataset_root="/tmp/dataset",
+            max_epochs=1,
         )
 
         assert result is None

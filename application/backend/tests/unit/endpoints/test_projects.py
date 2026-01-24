@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from unittest.mock import MagicMock
@@ -76,7 +76,11 @@ def test_delete_project_not_found(fxt_client, fxt_project_service, fxt_job_servi
 
 
 def test_delete_project_active_pipeline(
-    fxt_client, fxt_project_service, fxt_job_service, fxt_pipeline_service, fxt_project
+    fxt_client,
+    fxt_project_service,
+    fxt_job_service,
+    fxt_pipeline_service,
+    fxt_project,
 ):
     fxt_project_service.get_project_by_id.return_value = fxt_project
     active_pipeline = MagicMock(spec=Pipeline)
@@ -91,7 +95,11 @@ def test_delete_project_active_pipeline(
 
 
 def test_delete_project_running_jobs(
-    fxt_client, fxt_project_service, fxt_job_service, fxt_pipeline_service, fxt_project
+    fxt_client,
+    fxt_project_service,
+    fxt_job_service,
+    fxt_pipeline_service,
+    fxt_project,
 ):
     fxt_project_service.get_project_by_id.return_value = fxt_project
     fxt_pipeline_service.get_active_pipeline.return_value = None

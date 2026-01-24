@@ -1,6 +1,7 @@
 import { Flex, NumberField, Switch, TextField } from '@geti/ui';
 
 import { OutputFormats } from '../output-formats/output-formats.component';
+import { RateLimitField } from '../rate-limit-field/rate-limit-field.component';
 import { MqttSinkConfig } from '../utils';
 
 interface MqttFieldsProps {
@@ -32,24 +33,16 @@ export const MqttFields = ({ defaultState }: MqttFieldsProps) => {
                 />
             </Flex>
 
-            <Flex direction='row' gap='size-200' justifyContent='space-between'>
-                <NumberField
-                    label='Rate Limit'
-                    name='rate_limit'
-                    minValue={0}
-                    step={0.1}
-                    defaultValue={defaultState.rate_limit ?? undefined}
-                />
-                <Switch
-                    name='auth_required'
-                    alignSelf='end'
-                    aria-label='Require Authentication'
-                    defaultSelected={defaultState.auth_required}
-                    key={defaultState.auth_required ? 'true' : 'false'}
-                >
-                    Auth Required
-                </Switch>
-            </Flex>
+            <Switch
+                name='auth_required'
+                aria-label='Require Authentication'
+                defaultSelected={defaultState.auth_required}
+                key={defaultState.auth_required ? 'true' : 'false'}
+            >
+                Auth Required
+            </Switch>
+
+            <RateLimitField defaultValue={defaultState.rate_limit} />
 
             <OutputFormats config={defaultState.output_formats} />
         </Flex>

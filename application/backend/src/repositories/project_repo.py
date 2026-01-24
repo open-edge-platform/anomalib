@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from collections.abc import Callable
 from datetime import datetime
@@ -43,7 +43,7 @@ class ProjectRepository(BaseRepository):
             .values(
                 dataset_updated_at=sa.func.current_timestamp(),
                 updated_at=sa.func.current_timestamp(),
-            )
+            ),
         )
         logger.info(f"Updated dataset timestamp for project {project_id} to current time.")
         await self.db.commit()

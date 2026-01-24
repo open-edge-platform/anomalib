@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from unittest.mock import MagicMock
@@ -83,5 +83,5 @@ class TestWebRTCEndpoints:
             "iceServers": [
                 {"urls": "turn:192.168.1.100:443?transport=tcp", "username": "user", "credential": "password"},
                 {"urls": "stun:stun.example.com:3478", "username": None, "credential": None},
-            ]
+            ],
         }

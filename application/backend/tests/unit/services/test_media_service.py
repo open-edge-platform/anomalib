@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 from io import BytesIO
@@ -130,7 +130,7 @@ class TestMediaService:
             patch("services.media_service.MediaRepository", return_value=mock_media_repo),
         ):
             result = asyncio.run(
-                fxt_media_service.upload_image(fxt_project.id, fxt_image_bytes, False, extension=".jpg")
+                fxt_media_service.upload_image(fxt_project.id, fxt_image_bytes, False, extension=".jpg"),
             )
 
         assert result is not None
@@ -178,7 +178,11 @@ class TestMediaService:
         assert mock_bin_repo.delete_file.call_count == 1
 
     def test_upload_image_rollback_file_not_found(
-        self, fxt_media_service, fxt_upload_file, fxt_project, fxt_image_bytes
+        self,
+        fxt_media_service,
+        fxt_upload_file,
+        fxt_project,
+        fxt_image_bytes,
     ):
         """Test image upload rollback when file deletion fails with FileNotFoundError."""
         mock_bin_repo = MagicMock()
@@ -299,7 +303,7 @@ class TestMediaService:
                     project_id=fxt_project.id,
                     media_id=media_id,
                     image=image_bytes,
-                )
+                ),
             )
 
     def test_thumbnail_upload_and_deletion(self, fxt_media_service, fxt_upload_file, fxt_project):
@@ -335,7 +339,7 @@ class TestMediaService:
                     project_id=fxt_project.id,
                     media_id=saved_media.id,
                     image=image_bytes,
-                )
+                ),
             )
 
             # Deletion removes both files

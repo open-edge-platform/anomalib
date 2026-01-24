@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 import uuid
@@ -76,7 +76,8 @@ def fxt_active_pipeline_service():
 def fxt_configuration_service(fxt_active_pipeline_service, fxt_condition):
     """Fixture for ConfigurationService with mocked dependencies."""
     return ConfigurationService(
-        active_pipeline_service=fxt_active_pipeline_service, config_changed_condition=fxt_condition
+        active_pipeline_service=fxt_active_pipeline_service,
+        config_changed_condition=fxt_condition,
     )
 
 
@@ -132,7 +133,8 @@ class TestConfigurationService:
     def test_init(self, fxt_active_pipeline_service, fxt_condition):
         """Test ConfigurationService initialization."""
         service = ConfigurationService(
-            active_pipeline_service=fxt_active_pipeline_service, config_changed_condition=fxt_condition
+            active_pipeline_service=fxt_active_pipeline_service,
+            config_changed_condition=fxt_condition,
         )
 
         assert service._active_pipeline_service == fxt_active_pipeline_service
@@ -193,7 +195,10 @@ class TestConfigurationService:
                 mock_repo_class.return_value = fxt_pipeline_repository
 
                 await ConfigurationService._on_config_changed(
-                    config_id, PipelineField.SOURCE_ID, MagicMock(), notify_fn
+                    config_id,
+                    PipelineField.SOURCE_ID,
+                    MagicMock(),
+                    notify_fn,
                 )
 
             fxt_pipeline_repository.get_active_pipeline.assert_called_once()
@@ -215,7 +220,10 @@ class TestConfigurationService:
                 mock_repo_class.return_value = fxt_pipeline_repository
 
                 await ConfigurationService._on_config_changed(
-                    different_config_id, PipelineField.SOURCE_ID, MagicMock(), notify_fn
+                    different_config_id,
+                    PipelineField.SOURCE_ID,
+                    MagicMock(),
+                    notify_fn,
                 )
 
             fxt_pipeline_repository.get_active_pipeline.assert_called_once()
@@ -234,7 +242,10 @@ class TestConfigurationService:
                 mock_repo_class.return_value = fxt_pipeline_repository
 
                 await ConfigurationService._on_config_changed(
-                    config_id, PipelineField.SOURCE_ID, MagicMock(), notify_fn
+                    config_id,
+                    PipelineField.SOURCE_ID,
+                    MagicMock(),
+                    notify_fn,
                 )
 
             fxt_pipeline_repository.get_active_pipeline.assert_called_once()
@@ -287,7 +298,12 @@ class TestConfigurationService:
         fxt_source_repository.get_by_id.assert_called_once_with(fxt_source.id)
 
     def test_get_source_by_id_with_session(
-        self, fxt_configuration_service, fxt_source_repository, fxt_source, fxt_db_session, fxt_project
+        self,
+        fxt_configuration_service,
+        fxt_source_repository,
+        fxt_source,
+        fxt_db_session,
+        fxt_project,
     ):
         """Test getting source by ID with provided session."""
         fxt_source_repository.get_by_id.return_value = fxt_source
@@ -296,7 +312,7 @@ class TestConfigurationService:
             mock_repo_class.return_value = fxt_source_repository
 
             result = asyncio.run(
-                fxt_configuration_service.get_source_by_id(fxt_source.id, fxt_project.id, fxt_db_session)
+                fxt_configuration_service.get_source_by_id(fxt_source.id, fxt_project.id, fxt_db_session),
             )
 
         assert result == fxt_source
@@ -329,7 +345,12 @@ class TestConfigurationService:
         fxt_sink_repository.get_by_id.assert_called_once_with(fxt_sink.id)
 
     def test_get_sink_by_id_with_session(
-        self, fxt_configuration_service, fxt_sink_repository, fxt_sink, fxt_db_session, fxt_project
+        self,
+        fxt_configuration_service,
+        fxt_sink_repository,
+        fxt_sink,
+        fxt_db_session,
+        fxt_project,
     ):
         """Test getting sink by ID with provided session."""
         fxt_sink_repository.get_by_id.return_value = fxt_sink
@@ -381,7 +402,12 @@ class TestConfigurationService:
         fxt_sink_repository.save.assert_called_once_with(fxt_sink)
 
     def test_update_source_success(
-        self, fxt_configuration_service, fxt_source_repository, fxt_pipeline_repository, fxt_source, fxt_condition
+        self,
+        fxt_configuration_service,
+        fxt_source_repository,
+        fxt_pipeline_repository,
+        fxt_source,
+        fxt_condition,
     ):
         """Test updating a source successfully."""
         updated_source = fxt_source.model_copy(update={"name": "Updated Source"})
@@ -398,8 +424,10 @@ class TestConfigurationService:
 
             result = asyncio.run(
                 fxt_configuration_service.update_source(
-                    fxt_source.id, fxt_source.project_id, {"name": "Updated Source"}
-                )
+                    fxt_source.id,
+                    fxt_source.project_id,
+                    {"name": "Updated Source"},
+                ),
             )
 
         assert result == updated_source
@@ -428,7 +456,7 @@ class TestConfigurationService:
             mock_pipeline_repo_class.return_value = fxt_pipeline_repository
 
             result = asyncio.run(
-                fxt_configuration_service.update_sink(fxt_sink.id, fxt_sink.project_id, {"name": "Updated Sink"})
+                fxt_configuration_service.update_sink(fxt_sink.id, fxt_sink.project_id, {"name": "Updated Sink"}),
             )
 
         assert result == updated_sink
@@ -487,8 +515,10 @@ class TestConfigurationService:
 
             result = asyncio.run(
                 fxt_configuration_service.update_source(
-                    fxt_source.id, fxt_source.project_id, {"name": "Updated Source"}
-                )
+                    fxt_source.id,
+                    fxt_source.project_id,
+                    {"name": "Updated Source"},
+                ),
             )
 
         assert result == updated_source
@@ -523,7 +553,7 @@ class TestConfigurationService:
             mock_pipeline_repo_class.return_value = fxt_pipeline_repository
 
             result = asyncio.run(
-                fxt_configuration_service.update_sink(fxt_sink.id, fxt_sink.project_id, {"name": "Updated Sink"})
+                fxt_configuration_service.update_sink(fxt_sink.id, fxt_sink.project_id, {"name": "Updated Sink"}),
             )
 
         assert result == updated_sink

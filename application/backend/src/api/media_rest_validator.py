@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import os
@@ -44,6 +44,6 @@ class MediaRestValidator:
         if extension not in MediaRestValidator.SUPPORTED_IMAGE_TYPES:
             raise InvalidMediaException(
                 f"Not a valid image format. Received {extension}, but only the following are allowed: "
-                f"{str(MediaRestValidator.SUPPORTED_IMAGE_TYPES)}"
+                f"{str(MediaRestValidator.SUPPORTED_IMAGE_TYPES)}",
             )
         return file

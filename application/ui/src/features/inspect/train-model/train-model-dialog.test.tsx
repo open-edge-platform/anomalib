@@ -13,15 +13,29 @@ import { server } from 'src/msw-node-setup';
 
 import { TrainModelDialog } from './train-model-dialog.component';
 
+type DeviceType = 'cpu' | 'xpu' | 'cuda';
+
+interface MockDeviceInfo {
+    type: DeviceType;
+    name: string;
+    memory: number | null;
+    index: number | null;
+}
+
+const DEFAULT_MOCK_DEVICES: MockDeviceInfo[] = [
+    { type: 'cpu', name: 'CPU', memory: null, index: null },
+    { type: 'cuda', name: 'NVIDIA GPU', memory: 8589934592, index: 0 },
+];
+
 describe('TrainModelDialog', () => {
     const closeMock = vi.fn();
 
-    const renderDialog = ({ devices = ['CPU', 'GPU'] }: { devices?: string[] } = {}) => {
+    const renderDialog = ({ devices = DEFAULT_MOCK_DEVICES }: { devices?: MockDeviceInfo[] } = {}) => {
         server.use(
             http.get('/api/trainable-models', ({ response }) =>
                 response(200).json({ trainable_models: TRAINABLE_MODELS })
             ),
-            http.get('/api/devices/training', ({ response }) => response(200).json({ devices })),
+            http.get('/api/system/devices/training', ({ response }) => response(200).json(devices)),
             http.post('/api/jobs:train', ({ response }) => response(200).json({ job_id: 'job-123' }))
         );
 

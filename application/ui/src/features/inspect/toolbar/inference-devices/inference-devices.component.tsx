@@ -6,7 +6,7 @@ import { Item, Key, Picker, toast } from '@geti/ui';
 import { usePipeline } from 'src/hooks/use-pipeline.hook';
 
 export const InferenceDevices = () => {
-    const { data } = $api.useSuspenseQuery('get', '/api/devices/inference');
+    const { data } = $api.useSuspenseQuery('get', '/api/system/devices/inference');
     const { data: pipeline } = usePipeline();
     const { projectId } = useProjectIdentifier();
     const [selectedKey, setSelectedKey] = useState<Key | null>(pipeline.inference_device?.toLowerCase() ?? null);
@@ -24,7 +24,10 @@ export const InferenceDevices = () => {
         },
     });
 
-    const options = data.devices.map((device) => ({ id: device, name: device }));
+    const options = data.map((device) => {
+        const id = device.type.toLowerCase();
+        return { id, name: device.type };
+    });
 
     const handleChange = (key: Key | null) => {
         if (key === null) {
