@@ -21,17 +21,15 @@ const getMockState = (props: Partial<UsbCameraSourceConfig> = {}): UsbCameraSour
 });
 
 describe('UsbCameraFields', () => {
-    const mockCameraDevices = {
-        devices: [
-            { index: 0, name: 'Camera 0' },
-            { index: 1, name: 'Camera 1' },
-            { index: 2, name: 'Camera 2' },
-        ],
-    };
+    const mockCameraDevices = [
+        { index: 0, name: 'Camera 0' },
+        { index: 1, name: 'Camera 1' },
+        { index: 2, name: 'Camera 2' },
+    ];
 
     const renderComponent = (state: UsbCameraSourceConfig) => {
         server.use(
-            http.get('/api/devices/camera', () => {
+            http.get('/api/system/devices/camera', () => {
                 return HttpResponse.json(mockCameraDevices);
             })
         );
@@ -56,7 +54,7 @@ describe('UsbCameraFields', () => {
         const cameraButton = await screen.findByRole('button', { name: /Camera list/i });
         await userEvent.click(cameraButton);
 
-        for (const device of mockCameraDevices.devices) {
+        for (const device of mockCameraDevices) {
             expect(await screen.findByRole('option', { name: device.name })).toBeInTheDocument();
         }
     });
@@ -73,7 +71,7 @@ describe('UsbCameraFields', () => {
     });
 
     it('updates name with device name when name is system-generated', async () => {
-        const selectedOption = mockCameraDevices.devices[1];
+        const selectedOption = mockCameraDevices[1];
         renderComponent(getMockState({ name: '' }));
 
         const cameraButton = await screen.findByRole('button', { name: /Camera list/i });

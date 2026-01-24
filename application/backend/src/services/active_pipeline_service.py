@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 import multiprocessing as mp
@@ -119,9 +119,7 @@ class ActivePipelineService:
             if source is not None:
                 self._source = source
 
-            sink = self._pipeline.sink
-            if sink is not None:
-                self._sink = sink
+            self._sink = self._pipeline.sink or DisconnectedSinkConfig()
 
     def _reload_config_daemon_routine(self) -> None:
         """Daemon thread routine to monitor configuration changes and reload when necessary.

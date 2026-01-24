@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Endpoints for managing pipeline sources"""
@@ -99,7 +99,8 @@ UPDATE_SOURCE_BODY_EXAMPLES = {
 async def create_source(
     project_id: Annotated[UUID, Depends(get_project_id)],
     source_config: Annotated[
-        SourceCreate, Body(description=CREATE_SOURCE_BODY_DESCRIPTION, openapi_examples=CREATE_SOURCE_BODY_EXAMPLES)
+        SourceCreate,
+        Body(description=CREATE_SOURCE_BODY_DESCRIPTION, openapi_examples=CREATE_SOURCE_BODY_EXAMPLES),
     ],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Source:
@@ -112,7 +113,8 @@ async def create_source(
 
     if validated_source.source_type == SourceType.DISCONNECTED:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="The source with source_type=DISCONNECTED cannot be created"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The source with source_type=DISCONNECTED cannot be created",
         )
 
     try:

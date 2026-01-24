@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 import base64
@@ -32,7 +32,7 @@ from repositories.binary_repo import ModelBinaryRepository, ModelExportBinaryRep
 from services import ResourceNotFoundError
 from services.dataset_snapshot_service import DatasetSnapshotService
 from services.exceptions import DeviceNotFoundError, ResourceType
-from utils.devices import Devices
+from services.system_service import SystemService
 
 DEFAULT_DEVICE = "AUTO"
 
@@ -166,7 +166,7 @@ class ModelService:
 
         bin_repo = ModelExportBinaryRepository(project_id=project_id, model_id=model_id)
         export_zip_path = anyio.Path(
-            bin_repo.get_model_export_path(model_name=model.name, export_params=export_parameters)
+            bin_repo.get_model_export_path(model_name=model.name, export_params=export_parameters),
         )
 
         # Cache check
@@ -279,7 +279,7 @@ class ModelService:
                 config={ov_hints.performance_mode: ov_hints.PerformanceMode.LATENCY},
             )
         except Exception as e:
-            if device and not Devices.is_device_supported_for_inference(device):
+            if device and not SystemService.is_device_supported_for_inference(device):
                 raise DeviceNotFoundError(device_name=device_name) from e
             raise e
 

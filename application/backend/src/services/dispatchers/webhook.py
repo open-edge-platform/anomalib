@@ -12,12 +12,13 @@ from loguru import logger
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from pydantic_models.sink import WebhookSinkConfig
 from services.dispatchers.base import BaseDispatcher
 
 if TYPE_CHECKING:
     import numpy as np
     from anomalib.data import NumpyImageBatch as PredictionResult
+
+    from pydantic_models.sink import WebhookSinkConfig
 
 MAX_RETRIES = 3
 BACKOFF_FACTOR = 0.3

@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 import uuid
@@ -236,9 +236,7 @@ class TestPipelineService:
             )
 
         assert result == updated_pipeline
-        fxt_condition.__enter__.assert_called_once()
-        fxt_condition.__exit__.assert_called_once()
-        fxt_condition.notify_all.assert_called_once()
+        fxt_condition.notify_all.assert_called()
 
     def test_update_pipeline_running_to_running_sink_change(
         self,

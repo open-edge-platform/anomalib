@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import multiprocessing as mp
@@ -12,7 +12,6 @@ from fastapi.staticfiles import StaticFiles
 
 from api.endpoints.active_pipeline_endpoints import router as active_pipeline_router
 from api.endpoints.capture_endpoints import router as capture_router
-from api.endpoints.devices_endpoints import device_router
 from api.endpoints.job_endpoints import job_router
 from api.endpoints.media_endpoints import media_router
 from api.endpoints.model_endpoints import model_router
@@ -21,6 +20,7 @@ from api.endpoints.project_endpoints import project_router
 from api.endpoints.sink_endpoints import router as sink_router
 from api.endpoints.snapshot_endpoints import router as snapshot_router
 from api.endpoints.source_endpoints import router as source_router
+from api.endpoints.system_endpoints import system_router
 from api.endpoints.trainable_models_endpoints import router as trainable_model_router
 from api.endpoints.webrtc import router as webrtc_router
 from api.endpoints.webui_endpoints import webui_router
@@ -38,11 +38,12 @@ import exception_handlers  # noqa: E402
 
 _ = exception_handlers  # to avoid import being removed by linters
 
+settings = get_settings()
 # TODO: check if middleware is required
 # Enable CORS for local test UI
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:9000", "http://127.0.0.1:9000"],
+    allow_origins=settings.cors_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -57,9 +58,9 @@ app.include_router(source_router)
 app.include_router(sink_router)
 app.include_router(webrtc_router)
 app.include_router(trainable_model_router)
-app.include_router(device_router)
 app.include_router(capture_router)
 app.include_router(snapshot_router)
+app.include_router(system_router)
 
 settings = get_settings()
 

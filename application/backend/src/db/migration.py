@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from alembic.config import Config
@@ -71,7 +71,7 @@ class MigrationManager:
             # Check if current_rev is in Alembic's tracked revisions
             if current_rev and current_rev not in script.get_heads() + script.get_bases():
                 raise RevisionNotFoundError(
-                    f"Current revision '{current_rev}' not found in Alembic history. Please, recreate the database."
+                    f"Current revision '{current_rev}' not found in Alembic history. Please, recreate the database.",
                 )
 
             needs_migration = current_rev != current_head

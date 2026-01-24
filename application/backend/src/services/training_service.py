@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 import os
@@ -23,8 +23,8 @@ from repositories.binary_repo import ModelBinaryRepository
 from services import ModelService
 from services.dataset_snapshot_service import DatasetSnapshotService
 from services.job_service import JobService
+from services.system_service import SystemService
 from utils.callbacks import GetiInspectProgressCallback, ProgressSyncParams
-from utils.devices import Devices
 
 
 class TrainingService:
@@ -127,7 +127,7 @@ class TrainingService:
             await job_service.update_job_status(
                 job_id=job.id,
                 status=JobStatus.FAILED,
-                message=f"Failed with exception: {e!s}",
+                message=f"Failed with exception: {str(e)}",
             )
             if model and model.export_path:
                 logger.warning(f"Deleting partially created model with id: {model.id}")
@@ -186,10 +186,11 @@ class TrainingService:
         from core.logging import global_log_config  # noqa: PLC0415
         from core.logging.handlers import LoggerStdoutWriter  # noqa: PLC0415
 
-        if device and not Devices.is_device_supported_for_training(device):
+        device = device.lower() if device else None  # anomalib expects lowercase device strings
+        if device and not SystemService.is_device_supported_for_training(device):
             raise ValueError(
                 f"Device '{device}' is not supported for training. "
-                f"Supported devices: {', '.join(Devices.training_devices())}",
+                f"Supported devices: {', '.join([device.type for device in SystemService.get_training_devices()])}",
             )
 
         training_device = device or "auto"

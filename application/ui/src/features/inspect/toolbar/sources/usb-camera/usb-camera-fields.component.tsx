@@ -18,9 +18,14 @@ export const UsbCameraFields = ({ defaultState }: UsbCameraFieldsProps) => {
     const [name, setName] = useState(defaultState.name);
     const isSystemName = useRef(isEmpty(defaultState.name));
 
-    const { data: cameraDevices, isLoading, isRefetching, refetch } = $api.useQuery('get', '/api/devices/camera');
+    const {
+        data: cameraDevices,
+        isLoading,
+        isRefetching,
+        refetch,
+    } = $api.useQuery('get', '/api/system/devices/camera');
 
-    const devices = (cameraDevices?.devices ?? []).map((device) => ({
+    const devices = (cameraDevices ?? []).map((device) => ({
         id: device.index,
         name: device.name,
     }));

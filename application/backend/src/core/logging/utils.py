@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import os
@@ -28,7 +28,7 @@ def _validate_job_id(job_id: str | UUID) -> str | UUID:
         UUID(str(job_id))
     except ValueError as e:
         raise ValueError(
-            f"Invalid job_id '{job_id}'. Only alphanumeric characters, hyphens, and underscores are allowed."
+            f"Invalid job_id '{job_id}'. Only alphanumeric characters, hyphens, and underscores are allowed.",
         ) from e
     return job_id
 
