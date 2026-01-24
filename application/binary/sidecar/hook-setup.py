@@ -76,6 +76,6 @@ if system == "Windows":
         os.environ["DATA_DIR"] = app_data_folder
 
         print("Setup Hook: Writing log to:", app_data_folder)
-        os.environ["LOGS_DIR"] = app_data_folder
+        os.environ["LOG_DIR"] = app_data_folder
     else:
         print("Setup Hook: Application doesn't run in a UWP context; skipping folder setup.")

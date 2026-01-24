@@ -54,10 +54,14 @@ concurrency:
 
 jobs:
   build-linux:
-    runs-on: "self-hosted"
-    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
 
     steps:
+      - name: Runner cleanup
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@63eb5023d2b0c0a1bd9f15341add63b167fc9458
+        with:
+          type: "all"
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
@@ -79,10 +83,10 @@ jobs:
           node-version: "24"
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7
+        uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
 
       - name: Cache Rust dependencies
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         with:
           path: |
             ~/.cargo/bin/
@@ -112,10 +116,7 @@ jobs:
       - name: Build Tauri .deb package
         working-directory: application/binary/tauri
         run: |
-          npx tauri build --bundles deb -v
-        env:
-          TAURI_SIGNING_PRIVATE_KEY: ""
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+          npx tauri build --no-sign --bundles deb -v
 
       - name: Upload .deb artifact
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0

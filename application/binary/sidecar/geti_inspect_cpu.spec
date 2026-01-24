@@ -15,7 +15,7 @@ if platform.system() == "Linux":
 elif platform.system() == "Darwin":
     binaries = [(so, '.') for so in glob.glob('../../backend/.venv/lib/**/*.dylib', recursive=True)]
 else:
-    binaries = [(dll, '.') for dll in glob.glob('../../backend/.venv/lib/**/*.dll', recursive=True)]
+    binaries = [(dll, 'Library/bin/') for dll in glob.glob('.venv/Library/bin/*')]
 
 hiddenimports = [
     "aiosqlite",
