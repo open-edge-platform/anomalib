@@ -1080,6 +1080,7 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-fs",
  "tauri-plugin-log",
+ "webkit2gtk",
 ]
 
 [[package]]

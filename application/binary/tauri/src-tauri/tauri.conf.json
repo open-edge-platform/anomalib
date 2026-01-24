@@ -25,18 +25,28 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["app"],
+    "targets": [
+      "app"
+    ],
     "externalBin": [
       "../../sidecar/dist/geti-inspect-backend/geti-inspect-backend"
     ],
-    "resources": ["../../sidecar/dist/geti-inspect-backend/_internal"],
+    "resources": [
+      "../../sidecar/dist/geti-inspect-backend/_internal"
+    ],
     "icon": [
       "icons/icon.ico",
       "icons/icon.png"
     ],
     "linux": {
       "deb": {
-        "postInstallScript": "install_scripts/debian_postinstall.sh"
+        "postInstallScript": "install_scripts/debian_postinstall.sh",
+        "depends": [
+          "gstreamer1.0-plugins-base",
+          "gstreamer1.0-plugins-good",
+          "gstreamer1.0-plugins-bad",
+          "gstreamer1.0-nice"
+        ]
       }
     }
   }

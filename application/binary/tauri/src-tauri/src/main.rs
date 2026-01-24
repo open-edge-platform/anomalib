@@ -6,10 +6,8 @@ use std::{
     process::{Child, Command},
     sync::{Arc, Mutex},
 };
+use tauri::Manager;
 use tauri::RunEvent;
-
-#[cfg(debug_assertions)]
-use tauri::Manager; // for open_devtools
 
 /// "geti-inspect-backend.exe" on Windows, "geti-inspect-backend" elsewhere.
 fn backend_filename() -> &'static str {
@@ -32,15 +30,15 @@ fn spawn_backend() -> std::io::Result<Child> {
     // Tauri build will have renamed the suffixed file to plain name next to the exe.
     let backend_path = exe_dir.join(backend_filename());
 
-    log::info!("▶ Looking for backend side-car at {:?}", backend_path);
+    log::info!("Looking for backend side-car at {:?}", backend_path);
     let mut command = Command::new(&backend_path);
     let mut cors_origins = "http://tauri.localhost,tauri://localhost".to_string();
-    
+
     #[cfg(debug_assertions)]
     {
         cors_origins = format!("{},http://localhost:3000", cors_origins);
     }
-    
+
     command.env("CORS_ORIGINS", cors_origins);
 
     #[cfg(all(windows, not(debug_assertions)))]
@@ -51,7 +49,7 @@ fn spawn_backend() -> std::io::Result<Child> {
 
     let child = command.spawn()?;
 
-    log::info!("▶ Spawned backend: {:?}", backend_path);
+    log::info!("Spawned backend: {:?}", backend_path);
     Ok(child)
 }
 
@@ -68,6 +66,22 @@ fn main() {
             move |app| {
                 let child = spawn_backend().expect("Failed to spawn backend");
                 *child_handle.lock().unwrap() = Some(child);
+
+                // Enable WebRTC and media stream on Linux (WebKitGTK)
+                #[cfg(target_os = "linux")]
+                {
+                    let webview = app.get_webview_window("main").unwrap();
+                    webview
+                        .with_webview(|webview| {
+                            use webkit2gtk::{SettingsExt, WebViewExt};
+                            if let Some(settings) = webview.inner().settings() {
+                                settings.set_enable_webrtc(true);
+                                settings.set_enable_media_stream(true);
+                                log::info!("WebRTC and MediaStream enabled for WebKitGTK");
+                            }
+                        })
+                        .expect("Failed to configure WebRTC settings");
+                }
 
                 #[cfg(debug_assertions)]
                 {
