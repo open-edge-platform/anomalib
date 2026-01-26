@@ -293,10 +293,10 @@ class TrainingService:
             return None
 
         try:
-            file = pathlib.Path(path)
-            if file.is_file():
-                return file.stat().st_size
-            if not file.is_dir():
+            path_obj = pathlib.Path(path)
+            if path_obj.is_file():
+                return path_obj.stat().st_size
+            if not path_obj.is_dir():
                 logger.warning(f"Cannot compute export size because `{path}` is not a directory")
                 return None
         except OSError as error:
