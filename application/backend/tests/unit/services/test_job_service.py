@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 from datetime import UTC, datetime
@@ -128,7 +128,8 @@ class TestJobService:
                 assert result.job_id == fxt_job.id
 
         fxt_job_repository.is_job_duplicate.assert_called_once_with(
-            project_id=fxt_job_payload.project_id, payload=fxt_job_payload
+            project_id=fxt_job_payload.project_id,
+            payload=fxt_job_payload,
         )
         if not is_duplicate:
             fxt_job_repository.save.assert_called_once()

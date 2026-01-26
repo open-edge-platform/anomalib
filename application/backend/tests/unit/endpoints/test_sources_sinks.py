@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import io
@@ -90,14 +90,22 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_create_config_success(
-        self, fixture_name, api_path, create_method, fxt_config_service, fxt_client, fxt_project, request
+        self,
+        fixture_name,
+        api_path,
+        create_method,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
+        request,
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
         getattr(fxt_config_service, create_method).return_value = fxt_config
 
         response = fxt_client.post(
-            f"/api/projects/{fxt_project.id}/{api_path}", json=fxt_config.model_dump(exclude={"id", "project_id"})
+            f"/api/projects/{fxt_project.id}/{api_path}",
+            json=fxt_config.model_dump(exclude={"id", "project_id"}),
         )
 
         assert response.status_code == status.HTTP_201_CREATED
@@ -126,14 +134,24 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_create_config_exists(
-        self, resource_type, api_path, fixture_name, create_method, fxt_config_service, fxt_client, fxt_project, request
+        self,
+        resource_type,
+        api_path,
+        fixture_name,
+        create_method,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
+        request,
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         getattr(fxt_config_service, create_method).side_effect = ResourceAlreadyExistsError(
-            resource_type=resource_type, resource_name="New Config"
+            resource_type=resource_type,
+            resource_name="New Config",
         )
         response = fxt_client.post(
-            f"/api/projects/{fxt_project.id}/{api_path}", json=fxt_config.model_dump(exclude={"id", "project_id"})
+            f"/api/projects/{fxt_project.id}/{api_path}",
+            json=fxt_config.model_dump(exclude={"id", "project_id"}),
         )
 
         assert response.status_code == status.HTTP_409_CONFLICT
@@ -177,7 +195,14 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_get_config_success(
-        self, fixture_name, api_path, get_method, fxt_config_service, fxt_client, fxt_project, request
+        self,
+        fixture_name,
+        api_path,
+        get_method,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
+        request,
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
@@ -197,7 +222,13 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_get_config_not_found(
-        self, resource_type, api_path, get_method, fxt_config_service, fxt_client, fxt_project
+        self,
+        resource_type,
+        api_path,
+        get_method,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
     ):
         config_id = uuid4()
         getattr(fxt_config_service, get_method).side_effect = ResourceNotFoundError(resource_type, str(config_id))
@@ -220,7 +251,15 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_update_sink_success(
-        self, fixture_name, api_path, update_method, update_data, fxt_config_service, fxt_client, fxt_project, request
+        self,
+        fixture_name,
+        api_path,
+        update_method,
+        update_data,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
+        request,
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
@@ -242,7 +281,13 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_update_config_not_found(
-        self, api_path, update_method, resource_type, fxt_config_service, fxt_client, fxt_project
+        self,
+        api_path,
+        update_method,
+        resource_type,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
     ):
         config_id = str(uuid4())
         getattr(fxt_config_service, update_method).side_effect = ResourceNotFoundError(resource_type, config_id)
@@ -259,7 +304,15 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_update_config_type_forbidden(
-        self, fixture_name, api_path, update_method, update_data, fxt_config_service, fxt_client, fxt_project, request
+        self,
+        fixture_name,
+        api_path,
+        update_method,
+        update_data,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
+        request,
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
@@ -278,7 +331,14 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_delete_config_success(
-        self, fixture_name, api_path, delete_method, fxt_config_service, fxt_client, fxt_project, request
+        self,
+        fixture_name,
+        api_path,
+        delete_method,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
+        request,
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
@@ -312,7 +372,13 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_delete_config_not_found(
-        self, api_path, delete_method, resource_type, fxt_config_service, fxt_client, fxt_project
+        self,
+        api_path,
+        delete_method,
+        resource_type,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
     ):
         config_id = str(uuid4())
         getattr(fxt_config_service, delete_method).side_effect = ResourceNotFoundError(resource_type, config_id)
@@ -329,7 +395,15 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_delete_config_in_use(
-        self, fixture_name, api_path, delete_method, resource_type, fxt_config_service, fxt_client, fxt_project, request
+        self,
+        fixture_name,
+        api_path,
+        delete_method,
+        resource_type,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
+        request,
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
@@ -360,7 +434,15 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_export_config_success(
-        self, fixture_name, api_path, get_method, expected_yaml, fxt_config_service, fxt_client, fxt_project, request
+        self,
+        fixture_name,
+        api_path,
+        get_method,
+        expected_yaml,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
+        request,
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
@@ -382,7 +464,14 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_import_config_success(
-        self, fixture_name, api_path, create_method, fxt_config_service, fxt_client, fxt_project, request
+        self,
+        fixture_name,
+        api_path,
+        create_method,
+        fxt_config_service,
+        fxt_client,
+        fxt_project,
+        request,
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         sink_data = fxt_config.model_dump(exclude={"id", "project_id"}, mode="json")

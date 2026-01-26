@@ -1,18 +1,27 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+from __future__ import annotations
+
 import abc
 import asyncio
 import os
 import shutil
 from enum import StrEnum
 from functools import cached_property
-from uuid import UUID
+from typing import TYPE_CHECKING
 
-from anomalib.deploy import ExportType
+from settings import get_settings
 
-from pydantic_models.model import ExportParameters
+if TYPE_CHECKING:
+    from uuid import UUID
 
-STORAGE_ROOT_PATH = "data"
+    from anomalib.deploy import ExportType
+
+    from pydantic_models.model import ExportParameters
+    from settings import Settings
+
+settings: Settings = get_settings()
 
 
 class FileType(StrEnum):
@@ -20,6 +29,7 @@ class FileType(StrEnum):
     MODELS = "models"
     SNAPSHOTS = "snapshots"
     MODEL_EXPORTS = "model_exports"
+    VIDEOS = "videos"
 
 
 class BinaryRepository(metaclass=abc.ABCMeta):
@@ -52,7 +62,7 @@ class BinaryRepository(metaclass=abc.ABCMeta):
         """
         Get the project folder path containing the binary files.
         """
-        return os.path.join(STORAGE_ROOT_PATH, self.file_type, "projects", self.project_id)
+        return os.path.join(settings.data_dir, self.file_type, "projects", self.project_id)
 
     @abc.abstractmethod
     def get_full_path(self, filename: str) -> str:
@@ -144,6 +154,21 @@ class DatasetSnapshotBinaryRepository(BinaryRepository):
 class ImageBinaryRepository(BinaryRepository):
     def __init__(self, project_id: str | UUID):
         super().__init__(project_id=project_id, file_type=FileType.IMAGES)
+
+    def get_full_path(self, filename: str) -> str:
+        return os.path.join(self.project_folder_path, filename)
+
+
+class VideoBinaryRepository(BinaryRepository):
+    """Binary repository for storing and retrieving video files for a project.
+
+    This repository manages video binaries under the project-specific ``videos``
+    directory. Use :meth:`get_full_path` to resolve a video filename to its
+    absolute path on the filesystem.
+    """
+
+    def __init__(self, project_id: str | UUID):
+        super().__init__(project_id=project_id, file_type=FileType.VIDEOS)
 
     def get_full_path(self, filename: str) -> str:
         return os.path.join(self.project_folder_path, filename)

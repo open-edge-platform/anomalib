@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Application configuration management"""
@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     host: str = Field(default="0.0.0.0", alias="HOST")  # noqa: S104
     port: int = Field(default=8000, alias="PORT")
 
+    # CORS
+    cors_origins: str = Field(
+        default="http://localhost:3000",
+        alias="CORS_ORIGINS",
+    )
+
     # Database
     database_file: str = Field(default="geti_inspect.db", alias="DATABASE_FILE", description="Database filename")
     db_echo: bool = Field(default=False, alias="DB_ECHO")
@@ -47,9 +53,14 @@ class Settings(BaseSettings):
     webrtc_advertise_ip: str | None = Field(default=None, alias="WEBRTC_ADVERTISE_IP")
 
     @property
+    def cors_allowed_origins(self) -> list[str]:
+        """Get CORS allowed origins as a list"""
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+    @property
     def database_url(self) -> str:
         """Get database URL"""
-        return f"sqlite+aiosqlite:///./{self.data_dir / self.database_file}?journal_mode=WAL"
+        return f"sqlite+aiosqlite:///{self.data_dir / self.database_file}?journal_mode=WAL"
 
     @property
     def sync_database_url(self) -> str:

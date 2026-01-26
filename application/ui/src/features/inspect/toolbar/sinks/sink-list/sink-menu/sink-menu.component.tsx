@@ -31,6 +31,9 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
             case 'connect':
                 handleConnect();
                 break;
+            case 'disconnect':
+                handleDisconnect();
+                break;
             case 'remove':
                 handleDelete();
                 break;
@@ -59,6 +62,25 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
         }
     };
 
+    const handleDisconnect = async () => {
+        try {
+            await updatePipeline.mutateAsync({
+                params: { path: { project_id: projectId } },
+                body: { sink_id: null },
+            });
+
+            toast({
+                type: 'success',
+                message: `Successfully disconnected "${name}"`,
+            });
+        } catch (_error) {
+            toast({
+                type: 'error',
+                message: `Failed to disconnect "${name}".`,
+            });
+        }
+    };
+
     const handleDelete = async () => {
         try {
             await removeSink.mutateAsync({ params: { path: { sink_id: id, project_id: projectId } } });
@@ -80,8 +102,9 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
             <ActionButton isQuiet aria-label='sink menu'>
                 <MoreMenu />
             </ActionButton>
-            <Menu onAction={handleOnAction} disabledKeys={isConnected ? ['connect', 'remove'] : []}>
+            <Menu onAction={handleOnAction} disabledKeys={isConnected ? ['connect', 'remove'] : ['disconnect']}>
                 <Item key='connect'>Connect</Item>
+                <Item key='disconnect'>Disconnect</Item>
                 <Item key='edit'>Edit</Item>
                 <Item key='remove'>Remove</Item>
             </Menu>

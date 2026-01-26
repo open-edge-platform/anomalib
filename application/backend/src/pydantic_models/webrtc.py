@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from pydantic import BaseModel, Field
@@ -29,8 +29,8 @@ class WebRTCIceServer(BaseModel):
 
     model_config = {
         "json_schema_extra": {
-            "example": {"urls": "turn:192.168.1.100:3478?transport=tcp", "username": "user", "credential": "password"}
-        }
+            "example": {"urls": "turn:192.168.1.100:3478?transport=tcp", "username": "user", "credential": "password"},
+        },
     }
 
 
@@ -38,15 +38,17 @@ class WebRTCConfigResponse(BaseModel):
     """WebRTC configuration response."""
 
     ice_servers: list[WebRTCIceServer] = Field(
-        ..., alias="iceServers", description="List of ICE servers for WebRTC connection establishment"
+        ...,
+        alias="iceServers",
+        description="List of ICE servers for WebRTC connection establishment",
     )
 
     model_config = {
         "json_schema_extra": {
             "example": {
                 "iceServers": [
-                    {"urls": "turn:192.168.1.100:3478?transport=tcp", "username": "user", "credential": "password"}
-                ]
-            }
-        }
+                    {"urls": "turn:192.168.1.100:3478?transport=tcp", "username": "user", "credential": "password"},
+                ],
+            },
+        },
     }

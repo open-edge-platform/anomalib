@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from datetime import datetime
@@ -57,6 +57,6 @@ class PipelineMetrics(BaseModel):
                         "max_requests_per_second": 85.2,
                     },
                 },
-            }
-        }
+            },
+        },
     }

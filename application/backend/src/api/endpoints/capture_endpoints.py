@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 import queue
@@ -46,7 +46,10 @@ async def capture(
         ) from e
 
     media = await media_service.upload_image(
-        project_id=project_id, image=stream_data.frame_data, is_anomalous=False, extension=".png"
+        project_id=project_id,
+        image=stream_data.frame_data,
+        is_anomalous=False,
+        extension=".png",
     )
 
     background_tasks.add_task(

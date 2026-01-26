@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from .dataset_snapshot import DatasetSnapshot
@@ -10,7 +10,9 @@ from .pipeline import Pipeline, PipelineStatus
 from .project import Project, ProjectList, ProjectUpdate
 from .sink import DisconnectedSinkConfig, OutputFormat, Sink, SinkType
 from .source import DisconnectedSourceConfig, Source, SourceType
+from .system import LibraryVersions, SystemInfo
 from .trainable_model import ModelFamily, TrainableModel, TrainableModelList
+from .video import Video, VideoExtension, VideoList
 
 __all__ = [
     "DatasetSnapshot",
@@ -23,6 +25,7 @@ __all__ = [
     "JobStatus",
     "JobType",
     "LatencyMetrics",
+    "LibraryVersions",
     "Media",
     "MediaList",
     "Model",
@@ -41,7 +44,11 @@ __all__ = [
     "SinkType",
     "Source",
     "SourceType",
+    "SystemInfo",
     "TimeWindow",
     "TrainableModel",
     "TrainableModelList",
+    "Video",
+    "VideoExtension",
+    "VideoList",
 ]

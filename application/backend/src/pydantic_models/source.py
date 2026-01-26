@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import StrEnum
@@ -46,8 +46,8 @@ class UsbCameraSourceConfig(BaseSourceConfig):
                 "name": "USB Camera 0",
                 "id": "f9e0ae4f-d96c-4304-baab-2ab845362d03",
                 "device_id": 0,
-            }
-        }
+            },
+        },
     }
 
 
@@ -64,8 +64,8 @@ class IPCameraSourceConfig(BaseSourceConfig):
                 "id": "3d055c8a-2536-46ea-8f3c-832bd6f8bbdc",
                 "stream_url": "http://example.com/stream",
                 "auth_required": True,
-            }
-        }
+            },
+        },
     }
 
     def get_configured_stream_url(self) -> str:
@@ -96,8 +96,8 @@ class VideoFileSourceConfig(BaseSourceConfig):
                 "name": "Sample Video",
                 "id": "712750b2-5a82-47ee-8fba-f3dc96cb615d",
                 "video_path": "/path/to/video.mp4",
-            }
-        }
+            },
+        },
     }
 
 
@@ -114,8 +114,8 @@ class ImagesFolderSourceConfig(BaseSourceConfig):
                 "id": "4a580a0e-b841-4c70-bf88-2d68a28f780d",
                 "images_folder_path": "/path/to/images",
                 "ignore_existing_images": True,
-            }
-        }
+            },
+        },
     }
 
 

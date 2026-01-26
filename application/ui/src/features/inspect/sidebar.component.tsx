@@ -8,6 +8,7 @@ import { Flex, Grid, ToggleButton, View } from '@geti/ui';
 import { useSearchParams } from 'react-router-dom';
 
 import { Dataset } from './dataset/dataset.component';
+import { FeedbackButton } from './feedback';
 import { Models } from './models/models.component';
 
 import styles from './sidebar.module.scss';
@@ -71,6 +72,9 @@ const SidebarTabs = ({ tabs }: TabProps) => {
                             {icon}
                         </ToggleButton>
                     ))}
+                    <View marginTop={'auto'}>
+                        <FeedbackButton />
+                    </View>
                 </Flex>
             </View>
         </Grid>

@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import StrEnum
@@ -31,7 +31,7 @@ class OutputFormat(StrEnum):
 class BaseSinkConfig(BaseIDNameModel):
     project_id: UUID
     output_formats: list[OutputFormat]
-    rate_limit: float | None = None  # Rate limit in Hz, None means no limit
+    rate_limit: float | None = Field(default=None, ge=0.0, description="Rate limit in Hz, None means no limit")
 
 
 class DisconnectedSinkConfig(BaseSinkConfig):
@@ -46,8 +46,8 @@ class DisconnectedSinkConfig(BaseSinkConfig):
                 "sink_type": "disconnected",
                 "name": "No Sink",
                 "id": "00000000-0000-0000-0000-000000000000",
-            }
-        }
+            },
+        },
     }
 
 
@@ -64,8 +64,8 @@ class FolderSinkConfig(BaseSinkConfig):
                 "folder_path": "/path/to/output",
                 "output_formats": ["image_original", "image_with_predictions", "predictions"],
                 "rate_limit": 0.2,
-            }
-        }
+            },
+        },
     }
 
 
@@ -87,8 +87,8 @@ class MqttSinkConfig(BaseSinkConfig):
                 "topic": "predictions",
                 "output_formats": ["predictions"],
                 "auth_required": True,
-            }
-        }
+            },
+        },
     }
 
     def get_credentials(self) -> tuple[str | None, str | None]:
@@ -117,8 +117,8 @@ class RosSinkConfig(BaseSinkConfig):
                 "name": "ROS2 Predictions Topic",
                 "topic": "/predictions",
                 "output_formats": ["predictions"],
-            }
-        }
+            },
+        },
     }
 
 
@@ -131,7 +131,7 @@ class WebhookSinkConfig(BaseSinkConfig):
     webhook_url: str
     http_method: HttpMethod = "POST"
     headers: HttpHeaders | None = None
-    timeout: int = 10  # seconds
+    timeout: int = Field(default=10, gt=0, description="Request timeout in seconds")
 
     model_config = {
         "json_schema_extra": {
@@ -143,8 +143,8 @@ class WebhookSinkConfig(BaseSinkConfig):
                 "http_method": "PUT",
                 "headers": {"Authorization": "Bearer YOUR_TOKEN"},
                 "output_formats": ["predictions"],
-            }
-        }
+            },
+        },
     }
 
 
