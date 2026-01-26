@@ -123,7 +123,7 @@ class TrainingService:
 
             return await model_service.create_model(trained_model)
         except Exception as e:
-            logger.error(f"Failed to train pending training job: {e!s}")
+            logger.error(f"Failed to train pending training job: {e}")
             await job_service.update_job_status(
                 job_id=job.id,
                 status=JobStatus.FAILED,
@@ -293,9 +293,10 @@ class TrainingService:
             return None
 
         try:
-            if pathlib.Path(path).is_file():
-                return pathlib.Path(path).stat().st_size
-            if not pathlib.Path(path).is_dir():
+            file = pathlib.Path(path)
+            if file.is_file():
+                return file.stat().st_size
+            if not file.is_dir():
                 logger.warning(f"Cannot compute export size because `{path}` is not a directory")
                 return None
         except OSError as error:

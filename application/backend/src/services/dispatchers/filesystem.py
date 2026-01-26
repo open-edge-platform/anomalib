@@ -30,8 +30,9 @@ class FolderDispatcher(BaseDispatcher):
         """
         super().__init__(output_config=output_config)
         self.output_folder = output_config.folder_path
-        if not pathlib.Path(self.output_folder).exists():
-            pathlib.Path(self.output_folder).mkdir(exist_ok=True, parents=True)
+        folder = pathlib.Path(self.output_folder)
+        if not folder.exists():
+            folder.mkdir(exist_ok=True, parents=True)
 
     @staticmethod
     def _write_image_to_file(image: np.ndarray, file_path: str) -> None:
