@@ -42,6 +42,7 @@ export default defineConfig({
             testMatch: ['**/full-workflow.spec.ts'],
             timeout: 20 * 60 * 1000,
             fullyParallel: false,
+            retries: 0,
             use: { ...devices['Desktop Chrome'] },
         },
     ],
