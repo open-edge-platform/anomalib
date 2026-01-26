@@ -28,4 +28,3 @@ export { ReactComponent as ThreeDotsCircle } from './three-dots-circle.svg';
 export { ReactComponent as UsbCamera } from './usb-camera.svg';
 export { ReactComponent as VideoFile } from './video-file.svg';
 export { ReactComponent as Webhook } from './webhook.svg';
-
