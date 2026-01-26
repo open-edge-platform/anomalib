@@ -1,0 +1,53 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Geti Inspect",
+  "version": "0.1.0",
+  "identifier": "com.geti.inspect",
+  "build": {
+    "beforeDevCommand": "mkdir -p $(pwd)/src-tauri/target/debug && ln -snf $(pwd)/../sidecar/dist/geti-inspect-backend/_internal/ $(pwd)/src-tauri/target/debug/_internal && cd ../../ui && npm start",
+    "devUrl": "http://localhost:3000",
+    "beforeBuildCommand": "cd ../../ui && npm ci && npm run build",
+    "frontendDist": "../../../ui/dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Geti Inspect",
+        "width": 1000,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "app"
+    ],
+    "externalBin": [
+      "../../sidecar/dist/geti-inspect-backend/geti-inspect-backend"
+    ],
+    "resources": [
+      "../../sidecar/dist/geti-inspect-backend/_internal"
+    ],
+    "icon": [
+      "icons/icon.ico",
+      "icons/icon.png"
+    ],
+    "linux": {
+      "deb": {
+        "postInstallScript": "install_scripts/debian_postinstall.sh",
+        "depends": [
+          "gstreamer1.0-plugins-base",
+          "gstreamer1.0-plugins-good",
+          "gstreamer1.0-plugins-bad",
+          "gstreamer1.0-nice"
+        ]
+      }
+    }
+  }
+}

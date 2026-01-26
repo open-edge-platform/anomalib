@@ -1,5 +1,7 @@
 import { isString } from 'lodash-es';
 
+import { getApiUrl } from 'src/api/client';
+
 import { MediaItem } from './dataset/types';
 
 export const removeUnderscore = (text: string) => {
@@ -10,7 +12,56 @@ export const isStatusActive = (status: string) => {
     return ['running', 'active'].includes(status);
 };
 
-export const downloadBlob = (blob: Blob, filename: string) => {
+/**
+ * Check if the app is running inside Tauri v2
+ */
+export const isTauri = (): boolean => {
+    return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+};
+
+/**
+ * Downloads a blob as a file. In Tauri, shows a save dialog to let the user choose the location.
+ * In browser, uses the traditional download approach.
+ */
+export const downloadBlob = async (blob: Blob, filename: string): Promise<void> => {
+    if (isTauri()) {
+        console.debug('Downloading via Tauri');
+        try {
+            const { save } = await import('@tauri-apps/plugin-dialog');
+            const { writeFile } = await import('@tauri-apps/plugin-fs');
+
+            // Open save dialog with suggested filename
+            const filePath = await save({
+                defaultPath: filename,
+                filters: [
+                    {
+                        name: 'All Files',
+                        extensions: ['*'],
+                    },
+                ],
+            });
+
+            if (filePath) {
+                // Convert blob to Uint8Array and write to file
+                const arrayBuffer = await blob.arrayBuffer();
+                const contents = new Uint8Array(arrayBuffer);
+                await writeFile(filePath, contents);
+            }
+        } catch (error) {
+            console.error('Failed to save file via Tauri:', error);
+            // Fallback to browser download if Tauri save fails
+            downloadBlobBrowser(blob, filename);
+        }
+    } else {
+        console.debug('Downloading via Browser');
+        downloadBlobBrowser(blob, filename);
+    }
+};
+
+/**
+ * Browser-based blob download using anchor element
+ */
+const downloadBlobBrowser = (blob: Blob, filename: string): void => {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -52,7 +103,7 @@ export const formatSize = (bytes: number | null | undefined) => {
 export const isNonEmptyString = (value: unknown): value is string => isString(value) && value !== '';
 
 export const getThumbnailUrl = (mediaItem: MediaItem) =>
-    `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail`;
+    getApiUrl(`/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail`);
 
 export const formatDuration = (seconds: number | null): string | null => {
     if (seconds === null) return null;

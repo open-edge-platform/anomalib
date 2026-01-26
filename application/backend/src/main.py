@@ -3,6 +3,12 @@
 
 import multiprocessing as mp
 import os
+import sys
+
+# This is needed at the very top of the file to prevent worker processes
+# from executing module-level code and setup hooks in PyInstaller builds
+if getattr(sys, "frozen", False) and __name__ == "__main__":
+    mp.freeze_support()
 
 import uvicorn
 from fastapi import FastAPI

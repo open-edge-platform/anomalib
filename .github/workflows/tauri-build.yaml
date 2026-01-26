@@ -1,0 +1,200 @@
+# Tauri Application Build Workflow
+#
+# This workflow builds the Geti Inspect Tauri application for Linux
+# and uploads the .deb package as an artifact.
+#
+# Key Features:
+# - Builds Python backend sidecar using PyInstaller
+# - Builds UI frontend
+# - Creates Tauri .deb package for Linux
+# - Uploads artifacts for distribution
+#
+# Process Stages:
+# 1. Setup:
+#    - Install system dependencies for Tauri/deb
+#    - Setup Python environment for backend
+#    - Setup Node.js for frontend
+#
+# 2. Build Sidecar:
+#    - Install Python dependencies
+#    - Build backend binary with PyInstaller
+#
+# 3. Build UI:
+#    - Install npm dependencies
+#    - Build frontend assets
+#
+# 4. Build Tauri:
+#    - Build Tauri application
+#    - Generate .deb package
+#
+# 5. Upload:
+#    - Upload .deb package as artifact
+
+name: Tauri Build (Linux)
+
+on:
+  push:
+    branches: ["main", "feature/**"]
+    paths:
+      - "application/**"
+      - ".github/workflows/tauri-build.yaml"
+  pull_request:
+    branches: ["main", "feature/**"]
+    paths:
+      - "application/**"
+      - ".github/workflows/tauri-build.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Runner cleanup
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@63eb5023d2b0c0a1bd9f15341add63b167fc9458
+        with:
+          type: "all"
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+        with:
+          version: "latest"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version: "24"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            application/binary/tauri/src-tauri/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Build Python sidecar
+        working-directory: application/backend
+        run: |
+          uv sync --no-dev
+          source .venv/bin/activate
+          cd ../binary/sidecar
+          uv run --active --with pyinstaller pyinstaller geti_inspect_cpu.spec
+          # Rename binary with target triple
+          TARGET_TRIPLE=$(rustc -Vv | grep host | cut -f2 -d' ')
+          mv dist/geti-inspect-backend/geti-inspect-backend "dist/geti-inspect-backend/geti-inspect-backend-${TARGET_TRIPLE}"
+
+      - name: Install Tauri dependencies
+        working-directory: application/binary/tauri
+        run: npm ci
+
+      - name: Build Tauri .deb package
+        working-directory: application/binary/tauri
+        run: |
+          npx tauri build --no-sign --bundles deb -v
+
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: geti-inspect-linux-deb
+          path: application/binary/tauri/src-tauri/target/release/bundle/deb/*.deb
+          retention-days: 30
+          if-no-files-found: error
+
+  # TODO(ashwinvaidya17): Temporarily disabled MacOS build until we sort out signing the build.
+  # build-macos:
+  #   runs-on: macos-latest
+  #   timeout-minutes: 60
+
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+  #       with:
+  #         persist-credentials: false
+
+  #     - name: Setup Python
+  #       uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+  #       with:
+  #         python-version: "3.13"
+
+  #     - name: Install uv
+  #       uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+  #       with:
+  #         version: "latest"
+
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+  #       with:
+  #         node-version: "24"
+
+  #     - name: Install Rust
+  #       uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7
+
+  #     - name: Cache Rust dependencies
+  #       uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
+  #       with:
+  #         path: |
+  #           ~/.cargo/bin/
+  #           ~/.cargo/registry/index/
+  #           ~/.cargo/registry/cache/
+  #           ~/.cargo/git/db/
+  #           application/binary/tauri/src-tauri/target/
+  #         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-cargo-
+
+  #     - name: Build Python sidecar
+  #       working-directory: application/backend
+  #       run: |
+  #         uv sync --no-dev
+  #         source .venv/bin/activate
+  #         cd ../binary/sidecar
+  #         uv run --active --with pyinstaller pyinstaller geti_inspect_cpu.spec
+  #         # Rename binary with target triple
+  #         TARGET_TRIPLE=$(rustc -Vv | grep host | cut -f2 -d' ')
+  #         mv dist/geti-inspect-backend/geti-inspect-backend "dist/geti-inspect-backend/geti-inspect-backend-${TARGET_TRIPLE}"
+
+  #     - name: Install Tauri dependencies
+  #       working-directory: application/binary/tauri
+  #       run: npm ci
+
+  #     - name: Build Tauri .dmg package
+  #       working-directory: application/binary/tauri
+  #       run: |
+  #         npx tauri build --bundles dmg -v
+  #       env:
+  #         TAURI_SIGNING_PRIVATE_KEY: ""
+  #         TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+
+  #     - name: Upload .dmg artifact
+  #       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+  #       with:
+  #         name: geti-inspect-macos-dmg
+  #         path: application/binary/tauri/src-tauri/target/release/bundle/dmg/*.dmg
+  #         retention-days: 30
+  #         if-no-files-found: error

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 import os
+import pathlib
 from contextlib import redirect_stdout
 from uuid import UUID
 
@@ -122,7 +123,7 @@ class TrainingService:
 
             return await model_service.create_model(trained_model)
         except Exception as e:
-            logger.error(f"Failed to train pending training job: {str(e)}")
+            logger.error(f"Failed to train pending training job: {e!s}")
             await job_service.update_job_status(
                 job_id=job.id,
                 status=JobStatus.FAILED,
@@ -289,9 +290,9 @@ class TrainingService:
             return None
 
         try:
-            if os.path.isfile(path):
-                return os.path.getsize(path)
-            if not os.path.isdir(path):
+            if pathlib.Path(path).is_file():
+                return pathlib.Path(path).stat().st_size
+            if not pathlib.Path(path).is_dir():
                 logger.warning(f"Cannot compute export size because `{path}` is not a directory")
                 return None
         except OSError as error:
@@ -302,10 +303,10 @@ class TrainingService:
             for root, _, files in os.walk(path, followlinks=False):
                 for file_name in files:
                     file_path = os.path.join(root, file_name)
-                    if os.path.islink(file_path):
+                    if pathlib.Path(file_path).is_symlink():
                         continue
                     try:
-                        yield os.path.getsize(file_path)
+                        yield pathlib.Path(file_path).stat().st_size
                     except OSError:
                         continue
 
@@ -352,8 +353,7 @@ class TrainingService:
 
     @staticmethod
     async def abort_orphan_jobs() -> None:
-        """
-        Abort all running orphan training jobs (that do not belong to any worker).
+        """Abort all running orphan training jobs (that do not belong to any worker).
 
         This method can be called during application shutdown/setup to ensure that
         any orphan in-progress training jobs are marked as failed.
