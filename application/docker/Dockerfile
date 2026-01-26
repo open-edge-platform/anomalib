@@ -70,6 +70,14 @@ RUN mkdir -p /app/data /app/logs
 #------------------------------------------
 FROM geti-inspect-base AS geti-inspect-cpu
 
+ARG UID=10001
+ARG USER_NAME="non-root"
+
+# Create secure non-root user with home directory
+RUN useradd -l -u ${UID} -m ${USER_NAME} \
+    && mkdir -p /home/${USER_NAME}/.cache/uv \
+    && chown -R ${USER_NAME}:${USER_NAME} /home/${USER_NAME}
+
 WORKDIR /app/application/backend
 
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -77,12 +85,17 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 EXPOSE 8000
 
+USER ${USER_NAME}
+
 CMD ["sh", "-c", "exec ./run.sh"]
 
 #------------------------------------------
 # Geti Inspect CUDA version
 #------------------------------------------
 FROM geti-inspect-base AS geti-inspect-cuda
+
+ARG UID=10001
+ARG USER_NAME="non-root"
 
 RUN apt-get update  \
     && apt-get install -y --no-install-recommends wget=1.25.0-2 \
@@ -102,6 +115,10 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
+RUN useradd -l -u ${UID} -m ${USER_NAME} \
+    && mkdir -p /home/${USER_NAME}/.cache/uv \
+    && chown -R ${USER_NAME}:${USER_NAME} /home/${USER_NAME}
+
 WORKDIR /app/application/backend
 
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -109,12 +126,17 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 EXPOSE 8000
 
+USER ${USER_NAME}
+
 CMD ["sh", "-c", "exec ./run.sh"]
 
 #------------------------------------------
 # Geti Inspect XPU version
 #------------------------------------------
 FROM geti-inspect-base AS geti-inspect-xpu
+
+ARG UID=10001
+ARG USER_NAME="non-root"
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends wget gpg \
@@ -132,7 +154,9 @@ RUN apt-get update \
  && apt-get remove -y wget gpg \
  && apt-get clean
 
-
+RUN useradd -l -u ${UID} -m ${USER_NAME} \
+    && mkdir -p /home/${USER_NAME}/.cache/uv \
+    && chown -R ${USER_NAME}:${USER_NAME} /home/${USER_NAME}
 
 WORKDIR /app/application/backend
 
@@ -140,5 +164,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --extra xpu
 
 EXPOSE 8000
+
+USER ${USER_NAME}
 
 CMD ["sh", "-c", "exec ./run.sh"]
