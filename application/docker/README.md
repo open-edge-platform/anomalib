@@ -13,7 +13,7 @@ docker compose build
 
 ```bash
 cd application/docker
-compose up
+docker compose up
 ```
 
 ## To create XPU build
