@@ -50,7 +50,7 @@
 
 # Geti Inspect
 /application/ui                                             @MarkRedeman @maxxgx @ActiveChooN
-/application/backend                                        @maxxgx
+/application/backend                                        @maxxgx @rajeshgangireddy
 
 # Tests
 /tests/                                                     @samet-akcay @ashwinvaidya17 @rajeshgangireddy
