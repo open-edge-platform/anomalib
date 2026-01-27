@@ -173,7 +173,8 @@ def make_kolektor_dataset(
 
     # assert that the right mask files are associated with the right test images
     if not (
-        samples.loc[samples.label_index == 1]
+        samples
+        .loc[samples.label_index == 1]
         .apply(lambda x: Path(x.image_path).stem in Path(x.mask_path).stem, axis=1)
         .all()
     ):

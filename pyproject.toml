@@ -86,7 +86,7 @@ docs = [
     "sphinx_design",
 ]
 test = [
-    "pre-commit",
+    "prek",
     "pytest",
     "pytest-cov",
     "pytest-xdist",

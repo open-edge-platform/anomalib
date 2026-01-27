@@ -96,13 +96,13 @@ class BenchmarkJobGenerator(JobGenerator):
             >>> jobs = list(generator.generate_jobs(args, None))
         """
         del previous_stage_result  # Not needed for this job
-        for _container in get_iterator_from_grid_dict(args):
+        for container in get_iterator_from_grid_dict(args):
             # Pass experimental configs as a flatten dictionary to the job runner.
-            flat_cfg = flatten_dict(_container)
+            flat_cfg = flatten_dict(container)
             yield BenchmarkJob(
                 accelerator=self.accelerator,
-                seed=_container["seed"],
-                model=get_model(_container["model"]),
-                datamodule=get_datamodule(_container["data"]),
+                seed=container["seed"],
+                model=get_model(container["model"]),
+                datamodule=get_datamodule(container["data"]),
                 flat_cfg=flat_cfg,
             )

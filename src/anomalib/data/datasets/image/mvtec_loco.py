@@ -260,7 +260,8 @@ def make_dataset(
 
     # Group masks and aggregate the path into a list
     mask_samples = (
-        mask_samples.groupby(["path", "split", "label", "image_folder"])["image_path"]
+        mask_samples
+        .groupby(["path", "split", "label", "image_folder"])["image_path"]
         .agg(list)
         .reset_index()
         .rename(columns={"image_path": "mask_path"})

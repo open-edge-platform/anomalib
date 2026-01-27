@@ -1,0 +1,98 @@
+:root {
+    --aqua: #16cfb1;
+    --background: #313236;
+    --background-inverse: #3c3e42;
+    --coral: #ff5662;
+    --energy-blue-light: #7bdeff;
+    --energy-blue: #00c7fd;
+    --selection-dark-blue: #0c1e29;
+
+    --daisy-shade: rgb(237, 178, 0); /* #edb200 */
+    --brand-daisy: #fec91b;
+    --brand-daisy-tint: #ffe17a;
+    --electric-daisy: #ffe500;
+    --brand-rust: #e96115;
+
+    --annotation-fill: var(--daisy-shade);
+    --annotation-stroke: var(--energy-blue-light, #7bdeff);
+
+    --annotation-fill: var(--color-pink-300);
+    --annotation-stroke: var(--color-rose-500);
+
+    --annotation-fill: #e9611580;
+    --annotation-stroke: #7bdeff;
+
+    --moss-tint-1: #b1d272;
+    --brand-moss: #8bae46;
+
+    --spectrum-button-primary-text-font-weight: 500;
+    --spectrum-accent-background-color-default: var(--energy-blue);
+    --spectrum-accent-background-color: var(--energy-blue);
+    --spectrum-accent-background-color-disabled: var(--spectrum-global-color-gray-200);
+    --spectrum-accent-border-color: var(--energy-blue);
+    --spectrum-button-text-color: var(--spectrum-global-color-gray-50) !important;
+    --spectrum-accent-background-color-key-focus: var(--energy-blue);
+    --spectrum-global-color-blue-300: rgb(20, 103, 200);
+
+    --spectrum-accent-border-color-hover: var(--energy-blue-shade);
+    --spectrum-button-text-color-hover: var(--spectrum-global-color-gray-50);
+    --spectrum-accent-background-color-hover: var(--spectrum-global-color-blue-300);
+    --spectrum-global-color-blue-200: rgb(13, 90, 188);
+
+    --spectrum-accent-border-color-down: var(--energy-blue-shade-darker);
+    --spectrum-button-text-color-down: var(--spectrum-global-color-gray-50);
+    --spectrum-accent-background-color-down: var(--spectrum-global-color-blue-200);
+
+    --spectrum-button-text-background-color-down: var(--energy-blue-shade-darker);
+    --spectrum-button-text-border-color-down: var(--energy-blue-shade-darker);
+
+    --spectrum-high-contrast-button-face: var(--spectrum-global-color-gray-50);
+    --spectrum-high-contrast-gray-text: var(--spectrum-global-color-gray-500);
+    --spectrum-positive-visual-color: var(--brand-moss);
+}
+
+body,
+html {
+    margin: 0;
+    padding: 0;
+    background-color: var(--background);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+h1,
+h2,
+h3,
+h4 {
+    margin: 0;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+svg {
+    fill: currentColor;
+}
+
+[data-sonner-toaster] {
+    font-family: var(--spectrum-global-font-family-base) !important;
+}
+
+[class$='Tabs-selectionIndicator'] {
+    background: var(--energy-blue);
+}
+
+/* Increase the modal’s opaque background when a modal is opened inside another modal. */
+[data-testid='underlay'] {
+    z-index: 2 !important;
+}

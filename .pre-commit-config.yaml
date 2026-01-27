@@ -1,9 +1,12 @@
 default_language_version:
   node: 24.2.0
 
+# We use a different CI setup for geti-inspect
+exclude: ^application/
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       # list of supported hooks: https://pre-commit.com/hooks.html
       - id: trailing-whitespace
@@ -11,11 +14,12 @@ repos:
         exclude: "docs/source/examples"
       - id: check-yaml
       - id: check-added-large-files
+        exclude: '(^|/).*\.lock$' # Exclude lock files (uv.lock, package-lock.json, etc.)
       - id: debug-statements
       - id: detect-private-key
 
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.8.3
+    rev: v4.10.0
     hooks:
       # Only enforce branch naming, not commit messages (since we validate PR titles instead)
       - id: commitizen-branch
@@ -23,7 +27,7 @@ repos:
 
   # Ruff version.
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.12.0"
+    rev: "v0.14.10"
     hooks:
       # Run the linter.
       - id: ruff
@@ -35,7 +39,7 @@ repos:
 
   # python static type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.16.1"
+    rev: "v1.19.1"
     hooks:
       - id: mypy
         additional_dependencies: [types-PyYAML, types-setuptools]
@@ -45,7 +49,7 @@ repos:
   # semgrep does not support Windows, therefore it is not currently used in pre-commit
   # https://github.com/semgrep/semgrep/issues/1330
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.8.5
+    rev: 1.9.2
     hooks:
       - id: bandit
         args:
@@ -72,15 +76,16 @@ repos:
     rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
+        exclude: ^app/ui/
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.45.0
+    rev: v0.47.0
     hooks:
       - id: markdownlint
 
   # zizmor detects security issues in GitHub Actions workflows.
   - repo: https://github.com/woodruffw/zizmor-pre-commit
-    rev: v1.9.0
+    rev: v1.19.0
     hooks:
       - id: zizmor
         args: ["--min-severity", "medium", "--min-confidence", "high"]

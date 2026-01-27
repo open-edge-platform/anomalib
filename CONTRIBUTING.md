@@ -69,15 +69,15 @@ Set up your development environment to start contributing. This involves install
 3. Install and configure pre-commit hooks:
 
    ```bash
-   pre-commit install
+   prek install
    ```
 
 Pre-commit hooks help ensure code quality and consistency. After each commit,
-`pre-commit` will automatically run the configured checks for the changed file.
+`prek` will automatically run the configured checks for the changed file.
 If you would like to manually run the checks for all files, use:
 
 ```bash
-pre-commit run --all-files
+prek run --all-files
 ```
 
 To bypass pre-commit hooks temporarily (e.g., for a work-in-progress commit),
@@ -102,7 +102,7 @@ However, make sure to address any pre-commit issues before finalizing your pull 
 4. **Pass Tests and Quality Checks:** Ensure the test suite passes and that your code meets quality standards by running:
 
    ```bash
-   pre-commit run --all-files
+   prek run --all-files
    pytest tests/
    ```
 

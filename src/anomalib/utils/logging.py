@@ -157,5 +157,5 @@ def redirect_logs(log_file: str) -> None:
     logging.captureWarnings(capture=True)
     # remove other handlers from all loggers
     loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]
-    for _logger in loggers:
-        _logger.handlers = [logger_file_handler]
+    for logger in loggers:
+        logger.handlers = [logger_file_handler]

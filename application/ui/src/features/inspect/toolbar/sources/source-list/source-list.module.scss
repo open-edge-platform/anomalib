@@ -1,0 +1,30 @@
+.addSource {
+    width: 100%;
+    flex: none;
+    cursor: pointer;
+    display: flex;
+    border-style: dashed;
+    gap: var(--spectrum-global-dimension-size-65);
+    padding: var(--spectrum-global-dimension-size-250);
+}
+
+.card {
+    padding: var(--spectrum-global-dimension-size-250);
+    background: var(--spectrum-global-color-gray-200);
+    border-radius: var(--spectrum-global-dimension-size-65);
+}
+
+.activeCard {
+    background: var(--selection-dark-blue);
+    border: var(--spectrum-global-dimension-size-25) solid var(--energy-blue);
+}
+
+.title {
+    font-weight: 500;
+    text-transform: capitalize;
+    font-size: var(--spectrum-global-dimension-font-size-200);
+}
+
+.type {
+    text-transform: capitalize;
+}

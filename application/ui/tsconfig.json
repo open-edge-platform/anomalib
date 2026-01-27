@@ -1,0 +1,14 @@
+{
+    "extends": "@geti/config/typescript",
+    "include": ["src", "rsbuild.config.ts", "vitest.config.ts", "playwright.config.ts"],
+    "compilerOptions": {
+        "types": ["vitest/globals"],
+        "baseUrl": ".",
+        "paths": {
+            "@geti-inspect/icons": ["./src/assets/icons"],
+            "@geti-inspect/api": ["./src/api/client"],
+            "@geti-inspect/api/spec": ["./src/api/openapi-spec.d"],
+            "@geti-inspect/hooks": ["./src/hooks"]
+        }
+    }
+}

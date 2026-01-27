@@ -1,0 +1,16 @@
+.projectListItem {
+    padding: var(--spectrum-global-dimension-size-100);
+
+    &:hover,
+    &:has(.actionMenu[aria-expanded='true']) {
+        background-color: var(--spectrum-global-color-gray-100);
+    }
+}
+
+.actionMenu svg {
+    transform: rotate(90deg);
+}
+
+.active {
+    background-color: var(--spectrum-global-color-gray-100);
+}

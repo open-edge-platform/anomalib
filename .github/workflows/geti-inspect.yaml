@@ -1,0 +1,294 @@
+name: Geti Inspect UI checks
+permissions: {} # No permissions by default on workflow level
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "application/**"
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+    paths:
+      - "application/**"
+  workflow_dispatch: # run on request (no need for PR)
+
+jobs:
+  generate-openapi-spec:
+    name: Generate OpenAPI Spec
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # to checkout code
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          lfs: true
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+        with:
+          version: "0.9.18"
+
+      - name: Install OpenCV dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1 libglib2.0-0
+
+      - name: Prepare venv and install Python dependencies
+        working-directory: application/backend
+        run: |
+          uv lock --check
+          uv sync --frozen --all-extras
+
+      - name: Get OpenAPI spec
+        working-directory: application/backend
+        run: |
+          export PYTHONPATH=.
+          uv run src/cli.py gen-api --target-path openapi-spec.json
+
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: openapi-spec
+          path: application/backend/openapi-spec.json
+
+  python-checks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # to checkout code
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          lfs: true
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+        with:
+          version: "0.9.18"
+
+      - name: Prepare venv and install Python dependencies
+        working-directory: application/backend
+        run: |
+          uv lock --check
+          uv sync --frozen --all-extras
+
+      - name: Check formatting with ruff
+        working-directory: application/backend
+        run: |
+          uv run --with ruff ruff check --output-format=github .
+          uv run --with ruff ruff format --check .
+
+      - name: Check source code with mypy
+        working-directory: application/backend
+        run: |
+          uv run --group lint mypy . --config-file=pyproject.toml
+
+      - name: Run unit tests
+        working-directory: application/backend
+        run: |
+          uv run pytest tests/unit
+
+  ui-build:
+    name: Build UI
+    needs:
+      - generate-openapi-spec
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # to checkout code
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          lfs: true
+          persist-credentials: false
+
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        id: setup-node
+        with:
+          node-version-file: application/ui/.nvmrc
+
+      - name: Install dependencies
+        working-directory: "application/ui"
+        run: npm ci
+
+      - name: Download OpenAPI spec artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: openapi-spec
+          path: application/ui/src/api
+
+      - name: Build UI
+        working-directory: "application/ui"
+        run: npm run build
+
+      - name: Compress build
+        working-directory: "application/ui"
+        run: tar -czf dist.tar.gz dist
+
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: ui-dist
+          path: "application/ui/dist.tar.gz"
+
+  ui-lint:
+    name: Eslint checks
+    needs:
+      - generate-openapi-spec
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # to checkout code
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          lfs: true
+          persist-credentials: false
+
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        id: setup-node
+        with:
+          node-version-file: application/ui/.nvmrc
+
+      - name: Install dependencies
+        working-directory: "application/ui"
+        run: npm ci
+
+      - name: Download OpenAPI spec artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: openapi-spec
+          path: application/ui/src/api
+
+      - name: Build OpenAPI type definitions
+        working-directory: "application/ui"
+        run: npm run build:api:types
+
+      - name: Prettier
+        working-directory: "application/ui"
+        run: npm run format:check
+
+      - name: Eslint
+        working-directory: "application/ui"
+        run: npm run lint
+
+      - name: Eslint cyclic imports
+        working-directory: "application/ui"
+        run: npm run cyclic-deps-check
+
+      - name: Typescript
+        working-directory: "application/ui"
+        run: npm run type-check
+
+  ui-unit-tests:
+    name: Unit tests
+    needs:
+      - generate-openapi-spec
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # to checkout code
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          lfs: true
+          persist-credentials: false
+
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        id: setup-node
+        with:
+          node-version-file: application/ui/.nvmrc
+
+      - name: Install dependencies
+        working-directory: "application/ui"
+        run: npm ci
+
+      - name: Download OpenAPI spec artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: openapi-spec
+          path: application/ui/src/api
+
+      - name: Build OpenAPI type definitions
+        working-directory: "application/ui"
+        run: npm run build:api:types
+
+      - name: UI Unit tests
+        working-directory: "application/ui"
+        run: npm run test:unit
+
+  ui-playwright-tests:
+    name: Playwright Tests
+    needs:
+      - ui-build
+      - generate-openapi-spec
+    permissions:
+      contents: read # to checkout code
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.57.0-jammy@sha256:6aca677c27a967caf7673d108ac67ffaf8fed134f27e17b27a05464ca0ace831
+    steps:
+      - name: Install git lfs
+        run: apt-get update && apt-get install git-lfs
+
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          lfs: true
+          persist-credentials: false
+
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        id: setup-node
+        with:
+          node-version-file: application/ui/.nvmrc
+
+      - name: Install dependencies
+        working-directory: "application/ui"
+        run: npm ci
+
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: ui-dist
+          path: "application/ui"
+
+      - name: Unpack build
+        working-directory: "application/ui"
+        run: tar -xzf dist.tar.gz
+
+      - name: Download OpenAPI spec artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: openapi-spec
+          path: application/ui/src/api
+
+      - name: Build OpenAPI type definitions
+        working-directory: "application/ui"
+        run: npm run build:api:types
+
+      - name: Run Playwright tests
+        working-directory: "application/ui"
+        run: npm run test:component -- --project "Component tests"
+
+      - name: Upload blob report to GitHub Actions Artifacts
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: always()
+        with:
+          name: playwright-report
+          path: application/ui/playwright-report/
+          retention-days: 30

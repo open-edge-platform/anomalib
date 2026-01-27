@@ -236,12 +236,14 @@ def make_tabular_dataset(
         True,  # split
     ]:
         samples["label"] = samples.apply(
-            lambda x: DirType.NORMAL
-            if (x["label_index"] == LabelName.NORMAL) and (x["split"] == Split.TRAIN)
-            else (
-                DirType.NORMAL_TEST
-                if x["label_index"] == LabelName.NORMAL and x["split"] == Split.TEST
-                else (DirType.ABNORMAL if x["label_index"] == LabelName.ABNORMAL else None)
+            lambda x: (
+                DirType.NORMAL
+                if (x["label_index"] == LabelName.NORMAL) and (x["split"] == Split.TRAIN)
+                else (
+                    DirType.NORMAL_TEST
+                    if x["label_index"] == LabelName.NORMAL and x["split"] == Split.TEST
+                    else (DirType.ABNORMAL if x["label_index"] == LabelName.ABNORMAL else None)
+                )
             ),
             axis=1,
         )

@@ -234,7 +234,8 @@ def make_folder3d_dataset(
 
         # make sure every rgb image has a corresponding depth image and that the file exists
         mismatch = (
-            samples.loc[samples.label_index == LabelName.ABNORMAL]
+            samples
+            .loc[samples.label_index == LabelName.ABNORMAL]
             .apply(lambda x: Path(x.image_path).stem in Path(x.depth_path).stem, axis=1)
             .all()
         )
