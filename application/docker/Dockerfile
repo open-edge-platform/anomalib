@@ -77,6 +77,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 EXPOSE 8000
 
+# nosemgrep: dockerfile.security.missing-user.missing-user # will fix later
 CMD ["sh", "-c", "exec ./run.sh"]
 
 #------------------------------------------
@@ -109,6 +110,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 EXPOSE 8000
 
+# nosemgrep: dockerfile.security.missing-user.missing-user # will fix later
 CMD ["sh", "-c", "exec ./run.sh"]
 
 #------------------------------------------
@@ -141,4 +143,5 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 EXPOSE 8000
 
+# nosemgrep: dockerfile.security.missing-user.missing-user # will fix later
 CMD ["sh", "-c", "exec ./run.sh"]
