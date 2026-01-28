@@ -13,9 +13,7 @@ if TYPE_CHECKING:
 
 @dataclass(kw_only=True)
 class InferenceData:
-    """
-    InferenceData represents the data that is produced by the inference stage of the pipeline.
-    """
+    """InferenceData represents the data that is produced by the inference stage of the pipeline."""
 
     prediction: PredictionResult  # prediction result, e.g., bounding boxes, masks, etc.
     visualized_prediction: np.ndarray  # visualized prediction (e.g., bounding boxes, masks, etc. drawn on the frame)
@@ -24,8 +22,7 @@ class InferenceData:
 
 @dataclass(kw_only=True)
 class StreamData:
-    """
-    StreamData represents the data that flows through the various stages of the pipeline.
+    """StreamData represents the data that flows through the various stages of the pipeline.
     Each stage of the pipeline may set some of the attributes of this class,
     making the corresponding information available to the subsequent stages.
     """

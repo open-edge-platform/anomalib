@@ -18,8 +18,7 @@ class PredictionLabel(StrEnum):
 
 
 class Model(BaseIDNameModel):
-    """
-    Base model schema that includes common fields for all models.
+    """Base model schema that includes common fields for all models.
     This can be extended by other schemas to include additional fields.
     """
 

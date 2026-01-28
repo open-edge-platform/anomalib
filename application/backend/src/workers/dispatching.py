@@ -24,8 +24,7 @@ if TYPE_CHECKING:
 
 
 class DispatchingWorker(BaseThreadWorker):
-    """
-    A thread that pulls predictions from the queue and dispatches them to the configured outputs
+    """A thread that pulls predictions from the queue and dispatches them to the configured outputs
     and WebRTC visualization stream.
     """
 

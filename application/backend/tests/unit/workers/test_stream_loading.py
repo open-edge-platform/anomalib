@@ -60,7 +60,7 @@ def mock_stream_data():
             source_metadata={},
         )
 
-    yield create_sample
+    return create_sample
 
 
 @pytest.fixture
@@ -123,7 +123,6 @@ class TestStreamLoader:
         mock_services,
     ):
         """Test that frames are discarded when queue is full for real-time streams"""
-
         data1, data2 = mock_stream_data(), mock_stream_data()
         frame_queue.put(data1)
         frame_queue.put(data2)
@@ -162,7 +161,6 @@ class TestStreamLoader:
 
     def test_queue_empty(self, frame_queue, stop_event, config_changed_condition, mock_services):
         """Test that stream frames are acquired when queue is empty"""
-
         # Create and start the worker
         worker = StreamLoader(
             frame_queue=frame_queue,
@@ -185,7 +183,6 @@ class TestStreamLoader:
 
     def test_cleanup(self, frame_queue, stop_event, config_changed_condition, mock_services):
         """Test that resources are successfully released when worker finishes"""
-
         # Create and start the worker
         worker = StreamLoader(
             frame_queue=frame_queue,

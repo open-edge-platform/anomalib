@@ -35,14 +35,13 @@ class DispatchError(Exception):
 
 
 class BaseDispatcher(metaclass=ABCMeta):
-    """
-    Base class for dispatchers.
+    """Base class for dispatchers.
     This class should be inherited by all dispatcher classes.
     """
 
     def __init__(self, output_config: Sink) -> None:
-        """
-        Initialize the dispatcher.
+        """Initialize the dispatcher.
+
         Args:
             output_config: Configuration for the output destination
         """
@@ -58,10 +57,10 @@ class BaseDispatcher(metaclass=ABCMeta):
         image_with_visualization: np.ndarray,
         predictions: PredictionResult,
     ) -> None:
-        """
-        Internal method to dispatch an image with predictions.
+        """Internal method to dispatch an image with predictions.
 
         This method should be overridden by subclasses to implement specific dispatch logic.
+
         Args:
             original_image (np.ndarray): The original image
             image_with_visualization (np.ndarray): The image with overlaid predictions
@@ -102,8 +101,8 @@ class BaseDispatcher(metaclass=ABCMeta):
         image_with_visualization: np.ndarray,
         predictions: PredictionResult,
     ) -> None:
-        """
-        Dispatch an image with predictions.
+        """Dispatch an image with predictions.
+
         Args:
             original_image (np.ndarray): The original image
             image_with_visualization (np.ndarray): The image with overlaid predictions

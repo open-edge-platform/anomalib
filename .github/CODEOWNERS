@@ -49,8 +49,8 @@
 
 
 # Geti Inspect
-/application/ui                                             @MarkRedeman
-/application/backend                                        @maxxgx
+/application/ui                                             @MarkRedeman @maxxgx @ActiveChooN
+/application/backend                                        @maxxgx @rajeshgangireddy @MarkRedeman
 
 # Tests
 /tests/                                                     @samet-akcay @ashwinvaidya17 @rajeshgangireddy

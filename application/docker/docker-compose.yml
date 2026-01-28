@@ -1,0 +1,43 @@
+x-proxy-list: &proxy-list
+  - HTTP_PROXY=${HTTP_PROXY}
+  - HTTPS_PROXY=${HTTPS_PROXY}
+  - NO_PROXY=${NO_PROXY}
+  - http_proxy=${http_proxy}
+  - https_proxy=${https_proxy}
+  - no_proxy=${no_proxy}
+
+x-proxies: &proxies
+  args: *proxy-list
+
+services:
+  geti-inspect:
+    image: geti-inspect-${AI_DEVICE:-cpu}:${TAG:-latest}
+    environment:
+      - ICE_SERVERS=${ICE_SERVERS:-[]} # JSON array of STUN/TURN servers for WebRTC, e.g. '[{"urls":"stun:stun.l.google.com:19302"},{"urls": "turn:' + COTURN-EXTERNAL-IP + ':' + COTURN-PORT + '?transport=tcp", "username": "user", "credential": "password"}]'
+      - WEBRTC_ADVERTISE_IP=${WEBRTC_ADVERTISE_IP}
+    restart: unless-stopped
+    build:
+      # Use root directory as context to build the image
+      context: ../../
+      dockerfile: application/docker/Dockerfile
+      target: geti-inspect-${AI_DEVICE:-cpu}
+      <<: *proxies
+    working_dir: /app/application/backend
+    container_name: geti-inspect-${AI_DEVICE:-cpu}
+    volumes:
+      # Persist database and uploaded data
+      - ../backend/data:/app/data
+      # Persist logs
+      - ../backend/logs:/app/logs
+    ports:
+      # nosemgrep: trailofbits.yaml.docker-compose.port-all-interfaces.port-all-interfaces # to be replaced
+      - "8000:8000"
+    # Increase file descriptor limits. Needed for uv bytecode compilation
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    # Map all host devices to provide access to webcams and other attached devices
+    privileged: true
+    devices:
+      - /dev:/dev

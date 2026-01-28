@@ -38,8 +38,7 @@ class MqttDispatcher(BaseDispatcher):
         mqtt_client: mqtt.Client | None = None,
         track_messages: bool | None = False,
     ) -> None:
-        """
-        Initialize the MqttDispatcher.
+        """Initialize the MqttDispatcher.
 
         Args:
             output_config: Configuration for the MQTT destination

@@ -34,3 +34,13 @@ repos:
         alias: markdownlint-application-backend
         name: markdownlint (application-backend)
         args: [--config=.markdownlint.yaml]
+
+  # Dockerfile linting
+  - repo: https://github.com/AleksaC/hadolint-py
+    rev: v2.12.0.2
+    hooks:
+      - id: hadolint
+        files: Dockerfile$
+        args:
+          - "--ignore=DL3008" # Pin versions in apt-get install
+          - "--ignore=DL4006" # Use bash in scripts

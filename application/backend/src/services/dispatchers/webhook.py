@@ -27,8 +27,8 @@ RETRY_ON_STATUS = [500, 502, 503, 504]
 
 class WebhookDispatcher(BaseDispatcher):
     def __init__(self, output_config: WebhookSinkConfig) -> None:
-        """
-        Initialize the WebhookDispatcher.
+        """Initialize the WebhookDispatcher.
+
         Args:
             output_config: Configuration for the webhook-based output destination
         """

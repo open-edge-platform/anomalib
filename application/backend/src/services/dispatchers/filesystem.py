@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+import pathlib
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -22,19 +23,20 @@ class FolderDispatcher(BaseDispatcher):
     """FolderDispatcher allows outputting to a folder in the local filesystem."""
 
     def __init__(self, output_config: FolderSinkConfig) -> None:
-        """
-        Initialize the FolderDispatcher.
+        """Initialize the FolderDispatcher.
+
         Args:
             output_config: Configuration for the output destination
         """
         super().__init__(output_config=output_config)
         self.output_folder = output_config.folder_path
-        if not os.path.exists(self.output_folder):
-            os.makedirs(self.output_folder, exist_ok=True)
+        folder = pathlib.Path(self.output_folder)
+        if not folder.exists():
+            folder.mkdir(exist_ok=True, parents=True)
 
     @staticmethod
     def _write_image_to_file(image: np.ndarray, file_path: str) -> None:
-        with open(file_path, "wb") as f:
+        with pathlib.Path(file_path).open("wb") as f:
             success, img_buf = cv2.imencode(".png", image)
             if success:
                 f.write(img_buf.tobytes())
@@ -43,7 +45,7 @@ class FolderDispatcher(BaseDispatcher):
 
     @staticmethod
     def _write_predictions_to_file(predictions: str, file_path: str) -> None:
-        with open(file_path, "w", encoding="utf-8") as f:
+        with pathlib.Path(file_path).open("w", encoding="utf-8") as f:
             f.write(predictions)
 
     def _dispatch(

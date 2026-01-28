@@ -21,6 +21,8 @@ from core.logging.log_config import LogConfig
 if TYPE_CHECKING:
     from loguru import Record
 
+import pathlib
+
 from loguru import logger
 
 global_log_config = LogConfig()
@@ -65,7 +67,7 @@ def setup_logging(config: LogConfig | None = None) -> None:
         log_path = os.path.join(config.log_folder, log_file)
 
         try:
-            os.makedirs(os.path.dirname(log_path), exist_ok=True)
+            pathlib.Path(os.path.dirname(log_path)).mkdir(exist_ok=True, parents=True)
         except OSError as e:
             logger.warning(f"Failed to create log directory {log_path}: {e}")
             continue

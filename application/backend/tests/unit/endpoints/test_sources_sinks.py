@@ -233,7 +233,7 @@ class TestSourceAndSinkEndpoints:
         config_id = uuid4()
         getattr(fxt_config_service, get_method).side_effect = ResourceNotFoundError(resource_type, str(config_id))
 
-        response = fxt_client.get(f"/api/projects/{fxt_project.id}/{api_path}/{str(config_id)}")
+        response = fxt_client.get(f"/api/projects/{fxt_project.id}/{api_path}/{config_id!s}")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         getattr(fxt_config_service, get_method).assert_called_once_with(config_id, fxt_project.id)

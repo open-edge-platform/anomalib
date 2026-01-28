@@ -1,0 +1,170 @@
+#------------------------------------------
+# Web UI Build Stage
+#------------------------------------------
+FROM node:24-alpine3.22@sha256:3e843c608bb5232f39ecb2b25e41214b958b0795914707374c8acc28487dea17 AS web-ui-base
+
+WORKDIR /home/app/web_ui/
+
+# Install git for degit
+RUN apk add --no-cache git
+
+
+COPY --link application/ui/package.json ./package.json
+COPY --link application/ui/package-lock.json ./package-lock.json
+RUN npm ci --audit=false
+
+
+COPY --link application/ui/tsconfig.json ./tsconfig.json
+COPY --link application/ui/rsbuild.config.ts ./rsbuild.config.ts
+COPY --link application/ui/src ./src
+
+FROM web-ui-base AS web-ui
+
+RUN npm run build
+
+
+#------------------------------------------
+# Geti Inspect Base with UI built
+#------------------------------------------
+FROM python:3.13-slim@sha256:58c30f5bfaa718b5803a53393190b9c68bd517c44c6c94c1b6c8c172bcfad040 AS geti-inspect-base
+COPY --from=docker.io/astral/uv:0.9.7@sha256:ba4857bf2a068e9bc0e64eed8563b065908a4cd6bfb66b531a9c424c8e25e142 /uv /uvx /bin/
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+ENV UV_PYTHON_DOWNLOADS=0
+
+
+RUN apt-get update \
+&& apt-get install -y --no-install-recommends \
+libgl1 \
+libglib2.0-0 \
+g++ \
+&& rm -rf /var/lib/apt/lists/* \
+&& apt-get clean
+
+ENV PATH=/app/.venv/bin:$PATH
+WORKDIR /app
+
+ARG STATIC_FILES_DIR="/app/application/ui/"
+ENV STATIC_FILES_DIR=${STATIC_FILES_DIR}
+ENV DATA_DIR="/app/data"
+ENV LOG_DIR="/app/logs"
+ENV PYTHONPATH=/app/application/backend
+
+COPY --link --from=web-ui /home/app/web_ui/dist ${STATIC_FILES_DIR}
+COPY  application/backend/run.sh /app/application/backend/run.sh
+
+# Copy anomalib source code (pyproject.toml depends on README and LICENSE as well)
+COPY --link src ./src
+COPY --link pyproject.toml uv.lock ./
+COPY --link LICENSE ./LICENSE
+COPY --link README.md ./README.md
+
+# Copy backend application
+COPY --link application/backend /app/application/backend
+
+# Create data and logs directories with write permissions for mounted volumes
+RUN mkdir -p /app/data /app/logs
+
+
+#------------------------------------------
+# Geti Inspect CPU version
+#------------------------------------------
+FROM geti-inspect-base AS geti-inspect-cpu
+
+ARG UID=10001
+ARG USER_NAME="non-root"
+
+# Create secure non-root user with home directory
+RUN useradd -l -u ${UID} -m ${USER_NAME} \
+    && mkdir -p /home/${USER_NAME}/.cache/uv \
+    && chown -R ${USER_NAME}:${USER_NAME} /home/${USER_NAME}
+
+WORKDIR /app/application/backend
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --extra cpu
+
+EXPOSE 8000
+
+USER ${USER_NAME}
+
+CMD ["sh", "-c", "exec ./run.sh"]
+
+#------------------------------------------
+# Geti Inspect CUDA version
+#------------------------------------------
+FROM geti-inspect-base AS geti-inspect-cuda
+
+ARG UID=10001
+ARG USER_NAME="non-root"
+
+RUN apt-get update  \
+    && apt-get install -y --no-install-recommends wget=1.25.0-2 \
+    && wget -q https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb \
+    && dpkg -i cuda-keyring_1.1-1_all.deb \
+    && rm -rf cuda-keyring_1.1-1_all.deb \
+    && apt-get remove -y wget
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    cuda-cudart-12-4 \
+    libcublas-12-4 \
+    libcufft-12-4 \
+    libcurand-12-4 \
+    libcusolver-12-4 \
+    libcusparse-12-4 \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+RUN useradd -l -u ${UID} -m ${USER_NAME} \
+    && mkdir -p /home/${USER_NAME}/.cache/uv \
+    && chown -R ${USER_NAME}:${USER_NAME} /home/${USER_NAME}
+
+WORKDIR /app/application/backend
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --extra cu124
+
+EXPOSE 8000
+
+USER ${USER_NAME}
+
+CMD ["sh", "-c", "exec ./run.sh"]
+
+#------------------------------------------
+# Geti Inspect XPU version
+#------------------------------------------
+FROM geti-inspect-base AS geti-inspect-xpu
+
+ARG UID=10001
+ARG USER_NAME="non-root"
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends wget gpg \
+ && wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | \
+    gpg --yes --dearmor --output /usr/share/keyrings/intel-graphics.gpg \
+ && echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy unified" | \
+    tee /etc/apt/sources.list.d/intel-gpu-jammy.list \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends \
+    libze-intel-gpu1 \
+    libze1 \
+    intel-opencl-icd \
+    clinfo \
+ && rm -rf /var/lib/apt/lists/* \
+ && apt-get remove -y wget gpg \
+ && apt-get clean
+
+RUN useradd -l -u ${UID} -m ${USER_NAME} \
+    && mkdir -p /home/${USER_NAME}/.cache/uv \
+    && chown -R ${USER_NAME}:${USER_NAME} /home/${USER_NAME}
+
+WORKDIR /app/application/backend
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --extra xpu
+
+EXPOSE 8000
+
+USER ${USER_NAME}
+
+CMD ["sh", "-c", "exec ./run.sh"]
