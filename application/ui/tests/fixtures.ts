@@ -1,52 +1,107 @@
-import { createNetworkFixture, NetworkFixture } from '@msw/playwright';
-import { expect, test as testBase } from '@playwright/test';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-import { handlers, http } from '../src/api/utils';
+import { test as base, expect, APIRequestContext, Page } from '@playwright/test';
+import { randomUUID } from 'crypto';
 
-interface Fixtures {
-    network: NetworkFixture;
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8000';
+
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+export const TEST_ASSETS_DIR = path.join(currentDir, 'e2e', 'test-assets');
+
+interface TestProject {
+    id: string;
+    name: string;
 }
 
-const test = testBase.extend<Fixtures>({
-    network: createNetworkFixture({
-        initialHandlers: [
-            ...handlers,
-            http.get('/api/projects', ({ response }) => {
-                return response(200).json({
-                    projects: [
-                        {
-                            id: '12',
-                            name: 'Project #12',
-                        },
-                    ],
-                });
-            }),
-            http.get('/api/projects/{project_id}', ({ response }) => {
-                return response(200).json({
-                    id: '1',
-                    name: 'Project #1',
-                });
-            }),
-            http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
-                return response(200).json({
-                    status: 'idle',
-                    project_id: '12',
-                });
-            }),
-            http.get('/api/projects/{project_id}/images', ({ response }) => {
-                return response(200).json({ media: [] });
-            }),
-            http.get('/api/devices/inference', ({ response }) => {
-                return response(200).json({ devices: ['cpu'] });
-            }),
-            http.get('/api/projects/{project_id}/models', ({ response }) => {
-                return response(200).json({ models: [] });
-            }),
-            http.get('/api/active-pipeline', ({ response }) => {
-                return response(200).json({ project_id: '12', status: 'idle' });
-            }),
-        ],
-    }),
+interface TestFixtures {
+    api: APIRequestContext;
+    createProject: (name?: string) => Promise<TestProject>;
+    deleteProject: (projectId: string) => Promise<void>;
+    clearAllProjects: () => Promise<void>;
+    getProjectIdFromUrl: (page: Page) => string | null;
+    cleanupProjects: string[];
+}
+
+export const test = base.extend<TestFixtures>({
+    api: async ({ playwright }, use) => {
+        const context = await playwright.request.newContext({
+            baseURL: API_BASE_URL,
+        });
+        await use(context);
+        await context.dispose();
+    },
+
+    cleanupProjects: async ({}, use) => {
+        const projectIds: string[] = [];
+        await use(projectIds);
+    },
+
+    createProject: async ({ api, cleanupProjects }, use) => {
+        const createFn = async (name?: string): Promise<TestProject> => {
+            const projectId = randomUUID();
+            const projectName = name || `Test Project ${projectId.slice(0, 8)}`;
+
+            const response = await api.post('/api/projects', {
+                data: { id: projectId, name: projectName },
+            });
+
+            if (!response.ok()) {
+                const body = await response.text();
+                throw new Error(`Failed to create project: ${response.status()} - ${body}`);
+            }
+
+            cleanupProjects.push(projectId);
+            return { id: projectId, name: projectName };
+        };
+
+        await use(createFn);
+    },
+
+    deleteProject: async ({ api }, use) => {
+        const deleteFn = async (projectId: string): Promise<void> => {
+            await api.delete(`/api/projects/${projectId}`);
+        };
+        await use(deleteFn);
+    },
+
+    clearAllProjects: async ({ api }, use) => {
+        const clearFn = async (): Promise<void> => {
+            const projectsResp = await api.get('/api/projects');
+            const { projects } = await projectsResp.json();
+            for (const p of projects) {
+                // Cancel any running training jobs first
+                const modelsResp = await api.get(`/api/projects/${p.id}/models`);
+                const { models } = await modelsResp.json();
+                for (const m of models) {
+                    if (m.status === 'training') {
+                        await api.post(`/api/projects/${p.id}/models/${m.id}/cancel`);
+                    }
+                }
+                await api.delete(`/api/projects/${p.id}`);
+            }
+        };
+        await use(clearFn);
+    },
+
+    getProjectIdFromUrl: async ({}, use) => {
+        const getFn = (page: Page): string | null => {
+            const url = page.url();
+            const match = url.match(/\/projects\/([^/?]+)/);
+            return match?.[1] ?? null;
+        };
+        await use(getFn);
+    },
 });
 
-export { expect, http, test };
+test.afterEach(async ({ api, cleanupProjects }) => {
+    for (const projectId of cleanupProjects) {
+        try {
+            await api.delete(`/api/projects/${projectId}`);
+        } catch {
+            // Ignore cleanup errors
+        }
+    }
+});
+
+export { expect };
