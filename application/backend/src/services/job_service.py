@@ -101,6 +101,22 @@ class JobService:
                 updates["progress"] = progress_
             await repo.update(job, updates)
 
+    @staticmethod
+    async def update_job_progress(
+        job_id: UUID,
+        progress: int,
+        message: str | None = None,
+    ) -> None:
+        async with get_async_db_session_ctx() as session:
+            repo = JobRepository(session)
+            job = await repo.get_by_id(job_id)
+            if job is None:
+                raise ResourceNotFoundException(resource_id=job_id, resource_name="job")
+            updates: dict = {"progress": progress}
+            if message is not None:
+                updates["message"] = message
+            await repo.update(job, updates)
+
     @classmethod
     async def is_job_still_running(cls, job_id: UUID | str) -> bool:
         job = await cls.get_job_by_id(job_id=job_id)
