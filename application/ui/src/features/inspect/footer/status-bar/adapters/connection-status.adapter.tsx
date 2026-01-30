@@ -3,7 +3,7 @@
 
 import { useEffect } from 'react';
 
-import { useWebRTCConnection } from '../../../../../components/stream/web-rtc-connection-provider';
+import { useStreamConnection } from '../../../../../components/stream/stream-connection-provider';
 import { useStatusBar } from '../status-bar-context';
 import type { ConnectionStatus } from '../status-bar.interface';
 
@@ -17,7 +17,7 @@ const CONNECTION_STATUS_MAP: Record<string, ConnectionStatus> = {
 
 export const ConnectionStatusAdapter = () => {
     const { setConnection } = useStatusBar();
-    const { status } = useWebRTCConnection();
+    const { status } = useStreamConnection();
 
     useEffect(() => {
         const connectionStatus = CONNECTION_STATUS_MAP[status] || 'disconnected';

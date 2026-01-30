@@ -3,7 +3,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { LinkExpired } from '@geti-inspect/icons';
 import { Button, DialogContainer, Flex, Loading, Text } from '@geti/ui';
 
-import { useWebRTCConnection } from '../../../../components/stream/web-rtc-connection-provider';
+import { useStreamConnection } from '../../../../components/stream/stream-connection-provider';
 import { ConfirmationDialog } from './confirmation-dialog.component';
 
 import classes from './enable-project.module.scss';
@@ -14,7 +14,7 @@ interface EnableProjectProps {
 }
 
 const useStopCurrentWebRtcConnection = () => {
-    const { stop } = useWebRTCConnection();
+    const { stop } = useStreamConnection();
 
     useEffect(() => {
         stop();

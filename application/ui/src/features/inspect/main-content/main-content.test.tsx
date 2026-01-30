@@ -7,30 +7,31 @@ import { ZoomProvider } from 'src/components/zoom/zoom';
 import { server } from 'src/msw-node-setup';
 
 import { getMockedPipeline } from '../../../../mocks/mock-pipeline';
-import { useWebRTCConnection, WebRTCConnectionState } from '../../../components/stream/web-rtc-connection-provider';
+import { StreamConnectionState, useStreamConnection } from '../../../components/stream/stream-connection-provider';
 import { MainContent } from './main-content.component';
 import { SOURCE_MESSAGE } from './source-sink-message/source-sink-message.component';
 
-vi.mock('../../../components/stream/web-rtc-connection-provider', () => ({
-    useWebRTCConnection: vi.fn(),
+vi.mock('../../../components/stream/stream-connection-provider', () => ({
+    useStreamConnection: vi.fn(),
 }));
 
 describe('MainContent', () => {
     const renderApp = ({
-        webRtcConfig = {},
+        streamConfig = {},
         pipelineConfig = {},
         activePipelineConfig = {},
     }: {
-        webRtcConfig?: Partial<WebRTCConnectionState>;
+        streamConfig?: Partial<StreamConnectionState>;
         pipelineConfig?: Partial<SchemaPipeline>;
         activePipelineConfig?: Partial<SchemaPipeline> | null;
     }) => {
-        vi.mocked(useWebRTCConnection).mockReturnValue({
+        vi.mocked(useStreamConnection).mockReturnValue({
             start: vi.fn(),
             status: 'idle',
             stop: vi.fn(),
-            webRTCConnectionRef: { current: null },
-            ...webRtcConfig,
+            streamUrl: null,
+            setStatus: vi.fn(),
+            ...streamConfig,
         });
 
         server.use(
@@ -117,7 +118,7 @@ describe('MainContent', () => {
         it('renders when source is configured', async () => {
             renderApp({
                 pipelineConfig: { status: 'idle' },
-                webRtcConfig: { status: 'idle' },
+                streamConfig: { status: 'idle' },
             });
 
             expect(await screen.findByRole('button', { name: /Start stream/i })).toBeVisible();
@@ -125,7 +126,7 @@ describe('MainContent', () => {
 
         it('renders when current project is active', async () => {
             renderApp({
-                webRtcConfig: { status: 'idle' },
+                streamConfig: { status: 'idle' },
                 pipelineConfig: { project_id: '123', status: 'running' },
                 activePipelineConfig: { project_id: '123' },
             });
