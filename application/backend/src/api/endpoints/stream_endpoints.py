@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 import queue
-import time
 from collections.abc import AsyncIterator
 from typing import Annotated
 
@@ -10,6 +9,7 @@ import cv2
 import numpy as np
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
+from loguru import logger
 
 from api.dependencies import get_scheduler
 from api.endpoints import API_PREFIX
@@ -23,8 +23,7 @@ router = APIRouter(
 JPEG_QUALITY = 85
 FRAME_TIMEOUT_SEC = 0.5
 STREAM_BOUNDARY = "frame"
-MAX_FPS = 10
-FRAME_INTERVAL_SEC = 1.0 / MAX_FPS
+FALLBACK_FRAME = np.full((64, 64, 3), 16, dtype=np.uint8)
 
 
 def encode_frame_to_jpeg(frame: np.ndarray) -> bytes | None:
@@ -53,36 +52,22 @@ async def generate_mjpeg_stream(stream_queue: queue.Queue) -> AsyncIterator[byte
         AsyncIterator[bytes]: Multipart MJPEG byte chunks.
     """
     last_frame: np.ndarray | None = None
-    last_emit_at: float | None = None
 
     while True:
         try:
+            logger.trace("Getting the frame from the stream_queue...")
             frame = await asyncio.to_thread(stream_queue.get, True, FRAME_TIMEOUT_SEC)
-            while True:
-                try:
-                    frame = stream_queue.get_nowait()
-                except queue.Empty:
-                    break
             last_frame = frame
         except queue.Empty:
+            logger.trace("Empty queue. Using the last frame...")
             if last_frame is None:
-                await asyncio.sleep(0.1)
-                continue
-            frame = last_frame
-
-        if frame is None:
-            await asyncio.sleep(0.1)
-            continue
-
-        if last_emit_at is not None:
-            elapsed = time.monotonic() - last_emit_at
-            if elapsed < FRAME_INTERVAL_SEC:
-                await asyncio.sleep(FRAME_INTERVAL_SEC - elapsed)
+                frame = FALLBACK_FRAME
+            else:
+                frame = last_frame
 
         jpeg_bytes = await asyncio.to_thread(encode_frame_to_jpeg, frame)
         if jpeg_bytes is None:
             continue
-        last_emit_at = time.monotonic()
 
         yield (f"--{STREAM_BOUNDARY}\r\n".encode() + b"Content-Type: image/jpeg\r\n\r\n" + jpeg_bytes + b"\r\n")
 
