@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 
-import { fetchClient } from '@geti-inspect/api';
+import { API_BASE_URL } from '@geti-inspect/api';
 import { Flex, TextField, View } from '@geti/ui';
 
 import { OutputFormats } from '../output-formats/output-formats.component';
@@ -30,6 +30,7 @@ const extractSuffix = (folderPath: string, dataPath: string): string => {
 };
 
 export const LocalFolderFields = ({ defaultState }: LocalFolderFieldsProps) => {
+    const folderPathLabelId = useId();
     const [dataPath, setDataPath] = useState<string>('');
     const [folderSuffix, setFolderSuffix] = useState(defaultState.folder_path);
     const [initializedSuffix, setInitializedSuffix] = useState(false);
@@ -37,12 +38,25 @@ export const LocalFolderFields = ({ defaultState }: LocalFolderFieldsProps) => {
     useEffect(() => {
         const fetchDataPath = async () => {
             try {
-                const response = await fetchClient.GET('/api/system/datapath' as any, {});
-                if (response.data) {
-                    // Remove quotes if the response is a JSON string
-                    const path = typeof response.data === 'string' ? response.data : String(response.data);
-                    setDataPath(path);
+                const url = API_BASE_URL
+                    ? new URL('/api/system/datapath', API_BASE_URL).toString()
+                    : '/api/system/datapath';
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch data path (HTTP ${response.status})`);
                 }
+
+                const raw = await response.text();
+                // Endpoint may return a JSON string (quoted) or plain text.
+                const parsed = (() => {
+                    try {
+                        return JSON.parse(raw) as unknown;
+                    } catch {
+                        return raw;
+                    }
+                })();
+
+                setDataPath(typeof parsed === 'string' ? parsed : String(parsed));
             } catch (error) {
                 console.error('Failed to fetch data path:', error);
             }
@@ -70,7 +84,9 @@ export const LocalFolderFields = ({ defaultState }: LocalFolderFieldsProps) => {
             <TextField isRequired label='Name' name='name' defaultValue={defaultState.name} />
 
             <View>
-                <label className={styles.folderPathLabel}>Folder Path</label>
+                <span id={folderPathLabelId} className={styles.folderPathLabel}>
+                    Folder Path
+                </span>
                 <Flex direction='row' alignItems='center' gap='size-0'>
                     <View
                         backgroundColor='gray-200'
@@ -85,7 +101,7 @@ export const LocalFolderFields = ({ defaultState }: LocalFolderFieldsProps) => {
                     <TextField
                         isRequired
                         flex='1'
-                        aria-label='Folder suffix'
+                        aria-labelledby={folderPathLabelId}
                         value={folderSuffix}
                         onChange={setFolderSuffix}
                         UNSAFE_className={styles.folderSuffixField}
