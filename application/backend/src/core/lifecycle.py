@@ -3,6 +3,7 @@
 
 """Application lifecycle management"""
 
+import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -37,6 +38,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
     # Initialize Scheduler
     app_scheduler = Scheduler()
+    app_scheduler.initialize_broadcaster(asyncio.get_running_loop())
     app_scheduler.start_workers()
     app.state.scheduler = app_scheduler
     app.state.active_models = {}
