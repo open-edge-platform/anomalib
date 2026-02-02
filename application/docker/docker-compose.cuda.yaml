@@ -1,18 +1,20 @@
-x-proxy-list: &proxy-list
-  - HTTP_PROXY=${HTTP_PROXY}
-  - HTTPS_PROXY=${HTTPS_PROXY}
-  - NO_PROXY=${NO_PROXY}
-  - http_proxy=${http_proxy}
-  - https_proxy=${https_proxy}
-  - no_proxy=${no_proxy}
+x-proxy-env: &proxy-env
+  HTTP_PROXY: ${HTTP_PROXY}
+  HTTPS_PROXY: ${HTTPS_PROXY}
+  NO_PROXY: ${NO_PROXY}
+  http_proxy: ${http_proxy}
+  https_proxy: ${https_proxy}
+  no_proxy: ${no_proxy}
 
 x-proxies: &proxies
-  args: *proxy-list
+  args: *proxy-env
 
 services:
   geti-inspect:
     image: geti-inspect-${AI_DEVICE:-cpu}:${TAG:-latest}
-    environment: *proxy-list
+    environment:
+      DEBUG: ${DEBUG:-false}
+      <<: *proxy-env
     restart: unless-stopped
     build:
       # Use root directory as context to build the image
