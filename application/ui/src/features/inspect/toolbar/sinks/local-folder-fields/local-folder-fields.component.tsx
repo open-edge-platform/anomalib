@@ -6,6 +6,7 @@ import { Flex, TextField, View } from '@geti/ui';
 import { OutputFormats } from '../output-formats/output-formats.component';
 import { RateLimitField } from '../rate-limit-field/rate-limit-field.component';
 import { LocalFolderSinkConfig } from '../utils';
+
 import styles from './local-folder-fields.module.scss';
 
 interface LocalFolderFieldsProps {
