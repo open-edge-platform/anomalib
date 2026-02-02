@@ -4,7 +4,7 @@ import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { HttpResponse } from 'msw';
 import { SchemaPipeline } from 'src/api/openapi-spec';
 import { http } from 'src/api/utils';
-import { StreamConnectionStatus , useStreamConnection } from 'src/components/stream/stream-connection-provider';
+import { StreamConnectionStatus, useStreamConnection } from 'src/components/stream/stream-connection-provider';
 import { server } from 'src/msw-node-setup';
 import { TestProviders } from 'src/providers';
 import { queryClient } from 'src/query-client/query-client';
