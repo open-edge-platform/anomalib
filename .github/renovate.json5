@@ -46,7 +46,7 @@
       schedule: ["* * * * 0"], // weekly
     },
 
-    // Disable python base image upgrades, except patch and digital pinning
+    // Disable python base image upgrades, except patch and digest pinning
     {
       enabled: false,
       matchDatasources: ["docker"],
@@ -54,7 +54,7 @@
       matchUpdateTypes: ["major", "minor"],
     },
 
-    // Disable node image upgrades, except patch and digital pinning
+    // Disable node image upgrades, except patch and digest pinning
     {
       enabled: false,
       matchDatasources: ["docker"],
