@@ -51,7 +51,7 @@ dependencies = [
     "imagecodecs",
     "kornia>=0.6.6",
     # Data science and analysis
-    "pandas>=1.1.0",
+    "pandas>=1.1.0,<3.0.0",  # Temporary pin: pandas 3.0 breaks DirType enum comparisons in DataFrame.loc (issue #3303)
     "matplotlib>=3.4.3",
     "scikit-learn",
 ]
