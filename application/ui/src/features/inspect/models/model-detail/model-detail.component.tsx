@@ -144,11 +144,12 @@ export const ModelDetail = ({ model, isActiveModel, onBack }: ModelDetailProps) 
                         <Flex direction='column' gap='size-100'>
                             <Text UNSAFE_className={classes.label}>Export Format</Text>
                             <div className={classes.formatGroup} role='radiogroup' aria-label='Select export format'>
-                                {EXPORT_FORMATS.map(({ id, Icon }) => (
+                                {EXPORT_FORMATS.map(({ id, name, Icon }) => (
                                     <button
                                         key={id}
                                         type='button'
                                         role='radio'
+                                        aria-label={name}
                                         aria-checked={selectedFormat === id}
                                         onClick={() => handleFormatChange(id)}
                                         className={`${classes.formatOption} ${
