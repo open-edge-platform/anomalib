@@ -29,7 +29,7 @@
   // if necessary, add supported releases branches here
   // it is possible to enable/disable specific upgrades per branch with
   // `matchBaseBranches` in specific rule
-  baseBranches: ["main", "feature/geti-inspect"],
+  baseBranches: ["main"],
 
   enabledManagers: ["github-actions", "pep621", "custom.regex"],
 
@@ -46,11 +46,27 @@
       schedule: ["* * * * 0"], // weekly
     },
 
-    // Disable non-security upgrades for pypi, except lock file update
+    // Disable python base image upgrades, except patch and digital pinning
     {
-      matchBaseBranches: ["feature/geti-inspect"],
       enabled: false,
-      matchDatasources: ["pypi"],
+      matchDatasources: ["docker"],
+      matchPackageNames: ["python"],
+      matchUpdateTypes: ["major", "minor"],
+    },
+
+    // Disable node image upgrades, except patch and digital pinning
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["node"],
+      matchUpdateTypes: ["major", "minor"],
+    },
+
+    // Disable non-security and lock file upgrades for npm
+    // Lock is updated manually
+    {
+      enabled: false,
+      matchManagers: ["npm"],
     },
 
     // Python version is upgraded manually
@@ -59,6 +75,13 @@
       matchDatasources: ["python-version"],
       matchDepNames: ["python"],
       matchDepTypes: ["requires-python"],
+    },
+
+    // Disable upgrades for Dockerfile syntax (docker/dockerfile)
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchDepNames: ["docker/dockerfile"],
     },
 
     // disable open-clip-torch upgrades as
@@ -77,6 +100,14 @@
       matchDepNames: ["torch"],
     },
 
+    // Disable ruff upgrades in application/backend/pyproject.toml
+    {
+      enabled: false,
+      matchDatasources: ["pypi"],
+      matchDepNames: ["ruff"],
+      matchFileNames: ["application/backend/pyproject.toml"],
+    },
+
     // Group GitHub Actions updates
     {
       enabled: true,
@@ -85,6 +116,21 @@
       matchManagers: ["github-actions"],
       matchPackagePatterns: ["*"],
       schedule: ["* * 1 * *"], // every month
+    },
+
+    // Disable upgrades for non-main branches
+    {
+      enabled: false,
+      matchManagers: ["github-actions"],
+      matchBaseBranches: ["!main"],
+    },
+
+    // uv version used in GitHub Actions is updated manually
+    {
+      enabled: false,
+      matchDatasources: ["github-releases"],
+      matchDepNames: ["astral-sh/setup-uv"],
+      matchDepTypes: ["uses-with"],
     },
 
     // Python version used in GitHub Actions is updated manually
