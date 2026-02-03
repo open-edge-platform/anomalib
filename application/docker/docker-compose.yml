@@ -13,8 +13,7 @@ services:
   geti-inspect:
     image: geti-inspect-${AI_DEVICE:-cpu}:${TAG:-latest}
     environment:
-      ICE_SERVERS: ${ICE_SERVERS:-[]} # JSON array of STUN/TURN servers for WebRTC, e.g. '[{"urls":"stun:stun.l.google.com:19302"},{"urls": "turn:' + COTURN-EXTERNAL-IP + ':' + COTURN-PORT + '?transport=tcp", "username": "user", "credential": "password"}]'
-      WEBRTC_ADVERTISE_IP: ${WEBRTC_ADVERTISE_IP}
+      DEBUG: ${DEBUG:-false}
       <<: *proxy-env
     restart: unless-stopped
     build:
