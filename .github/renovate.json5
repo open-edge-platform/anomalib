@@ -31,13 +31,24 @@
   // `matchBaseBranches` in specific rule
   baseBranches: ["main"],
 
-  enabledManagers: ["github-actions", "pep621", "custom.regex"],
+  enabledManagers: ["github-actions", "pep621", "dockerfile", "npm"],
 
   // Set limit to 10
   ignorePresets: [":prHourlyLimit2"],
   prHourlyLimit: 10,
 
   packageRules: [
+    // Enable pinning for container images
+    // https://docs.renovatebot.com/presets-docker/#dockerpindigests
+    {
+      enabled: true,
+      matchDatasources: ["docker"],
+      pinDigests: true,
+      groupName: "Pin images",
+      groupSlug: "pin-images",
+      schedule: ["* * * * 0"], // weekly
+    },
+
     // weekly dependencies upgrades
     {
       matchBaseBranches: ["main"],
@@ -60,6 +71,14 @@
       matchDatasources: ["docker"],
       matchPackageNames: ["node"],
       matchUpdateTypes: ["major", "minor"],
+    },
+
+    // Disable docker.io/astral/uv image upgrades, except digital pinning,
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["docker.io/astral/uv"],
+      matchUpdateTypes: ["major", "minor", "patch"],
     },
 
     // Disable non-security and lock file upgrades for npm
@@ -116,13 +135,6 @@
       matchManagers: ["github-actions"],
       matchPackagePatterns: ["*"],
       schedule: ["* * 1 * *"], // every month
-    },
-
-    // Disable upgrades for non-main branches
-    {
-      enabled: false,
-      matchManagers: ["github-actions"],
-      matchBaseBranches: ["!main"],
     },
 
     // uv version used in GitHub Actions is updated manually
