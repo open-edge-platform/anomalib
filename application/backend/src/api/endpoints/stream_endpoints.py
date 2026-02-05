@@ -36,7 +36,7 @@ async def generate_mjpeg_stream(scheduler: Scheduler, request: Request) -> Async
     """
     last_seen_id = 0
     stream_id = _active_stream_clients
-    logger.warning(f"MJPEG stream started ({stream_id})")
+    logger.info(f"MJPEG stream started ({stream_id})")
 
     try:
         while True:
@@ -56,7 +56,7 @@ async def generate_mjpeg_stream(scheduler: Scheduler, request: Request) -> Async
     except asyncio.CancelledError:
         logger.debug(f"MJPEG stream cancelled ({stream_id})")
     finally:
-        logger.warning(f"MJPEG stream stopped ({stream_id})")
+        logger.info(f"MJPEG stream stopped ({stream_id})")
 
 
 @router.get("")
