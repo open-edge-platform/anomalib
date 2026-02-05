@@ -55,12 +55,12 @@ class MJPEGBroadcaster:
             self._frame_id += 1
             self._condition.notify_all()
 
-    async def get_jpeg(self, last_seen_id: int, timeout: float = 1.0) -> tuple[bytes | None, int]:  # noqa: ASYNC109
+    async def get_jpeg(self, last_seen_id: int, timeout: float = 0.5) -> tuple[bytes | None, int]:  # noqa: ASYNC109
         """Wait for new JPEG bytes or timeout.
 
         Args:
             last_seen_id (int): Last frame id seen by the consumer.
-            timeout (float): Time to wait for a new frame. Defaults to 1.0.
+            timeout (float): Time to wait for a new frame. Defaults to 0.5.
 
         Returns:
             tuple[bytes | None, int]: JPEG bytes and new frame id or (None, last_seen_id) on timeout.

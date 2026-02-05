@@ -3,7 +3,6 @@ import { Suspense, useEffect, useState } from 'react';
 import { LinkExpired } from '@geti-inspect/icons';
 import { Button, DialogContainer, Flex, Loading, Text } from '@geti/ui';
 
-import { useStreamConnection } from '../../../../components/stream/stream-connection-provider';
 import { ConfirmationDialog } from './confirmation-dialog.component';
 
 import classes from './enable-project.module.scss';
@@ -13,17 +12,8 @@ interface EnableProjectProps {
     currentProjectId: string;
 }
 
-const useStopCurrentWebRtcConnection = () => {
-    const { stop } = useStreamConnection();
-
-    useEffect(() => {
-        stop();
-    }, [stop]);
-};
-
 export const EnableProject = ({ activeProjectId, currentProjectId }: EnableProjectProps) => {
     const [isOpen, setIsOpen] = useState(false);
-    useStopCurrentWebRtcConnection();
 
     return (
         <Flex UNSAFE_className={classes.container} alignItems={'center'} justifyContent={'center'}>

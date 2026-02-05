@@ -83,7 +83,7 @@ describe('useAutoPlayStream', () => {
     it('run pipeline', async () => {
         const pipelinePatchSpy = vi.fn();
         const mockedPipeline = getMockedPipeline({});
-        mockedPipeline.status = 'idle';
+        mockedPipeline.status = 'active';
 
         server.use(
             http.post('/api/projects/{project_id}/pipeline:run', () => {
@@ -98,6 +98,27 @@ describe('useAutoPlayStream', () => {
 
         await waitFor(() => {
             expect(pipelinePatchSpy).toHaveBeenCalled();
+        });
+    });
+
+    it('does not run pipeline if pipeline status is idle', async () => {
+        const pipelinePatchSpy = vi.fn();
+        const mockedPipeline = getMockedPipeline({});
+        mockedPipeline.status = 'idle';
+
+        server.use(
+            http.post('/api/projects/{project_id}/pipeline:run', () => {
+                pipelinePatchSpy();
+                return HttpResponse.json({}, { status: 204 });
+            })
+        );
+        renderApp({
+            status: 'connected',
+            pipelineConfig: mockedPipeline,
+        });
+
+        await waitFor(() => {
+            expect(pipelinePatchSpy).not.toHaveBeenCalled();
         });
     });
 
@@ -136,7 +157,7 @@ describe('useAutoPlayStream', () => {
 
     it('shows error toast if pipeline run API fails', async () => {
         const mockedPipeline = getMockedPipeline({});
-        mockedPipeline.status = 'idle';
+        mockedPipeline.status = 'active';
         server.use(
             http.post('/api/projects/{project_id}/pipeline:run', () => {
                 return HttpResponse.json(

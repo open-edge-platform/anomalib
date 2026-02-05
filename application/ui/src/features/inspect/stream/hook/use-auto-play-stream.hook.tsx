@@ -22,7 +22,7 @@ export const useAutoPlayStream = () => {
 
     const hasModel = isNonEmptyString(pipeline?.model?.id);
     const hasSource = isNonEmptyString(pipeline?.source?.id);
-    const isRunning = pipeline?.status === 'running';
+    const isActive = pipeline?.status === 'active';
     const hasInferenceConfig = hasModel && hasSource;
 
     // Track previous status to detect transitions
@@ -66,7 +66,7 @@ export const useAutoPlayStream = () => {
             start();
         }
 
-        if (hasInferenceConfig && !isRunning && !runPipeline.isPending) {
+        if (hasInferenceConfig && isActive && !runPipeline.isPending) {
             runPipeline.mutate({ params: { path: { project_id: projectId } } });
         }
 
@@ -77,5 +77,5 @@ export const useAutoPlayStream = () => {
                 errorToastTimeoutRef.current = null;
             }
         };
-    }, [hasSource, status, start, hasInferenceConfig, isRunning, runPipeline, projectId]);
+    }, [hasSource, status, start, hasInferenceConfig, isActive, runPipeline, projectId]);
 };

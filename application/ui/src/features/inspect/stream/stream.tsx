@@ -82,8 +82,13 @@ export const Stream = () => {
     }, [setStatus]);
 
     const handleStreamError = useCallback(() => {
-        setStatus((current) => (current === 'connected' ? 'disconnected' : 'failed'));
-    }, [setStatus]);
+        // Only set failed if we were previously connected or connecting,
+        // and avoid flipping to failed if the url was just cleared (null)
+        if (streamUrl) {
+             setStatus((current) => (current === 'connected' ? 'disconnected' : 'failed'));
+             toast({ type: 'error', message: 'Stream connection failed' });
+        }
+    }, [setStatus, streamUrl]);
 
     const captureImageMutation = $api.useMutation('get', '/api/projects/{project_id}/capture', {
         onError: () => {
@@ -116,6 +121,7 @@ export const Stream = () => {
 
             <ZoomTransform target={size}>
                 <img
+                    key={streamUrl}
                     ref={imageRef}
                     src={streamUrl ?? undefined}
                     width={size.width}

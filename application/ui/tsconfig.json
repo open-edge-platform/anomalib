@@ -1,7 +1,6 @@
 {
     "extends": "@geti/config/typescript",
     "include": ["src", "rsbuild.config.ts", "vitest.config.ts", "playwright.config.ts"],
-    "exclude": ["src/components/stream/web-rtc-connection.ts", "src/components/stream/web-rtc-connection-provider.tsx"],
     "compilerOptions": {
         "types": ["vitest/globals"],
         "baseUrl": ".",
