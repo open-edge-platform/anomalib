@@ -85,8 +85,8 @@ export const Stream = () => {
         // Only set failed if we were previously connected or connecting,
         // and avoid flipping to failed if the url was just cleared (null)
         if (streamUrl) {
-             setStatus((current) => (current === 'connected' ? 'disconnected' : 'failed'));
-             toast({ type: 'error', message: 'Stream connection failed' });
+            setStatus((current) => (current === 'connected' ? 'disconnected' : 'failed'));
+            toast({ type: 'error', message: 'Stream connection failed' });
         }
     }, [setStatus, streamUrl]);
 
