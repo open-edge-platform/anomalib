@@ -71,7 +71,7 @@ export const StreamContainer = () => {
                 </View>
             )}
 
-            {activePipeline.isPending && (
+            {(status === 'connecting' || activePipeline.isPending) && (
                 <View backgroundColor={'gray-200'} width='90%' height='90%'>
                     <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
                         <Loading mode='inline' />
