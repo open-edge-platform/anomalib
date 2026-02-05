@@ -28,16 +28,13 @@ const useStreamConnectionState = () => {
         setStatus('idle');
     }, []);
 
-    return useMemo(
-        () => ({
-            status,
-            start,
-            stop,
-            streamUrl,
-            setStatus,
-        }),
-        [status, start, stop, streamUrl, setStatus]
-    );
+    return {
+        status,
+        start,
+        stop,
+        streamUrl,
+        setStatus,
+    };
 };
 
 export const StreamConnectionProvider = ({ children }: { children: ReactNode }) => {
