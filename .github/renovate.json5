@@ -54,6 +54,8 @@
       matchBaseBranches: ["main"],
       enabled: true,
       matchManagers: ["pep621"],
+      groupName: "Python dependencies",
+      groupSlug: "python-dependencies",
       schedule: ["* * * * 0"], // weekly
     },
 
@@ -81,11 +83,13 @@
       matchUpdateTypes: ["major", "minor", "patch"],
     },
 
-    // Disable non-security and lock file upgrades for npm
-    // Lock is updated manually
+    // Enable minor, patch non-security and lock file upgrades for npm
     {
-      enabled: false,
+      enabled: true,
       matchManagers: ["npm"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "npm dependencies",
+      groupSlug: "npm-dependencies",
     },
 
     // Python version is upgraded manually
