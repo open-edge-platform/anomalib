@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useState } from 'react';
 
 import { LinkExpired } from '@geti-inspect/icons';
 import { Button, DialogContainer, Flex, Loading, Text } from '@geti/ui';

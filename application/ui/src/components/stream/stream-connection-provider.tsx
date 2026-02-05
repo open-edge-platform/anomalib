@@ -1,4 +1,4 @@
-import { createContext, Dispatch, ReactNode, SetStateAction, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, Dispatch, ReactNode, SetStateAction, useCallback, useContext, useState } from 'react';
 
 export type StreamConnectionStatus = 'idle' | 'connecting' | 'connected' | 'failed' | 'disconnected';
 
