@@ -225,11 +225,7 @@ class DsrModel(nn.Module):
                 stride=1,
                 padding=21 // 2,
             ).detach()
-            image_score = torch.amax(out_mask_averaged, dim=(2, 3)).squeeze()
-
-            # prevent crash when image_score is a single value (batch size of 1)
-            if image_score.size() == torch.Size([]):
-                image_score = image_score.unsqueeze(0)
+            image_score = torch.amax(out_mask_averaged, dim=(2, 3)).squeeze(dim=1)
 
             anomaly_map = out_mask_sm_up[:, 1, :, :]
 
@@ -241,10 +237,10 @@ class DsrModel(nn.Module):
             # Generate anomaly strength factors
             anom_str_lo = (
                 torch.rand(batch.shape[0]) * (1.0 - self.latent_anomaly_strength) + self.latent_anomaly_strength
-            ).cuda()
+            ).to(batch.device)
             anom_str_hi = (
                 torch.rand(batch.shape[0]) * (1.0 - self.latent_anomaly_strength) + self.latent_anomaly_strength
-            ).cuda()
+            ).to(batch.device)
 
             # Generate image through general object decoder, and defective & non
             # defective quantized feature maps.
@@ -1203,7 +1199,7 @@ class DiscreteLatentModel(nn.Module):
         random_embeddings = random_embeddings.reshape(
             (random_embeddings.shape[0], embeddings.shape[2], embeddings.shape[3], random_embeddings.shape[2]),
         )
-        random_embeddings_tensor = random_embeddings.permute(0, 3, 1, 2).cuda()
+        random_embeddings_tensor = random_embeddings.permute(0, 3, 1, 2).to(embeddings.device)
 
         down_ratio_y = int(mask.shape[2] / embeddings.shape[2])
         down_ratio_x = int(mask.shape[3] / embeddings.shape[3])
@@ -1296,8 +1292,8 @@ class DiscreteLatentModel(nn.Module):
             )
 
             # get anomaly embeddings
-            use_both = torch.randint(0, 2, (batch.shape[0], 1, 1, 1)).cuda().float()
-            use_lo = torch.randint(0, 2, (batch.shape[0], 1, 1, 1)).cuda().float()
+            use_both = torch.randint(0, 2, (batch.shape[0], 1, 1, 1)).to(batch.device).float()
+            use_lo = torch.randint(0, 2, (batch.shape[0], 1, 1, 1)).to(batch.device).float()
             use_hi = 1 - use_lo
 
             anomaly_embedding_hi_usebot = self.generate_fake_anomalies_joined(
