@@ -94,6 +94,7 @@ UPDATE_SOURCE_BODY_EXAMPLES = {
         status.HTTP_201_CREATED: {"description": "Source created", "model": Source},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid source ID or request body"},
         status.HTTP_409_CONFLICT: {"description": "Source already exists"},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Source could not be connected to"},
     },
 )
 async def create_source(
@@ -115,6 +116,14 @@ async def create_source(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="The source with source_type=DISCONNECTED cannot be created",
+        )
+
+    # Validate source connectivity before creating
+    is_reachable = await configuration_service.validate_source_connectivity(validated_source)
+    if not is_reachable:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="The source could not be reached. Please verify the configuration is correct.",
         )
 
     try:

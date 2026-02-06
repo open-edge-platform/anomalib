@@ -42,7 +42,7 @@ export const useSourceAction = <T extends SourceConfig>({
 
             toast({
                 type: 'error',
-                message: `Failed to save source configuration, ${details ?? 'please try again'}`,
+                message: `Failed to save source configuration. ${details ?? 'Please try again'}`,
             });
         }
 
