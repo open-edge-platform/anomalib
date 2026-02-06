@@ -186,8 +186,8 @@ class ConfigurationService:
             video_stream = VideoStreamService.get_video_stream(source)
             if video_stream:
                 video_stream.get_data()
-        except Exception as es:
-            logger.error(f"Source connectivity validation failed. {es}")
+        except Exception as error:
+            logger.error(f"Source connectivity validation failed. {error}")
             return False
         finally:
             if video_stream is not None:
