@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Custom metrics for evaluating anomaly detection models.
@@ -62,7 +62,7 @@ from .pg_pb import PBn, PGn
 from .pimo import AUPIMO, PIMO
 from .precision_recall_curve import BinaryPrecisionRecallCurve
 from .pro import PRO
-from .threshold import F1AdaptiveThreshold, ManualThreshold, MEBin
+from .threshold import F1AdaptiveThreshold, ManualThreshold
 
 __all__ = [
     "AUROC",
@@ -83,5 +83,4 @@ __all__ = [
     "PRO",
     "PIMO",
     "AUPIMO",
-    "MEBin",
 ]

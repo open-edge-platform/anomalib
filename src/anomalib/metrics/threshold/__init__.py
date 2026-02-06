@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Thresholding metrics for anomaly detection.
@@ -24,6 +24,5 @@ Example:
 from .base import BaseThreshold, Threshold
 from .f1_adaptive_threshold import F1AdaptiveThreshold
 from .manual_threshold import ManualThreshold
-from .mebin import MEBin
 
-__all__ = ["BaseThreshold", "Threshold", "F1AdaptiveThreshold", "ManualThreshold", "MEBin"]
+__all__ = ["BaseThreshold", "Threshold", "F1AdaptiveThreshold", "ManualThreshold"]

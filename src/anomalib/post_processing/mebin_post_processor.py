@@ -1,20 +1,76 @@
-import numpy as np
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""MEBin post-processor for anomaly detection.
+
+This module provides a post-processor that uses the MEBin (Main Element
+Binarization) algorithm to adaptively determine per-image thresholds for anomaly
+map binarization.  Unlike the default :class:`PostProcessor` which uses a single
+global F1-adaptive threshold,  MEBinPostProcessor  computes a   per-image
+threshold based on connected-component stability analysis.
+
+Reference:
+    "AnomalyNCD: Towards Novel Anomaly Class Discovery in
+    Industrial Scenarios", CVPR 2025.
+    https://arxiv.org/abs/2410.14379
+    https://github.com/HUST-SLOW/AnomalyNCD
+
+
+
+Example:
+    >>> from anomalib.models import Padim
+    >>> from anomalib.post_processing import MEBinPostProcessor
+    >>> post_processor = MEBinPostProcessor()
+    >>> model = Padim(post_processor=post_processor)
+"""
+
 import torch
-import torch.nn.functional as F
 
 from anomalib.data import Batch, InferenceBatch
-from anomalib.metrics import MEBin, MinMax
 
+from .mebin import mebin_binarize
 from .post_processor import PostProcessor
 
+
 class MEBinPostProcessor(PostProcessor):
-    """Post-processor for MEBin-based anomaly detection.
+    """Post-processor using MEBin adaptive binarization.
+
+    MEBin determines per-image thresholds by sweeping thresholds across the
+    anomaly map, counting connected components at each level, and selecting the
+    threshold at the endpoint of the longest stable interval (a contiguous
+    range where the component count stays constant).
+
+    This post-processor inherits all normalization and metric-tracking
+    functionality from :class:`PostProcessor`.  The key difference is that
+     pred_mask  is computed using the MEBin per-image threshold instead of the
+    global F1-adaptive threshold.
+
+    .. note::
+        MEBin is precision-oriented — it suppresses false positives at the cost
+        of recall.  Pixel-level F1 might be lower than the default
+        post-processor, but the resulting masks are better suited for downstream
+        tasks like anomaly class discovery.
 
     Args:
-        sample_rate (int, optional): Threshold sampling step size. Default to 4.
-        min_interval_len (int, optional): Minimum length of the stable interval. Default to 4.
-        erode (bool, optional): Whether to perform erosion after binarization. Default to True.
-        **kwargs: Additional keyword arguments passed to parent class.
+        sample_rate: Step size for the threshold sweep in the normalised
+            [0, 255] space. Smaller values give finer granularity but are
+            slower. Defaults to  4 .
+        min_interval_len: Minimum length (in sweep steps) of a stable interval
+            to be considered valid. Defaults to  4 .
+        erode: Whether to apply morphological erosion to the binarized map
+            before counting connected components. Helps suppress noise.
+            Defaults to  True .
+        kernel_size: Size of the square erosion kernel (only used when
+             erode=True ). Defaults to  6 .
+        **kwargs: Additional keyword arguments passed to
+            :class:`PostProcessor`.
+
+    Example:
+        >>> from anomalib.post_processing import MEBinPostProcessor
+        >>> processor = MEBinPostProcessor(sample_rate=4, min_interval_len=4)
+        >>> # Use with a model
+        >>> from anomalib.models import Patchcore
+        >>> model = Patchcore(post_processor=processor)
     """
 
     def __init__(
@@ -22,99 +78,81 @@ class MEBinPostProcessor(PostProcessor):
         sample_rate: int = 4,
         min_interval_len: int = 4,
         erode: bool = True,
+        kernel_size: int = 6,
         **kwargs,
     ) -> None:
-        super().__init__(enable_normalization=True, **kwargs)
-
+        super().__init__(**kwargs)
         self.sample_rate = sample_rate
         self.min_interval_len = min_interval_len
         self.erode = erode
-
-    @staticmethod
-    def _normalize_with_batch_thresholds(
-        preds: torch.Tensor | None,
-        norm_min: torch.Tensor,
-        norm_max: torch.Tensor,
-        thresholds: torch.Tensor,
-    ) -> torch.Tensor | None:
-        """Normalize a tensor using min, max, and batch thresholds.
-
-        Args:
-            preds (torch.Tensor | None): Predictions to normalize.
-            norm_min (torch.Tensor): Minimum value for normalization.
-            norm_max (torch.Tensor): Maximum value for normalization.
-            thresholds (torch.Tensor): Threshold values for each sample in batch, shape (B,).
-
-        Returns:
-            torch.Tensor | None: Normalized predictions or None if input is None.
-        """
-        if preds is None or norm_min.isnan() or norm_max.isnan():
-            return preds
-        
-        nan_mask = thresholds.isnan()
-        if nan_mask.any():
-            default_threshold = (norm_max + norm_min) / 2
-            thresholds = torch.where(nan_mask, default_threshold, thresholds)
-        
-        if preds.dim() == 1:
-            preds = ((preds - thresholds) / (norm_max - norm_min)) + 0.5
-        else:
-            while thresholds.dim() < preds.dim():
-                thresholds = thresholds.unsqueeze(-1)
-            preds = ((preds - thresholds) / (norm_max - norm_min)) + 0.5
-        
-        return preds.clamp(min=0, max=1)
+        self.kernel_size = kernel_size
 
     def forward(self, predictions: InferenceBatch) -> InferenceBatch:
-        anomaly_maps = predictions.anomaly_map
+        """Post-process model predictions using MEBin adaptive thresholding.
 
-        if not self.pixel_min.isnan() and not self.pixel_max.isnan():
-            normalized_map = (anomaly_maps - self.pixel_min) / (self.pixel_max - self.pixel_min + 1e-8)
-            normalized_map = (normalized_map * 255).cpu().numpy().astype(np.uint8)
-        else:
-            normalized_map = anomaly_maps.cpu().numpy().astype(np.uint8)
-        normalized_maps = normalized_map.squeeze(1)
-        
-        mebin = MEBin(
-            anomaly_map_list=normalized_maps,
-            sample_rate=self.sample_rate,
-            min_interval_len=self.min_interval_len,
-            erode=self.erode,
-        )
-        _, thresholds = mebin.binarize_anomaly_maps()
-        thresholds = torch.tensor(thresholds, device=predictions.anomaly_map.device, dtype=predictions.anomaly_map.dtype)
-        
+        When normalization statistics ( pixel_min  /  pixel_max ) are
+        available (i.e. after a validation pass), the anomaly maps are first
+        normalised using the standard :class:`PostProcessor` logic, and then
+        MEBin is applied to compute per-image masks.
+
+        When normalization statistics are   not   available (e.g. during
+        standalone inference), MEBin is applied directly to the raw anomaly
+        maps.
+
+        Args:
+            predictions: Batch of model predictions containing at least one of
+                 pred_score  or  anomaly_map .
+
+        Returns:
+            InferenceBatch: Post-processed predictions with:
+                -  pred_score  -- normalised image-level anomaly score
+                -  anomaly_map  -- normalised anomaly map
+                -  pred_label  -- binary image-level label (from global
+                  threshold)
+                -  pred_mask  -- binary pixel-level mask (from MEBin)
+
+        Raises:
+            ValueError: If neither  pred_score  nor  anomaly_map  is
+                provided.
+        """
         if predictions.pred_score is None and predictions.anomaly_map is None:
             msg = "At least one of pred_score or anomaly_map must be provided."
             raise ValueError(msg)
+
+        anomaly_map = predictions.anomaly_map
         pred_score = (
-            predictions.pred_score
-            if predictions.pred_score is not None
-            else torch.amax(anomaly_maps, dim=(-2, -1))
+            predictions.pred_score if predictions.pred_score is not None else torch.amax(anomaly_map, dim=(-2, -1))
         )
 
+        # --- Normalize using inherited logic (same as base PostProcessor) ---
         if self.enable_normalization:
-            if not self.pixel_min.isnan() and not self.pixel_max.isnan():
-                thresholds_raw = (thresholds / 255.0) * (self.pixel_max - self.pixel_min) + self.pixel_min
-            else:
-                thresholds_raw = thresholds
-            if not self.image_min.isnan() and not self.image_max.isnan():
-                thresholds_for_image = (thresholds / 255.0) * (self.image_max - self.image_min) + self.image_min
-            else:
-                thresholds_for_image = thresholds_raw
-            
-            pred_score = self._normalize_with_batch_thresholds(pred_score, self.image_min, self.image_max, thresholds_for_image)
-            anomaly_map = self._normalize_with_batch_thresholds(predictions.anomaly_map, self.pixel_min, self.pixel_max, thresholds_raw)
-        else:
-            pred_score = predictions.pred_score
-            anomaly_map = predictions.anomaly_map
+            pred_score = self._normalize(pred_score, self.image_min, self.image_max, self.image_threshold)
+            anomaly_map = self._normalize(anomaly_map, self.pixel_min, self.pixel_max, self.pixel_threshold)
 
+        # --- MEBin adaptive mask ---
+        # MEBin works on the (possibly normalised) anomaly map.
+        pred_mask: torch.Tensor | None = None
+        if anomaly_map is not None and self.enable_thresholding:
+            # Ensure (B, 1, H, W) shape for mebin_binarize.
+            maps_4d = anomaly_map
+            if maps_4d.dim() == 3:
+                maps_4d = maps_4d.unsqueeze(1)
+            pred_mask, _ = mebin_binarize(
+                maps_4d,
+                sample_rate=self.sample_rate,
+                min_interval_len=self.min_interval_len,
+                erode=self.erode,
+                kernel_size=self.kernel_size,
+            )
+            # Squeeze back if anomaly_map was 3-D.
+            if predictions.anomaly_map is not None and predictions.anomaly_map.dim() == 3:
+                pred_mask = pred_mask.squeeze(1)
+            pred_mask = pred_mask > 0.5
+
+        # --- Image-level label uses the standard global threshold ---
+        pred_label: torch.Tensor | None = None
         if self.enable_thresholding:
             pred_label = self._apply_threshold(pred_score, self.normalized_image_threshold)
-            pred_mask = self._apply_threshold(anomaly_map, self.normalized_pixel_threshold)
-        else:
-            pred_label = None
-            pred_mask = None
 
         return InferenceBatch(
             pred_label=pred_label,
@@ -122,3 +160,41 @@ class MEBinPostProcessor(PostProcessor):
             pred_mask=pred_mask,
             anomaly_map=anomaly_map,
         )
+
+    def post_process_batch(self, batch: Batch) -> None:
+        """Post-process a batch during  on_test_batch_end  /  on_predict_batch_end .
+
+        Applies the inherited normalization (image + pixel level) and then
+        computes the pixel-level mask using MEBin instead of the global
+        threshold.
+
+        Args:
+            batch: Batch containing model predictions (modified in-place).
+        """
+        # 1. Normalize (same as base).
+        if self.enable_normalization:
+            self.normalize_batch(batch)
+
+        # 2. Image-level threshold (same as base).
+        if self.enable_thresholding:
+            batch.pred_label = (
+                batch.pred_label
+                if batch.pred_label is not None
+                else self._apply_threshold(batch.pred_score, self.normalized_image_threshold)
+            )
+
+        # 3. Pixel-level mask via MEBin.
+        if self.enable_thresholding and batch.anomaly_map is not None and batch.pred_mask is None:
+            maps_4d = batch.anomaly_map
+            if maps_4d.dim() == 3:
+                maps_4d = maps_4d.unsqueeze(1)
+            pred_mask, _ = mebin_binarize(
+                maps_4d,
+                sample_rate=self.sample_rate,
+                min_interval_len=self.min_interval_len,
+                erode=self.erode,
+                kernel_size=self.kernel_size,
+            )
+            if batch.anomaly_map.dim() == 3:
+                pred_mask = pred_mask.squeeze(1)
+            batch.pred_mask = pred_mask > 0.5
