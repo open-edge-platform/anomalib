@@ -110,8 +110,8 @@ export const ModelsView = ({ onModelSelect }: ModelsViewProps) => {
                     {(model) => (
                         <Row key={model.id}>
                             <Cell>
-                                <Flex alignItems='start' gap='size-50' direction='column'>
-                                    <Flex alignItems='end' gap='size-75'>
+                                <Flex alignItems='start' gap='size-50' direction='column' minWidth={0}>
+                                    <Flex alignItems='end' gap='size-75' minWidth={0} width='100%'>
                                         {model.status === 'Completed' ? (
                                             <Link
                                                 variant='secondary'
