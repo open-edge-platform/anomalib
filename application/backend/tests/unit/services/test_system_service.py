@@ -37,7 +37,7 @@ class TestSystemService:
             mock_torch.cuda.is_available.return_value = False
             mock_torch.mps.is_available.return_value = False
 
-            devices = fxt_system_service.get_devices()
+            devices = fxt_system_service.get_training_devices()
 
             assert len(devices) == 1
             assert devices[0].name == "CPU"
@@ -60,7 +60,7 @@ class TestSystemService:
             mock_torch.cuda.is_available.return_value = False
             mock_torch.mps.is_available.return_value = False
 
-            devices = fxt_system_service.get_devices()
+            devices = fxt_system_service.get_training_devices()
 
             assert len(devices) == 2
             assert devices[1].name == "Intel(R) Graphics [0x7d41]"
@@ -83,7 +83,7 @@ class TestSystemService:
             mock_torch.cuda.device_count.return_value = 1
             mock_torch.cuda.get_device_properties.return_value = mock_dp
 
-            devices = fxt_system_service.get_devices()
+            devices = fxt_system_service.get_training_devices()
 
             assert len(devices) == 2
             assert devices[1].name == "NVIDIA GeForce RTX 4090"
@@ -113,7 +113,7 @@ class TestSystemService:
 
             mock_torch.mps.is_available.return_value = True
 
-            devices = fxt_system_service.get_devices()
+            devices = fxt_system_service.get_training_devices()
 
             assert len(devices) == 4
 
