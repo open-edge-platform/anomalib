@@ -51,14 +51,14 @@ dependencies = [
     "imagecodecs",
     "kornia>=0.6.6",
     # Data science and analysis
-    "pandas>=1.1.0",
+    "pandas>=1.1.0,<3.0.0",  # Temporary pin: pandas 3.0 breaks DirType enum comparisons in DataFrame.loc (issue #3303)
     "matplotlib>=3.4.3",
     "scikit-learn",
 ]
 
 [project.optional-dependencies]
 # Model-specific optional dependencies
-openvino = ["openvino>=2024.0", "nncf>=2.10.0", "onnx>=1.16.0", "onnxscript"]
+openvino = ["openvino>=2024.0,<2025.4.0", "nncf>=2.10.0", "onnx>=1.16.0", "onnxscript"]
 clip = [
     # NOTE: open-clip-torch throws the following error on v2.26.1
     #   torch.onnx.errors.UnsupportedOperatorError: Exporting the operator
