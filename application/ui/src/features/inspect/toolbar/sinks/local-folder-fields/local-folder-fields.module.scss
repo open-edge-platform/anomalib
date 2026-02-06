@@ -25,7 +25,7 @@
     height: var(--spectrum-global-dimension-size-400);
     display: flex;
     align-items: center;
-    border: 1px solid var(--spectrum-global-color-gray-400);
+    border: var(--spectrum-global-dimension-size-10) solid var(--spectrum-global-color-gray-400);
     border-right: none;
     white-space: nowrap;
 }
