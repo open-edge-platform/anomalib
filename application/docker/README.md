@@ -38,11 +38,11 @@ AI_DEVICE=xpu docker compose up
 
 ```bash
 cd application/docker
-docker compose -f docker-compose.cuda.yaml build
+AI_DEVICE=gpu docker compose -f docker-compose.cuda.yaml build
 ```
 ### Start the container
 
 ```bash
 cd application/docker
-docker compose -f docker-compose.cuda.yaml up
+AI_DEVICE=gpu docker compose -f docker-compose.cuda.yaml up
 ```
