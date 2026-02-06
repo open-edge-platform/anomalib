@@ -73,16 +73,16 @@ class SystemService:
                         openvino_name=device,
                     ),
                 )
-            elif core.get_property(device, "DEVICE_TYPE") is OVDeviceType.DISCRETE:
-                is_intel_device = "intel" not in ov_name.lower()
-                is_nvidia_device = "nvidia" not in ov_name.lower()
-                if not is_nvidia_device and not is_intel_device:
-                    logger.warning(f"Unsupported device: {ov_name}")
+            elif core.get_property(device, "DEVICE_TYPE") == OVDeviceType.DISCRETE:
+                is_intel_device = "intel" in ov_name.lower()
+                # OV does not support cuda
+                if not is_intel_device:
+                    logger.warning(f"Unsupported device: {ov_name}. Skipping.")
                     continue
 
                 devices.append(
                     DeviceInfo(
-                        type=DeviceType.XPU if is_intel_device else DeviceType.CUDA,
+                        type=DeviceType.XPU,
                         name=ov_name,
                         memory=core.get_property(device, "GPU_DEVICE_TOTAL_MEM_SIZE"),
                         index=core.get_property(device, "DEVICE_ID"),

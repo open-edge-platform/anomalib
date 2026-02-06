@@ -25,8 +25,8 @@ export const InferenceDevices = () => {
     });
 
     const options = data.map((device) => {
-        const id = device.name;
-        return { id, type: device.type, name: device.openvino_name};
+        const id = device.openvino_name;
+        return { id, type: device.type, name: device.name};
     });
 
     const handleChange = (key: Key | null) => {
