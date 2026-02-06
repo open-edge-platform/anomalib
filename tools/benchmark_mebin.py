@@ -29,7 +29,6 @@ from anomalib.post_processing import MEBinPostProcessor, PostProcessor
 
 logger = logging.getLogger(__name__)
 
-seed_everything(117)
 # A representative subset of MVTec categories covering textures (carpet, grid,
 # leather) and objects (bottle, cable, hazelnut) to keep runtime reasonable.
 DEFAULT_CATEGORIES = ["bottle", "cable", "carpet", "hazelnut", "leather", "grid"]
@@ -52,6 +51,7 @@ def _run_experiment(
 
     engine = Engine(
         default_root_dir=f"results/mebin_benchmark/{model_name}_{pp_name}_{category}",
+        barebones=True,
     )
 
     engine.fit(model=model, datamodule=datamodule)
@@ -71,6 +71,8 @@ def _run_experiment(
 
 def main() -> None:
     """Run the benchmark."""
+    seed_everything(117)
+
     parser = argparse.ArgumentParser(description="Benchmark MEBin vs default PostProcessor")
     parser.add_argument(
         "--categories",

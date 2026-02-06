@@ -322,3 +322,22 @@ class TestMEBinPostProcessor:
         # on_test_batch_end delegates to post_process_batch
         processor.on_test_batch_end(None, None, batch)
         assert batch.pred_mask is not None
+
+    @staticmethod
+    def test_forward_pred_score_only_with_normalization() -> None:
+        """forward() with pred_score only and anomaly_map=None should not crash.
+
+        Regression test: when anomaly_map is None but normalization is enabled,
+        the normalization step must not call _normalize(None, ...).
+        """
+        processor = MEBinPostProcessor()
+        # Set normalization stats so normalization is actually attempted.
+        processor.image_min.copy_(torch.tensor(0.0))
+        processor.image_max.copy_(torch.tensor(1.0))
+        processor._image_threshold.copy_(torch.tensor(0.5))  # noqa: SLF001
+
+        predictions = InferenceBatch(pred_score=torch.tensor([0.3, 0.8]))
+        result = processor.forward(predictions)
+        assert result.pred_score is not None
+        assert result.anomaly_map is None
+        assert result.pred_mask is None  # No anomaly_map → no mask

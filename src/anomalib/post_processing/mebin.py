@@ -134,7 +134,7 @@ def _find_stable_threshold(
     best_count: int | None = None
     best_length = -1
     for count, intervals in interval_result.items():
-        max_len = max(e - s for s, e in intervals)
+        max_len = max(e - s + 1 for s, e in intervals)
         if max_len > best_length:
             best_length = max_len
             best_count = count
@@ -142,7 +142,7 @@ def _find_stable_threshold(
     assert best_count is not None
     # Within the best count, pick the longest interval.
     intervals = interval_result[best_count]
-    longest = max(intervals, key=lambda x: x[1] - x[0])
+    longest = max(intervals, key=lambda x: x[1] - x[0] + 1)
     # Threshold value from the endpoint index.
     threshold = 255 - longest[1] * sample_rate
     return max(threshold, 0), best_count

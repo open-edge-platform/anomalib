@@ -127,7 +127,8 @@ class MEBinPostProcessor(PostProcessor):
         # --- Normalize using inherited logic (same as base PostProcessor) ---
         if self.enable_normalization:
             pred_score = self._normalize(pred_score, self.image_min, self.image_max, self.image_threshold)
-            anomaly_map = self._normalize(anomaly_map, self.pixel_min, self.pixel_max, self.pixel_threshold)
+            if anomaly_map is not None:
+                anomaly_map = self._normalize(anomaly_map, self.pixel_min, self.pixel_max, self.pixel_threshold)
 
         # --- MEBin adaptive mask ---
         # MEBin works on the (possibly normalised) anomaly map.
