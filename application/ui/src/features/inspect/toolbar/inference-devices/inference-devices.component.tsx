@@ -26,7 +26,7 @@ export const InferenceDevices = () => {
 
     const options = data.map((device) => {
         const id = device.openvino_name;
-        return { id, type: device.type, name: device.name};
+        return { id, type: device.type, name: device.name };
     });
 
     const handleChange = (key: Key | null) => {
@@ -52,11 +52,7 @@ export const InferenceDevices = () => {
             onSelectionChange={handleChange}
             selectedKey={selectedKey}
         >
-            {(item) => (
-                <Item>
-                    {item.type === 'cpu' ? item.type : `${item.type} - ${item.name}`}
-                </Item>
-            )}
+            {(item) => <Item>{item.type === 'cpu' ? item.type : `${item.type} - ${item.name}`}</Item>}
         </Picker>
     );
 };

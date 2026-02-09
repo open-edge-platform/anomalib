@@ -71,6 +71,8 @@ class SystemService:
                         type=DeviceType.NPU,
                         name=ov_name,
                         openvino_name=device,
+                        memory=None,
+                        index=None,
                     ),
                 )
             elif core.get_property(device, "DEVICE_TYPE") == OVDeviceType.DISCRETE:
@@ -100,7 +102,9 @@ class SystemService:
             list[DeviceInfo]: List of available training devices
         """
         # CPU is always available
-        devices: list[DeviceInfo] = [DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)]
+        devices: list[DeviceInfo] = [
+            DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None, openvino_name=None)
+        ]
 
         # Check for Intel XPU devices
         if torch.xpu.is_available():
@@ -112,6 +116,7 @@ class SystemService:
                         name=xpu_dp.name,
                         memory=xpu_dp.total_memory,
                         index=device_idx,
+                        openvino_name=None,
                     ),
                 )
 
@@ -125,12 +130,13 @@ class SystemService:
                         name=cuda_dp.name,
                         memory=cuda_dp.total_memory,
                         index=device_idx,
+                        openvino_name=None,
                     ),
                 )
 
         # Check if Apple MPS is available
         if torch.mps.is_available():
-            devices.append(DeviceInfo(type=DeviceType.MPS, name="MPS", memory=None, index=None))
+            devices.append(DeviceInfo(type=DeviceType.MPS, name="MPS", memory=None, index=None, openvino_name=None))
 
         return devices
 
@@ -218,7 +224,7 @@ class SystemService:
 
         device_type, device_index = self._parse_device(device_str)
         if device_type == DeviceType.CPU:
-            return DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
+            return DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None, openvino_name=None)
         return next(
             device
             for device in self.get_training_devices()
