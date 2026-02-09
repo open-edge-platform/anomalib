@@ -8,7 +8,7 @@ const handlers = await fromOpenApi(JSON.stringify(spec).replace(/}:/g, '}//:'));
 
 const getOpenApiHttp = (): OpenApiHttpHandlers<paths> => {
     const http = createOpenApiHttp<paths>({
-        baseUrl: process.env.PUBLIC_API_BASE_URL ?? 'http://localhost:8000',
+        baseUrl: process.env.PUBLIC_API_BASE_URL ?? '',
     });
 
     return {
