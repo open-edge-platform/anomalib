@@ -89,7 +89,7 @@
       matchManagers: ["npm"],
       matchUpdateTypes: ["minor", "patch"],
       groupName: "npm dependencies",
-      groupSlug: "npm-dependencies",
+      groupSlug: "npm-dependencies-non-major",
     },
 
     // Python version is upgraded manually
