@@ -35,6 +35,7 @@ def fxt_input_data() -> InputData:
     return InputData(webrtc_id="test_id", conf_threshold=0.5)
 
 
+@pytest.mark.skip(reason="WebRTC is currently disabled and may be refactored/removed in the future.")
 class TestWebRTCEndpoints:
     def test_create_webrtc_offer_success(self, fxt_client, fxt_webrtc_manager, fxt_offer, fxt_answer):
         fxt_webrtc_manager.handle_offer.return_value = fxt_answer

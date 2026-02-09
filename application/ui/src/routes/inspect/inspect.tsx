@@ -22,12 +22,12 @@ export const Inspect = () => {
             UNSAFE_style={{
                 overflow: 'hidden',
             }}
-            key={projectId}
         >
-            <Toolbar />
+            <Toolbar key={projectId} />
+            {/* do not refresh the stream to avoid duplicate connections */}
             <MainContent />
-            <Sidebar />
-            <Footer />
+            <Sidebar key={projectId} />
+            <Footer key={projectId} />
         </Grid>
     );
 };

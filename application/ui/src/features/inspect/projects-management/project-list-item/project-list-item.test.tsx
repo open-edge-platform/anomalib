@@ -9,10 +9,10 @@ import { http } from 'src/api/utils';
 import { server } from 'src/msw-node-setup';
 import { vi } from 'vitest';
 
-import { useWebRTCConnection } from '../../../../components/stream/web-rtc-connection-provider';
+import { useStreamConnection } from '../../../../components/stream/stream-connection-provider';
 import { Project, ProjectListItem } from './project-list-item.component';
 
-vi.mock('../../../../components/stream/web-rtc-connection-provider');
+vi.mock('../../../../components/stream/stream-connection-provider');
 
 vi.mock('react-router', async () => {
     const actual = await vi.importActual('react-router');
@@ -47,11 +47,12 @@ describe('ProjectListItem', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         vi.mocked(useNavigate).mockReturnValue(mockNavigate);
-        vi.mocked(useWebRTCConnection).mockReturnValue({
+        vi.mocked(useStreamConnection).mockReturnValue({
             stop: vi.fn(),
             start: vi.fn(),
             status: 'idle',
-            webRTCConnectionRef: { current: null },
+            streamUrl: null,
+            setStatus: vi.fn(),
         });
 
         server.use(

@@ -10,27 +10,28 @@ import { ZoomProvider } from 'src/components/zoom/zoom';
 import { server } from 'src/msw-node-setup';
 
 import { getMockedPipeline } from '../../../../mocks/mock-pipeline';
-import { useWebRTCConnection, WebRTCConnectionState } from '../../../components/stream/web-rtc-connection-provider';
+import { StreamConnectionState, useStreamConnection } from '../../../components/stream/stream-connection-provider';
 import { StreamContainer } from './stream-container';
 
-vi.mock('../../../components/stream/web-rtc-connection-provider', () => ({
-    useWebRTCConnection: vi.fn(),
+vi.mock('../../../components/stream/stream-connection-provider', () => ({
+    useStreamConnection: vi.fn(),
 }));
 
 describe('StreamContainer', () => {
     const renderApp = ({
-        webRtcConfig = {},
+        streamConfig = {},
         pipelineConfig = {},
     }: {
-        webRtcConfig?: Partial<WebRTCConnectionState>;
+        streamConfig?: Partial<StreamConnectionState>;
         pipelineConfig?: Partial<SchemaPipeline>;
     }) => {
-        vi.mocked(useWebRTCConnection).mockReturnValue({
+        vi.mocked(useStreamConnection).mockReturnValue({
             stop: vi.fn(),
             start: vi.fn(),
             status: 'idle',
-            webRTCConnectionRef: { current: null },
-            ...webRtcConfig,
+            streamUrl: null,
+            setStatus: vi.fn(),
+            ...streamConfig,
         });
 
         server.use(
@@ -68,7 +69,7 @@ describe('StreamContainer', () => {
             );
 
             renderApp({
-                webRtcConfig: { status: 'idle', start: mockedStart },
+                streamConfig: { status: 'idle', start: mockedStart },
                 pipelineConfig: { status: 'idle' },
             });
 
@@ -90,7 +91,7 @@ describe('StreamContainer', () => {
                 })
             );
 
-            renderApp({ webRtcConfig: { status: 'idle', start: mockedStart }, pipelineConfig: { status: 'running' } });
+            renderApp({ streamConfig: { status: 'idle', start: mockedStart }, pipelineConfig: { status: 'running' } });
 
             const button = await screen.findByRole('button', { name: /Start stream/i });
             await userEvent.click(button);
@@ -100,21 +101,21 @@ describe('StreamContainer', () => {
         });
     });
 
-    it('render loading state', async () => {
-        renderApp({ webRtcConfig: { status: 'connecting' } });
-
-        expect(await screen.findByLabelText('Loading...')).toBeVisible();
-    });
-
-    it('webRtc connected', async () => {
-        renderApp({ webRtcConfig: { status: 'connected' } });
+    it('renders stream while connecting', async () => {
+        renderApp({ streamConfig: { status: 'connecting', streamUrl: '/api/stream' } });
 
         expect(await screen.findByLabelText('stream player')).toBeVisible();
     });
 
-    it('autoplay webRtc if pipeline is enabled', async () => {
+    it('renders stream when connected', async () => {
+        renderApp({ streamConfig: { status: 'connected', streamUrl: '/api/stream' } });
+
+        expect(await screen.findByLabelText('stream player')).toBeVisible();
+    });
+
+    it('autoplay stream if pipeline is enabled', async () => {
         const mockedStart = vi.fn();
-        renderApp({ webRtcConfig: { status: 'idle', start: mockedStart }, pipelineConfig: { status: 'running' } });
+        renderApp({ streamConfig: { status: 'idle', start: mockedStart }, pipelineConfig: { status: 'running' } });
 
         expect(await screen.findByRole('button', { name: /Start stream/i })).toBeVisible();
         expect(mockedStart).toHaveBeenCalled();

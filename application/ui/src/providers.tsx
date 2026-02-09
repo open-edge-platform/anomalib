@@ -7,7 +7,7 @@ import { NuqsAdapter } from 'nuqs/adapters/react-router/v6';
 import { MemoryRouterProps, RouterProvider } from 'react-router';
 import { MemoryRouter as Router } from 'react-router-dom';
 
-import { WebRTCConnectionProvider } from './components/stream/web-rtc-connection-provider';
+import { StreamConnectionProvider } from './components/stream/stream-connection-provider';
 import { ZoomProvider } from './components/zoom/zoom';
 import { StatusBarProvider } from './features/inspect/footer/status-bar/status-bar-context';
 import { queryClient } from './query-client/query-client';
@@ -17,7 +17,7 @@ export const Providers = () => {
     return (
         <QueryClientProvider client={queryClient}>
             <ThemeProvider router={router}>
-                <WebRTCConnectionProvider>
+                <StreamConnectionProvider>
                     <ZoomProvider>
                         <NuqsAdapter>
                             <StatusBarProvider>
@@ -25,7 +25,7 @@ export const Providers = () => {
                             </StatusBarProvider>
                         </NuqsAdapter>
                     </ZoomProvider>
-                </WebRTCConnectionProvider>
+                </StreamConnectionProvider>
             </ThemeProvider>
         </QueryClientProvider>
     );
@@ -37,7 +37,7 @@ export const TestProviders = ({ children, routerProps }: { children: ReactNode; 
             <ThemeProvider>
                 <NuqsAdapter>
                     <Router {...routerProps}>
-                        <WebRTCConnectionProvider>{children}</WebRTCConnectionProvider>
+                        <StreamConnectionProvider>{children}</StreamConnectionProvider>
                         <Toast />
                     </Router>
                 </NuqsAdapter>

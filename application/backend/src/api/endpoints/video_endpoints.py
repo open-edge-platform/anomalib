@@ -50,7 +50,7 @@ def validate_video_file(file: UploadFile = File(...)) -> UploadFile:
 
     if file.size and file.size > MAX_VIDEO_SIZE_BYTES:
         raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
             detail=f"Video file too large. Maximum size: {MAX_VIDEO_SIZE_BYTES / (1024**3):.1f} GB",
         )
 
@@ -63,7 +63,7 @@ def validate_video_file(file: UploadFile = File(...)) -> UploadFile:
     responses={
         status.HTTP_201_CREATED: {"description": "Video uploaded successfully", "model": Video},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid video file"},
-        status.HTTP_413_REQUEST_ENTITY_TOO_LARGE: {"description": "Video file too large"},
+        status.HTTP_413_CONTENT_TOO_LARGE: {"description": "Video file too large"},
     },
 )
 async def upload_video(

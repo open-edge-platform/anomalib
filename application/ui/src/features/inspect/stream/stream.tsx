@@ -8,97 +8,87 @@ import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { Button, dimensionValue, Flex, toast } from '@geti/ui';
 import { clsx } from 'clsx';
 
-import { useWebRTCConnection } from '../../../components/stream/web-rtc-connection-provider';
+import { useStreamConnection } from '../../../components/stream/stream-connection-provider';
 import { ZoomTransform } from '../../../components/zoom/zoom-transform';
 import { useEventListener } from '../../../hooks/event-listener/event-listener.hook';
 import { Fps } from './fps/fps.component';
 
 import classes from './stream.module.scss';
 
-const useSetTargetSizeBasedOnVideo = (
+const useSetTargetSizeBasedOnImage = (
     setSize: Dispatch<SetStateAction<{ width: number; height: number }>>,
-    videoRef: RefObject<HTMLVideoElement | null>
+    imageRef: RefObject<HTMLImageElement | null>,
+    streamUrl: string | null
 ) => {
     useEffect(() => {
-        const video = videoRef.current;
-        if (!video) return;
+        const image = imageRef.current;
+        if (!image) return;
 
-        const onLoaded = () => {
-            if (video.videoWidth && video.videoHeight) {
-                setSize({ width: video.videoWidth, height: video.videoHeight });
+        const updateSize = () => {
+            if (image.naturalWidth && image.naturalHeight) {
+                setSize({ width: image.naturalWidth, height: image.naturalHeight });
             }
         };
 
-        const resizeObserver = new ResizeObserver(() => {
-            if (video.videoWidth && video.videoHeight) {
-                setSize({ width: video.videoWidth, height: video.videoHeight });
-            }
-        });
-
-        video.addEventListener('loadedmetadata', onLoaded);
-        resizeObserver.observe(video);
+        const resizeObserver = new ResizeObserver(updateSize);
+        image.addEventListener('load', updateSize);
+        resizeObserver.observe(image);
 
         return () => {
-            video.removeEventListener('loadedmetadata', onLoaded);
+            image.removeEventListener('load', updateSize);
             resizeObserver.disconnect();
         };
-    }, [setSize, videoRef]);
-};
+    }, [setSize, imageRef, streamUrl]);
 
-const useStreamToVideo = () => {
-    const videoRef = useRef<HTMLVideoElement>(null);
-
-    const { status, webRTCConnectionRef } = useWebRTCConnection();
-
-    const connect = useCallback(async () => {
-        const videoOutput = videoRef.current;
-        const webrtcConnection = webRTCConnectionRef.current;
-        const peerConnection = webrtcConnection?.getPeerConnection();
-
-        if (!peerConnection) {
+    useEffect(() => {
+        const image = imageRef.current;
+        if (!image || !streamUrl) {
             return;
         }
 
-        const receivers = peerConnection.getReceivers() ?? [];
-        const stream = new MediaStream(receivers.map((receiver) => receiver.track).filter(Boolean));
+        let attempts = 0;
+        const maxAttempts = 20;
+        const interval = setInterval(() => {
+            if (image.naturalWidth && image.naturalHeight) {
+                setSize({ width: image.naturalWidth, height: image.naturalHeight });
+                clearInterval(interval);
+                return;
+            }
 
-        if (videoOutput && videoOutput.srcObject !== stream) {
-            videoOutput.srcObject = stream;
-        }
-    }, [videoRef, webRTCConnectionRef]);
-
-    useEffect(() => {
-        if (status === 'connected') {
-            connect();
-        }
-    }, [status, connect]);
-
-    useEffect(() => {
-        const webrtcConnection = webRTCConnectionRef.current;
-        const peerConnection = webrtcConnection?.getPeerConnection();
-
-        if (!peerConnection) {
-            return;
-        }
-
-        peerConnection.addEventListener('track', connect);
+            attempts += 1;
+            if (attempts >= maxAttempts) {
+                clearInterval(interval);
+            }
+        }, 200);
 
         return () => {
-            peerConnection.removeEventListener('track', connect);
+            clearInterval(interval);
         };
-    }, [webRTCConnectionRef, connect]);
-
-    return videoRef;
+    }, [setSize, imageRef, streamUrl]);
 };
 
 export const Stream = () => {
-    const videoRef = useStreamToVideo();
+    const imageRef = useRef<HTMLImageElement>(null);
     const { projectId } = useProjectIdentifier();
+    const { setStatus, status, streamUrl } = useStreamConnection();
     const [hasCaptureAnimation, setHasCaptureAnimation] = useState(false);
     const [size, setSize] = useState({ height: 608, width: 892 });
 
-    useSetTargetSizeBasedOnVideo(setSize, videoRef);
-    useEventListener('animationend', () => setHasCaptureAnimation(false), videoRef);
+    useSetTargetSizeBasedOnImage(setSize, imageRef, streamUrl);
+    useEventListener('animationend', () => setHasCaptureAnimation(false), imageRef);
+
+    const handleStreamLoad = useCallback(() => {
+        setStatus('connected');
+    }, [setStatus]);
+
+    const handleStreamError = useCallback(() => {
+        // Only set failed if we were previously connected or connecting,
+        // and avoid flipping to failed if the url was just cleared (null)
+        if (streamUrl) {
+            setStatus((current) => (current === 'connected' ? 'disconnected' : 'failed'));
+            toast({ type: 'error', message: 'Stream connection failed' });
+        }
+    }, [setStatus, streamUrl]);
 
     const captureImageMutation = $api.useMutation('get', '/api/projects/{project_id}/capture', {
         onError: () => {
@@ -127,25 +117,28 @@ export const Stream = () => {
             justifyContent={'center'}
             UNSAFE_style={{ width: '100%', height: '100%', paddingBlockEnd: dimensionValue('size-400') }}
         >
-            <Fps projectId={projectId} />
+            {status === 'connected' && <Fps projectId={projectId} />}
 
             <ZoomTransform target={size}>
-                <video
-                    ref={videoRef}
-                    muted
-                    autoPlay
-                    playsInline
+                <img
+                    key={streamUrl}
+                    ref={imageRef}
+                    src={streamUrl ?? undefined}
                     width={size.width}
                     height={size.height}
-                    controls={false}
                     aria-label='stream player'
+                    alt='stream'
+                    onLoad={handleStreamLoad}
+                    onError={handleStreamError}
                     style={{ background: 'var(--spectrum-global-color-gray-200)' }}
                     className={clsx({ [classes.takeOldCamera]: hasCaptureAnimation })}
                 />
             </ZoomTransform>
-            <Button onPress={handleCaptureFrame} variant='primary' UNSAFE_className={classes.captureButton}>
-                Capture
-            </Button>
+            {status === 'connected' && (
+                <Button onPress={handleCaptureFrame} variant='primary' UNSAFE_className={classes.captureButton}>
+                    Capture
+                </Button>
+            )}
         </Flex>
     );
 };

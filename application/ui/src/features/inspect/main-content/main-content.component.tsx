@@ -15,9 +15,16 @@ export const MainContent = () => {
         return <SourceSinkMessage />;
     }
 
-    if (hasActiveProject && !isCurrentProjectActive) {
-        return <EnableProject currentProjectId={projectId} activeProjectId={String(activeProjectId)} />;
-    }
+    const showEnableProject = hasActiveProject && !isCurrentProjectActive;
 
-    return <StreamContainer />;
+    return (
+        <>
+            {showEnableProject && (
+                <EnableProject currentProjectId={projectId} activeProjectId={String(activeProjectId)} />
+            )}
+            <div style={{ display: showEnableProject ? 'none' : 'contents' }}>
+                <StreamContainer />
+            </div>
+        </>
+    );
 };
