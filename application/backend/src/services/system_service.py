@@ -65,7 +65,7 @@ class SystemService:
 
         for device in core.available_devices:
             ov_name = core.get_property(device, "FULL_DEVICE_NAME")
-            if device.lower() == "npu":
+            if device.lower().startswith("npu"):
                 devices.append(
                     DeviceInfo(
                         type=DeviceType.NPU,
