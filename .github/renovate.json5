@@ -49,14 +49,22 @@
       schedule: ["* * * * 0"], // weekly
     },
 
-    // weekly dependencies upgrades
+    // Python bi-weekly minor and patch dependencies upgrades
     {
-      matchBaseBranches: ["main"],
       enabled: true,
       matchManagers: ["pep621"],
+      matchUpdateTypes: ["minor", "patch"],
       groupName: "Python dependencies",
       groupSlug: "python-dependencies",
-      schedule: ["* * * * 0"], // weekly
+      schedule: ["* * 1,15 * *"], // bi-weekly (1st and 15th of each month)
+    },
+
+    // Python monthly major dependencies upgrades
+    {
+      enabled: true,
+      matchManagers: ["pep621"],
+      matchUpdateTypes: ["major"],
+      schedule: ["* * 7 * *"], // monthly
     },
 
     // Disable python base image upgrades, except patch and digest pinning
@@ -83,13 +91,22 @@
       matchUpdateTypes: ["major", "minor", "patch"],
     },
 
-    // Enable minor, patch non-security and lock file upgrades for npm
+    // npm bi-weekly minor, patch and lock file upgrades
     {
       enabled: true,
       matchManagers: ["npm"],
       matchUpdateTypes: ["minor", "patch"],
       groupName: "npm dependencies non-major",
       groupSlug: "npm-dependencies-non-major",
+      schedule: ["* * 1,15 * *"], // bi-weekly (1st and 15th of each month)
+    },
+
+    // npm monthly major upgrades
+    {
+      enabled: true,
+      matchManagers: ["npm"],
+      matchUpdateTypes: ["major"],
+      schedule: ["* * 21 * *"], // monthly
     },
 
     // Python version is upgraded manually
