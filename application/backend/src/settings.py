@@ -56,6 +56,9 @@ class Settings(BaseSettings):
     ice_servers: list[dict] = Field(default=[], alias="ICE_SERVERS")
     webrtc_advertise_ip: str | None = Field(default=None, alias="WEBRTC_ADVERTISE_IP")
 
+    # Stream
+    stream_max_clients: int = Field(default=5, alias="STREAM_MAX_CLIENTS")
+
     @property
     def cors_allowed_origins(self) -> list[str]:
         """Get CORS allowed origins as a list"""

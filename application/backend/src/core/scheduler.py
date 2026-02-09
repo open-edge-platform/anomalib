@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import asyncio
 import atexit
 import multiprocessing as mp
 import os
@@ -11,6 +12,7 @@ from multiprocessing.shared_memory import SharedMemory
 import psutil
 from loguru import logger
 
+from core.mjpeg_broadcaster import MJPEGBroadcaster
 from services.metrics_service import SIZE
 from utils.singleton import Singleton
 from workers import DispatchingWorker, InferenceWorker, StreamLoader, TrainingWorker
@@ -30,6 +32,8 @@ class Scheduler(metaclass=Singleton):
         self.pred_queue: mp.Queue = mp.Queue(maxsize=self.PREDICTION_QUEUE_SIZE)
         # Queue for pushing predictions to the visualization stream (WebRTC)
         self.rtc_stream_queue: queue.Queue = queue.Queue(maxsize=1)
+        # Broadcaster for MJPEG stream consumers
+        self.mjpeg_broadcaster = MJPEGBroadcaster()
         # Event to sync all processes on application shutdown
         self.mp_stop_event = mp.Event()
         # Event to signal that the model has to be reloaded
@@ -46,6 +50,14 @@ class Scheduler(metaclass=Singleton):
         logger.info("Scheduler initialized")
         # Ensure we always attempt a graceful shutdown when the main process exits
         atexit.register(self.shutdown)
+
+    def initialize_broadcaster(self, loop: asyncio.AbstractEventLoop) -> None:
+        """Initialize the MJPEG broadcaster with the event loop.
+
+        Args:
+            loop (asyncio.AbstractEventLoop): Event loop used for async broadcasts.
+        """
+        self.mjpeg_broadcaster.initialize(loop)
 
     def start_workers(self) -> None:
         """Start all worker processes and threads"""
@@ -76,6 +88,7 @@ class Scheduler(metaclass=Singleton):
         dispatching_thread = DispatchingWorker(
             pred_queue=self.pred_queue,
             rtc_stream_queue=self.rtc_stream_queue,
+            mjpeg_broadcaster=self.mjpeg_broadcaster,
             stop_event=self.mp_stop_event,
             active_config_changed_condition=self.mp_config_changed_condition,
         )
@@ -107,6 +120,7 @@ class Scheduler(metaclass=Singleton):
 
         # Signal all processes to stop
         self.mp_stop_event.set()
+        self.mjpeg_broadcaster.shutdown()
 
         # Get current process info for debugging
         pid = os.getpid()

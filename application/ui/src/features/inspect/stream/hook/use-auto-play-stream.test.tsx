@@ -4,19 +4,18 @@ import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { HttpResponse } from 'msw';
 import { SchemaPipeline } from 'src/api/openapi-spec';
 import { http } from 'src/api/utils';
-import { WebRTCConnectionStatus } from 'src/components/stream/web-rtc-connection';
+import { StreamConnectionStatus, useStreamConnection } from 'src/components/stream/stream-connection-provider';
 import { server } from 'src/msw-node-setup';
 import { TestProviders } from 'src/providers';
 import { queryClient } from 'src/query-client/query-client';
 
-import { useWebRTCConnection } from '../../../../components/stream/web-rtc-connection-provider';
 import { STREAM_ERROR_MESSAGE, useAutoPlayStream } from './use-auto-play-stream.hook';
 
-vi.mock('../../../../components/stream/web-rtc-connection-provider', async () => {
-    const actual = await vi.importActual('../../../../components/stream/web-rtc-connection-provider');
+vi.mock('../../../../components/stream/stream-connection-provider', async () => {
+    const actual = await vi.importActual('../../../../components/stream/stream-connection-provider');
     return {
         ...actual,
-        useWebRTCConnection: vi.fn(),
+        useStreamConnection: vi.fn(),
     };
 });
 
@@ -37,15 +36,16 @@ describe('useAutoPlayStream', () => {
         status = 'idle',
         pipelineConfig,
     }: {
-        status: WebRTCConnectionStatus;
+        status: StreamConnectionStatus;
         pipelineConfig?: Partial<SchemaPipeline> | null;
     }) => {
         const mockedStart = vi.fn();
-        vi.mocked(useWebRTCConnection).mockReturnValue({
+        vi.mocked(useStreamConnection).mockReturnValue({
             stop: vi.fn(),
             start: mockedStart,
             status,
-            webRTCConnectionRef: { current: null },
+            streamUrl: null,
+            setStatus: vi.fn(),
         });
 
         server.use(
@@ -83,7 +83,7 @@ describe('useAutoPlayStream', () => {
     it('run pipeline', async () => {
         const pipelinePatchSpy = vi.fn();
         const mockedPipeline = getMockedPipeline({});
-        mockedPipeline.status = 'idle';
+        mockedPipeline.status = 'active';
 
         server.use(
             http.post('/api/projects/{project_id}/pipeline:run', () => {
@@ -98,6 +98,27 @@ describe('useAutoPlayStream', () => {
 
         await waitFor(() => {
             expect(pipelinePatchSpy).toHaveBeenCalled();
+        });
+    });
+
+    it('does not run pipeline if pipeline status is idle', async () => {
+        const pipelinePatchSpy = vi.fn();
+        const mockedPipeline = getMockedPipeline({});
+        mockedPipeline.status = 'idle';
+
+        server.use(
+            http.post('/api/projects/{project_id}/pipeline:run', () => {
+                pipelinePatchSpy();
+                return HttpResponse.json({}, { status: 204 });
+            })
+        );
+        renderApp({
+            status: 'connected',
+            pipelineConfig: mockedPipeline,
+        });
+
+        await waitFor(() => {
+            expect(pipelinePatchSpy).not.toHaveBeenCalled();
         });
     });
 
@@ -136,7 +157,7 @@ describe('useAutoPlayStream', () => {
 
     it('shows error toast if pipeline run API fails', async () => {
         const mockedPipeline = getMockedPipeline({});
-        mockedPipeline.status = 'idle';
+        mockedPipeline.status = 'active';
         server.use(
             http.post('/api/projects/{project_id}/pipeline:run', () => {
                 return HttpResponse.json(
