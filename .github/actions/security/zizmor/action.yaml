@@ -66,7 +66,7 @@ runs:
   using: composite
   steps:
     - name: Install uv
-      uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+      uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b # v7.3.0
       with:
         enable-cache: true
         activate-environment: true
@@ -144,6 +144,6 @@ runs:
         retention-days: 7
     - name: Upload sarif
       if: hashFiles('zizmor-report.sarif') != '' # if SARIF is available, upload it
-      uses: github/codeql-action/upload-sarif@5d4e8d1aca955e8d8589aabd499c5cae939e33c7 # v4.31.9
+      uses: github/codeql-action/upload-sarif@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2 # v4.32.2
       with:
         sarif_file: zizmor-report.sarif
