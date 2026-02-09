@@ -88,7 +88,7 @@
       enabled: true,
       matchManagers: ["npm"],
       matchUpdateTypes: ["minor", "patch"],
-      groupName: "npm dependencies",
+      groupName: "npm dependencies non-major",
       groupSlug: "npm-dependencies-non-major",
     },
 
