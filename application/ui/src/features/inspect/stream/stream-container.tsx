@@ -7,18 +7,18 @@ import { Play, Refresh } from '@geti/ui/icons';
 import { isEmpty } from 'lodash-es';
 import { useActivatePipeline, usePipeline } from 'src/hooks/use-pipeline.hook';
 
-import { useWebRTCConnection } from '../../../components/stream/web-rtc-connection-provider';
+import { useStreamConnection } from '../../../components/stream/stream-connection-provider';
 import { useAutoPlayStream } from './hook/use-auto-play-stream.hook';
 import { Stream } from './stream';
 
 import classes from './stream-container.module.scss';
 
-const RECONNECT_CLEANUP_DELAY_MS = 300; // Delay to allow WebRTC connection cleanup to complete before reconnecting
+const RECONNECT_CLEANUP_DELAY_MS = 300; // Delay to allow stream connection cleanup to complete before reconnecting
 
 export const StreamContainer = () => {
     const { projectId } = useProjectIdentifier();
     const { data: pipeline } = usePipeline();
-    const { start, stop, status } = useWebRTCConnection();
+    const { start, stop, status } = useStreamConnection();
     const activePipeline = useActivatePipeline({ onSuccess: start });
 
     useAutoPlayStream();
@@ -36,8 +36,8 @@ export const StreamContainer = () => {
             // Wait for cleanup to complete and status to update to 'idle'
             await new Promise((resolve) => setTimeout(resolve, RECONNECT_CLEANUP_DELAY_MS));
 
-            // If pipeline is already running, just start the WebRTC connection directly
-            // Otherwise, activate the pipeline which will start WebRTC via onSuccess callback
+            // If pipeline is already running, just start the stream directly
+            // Otherwise, activate the pipeline which will start streaming via onSuccess callback
             if (pipeline?.status === 'running') {
                 await start();
             } else {
@@ -102,7 +102,7 @@ export const StreamContainer = () => {
                 </View>
             )}
 
-            {status === 'connected' && <Stream />}
+            {(status === 'connecting' || status === 'connected') && <Stream />}
         </Flex>
     );
 };

@@ -105,3 +105,13 @@ async def download_logs() -> StreamingResponse:
         media_type="application/zip",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
+
+
+@system_router.get("/datapath")
+async def get_data_path() -> str:
+    """Get the data path used by the application.
+
+    Returns:
+        str: The data path.
+    """
+    return str(get_settings().data_dir)

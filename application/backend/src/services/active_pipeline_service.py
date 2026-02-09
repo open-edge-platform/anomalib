@@ -136,11 +136,11 @@ class ActivePipelineService:
         while True:
             with self.config_changed_condition:
                 notified = self.config_changed_condition.wait(timeout=3)
-                if not notified:  # awakened before of timeout
-                    continue
-                logger.info(f"Configuration changes detected. Process: {mp.current_process().name}")
-                # Schedule the async reload in the event loop using the stored loop reference
-                asyncio.run(self.reload())
+            if not notified:  # awakened before of timeout
+                continue
+            logger.info(f"Configuration changes detected. Process: {mp.current_process().name}")
+            # Schedule the async reload without holding the condition lock
+            asyncio.run(self.reload())
 
     @property
     def source_config(self) -> Source:

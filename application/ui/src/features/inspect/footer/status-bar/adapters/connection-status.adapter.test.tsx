@@ -5,12 +5,12 @@ import { ReactNode } from 'react';
 
 import { renderHook } from '@testing-library/react';
 
-import { useWebRTCConnection } from '../../../../../components/stream/web-rtc-connection-provider';
+import { useStreamConnection } from '../../../../../components/stream/stream-connection-provider';
 import { StatusBarProvider, useStatusBar } from '../status-bar-context';
 import { ConnectionStatusAdapter } from './connection-status.adapter';
 
-vi.mock('../../../../../components/stream/web-rtc-connection-provider', () => ({
-    useWebRTCConnection: vi.fn(),
+vi.mock('../../../../../components/stream/stream-connection-provider', () => ({
+    useStreamConnection: vi.fn(),
 }));
 
 const wrapper = ({ children }: { children: ReactNode }) => (
@@ -26,11 +26,12 @@ describe('ConnectionStatusAdapter', () => {
     });
 
     it('maps connected status', () => {
-        vi.mocked(useWebRTCConnection).mockReturnValue({
+        vi.mocked(useStreamConnection).mockReturnValue({
             status: 'connected',
             start: vi.fn(),
             stop: vi.fn(),
-            webRTCConnectionRef: { current: null },
+            streamUrl: null,
+            setStatus: vi.fn(),
         });
 
         const { result } = renderHook(() => useStatusBar(), { wrapper });
@@ -39,11 +40,12 @@ describe('ConnectionStatusAdapter', () => {
     });
 
     it('maps idle to disconnected', () => {
-        vi.mocked(useWebRTCConnection).mockReturnValue({
+        vi.mocked(useStreamConnection).mockReturnValue({
             status: 'idle',
             start: vi.fn(),
             stop: vi.fn(),
-            webRTCConnectionRef: { current: null },
+            streamUrl: null,
+            setStatus: vi.fn(),
         });
 
         const { result } = renderHook(() => useStatusBar(), { wrapper });
@@ -52,11 +54,12 @@ describe('ConnectionStatusAdapter', () => {
     });
 
     it('maps failed status', () => {
-        vi.mocked(useWebRTCConnection).mockReturnValue({
+        vi.mocked(useStreamConnection).mockReturnValue({
             status: 'failed',
             start: vi.fn(),
             stop: vi.fn(),
-            webRTCConnectionRef: { current: null },
+            streamUrl: null,
+            setStatus: vi.fn(),
         });
 
         const { result } = renderHook(() => useStatusBar(), { wrapper });

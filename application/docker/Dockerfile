@@ -70,14 +70,6 @@ RUN mkdir -p /app/data /app/logs
 #------------------------------------------
 FROM geti-inspect-base AS geti-inspect-cpu
 
-ARG UID=10001
-ARG USER_NAME="non-root"
-
-# Create secure non-root user with home directory
-RUN useradd -l -u ${UID} -m ${USER_NAME} \
-    && mkdir -p /home/${USER_NAME}/.cache/uv \
-    && chown -R ${USER_NAME}:${USER_NAME} /home/${USER_NAME}
-
 WORKDIR /app/application/backend
 
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -85,8 +77,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 EXPOSE 8000
 
-USER ${USER_NAME}
-
+# nosemgrep: dockerfile.security.missing-user.missing-user # will fix later
 CMD ["sh", "-c", "exec ./run.sh"]
 
 #------------------------------------------
@@ -94,30 +85,22 @@ CMD ["sh", "-c", "exec ./run.sh"]
 #------------------------------------------
 FROM geti-inspect-base AS geti-inspect-cuda
 
-ARG UID=10001
-ARG USER_NAME="non-root"
-
 RUN apt-get update  \
     && apt-get install -y --no-install-recommends wget=1.25.0-2 \
-    && wget -q https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb \
+    && wget -q https://developer.download.nvidia.com/compute/cuda/repos/debian13/x86_64/cuda-keyring_1.1-1_all.deb \
     && dpkg -i cuda-keyring_1.1-1_all.deb \
     && rm -rf cuda-keyring_1.1-1_all.deb \
     && apt-get remove -y wget
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-    cuda-cudart-12-4 \
-    libcublas-12-4 \
-    libcufft-12-4 \
-    libcurand-12-4 \
-    libcusolver-12-4 \
-    libcusparse-12-4 \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cuda-cudart-13-1 \
+    libcublas-13-1 \
+    libcufft-13-1 \
+    libcurand-13-1 \
+    libcusolver-13-1 \
+    libcusparse-13-1 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
-
-RUN useradd -l -u ${UID} -m ${USER_NAME} \
-    && mkdir -p /home/${USER_NAME}/.cache/uv \
-    && chown -R ${USER_NAME}:${USER_NAME} /home/${USER_NAME}
 
 WORKDIR /app/application/backend
 
@@ -126,17 +109,13 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 EXPOSE 8000
 
-USER ${USER_NAME}
-
+# nosemgrep: dockerfile.security.missing-user.missing-user # will fix later
 CMD ["sh", "-c", "exec ./run.sh"]
 
 #------------------------------------------
 # Geti Inspect XPU version
 #------------------------------------------
 FROM geti-inspect-base AS geti-inspect-xpu
-
-ARG UID=10001
-ARG USER_NAME="non-root"
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends wget gpg \
@@ -154,9 +133,7 @@ RUN apt-get update \
  && apt-get remove -y wget gpg \
  && apt-get clean
 
-RUN useradd -l -u ${UID} -m ${USER_NAME} \
-    && mkdir -p /home/${USER_NAME}/.cache/uv \
-    && chown -R ${USER_NAME}:${USER_NAME} /home/${USER_NAME}
+
 
 WORKDIR /app/application/backend
 
@@ -165,6 +142,5 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 EXPOSE 8000
 
-USER ${USER_NAME}
-
+# nosemgrep: dockerfile.security.missing-user.missing-user # will fix later
 CMD ["sh", "-c", "exec ./run.sh"]

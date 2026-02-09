@@ -147,7 +147,7 @@ class TrainingService:
             # bookkeeping after training completion
             # update must happen after synchronization task is cancelled to avoid overwriting
             job_ = await job_service.get_job_by_id(job_id=job.id)
-            if job_ is not None and job_.is_active:
+            if job_ is not None and job_.is_running:
                 logger.success(f"Successfully trained model: `{model_name}`")
                 await job_service.update_job_status(
                     job_id=job.id,
@@ -343,9 +343,8 @@ class TrainingService:
 
                 if progress != last_progress or message != last_message:
                     logger.trace(f"Syncing progress with db: {progress}% - {message}")
-                    await job_service.update_job_status(
+                    await job_service.update_job_progress(
                         job_id=job_id,
-                        status=JobStatus.RUNNING,
                         progress=progress,
                         message=message,
                     )

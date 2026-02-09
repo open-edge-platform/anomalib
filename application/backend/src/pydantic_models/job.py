@@ -38,8 +38,12 @@ class Job(BaseIDModel):
         return str(project_id)
 
     @property
-    def is_active(self) -> bool:
-        return self.status in {JobStatus.PENDING, JobStatus.RUNNING}
+    def is_running(self) -> bool:
+        return self.status == JobStatus.RUNNING
+
+    @property
+    def has_failed(self) -> bool:
+        return self.status == JobStatus.FAILED
 
 
 class JobList(BaseModel):

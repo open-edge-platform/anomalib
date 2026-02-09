@@ -7,7 +7,7 @@ import { useProjectIdentifier } from '@geti-inspect/hooks';
 import { toast } from '@geti/ui';
 import { usePipeline, useRunPipeline } from 'src/hooks/use-pipeline.hook';
 
-import { useWebRTCConnection } from '../../../../components/stream/web-rtc-connection-provider';
+import { useStreamConnection } from '../../../../components/stream/stream-connection-provider';
 import { isNonEmptyString } from '../../utils';
 
 export const STREAM_ERROR_MESSAGE = 'Failed to connect to the stream';
@@ -17,12 +17,12 @@ const ERROR_TOAST_DELAY = 500; // Delay before showing error toast to allow reco
 export const useAutoPlayStream = () => {
     const runPipeline = useRunPipeline({});
     const { data: pipeline } = usePipeline();
-    const { start, status } = useWebRTCConnection();
+    const { start, status } = useStreamConnection();
     const { projectId } = useProjectIdentifier();
 
     const hasModel = isNonEmptyString(pipeline?.model?.id);
     const hasSource = isNonEmptyString(pipeline?.source?.id);
-    const isRunning = pipeline?.status === 'running';
+    const isActive = pipeline?.status === 'active';
     const hasInferenceConfig = hasModel && hasSource;
 
     // Track previous status to detect transitions
@@ -66,7 +66,7 @@ export const useAutoPlayStream = () => {
             start();
         }
 
-        if (hasInferenceConfig && !isRunning && !runPipeline.isPending) {
+        if (hasInferenceConfig && isActive && !runPipeline.isPending) {
             runPipeline.mutate({ params: { path: { project_id: projectId } } });
         }
 
@@ -77,5 +77,5 @@ export const useAutoPlayStream = () => {
                 errorToastTimeoutRef.current = null;
             }
         };
-    }, [hasSource, status, start, hasInferenceConfig, isRunning, runPipeline, projectId]);
+    }, [hasSource, status, start, hasInferenceConfig, isActive, runPipeline, projectId]);
 };

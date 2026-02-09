@@ -20,10 +20,10 @@ from api.endpoints.project_endpoints import project_router
 from api.endpoints.sink_endpoints import router as sink_router
 from api.endpoints.snapshot_endpoints import router as snapshot_router
 from api.endpoints.source_endpoints import router as source_router
+from api.endpoints.stream_endpoints import router as stream_router
 from api.endpoints.system_endpoints import system_router
 from api.endpoints.trainable_models_endpoints import router as trainable_model_router
 from api.endpoints.video_endpoints import router as video_router
-from api.endpoints.webrtc import router as webrtc_router
 from api.endpoints.webui_endpoints import webui_router
 from core.lifecycle import lifespan
 from settings import get_settings
@@ -57,12 +57,16 @@ app.include_router(pipeline_router)
 app.include_router(active_pipeline_router)
 app.include_router(source_router)
 app.include_router(sink_router)
-app.include_router(webrtc_router)
+
+# TODO: WebRTC disabled due to connectivity issues: revisit implementation
+# app.include_router(webrtc_router)
+
 app.include_router(trainable_model_router)
 app.include_router(capture_router)
 app.include_router(snapshot_router)
 app.include_router(system_router)
 app.include_router(video_router)
+app.include_router(stream_router)
 
 settings = get_settings()
 

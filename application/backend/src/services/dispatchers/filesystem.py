@@ -37,7 +37,8 @@ class FolderDispatcher(BaseDispatcher):
     @staticmethod
     def _write_image_to_file(image: np.ndarray, file_path: str) -> None:
         with pathlib.Path(file_path).open("wb") as f:
-            success, img_buf = cv2.imencode(".png", image)
+            bgr_frame = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            success, img_buf = cv2.imencode(".png", bgr_frame)
             if success:
                 f.write(img_buf.tobytes())
             else:

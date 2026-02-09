@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Callable
 from enum import StrEnum
 from multiprocessing.synchronize import Condition
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from loguru import logger
@@ -16,8 +17,12 @@ from pydantic_models.base import Pagination
 from pydantic_models.sink import SinkList
 from pydantic_models.source import SourceList
 from repositories import PipelineRepository, SinkRepository, SourceRepository
-from services import ActivePipelineService
+from services.active_pipeline_service import ActivePipelineService
 from services.exceptions import ResourceNotFoundError, ResourceType
+from services.video_stream_service import VideoStreamService
+
+if TYPE_CHECKING:
+    from entities.video_stream import VideoStream
 
 
 class PipelineField(StrEnum):
@@ -172,3 +177,20 @@ class ConfigurationService:
         """Delete all sinks associated with a project from the database."""
         sink_repo = SinkRepository(session, project_id=project_id)
         await sink_repo.delete_all(commit=commit)
+
+    @staticmethod
+    async def validate_source_connectivity(source: Source) -> bool:
+        """Validate connectivity for a source"""
+        video_stream: VideoStream | None = None
+        try:
+            video_stream = VideoStreamService.get_video_stream(source)
+            if video_stream:
+                video_stream.get_data()
+        except Exception as error:
+            logger.error(f"Source connectivity validation failed. {error}")
+            return False
+        finally:
+            if video_stream is not None:
+                logger.debug("Video stream released after connectivity validation")
+                video_stream.release()
+        return True
