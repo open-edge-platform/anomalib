@@ -19,7 +19,7 @@ class DeviceType(StrEnum):
 class DeviceInfo(BaseModel):
     """Device information schema"""
 
-    type: DeviceType = Field(..., description="Device type (cpu, xpu, npu or cuda)")
+    type: DeviceType = Field(..., description="Device type (cpu, xpu, cuda, mps, npu)")
     name: str = Field(..., description="Device name")
     memory: int | None = Field(None, description="Total memory available to the device, in bytes (null for CPU/NPU)")
     index: int | None = Field(None, description="Device index among those of the same type (null for CPU/NPU)")
