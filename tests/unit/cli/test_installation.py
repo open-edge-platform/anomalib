@@ -14,7 +14,6 @@ import pytest
 from packaging.requirements import Requirement
 
 from anomalib.cli.utils import installation
-
 from anomalib.cli.utils.installation import (
     get_cuda_suffix,
     get_cuda_version,
