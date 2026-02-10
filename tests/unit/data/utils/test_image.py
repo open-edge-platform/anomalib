@@ -6,6 +6,7 @@
 from pathlib import Path
 
 import pytest
+from pytest_mock import MockerFixture
 
 from anomalib.data.utils.image import Image, get_image_filenames, np, read_mask, torch
 
@@ -52,13 +53,12 @@ class TestReadMask:
     """Tests for ``read_mask`` function."""
 
     @staticmethod
-    def test_mask_conversion_as_numpy(monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_mask_conversion_as_numpy(mocker: MockerFixture) -> None:
         """Test that the function correctly converts the image to a numpy array."""
         # Sample image: [[0, 236], [255, 0]]
-        monkeypatch.setattr(
-            Image,
-            "open",
-            lambda *_args, **_kwargs: Image.fromarray(np.array([[0, 236], [255, 0]], dtype=np.uint8)),
+        mocker.patch(
+            "anomalib.data.utils.image.Image.open",
+            return_value=Image.fromarray(np.array([[0, 236], [255, 0]], dtype=np.uint8)),
         )
 
         # Mocks are setup, call function to test!
@@ -68,7 +68,7 @@ class TestReadMask:
         np.testing.assert_array_equal(result, np.array([[0, 236], [255, 0]]))
 
     @staticmethod
-    def test_mask_conversion_as_tensor(monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_mask_conversion_as_tensor(mocker: MockerFixture) -> None:
         """Test that the function correctly converts the image to a tensor (normalized to 0, 1).
 
         Test cases:
@@ -76,10 +76,9 @@ class TestReadMask:
         - Value 236 (>0) becomes anomalous (1)
         - Value 255 becomes anomalous (1)
         """
-        monkeypatch.setattr(
-            Image,
-            "open",
-            lambda *_args, **_kwargs: Image.fromarray(np.array([[0, 236], [255, 0]], dtype=np.uint8)),
+        mocker.patch(
+            "anomalib.data.utils.image.Image.open",
+            return_value=Image.fromarray(np.array([[0, 236], [255, 0]], dtype=np.uint8)),
         )
         result = read_mask("dummy_path.png", as_tensor=True)
 
