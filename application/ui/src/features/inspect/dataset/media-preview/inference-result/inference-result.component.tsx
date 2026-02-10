@@ -1,4 +1,4 @@
-import { SchemaPredictionResponse } from '@geti-inspect/api/spec';
+import { SchemaPredictionResponse } from '@anomalib-studio/api/spec';
 import { DimensionValue, Responsive, View } from '@geti/ui';
 import { clsx } from 'clsx';
 import { motion } from 'motion/react';

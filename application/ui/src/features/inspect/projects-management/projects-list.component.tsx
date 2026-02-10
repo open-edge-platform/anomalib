@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { useProjectIdentifier } from '@anomalib-studio/hooks';
 import { LoadMoreList } from 'src/components/load-more-list/load-more-list.component';
 
 import { Project, ProjectListItem } from './project-list-item/project-list-item.component';

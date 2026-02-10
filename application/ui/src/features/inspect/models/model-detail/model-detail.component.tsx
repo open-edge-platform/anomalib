@@ -4,7 +4,7 @@
 import { useState } from 'react';
 
 import { Badge } from '@adobe/react-spectrum';
-import { $api } from '@geti-inspect/api';
+import { $api } from '@anomalib-studio/api';
 import {
     ActionButton,
     Button,

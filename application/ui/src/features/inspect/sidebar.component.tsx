@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Dataset as DatasetIcon, Models as ModelsIcon } from '@geti-inspect/icons';
+import { Dataset as DatasetIcon, Models as ModelsIcon } from '@anomalib-studio/icons';
 import { Flex, Grid, ToggleButton, View } from '@geti/ui';
 import { useSearchParams } from 'react-router-dom';
 

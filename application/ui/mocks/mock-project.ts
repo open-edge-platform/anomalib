@@ -1,4 +1,4 @@
-import type { SchemaProjectList } from '@geti-inspect/api/spec';
+import type { SchemaProjectList } from '@anomalib-studio/api/spec';
 
 export const getMockedProject = (
     partial?: Partial<SchemaProjectList['projects'][number]>

@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { useProjectIdentifier } from '@anomalib-studio/hooks';
 
 import { ReactComponent as IpCameraIcon } from '../../../../assets/icons/ip-camera.svg';
 import { ReactComponent as UsbCameraIcon } from '../../../../assets/icons/usb-camera.svg';

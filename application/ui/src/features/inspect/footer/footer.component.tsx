@@ -3,7 +3,7 @@
 
 import { Suspense, useEffect } from 'react';
 
-import { usePatchPipeline, usePipeline, useProjectIdentifier } from '@geti-inspect/hooks';
+import { usePatchPipeline, usePipeline, useProjectIdentifier } from '@anomalib-studio/hooks';
 import { Loading, View } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 

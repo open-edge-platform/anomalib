@@ -51,7 +51,7 @@ class ProgressSyncParams:
 
 
 class GetiInspectProgressCallback(Callback):
-    """Callback for displaying training/validation/testing progress in the Geti Inspect UI.
+    """Callback for displaying training/validation/testing progress in the Anomalib Studio UI.
 
     This callback sends progress events through a multiprocessing queue that the
     main process polls and broadcasts via WebSocket to connected frontend clients.

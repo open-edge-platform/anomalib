@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-import { $api } from '@geti-inspect/api';
-import { usePatchPipeline, useProjectIdentifier } from '@geti-inspect/hooks';
+import { $api } from '@anomalib-studio/api';
+import { usePatchPipeline, useProjectIdentifier } from '@anomalib-studio/hooks';
 import { ActionButton, AlertDialog, DialogContainer, Item, Menu, MenuTrigger, toast, type Key } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 

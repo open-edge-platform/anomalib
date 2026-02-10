@@ -32,9 +32,9 @@ export const OpenApi = () => {
                         hideClientButton: true,
                         hideDarkModeToggle: true,
                         metaData: {
-                            title: 'Geti Inspect | REST API specification',
+                            title: 'Anomalib Studio | REST API specification',
                         },
-                        servers: [{ url: `/api/`, description: 'Geti Inspect' }],
+                        servers: [{ url: `/api/`, description: 'Anomalib Studio' }],
                         forceDarkModeState: 'dark',
                     }}
                 />

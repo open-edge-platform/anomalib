@@ -1,5 +1,5 @@
-import { fetchClient } from '@geti-inspect/api';
-import { usePipeline } from '@geti-inspect/hooks';
+import { fetchClient } from '@anomalib-studio/api';
+import { usePipeline } from '@anomalib-studio/hooks';
 import { skipToken, useQuery } from '@tanstack/react-query';
 
 import { isNonEmptyString } from '../../../utils';

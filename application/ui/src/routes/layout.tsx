@@ -8,7 +8,7 @@ const Header = () => {
         <View backgroundColor={'gray-300'} gridArea={'header'}>
             <Flex height='100%' alignItems={'center'} justifyContent={'space-between'} marginX='1rem' gap='size-200'>
                 <View marginEnd='size-200' maxWidth={'5ch'}>
-                    <span>Geti Inspect</span>
+                    <span>Anomalib Studio</span>
                 </View>
 
                 <ProjectsListPanel />

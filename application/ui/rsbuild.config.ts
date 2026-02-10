@@ -32,7 +32,7 @@ export default defineConfig({
         },
     },
     html: {
-        title: 'Geti Inspect',
+        title: 'Anomalib Studio',
         favicon: './src/assets/icons/build-icon.svg',
     },
     tools: {
