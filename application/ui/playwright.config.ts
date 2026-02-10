@@ -3,15 +3,6 @@ import { defineConfig, devices } from '@playwright/test';
 const CI = !!process.env.CI;
 
 /**
- * Node.js v22+ exposes a global `localStorage` that is non-functional
- * without the `--localstorage-file` flag. This breaks MSW's cookieStore
- * module which checks `typeof localStorage` and then calls `getItem`.
- * Removing it here lets MSW fall back to its in-memory store.
- */
-// @ts-expect-error — intentionally removing the non-functional Node.js localStorage
-delete globalThis.localStorage;
-
-/**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({

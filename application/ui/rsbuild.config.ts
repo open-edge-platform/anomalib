@@ -25,6 +25,9 @@ export default defineConfig({
                 publicVars['import.meta.env.PUBLIC_API_BASE_URL'] ?? '""',
             'process.env.PUBLIC_API_BASE_URL':
                 publicVars['process.env.PUBLIC_API_BASE_URL'] ?? '""',
+            // Needed to prevent an issue with spectrum's picker
+            // eslint-disable-next-line max-len
+            // https://github.com/adobe/react-spectrum/blob/6173beb4dad153aef74fc81575fd97f8afcf6cb3/packages/%40react-spectrum/overlays/src/OpenTransition.tsx#L40
             'process.env': {},
         },
     },
