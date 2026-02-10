@@ -341,19 +341,20 @@ def get_torch_install_args(requirement: str | Requirement) -> list[str]:
 
     # NOTE: This does not take into account if the requirement has multiple versions
     #   such as torch<2.0.1,>=1.13.0
-    if not requirement.specifier:
+    specifiers = list(requirement.specifier)
+    if not specifiers:
         return [str(requirement)]
     preferred_operators = ("==", "<=", "<", ">=", ">")
     selected_spec = None
     for operator in preferred_operators:
-        for spec in requirement.specifier:
+        for spec in specifiers:
             if spec.operator == operator:
                 selected_spec = spec
                 break
         if selected_spec is not None:
             break
     if selected_spec is None:
-        selected_spec = next(iter(requirement.specifier))
+        selected_spec = specifiers[0]
     operator = selected_spec.operator
     version = selected_spec.version
     if version not in AVAILABLE_TORCH_VERSIONS:
