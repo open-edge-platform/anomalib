@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { $api } from '@anomalib-studio/api';
-import { useProjectIdenanomalib-studiom '@anomalib-studio/hooks';
+import { useProjectIdentifier } from '@anomalib-studio/hooks';
 
 export const useTrainedModels = () => {
     const { projectId } = useProjectIdentifier();
