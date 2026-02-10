@@ -345,6 +345,8 @@ For more information on each, refer to the respective README files.
 
 ### Setup Backend Dependencies
 
+> [!NOTE] This assumes that you have `uv` installed. If not, please refer to the [installation guide](https://docs.astral.sh/uv/getting-started/installation/).
+
 ```bash
 cd application/backend
 uv sync --extra xpu # or uv sync --extra cu124 for CUDA 12.4, uv sync --extra cpu for CPU
