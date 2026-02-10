@@ -323,6 +323,51 @@ anomalib benchmark --config tools/experimental/benchmarking/sample.yaml
 > - [Patchcore Results](src/anomalib/models/image/patchcore/README.md#mvtec-ad-dataset)
 > - [Other Models](src/anomalib/models/)
 
+
+# Anomalib Studio
+
+Anomalib Studio is a low/no-code web application that allows users to train and deploy anomaly detection models. It enables users to leverage Anomalib's features in their operational environment. Any user can bring their USB/IP cameras or just a folder of images and connect it to the training pipeline. The tool allows direct output to any of their industrial pipeline through ROS message, MQTT, etc.
+
+<p align="center">
+  <img src="docs/source/_static/images/anomalib_studio.png" alt="Anomalib Studio" />
+</p>
+
+The source code for Anomalib Studio lives in the [application](application) folder.
+
+Anomalib Studio is available as two distributions:
+
+1. As a [docker container](application/docker)
+2. As a [standalone application](application/ui)
+
+For more information on each, refer to the respective README files.
+
+## Get started with development build
+
+### Setup Backend Dependencies
+
+```bash
+cd application/backend
+uv sync --extra xpu # or uv sync --extra cu124 for CUDA 12.4, uv sync --extra cpu for CPU
+```
+
+### Setup Frontend Dependencies
+
+```bash
+cd application/ui
+npm install
+```
+
+### Run the application
+
+> [!IMPORTANT] Both backend and frontend dependencies should be installed before running the application.
+
+```bash
+cd application/ui
+npm run dev
+```
+
+Navigate to [http://localhost:3000](http://localhost:3000) to see the application.
+
 # ✍️ Reference
 
 If you find Anomalib useful in your research or work, please cite:
