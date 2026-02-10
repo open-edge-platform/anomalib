@@ -8,10 +8,12 @@ import platform
 import tempfile
 from pathlib import Path
 from types import SimpleNamespace
+from typing import NoReturn
 
 import pytest
-from pkg_resources import Requirement
-import anomalib.cli.utils.installation as installation
+from packaging.requirements import Requirement
+
+from anomalib.cli.utils import installation
 
 from anomalib.cli.utils.installation import (
     get_cuda_suffix,
@@ -49,8 +51,8 @@ def test_get_requirements(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_parse_requirements() -> None:
     """Test that parse_requirements returns the expected tuple of requirements."""
     requirements = [
-        Requirement.parse("torch==2.0.0"),
-        Requirement.parse("onnx>=1.8.1"),
+        Requirement("torch==2.0.0"),
+        Requirement("onnx>=1.8.1"),
     ]
     torch_req, other_reqs = parse_requirements(requirements)
     assert isinstance(torch_req, str)
@@ -59,14 +61,14 @@ def test_parse_requirements() -> None:
     assert other_reqs == ["onnx>=1.8.1"]
 
     requirements = [
-        Requirement.parse("torch<=2.0.1, >=1.8.1"),
+        Requirement("torch<=2.0.1, >=1.8.1"),
     ]
     torch_req, other_reqs = parse_requirements(requirements)
     assert torch_req == "torch<=2.0.1,>=1.8.1"
     assert other_reqs == []
 
     requirements = [
-        Requirement.parse("onnx>=1.8.1"),
+        Requirement("onnx>=1.8.1"),
     ]
     with pytest.raises(ValueError, match=r"Could not find torch requirement."):
         parse_requirements(requirements)
@@ -85,13 +87,12 @@ def test_get_cuda_version_with_version_file(monkeypatch: pytest.MonkeyPatch, tmp
 def test_get_cuda_version_with_nvcc(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that get_cuda_version returns the expected CUDA version when nvcc is available."""
     monkeypatch.setattr(Path, "exists", lambda *_args, **_kwargs: False)
-    popen_mock = lambda *_args, **_kwargs: SimpleNamespace(
-        read=lambda: "Build cuda_11.2.r11.2/compiler.00000_0",
-    )
+    def popen_mock(*_args, **_kwargs) -> SimpleNamespace:
+        return SimpleNamespace(read=lambda: "Build cuda_11.2.r11.2/compiler.00000_0")
     monkeypatch.setattr(os, "popen", popen_mock)
     assert get_cuda_version() == "11.2"
 
-    def raise_file_not_found(*_args, **_kwargs):
+    def raise_file_not_found(*_args, **_kwargs) -> NoReturn:
         raise FileNotFoundError
 
     monkeypatch.setattr(os, "popen", raise_file_not_found)
@@ -129,7 +130,7 @@ def test_get_hardware_suffix(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_get_torch_install_args(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that get_torch_install_args returns the expected install arguments."""
-    requirement = Requirement.parse("torch>=2.1.1")
+    requirement = Requirement("torch>=2.1.1")
     monkeypatch.setattr(platform, "system", lambda: "Linux")
     monkeypatch.setattr(installation, "get_hardware_suffix", lambda *_args, **_kwargs: "cpu")
     install_args = get_torch_install_args(requirement)
@@ -142,7 +143,7 @@ def test_get_torch_install_args(monkeypatch: pytest.MonkeyPatch) -> None:
     for arg in expected_args:
         assert arg in install_args
 
-    requirement = Requirement.parse("torch>=1.13.0,<=2.0.1")
+    requirement = Requirement("torch>=1.13.0,<=2.0.1")
     monkeypatch.setattr(installation, "get_hardware_suffix", lambda *_args, **_kwargs: "cu111")
     install_args = get_torch_install_args(requirement)
     expected_args = [
@@ -152,7 +153,7 @@ def test_get_torch_install_args(monkeypatch: pytest.MonkeyPatch) -> None:
     for arg in expected_args:
         assert arg in install_args
 
-    requirement = Requirement.parse("torch==2.0.1")
+    requirement = Requirement("torch==2.0.1")
     expected_args = [
         "--extra-index-url",
         "https://download.pytorch.org/whl/cu111",
@@ -167,7 +168,7 @@ def test_get_torch_install_args(monkeypatch: pytest.MonkeyPatch) -> None:
     assert install_args == ["torch"]
 
     monkeypatch.setattr(platform, "system", lambda: "Darwin")
-    requirement = Requirement.parse("torch==2.0.1")
+    requirement = Requirement("torch==2.0.1")
     install_args = get_torch_install_args(requirement)
     assert install_args == ["torch==2.0.1"]
 
