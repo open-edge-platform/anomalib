@@ -18,6 +18,7 @@ from pathlib import Path
 from warnings import warn
 
 from packaging.requirements import Requirement
+from packaging.version import Version
 
 AVAILABLE_TORCH_VERSIONS = {
     "2.0.0": {"torchvision": "0.15.1", "cuda": ("11.7", "11.8")},
@@ -353,7 +354,7 @@ def get_torch_install_args(requirement: str | Requirement) -> list[str]:
     operator = selected_spec.operator
     version = selected_spec.version
     if version not in AVAILABLE_TORCH_VERSIONS:
-        version = max(AVAILABLE_TORCH_VERSIONS.keys())
+        version = max(AVAILABLE_TORCH_VERSIONS.keys(), key=Version)
         warn(
             f"Torch Version will be selected as {version}.",
             stacklevel=2,
