@@ -4,12 +4,14 @@
 """Tests for installation utils."""
 
 import os
+import platform
 import tempfile
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from pkg_resources import Requirement
-from pytest_mock import MockerFixture
+import anomalib.cli.utils.installation as installation
 
 from anomalib.cli.utils.installation import (
     get_cuda_suffix,
@@ -31,7 +33,7 @@ def requirements_file() -> Path:
         return Path(f.name)
 
 
-def test_get_requirements(mocker: MockerFixture) -> None:
+def test_get_requirements(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that get_requirements returns the expected dictionary of requirements."""
     requirements = get_requirements("anomalib")
     assert isinstance(requirements, dict)
@@ -40,7 +42,7 @@ def test_get_requirements(mocker: MockerFixture) -> None:
         assert isinstance(reqs, list)
         for req in reqs:
             assert isinstance(req, Requirement)
-    mocker.patch("anomalib.cli.utils.installation.requires", return_value=None)
+    monkeypatch.setattr(installation, "requires", lambda _module="anomalib": None)
     assert get_requirements() == {}
 
 
@@ -70,25 +72,29 @@ def test_parse_requirements() -> None:
         parse_requirements(requirements)
 
 
-def test_get_cuda_version_with_version_file(mocker: MockerFixture, tmp_path: Path) -> None:
+def test_get_cuda_version_with_version_file(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Test that get_cuda_version returns the expected CUDA version when version file exists."""
     tmp_path = tmp_path / "cuda"
     tmp_path.mkdir()
-    mocker.patch.dict(os.environ, {"CUDA_HOME": str(tmp_path)})
+    monkeypatch.setenv("CUDA_HOME", str(tmp_path))
     version_file = tmp_path / "version.json"
     version_file.write_text('{"cuda": {"version": "11.2.0"}}')
     assert get_cuda_version() == "11.2"
 
 
-def test_get_cuda_version_with_nvcc(mocker: MockerFixture) -> None:
+def test_get_cuda_version_with_nvcc(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that get_cuda_version returns the expected CUDA version when nvcc is available."""
-    mock_run = mocker.patch("anomalib.cli.utils.installation.Path.exists", return_value=False)
-    mock_run = mocker.patch("os.popen")
-    mock_run.return_value.read.return_value = "Build cuda_11.2.r11.2/compiler.00000_0"
+    monkeypatch.setattr(Path, "exists", lambda *_args, **_kwargs: False)
+    popen_mock = lambda *_args, **_kwargs: SimpleNamespace(
+        read=lambda: "Build cuda_11.2.r11.2/compiler.00000_0",
+    )
+    monkeypatch.setattr(os, "popen", popen_mock)
     assert get_cuda_version() == "11.2"
 
-    mock_run = mocker.patch("os.popen")
-    mock_run.side_effect = FileNotFoundError
+    def raise_file_not_found(*_args, **_kwargs):
+        raise FileNotFoundError
+
+    monkeypatch.setattr(os, "popen", raise_file_not_found)
     assert get_cuda_version() is None
 
 
@@ -106,26 +112,26 @@ def test_get_cuda_suffix() -> None:
     assert get_cuda_suffix(cuda_version="11.8") == "cu118"
 
 
-def test_get_hardware_suffix(mocker: MockerFixture) -> None:
+def test_get_hardware_suffix(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test the behavior of the get_hardware_suffix function."""
-    mocker.patch("anomalib.cli.utils.installation.get_cuda_version", return_value="11.2")
+    monkeypatch.setattr(installation, "get_cuda_version", lambda: "11.2")
     assert get_hardware_suffix() == "cu112"
 
-    mocker.patch("anomalib.cli.utils.installation.get_cuda_version", return_value="12.1")
+    monkeypatch.setattr(installation, "get_cuda_version", lambda: "12.1")
     assert get_hardware_suffix(with_available_torch_build=True, torch_version="2.0.1") == "cu118"
 
     with pytest.raises(ValueError, match=r"``torch_version`` must be provided"):
         get_hardware_suffix(with_available_torch_build=True)
 
-    mocker.patch("anomalib.cli.utils.installation.get_cuda_version", return_value=None)
+    monkeypatch.setattr(installation, "get_cuda_version", lambda: None)
     assert get_hardware_suffix() == "cpu"
 
 
-def test_get_torch_install_args(mocker: MockerFixture) -> None:
+def test_get_torch_install_args(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that get_torch_install_args returns the expected install arguments."""
     requirement = Requirement.parse("torch>=2.1.1")
-    mocker.patch("anomalib.cli.utils.installation.platform.system", return_value="Linux")
-    mocker.patch("anomalib.cli.utils.installation.get_hardware_suffix", return_value="cpu")
+    monkeypatch.setattr(platform, "system", lambda: "Linux")
+    monkeypatch.setattr(installation, "get_hardware_suffix", lambda *_args, **_kwargs: "cpu")
     install_args = get_torch_install_args(requirement)
     expected_args = [
         "--extra-index-url",
@@ -137,7 +143,7 @@ def test_get_torch_install_args(mocker: MockerFixture) -> None:
         assert arg in install_args
 
     requirement = Requirement.parse("torch>=1.13.0,<=2.0.1")
-    mocker.patch("anomalib.cli.utils.installation.get_hardware_suffix", return_value="cu111")
+    monkeypatch.setattr(installation, "get_hardware_suffix", lambda *_args, **_kwargs: "cu111")
     install_args = get_torch_install_args(requirement)
     expected_args = [
         "--extra-index-url",
@@ -160,11 +166,11 @@ def test_get_torch_install_args(mocker: MockerFixture) -> None:
     install_args = get_torch_install_args("torch")
     assert install_args == ["torch"]
 
-    mocker.patch("anomalib.cli.utils.installation.platform.system", return_value="Darwin")
+    monkeypatch.setattr(platform, "system", lambda: "Darwin")
     requirement = Requirement.parse("torch==2.0.1")
     install_args = get_torch_install_args(requirement)
     assert install_args == ["torch==2.0.1"]
 
-    mocker.patch("anomalib.cli.utils.installation.platform.system", return_value="Unknown")
+    monkeypatch.setattr(platform, "system", lambda: "Unknown")
     with pytest.raises(RuntimeError, match=r"Unsupported OS: Unknown"):
         get_torch_install_args(requirement)
