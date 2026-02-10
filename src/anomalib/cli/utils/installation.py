@@ -119,7 +119,9 @@ def parse_requirements(
             torch_requirement = str(requirement)
             if len(requirement.specifier) > 1:
                 warn(
-                    "requirements.txt contains. Please remove other versions of torch from requirements.",
+                    f"Multiple version specifiers for 'torch' detected in requirements.txt "
+                    f"(requirement: '{requirement}'). Please specify only one torch version "
+                    "and remove any additional torch specifiers from your requirements.",
                     stacklevel=2,
                 )
 
