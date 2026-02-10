@@ -6,9 +6,9 @@ import spec from './openapi-spec.json' with { type: 'json' };
 
 const handlers = await fromOpenApi(JSON.stringify(spec).replace(/}:/g, '}//:'));
 
-const getOpenApiHttp = (): OpenApiHttpHandlers<paths> => {
+const getOpenApiHttp = (baseUrl?: string): OpenApiHttpHandlers<paths> => {
     const http = createOpenApiHttp<paths>({
-        baseUrl: process.env.PUBLIC_API_BASE_URL ?? 'http://localhost:8000',
+        baseUrl: baseUrl ?? process.env.PUBLIC_API_BASE_URL ?? 'http://localhost:8000',
     });
 
     return {
@@ -25,4 +25,4 @@ const getOpenApiHttp = (): OpenApiHttpHandlers<paths> => {
 
 const http = getOpenApiHttp();
 
-export { handlers, http };
+export { getOpenApiHttp, handlers, http };

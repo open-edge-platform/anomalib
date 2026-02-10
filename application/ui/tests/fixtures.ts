@@ -1,7 +1,11 @@
 import { createNetworkFixture, NetworkFixture } from '@msw/playwright';
 import { expect, test as testBase } from '@playwright/test';
 
-import { handlers, http } from '../src/api/utils';
+import { getOpenApiHttp, handlers } from '../src/api/utils';
+
+// Playwright component tests serve the app at localhost:3000 with relative API URLs,
+// so MSW handlers need an empty baseUrl to match requests like /api/projects.
+const http = getOpenApiHttp('');
 
 interface Fixtures {
     network: NetworkFixture;
