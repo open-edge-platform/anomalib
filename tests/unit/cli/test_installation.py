@@ -87,8 +87,10 @@ def test_get_cuda_version_with_version_file(monkeypatch: pytest.MonkeyPatch, tmp
 def test_get_cuda_version_with_nvcc(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that get_cuda_version returns the expected CUDA version when nvcc is available."""
     monkeypatch.setattr(Path, "exists", lambda *_args, **_kwargs: False)
+
     def popen_mock(*_args, **_kwargs) -> SimpleNamespace:
         return SimpleNamespace(read=lambda: "Build cuda_11.2.r11.2/compiler.00000_0")
+
     monkeypatch.setattr(os, "popen", popen_mock)
     assert get_cuda_version() == "11.2"
 
