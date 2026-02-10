@@ -3,6 +3,7 @@
 
 """Tests for installation utils."""
 
+import os
 import tempfile
 from pathlib import Path
 
@@ -73,14 +74,12 @@ def test_parse_requirements() -> None:
 
 def test_get_cuda_version_with_version_file(mocker: MockerFixture, tmp_path: Path) -> None:
     """Test that get_cuda_version returns the expected CUDA version when version file exists."""
-    mock_run = mocker.patch("anomalib.cli.utils.installation.Path.exists", return_value=False)
-    mock_run = mocker.patch("os.popen")
-    mock_run.return_value.read.return_value = "Build cuda_11.2.r11.2/compiler.00000_0"
+    tmp_path = tmp_path / "cuda"
+    tmp_path.mkdir()
+    mocker.patch.dict(os.environ, {"CUDA_HOME": str(tmp_path)})
+    version_file = tmp_path / "version.json"
+    version_file.write_text('{"cuda": {"version": "11.2.0"}}')
     assert get_cuda_version() == "11.2"
-
-    mock_run = mocker.patch("os.popen")
-    mock_run.side_effect = FileNotFoundError
-    assert get_cuda_version() is None
 
 
 def test_get_cuda_version_with_nvcc(mocker: MockerFixture) -> None:
