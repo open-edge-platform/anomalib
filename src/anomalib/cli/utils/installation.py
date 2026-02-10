@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Anomalib installation utilities.
@@ -117,7 +117,8 @@ def parse_requirements(
     for requirement in requirements:
         if requirement.name.lower() == "torch":
             torch_requirement = str(requirement)
-            if len(requirement.specifier) > 1:
+            specifiers = list(requirement.specifier)
+            if len(specifiers) > 1:
                 warn(
                     f"Multiple version specifiers for 'torch' detected in requirements.txt "
                     f"(requirement: '{requirement}'). Please specify only one torch version "
