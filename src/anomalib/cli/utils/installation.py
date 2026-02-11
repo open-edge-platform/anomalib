@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Anomalib installation utilities.
@@ -17,7 +17,8 @@ from importlib.metadata import requires
 from pathlib import Path
 from warnings import warn
 
-from pkg_resources import Requirement
+from packaging.requirements import Requirement
+from packaging.version import Version
 
 AVAILABLE_TORCH_VERSIONS = {
     "2.0.0": {"torchvision": "0.15.1", "cuda": ("11.7", "11.8")},
@@ -66,7 +67,7 @@ def get_requirements(module: str = "anomalib") -> dict[str, list[Requirement]]:
         if isinstance(requirement_extra, list) and len(requirement_extra) > 1:
             extra = requirement_extra[-1].split("==")[-1].strip("'\"")
         requirement_name_ = requirement_extra[0]
-        requirement_ = Requirement.parse(requirement_name_)
+        requirement_ = Requirement(requirement_name_)
         if extra in extra_requirement:
             extra_requirement[extra].append(requirement_)
         else:
@@ -114,11 +115,14 @@ def parse_requirements(
     other_requirements: list[str] = []
 
     for requirement in requirements:
-        if requirement.unsafe_name == "torch":
+        if requirement.name.lower() == "torch":
             torch_requirement = str(requirement)
-            if len(requirement.specs) > 1:
+            specifiers = list(requirement.specifier)
+            if len(specifiers) > 1:
                 warn(
-                    "requirements.txt contains. Please remove other versions of torch from requirements.",
+                    f"Multiple version specifiers for 'torch' detected in requirements.txt "
+                    f"(requirement: '{requirement}'). Please specify only one torch version "
+                    "and remove any additional torch specifiers from your requirements.",
                     stacklevel=2,
                 )
 
@@ -333,20 +337,28 @@ def get_torch_install_args(requirement: str | Requirement) -> list[str]:
         True
     """
     if isinstance(requirement, str):
-        requirement = Requirement.parse(requirement)
+        requirement = Requirement(requirement)
 
     # NOTE: This does not take into account if the requirement has multiple versions
     #   such as torch<2.0.1,>=1.13.0
-    if len(requirement.specs) < 1:
+    specifiers = list(requirement.specifier)
+    if not specifiers:
         return [str(requirement)]
-    select_spec_idx = 0
-    for i, spec in enumerate(requirement.specs):
-        if "=" in spec[0]:
-            select_spec_idx = i
+    preferred_operators = ("==", "<=", "<", ">=", ">")
+    selected_spec = None
+    for operator in preferred_operators:
+        for spec in specifiers:
+            if spec.operator == operator:
+                selected_spec = spec
+                break
+        if selected_spec is not None:
             break
-    operator, version = requirement.specs[select_spec_idx]
+    if selected_spec is None:
+        selected_spec = specifiers[0]
+    operator = selected_spec.operator
+    version = selected_spec.version
     if version not in AVAILABLE_TORCH_VERSIONS:
-        version = max(AVAILABLE_TORCH_VERSIONS.keys())
+        version = max(AVAILABLE_TORCH_VERSIONS.keys(), key=Version)
         warn(
             f"Torch Version will be selected as {version}.",
             stacklevel=2,
