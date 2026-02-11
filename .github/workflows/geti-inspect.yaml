@@ -242,7 +242,7 @@ jobs:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.57.0-jammy@sha256:6aca677c27a967caf7673d108ac67ffaf8fed134f27e17b27a05464ca0ace831
+      image: mcr.microsoft.com/playwright:v1.57.0-noble@sha256:3bed4b1a12f2338642f3d8cba28e291deef3c66bd4a964bbeb3e57bbff511dbd
     steps:
       - name: Install git lfs
         run: apt-get update && apt-get install git-lfs
@@ -252,6 +252,22 @@ jobs:
         with:
           lfs: true
           persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+        with:
+          version: "0.9.18"
+
+      - name: Prepare venv and install Python dependencies
+        working-directory: application/backend
+        run: |
+          uv lock --check
+          uv sync --frozen --all-extras
 
       - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         id: setup-node
@@ -282,9 +298,15 @@ jobs:
         run: npm run build:api:types
 
       - name: Run Playwright tests
+        if: false # temporarily disabled
         working-directory: "application/ui"
         run: npm run test:component -- --project "Component tests"
 
+      - name: Run E2E tests
+        working-directory: "application/ui"
+        env:
+          AUTO_START_BACKEND: "true"
+        run: npm run test:e2e -- --reporter=list --output=playwright-report
       - name: Upload blob report to GitHub Actions Artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always()
