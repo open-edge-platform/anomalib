@@ -4,6 +4,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from openvino.properties.device import Type as OVDeviceType
 
 from services.system_service import SystemService
 
@@ -37,7 +38,7 @@ class TestSystemService:
             mock_torch.cuda.is_available.return_value = False
             mock_torch.mps.is_available.return_value = False
 
-            devices = fxt_system_service.get_devices()
+            devices = fxt_system_service.get_training_devices()
 
             assert len(devices) == 1
             assert devices[0].name == "CPU"
@@ -60,7 +61,7 @@ class TestSystemService:
             mock_torch.cuda.is_available.return_value = False
             mock_torch.mps.is_available.return_value = False
 
-            devices = fxt_system_service.get_devices()
+            devices = fxt_system_service.get_training_devices()
 
             assert len(devices) == 2
             assert devices[1].name == "Intel(R) Graphics [0x7d41]"
@@ -83,7 +84,7 @@ class TestSystemService:
             mock_torch.cuda.device_count.return_value = 1
             mock_torch.cuda.get_device_properties.return_value = mock_dp
 
-            devices = fxt_system_service.get_devices()
+            devices = fxt_system_service.get_training_devices()
 
             assert len(devices) == 2
             assert devices[1].name == "NVIDIA GeForce RTX 4090"
@@ -113,7 +114,7 @@ class TestSystemService:
 
             mock_torch.mps.is_available.return_value = True
 
-            devices = fxt_system_service.get_devices()
+            devices = fxt_system_service.get_training_devices()
 
             assert len(devices) == 4
 
@@ -176,28 +177,35 @@ class TestSystemService:
 
     def test_get_inference_devices_with_multiple_devices(self, fxt_system_service: SystemService):
         """Test getting inference devices when multiple GPUs are available"""
-        with patch("services.system_service.torch") as mock_torch:
-            # Mock XPU device
-            mock_xpu_dp = MagicMock()
-            mock_xpu_dp.name = "Intel(R) Graphics [0x7d41]"
-            mock_xpu_dp.total_memory = 36022263808
+        with patch("services.system_service.ov.Core") as mock_core_cls:
+            mock_core = MagicMock()
+            mock_core_cls.return_value = mock_core
 
-            mock_torch.xpu.is_available.return_value = True
-            mock_torch.xpu.device_count.return_value = 1
-            mock_torch.xpu.get_device_properties.return_value = mock_xpu_dp
+            # Mock available devices: NPU and discrete Intel GPU
+            mock_core.available_devices = ["NPU", "GPU.0"]
 
-            # Mock CUDA device
-            mock_cuda_dp = MagicMock()
-            mock_cuda_dp.name = "NVIDIA GeForce RTX 4090"
-            mock_cuda_dp.total_memory = 25769803776
+            def get_property_side_effect(device, prop):
+                if prop == "FULL_DEVICE_NAME":
+                    if device == "NPU":
+                        return "Intel(R) AI Boost"
+                    return "Intel(R) Graphics [0x7d41]"
+                if prop == "DEVICE_TYPE":
+                    return OVDeviceType.DISCRETE
+                if prop == "GPU_DEVICE_TOTAL_MEM_SIZE":
+                    return 36022263808
+                if prop == "DEVICE_ID":
+                    return 0
+                return None
 
-            mock_torch.cuda.is_available.return_value = True
-            mock_torch.cuda.device_count.return_value = 1
-            mock_torch.cuda.get_device_properties.return_value = mock_cuda_dp
+            mock_core.get_property.side_effect = get_property_side_effect
 
             inference_devices = fxt_system_service.get_inference_devices()
 
-            assert len(inference_devices) == 2
+            # Should have CPU + NPU + XPU (Intel GPU)
+            assert len(inference_devices) == 3
+            assert inference_devices[0].type == "cpu"
+            assert inference_devices[1].type == "npu"
+            assert inference_devices[2].type == "xpu"
             assert not any(device.type == "cuda" for device in inference_devices)
 
     def test_validate_device_invalid_type(self, fxt_system_service: SystemService):

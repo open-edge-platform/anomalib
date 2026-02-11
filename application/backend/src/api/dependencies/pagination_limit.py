@@ -17,7 +17,10 @@ class PaginationLimit:
 
     def __call__(
         self,
-        limit: Annotated[int | None, Query(ge=1, description="Number of items to return")] = None,
+        limit: Annotated[
+            int | None,
+            Query(ge=1, le=MAX_PAGINATION_LIMIT, description="Number of items to return"),
+        ] = None,
     ) -> int:
         actual_limit = limit if limit is not None else self.default
 

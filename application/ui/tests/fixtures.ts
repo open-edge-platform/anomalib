@@ -1,7 +1,11 @@
 import { createNetworkFixture, NetworkFixture } from '@msw/playwright';
 import { expect, test as testBase } from '@playwright/test';
 
-import { handlers, http } from '../src/api/utils';
+import { getOpenApiHttp, handlers } from '../src/api/utils';
+
+// Playwright component tests serve the app at localhost:3000 with relative API URLs,
+// so MSW handlers need an empty baseUrl to match requests like /api/projects.
+const http = getOpenApiHttp('');
 
 interface Fixtures {
     network: NetworkFixture;
@@ -10,7 +14,6 @@ interface Fixtures {
 const test = testBase.extend<Fixtures>({
     network: createNetworkFixture({
         initialHandlers: [
-            ...handlers,
             http.get('/api/projects', ({ response }) => {
                 return response(200).json({
                     projects: [
@@ -36,8 +39,10 @@ const test = testBase.extend<Fixtures>({
             http.get('/api/projects/{project_id}/images', ({ response }) => {
                 return response(200).json({ media: [] });
             }),
-            http.get('/api/devices/inference', ({ response }) => {
-                return response(200).json({ devices: ['cpu'] });
+            http.get('/api/system/devices/inference', ({ response }) => {
+                return response(200).json([
+                    { type: 'cpu', name: 'CPU', memory: null, index: null, openvino_name: 'CPU' },
+                ]);
             }),
             http.get('/api/projects/{project_id}/models', ({ response }) => {
                 return response(200).json({ models: [] });
@@ -45,6 +50,11 @@ const test = testBase.extend<Fixtures>({
             http.get('/api/active-pipeline', ({ response }) => {
                 return response(200).json({ project_id: '12', status: 'idle' });
             }),
+            http.get('/api/jobs', ({ response }) => {
+                return response(200).json({ jobs: [], pagination: { total: 0, skip: 0, limit: 20 } });
+            }),
+            // Auto-generated handlers from the OpenAPI spec as fallback
+            ...handlers,
         ],
     }),
 });
