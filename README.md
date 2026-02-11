@@ -344,7 +344,8 @@ For more information on each, refer to the respective README files.
 
 ### Setup Backend Dependencies
 
-> [!NOTE] This assumes that you have `uv` installed. If not, please refer to the [installation guide](https://docs.astral.sh/uv/getting-started/installation/).
+> [!NOTE]
+> This assumes that you have `uv` installed. If not, please refer to the [installation guide](https://docs.astral.sh/uv/getting-started/installation/).
 
 ```bash
 cd application/backend
@@ -360,11 +361,19 @@ npm install
 
 ### Run the application
 
-> [!IMPORTANT] Both backend and frontend dependencies should be installed before running the application.
+> [!IMPORTANT]
+> Both backend and frontend dependencies should be installed before running the application.
 
+Run the backend server:
+```bash
+cd application/backend
+./run.sh
+```
+
+Run the frontend server:
 ```bash
 cd application/ui
-npm run dev
+npm run start
 ```
 
 Navigate to [http://localhost:3000](http://localhost:3000) to see the application.
