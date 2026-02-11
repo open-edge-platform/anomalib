@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2025 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Test Helpers - Dataset."""
@@ -685,6 +685,103 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
         # The only difference is that the root directory has a subdirectory called "visa_pytorch".
         self.dataset_root = self.dataset_root.parent / "visa_pytorch"
         self._generate_dummy_mvtecad_dataset(normal_dir="good", abnormal_dir="bad", image_extension=".jpg")
+
+    def _generate_dummy_kaputt_dataset(self) -> None:
+        """Generate dummy Kaputt dataset with Parquet metadata files.
+
+        The Kaputt dataset structure:
+        - datasets/ folder contains parquet metadata files
+        - query-image/data/<split>/query-data/image/ contains query images
+        - query-mask/data/<split>/query-data/mask/ contains masks for defective images
+        - reference-image/data/<split>/reference-data/image/ contains reference images
+        """
+        import pandas as pd
+
+        # Splits to generate
+        splits = ["train", "validation", "test"]
+
+        for split in splits:
+            query_samples = []
+            reference_samples = []
+
+            # Generate normal query images
+            for i in range(self.num_train if split == "train" else self.num_test):
+                capture_id = f"normal_{split}_{i:03d}"
+
+                # Create image path
+                image_dir = self.dataset_root / "query-image" / "data" / split / "query-data" / "image"
+                image_path = image_dir / f"{capture_id}.jpg"
+
+                # Generate and save normal image
+                self.image_generator.generate_image(
+                    label=LabelName.NORMAL,
+                    image_filename=image_path,
+                )
+
+                query_samples.append({
+                    "capture_id": capture_id,
+                    "defect": False,
+                    "major_defect": False,
+                    "defect_types": [],
+                    "item_material": "cardboard",
+                })
+
+            # Generate abnormal query images (only for validation and test)
+            if split in {"validation", "test"}:
+                for i in range(self.num_test):
+                    capture_id = f"abnormal_{split}_{i:03d}"
+
+                    # Create image path
+                    image_dir = self.dataset_root / "query-image" / "data" / split / "query-data" / "image"
+                    image_path = image_dir / f"{capture_id}.jpg"
+
+                    # Create mask path
+                    mask_dir = self.dataset_root / "query-mask" / "data" / split / "query-data" / "mask"
+                    mask_path = mask_dir / f"{capture_id}.png"
+
+                    # Generate and save abnormal image with mask
+                    self.image_generator.generate_image(
+                        label=LabelName.ABNORMAL,
+                        image_filename=image_path,
+                        mask_filename=mask_path,
+                    )
+
+                    query_samples.append({
+                        "capture_id": capture_id,
+                        "defect": True,
+                        "major_defect": True,
+                        "defect_types": ["damage"],
+                        "item_material": "plastic",
+                    })
+
+            # Generate reference images (always normal)
+            for i in range(self.num_train if split == "train" else self.num_test):
+                capture_id = f"ref_{split}_{i:03d}"
+
+                # Create image path
+                image_dir = self.dataset_root / "reference-image" / "data" / split / "reference-data" / "image"
+                image_path = image_dir / f"{capture_id}.jpg"
+
+                # Generate and save reference image
+                self.image_generator.generate_image(
+                    label=LabelName.NORMAL,
+                    image_filename=image_path,
+                )
+
+                reference_samples.append({
+                    "capture_id": capture_id,
+                    "item_material": "cardboard",
+                })
+
+            # Create parquet files
+            datasets_dir = self.dataset_root / "datasets"
+            datasets_dir.mkdir(parents=True, exist_ok=True)
+
+            query_df = pd.DataFrame(query_samples)
+            query_df.to_parquet(datasets_dir / f"query-{split}.parquet", index=False)
+
+            ref_df = pd.DataFrame(reference_samples)
+            ref_df.to_parquet(datasets_dir / f"reference-{split}.parquet", index=False)
 
 
 class DummyVideoDatasetGenerator(DummyDatasetGenerator):
