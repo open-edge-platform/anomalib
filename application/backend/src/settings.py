@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     app_name: str = "Anomalib Studio"
     version: str = "0.1.0"
     summary: str = "Anomalib Studio server"
-    description: str = "Anomalib Studio allows to fine-tune anomaly models at the edge."
+    description: str = "Anomalib Studio allows fine-tuning anomaly models at the edge."
     openapi_url: str = "/rest_api/openapi.json"
     debug: bool = Field(default=False, alias="DEBUG")
     environment: Literal["dev", "prod"] = "dev"
