@@ -51,9 +51,9 @@ mqtt = [
 ]
 
 # Explicit versions are needed as we can't propagate extra dependencies to anomalib
-cpu = ["anomalib[cpu]"]
-cu124 = ["anomalib[cu124]"]
-xpu = ["anomalib[xpu] ; sys_platform == 'linux' or sys_platform == 'win32'"]
+cpu = ["anomalib[cpu,openvino]"]
+cu124 = ["anomalib[cu124,openvino]"]
+xpu = ["anomalib[xpu,openvino] ; sys_platform == 'linux' or sys_platform == 'win32'"]
 
 [tool.uv]
 conflicts = [
