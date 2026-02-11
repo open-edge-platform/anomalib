@@ -178,5 +178,5 @@ lightning_logs/
 mlruns
 
 # application data
-data/
-logs/
+application/**/data/
+application/**/logs/
