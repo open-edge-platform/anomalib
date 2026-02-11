@@ -75,7 +75,7 @@ class SystemService:
                         index=None,
                     ),
                 )
-            elif core.get_property(device, "DEVICE_TYPE") == OVDeviceType.DISCRETE:
+            elif core.get_property(device, "DEVICE_TYPE") in {OVDeviceType.DISCRETE, OVDeviceType.INTEGRATED}:
                 is_intel_device = "intel" in ov_name.lower()
                 # OV does not support cuda
                 if not is_intel_device:
