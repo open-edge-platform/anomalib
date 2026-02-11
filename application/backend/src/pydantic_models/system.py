@@ -13,15 +13,17 @@ class DeviceType(StrEnum):
     XPU = auto()
     CUDA = auto()
     MPS = auto()
+    NPU = auto()
 
 
 class DeviceInfo(BaseModel):
     """Device information schema"""
 
-    type: DeviceType = Field(..., description="Device type (cpu, xpu, or cuda)")
+    type: DeviceType = Field(..., description="Device type (cpu, xpu, cuda, mps, npu)")
     name: str = Field(..., description="Device name")
-    memory: int | None = Field(None, description="Total memory available to the device, in bytes (null for CPU)")
-    index: int | None = Field(None, description="Device index among those of the same type (null for CPU)")
+    memory: int | None = Field(None, description="Total memory available to the device, in bytes (null for CPU/NPU)")
+    index: int | None = Field(None, description="Device index among those of the same type (null for CPU/NPU)")
+    openvino_name: str | None = Field(None, description="Name of the OpenVINO device (inference only)")
 
 
 class CameraInfo(BaseModel):
