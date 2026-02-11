@@ -323,7 +323,6 @@ anomalib benchmark --config tools/experimental/benchmarking/sample.yaml
 > - [Patchcore Results](src/anomalib/models/image/patchcore/README.md#mvtec-ad-dataset)
 > - [Other Models](src/anomalib/models/)
 
-
 # Anomalib Studio
 
 Anomalib Studio is a low/no-code web application that allows users to train and deploy anomaly detection models. It enables users to leverage Anomalib's features in their operational environment. Users can connect USB and IP cameras, or use a folder of images, as input to the training pipeline. The tool allows direct output to their industrial pipelines through ROS messages, MQTT, etc.
