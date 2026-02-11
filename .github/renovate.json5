@@ -29,28 +29,84 @@
   // if necessary, add supported releases branches here
   // it is possible to enable/disable specific upgrades per branch with
   // `matchBaseBranches` in specific rule
-  baseBranches: ["main", "feature/geti-inspect"],
+  baseBranches: ["main"],
 
-  enabledManagers: ["github-actions", "pep621", "custom.regex"],
+  enabledManagers: ["github-actions", "pep621", "dockerfile", "npm"],
 
   // Set limit to 10
   ignorePresets: [":prHourlyLimit2"],
   prHourlyLimit: 10,
 
   packageRules: [
-    // weekly dependencies upgrades
+    // Enable pinning for container images
+    // https://docs.renovatebot.com/presets-docker/#dockerpindigests
     {
-      matchBaseBranches: ["main"],
       enabled: true,
-      matchManagers: ["pep621"],
+      matchDatasources: ["docker"],
+      pinDigests: true,
+      groupName: "Pin images",
+      groupSlug: "pin-images",
       schedule: ["* * * * 0"], // weekly
     },
 
-    // Disable non-security upgrades for pypi, except lock file update
+    // Python bi-weekly minor and patch dependencies upgrades
     {
-      matchBaseBranches: ["feature/geti-inspect"],
+      enabled: true,
+      matchManagers: ["pep621"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "Python dependencies",
+      groupSlug: "python-dependencies",
+      schedule: ["* * 1,15 * *"], // bi-weekly (1st and 15th of each month)
+    },
+
+    // Python monthly major dependencies upgrades
+    {
+      enabled: true,
+      matchManagers: ["pep621"],
+      matchUpdateTypes: ["major"],
+      schedule: ["* * 7 * *"], // monthly
+    },
+
+    // Disable python base image upgrades, except patch and digest pinning
+    {
       enabled: false,
-      matchDatasources: ["pypi"],
+      matchDatasources: ["docker"],
+      matchPackageNames: ["python"],
+      matchUpdateTypes: ["major", "minor"],
+    },
+
+    // Disable node image upgrades, except patch and digest pinning
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["node"],
+      matchUpdateTypes: ["major", "minor"],
+    },
+
+    // Disable docker.io/astral/uv image upgrades, except digest pinning,
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["docker.io/astral/uv"],
+      matchUpdateTypes: ["major", "minor", "patch"],
+    },
+
+    // npm bi-weekly minor, patch and lock file upgrades
+    {
+      enabled: true,
+      matchManagers: ["npm"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "npm dependencies non-major",
+      groupSlug: "npm-dependencies-non-major",
+      schedule: ["* * 1,15 * *"], // bi-weekly (1st and 15th of each month)
+    },
+
+    // npm monthly major upgrades
+    {
+      enabled: true,
+      matchManagers: ["npm"],
+      matchUpdateTypes: ["major"],
+      schedule: ["* * 21 * *"], // monthly
     },
 
     // Python version is upgraded manually
@@ -59,6 +115,13 @@
       matchDatasources: ["python-version"],
       matchDepNames: ["python"],
       matchDepTypes: ["requires-python"],
+    },
+
+    // Disable upgrades for Dockerfile syntax (docker/dockerfile)
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchDepNames: ["docker/dockerfile"],
     },
 
     // disable open-clip-torch upgrades as
@@ -77,6 +140,14 @@
       matchDepNames: ["torch"],
     },
 
+    // Disable ruff upgrades in application/backend/pyproject.toml
+    {
+      enabled: false,
+      matchDatasources: ["pypi"],
+      matchDepNames: ["ruff"],
+      matchFileNames: ["application/backend/pyproject.toml"],
+    },
+
     // Group GitHub Actions updates
     {
       enabled: true,
@@ -85,6 +156,14 @@
       matchManagers: ["github-actions"],
       matchPackagePatterns: ["*"],
       schedule: ["* * 1 * *"], // every month
+    },
+
+    // uv version used in GitHub Actions is updated manually
+    {
+      enabled: false,
+      matchDatasources: ["github-releases"],
+      matchDepNames: ["astral-sh/setup-uv"],
+      matchDepTypes: ["uses-with"],
     },
 
     // Python version used in GitHub Actions is updated manually
