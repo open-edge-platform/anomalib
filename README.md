@@ -365,12 +365,14 @@ npm install
 > Both backend and frontend dependencies should be installed before running the application.
 
 Run the backend server:
+
 ```bash
 cd application/backend
 ./run.sh
 ```
 
 Run the frontend server:
+
 ```bash
 cd application/ui
 npm run start
