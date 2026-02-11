@@ -68,4 +68,4 @@ class TrainJobPayload(BaseModel):
     model_name: str
     device: str | None = Field(default=None)
     dataset_snapshot_id: str | None = Field(default=None)  # used because UUID is not JSON serializable
-    max_epochs: int | None = Field(default=None, ge=1)
+    max_epochs: int | None = Field(default=None, ge=1, le=10000)

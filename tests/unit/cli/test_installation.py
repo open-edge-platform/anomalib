@@ -8,7 +8,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
-from pkg_resources import Requirement
+from packaging.requirements import Requirement
 from pytest_mock import MockerFixture
 
 from anomalib.cli.utils.installation import (
@@ -47,8 +47,8 @@ def test_get_requirements(mocker: MockerFixture) -> None:
 def test_parse_requirements() -> None:
     """Test that parse_requirements returns the expected tuple of requirements."""
     requirements = [
-        Requirement.parse("torch==2.0.0"),
-        Requirement.parse("onnx>=1.8.1"),
+        Requirement("torch==2.0.0"),
+        Requirement("onnx>=1.8.1"),
     ]
     torch_req, other_reqs = parse_requirements(requirements)
     assert isinstance(torch_req, str)
@@ -57,14 +57,14 @@ def test_parse_requirements() -> None:
     assert other_reqs == ["onnx>=1.8.1"]
 
     requirements = [
-        Requirement.parse("torch<=2.0.1, >=1.8.1"),
+        Requirement("torch<=2.0.1, >=1.8.1"),
     ]
     torch_req, other_reqs = parse_requirements(requirements)
     assert torch_req == "torch<=2.0.1,>=1.8.1"
     assert other_reqs == []
 
     requirements = [
-        Requirement.parse("onnx>=1.8.1"),
+        Requirement("onnx>=1.8.1"),
     ]
     with pytest.raises(ValueError, match=r"Could not find torch requirement."):
         parse_requirements(requirements)
@@ -123,7 +123,7 @@ def test_get_hardware_suffix(mocker: MockerFixture) -> None:
 
 def test_get_torch_install_args(mocker: MockerFixture) -> None:
     """Test that get_torch_install_args returns the expected install arguments."""
-    requirement = Requirement.parse("torch>=2.1.1")
+    requirement = Requirement("torch>=2.1.1")
     mocker.patch("anomalib.cli.utils.installation.platform.system", return_value="Linux")
     mocker.patch("anomalib.cli.utils.installation.get_hardware_suffix", return_value="cpu")
     install_args = get_torch_install_args(requirement)
@@ -136,7 +136,7 @@ def test_get_torch_install_args(mocker: MockerFixture) -> None:
     for arg in expected_args:
         assert arg in install_args
 
-    requirement = Requirement.parse("torch>=1.13.0,<=2.0.1")
+    requirement = Requirement("torch>=1.13.0,<=2.0.1")
     mocker.patch("anomalib.cli.utils.installation.get_hardware_suffix", return_value="cu111")
     install_args = get_torch_install_args(requirement)
     expected_args = [
@@ -146,7 +146,7 @@ def test_get_torch_install_args(mocker: MockerFixture) -> None:
     for arg in expected_args:
         assert arg in install_args
 
-    requirement = Requirement.parse("torch==2.0.1")
+    requirement = Requirement("torch==2.0.1")
     expected_args = [
         "--extra-index-url",
         "https://download.pytorch.org/whl/cu111",
@@ -161,7 +161,7 @@ def test_get_torch_install_args(mocker: MockerFixture) -> None:
     assert install_args == ["torch"]
 
     mocker.patch("anomalib.cli.utils.installation.platform.system", return_value="Darwin")
-    requirement = Requirement.parse("torch==2.0.1")
+    requirement = Requirement("torch==2.0.1")
     install_args = get_torch_install_args(requirement)
     assert install_args == ["torch==2.0.1"]
 

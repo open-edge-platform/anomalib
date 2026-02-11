@@ -6,9 +6,12 @@ from functools import lru_cache
 from importlib.metadata import PackageNotFoundError, version
 
 import cv2
+import openvino as ov
 import psutil
 import torch
 from cv2_enumerate_cameras import enumerate_cameras
+from loguru import logger
+from openvino.properties.device import Type as OVDeviceType
 
 from pydantic_models.system import CameraInfo, DeviceInfo, DeviceType, LibraryVersions, SystemInfo
 from settings import get_settings
@@ -47,16 +50,61 @@ class SystemService:
         """
         return self.process.cpu_percent(interval=None)
 
-    @staticmethod
-    def get_devices() -> list[DeviceInfo]:
+    @classmethod
+    def get_inference_devices(cls) -> list[DeviceInfo]:
         """
-        Get available compute devices (CPU, GPUs, ...)
+        Get available compute devices for inference via OpenVINO (CPU, XPU, ...)
 
         Returns:
             list[DeviceInfo]: List of available devices
         """
+        core = ov.Core()
+        devices: list[DeviceInfo] = [
+            DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None, openvino_name="CPU")
+        ]
+
+        for device in core.available_devices:
+            ov_name = core.get_property(device, "FULL_DEVICE_NAME")
+            if device.lower().startswith("npu"):
+                devices.append(
+                    DeviceInfo(
+                        type=DeviceType.NPU,
+                        name=ov_name,
+                        openvino_name=device,
+                        memory=None,
+                        index=None,
+                    ),
+                )
+            elif core.get_property(device, "DEVICE_TYPE") == OVDeviceType.DISCRETE:
+                is_intel_device = "intel" in ov_name.lower()
+                # OV does not support cuda
+                if not is_intel_device:
+                    logger.warning(f"Unsupported device: {ov_name}. Skipping.")
+                    continue
+
+                devices.append(
+                    DeviceInfo(
+                        type=DeviceType.XPU,
+                        name=ov_name,
+                        memory=core.get_property(device, "GPU_DEVICE_TOTAL_MEM_SIZE"),
+                        index=core.get_property(device, "DEVICE_ID"),
+                        openvino_name=device,
+                    ),
+                )
+        return devices
+
+    @classmethod
+    def get_training_devices(cls) -> list[DeviceInfo]:
+        """
+        Get available compute devices for training (CPUs, XPUs, GPUs, ...)
+
+        Returns:
+            list[DeviceInfo]: List of available training devices
+        """
         # CPU is always available
-        devices: list[DeviceInfo] = [DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)]
+        devices: list[DeviceInfo] = [
+            DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None, openvino_name=None)
+        ]
 
         # Check for Intel XPU devices
         if torch.xpu.is_available():
@@ -68,6 +116,7 @@ class SystemService:
                         name=xpu_dp.name,
                         memory=xpu_dp.total_memory,
                         index=device_idx,
+                        openvino_name=None,
                     ),
                 )
 
@@ -81,34 +130,15 @@ class SystemService:
                         name=cuda_dp.name,
                         memory=cuda_dp.total_memory,
                         index=device_idx,
+                        openvino_name=None,
                     ),
                 )
 
         # Check if Apple MPS is available
         if torch.mps.is_available():
-            devices.append(DeviceInfo(type=DeviceType.MPS, name="MPS", memory=None, index=None))
+            devices.append(DeviceInfo(type=DeviceType.MPS, name="MPS", memory=None, index=None, openvino_name=None))
 
         return devices
-
-    @classmethod
-    def get_inference_devices(cls) -> list[DeviceInfo]:
-        """
-        Get available compute devices for inference (CPU, XPU, ...)
-
-        Returns:
-            list[DeviceInfo]: List of available devices
-        """
-        return [device for device in cls.get_devices() if device.type not in {DeviceType.CUDA, DeviceType.MPS}]
-
-    @classmethod
-    def get_training_devices(cls) -> list[DeviceInfo]:
-        """
-        Get available compute devices for training (CPUs, XPUs, GPUs, ...)
-
-        Returns:
-            list[DeviceInfo]: List of available training devices
-        """
-        return cls.get_devices()  # currently same as get_devices, can be customized later with filters
 
     @classmethod
     @lru_cache
@@ -172,7 +202,7 @@ class SystemService:
             return True
 
         # Check if desired device is among available devices
-        available_devices = self.get_devices()
+        available_devices = self.get_training_devices()
         for available_device in available_devices:
             if device_type == available_device.type and device_index == (available_device.index or 0):
                 return True
@@ -194,9 +224,11 @@ class SystemService:
 
         device_type, device_index = self._parse_device(device_str)
         if device_type == DeviceType.CPU:
-            return DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
+            return DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None, openvino_name=None)
         return next(
-            device for device in self.get_devices() if device.type == device_type and device.index == device_index
+            device
+            for device in self.get_training_devices()
+            if device.type == device_type and device.index == device_index
         )
 
     @staticmethod
@@ -284,5 +316,5 @@ class SystemService:
             platform=platform.platform(),
             app_version=get_settings().version,
             libraries=self.get_library_versions(),
-            devices=self.get_devices(),
+            devices=self.get_training_devices(),
         )
