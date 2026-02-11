@@ -1,4 +1,4 @@
-# Pre-commit configuration for anomalib-studio application (application-backend + UI)
+# Pre-commit configuration for Anomalib Studio application (application-backend + UI)
 # This config uses Python 3.13+ and Node.js 24.2.0+ with tool versions matching application dependencies
 # Install from application/ directory with: pre-commit install --config .pre-commit-config.yaml
 
