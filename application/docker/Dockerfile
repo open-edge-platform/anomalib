@@ -24,9 +24,9 @@ RUN npm run build
 
 
 #------------------------------------------
-# Geti Inspect Base with UI built
+# Anomalib Studio Base with UI built
 #------------------------------------------
-FROM python:3.13-slim@sha256:58c30f5bfaa718b5803a53393190b9c68bd517c44c6c94c1b6c8c172bcfad040 AS geti-inspect-base
+FROM python:3.13-slim@sha256:58c30f5bfaa718b5803a53393190b9c68bd517c44c6c94c1b6c8c172bcfad040 AS anomalib-studio-base
 COPY --from=docker.io/astral/uv:0.9.7@sha256:ba4857bf2a068e9bc0e64eed8563b065908a4cd6bfb66b531a9c424c8e25e142 /uv /uvx /bin/
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 ENV UV_PYTHON_DOWNLOADS=0
@@ -66,9 +66,9 @@ RUN mkdir -p /app/data /app/logs
 
 
 #------------------------------------------
-# Geti Inspect CPU version
+# Anomalib Studio CPU version
 #------------------------------------------
-FROM geti-inspect-base AS geti-inspect-cpu
+FROM anomalib-studio-base AS anomalib-studio-cpu
 
 WORKDIR /app/application/backend
 
@@ -81,9 +81,9 @@ EXPOSE 8000
 CMD ["sh", "-c", "exec ./run.sh"]
 
 #------------------------------------------
-# Geti Inspect CUDA version
+# Anomalib Studio CUDA version
 #------------------------------------------
-FROM geti-inspect-base AS geti-inspect-cuda
+FROM anomalib-studio-base AS anomalib-studio-cuda
 
 RUN apt-get update  \
     && apt-get install -y --no-install-recommends wget=1.25.0-2 \
@@ -113,9 +113,9 @@ EXPOSE 8000
 CMD ["sh", "-c", "exec ./run.sh"]
 
 #------------------------------------------
-# Geti Inspect XPU version
+# Anomalib Studio XPU version
 #------------------------------------------
-FROM geti-inspect-base AS geti-inspect-xpu
+FROM anomalib-studio-base AS anomalib-studio-xpu
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends wget gpg \

@@ -18,7 +18,7 @@ const mockedSource: UsbCameraSourceConfig = {
     device_id: 0,
 };
 
-vi.mock('@geti-inspect/hooks', () => ({ useProjectIdentifier: () => ({ projectId: 'project-id-123' }) }));
+vi.mock('@anomalib-studio/hooks', () => ({ useProjectIdentifier: () => ({ projectId: 'project-id-123' }) }));
 
 describe('useSourceMutation', () => {
     beforeEach(() => {

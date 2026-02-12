@@ -1,4 +1,4 @@
-import { ImagesFolder, IpCamera, UsbCamera, VideoFile } from '@geti-inspect/icons';
+import { ImagesFolder, IpCamera, UsbCamera, VideoFile } from '@anomalib-studio/icons';
 
 interface SourceIconProps {
     type: string;

@@ -1,7 +1,7 @@
 default_language_version:
   node: 24.2.0
 
-# We use a different CI setup for geti-inspect
+# We use a different CI setup for Anomalib Studio
 exclude: ^application/
 
 repos:

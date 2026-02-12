@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { usePipeline } from '@geti-inspect/hooks';
+import { usePipeline } from '@anomalib-studio/hooks';
 import { dimensionValue, Divider, Flex, View } from '@geti/ui';
 import { isNil } from 'lodash-es';
 

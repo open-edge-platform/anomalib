@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from 'react';
 
-import { API_BASE_URL } from '@geti-inspect/api';
+import { API_BASE_URL } from '@anomalib-studio/api';
 import { Flex, TextField, View } from '@geti/ui';
 
 import { OutputFormats } from '../output-formats/output-formats.component';

@@ -3,7 +3,7 @@
 
 import { ReactNode } from 'react';
 
-import { fetchClient } from '@geti-inspect/api';
+import { fetchClient } from '@anomalib-studio/api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { getMockedModelData } from 'mocks/mock-model';
 import { getMockedPagination } from 'mocks/mock-pagination';

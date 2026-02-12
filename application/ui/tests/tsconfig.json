@@ -3,7 +3,7 @@
     "compilerOptions": {
         "baseUrl": ".",
         "paths": {
-            "@geti-inspect/test-fixtures": ["./fixtures"]
+            "@anomalib-studio/test-fixtures": ["./fixtures"]
         }
     },
     "include": ["./"]
