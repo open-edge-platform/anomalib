@@ -87,7 +87,7 @@ def _find_stable_threshold(
 
     A stable interval is a contiguous range of threshold indices where the
     connected-component count is constant (and non-zero), with length ≥
-      min_interval_len  .  The threshold at the endpoint of the longest stable
+    `min_interval_len`. The threshold at the endpoint of the longest stable
     interval is selected.
 
     Args:
