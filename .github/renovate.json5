@@ -34,10 +34,7 @@
   enabledManagers: ["github-actions", "pep621", "dockerfile", "npm"],
 
   // ignore Geti components
-  ignoreDeps: [
-    "@geti/config",
-    "@geti/ui",
-  ],
+  ignoreDeps: ["@geti/config", "@geti/ui"],
 
   // Set limit to 10
   ignorePresets: [":prHourlyLimit2"],
