@@ -65,10 +65,6 @@ on:
         description: "Fail workflow if issues found"
         type: boolean
         default: true
-    outputs:
-      has-findings:
-        description: "Whether any security issues were found"
-        value: ${{ jobs.summarize.outputs.has_findings }}
 
 permissions:
   contents: read
