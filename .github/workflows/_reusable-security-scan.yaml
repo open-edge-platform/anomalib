@@ -140,7 +140,6 @@ jobs:
           fail-on-findings: ${{ inputs.fail-on-findings }}
 
   summarize:
-    name: Security Status Checks
     needs: [bandit, semgrep, trivy, zizmor]
     runs-on: ubuntu-latest
     if: ${{ always() && !cancelled() }}
