@@ -65,6 +65,10 @@ on:
         description: "Fail workflow if issues found"
         type: boolean
         default: true
+    outputs:
+      has-findings:
+        description: "Whether any security issues were found"
+        value: ${{ jobs.summarize.outputs.has_findings }}
 
 permissions:
   contents: read
@@ -110,7 +114,6 @@ jobs:
           persist-credentials: false
 
       - name: Run Trivy scan
-        id: trivy
         uses: open-edge-platform/geti-ci/actions/trivy@3a4b81ea648711eb638b34757427cd3ef71d19f1
         with:
           scan_type: "fs"
@@ -135,3 +138,32 @@ jobs:
           severity-level: ${{ inputs.severity-level }}
           confidence-level: ${{ inputs.confidence-level }}
           fail-on-findings: ${{ inputs.fail-on-findings }}
+
+  summarize:
+    name: Security Status Checks
+    needs: [bandit, semgrep, trivy, zizmor]
+    runs-on: ubuntu-latest
+    if: ${{ always() && !cancelled() }}
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    outputs:
+      has_findings: ${{ steps.check-results.outputs.has_findings }}
+    steps:
+      - name: Check security scan results
+        id: check-results
+        run: |
+          has_findings=false
+
+          for check in ${CHECKS}; do
+            echo "::notice::Security scan result=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error::Security scan checks failed. One or more scans detected issues."
+              has_findings=true
+            fi
+          done
+
+          echo "has_findings=$has_findings" >> $GITHUB_OUTPUT
+
+          if [[ "$has_findings" == "true" ]]; then
+            exit 1
+          fi
