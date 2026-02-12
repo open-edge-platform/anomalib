@@ -50,8 +50,8 @@ class ProgressSyncParams:
         logger.debug("Set cancel training event")
 
 
-class GetiInspectProgressCallback(Callback):
-    """Callback for displaying training/validation/testing progress in the Geti Inspect UI.
+class AnomalibStudioProgressCallback(Callback):
+    """Callback for displaying training/validation/testing progress in the Anomalib Studio UI.
 
     This callback sends progress events through a multiprocessing queue that the
     main process polls and broadcasts via WebSocket to connected frontend clients.
@@ -60,7 +60,7 @@ class GetiInspectProgressCallback(Callback):
         synchronization_parameters: Parameters for synchronization between the main process and the training process
 
     Example:
-        trainer = Trainer(callbacks=[GetiInspectProgressCallback(synchronization_parameters=ProgressSyncParams())])
+        trainer = Trainer(callbacks=[AnomalibStudioProgressCallback(synchronization_parameters=ProgressSyncParams())])
     """
 
     def __init__(self, synchronization_parameters: ProgressSyncParams) -> None:

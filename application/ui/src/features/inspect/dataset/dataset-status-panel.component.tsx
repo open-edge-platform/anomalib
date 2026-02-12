@@ -1,7 +1,7 @@
 import { ComponentProps, Suspense, useEffect, useRef } from 'react';
 
-import { SchemaJob as Job, SchemaJob, SchemaJobStatus } from '@geti-inspect/api/spec';
-import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { SchemaJob as Job, SchemaJob, SchemaJobStatus } from '@anomalib-studio/api/spec';
+import { useProjectIdentifier } from '@anomalib-studio/hooks';
 import { Content, Flex, Heading, InlineAlert, IntelBrandedLoading, ProgressBar, Text } from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { isEqual } from 'lodash-es';

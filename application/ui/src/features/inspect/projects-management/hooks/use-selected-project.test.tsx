@@ -13,7 +13,7 @@ vi.mock('./use-get-project.hooks', () => ({
 
 const mockUseProjectIdentifier = vi.fn();
 
-vi.mock('@geti-inspect/hooks', () => ({
+vi.mock('@anomalib-studio/hooks', () => ({
     useProjectIdentifier: () => mockUseProjectIdentifier(),
 }));
 

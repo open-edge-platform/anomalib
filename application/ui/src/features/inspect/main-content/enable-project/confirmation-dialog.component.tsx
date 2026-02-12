@@ -1,5 +1,5 @@
-import { $api } from '@geti-inspect/api';
-import { useActivatePipeline, useDisablePipeline } from '@geti-inspect/hooks';
+import { $api } from '@anomalib-studio/api';
+import { useActivatePipeline, useDisablePipeline } from '@anomalib-studio/hooks';
 import { AlertDialog } from '@geti/ui';
 
 interface ConfirmationDialogProps {

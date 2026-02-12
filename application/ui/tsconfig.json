@@ -5,10 +5,10 @@
         "types": ["vitest/globals"],
         "baseUrl": ".",
         "paths": {
-            "@geti-inspect/icons": ["./src/assets/icons"],
-            "@geti-inspect/api": ["./src/api/client"],
-            "@geti-inspect/api/spec": ["./src/api/openapi-spec.d"],
-            "@geti-inspect/hooks": ["./src/hooks"]
+            "@anomalib-studio/icons": ["./src/assets/icons"],
+            "@anomalib-studio/api": ["./src/api/client"],
+            "@anomalib-studio/api/spec": ["./src/api/openapi-spec.d"],
+            "@anomalib-studio/hooks": ["./src/hooks"]
         }
     }
 }

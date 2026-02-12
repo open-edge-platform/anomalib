@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { fetchClient } from '@geti-inspect/api';
+import { fetchClient } from '@anomalib-studio/api';
 import {
     ActionButton,
     Button,
@@ -115,7 +115,7 @@ const sanitizeDescription = (description: string): string => {
 const createGitHubIssueUrl = (systemInfo: SystemInfo, issueType: IssueType, description: string): string => {
     const isBug = issueType === 'bug';
     const title = isBug ? '[Bug]: ' : '[Feature]: ';
-    const labels = isBug ? ['bug', 'Geti Inspect'] : ['enhancement', 'Geti Inspect'];
+    const labels = isBug ? ['bug', 'Anomalib Studio'] : ['enhancement', 'Anomalib Studio'];
     const sanitizedDescription = sanitizeDescription(description);
 
     const { libraries, devices } = systemInfo;
@@ -137,7 +137,7 @@ const createGitHubIssueUrl = (systemInfo: SystemInfo, issueType: IssueType, desc
 ### Environment
 - **OS**: ${systemInfo.os_name} ${systemInfo.os_version}
 - **Platform**: ${systemInfo.platform}
-- **App**: Geti Inspect v${systemInfo.app_version}
+- **App**: Anomalib Studio v${systemInfo.app_version}
 
 ### Library Versions
 ${libraryLines.map((line) => `- ${line}`).join('\n')}
@@ -166,7 +166,7 @@ const downloadLogs = async (): Promise<void> => {
     if (response.data) {
         const contentDisposition = response.response.headers.get('content-disposition');
         const filenameMatch = contentDisposition?.match(/filename=(.+)/);
-        const filename = filenameMatch ? filenameMatch[1] : 'geti_inspect_logs.zip';
+        const filename = filenameMatch ? filenameMatch[1] : 'anomalib_studio_logs.zip';
 
         downloadBlob(response.data as Blob, filename);
     }

@@ -1,4 +1,4 @@
-import { usePipeline, useProjectIdentifier } from '@geti-inspect/hooks';
+import { usePipeline, useProjectIdentifier } from '@anomalib-studio/hooks';
 import isEmpty from 'lodash-es/isEmpty';
 
 import { StreamContainer } from '../stream/stream-container';

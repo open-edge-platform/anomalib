@@ -1,4 +1,4 @@
-name: Geti Inspect UI checks
+name: Anomalib Studio UI checks
 permissions: {} # No permissions by default on workflow level
 
 on:

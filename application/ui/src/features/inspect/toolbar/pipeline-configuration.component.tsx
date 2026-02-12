@@ -3,7 +3,7 @@
 
 import { CSSProperties, Suspense } from 'react';
 
-import { PipelineLink } from '@geti-inspect/icons';
+import { PipelineLink } from '@anomalib-studio/icons';
 import {
     Button,
     Content,

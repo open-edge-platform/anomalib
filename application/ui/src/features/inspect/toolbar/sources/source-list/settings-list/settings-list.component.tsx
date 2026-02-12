@@ -1,4 +1,4 @@
-import { $api } from '@geti-inspect/api';
+import { $api } from '@anomalib-studio/api';
 
 import { SourceConfig } from '../../util';
 

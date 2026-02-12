@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { fetchClient } from '@geti-inspect/api';
+import { fetchClient } from '@anomalib-studio/api';
 import { useMutation } from '@tanstack/react-query';
 import type { SchemaCompressionType, SchemaExportType } from 'src/api/openapi-spec';
 

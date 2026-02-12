@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 
-import { useProjectIdentifier } from '@geti-inspect/hooks';
-import { Folder as FolderIcon, Mqtt as MqttIcon, Webhook as WebhookIcon } from '@geti-inspect/icons';
+import { useProjectIdentifier } from '@anomalib-studio/hooks';
+import { Folder as FolderIcon, Mqtt as MqttIcon, Webhook as WebhookIcon } from '@anomalib-studio/icons';
 
 import { DisclosureGroup } from '../../../../components/disclosure-group/disclosure-group.component';
 import { AddSink } from './add-sink/add-sink.component';

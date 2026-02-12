@@ -20,10 +20,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore")
 
     # Application
-    app_name: str = "Geti Inspect"
+    app_name: str = "Anomalib Studio"
     version: str = "0.1.0"
-    summary: str = "Geti Inspect server"
-    description: str = "Geti Inspect allows to fine-tune anomaly models at the edge."
+    summary: str = "Anomalib Studio server"
+    description: str = "Anomalib Studio allows fine-tuning anomaly models at the edge."
     openapi_url: str = "/rest_api/openapi.json"
     debug: bool = Field(default=False, alias="DEBUG")
     environment: Literal["dev", "prod"] = "dev"
@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     )
 
     # Database
-    database_file: str = Field(default="geti_inspect.db", alias="DATABASE_FILE", description="Database filename")
+    database_file: str = Field(default="anomalib_studio.db", alias="DATABASE_FILE", description="Database filename")
     db_echo: bool = Field(default=False, alias="DB_ECHO")
 
     # Alembic
