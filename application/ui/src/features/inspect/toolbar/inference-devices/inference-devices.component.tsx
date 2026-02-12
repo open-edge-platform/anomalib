@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-import { $api } from '@geti-inspect/api';
-import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { $api } from '@anomalib-studio/api';
+import { useProjectIdentifier } from '@anomalib-studio/hooks';
 import { Item, Key, Picker, toast } from '@geti/ui';
 import { usePipeline } from 'src/hooks/use-pipeline.hook';
 
@@ -25,8 +25,8 @@ export const InferenceDevices = () => {
     });
 
     const options = data.map((device) => {
-        const id = device.type.toLowerCase();
-        return { id, name: device.type };
+        const id = device.openvino_name;
+        return { id, type: device.type, name: device.name };
     });
 
     const handleChange = (key: Key | null) => {
@@ -52,7 +52,7 @@ export const InferenceDevices = () => {
             onSelectionChange={handleChange}
             selectedKey={selectedKey}
         >
-            {(item) => <Item>{item.name}</Item>}
+            {(item) => <Item>{item.type === 'cpu' ? item.type : `${item.type} - ${item.name}`}</Item>}
         </Picker>
     );
 };

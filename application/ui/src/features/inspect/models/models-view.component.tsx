@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { usePipeline } from '@geti-inspect/hooks';
+import { usePipeline } from '@anomalib-studio/hooks';
 import {
     Cell,
     Column,

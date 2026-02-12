@@ -1,7 +1,7 @@
 [project]
-name = "geti-inspect"
+name = "anomalib-studio"
 version = "1.0.0"
-description = "Geti inspect server"
+description = "Anomalib Studio server"
 requires-python = ">=3.13"
 
 dependencies = [

@@ -1,4 +1,4 @@
-# Pre-commit configuration for geti-inspect application (application-backend + UI)
+# Pre-commit configuration for Anomalib Studio application (application-backend + UI)
 # This config uses Python 3.13+ and Node.js 24.2.0+ with tool versions matching application dependencies
 # Install from application/ directory with: pre-commit install --config .pre-commit-config.yaml
 
@@ -24,7 +24,8 @@ repos:
       - id: mypy
         alias: mypy-application-backend
         name: mypy (application-backend)
-        additional_dependencies: [types-PyYAML, types-setuptools, types-requests, alembic]
+        additional_dependencies:
+          [types-PyYAML, types-setuptools, types-requests, alembic]
 
   # Markdown linting
   - repo: https://github.com/igorshubovych/markdownlint-cli

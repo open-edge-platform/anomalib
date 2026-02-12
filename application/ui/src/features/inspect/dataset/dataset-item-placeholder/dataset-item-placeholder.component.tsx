@@ -1,4 +1,4 @@
-import { Image } from '@geti-inspect/icons';
+import { Image } from '@anomalib-studio/icons';
 import { Flex } from '@geti/ui';
 
 import styles from './dataset-item-placeholder.module.scss';
