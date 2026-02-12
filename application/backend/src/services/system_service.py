@@ -75,18 +75,28 @@ class SystemService:
                         index=None,
                     ),
                 )
-            elif core.get_property(device, "DEVICE_TYPE") in {OVDeviceType.DISCRETE, OVDeviceType.INTEGRATED}:
+            elif device_type := core.get_property(device, "DEVICE_TYPE") in {
+                OVDeviceType.DISCRETE,
+                OVDeviceType.INTEGRATED,
+            }:
                 is_intel_device = "intel" in ov_name.lower()
                 # OV does not support cuda
                 if not is_intel_device:
                     logger.warning(f"Unsupported device: {ov_name}. Skipping.")
                     continue
 
+                # Only discrete XPUs have memory info available via OV, integrated devices do not report memory
+                memory = (
+                    core.get_property(device, "GPU_DEVICE_TOTAL_MEM_SIZE")
+                    if device_type == OVDeviceType.DISCRETE
+                    else None
+                )
+
                 devices.append(
                     DeviceInfo(
                         type=DeviceType.XPU,
                         name=ov_name,
-                        memory=core.get_property(device, "GPU_DEVICE_TOTAL_MEM_SIZE"),
+                        memory=memory,
                         index=core.get_property(device, "DEVICE_ID"),
                         openvino_name=device,
                     ),
