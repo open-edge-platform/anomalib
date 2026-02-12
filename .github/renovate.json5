@@ -33,6 +33,12 @@
 
   enabledManagers: ["github-actions", "pep621", "dockerfile", "npm"],
 
+  // ignore Geti components
+  ignoreDeps: [
+    "@geti/config",
+    "@geti/ui",
+  ],
+
   // Set limit to 10
   ignorePresets: [":prHourlyLimit2"],
   prHourlyLimit: 10,
@@ -54,17 +60,16 @@
       enabled: true,
       matchManagers: ["pep621"],
       matchUpdateTypes: ["minor", "patch"],
-      groupName: "Python dependencies",
-      groupSlug: "python-dependencies",
+      groupName: "Python dependencies non-major",
+      groupSlug: "python-dependencies-non-major",
       schedule: ["* * 1,15 * *"], // bi-weekly (1st and 15th of each month)
     },
 
-    // Python monthly major dependencies upgrades
+    // Python major dependencies are updated manually
     {
-      enabled: true,
+      enabled: false,
       matchManagers: ["pep621"],
       matchUpdateTypes: ["major"],
-      schedule: ["* * 7 * *"], // monthly
     },
 
     // Disable python base image upgrades, except patch and digest pinning
@@ -91,25 +96,14 @@
       matchUpdateTypes: ["major", "minor", "patch"],
     },
 
-    // npm bi-weekly minor, patch and lock file upgrades
+    // Disable non-security and lock file upgrades for npm
+    // Lock is updated manually
     {
-      enabled: true,
+      enabled: false,
       matchManagers: ["npm"],
-      matchUpdateTypes: ["minor", "patch"],
-      groupName: "npm dependencies non-major",
-      groupSlug: "npm-dependencies-non-major",
-      schedule: ["* * 1,15 * *"], // bi-weekly (1st and 15th of each month)
     },
 
-    // npm monthly major upgrades
-    {
-      enabled: true,
-      matchManagers: ["npm"],
-      matchUpdateTypes: ["major"],
-      schedule: ["* * 21 * *"], // monthly
-    },
-
-    // Python version is upgraded manually
+    // Python version in TOML is updated manually
     {
       enabled: false,
       matchDatasources: ["python-version"],
@@ -172,6 +166,15 @@
       matchDatasources: ["github-releases"],
       matchDepNames: ["python"],
       matchDepTypes: ["uses-with"],
+    },
+
+    // Disable mcr.microsoft.com/playwright image upgrades, except digital pinning,
+    {
+      enabled: false,
+      matchManagers: ["github-actions"],
+      matchDepTypes: ["container"],
+      matchDepNames: ["mcr.microsoft.com/playwright"],
+      matchUpdateTypes: ["major", "minor", "patch"],
     },
   ],
 
