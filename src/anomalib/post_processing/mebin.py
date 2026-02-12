@@ -44,10 +44,10 @@ def _count_connected_components(
         binary_mask: Binary mask tensor of shape   (B, 1, H, W)   with values
             in   {0, 1}   (float).
         num_iterations: Number of iterations for kornia's connected component
-            algorithm. Defaults to   1000  .
+            algorithm. Defaults to 1000.
 
     Returns:
-        torch.Tensor: Integer tensor of shape   (B,)   with the number of
+        torch.Tensor: Integer tensor of shape (B,) with the number of
             foreground connected components in each image.
     """
     labels = connected_components(binary_mask.float(), num_iterations=num_iterations)
@@ -177,9 +177,9 @@ def mebin_binarize(
         sample_rate: Step size for the threshold sweep. Defaults to   4  .
         min_interval_len: Minimum length of a stable interval. Defaults to   4  .
         erode: Whether to apply morphological erosion before counting connected
-            components. Defaults to   True  .
-        kernel_size: Size of the erosion kernel (only used when   erode=True  ).
-            Defaults to   6  .
+            components. Defaults to True.
+        kernel_size: Size of the erosion kernel (only used when erode=True).
+            Defaults to 6.
 
     Returns:
         tuple[torch.Tensor, torch.Tensor]:

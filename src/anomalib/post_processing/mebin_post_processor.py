@@ -54,14 +54,14 @@ class MEBinPostProcessor(PostProcessor):
     Args:
         sample_rate: Step size for the threshold sweep in the normalised
             [0, 255] space. Smaller values give finer granularity but are
-            slower. Defaults to  4 .
+            slower. Defaults to `4`.
         min_interval_len: Minimum length (in sweep steps) of a stable interval
             to be considered valid. Defaults to  4 .
         erode: Whether to apply morphological erosion to the binarized map
             before counting connected components. Helps suppress noise.
             Defaults to  True .
         kernel_size: Size of the square erosion kernel (only used when
-             erode=True ). Defaults to  6 .
+            `erode=True`). Defaults to `6`.
         **kwargs: Additional keyword arguments passed to
             :class:`PostProcessor`.
 
@@ -90,7 +90,7 @@ class MEBinPostProcessor(PostProcessor):
     def forward(self, predictions: InferenceBatch) -> InferenceBatch:
         """Post-process model predictions using MEBin adaptive thresholding.
 
-        When normalization statistics ( pixel_min  /  pixel_max ) are
+        When normalization statistics (``pixel_min`` / ``pixel_max``) are
         available (i.e. after a validation pass), the anomaly maps are first
         normalised using the standard :class:`PostProcessor` logic, and then
         MEBin is applied to compute per-image masks.
@@ -101,18 +101,18 @@ class MEBinPostProcessor(PostProcessor):
 
         Args:
             predictions: Batch of model predictions containing at least one of
-                 pred_score  or  anomaly_map .
+                `pred_score` or `anomaly_map`.
 
         Returns:
             InferenceBatch: Post-processed predictions with:
-                -  pred_score  -- normalised image-level anomaly score
-                -  anomaly_map  -- normalised anomaly map
-                -  pred_label  -- binary image-level label (from global
+                - pred_score -- normalised image-level anomaly score
+                - anomaly_map -- normalised anomaly map
+                - pred_label -- binary image-level label (from global
                   threshold)
-                -  pred_mask  -- binary pixel-level mask (from MEBin)
+                - pred_mask -- binary pixel-level mask (from MEBin)
 
         Raises:
-            ValueError: If neither  pred_score  nor  anomaly_map  is
+            ValueError: If neither `pred_score` nor `anomaly_map` is
                 provided.
         """
         if predictions.pred_score is None and predictions.anomaly_map is None:
@@ -163,7 +163,7 @@ class MEBinPostProcessor(PostProcessor):
         )
 
     def post_process_batch(self, batch: Batch) -> None:
-        """Post-process a batch during  on_test_batch_end  /  on_predict_batch_end .
+        """Post-process a batch during `on_test_batch_end` / `on_predict_batch_end`.
 
         Applies the inherited normalization (image + pixel level) and then
         computes the pixel-level mask using MEBin instead of the global
