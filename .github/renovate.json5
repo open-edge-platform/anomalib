@@ -153,7 +153,7 @@
     {
       enabled: false,
       matchDatasources: ["github-releases"],
-      matchDepNames: ["astral-sh/setup-uv"],
+      matchDepNames: ["astral-sh/uv"],
       matchDepTypes: ["uses-with"],
     },
 
