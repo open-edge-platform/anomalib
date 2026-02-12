@@ -38,7 +38,7 @@ def _run_experiment(
     model_cls: type,
     model_name: str,
     category: str,
-    post_processor: PostProcessor | MEBinPostProcessor,
+    post_processor: PostProcessor,
     pp_name: str,
     root: str,
 ) -> dict:
