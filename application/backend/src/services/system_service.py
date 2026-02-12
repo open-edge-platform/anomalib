@@ -65,6 +65,8 @@ class SystemService:
 
         for device in core.available_devices:
             ov_name = core.get_property(device, "FULL_DEVICE_NAME")
+            if device.lower().startswith("cpu"):
+                continue
             if device.lower().startswith("npu"):
                 devices.append(
                     DeviceInfo(
@@ -75,7 +77,7 @@ class SystemService:
                         index=None,
                     ),
                 )
-            elif device_type := core.get_property(device, "DEVICE_TYPE") in {
+            elif core.get_property(device, "DEVICE_TYPE") in {
                 OVDeviceType.DISCRETE,
                 OVDeviceType.INTEGRATED,
             }:
@@ -85,18 +87,11 @@ class SystemService:
                     logger.warning(f"Unsupported device: {ov_name}. Skipping.")
                     continue
 
-                # Only discrete XPUs have memory info available via OV, integrated devices do not report memory
-                memory = (
-                    core.get_property(device, "GPU_DEVICE_TOTAL_MEM_SIZE")
-                    if device_type == OVDeviceType.DISCRETE
-                    else None
-                )
-
                 devices.append(
                     DeviceInfo(
                         type=DeviceType.XPU,
                         name=ov_name,
-                        memory=memory,
+                        memory=core.get_property(device, "GPU_DEVICE_TOTAL_MEM_SIZE"),
                         index=core.get_property(device, "DEVICE_ID"),
                         openvino_name=device,
                     ),
