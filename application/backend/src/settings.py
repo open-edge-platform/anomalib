@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     )
 
     # Database
-    database_file: str = Field(default="geti_inspect.db", alias="DATABASE_FILE", description="Database filename")
+    database_file: str = Field(default="anomalib_studio.db", alias="DATABASE_FILE", description="Database filename")
     db_echo: bool = Field(default=False, alias="DB_ECHO")
 
     # Alembic

@@ -166,7 +166,7 @@ const downloadLogs = async (): Promise<void> => {
     if (response.data) {
         const contentDisposition = response.response.headers.get('content-disposition');
         const filenameMatch = contentDisposition?.match(/filename=(.+)/);
-        const filename = filenameMatch ? filenameMatch[1] : 'geti_inspect_logs.zip';
+        const filename = filenameMatch ? filenameMatch[1] : 'anomalib_studio_logs.zip';
 
         downloadBlob(response.data as Blob, filename);
     }
