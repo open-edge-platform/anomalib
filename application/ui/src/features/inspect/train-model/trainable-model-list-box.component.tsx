@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { $api } from '@geti-inspect/api';
+import { $api } from '@anomalib-studio/api';
 import { Button, Flex, Grid, minmax, repeat } from '@geti/ui';
 import { ChevronDownLight, ChevronUpLight } from '@geti/ui/icons';
 

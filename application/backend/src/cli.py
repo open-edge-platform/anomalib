@@ -1,7 +1,7 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Command line interface for interacting with the Geti Inspect application."""
+"""Command line interface for interacting with the Anomalib Studio application."""
 
 import sys
 
@@ -19,7 +19,7 @@ migration_manager = MigrationManager(settings)
 
 @click.group()
 def cli() -> None:
-    """Geti Inspect CLI"""
+    """Anomalib Studio CLI"""
 
 
 @cli.command()

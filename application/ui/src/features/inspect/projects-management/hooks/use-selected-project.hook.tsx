@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { useProjectIdentifier } from '@anomalib-studio/hooks';
 import { isNil } from 'lodash-es';
 
 import { useGetProjects } from './use-get-project.hooks';

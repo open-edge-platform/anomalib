@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { $api } from '@geti-inspect/api';
+import { $api } from '@anomalib-studio/api';
 import { Image, PhotoPlaceholder } from '@geti/ui';
 
 import { isNonEmptyString } from '../../utils';

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-import { useActivatePipeline, useActivePipeline } from '@geti-inspect/hooks';
+import { useActivatePipeline, useActivePipeline } from '@anomalib-studio/hooks';
 import isEmpty from 'lodash-es/isEmpty';
 
 export const useEnsureActivePipeline = (projectId: string) => {

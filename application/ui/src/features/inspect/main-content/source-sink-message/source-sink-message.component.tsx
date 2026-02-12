@@ -1,4 +1,4 @@
-import { NotFoundIcon } from '@geti-inspect/icons';
+import { NotFoundIcon } from '@anomalib-studio/icons';
 import { Flex, Text } from '@geti/ui';
 
 import styles from './source-sink-message.module.scss';

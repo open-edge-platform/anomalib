@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { $api } from '@geti-inspect/api';
-import { SchemaProjectList } from '@geti-inspect/api/spec';
+import { $api } from '@anomalib-studio/api';
+import { SchemaProjectList } from '@anomalib-studio/api/spec';
 import { Flex, Text } from '@geti/ui';
 import { clsx } from 'clsx';
 import { useNavigate } from 'react-router';
