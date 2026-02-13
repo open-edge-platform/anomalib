@@ -5,8 +5,8 @@
 
 This module provides a post-processor that uses the MEBin (Main Element
 Binarization) algorithm to adaptively determine per-image thresholds for anomaly
-map binarization.  Unlike the default :class:`PostProcessor` which uses a single
-global F1-adaptive threshold,  MEBinPostProcessor  computes a   per-image
+map binarization. Unlike the default :class:`PostProcessor` which uses a single
+global F1-adaptive threshold, `MEBinPostProcessor` computes a per-image
 threshold based on connected-component stability analysis.
 
 Reference:
@@ -41,8 +41,8 @@ class MEBinPostProcessor(PostProcessor):
     range where the component count stays constant).
 
     This post-processor inherits all normalization and metric-tracking
-    functionality from :class:`PostProcessor`.  The key difference is that
-     pred_mask  is computed using the MEBin per-image threshold instead of the
+    functionality from :class:`PostProcessor`. The key difference is that
+    `pred_mask` is computed using the MEBin per-image threshold instead of the
     global F1-adaptive threshold.
 
     .. note::
@@ -56,10 +56,10 @@ class MEBinPostProcessor(PostProcessor):
             [0, 255] space. Smaller values give finer granularity but are
             slower. Defaults to `4`.
         min_interval_len: Minimum length (in sweep steps) of a stable interval
-            to be considered valid. Defaults to  4 .
+            to be considered valid. Defaults to `4`.
         erode: Whether to apply morphological erosion to the binarized map
             before counting connected components. Helps suppress noise.
-            Defaults to  True .
+            Defaults to `True`.
         kernel_size: Size of the square erosion kernel (only used when
             `erode=True`). Defaults to `6`.
         **kwargs: Additional keyword arguments passed to
@@ -95,7 +95,7 @@ class MEBinPostProcessor(PostProcessor):
         normalised using the standard :class:`PostProcessor` logic, and then
         MEBin is applied to compute per-image masks.
 
-        When normalization statistics are   not   available (e.g. during
+        When normalization statistics are not available (e.g. during
         standalone inference), MEBin is applied directly to the raw anomaly
         maps.
 

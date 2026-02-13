@@ -51,13 +51,11 @@ def _count_connected_components(
             foreground connected components in each image.
     """
     labels = connected_components(binary_mask.float(), num_iterations=num_iterations)
-    batch_size = labels.shape[0]
-    counts = torch.zeros(batch_size, device=labels.device, dtype=torch.long)
-    for i in range(batch_size):
-        # Unique labels excluding background (0)
-        unique_labels = labels[i].unique()
-        counts[i] = (unique_labels > 0).sum()
-    return counts
+    # connected_components assigns label 0 to background and positive,
+    # contiguous integers 1..N to foreground components. Therefore, the
+    # number of connected components per image is simply the maximum label
+    # value in that image.
+    return labels.view(labels.shape[0], -1).amax(dim=1).to(torch.long)
 
 
 def _erode(
@@ -74,7 +72,7 @@ def _erode(
     Returns:
         torch.Tensor: Eroded binary mask of the same shape.
     """
-    kernel = torch.ones(kernel_size, kernel_size, device=binary_mask.device)
+    kernel = torch.ones(kernel_size, kernel_size, device=binary_mask.device, dtype=binary_mask.dtype)
     return erosion(binary_mask, kernel)
 
 
@@ -196,6 +194,16 @@ def mebin_binarize(
         >>> thresholds.shape
         torch.Size([4])
     """
+    # Validate arguments
+    if sample_rate <= 0:
+        msg = f"sample_rate must be positive, got {sample_rate}"
+        raise ValueError(msg)
+    if min_interval_len <= 0:
+        msg = f"min_interval_len must be positive, got {min_interval_len}"
+        raise ValueError(msg)
+    if kernel_size <= 0:
+        msg = f"kernel_size must be positive, got {kernel_size}"
+        raise ValueError(msg)
     if anomaly_maps.dim() != 4 or anomaly_maps.shape[1] != 1:
         msg = f"Expected anomaly_maps of shape (B, 1, H, W), got {anomaly_maps.shape}"
         raise ValueError(msg)
@@ -238,7 +246,7 @@ def mebin_binarize(
         single_map = maps_norm[i : i + 1]  # (1, 1, H, W)
         component_counts: list[int] = []
 
-        for score in range(255, 0, -sample_rate):
+        for score in range(255, -1, -sample_rate):
             # Binarize at this threshold.
             binary = (single_map > score).float()
             # Optionally erode.

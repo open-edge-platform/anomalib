@@ -10,7 +10,7 @@ the pixel-level and image-level metrics between the default PostProcessor
 Usage:
     python tools/benchmark_mebin.py [--categories bottle carpet ...] [--root ./datasets/MVTecAD]
 
-Results are printed as a table and saved to    results/mebin_benchmark.csv   .
+Results are printed as a table and saved to results/mebin_benchmark.csv.
 """
 
 from __future__ import annotations
