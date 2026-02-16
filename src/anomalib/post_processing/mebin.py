@@ -51,11 +51,17 @@ def _count_connected_components(
             foreground connected components in each image.
     """
     labels = connected_components(binary_mask.float(), num_iterations=num_iterations)
-    # connected_components assigns label 0 to background and positive,
-    # contiguous integers 1..N to foreground components. Therefore, the
-    # number of connected components per image is simply the maximum label
-    # value in that image.
-    return labels.view(labels.shape[0], -1).amax(dim=1).to(torch.long)
+    # kornia's connected_components assigns 0 to background and arbitrary
+    # positive integers (root pixel indices) to foreground components.
+    # Labels are NOT contiguous 1..N, so we count unique non-zero values.
+    batch_size = labels.shape[0]
+    flat = labels.view(batch_size, -1)
+    counts = torch.zeros(batch_size, dtype=torch.long, device=labels.device)
+    for i in range(batch_size):
+        unique_labels = flat[i].unique()
+        # Subtract 1 for the background label (0).
+        counts[i] = (unique_labels > 0).sum()
+    return counts
 
 
 def _erode(
