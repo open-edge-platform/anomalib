@@ -100,16 +100,19 @@ def main() -> None:
         (AnomalyDINO, "AnomalyDINO"),
     ]
 
-    post_processor_configs: list[tuple[PostProcessor | MEBinPostProcessor, str]] = [
-        (PostProcessor(), "Default"),
-        (MEBinPostProcessor(sample_rate=4, min_interval_len=4, erode=True, kernel_size=6), "MEBin"),
+    # Store factories (class + kwargs) instead of instances so that each run
+    # gets a fresh post-processor with no leaked state from prior runs.
+    post_processor_factories: list[tuple[type, dict, str]] = [
+        (PostProcessor, {}, "Default"),
+        (MEBinPostProcessor, {"sample_rate": 4, "min_interval_len": 4, "erode": True, "kernel_size": 6}, "MEBin"),
     ]
 
     results: list[dict] = []
 
     for model_cls, model_name in model_configs:
         for category in args.categories:
-            for post_processor, processor_name in post_processor_configs:
+            for pp_cls, pp_kwargs, processor_name in post_processor_factories:
+                post_processor = pp_cls(**pp_kwargs)
                 logger.info("Running: %s / %s / %s", model_name, category, processor_name)
                 try:
                     row = _run_experiment(model_cls, model_name, category, post_processor, processor_name, args.root)
