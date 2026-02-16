@@ -130,8 +130,9 @@ class TrainingService:
                 message=f"Failed with exception: {str(e)}",
             )
             if model and model.export_path:
-                logger.warning(f"Deleting partially created model with id: {model.id}")
-                await model_service.delete_model(project_id=project_id, model_id=model.id)
+                logger.warning(f"Deleting partially created model artifacts with id: {model.id}")
+                model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model.id)
+                await model_binary_repo.delete_model_folder()
             raise e
         finally:
             logger.debug("Syncing progress with db stopped")
@@ -228,10 +229,18 @@ class TrainingService:
         kwargs = {}
         if training_device == "xpu":
             kwargs["strategy"] = SingleXPUStrategy()
+        devices: int | str | list[int]
+        if training_device == "cpu":
+            devices = 1
+        elif training_device == "auto":
+            devices = "auto"
+        else:
+            devices = [0]  # Only single accelerator training is supported for now
+
         engine = Engine(
             default_root_dir=model.export_path,
             logger=[tensorboard],
-            devices=[0],  # Only single GPU training is supported for now
+            devices=devices,
             max_epochs=max_epochs,
             callbacks=[
                 AnomalibStudioProgressCallback(synchronization_parameters),
