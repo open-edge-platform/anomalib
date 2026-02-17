@@ -1,4 +1,4 @@
-# Copyright (C) 2024-2025 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Path utilities for anomaly detection.
@@ -41,6 +41,34 @@ from contextlib import suppress
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+
+def _highest_version_dir(parent: Path) -> str | None:
+    """Return the highest version directory name (e.g. 'v2') under parent, or None.
+
+    Scans parent for directories matching v0, v1, v2, ... and returns the name of the one with the
+    highest number. Used by create_versioned_dir and resolve_versioned_path to avoid duplication.
+
+    Args:
+        parent (Path): Directory that may contain versioned subdirs (v0, v1, ...).
+
+    Returns:
+        str | None: Name of the highest version dir (e.g. 'v2'), or None if none exist.
+    """
+    result: str | None = None
+    try:
+        if not parent.is_dir():
+            result = None
+        else:
+            highest = -1
+            version_pattern = re.compile(r"^v(\d+)$")
+            for child in parent.iterdir():
+                if child.is_dir() and (match := version_pattern.match(child.name)):
+                    highest = max(highest, int(match.group(1)))
+            result = f"v{highest}" if highest >= 0 else None
+    except OSError:
+        result = None
+    return result
 
 
 def _validate_windows_path(path: Path) -> bool:
@@ -202,25 +230,12 @@ def create_versioned_dir(root_dir: str | Path) -> Path:
         - Version directories follow the pattern ``v1``, ``v2``, etc.
         - The ``latest`` link always points to the most recently created version
     """
-    # Compile a regular expression to match version directories
-    version_pattern = re.compile(r"^v(\d+)$")
-
-    # Resolve the path
     root_dir = Path(root_dir).resolve()
     root_dir.mkdir(parents=True, exist_ok=True)
 
-    # Find the highest existing version number
-    highest_version = -1
-    for version_dir in root_dir.iterdir():
-        if version_dir.is_dir():
-            match = version_pattern.match(version_dir.name)
-            if match:
-                version_number = int(match.group(1))
-                highest_version = max(highest_version, version_number)
-
-    # The new directory will have the next highest version number
-    new_version_number = highest_version + 1
-    new_version_dir = root_dir / f"v{new_version_number}"
+    highest = _highest_version_dir(root_dir)
+    next_num = int(highest[1:]) + 1 if highest else 0
+    new_version_dir = root_dir / f"v{next_num}"
 
     # Create the new version directory
     new_version_dir.mkdir()
@@ -237,6 +252,49 @@ def create_versioned_dir(root_dir: str | Path) -> Path:
     # Return the versioned directory path, not the latest link
     # This ensures training saves to the versioned directory directly
     return new_version_dir
+
+
+def resolve_versioned_path(path: str | Path) -> Path:
+    """Resolve a path by replacing a ``latest`` component with the actual version dir.
+
+    If the path contains a component named ``latest`` (e.g. from a symlink or junction used by
+    ``create_versioned_dir``), returns the concrete path. On POSIX, the symlink is followed via
+    ``Path.resolve()``. On Windows, traversing the junction can raise WinError 448 (untrusted
+    mount point), so the path is resolved by replacing ``latest`` with the highest version dir
+    (v0, v1, ...) using ``_highest_version_dir`` without traversing the junction.
+
+    Args:
+        path (str | Path): Path that may contain ``latest`` as a component (e.g.
+            ``.../latest/weights/lightning/model.ckpt``).
+
+    Returns:
+        Path: Resolved path (symlink followed on POSIX; ``latest`` replaced by actual version on
+            Windows), or the original path if no ``latest`` component or resolution not possible.
+
+    Example:
+        >>> from pathlib import Path
+        >>> # If /exp contains v0, v1 and a 'latest' link to v1:
+        >>> resolve_versioned_path(Path("/exp/latest/weights/model.ckpt"))
+        PosixPath('/exp/v1/weights/model.ckpt')
+    """
+    path = Path(path)
+    result = path
+    if "latest" in (parts := list(path.parts)):
+        if sys.platform != "win32":
+            # POSIX: follow the symlink directly
+            try:
+                result = path.resolve()
+            except OSError:
+                result = path
+        else:
+            # Windows: avoid traversing the junction; replace "latest" with highest vN.
+            idx = parts.index("latest")
+            parent = Path(*parts[:idx])
+            version_dir = _highest_version_dir(parent)
+            if version_dir:
+                parts[idx] = version_dir
+                result = Path(*parts)
+    return result
 
 
 def convert_to_snake_case(s: str) -> str:
