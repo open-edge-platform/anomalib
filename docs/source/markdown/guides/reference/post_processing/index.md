@@ -41,7 +41,7 @@ thresholds based on connected-component stability analysis.
 ## Base Post-processor
 
 ```{eval-rst}
-.. automodule:: anomalib.post_processing.base
+.. automodule:: anomalib.post_processing.post_processor
    :members:
    :show-inheritance:
 ```

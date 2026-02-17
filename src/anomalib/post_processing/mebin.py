@@ -242,10 +242,10 @@ def mebin_binarize(
     )
 
     # Pre-compute erosion kernel once.
-    erosion_kernel = torch.ones(kernel_size, kernel_size, device=device) if erode else None
+    erosion_kernel = torch.ones(kernel_size, kernel_size, device=device, dtype=anomaly_maps.dtype) if erode else None
 
     masks = torch.zeros_like(anomaly_maps)
-    thresholds_raw = torch.full((batch_size,), s_max.item(), device=device, dtype=anomaly_maps.dtype)
+    thresholds_raw = s_max.expand(batch_size).clone().to(device=device, dtype=anomaly_maps.dtype)
 
     # --- Per-image threshold search ---
     for i in range(batch_size):
