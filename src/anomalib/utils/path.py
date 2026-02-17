@@ -55,20 +55,18 @@ def _highest_version_dir(parent: Path) -> str | None:
     Returns:
         str | None: Name of the highest version dir (e.g. 'v2'), or None if none exist.
     """
-    result: str | None = None
     try:
         if not parent.is_dir():
-            result = None
-        else:
-            highest = -1
-            version_pattern = re.compile(r"^v(\d+)$")
-            for child in parent.iterdir():
-                if child.is_dir() and (match := version_pattern.match(child.name)):
-                    highest = max(highest, int(match.group(1)))
-            result = f"v{highest}" if highest >= 0 else None
+            return None
+
+        highest = -1
+        version_pattern = re.compile(r"^v(\d+)$")
+        for child in parent.iterdir():
+            if child.is_dir() and (match := version_pattern.match(child.name)):
+                highest = max(highest, int(match.group(1)))
+        return f"v{highest}" if highest >= 0 else None
     except OSError:
-        result = None
-    return result
+        return None
 
 
 def _validate_windows_path(path: Path) -> bool:
@@ -84,13 +82,10 @@ def _validate_windows_path(path: Path) -> bool:
 
     # Check for shell metacharacters that could be dangerous
     dangerous_chars = {"&", "|", ";", "<", ">", "^", '"', "'", "`", "$", "(", ")", "*", "?", "[", "]", "{", "}"}
-    # Check for command injection patterns (multi-character sequences)
-    injection_patterns = ["&&", "||"]
 
     # Perform all validation checks
     if (
         any(char in path_str for char in dangerous_chars)
-        or any(pattern in path_str for pattern in injection_patterns)
         or "\x00" in path_str
         # Traditional Windows MAX_PATH is 260 characters. This is a conservative
         # limit and does not take optional long-path support into account.
