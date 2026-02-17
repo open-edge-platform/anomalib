@@ -83,18 +83,18 @@ class TestCreateVersionedDir:
         """create_versioned_dir returns the real version directory path, not the 'latest' link."""
         root = tmp_path / "results"
         result = create_versioned_dir(root)
-        assert result.name == "v1"
-        assert result == root / "v1"
+        assert result.name == "v0"
+        assert result == root / "v0"
         assert (root / "latest").exists()
         # Returned path must not be the link path
         assert result != root / "latest"
 
     @staticmethod
     def test_increments_version(tmp_path: Path) -> None:
-        """Second call returns v2, etc."""
+        """Second call returns v1, etc."""
         root = tmp_path / "results"
         r1 = create_versioned_dir(root)
         r2 = create_versioned_dir(root)
-        assert r1.name == "v1"
-        assert r2.name == "v2"
+        assert r1.name == "v0"
+        assert r2.name == "v1"
         assert r1 != r2
