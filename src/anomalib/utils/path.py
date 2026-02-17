@@ -173,14 +173,12 @@ def _make_latest_windows(latest: Path, target: Path) -> None:
             if result.returncode == 0 and tmp.exists():
                 tmp.replace(latest)
                 return
-            else:
-                logger.warning(
-                    "Failed to create Windows junction with mklink (return code %s). "
-                    "Command: %s, stderr: %r",
-                    result.returncode,
-                    result.args,
-                    result.stderr,
-                )
+            logger.warning(
+                "Failed to create Windows junction with mklink (return code %s). Command: %s, stderr: %r",
+                result.returncode,
+                result.args,
+                result.stderr,
+            )
         except (subprocess.SubprocessError, OSError):
             # Subprocess failed; intentionally fall through to the final
             # fallback below that creates a text pointer file.
