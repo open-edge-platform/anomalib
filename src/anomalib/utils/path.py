@@ -84,15 +84,17 @@ def _validate_windows_path(path: Path) -> bool:
 
     # Check for shell metacharacters that could be dangerous
     dangerous_chars = {"&", "|", ";", "<", ">", "^", '"', "'", "`", "$", "(", ")", "*", "?", "[", "]", "{", "}"}
-    # Check for command injection patterns
-    injection_patterns = ["&&", "||", ";", "&", "|"]
+    # Check for command injection patterns (multi-character sequences)
+    injection_patterns = ["&&", "||"]
 
     # Perform all validation checks
     if (
         any(char in path_str for char in dangerous_chars)
         or any(pattern in path_str for pattern in injection_patterns)
         or "\x00" in path_str
-        or len(path_str) > 260  # Windows MAX_PATH
+        # Traditional Windows MAX_PATH is 260 characters. This is a conservative
+        # limit and does not take optional long-path support into account.
+        or (sys.platform.startswith("win") and len(path_str) > 260)
     ):
         return False
 
@@ -176,9 +178,21 @@ def _make_latest_windows(latest: Path, target: Path) -> None:
             if result.returncode == 0 and tmp.exists():
                 tmp.replace(latest)
                 return
+            else:
+                logger.warning(
+                    "Failed to create Windows junction with mklink (return code %s). "
+                    "Command: %s, stderr: %r",
+                    result.returncode,
+                    result.args,
+                    result.stderr,
+                )
         except (subprocess.SubprocessError, OSError):
-            # Subprocess failed, fall through to fallback
-            pass
+            # Subprocess failed; intentionally fall through to the final
+            # fallback below that creates a text pointer file.
+            logger.debug(
+                "Failed to create Windows junction using mklink; falling back to pointer file.",
+                exc_info=True,
+            )
     else:
         # Only reached if symlink creation succeeded
         tmp.replace(latest)
