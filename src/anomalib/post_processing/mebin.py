@@ -241,9 +241,6 @@ def mebin_binarize(
         ((anomaly_maps - s_min) / score_range * 255.0).clamp(0, 255),
     )
 
-    # Pre-compute erosion kernel once.
-    erosion_kernel = torch.ones(kernel_size, kernel_size, device=device, dtype=anomaly_maps.dtype) if erode else None
-
     masks = torch.zeros_like(anomaly_maps)
     thresholds_raw = s_max.expand(batch_size).clone().to(device=device, dtype=anomaly_maps.dtype)
 
@@ -256,8 +253,8 @@ def mebin_binarize(
             # Binarize at this threshold.
             binary = (single_map > score).float()
             # Optionally erode.
-            if erode and erosion_kernel is not None:
-                binary = erosion(binary, erosion_kernel)
+            if erode:
+                binary = _erode(binary, kernel_size=kernel_size)
                 binary = (binary > 0.5).float()
             # Count connected components.
             n_components = _count_connected_components(binary)
