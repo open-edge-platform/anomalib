@@ -64,9 +64,9 @@ def _highest_version_dir(parent: Path) -> str | None:
         for child in parent.iterdir():
             if child.is_dir() and (match := version_pattern.match(child.name)):
                 highest = max(highest, int(match.group(1)))
-        return f"v{highest}" if highest >= 0 else None
     except OSError:
         return None
+    return f"v{highest}" if highest >= 0 else None
 
 
 def _validate_windows_path(path: Path) -> bool:
