@@ -3,6 +3,7 @@
 
 import multiprocessing as mp
 import os
+import sys
 from pathlib import Path
 
 import uvicorn
@@ -84,7 +85,9 @@ if (
 def main() -> None:
     """Main function to run the Anomalib Studio server"""
     uvicorn_port = int(os.environ.get("HTTP_SERVER_PORT", settings.port))
-    uvicorn.run("main:app", loop="uvloop", host=settings.host, port=uvicorn_port, log_config=None)
+    # uvloop is faster but does not support Windows. Use asyncio on Windows variants.
+    loop = "asyncio" if os.name == "nt" or sys.platform.startswith("win") else "uvloop"
+    uvicorn.run("main:app", loop=loop, host=settings.host, port=uvicorn_port, log_config=None)
 
 
 if __name__ == "__main__":

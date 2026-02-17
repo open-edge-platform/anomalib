@@ -1,6 +1,6 @@
-# Geti Edge UI Application Architecture
+# Anomalib Studio UI Architecture
 
-The Geti Edge applications aim to provide a user experience and design language consistent with the main Geti application. To achieve this, we reuse many architectural decisions from Geti.
+The Anomalib studio aims to provide a user experience and design language consistent with the Geti ecosystem. To achieve this, it reuses many architectural decisions from Geti.
 
 ## Goals
 
@@ -56,7 +56,7 @@ The application follows a modular, feature-oriented structure:
 
 ### Build System
 
-Geti Edge UI uses modern web tooling for efficient development and deployment:
+Anomalib Studio uses modern web tooling for efficient development and deployment:
 
 - **React**: Component-based UI architecture.
 - **TypeScript**: Static typing for reliability and maintainability.
