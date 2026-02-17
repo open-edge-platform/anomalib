@@ -85,8 +85,8 @@ if (
 def main() -> None:
     """Main function to run the Anomalib Studio server"""
     uvicorn_port = int(os.environ.get("HTTP_SERVER_PORT", settings.port))
-    # uvloop is faster but does not support Windows. Use asyncio on Windows.
-    loop = "uvloop" if sys.platform != "win32" else "asyncio"
+    # uvloop is faster but does not support Windows. Use asyncio on Windows variants.
+    loop = "asyncio" if os.name == "nt" or sys.platform.startswith("win") else "uvloop"
     uvicorn.run("main:app", loop=loop, host=settings.host, port=uvicorn_port, log_config=None)
 
 
