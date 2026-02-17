@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "identifier": "com.anomalib.studio",
   "build": {
-    "frontendDist": "ui",
-    "devUrl": "localhost:3000",
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build"
+    "frontendDist": "../../../ui/dist",
+    "devUrl": "http://localhost:3000",
+    "beforeDevCommand": "cd ../../ui && npm run start",
+    "beforeBuildCommand": "cd ../../ui && npm run build"
   },
   "app": {
     "windows": [
