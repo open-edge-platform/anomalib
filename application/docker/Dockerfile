@@ -83,7 +83,7 @@ CMD ["sh", "-c", "exec ./run.sh"]
 #------------------------------------------
 # Anomalib Studio CUDA version
 #------------------------------------------
-FROM anomalib-studio-base AS anomalib-studio-cuda
+FROM anomalib-studio-base AS anomalib-studio-gpu
 
 RUN apt-get update  \
     && apt-get install -y --no-install-recommends wget=1.25.0-2 \
