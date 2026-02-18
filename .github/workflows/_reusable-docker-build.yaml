@@ -1,0 +1,303 @@
+# Docker Image Build Workflow
+#
+# This reusable workflow handles Docker image building,
+# providing a standardized build process with verification.
+#
+# Key Features:
+# - Docker image building
+# - Image verification
+# - Image size reporting
+# - Upload Image as artifact (for non-PR events)
+#
+# Process Stages:
+# 1. Check paths to determine if workflow should run (for PRs)
+# 2. Build Docker and upload as artifact
+#    - Buildimages for specified devices (cpu, xpu, gpu)
+#    - Run simple health checks on the built images
+#    - Upload document with size of images as artifact (for PRs)
+#    - Upload built images as artifacts (for non-PR events)
+# 3. Report image sizes as artifacts in PR comments
+#
+# Example Usage:
+# 1. Basic Build:
+#    jobs:
+#      build:
+#        uses: ./.github/workflows/_reusable-docker-build.yaml
+#
+# 2. Build with Verification:
+#    jobs:
+#      build:
+#        uses: ./.github/workflows/_reusable-docker-build.yaml
+#
+
+name: Reusable Docker Image Build
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions: {} # No permissions by default on workflow level
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Determines if workflow should execute based on event type and changed paths
+  # If push or workflow_dispatch -> always run
+  # If PR or merge_group -> run only if files in specified paths changed
+  check_paths:
+    name: Check if workflow should run
+    runs-on: ubuntu-latest
+    outputs:
+      run_workflow: ${{ steps.check_paths.outputs.run }}
+    steps:
+      - &checkout
+        name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check paths
+        id: check_paths
+        uses: open-edge-platform/geti-ci/actions/check-paths@375de2eb018dae396c959f9b3a464f40271de969
+        with:
+          files_yaml: |
+            test:
+              - application/**
+              - .github/**
+
+  build:
+    name: Build and upload docker image (${{ matrix.device }})
+    runs-on: ubuntu-latest
+    needs: check_paths
+    if: needs.check_paths.outputs.run_workflow == 'true'
+    strategy:
+      matrix:
+        device: [cpu, xpu, gpu]
+    permissions:
+      contents: read
+    steps:
+      - *checkout
+
+      - name: Initial cleanup
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@d30e32248aa6bd06adeda7129b50a38bdbceca12
+        with:
+          type: "initial"
+
+      - name: Pre-build cleanup
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@d30e32248aa6bd06adeda7129b50a38bdbceca12
+        with:
+          type: "pre-build"
+
+      - name: Set up Docker Compose
+        uses: docker/setup-compose-action@364cc21a5de5b1ee4a7f5f9d3fa374ce0ccde746 #v1.2.0
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+        with:
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build image for ${{ matrix.device }}
+        working-directory: application/docker
+        run: |
+          # Build and tag images using provided metadata
+          for TAG in $TAGS ; do
+              AI_DEVICE=${DEVICE} TAG=${TAG} docker compose build
+          done
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DEVICE: ${{ matrix.device }}
+          PUBLIC_API_BASE_URL: "/"
+
+      - name: Run simple checks on the built image
+        working-directory: application/docker
+        run: |
+          # Get the first tag for testing
+          FIRST_TAG=$(echo "$TAGS" | awk 'NR==1 {print $1}')
+          echo "Testing container with tag: $FIRST_TAG for device: $DEVICE"
+
+          # Start the container in detached mode
+          CONTAINER_ID=$(docker run -d --rm -v ./data:/app/data -v ./logs:/app/logs -p 8000:8000 anomalib-studio-${DEVICE}:${FIRST_TAG})
+          echo "Started container: $CONTAINER_ID"
+
+          # Function to cleanup container on exit
+          cleanup() {
+              echo "Cleaning up container: $CONTAINER_ID"
+              docker stop $CONTAINER_ID || true
+          }
+          trap cleanup EXIT
+
+          TEST_URL="localhost:8000"
+          # Wait for container to be ready (max 60 seconds)
+          echo "Waiting for container to be ready..."
+          for i in {1..12}; do
+              if curl -sf $TEST_URL/health > /dev/null 2>&1; then
+                  echo "✅ Health check passed!"
+                  break
+              fi
+              if [ $i -eq 12 ]; then
+                  echo "❌ Health check failed after 60 seconds"
+                  docker logs $CONTAINER_ID
+                  exit 1
+              fi
+              echo "Attempt $i/12 - waiting 5 seconds..."
+              sleep 5
+          done
+
+          EXPECTED_TITLE="Anomalib Studio"
+          echo "Checking HTML title..."
+
+          HTML_CONTENT=$(curl -sf $TEST_URL)
+          if echo "$HTML_CONTENT" | grep -q "<title>.*$EXPECTED_TITLE.*</title>"; then
+              echo "✅ HTML title check passed - found: $EXPECTED_TITLE"
+          else
+              echo "❌ HTML title check failed - expected title '$EXPECTED_TITLE' not found"
+              echo "Actual HTML content:"
+              echo "$HTML_CONTENT"
+              exit 1
+          fi
+
+          echo "All checks passed successfully!"
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DEVICE: ${{ matrix.device }}
+
+      - name: Get Docker image sizes
+        working-directory: application/docker
+        id: image-sizes
+        if: github.event_name == 'pull_request'
+        run: |
+          mkdir -p image-sizes
+
+          echo "| Image | Size |" > image-sizes/${DEVICE}.md
+          echo "|-------|------|" >> image-sizes/${DEVICE}.md
+
+          for TAG in $TAGS ; do
+            IMAGE="anomalib-studio-${DEVICE}:${TAG}"
+            if docker image inspect "$IMAGE" >/dev/null 2>&1; then
+              size_bytes=$(docker image inspect "$IMAGE" --format='{{.Size}}')
+              size_readable=$(numfmt --to=si --format "%.2f" "$size_bytes")
+              echo "| $IMAGE | $size_readable |" >> image-sizes/${DEVICE}.md
+            fi
+          done
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DEVICE: ${{ matrix.device }}
+
+      - name: Upload image sizes
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: image-sizes-${{ matrix.device }}
+          path: application/docker/image-sizes/${{ matrix.device }}.md
+          retention-days: 1
+
+      - name: Extract first tag
+        id: first-tag
+        run: |
+          FIRST_TAG=$(echo "$TAGS" | awk 'NR==1 {print $1}')
+          echo "tag=${FIRST_TAG}" >> $GITHUB_OUTPUT
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+
+      - name: Upload image as artifact
+        # Image upload is heavy and slow, so we skip it on PRs
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: ishworkh/container-image-artifact-upload@5d71a2417f0576fa11fe770fb04ece58c4587714
+        with:
+          image: "anomalib-studio-${{ matrix.device }}:${{ steps.first-tag.outputs.tag }}"
+          retention_days: "3"
+        continue-on-error: true
+        env:
+          FIRST_TAG: ${{ steps.first-tag.outputs.tag }}
+
+  comment-sizes:
+    name: Comment PR with all image sizes
+    needs: build
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    continue-on-error: true
+    steps:
+      - name: Download all image size artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: image-sizes-*
+          merge-multiple: true
+          path: image-sizes
+
+      - name: Combine image sizes and comment
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            // Read all device size files
+            const sizesDir = 'image-sizes';
+            const files = fs.readdirSync(sizesDir).sort();
+
+            let comment = '## Docker Image Sizes\n\n';
+
+            for (const file of files) {
+              const device = path.basename(file, '.md');
+              const content = fs.readFileSync(path.join(sizesDir, file), 'utf8');
+              comment += `### ${device.toUpperCase()}\n\n${content}\n\n`;
+            }
+
+            // Find existing comment
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existingComment = comments.data.find(comment =>
+              comment.body.includes('## Docker Image Sizes')
+            );
+
+            if (existingComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: comment
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }
+
+  required_check:
+    name: Required Check build
+    needs:
+      - check_paths
+      - build
+    runs-on: ubuntu-latest
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    if: always() && !cancelled()
+    steps:
+      - name: Check jobs results
+        run: |
+          for check in ${CHECKS}; do
+            echo "::notice::check=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error::Required status checks failed. They must succeed before this pull request can be merged."
+              exit 1
+            fi
+          done
