@@ -4,12 +4,13 @@ import asyncio
 import os
 import pathlib
 from contextlib import redirect_stdout
+from typing import Any
 from uuid import UUID
 
 from anomalib.data import Folder
 from anomalib.data.utils import ValSplitMode
 from anomalib.deploy import ExportType
-from anomalib.engine import Engine
+from anomalib.engine import Engine, XPUAccelerator
 from anomalib.engine.strategy.xpu_single import SingleXPUStrategy
 from anomalib.loggers import AnomalibTensorBoardLogger
 from anomalib.metrics import AUROC, F1Score
@@ -24,7 +25,7 @@ from services import ModelService
 from services.dataset_snapshot_service import DatasetSnapshotService
 from services.job_service import JobService
 from services.system_service import SystemService
-from utils.callbacks import GetiInspectProgressCallback, ProgressSyncParams
+from utils.callbacks import AnomalibStudioProgressCallback, ProgressSyncParams
 
 
 class TrainingService:
@@ -225,19 +226,22 @@ class TrainingService:
         )
 
         tensorboard = AnomalibTensorBoardLogger(save_dir=global_log_config.tensorboard_log_path, name=name)
-        kwargs = {}
+        kwargs: dict[str, Any] = {}
         if training_device == "xpu":
             kwargs["strategy"] = SingleXPUStrategy()
+            kwargs["accelerator"] = XPUAccelerator()
+        else:
+            kwargs["accelerator"] = training_device
+
         engine = Engine(
             default_root_dir=model.export_path,
             logger=[tensorboard],
-            devices=[0],  # Only single GPU training is supported for now
+            devices=1,  # Works for all devices. Single GPU training for now. And for CPU, this means single process
             max_epochs=max_epochs,
             callbacks=[
-                GetiInspectProgressCallback(synchronization_parameters),
+                AnomalibStudioProgressCallback(synchronization_parameters),
                 EarlyStopping(monitor="pixel_AUROC", mode="max", patience=5),
             ],
-            accelerator=training_device,
             **kwargs,
         )
 

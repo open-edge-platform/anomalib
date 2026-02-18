@@ -1,5 +1,5 @@
 {
-    "name": "@geti/inspect-ui",
+    "name": "@anomalib/studio-ui",
     "version": "1.0.0",
     "private": true,
     "type": "module",

@@ -23,7 +23,7 @@
 #
 # Security Tools:
 # - Bandit: Python-specific security scanning
-# - ClamAV: Malware detection
+# - Zizmor: Workflows security scanner
 # - Semgrep: Static Application Security Testing (SAST)
 # - Trivy: Vulnerability scanning
 #
@@ -62,9 +62,9 @@ on:
         type: choice
         options:
           - "bandit,semgrep"
+          - "bandit,semgrep,trivy"
           - "bandit,semgrep,trivy,zizmor"
-          - "bandit,clamav,semgrep,trivy,zizmor"
-        default: "bandit,clamav,semgrep,trivy,zizmor"
+        default: "bandit,semgrep,trivy,zizmor"
       scan-scope:
         description: "Scan scope"
         required: true
@@ -101,7 +101,7 @@ jobs:
     uses: ./.github/workflows/_reusable-security-scan.yaml
     with:
       # For scheduled runs, use full scan configuration
-      tools: ${{ inputs.tools || 'bandit,clamav,semgrep,trivy,zizmor' }}
+      tools: ${{ inputs.tools || 'bandit,semgrep,trivy,zizmor' }}
       scan-scope: ${{ inputs.scan-scope || 'all' }}
       severity-level: ${{ inputs.severity-level || 'LOW' }}
       confidence-level: ${{ inputs.confidence-level || 'LOW' }}

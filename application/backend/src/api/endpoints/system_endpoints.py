@@ -98,7 +98,7 @@ async def download_logs() -> StreamingResponse:
     # Generate filename with timestamp
     # since this won't run in distributed setting, using local timezone
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"geti_inspect_logs_{timestamp}.zip"
+    filename = f"anomalib_studio_logs_{timestamp}.zip"
 
     return StreamingResponse(
         iter([zip_buffer.getvalue()]),

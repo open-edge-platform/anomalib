@@ -7,7 +7,7 @@ import { TestProviders } from 'src/providers';
 
 import { SinkMenu, SinkMenuProps } from './sink-menu.component';
 
-vi.mock('@geti-inspect/hooks', () => ({ useProjectIdentifier: () => ({ projectId: '123' }) }));
+vi.mock('@anomalib-studio/hooks', () => ({ useProjectIdentifier: () => ({ projectId: '123' }) }));
 
 describe('SinkMenu', () => {
     const renderApp = ({
