@@ -1,3 +1,4 @@
+import { getApiUrl } from '@anomalib-studio/api';
 import { SchemaPredictionResponse } from '@anomalib-studio/api/spec';
 import { DimensionValue, Responsive, View } from '@geti/ui';
 import { clsx } from 'clsx';
@@ -50,7 +51,9 @@ export const InferenceResult = ({ selectedMediaItem, inferenceResult }: Inferenc
                     <View width={'100%'} height={'100%'} position={'relative'}>
                         <img
                             alt={selectedMediaItem.filename}
-                            src={`/api/projects/${selectedMediaItem.project_id}/images/${selectedMediaItem.id}/full`}
+                            src={getApiUrl(
+                                `/api/projects/${selectedMediaItem.project_id}/images/${selectedMediaItem.id}/full`
+                            )}
                         />
 
                         {isNonEmptyString(inferenceResult?.anomaly_map) && (

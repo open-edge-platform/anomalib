@@ -1,7 +1,8 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { $api } from '@anomalib-studio/api';
+import { getApiUrl } from '@anomalib-studio/api';
 import { Image, PhotoPlaceholder } from '@geti/ui';
 
 import { isNonEmptyString } from '../../utils';
@@ -22,7 +23,7 @@ const ProjectImage = ({ projectId, projectName, size }: ProjectThumbnailProps & 
     if (isNonEmptyString(firstMedia?.id)) {
         return (
             <Image
-                src={`/api/projects/${projectId}/images/${firstMedia.id}/thumbnail`}
+                src={getApiUrl(`/api/projects/${projectId}/images/${firstMedia.id}/thumbnail`)}
                 alt={`${projectName} thumbnail`}
                 height={size}
                 width={size}
