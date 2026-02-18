@@ -119,3 +119,11 @@ jobs:
       severity-level: "MEDIUM" # Minimum severity to report
       confidence-level: "HIGH" # High confidence to report
       fail-on-findings: true # explicitly set
+
+  # Docker image build job using reusable workflow
+  docker-build:
+    if: github.event.pull_request.draft != true
+    uses: ./.github/workflows/_reusable-docker-build.yaml
+    permissions:
+      contents: read
+      pull-requests: write
