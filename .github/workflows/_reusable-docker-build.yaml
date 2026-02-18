@@ -12,7 +12,7 @@
 # Process Stages:
 # 1. Check paths to determine if workflow should run (for PRs)
 # 2. Build Docker and upload as artifact
-#    - Buildimages for specified devices (cpu, xpu, gpu)
+#    - Build images for specified devices (cpu, xpu, gpu)
 #    - Run simple health checks on the built images
 #    - Upload document with size of images as artifact (for PRs)
 #    - Upload built images as artifacts (for non-PR events)
