@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, computed_field, field_serializer
 
 from pydantic_models.base import BaseIDModel, Pagination
+from pydantic_models.system import DeviceType
 
 
 class JobType(StrEnum):
@@ -63,9 +64,16 @@ class JobCancelled(BaseModel):
         return f"Job with ID `{self.job_id}` marked as cancelled."
 
 
+class TrainingDevice(BaseModel):
+    """Device specification for training."""
+
+    type: DeviceType = Field(..., description="Device type, e.g. 'cpu', 'xpu', 'cuda'")
+    index: int | None = Field(default=None, ge=0, description="Device index (null for CPU/MPS/NPU)")
+
+
 class TrainJobPayload(BaseModel):
     project_id: UUID = Field(exclude=True)
     model_name: str
-    device: str | None = Field(default=None)
+    device: TrainingDevice | None = Field(default=None)
     dataset_snapshot_id: str | None = Field(default=None)  # used because UUID is not JSON serializable
     max_epochs: int | None = Field(default=None, ge=1, le=10000)
