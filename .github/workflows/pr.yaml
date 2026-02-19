@@ -146,7 +146,7 @@ jobs:
             test:
               - application/**
               - .github/**
-  
+
   # Docker image build job using reusable workflow
   docker-build:
     name: Build and upload docker image
