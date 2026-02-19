@@ -55,14 +55,17 @@ from anomalib.data.utils import LabelName, Split, validate_path
 IMG_EXTENSIONS = (".jpg", ".JPG", ".jpeg", ".JPEG", ".png", ".PNG")
 
 # Material categories in Kaputt dataset (based on item_material field)
-MATERIAL_CATEGORIES = (
+CATEGORIES = (
+    "book_other",
+    "book_paper",
+    "book_plastic_tight_wrap",
     "cardboard",
-    "glass",
-    "metal",
+    "other",
     "paper",
-    "plastic",
-    "styrofoam",
-    "wood",
+    "plastic_bubble_wrap",
+    "plastic_hard",
+    "plastic_loose_bag",
+    "plastic_tight_wrap",
 )
 
 
