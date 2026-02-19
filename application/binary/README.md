@@ -40,7 +40,7 @@ The `prepare-tauri-dev.mjs` script automatically copies the sidecar binary (with
 suffix) and links `_internal` into `src-tauri/sidecar/`. It runs as part of both `tauri dev` and `tauri build` via
 `beforeDevCommand` / `beforeBuildCommand` in `tauri.conf.json`.
 
-Config is passed during runtime as he PyInstaller `_internal` directory contains thousands of Python runtime
+Config is passed during runtime as the PyInstaller `_internal` directory contains thousands of Python runtime
 files (.pyd, .dll, .so). If listed in `tauri.conf.json` `resources`, Tauri's Cargo build script walks every file to
 register `cargo:rerun-if-changed`, which causes slow recompilation and "file in use" errors on Windows when antivirus
 or the OS still holds locks on freshly-built files. To avoid this, `_internal` is omitted from the default config and

@@ -48,11 +48,38 @@ WinHttpGetProxyForUrl.argtypes = [
     ctypes.POINTER(WINHTTP_AUTOPROXY_OPTIONS),
     ctypes.POINTER(WINHTTP_PROXY_INFO),
 ]
-WinHttpGetProxyForUrl.restype = wintypes.DWORD
+WinHttpGetProxyForUrl.restype = wintypes.BOOL
 
 WinHttpCloseHandle = ctypes.windll.winhttp.WinHttpCloseHandle  # type: ignore[attr-defined]
 WinHttpCloseHandle.argtypes = [wintypes.HANDLE]
 WinHttpCloseHandle.restype = wintypes.BOOL
+
+
+def _normalize_proxy_url(proxy: str) -> str:
+    """Normalize WinHTTP proxy value to a URL with scheme for HTTP_PROXY/HTTPS_PROXY.
+
+    WinHTTP may return "host:port", "host", or "http=host:port;https=host:port".
+    Python HTTP clients expect a full URL with scheme (e.g. http://host:port).
+
+    Args:
+        proxy: Raw proxy string from WinHTTP (possibly semicolon-separated, no scheme).
+
+    Returns:
+        A single proxy URL with http:// scheme, suitable for HTTP_PROXY/HTTPS_PROXY.
+    """
+    proxy = proxy.strip()
+    if not proxy:
+        return proxy
+    # Use first proxy if semicolon-separated (e.g. "proxy1:8080;proxy2:8080" or "http=host:80;https=host:80")
+    first = proxy.split(";")[0].strip()
+    # If WinHTTP used protocol-prefix form (e.g. "http=host:80"), use the part after "="
+    if "=" in first:
+        first = first.split("=", 1)[1].strip()
+    # If it already has a scheme, use as-is (after stripping)
+    if first.lower().startswith(("http://", "https://")):
+        return first
+    # Otherwise prepend http:// so clients get a valid URL
+    return "http://" + first
 
 
 def _proxy_resolver(url: str) -> str | None:
@@ -75,8 +102,10 @@ def _proxy_resolver(url: str) -> str | None:
         options.fAutoLogonIfChallenged = True
 
         proxy_info = WINHTTP_PROXY_INFO()
-        result = WinHttpGetProxyForUrl(hSession, url, ctypes.byref(options), ctypes.byref(proxy_info))
-        return proxy_info.lpszProxy if result == 1 else None
+        success = WinHttpGetProxyForUrl(hSession, url, ctypes.byref(options), ctypes.byref(proxy_info))
+        if not success or not proxy_info.lpszProxy:
+            return None
+        return _normalize_proxy_url(proxy_info.lpszProxy)
     finally:
         WinHttpCloseHandle(hSession)
 

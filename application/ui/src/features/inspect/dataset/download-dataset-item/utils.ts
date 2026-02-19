@@ -1,5 +1,4 @@
 import { isTauri } from '@tauri-apps/api/core';
-
 import { getApiUrl } from 'src/api/client';
 
 import { downloadBlob } from '../../utils';

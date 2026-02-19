@@ -1,5 +1,5 @@
-import { isTauri } from '@tauri-apps/api/core';
 import { getApiUrl } from '@anomalib-studio/api';
+import { isTauri } from '@tauri-apps/api/core';
 import { isString } from 'lodash-es';
 
 import { MediaItem } from './dataset/types';
