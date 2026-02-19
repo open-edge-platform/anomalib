@@ -1,7 +1,7 @@
 [project]
-name = "geti-inspect"
+name = "anomalib-studio"
 version = "1.0.0"
-description = "Geti inspect server"
+description = "Anomalib Studio server"
 requires-python = ">=3.13"
 
 dependencies = [
@@ -23,7 +23,7 @@ dependencies = [
     "sse-starlette~=3.0",
     "tensorboard",
     "uvicorn~=0.17",
-    "uvloop==0.22.1",
+    "uvloop==0.22.1 ; sys_platform != 'win32'",
     "watchdog==6.0.0",
 ]
 

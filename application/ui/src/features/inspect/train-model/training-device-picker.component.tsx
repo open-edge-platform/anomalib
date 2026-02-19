@@ -3,7 +3,7 @@
 
 import { Key, useState } from 'react';
 
-import { $api } from '@geti-inspect/api';
+import { $api } from '@anomalib-studio/api';
 import { Heading, InlineAlert, Item, Link, Picker, Text } from '@geti/ui';
 
 import { getDeviceMetadata, selectPreferredDevice } from './utils/device-metadata';
@@ -48,7 +48,7 @@ export const TrainingDevicePicker = ({ selectedDevice, onDeviceChange, devices }
             <InlineAlert variant='notice'>
                 <Heading level={5}>No training devices detected</Heading>
                 <Text>
-                    Geti Inspect was unable to discover any compatible training hardware. If you believe this is an
+                    Anomalib Studio was unable to discover any compatible training hardware. If you believe this is an
                     error,{' '}
                     <Link
                         isQuiet

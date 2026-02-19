@@ -1,4 +1,4 @@
-import { Folder, Mqtt, Webhook } from '@geti-inspect/icons';
+import { Folder, Mqtt, Webhook } from '@anomalib-studio/icons';
 
 interface SinkIconProps {
     type: 'folder' | 'mqtt' | 'webhook' | 'disconnected';

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { useProjectIdentifier } from '@anomalib-studio/hooks';
 import { Grid } from '@geti/ui';
 
 import { Footer } from '../../features/inspect/footer/footer.component';

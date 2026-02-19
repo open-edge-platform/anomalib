@@ -61,7 +61,7 @@ export const Welcome = () => {
         >
             <IllustratedMessage>
                 <Fireworks />
-                <Heading level={1}>Welcome to Geti Inspect!</Heading>
+                <Heading level={1}>Welcome to Anomalib Studio!</Heading>
                 <Content>
                     <Flex direction={'column'} gap={'size-200'}>
                         <Text>Press the button below to create your first project</Text>

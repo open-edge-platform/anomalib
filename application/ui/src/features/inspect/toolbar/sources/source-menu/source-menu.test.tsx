@@ -7,7 +7,7 @@ import { TestProviders } from 'src/providers';
 
 import { SourceMenu, SourceMenuProps } from './source-menu.component';
 
-vi.mock('@geti-inspect/hooks', () => ({ useProjectIdentifier: () => ({ projectId: '123' }) }));
+vi.mock('@anomalib-studio/hooks', () => ({ useProjectIdentifier: () => ({ projectId: '123' }) }));
 
 describe('SourceMenu', () => {
     const renderApp = ({

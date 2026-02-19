@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { SchemaModelFamily, SchemaTrainableModel } from '@geti-inspect/api/spec';
+import type { SchemaModelFamily, SchemaTrainableModel } from '@anomalib-studio/api/spec';
 
 type ModelFamily = SchemaModelFamily;
 export type TrainableModel = SchemaTrainableModel;

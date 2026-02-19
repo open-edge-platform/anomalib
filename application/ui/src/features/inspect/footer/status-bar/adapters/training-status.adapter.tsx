@@ -3,9 +3,9 @@
 
 import { useEffect } from 'react';
 
-import { $api } from '@geti-inspect/api';
-import { SchemaJob as Job } from '@geti-inspect/api/spec';
-import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { $api } from '@anomalib-studio/api';
+import { SchemaJob as Job } from '@anomalib-studio/api/spec';
+import { useProjectIdentifier } from '@anomalib-studio/hooks';
 import { queryOptions, experimental_streamedQuery as streamedQuery, useQuery } from '@tanstack/react-query';
 import { fetchSSE } from 'src/api/fetch-sse';
 

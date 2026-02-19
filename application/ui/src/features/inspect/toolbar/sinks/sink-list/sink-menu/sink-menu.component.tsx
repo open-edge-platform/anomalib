@@ -1,5 +1,5 @@
-import { $api } from '@geti-inspect/api';
-import { useProjectIdentifier } from '@geti-inspect/hooks';
+import { $api } from '@anomalib-studio/api';
+import { useProjectIdentifier } from '@anomalib-studio/hooks';
 import { MoreMenu } from '@geti/ui/icons';
 import { ActionButton, Item, Key, Menu, MenuTrigger, toast } from 'packages/ui';
 

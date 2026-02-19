@@ -1,4 +1,4 @@
-# Docker distribution for Geti Inspect
+# Docker distribution for Anomalib Studio
 
 ## To create CPU build
 

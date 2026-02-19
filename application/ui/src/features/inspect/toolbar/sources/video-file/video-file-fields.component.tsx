@@ -3,9 +3,9 @@
 
 import { useState } from 'react';
 
-import { $api } from '@geti-inspect/api';
-import { useProjectIdentifier } from '@geti-inspect/hooks';
-import { Folder } from '@geti-inspect/icons';
+import { $api } from '@anomalib-studio/api';
+import { useProjectIdentifier } from '@anomalib-studio/hooks';
+import { Folder } from '@anomalib-studio/icons';
 import {
     ActionButton,
     FileTrigger,

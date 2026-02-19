@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Folder } from '@geti-inspect/icons';
+import { Folder } from '@anomalib-studio/icons';
 import { Flex, Switch, TextField } from '@geti/ui';
 
 import { ImagesFolderSourceConfig } from '../util';

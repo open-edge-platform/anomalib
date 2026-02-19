@@ -19,6 +19,7 @@ from anomalib.data import AnomalibDataModule, Folder
 from anomalib.deploy import CompressionType, ExportType, OpenVINOInferencer
 from anomalib.engine import Engine
 from anomalib.models import get_model
+from anomalib.utils.path import resolve_versioned_path
 from loguru import logger
 from PIL import Image
 from sqlalchemy.ext.asyncio.session import AsyncSession
@@ -185,6 +186,9 @@ class ModelService:
             / "lightning"
             / "model.ckpt"
         )
+
+        # Resolve 'latest' to actual version dir to avoid traversing junction (e.g. WinError 448 on Windows)
+        ckpt_path = resolve_versioned_path(ckpt_path)
 
         if not ckpt_path.exists():
             # Try alternative path for older structure or if title case isn't used

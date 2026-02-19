@@ -170,7 +170,7 @@ jobs:
       security-events: write # needed to upload results
       contents: read
     with:
-      tools: "bandit,semgrep,trivy,clamav"
+      tools: "bandit,semgrep,trivy,zizmor"
       scan-scope: "all"
       severity-level: "LOW"
       fail-on-findings: true

@@ -46,7 +46,7 @@ on:
   workflow_call:
     inputs:
       tools:
-        description: "Security tools to run (comma-separated: bandit,clamav,semgrep,trivy,zizmor)"
+        description: "Security tools to run (comma-separated: bandit,semgrep,trivy,zizmor)"
         type: string
         default: "bandit,semgrep"
       scan-scope:
@@ -79,11 +79,11 @@ jobs:
     if: contains(inputs.tools, 'bandit')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: ./.github/actions/security/bandit
+        uses: open-edge-platform/geti-ci/actions/bandit@3a4b81ea648711eb638b34757427cd3ef71d19f1
         with:
           scan-scope: ${{ inputs.scan-scope }}
           severity-level: ${{ inputs.severity-level }}
@@ -94,12 +94,12 @@ jobs:
     if: contains(inputs.tools, 'semgrep')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
           fetch-depth: 0
       - name: Run Semgrep scan
-        uses: open-edge-platform/geti-ci/actions/semgrep@d30e32248aa6bd06adeda7129b50a38bdbceca12
+        uses: open-edge-platform/geti-ci/actions/semgrep@3a4b81ea648711eb638b34757427cd3ef71d19f1
         with:
           scan-scope: ${{ inputs.scan-scope }}
           severity: ${{ inputs.severity-level }}
@@ -109,14 +109,12 @@ jobs:
     if: contains(inputs.tools, 'trivy')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: 0 # Required for changed files detection
           persist-credentials: false
 
       - name: Run Trivy scan
-        id: trivy
-        uses: ./.github/actions/security/trivy
+        uses: open-edge-platform/geti-ci/actions/trivy@3a4b81ea648711eb638b34757427cd3ef71d19f1
         with:
           scan_type: "fs"
           scan-scope: ${{ inputs.scan-scope }}
@@ -125,30 +123,16 @@ jobs:
           format: "sarif"
           timeout: "15m"
           ignore_unfixed: "false"
-          generate_sbom: "true"
-
-  clamav:
-    if: contains(inputs.tools, 'clamav')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
-        with:
-          persist-credentials: false
-      - name: Run ClamAV scan
-        uses: ./.github/actions/security/clamav
-        with:
-          scan-scope: ${{ inputs.scan-scope }}
-          fail-on-findings: ${{ inputs.fail-on-findings }}
 
   zizmor:
     if: contains(inputs.tools, 'zizmor')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
       - name: Run Zizmor scan
-        uses: ./.github/actions/security/zizmor
+        uses: open-edge-platform/geti-ci/actions/zizmor@3a4b81ea648711eb638b34757427cd3ef71d19f1
         with:
           scan-scope: ${{ inputs.scan-scope }}
           severity-level: ${{ inputs.severity-level }}
@@ -156,38 +140,29 @@ jobs:
           fail-on-findings: ${{ inputs.fail-on-findings }}
 
   summarize:
-    needs: [bandit, semgrep, trivy, clamav, zizmor]
-    if: always()
+    needs: [bandit, semgrep, trivy, zizmor]
     runs-on: ubuntu-latest
+    if: ${{ always() && !cancelled() }}
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
     outputs:
-      has_findings: ${{ steps.check-findings.outputs.has_findings }}
+      has_findings: ${{ steps.check-results.outputs.has_findings }}
     steps:
-      - id: check-findings
+      - name: Check security scan results
+        id: check-results
         run: |
-          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
-            echo "has_findings=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_findings=false" >> $GITHUB_OUTPUT
+          has_findings=false
+
+          for check in ${CHECKS}; do
+            echo "::notice::Security scan result=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error::Security scan checks failed. One or more scans detected issues."
+              has_findings=true
+            fi
+          done
+
+          echo "has_findings=$has_findings" >> $GITHUB_OUTPUT
+
+          if [[ "$has_findings" == "true" ]]; then
+            exit 1
           fi
-
-      # Create directory first
-      - name: Create results directory
-        run: mkdir -p all-results
-
-      # Download artifacts with error handling
-      - name: Download all results
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        continue-on-error: true # Don't fail if some tools didn't generate results
-        with:
-          pattern: "*-results"
-          merge-multiple: true
-          path: all-results
-
-      # Only upload if there are files
-      - name: Upload combined results
-        if: hashFiles('all-results/**/*') != ''
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: security-scan-results
-          path: all-results
-          retention-days: 7

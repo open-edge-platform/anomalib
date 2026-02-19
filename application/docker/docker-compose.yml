@@ -10,8 +10,8 @@ x-proxies: &proxies
   args: *proxy-env
 
 services:
-  geti-inspect:
-    image: geti-inspect-${AI_DEVICE:-cpu}:${TAG:-latest}
+  anomalib-studio:
+    image: anomalib-studio-${AI_DEVICE:-cpu}:${TAG:-latest}
     environment:
       DEBUG: ${DEBUG:-false}
       <<: *proxy-env
@@ -20,10 +20,10 @@ services:
       # Use root directory as context to build the image
       context: ../../
       dockerfile: application/docker/Dockerfile
-      target: geti-inspect-${AI_DEVICE:-cpu}
+      target: anomalib-studio-${AI_DEVICE:-cpu}
       <<: *proxies
     working_dir: /app/application/backend
-    container_name: geti-inspect-${AI_DEVICE:-cpu}
+    container_name: anomalib-studio-${AI_DEVICE:-cpu}
     volumes:
       # Persist database and uploaded data
       - ../backend/data:/app/data
@@ -31,7 +31,7 @@ services:
       - ../backend/logs:/app/logs
     ports:
       # nosemgrep: trailofbits.yaml.docker-compose.port-all-interfaces.port-all-interfaces # to be replaced
-      - "8000:8000"
+      - "${HOST_PORT:-8000}:8000"
     # Increase file descriptor limits. Needed for uv bytecode compilation
     ulimits:
       nofile:

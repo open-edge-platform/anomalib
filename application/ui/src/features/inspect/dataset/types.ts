@@ -1,3 +1,3 @@
-import { SchemaMediaList } from '@geti-inspect/api/spec';
+import { SchemaMediaList } from '@anomalib-studio/api/spec';
 
 export type MediaItem = SchemaMediaList['media'][number];
