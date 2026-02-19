@@ -34,6 +34,10 @@
 #    - Vulnerability detection
 #    - Security report generation
 #
+# 5. Docker Image Build:
+#    - Determines if docker images need to be built based on event type and changed paths
+#    - Builds and uploads docker images as artifacts
+#
 # Required Secrets:
 # - CODECOV_TOKEN: Coverage reporting token
 #
@@ -120,9 +124,34 @@ jobs:
       confidence-level: "HIGH" # High confidence to report
       fail-on-findings: true # explicitly set
 
+  # Determines if docker images must be built based on event type and changed paths
+  # If push or workflow_dispatch -> always run
+  # If PR or merge_group -> run only if files in specified paths changed
+  check_paths:
+    name: Check if docker build job should run
+    runs-on: ubuntu-latest
+    outputs:
+      run_build: ${{ steps.check_paths.outputs.run }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Check paths
+        id: check_paths
+        uses: open-edge-platform/geti-ci/actions/check-paths@375de2eb018dae396c959f9b3a464f40271de969
+        with:
+          files_yaml: |
+            test:
+              - application/**
+              - .github/**
+  
   # Docker image build job using reusable workflow
   docker-build:
-    if: github.event.pull_request.draft != true
+    name: Build and upload docker image
+    needs: check_paths
+    if: needs.check_paths.outputs.run_build == 'true' && github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-docker-build.yaml
     permissions:
       contents: read

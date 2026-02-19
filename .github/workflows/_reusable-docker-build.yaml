@@ -10,24 +10,21 @@
 # - Upload Image as artifact (for non-PR events)
 #
 # Process Stages:
-# 1. Check paths to determine if workflow should run (for PRs)
-# 2. Build Docker and upload as artifact
+# 1. Build Docker and upload as artifact
 #    - Build images for specified devices (cpu, xpu, gpu)
 #    - Run simple health checks on the built images
 #    - Upload document with size of images as artifact (for PRs)
 #    - Upload built images as artifacts (for non-PR events)
-# 3. Report image sizes as artifacts in PR comments
+# 2. Report image sizes as artifacts in PR comments
 #
 # Example Usage:
-# 1. Basic Build:
+# 1. Build docker images:
 #    jobs:
 #      build:
 #        uses: ./.github/workflows/_reusable-docker-build.yaml
-#
-# 2. Build with Verification:
-#    jobs:
-#      build:
-#        uses: ./.github/workflows/_reusable-docker-build.yaml
+#        permissions:
+#          contents: read
+#          pull-requests: write
 #
 
 name: Reusable Docker Image Build
@@ -43,42 +40,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Determines if workflow should execute based on event type and changed paths
-  # If push or workflow_dispatch -> always run
-  # If PR or merge_group -> run only if files in specified paths changed
-  check_paths:
-    name: Check if workflow should run
-    runs-on: ubuntu-latest
-    outputs:
-      run_workflow: ${{ steps.check_paths.outputs.run }}
-    steps:
-      - &checkout
-        name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - name: Check paths
-        id: check_paths
-        uses: open-edge-platform/geti-ci/actions/check-paths@375de2eb018dae396c959f9b3a464f40271de969
-        with:
-          files_yaml: |
-            test:
-              - application/**
-              - .github/**
-
   build:
     name: Build and upload docker image (${{ matrix.device }})
     runs-on: ubuntu-latest
-    needs: check_paths
-    if: needs.check_paths.outputs.run_workflow == 'true'
     strategy:
       matrix:
         device: [cpu, xpu, gpu]
     permissions:
       contents: read
     steps:
-      - *checkout
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Initial cleanup
         uses: open-edge-platform/geti-ci/actions/cleanup-runner@d30e32248aa6bd06adeda7129b50a38bdbceca12
@@ -281,23 +255,3 @@ jobs:
                 body: comment
               });
             }
-
-  required_check:
-    name: Required Check build
-    needs:
-      - check_paths
-      - build
-    runs-on: ubuntu-latest
-    env:
-      CHECKS: ${{ join(needs.*.result, ' ') }}
-    if: always() && !cancelled()
-    steps:
-      - name: Check jobs results
-        run: |
-          for check in ${CHECKS}; do
-            echo "::notice::check=${check}"
-            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
-              echo "::error::Required status checks failed. They must succeed before this pull request can be merged."
-              exit 1
-            fi
-          done
