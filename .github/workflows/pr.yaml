@@ -127,11 +127,11 @@ jobs:
   # Determines if docker images must be built based on event type and changed paths
   # If push or workflow_dispatch -> always run
   # If PR or merge_group -> run only if files in specified paths changed
-  check_paths:
+  check-paths:
     name: Check if docker build job should run
     runs-on: ubuntu-latest
     outputs:
-      run_build: ${{ steps.check_paths.outputs.run }}
+      run_build: ${{ steps.check-paths.outputs.run }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -139,7 +139,7 @@ jobs:
           persist-credentials: false
 
       - name: Check paths
-        id: check_paths
+        id: check-paths
         uses: open-edge-platform/geti-ci/actions/check-paths@375de2eb018dae396c959f9b3a464f40271de969
         with:
           files_yaml: |
@@ -150,8 +150,8 @@ jobs:
   # Docker image build job using reusable workflow
   docker-build:
     name: Build and upload docker image
-    needs: check_paths
-    if: needs.check_paths.outputs.run_build == 'true' && github.event.pull_request.draft != true
+    needs: check-paths
+    if: needs.check-paths.outputs.run_build == 'true' && github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-docker-build.yaml
     permissions:
       contents: read

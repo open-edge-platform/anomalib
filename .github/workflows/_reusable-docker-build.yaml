@@ -10,7 +10,7 @@
 # - Upload Image as artifact (for non-PR events)
 #
 # Process Stages:
-# 1. Build Docker and upload as artifact
+# 1. Build Docker images and upload as artifacts
 #    - Build images for specified devices (cpu, xpu, gpu)
 #    - Run simple health checks on the built images
 #    - Upload document with size of images as artifact (for PRs)
@@ -189,8 +189,6 @@ jobs:
           image: "anomalib-studio-${{ matrix.device }}:${{ steps.first-tag.outputs.tag }}"
           retention_days: "3"
         continue-on-error: true
-        env:
-          FIRST_TAG: ${{ steps.first-tag.outputs.tag }}
 
   comment-sizes:
     name: Comment PR with all image sizes
