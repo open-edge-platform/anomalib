@@ -215,6 +215,9 @@ def make_kaputt_dataset(
 
         query_df = pd.read_parquet(query_parquet)
 
+        # Map image_type to the parquet column name
+        query_image_col = f"query_{image_type}"  # "query_image" or "query_crop"
+
         # Process query images
         for _, row in query_df.iterrows():
             capture_id = row["capture_id"]
@@ -224,17 +227,15 @@ def make_kaputt_dataset(
             label = "abnormal" if is_defective else "normal"
             label_index = LabelName.ABNORMAL if is_defective else LabelName.NORMAL
 
-            # Build image path
-            image_path = (
-                root / f"query-{image_type}" / "data" / split_name / "query-data" / image_type / f"{capture_id}.jpg"
-            )
+            # Build image path from parquet relative path
+            # Parquet stores e.g. "data/train/query-data/image/<uuid>.jpg"
+            # On disk: root / "query-image" / "data/train/query-data/image/<uuid>.jpg"
+            image_path = root / f"query-{image_type}" / row[query_image_col]
 
             # Build mask path for defective images
             mask_path = ""
             if is_defective:
-                mask_path = str(
-                    root / "query-mask" / "data" / split_name / "query-data" / "mask" / f"{capture_id}.png",
-                )
+                mask_path = str(root / "query-mask" / row["query_mask"])
 
             # Convert split name back to anomalib format
             anomalib_split = "val" if split_name == "validation" else split_name
@@ -257,19 +258,13 @@ def make_kaputt_dataset(
             if ref_parquet.exists():
                 ref_df = pd.read_parquet(ref_parquet)
 
-                for _, row in ref_df.iterrows():
-                    capture_id = row["capture_id"]
+                # Map image_type to the parquet column name
+                ref_image_col = f"reference_{image_type}"  # "reference_image" or "reference_crop"
 
-                    # Reference images are always normal
-                    image_path = (
-                        root
-                        / f"reference-{image_type}"
-                        / "data"
-                        / split_name
-                        / "reference-data"
-                        / image_type
-                        / f"{capture_id}.jpg"
-                    )
+                for _, row in ref_df.iterrows():
+                    # Reference parquets use relative paths directly;
+                    # they have item_identifier (not capture_id) and no item_material
+                    image_path = root / f"reference-{image_type}" / row[ref_image_col]
 
                     anomalib_split = "val" if split_name == "validation" else split_name
 
@@ -279,9 +274,9 @@ def make_kaputt_dataset(
                         "image_path": str(image_path),
                         "mask_path": "",
                         "label_index": int(LabelName.NORMAL),
-                        "capture_id": capture_id,
+                        "capture_id": row.get("item_identifier", ""),
                         "defect_types": [],
-                        "item_material": row.get("item_material", ""),
+                        "item_material": "",
                     }
                     all_samples.append(sample)
 
