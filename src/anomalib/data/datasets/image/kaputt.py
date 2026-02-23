@@ -51,9 +51,6 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datasets.base import AnomalibDataset
 from anomalib.data.utils import LabelName, Split, validate_path
 
-# Image extensions used in Kaputt dataset
-IMG_EXTENSIONS = (".jpg", ".JPG", ".jpeg", ".JPEG", ".png", ".PNG")
-
 # Material categories in Kaputt dataset (based on item_material field)
 CATEGORIES = (
     "book_other",
@@ -150,12 +147,12 @@ def make_kaputt_dataset(
 ) -> DataFrame:
     """Create Kaputt samples by parsing the Parquet metadata files.
 
-    The Kaputt dataset uses Parquet files containing metadata about each image:
-        - capture_id: Unique identifier for the capture
-        - defect: Boolean indicating if the image has a defect
-        - major_defect: Boolean indicating if the defect is major
-        - defect_types: List of defect type strings
-        - item_material: Material category of the item
+    The Kaputt dataset uses Parquet files containing metadata about each image,
+    including relative paths to image, crop, and mask files. Query parquets
+    contain columns such as ``capture_id``, ``defect``, ``item_material``,
+    ``query_image``, ``query_crop``, and ``query_mask``. Reference parquets
+    contain ``item_identifier``, ``reference_image``, ``reference_crop``, and
+    ``reference_mask``.
 
     Args:
         root (Path | str): Path to dataset root directory.
@@ -190,107 +187,79 @@ def make_kaputt_dataset(
     """
     root = validate_path(root)
 
-    # Define split mappings
-    split_map = {
-        Split.TRAIN: "train",
-        Split.VAL: "validation",
-        Split.TEST: "test",
-        "train": "train",
-        "val": "validation",
-        "validation": "validation",
-        "test": "test",
-    }
+    # Parquet files use "validation" while anomalib uses "val"
+    parquet_splits = {"train": "train", "validation": "val", "test": "test"}
 
-    # Determine which splits to load
-    splits_to_load = [split_map.get(split, str(split))] if split is not None else ["train", "validation", "test"]
+    frames: list[DataFrame] = []
 
-    all_samples = []
-
-    for split_name in splits_to_load:
-        # Load query parquet file
-        query_parquet = root / "datasets" / f"query-{split_name}.parquet"
+    for parquet_name, anomalib_name in parquet_splits.items():
+        # --- Query samples ---
+        query_parquet = root / "datasets" / f"query-{parquet_name}.parquet"
         if not query_parquet.exists():
             msg = f"Query parquet file not found: {query_parquet}"
             raise FileNotFoundError(msg)
 
         query_df = pd.read_parquet(query_parquet)
 
-        # Map image_type to the parquet column name
-        query_image_col = f"query_{image_type}"  # "query_image" or "query_crop"
+        # Build image paths: root / "query-{image_type}" / <relative path from parquet>
+        image_col = f"query_{image_type}"  # "query_image" or "query_crop"
+        root_prefix = str(root / f"query-{image_type}") + "/"
+        mask_prefix = str(root / "query-mask") + "/"
 
-        # Process query images
-        for _, row in query_df.iterrows():
-            capture_id = row["capture_id"]
+        samples = DataFrame()
+        samples["image_path"] = root_prefix + query_df[image_col]
+        samples["capture_id"] = query_df["capture_id"]
+        samples["item_material"] = query_df["item_material"].fillna("")
+        samples["defect_types"] = query_df["defect_types"].fillna("")
+        samples["split"] = anomalib_name
 
-            # Determine if defective
-            is_defective = row.get("defect", False)
-            label = "abnormal" if is_defective else "normal"
-            label_index = LabelName.ABNORMAL if is_defective else LabelName.NORMAL
+        # Label assignment
+        samples.loc[query_df["defect"] == False, "label_index"] = LabelName.NORMAL  # noqa: E712
+        samples.loc[query_df["defect"] != False, "label_index"] = LabelName.ABNORMAL  # noqa: E712
+        samples["label_index"] = samples["label_index"].astype(int)
+        samples.loc[samples["label_index"] == LabelName.NORMAL, "label"] = "normal"
+        samples.loc[samples["label_index"] == LabelName.ABNORMAL, "label"] = "abnormal"
 
-            # Build image path from parquet relative path
-            # Parquet stores e.g. "data/train/query-data/image/<uuid>.jpg"
-            # On disk: root / "query-image" / "data/train/query-data/image/<uuid>.jpg"
-            image_path = root / f"query-{image_type}" / row[query_image_col]
+        # Mask paths: only for defective images
+        samples["mask_path"] = ""
+        samples.loc[
+            samples["label_index"] == LabelName.ABNORMAL,
+            "mask_path",
+        ] = mask_prefix + query_df.loc[query_df["defect"] != False, "query_mask"]  # noqa: E712
 
-            # Build mask path for defective images
-            mask_path = ""
-            if is_defective:
-                mask_path = str(root / "query-mask" / row["query_mask"])
+        frames.append(samples)
 
-            # Convert split name back to anomalib format
-            anomalib_split = "val" if split_name == "validation" else split_name
-
-            sample = {
-                "split": anomalib_split,
-                "label": label,
-                "image_path": str(image_path),
-                "mask_path": mask_path,
-                "label_index": int(label_index),
-                "capture_id": capture_id,
-                "defect_types": row.get("defect_types", []),
-                "item_material": row.get("item_material", ""),
-            }
-            all_samples.append(sample)
-
-        # Optionally load reference images (always normal)
+        # --- Reference samples (always normal) ---
         if use_reference:
-            ref_parquet = root / "datasets" / f"reference-{split_name}.parquet"
+            ref_parquet = root / "datasets" / f"reference-{parquet_name}.parquet"
             if ref_parquet.exists():
                 ref_df = pd.read_parquet(ref_parquet)
+                ref_image_col = f"reference_{image_type}"
+                ref_prefix = str(root / f"reference-{image_type}") + "/"
 
-                # Map image_type to the parquet column name
-                ref_image_col = f"reference_{image_type}"  # "reference_image" or "reference_crop"
+                ref_samples = DataFrame()
+                ref_samples["image_path"] = ref_prefix + ref_df[ref_image_col]
+                ref_samples["capture_id"] = ref_df["item_identifier"]
+                ref_samples["item_material"] = ""
+                ref_samples["defect_types"] = ""
+                ref_samples["split"] = anomalib_name
+                ref_samples["label"] = "normal"
+                ref_samples["label_index"] = int(LabelName.NORMAL)
+                ref_samples["mask_path"] = ""
 
-                for _, row in ref_df.iterrows():
-                    # Reference parquets use relative paths directly;
-                    # they have item_identifier (not capture_id) and no item_material
-                    image_path = root / f"reference-{image_type}" / row[ref_image_col]
+                frames.append(ref_samples)
 
-                    anomalib_split = "val" if split_name == "validation" else split_name
-
-                    sample = {
-                        "split": anomalib_split,
-                        "label": "normal",
-                        "image_path": str(image_path),
-                        "mask_path": "",
-                        "label_index": int(LabelName.NORMAL),
-                        "capture_id": row.get("item_identifier", ""),
-                        "defect_types": [],
-                        "item_material": "",
-                    }
-                    all_samples.append(sample)
-
-    if not all_samples:
+    if not frames:
         msg = f"Found 0 images in {root}"
         raise RuntimeError(msg)
 
-    samples = pd.DataFrame(all_samples)
+    samples = pd.concat(frames, ignore_index=True)
+    samples = samples.sort_values(by="image_path", ignore_index=True)
 
-    # Sort by image path for consistency
-    samples = samples.sort_values(by="image_path", ignore_index=True).reset_index(drop=True)
+    # infer the task type
+    samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
 
-    # Infer the task type - if any masks exist, it's segmentation
-    has_masks = (samples["mask_path"] != "").any()
-    samples.attrs["task"] = "segmentation" if has_masks else "classification"
+    if split:
+        samples = samples[samples.split == split].reset_index(drop=True)
 
     return samples

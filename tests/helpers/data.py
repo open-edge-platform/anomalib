@@ -13,6 +13,7 @@ from tempfile import mkdtemp
 
 import cv2
 import numpy as np
+import pandas as pd
 from scipy.io import savemat
 from skimage import img_as_ubyte
 from skimage.io import imsave
@@ -689,14 +690,19 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
     def _generate_dummy_kaputt_dataset(self) -> None:
         """Generate dummy Kaputt dataset with Parquet metadata files.
 
-        The Kaputt dataset structure:
-        - datasets/ folder contains parquet metadata files
-        - query-image/data/<split>/query-data/image/ contains query images
-        - query-mask/data/<split>/query-data/mask/ contains masks for defective images
-        - reference-image/data/<split>/reference-data/image/ contains reference images
+        The Kaputt dataset structure matches the real Kaputt parquet schema:
+        - Query parquets have columns: capture_id, item_material, item_identifier,
+          defect, major_defect, defect_types, query_image, query_crop, query_mask
+        - Reference parquets have columns: item_identifier, reference_image,
+          reference_crop, reference_mask
+        - Image/crop/mask directories:
+            query-image/data/<split>/query-data/image/
+            query-crop/data/<split>/query-data/crop/
+            query-mask/data/<split>/query-data/mask/
+            reference-image/data/<split>/reference-data/image/
+            reference-crop/data/<split>/reference-data/crop/
+            reference-mask/data/<split>/reference-data/mask/
         """
-        import pandas as pd
-
         # Splits to generate
         splits = ["train", "validation", "test"]
 
@@ -707,70 +713,109 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
             # Generate normal query images
             for i in range(self.num_train if split == "train" else self.num_test):
                 capture_id = f"normal_{split}_{i:03d}"
+                item_identifier = f"item_{split}_{i:03d}"
 
-                # Create image path
-                image_dir = self.dataset_root / "query-image" / "data" / split / "query-data" / "image"
-                image_path = image_dir / f"{capture_id}.jpg"
+                # Relative paths as stored in real parquets
+                rel_image = f"data/{split}/query-data/image/{capture_id}.jpg"
+                rel_crop = f"data/{split}/query-data/crop/{capture_id}.jpg"
+                rel_mask = f"data/{split}/query-data/mask/{capture_id}.png"
 
-                # Generate and save normal image
+                # Create full-size image
+                image_path = self.dataset_root / "query-image" / rel_image
                 self.image_generator.generate_image(
                     label=LabelName.NORMAL,
                     image_filename=image_path,
                 )
 
+                # Create crop image (same content for dummy)
+                crop_path = self.dataset_root / "query-crop" / rel_crop
+                self.image_generator.generate_image(
+                    label=LabelName.NORMAL,
+                    image_filename=crop_path,
+                )
+
                 query_samples.append({
                     "capture_id": capture_id,
+                    "item_material": "cardboard",
+                    "item_identifier": item_identifier,
                     "defect": False,
                     "major_defect": False,
-                    "defect_types": [],
-                    "item_material": "cardboard",
+                    "defect_types": "",
+                    "query_image": rel_image,
+                    "query_crop": rel_crop,
+                    "query_mask": rel_mask,
                 })
 
             # Generate abnormal query images (only for validation and test)
             if split in {"validation", "test"}:
                 for i in range(self.num_test):
                     capture_id = f"abnormal_{split}_{i:03d}"
+                    item_identifier = f"item_abn_{split}_{i:03d}"
 
-                    # Create image path
-                    image_dir = self.dataset_root / "query-image" / "data" / split / "query-data" / "image"
-                    image_path = image_dir / f"{capture_id}.jpg"
+                    # Relative paths as stored in real parquets
+                    rel_image = f"data/{split}/query-data/image/{capture_id}.jpg"
+                    rel_crop = f"data/{split}/query-data/crop/{capture_id}.jpg"
+                    rel_mask = f"data/{split}/query-data/mask/{capture_id}.png"
 
-                    # Create mask path
-                    mask_dir = self.dataset_root / "query-mask" / "data" / split / "query-data" / "mask"
-                    mask_path = mask_dir / f"{capture_id}.png"
-
-                    # Generate and save abnormal image with mask
+                    # Create full-size image
+                    image_path = self.dataset_root / "query-image" / rel_image
+                    mask_path = self.dataset_root / "query-mask" / rel_mask
                     self.image_generator.generate_image(
                         label=LabelName.ABNORMAL,
                         image_filename=image_path,
                         mask_filename=mask_path,
                     )
 
+                    # Create crop image
+                    crop_path = self.dataset_root / "query-crop" / rel_crop
+                    crop_mask_path = self.dataset_root / "query-mask" / rel_mask
+                    self.image_generator.generate_image(
+                        label=LabelName.ABNORMAL,
+                        image_filename=crop_path,
+                        mask_filename=crop_mask_path,
+                    )
+
                     query_samples.append({
                         "capture_id": capture_id,
+                        "item_material": "plastic",
+                        "item_identifier": item_identifier,
                         "defect": True,
                         "major_defect": True,
-                        "defect_types": ["damage"],
-                        "item_material": "plastic",
+                        "defect_types": "damage",
+                        "query_image": rel_image,
+                        "query_crop": rel_crop,
+                        "query_mask": rel_mask,
                     })
 
             # Generate reference images (always normal)
             for i in range(self.num_train if split == "train" else self.num_test):
-                capture_id = f"ref_{split}_{i:03d}"
+                ref_id = f"ref_{split}_{i:03d}"
+                item_identifier = f"item_{split}_{i:03d}"
 
-                # Create image path
-                image_dir = self.dataset_root / "reference-image" / "data" / split / "reference-data" / "image"
-                image_path = image_dir / f"{capture_id}.jpg"
+                # Relative paths as stored in real parquets
+                rel_image = f"data/{split}/reference-data/image/{ref_id}.jpg"
+                rel_crop = f"data/{split}/reference-data/crop/{ref_id}.jpg"
+                rel_mask = f"data/{split}/reference-data/mask/{ref_id}.png"
 
-                # Generate and save reference image
+                # Create full-size image
+                image_path = self.dataset_root / "reference-image" / rel_image
                 self.image_generator.generate_image(
                     label=LabelName.NORMAL,
                     image_filename=image_path,
                 )
 
+                # Create crop image
+                crop_path = self.dataset_root / "reference-crop" / rel_crop
+                self.image_generator.generate_image(
+                    label=LabelName.NORMAL,
+                    image_filename=crop_path,
+                )
+
                 reference_samples.append({
-                    "capture_id": capture_id,
-                    "item_material": "cardboard",
+                    "item_identifier": item_identifier,
+                    "reference_image": rel_image,
+                    "reference_crop": rel_crop,
+                    "reference_mask": rel_mask,
                 })
 
             # Create parquet files
