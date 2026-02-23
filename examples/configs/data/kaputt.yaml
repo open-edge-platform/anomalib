@@ -4,10 +4,10 @@ init_args:
   train_batch_size: 32
   eval_batch_size: 32
   num_workers: 8
-  image_type: image  # "image" for full images, "crop" for cropped regions
-  use_reference: false  # Whether to include reference (defect-free) images
+  image_type: image # "image" for full images, "crop" for cropped regions
+  use_reference: false # Whether to include reference (defect-free) images
   test_split_mode: from_dir
   test_split_ratio: 0.2
-  val_split_mode: from_dir  # Kaputt has native validation split
+  val_split_mode: from_dir # Kaputt has native validation split
   val_split_ratio: 0.5
   seed: null
