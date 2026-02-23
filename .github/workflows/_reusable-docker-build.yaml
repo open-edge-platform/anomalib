@@ -173,23 +173,6 @@ jobs:
           path: application/docker/image-sizes/${{ matrix.device }}.md
           retention-days: 1
 
-      - name: Extract first tag
-        id: first-tag
-        run: |
-          FIRST_TAG=$(echo "$TAGS" | awk 'NR==1 {print $1}')
-          echo "tag=${FIRST_TAG}" >> $GITHUB_OUTPUT
-        env:
-          TAGS: ${{ steps.meta.outputs.tags }}
-
-      - name: Upload image as artifact
-        # Image upload is heavy and slow, so we skip it on PRs
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-        uses: ishworkh/container-image-artifact-upload@5d71a2417f0576fa11fe770fb04ece58c4587714
-        with:
-          image: "anomalib-studio-${{ matrix.device }}:${{ steps.first-tag.outputs.tag }}"
-          retention_days: "3"
-        continue-on-error: true
-
   comment-sizes:
     name: Comment PR with all image sizes
     needs: build
