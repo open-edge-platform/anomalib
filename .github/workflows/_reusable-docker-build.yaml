@@ -7,14 +7,12 @@
 # - Docker image building
 # - Image verification
 # - Image size reporting
-# - Upload Image as artifact (for non-PR events)
 #
 # Process Stages:
-# 1. Build Docker images and upload as artifacts
+# 1. Build Docker images
 #    - Build images for specified devices (cpu, xpu, gpu)
 #    - Run simple health checks on the built images
 #    - Upload document with size of images as artifact (for PRs)
-#    - Upload built images as artifacts (for non-PR events)
 # 2. Report image sizes as artifacts in PR comments
 #
 # Example Usage:
@@ -41,7 +39,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build and upload docker image (${{ matrix.device }})
+    name: Build and upload docker image size (${{ matrix.device }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -215,8 +213,8 @@ jobs:
               issue_number: context.issue.number,
             });
 
-            const existingComment = comments.data.find(comment =>
-              comment.body.includes('## Docker Image Sizes')
+            const existingComment = comments.data.find(commentItem =>
+              commentItem.body.includes('## Docker Image Sizes')
             );
 
             if (existingComment) {
