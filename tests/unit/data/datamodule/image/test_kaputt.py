@@ -9,7 +9,7 @@ import pytest
 from torchvision.transforms.v2 import Resize
 
 from anomalib.data import Kaputt
-from anomalib.data.datasets.image.kaputt import KaputtDataset, make_kaputt_dataset
+from anomalib.data.datasets.image.kaputt import make_kaputt_dataset
 from anomalib.data.utils import LabelName, Split, ValSplitMode
 from tests.unit.data.datamodule.base.image import _TestAnomalibImageDatamodule
 
