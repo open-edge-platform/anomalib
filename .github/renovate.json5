@@ -153,8 +153,7 @@
     {
       enabled: false,
       matchDatasources: ["github-releases"],
-      matchDepNames: ["astral-sh/setup-uv"],
-      matchDepTypes: ["uses-with"],
+      matchDepNames: ["astral-sh/uv"],
     },
 
     // Python version used in GitHub Actions is updated manually

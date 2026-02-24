@@ -30,6 +30,7 @@ from .bmad import BMADDataset
 from .btech import BTechDataset
 from .datumaro import DatumaroDataset
 from .folder import FolderDataset
+from .kaputt import KaputtDataset
 from .kolektor import KolektorDataset
 from .mpdd import MPDDDataset
 from .mvtec_loco import MVTecLOCODataset
@@ -45,6 +46,7 @@ __all__ = [
     "BTechDataset",
     "DatumaroDataset",
     "FolderDataset",
+    "KaputtDataset",
     "KolektorDataset",
     "MPDDDataset",
     "MVTecDataset",

@@ -11,7 +11,6 @@ import psutil
 import torch
 from cv2_enumerate_cameras import enumerate_cameras
 from loguru import logger
-from openvino.properties.device import Type as OVDeviceType
 
 from pydantic_models.system import CameraInfo, DeviceInfo, DeviceType, LibraryVersions, SystemInfo
 from settings import get_settings
@@ -75,7 +74,7 @@ class SystemService:
                         index=None,
                     ),
                 )
-            elif core.get_property(device, "DEVICE_TYPE") in {OVDeviceType.DISCRETE, OVDeviceType.INTEGRATED}:
+            elif device.lower().startswith("gpu"):
                 is_intel_device = "intel" in ov_name.lower()
                 # OV does not support cuda
                 if not is_intel_device:

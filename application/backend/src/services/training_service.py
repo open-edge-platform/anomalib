@@ -4,12 +4,13 @@ import asyncio
 import os
 import pathlib
 from contextlib import redirect_stdout
+from typing import Any
 from uuid import UUID
 
 from anomalib.data import Folder
 from anomalib.data.utils import ValSplitMode
 from anomalib.deploy import ExportType
-from anomalib.engine import Engine
+from anomalib.engine import Engine, XPUAccelerator
 from anomalib.engine.strategy.xpu_single import SingleXPUStrategy
 from anomalib.loggers import AnomalibTensorBoardLogger
 from anomalib.metrics import AUROC, F1Score
@@ -17,8 +18,10 @@ from anomalib.metrics.evaluator import Evaluator
 from anomalib.models import get_model
 from lightning.pytorch.callbacks import EarlyStopping
 from loguru import logger
+from pydantic import ValidationError
 
 from pydantic_models import Job, JobStatus, JobType, Model
+from pydantic_models.job import TrainJobPayload
 from repositories.binary_repo import ModelBinaryRepository
 from services import ModelService
 from services.dataset_snapshot_service import DatasetSnapshotService
@@ -61,17 +64,23 @@ class TrainingService:
             return await cls._run_training_job(job, job_service)
 
     @classmethod
-    async def _run_training_job(cls, job: Job, job_service: JobService) -> Model | None:
+    async def _run_training_job(cls, job: Job, job_service: JobService) -> Model | None:  # noqa: PLR0915
         # Mark job as running
         await job_service.update_job_status(job_id=job.id, status=JobStatus.RUNNING, message="Training started")
         project_id = job.project_id
-        model_name = job.payload.get("model_name")
-        device = job.payload.get("device")
-        snapshot_id = UUID(snapshot_id_str) if (snapshot_id_str := job.payload.get("dataset_snapshot_id")) else None
-        # UI can return None
-        max_epochs: int = payload_epochs if (payload_epochs := job.payload.get("max_epochs")) is not None else 200
-        if model_name is None:
-            raise ValueError(f"Job {job.id} payload must contain 'model_name'")
+        try:
+            payload = TrainJobPayload.model_validate({**job.payload, "project_id": str(project_id)})
+        except ValidationError as e:
+            logger.error(f"Failed to validate training job payload: {e}")
+            await job_service.update_job_status(
+                job_id=job.id, status=JobStatus.FAILED, message=f"Failed to validate training job payload: {e}"
+            )
+            return None
+        model_name = payload.model_name
+        device_type = payload.device.type if payload.device else None
+        device_index = payload.device.index if payload.device else None
+        snapshot_id = UUID(payload.dataset_snapshot_id) if payload.dataset_snapshot_id else None
+        max_epochs: int = payload.max_epochs if payload.max_epochs is not None else 200
 
         synchronization_task: asyncio.Task[None] | None = None
         model: Model | None = None  # Initialize model to None
@@ -108,7 +117,8 @@ class TrainingService:
                 trained_model = await asyncio.to_thread(
                     cls._train_model,
                     model=model,
-                    device=device,
+                    device_type=device_type,
+                    device_index=device_index,
                     synchronization_parameters=synchronization_parameters,
                     max_epochs=max_epochs,
                     dataset_root=dataset_root,
@@ -166,7 +176,8 @@ class TrainingService:
         synchronization_parameters: ProgressSyncParams,
         dataset_root: str,
         max_epochs: int,
-        device: str | None = None,
+        device_type: str | None = None,
+        device_index: int | None = None,
     ) -> Model | None:
         """Execute CPU-intensive model training using anomalib.
 
@@ -178,7 +189,8 @@ class TrainingService:
             model: Model object with training configuration
             synchronization_parameters: Parameters for synchronization between the main process and the training process
             dataset_root: Path to the temporary folder containing the extracted dataset
-            device: Device to train on
+            device_type: Device type, e.g. 'cpu', 'xpu', 'cuda'
+            device_index: Device index, e.g. 0, 1 (None for CPU/MPS/NPU)
 
         Returns:
             Model: Trained model with updated export_path and is_ready=True
@@ -186,15 +198,15 @@ class TrainingService:
         from core.logging import global_log_config  # noqa: PLC0415
         from core.logging.handlers import LoggerStdoutWriter  # noqa: PLC0415
 
-        device = device.lower() if device else None  # anomalib expects lowercase device strings
-        if device and not SystemService.is_device_supported_for_training(device):
+        device_type = device_type.lower() if device_type else None  # anomalib expects lowercase device strings
+        if device_type and not SystemService.is_device_supported_for_training(device_type):
             raise ValueError(
-                f"Device '{device}' is not supported for training. "
-                f"Supported devices: {', '.join([device.type for device in SystemService.get_training_devices()])}",
+                f"Device type '{device_type}' is not supported for training. "
+                f"Supported devices: {', '.join([d.type for d in SystemService.get_training_devices()])}",
             )
 
-        training_device = device or "auto"
-        logger.info(f"Training on device: {training_device}")
+        training_device = device_type or "auto"
+        logger.info(f"Training on device: {training_device}, device_index: {device_index}")
 
         model_binary_repo = ModelBinaryRepository(project_id=model.project_id, model_id=model.id)
         model.export_path = model_binary_repo.model_folder_path
@@ -225,19 +237,22 @@ class TrainingService:
         )
 
         tensorboard = AnomalibTensorBoardLogger(save_dir=global_log_config.tensorboard_log_path, name=name)
-        kwargs = {}
+        kwargs: dict[str, Any] = {}
         if training_device == "xpu":
             kwargs["strategy"] = SingleXPUStrategy()
+            kwargs["accelerator"] = XPUAccelerator()
+        else:
+            kwargs["accelerator"] = training_device
+
         engine = Engine(
             default_root_dir=model.export_path,
             logger=[tensorboard],
-            devices=[0],  # Only single GPU training is supported for now
+            devices=[device_index] if device_index is not None else 1,  # Single GPU training for now
             max_epochs=max_epochs,
             callbacks=[
                 AnomalibStudioProgressCallback(synchronization_parameters),
                 EarlyStopping(monitor="pixel_AUROC", mode="max", patience=5),
             ],
-            accelerator=training_device,
             **kwargs,
         )
 

@@ -1,0 +1,31 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "anomalib-studio",
+  "version": "0.1.0",
+  "identifier": "com.anomalib.studio",
+  "build": {
+    "frontendDist": "../../../ui/dist",
+    "devUrl": "http://localhost:3000",
+    "beforeDevCommand": "cd ../../ui && npm run start",
+    "beforeBuildCommand": "cd ../../ui && npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Anomalib Studio",
+        "width": 800,
+        "height": 600,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' http://localhost:3000 ws://localhost:3000; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": ["icons/icon.ico", "icons/icon.png"]
+  }
+}

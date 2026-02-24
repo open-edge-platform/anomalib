@@ -138,7 +138,7 @@ class JobService:
         cached_still_running = True
         loop = asyncio.get_running_loop()
 
-        async with await anyio.open_file(log_file) as f:
+        async with await anyio.open_file(log_file, encoding="utf-8") as f:
             while True:
                 line = await f.readline()
                 now = loop.time()

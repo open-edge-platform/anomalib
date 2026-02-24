@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Implements custom trainer for Anomalib.
@@ -44,7 +44,7 @@ from anomalib.callbacks.timer import TimerCallback
 from anomalib.data import AnomalibDataModule, AnomalibDataset, PredictDataset
 from anomalib.deploy import CompressionType, ExportType
 from anomalib.models import AnomalibModule
-from anomalib.utils.path import create_versioned_dir
+from anomalib.utils.path import create_versioned_dir, resolve_versioned_path
 
 logger = logging.getLogger(__name__)
 
@@ -291,7 +291,9 @@ class Engine:
         # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
         # 2. Update the default root directory
         root_dir = Path(self._cache.args["default_root_dir"]) / model.name / dataset_name / category
-        self._cache.args["default_root_dir"] = create_versioned_dir(root_dir) if versioned_dir else root_dir / "latest"
+        self._cache.args["default_root_dir"] = (
+            create_versioned_dir(root_dir) if versioned_dir else resolve_versioned_path(root_dir / "latest")
+        )
 
     def _setup_trainer(self, model: AnomalibModule) -> None:
         """Instantiate the trainer based on the model parameters."""
