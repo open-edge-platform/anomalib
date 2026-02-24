@@ -18,6 +18,7 @@ from anomalib.metrics.evaluator import Evaluator
 from anomalib.models import get_model
 from lightning.pytorch.callbacks import EarlyStopping
 from loguru import logger
+from pydantic import ValidationError
 
 from pydantic_models import Job, JobStatus, JobType, Model
 from pydantic_models.job import TrainJobPayload
@@ -63,11 +64,18 @@ class TrainingService:
             return await cls._run_training_job(job, job_service)
 
     @classmethod
-    async def _run_training_job(cls, job: Job, job_service: JobService) -> Model | None:
+    async def _run_training_job(cls, job: Job, job_service: JobService) -> Model | None:  # noqa: PLR0915
         # Mark job as running
         await job_service.update_job_status(job_id=job.id, status=JobStatus.RUNNING, message="Training started")
         project_id = job.project_id
-        payload = TrainJobPayload.model_validate({**job.payload, "project_id": str(project_id)})
+        try:
+            payload = TrainJobPayload.model_validate({**job.payload, "project_id": str(project_id)})
+        except ValidationError as e:
+            logger.error(f"Failed to validate training job payload: {e}")
+            await job_service.update_job_status(
+                job_id=job.id, status=JobStatus.FAILED, message=f"Failed to validate training job payload: {e}"
+            )
+            return None
         model_name = payload.model_name
         device_type = payload.device.type if payload.device else None
         device_index = payload.device.index if payload.device else None

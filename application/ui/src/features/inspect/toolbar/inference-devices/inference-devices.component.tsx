@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { $api } from '@anomalib-studio/api';
 import { useProjectIdentifier } from '@anomalib-studio/hooks';
@@ -44,6 +44,13 @@ export const InferenceDevices = () => {
     const derivedKey = findMatchingKey(pipeline.inference_device, options);
     const selectedKey = optimisticKey ?? derivedKey;
 
+    // Clear optimistic override only once pipeline data reflects it (avoids flicker before refetch)
+    useEffect(() => {
+        if (optimisticKey !== null && derivedKey === optimisticKey) {
+            setOptimisticKey(null);
+        }
+    }, [optimisticKey, derivedKey]);
+
     const updatePipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
         meta: {
             invalidates: [
@@ -51,13 +58,10 @@ export const InferenceDevices = () => {
             ],
         },
         onError: (error) => {
+            setOptimisticKey(null);
             if (error) {
                 toast({ type: 'error', message: String(error.detail) });
             }
-        },
-        onSettled: () => {
-            // Clear optimistic override once the mutation settles (success or error)
-            setOptimisticKey(null);
         },
     });
 
