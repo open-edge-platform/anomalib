@@ -38,7 +38,7 @@
         "@tauri-apps/plugin-fs": "^2",
         "clsx": "^2.1.1",
         "comlink": "^4.4.2",
-        "lodash-es": "^4.17.21",
+        "lodash-es": "^4.17.23",
         "motion": "^12.23.24",
         "nuqs": "^2.8.1",
         "openapi-fetch": "^0.14.0",
