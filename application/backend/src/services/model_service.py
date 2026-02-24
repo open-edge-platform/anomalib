@@ -35,7 +35,7 @@ from services.dataset_snapshot_service import DatasetSnapshotService
 from services.exceptions import DeviceNotFoundError, ResourceType
 from services.system_service import SystemService
 
-DEFAULT_DEVICE = "AUTO"
+DEFAULT_DEVICE = "CPU"
 
 
 @dataclass
@@ -46,7 +46,9 @@ class LoadedModel:
     device: str | None = None
 
     def __post_init__(self):
-        self.device = self.device or DEFAULT_DEVICE
+        if not self.device:
+            logger.warning(f"No inference device set for model '{self.name}'; falling back to {DEFAULT_DEVICE}")
+            self.device = DEFAULT_DEVICE
 
 
 class ModelService:

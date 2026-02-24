@@ -30,6 +30,7 @@ class ProjectRepository(BaseRepository):
         project_schema: ProjectDB = self.to_schema(project)
         project_schema.pipeline = PipelineDB(
             project_id=project_schema.id,
+            inference_device="CPU",
         )
         self.db.add(project_schema)
         await self.db.commit()
