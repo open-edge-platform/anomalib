@@ -42,14 +42,18 @@ Dataset URL:
     https://www.kaputt-dataset.com/
 """
 
+import logging
 from pathlib import Path
 
 import pandas as pd
+from lightning_utilities.core.imports import module_available
 from pandas import DataFrame
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datasets.base import AnomalibDataset
 from anomalib.data.utils import LabelName, Split, validate_path
+
+logger = logging.getLogger(__name__)
 
 # Material categories in Kaputt dataset (based on item_material field)
 CATEGORIES = (
@@ -192,6 +196,13 @@ def make_kaputt_dataset(
 
     frames: list[DataFrame] = []
 
+    if not module_available("pyarrow"):
+        msg = (
+            "pyarrow is needed to read the parquet files. You can install it using: `uv pip install pyarrow`"
+            "or `uv pip install anomalib[datasets]`"
+        )
+        raise ImportError(msg)
+
     for parquet_name, anomalib_name in parquet_splits.items():
         # --- Query samples ---
         query_parquet = root / "datasets" / f"query-{parquet_name}.parquet"
@@ -248,6 +259,9 @@ def make_kaputt_dataset(
                 ref_samples["mask_path"] = ""
 
                 frames.append(ref_samples)
+            else:
+                msg = f"Reference parquet file not found: {ref_parquet}"
+                logger.warning(msg)
 
     if not frames:
         msg = f"Found 0 images in {root}"

@@ -56,6 +56,7 @@ Reference:
 
 import logging
 from pathlib import Path
+from typing import Literal
 
 from torchvision.transforms.v2 import Transform
 
@@ -141,7 +142,7 @@ class Kaputt(AnomalibDataModule):
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
         num_workers: int = 8,
-        image_type: str = "image",
+        image_type: Literal["image", "crop"] = "image",
         use_reference: bool = False,
         train_augmentations: Transform | None = None,
         val_augmentations: Transform | None = None,
