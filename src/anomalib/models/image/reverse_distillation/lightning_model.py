@@ -70,7 +70,13 @@ class ReverseDistillation(AnomalibModule):
             Defaults to ``True``.
         pre_processor (PreProcessor, optional): Pre-processor for the model.
             This is used to pre-process the input data before it is passed to the model.
-            Defaults to ``None``.
+            Defaults to ``True``.
+        post_processor (PostProcessor | bool, optional): Post-processor instance
+            or flag to use default. Defaults to ``True``.
+        evaluator (Evaluator | bool, optional): Evaluator instance or flag to use
+            default. Defaults to ``True``.
+        visualizer (Visualizer | bool, optional): Visualizer instance or flag to
+            use default. Defaults to ``True``.
     """
 
     def __init__(
