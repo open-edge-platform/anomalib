@@ -38,7 +38,7 @@ repos:
 
   # Dockerfile linting
   - repo: https://github.com/AleksaC/hadolint-py
-    rev: v2.12.0.2
+    rev: v2.14.0
     hooks:
       - id: hadolint
         files: Dockerfile$

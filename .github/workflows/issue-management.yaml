@@ -43,6 +43,8 @@ on:
     - cron: "0 5 * * *"
   workflow_dispatch:
 
+permissions: {} # No permissions by default on workflow level
+
 jobs:
   triage:
     if: github.event_name == 'issues'

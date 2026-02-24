@@ -210,6 +210,38 @@ post_processor = CustomPostProcessor()
 model = Padim(post_processor=post_processor)
 ```
 
+## MEBin Post-processor
+
+Anomalib also provides the `MEBinPostProcessor`, which uses the **MEBin (Main Element
+Binarization)** algorithm from [AnomalyNCD](https://arxiv.org/abs/2410.14379). Unlike the default `PostProcessor` which applies a single global
+threshold, MEBin computes a **per-image adaptive threshold** based on
+connected-component stability analysis.
+
+```python
+from anomalib.models import Patchcore
+from anomalib.post_processing import MEBinPostProcessor
+
+post_processor = MEBinPostProcessor(
+    sample_rate=4,         # threshold sweep step size
+    min_interval_len=4,    # minimum stable interval length
+    erode=True,            # apply erosion to suppress noise
+    kernel_size=6,         # erosion kernel size
+)
+model = Patchcore(post_processor=post_processor)
+```
+
+The MEBin post-processor inherits all normalization and metric-tracking from the base
+`PostProcessor`. The key difference is that `pred_mask` is computed using per-image
+MEBin thresholds instead of the global F1-adaptive threshold. Image-level predictions
+(`pred_label`) still use the global threshold.
+
+```{note}
+MEBin is an *alternative* post-processor designed for precision-oriented use cases
+(e.g., anomaly class discovery).  It intentionally suppresses false positives at the
+cost of recall, so pixel-level F1 will typically be lower than the default
+post-processor.  Use it when downstream tasks benefit from high-confidence masks.
+```
+
 ## Best Practices
 
 **Validation**:

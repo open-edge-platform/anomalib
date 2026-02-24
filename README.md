@@ -97,11 +97,11 @@ To ensure compatibility with your hardware, you can specify a backend during ins
 # CPU support (default, works on all platforms)
 uv pip install "anomalib[cpu]"
 
+# CUDA 12.6 support (Linux/Windows with NVIDIA GPU)
+uv pip install "anomalib[cu126]"
+
 # CUDA 12.4 support (Linux/Windows with NVIDIA GPU)
 uv pip install "anomalib[cu124]"
-
-# CUDA 12.1 support (Linux/Windows with NVIDIA GPU)
-uv pip install "anomalib[cu121]"
 
 # CUDA 11.8 support (Linux/Windows with NVIDIA GPU)
 uv pip install "anomalib[cu118]"
