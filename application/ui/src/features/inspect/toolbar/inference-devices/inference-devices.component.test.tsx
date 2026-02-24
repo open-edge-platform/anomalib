@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getMockedPipeline } from 'mocks/mock-pipeline';
+import { HttpResponse } from 'msw';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { SchemaPipeline } from 'src/api/openapi-spec';
 import { http } from 'src/api/utils';
@@ -127,8 +128,8 @@ describe('InferenceDevices', () => {
 
         it('shows error toast on mutation failure', async () => {
             server.use(
-                http.patch('/api/projects/{project_id}/pipeline', ({ response }) =>
-                    response(500).json({ detail: 'Internal server error' })
+                http.patch('/api/projects/{project_id}/pipeline', () =>
+                    HttpResponse.json({ detail: 'Internal server error' } as Record<string, unknown>, { status: 500 })
                 )
             );
 
