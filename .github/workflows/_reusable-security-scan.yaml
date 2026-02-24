@@ -70,8 +70,7 @@ on:
         description: "Whether any security issues were found"
         value: ${{ jobs.summarize.outputs.has_findings }}
 
-permissions:
-  contents: read
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   bandit:
@@ -79,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write
+      security-events: write # needed by nested workflows to upload results
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -97,7 +96,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write
+      security-events: write # needed by nested workflows to upload results
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -115,7 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write
+      security-events: write # needed by nested workflows to upload results
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -137,7 +136,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write
+      security-events: write # needed by nested workflows to upload results
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -153,8 +152,6 @@ jobs:
   summarize:
     needs: [bandit, semgrep, trivy, zizmor]
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     if: ${{ always() && !cancelled() }}
     env:
       CHECKS: ${{ join(needs.*.result, ' ') }}

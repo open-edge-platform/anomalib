@@ -92,8 +92,7 @@ on:
           - HIGH
         default: "LOW"
 
-permissions:
-  contents: read
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   security:
