@@ -142,7 +142,10 @@ describe('InferenceDevices', () => {
 
             await waitFor(() => {
                 expect(toast).toHaveBeenCalledWith(
-                    expect.objectContaining({ type: 'error', message: expect.stringContaining('Internal server error') })
+                    expect.objectContaining({
+                        type: 'error',
+                        message: expect.stringContaining('Internal server error'),
+                    })
                 );
             });
         });

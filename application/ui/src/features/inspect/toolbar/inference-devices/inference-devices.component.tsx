@@ -14,7 +14,7 @@ import { getDeviceLabel } from '../../train-model/utils/device-metadata';
  */
 const findMatchingKey = (
     pipelineDevice: string | null | undefined,
-    options: { id: string | null | undefined }[],
+    options: { id: string | null | undefined }[]
 ): string | null => {
     if (!pipelineDevice) return null;
     const normalized = pipelineDevice.toUpperCase();
