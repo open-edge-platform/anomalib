@@ -104,15 +104,6 @@ conflicts = [[
 ]]
 
 [[package]]
-name = "about-time"
-version = "4.2.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/1c/3f/ccb16bdc53ebb81c1bf837c1ee4b5b0b69584fd2e4a802a2a79936691c0a/about-time-4.2.1.tar.gz", hash = "sha256:6a538862d33ce67d997429d14998310e1dbfda6cb7d9bbfbf799c4709847fece", size = 15380, upload-time = "2022-12-21T04:15:54.991Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/fb/cd/7ee00d6aa023b1d0551da0da5fee3bc23c3eeea632fbfc5126d1fec52b7e/about_time-4.2.1-py3-none-any.whl", hash = "sha256:8bbf4c75fe13cbd3d72f49a03b02c5c7dca32169b6d49117c257e7eb3eaee341", size = 13295, upload-time = "2022-12-21T04:15:53.613Z" },
-]
-
-[[package]]
 name = "absl-py"
 version = "2.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -309,19 +300,6 @@ wheels = [
 ]
 
 [[package]]
-name = "alive-progress"
-version = "3.3.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "about-time" },
-    { name = "graphemeu" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/9a/26/d43128764a6f8fe1668c4f87aba6b1fe52bea81d05a35c84a70d3c70b6f7/alive-progress-3.3.0.tar.gz", hash = "sha256:457dd2428b48dacd49854022a46448d236a48f1b7277874071c39395307e830c", size = 116281, upload-time = "2025-07-20T02:10:39.07Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/26/85/ec72f6c885703d18f3b09769645e950e14c7d0cc0a0e35d94127983f666f/alive_progress-3.3.0-py3-none-any.whl", hash = "sha256:63dd33bb94cde15ad9e5b666dbba8fedf71b72a4935d6fb9a92931e69402c9ff", size = 78403, upload-time = "2025-07-20T02:10:37.318Z" },
-]
-
-[[package]]
 name = "annotated-doc"
 version = "0.0.4"
 source = { registry = "https://pypi.org/simple" }
@@ -436,7 +414,7 @@ dev = [
     { name = "sphinx", version = "9.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "sphinx-autodoc-typehints", version = "3.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "sphinx-autodoc-typehints", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
-    { name = "sphinx-autodoc-typehints", version = "3.6.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
+    { name = "sphinx-autodoc-typehints", version = "3.7.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "sphinx-book-theme" },
     { name = "sphinx-copybutton" },
     { name = "sphinx-design", version = "0.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
@@ -456,7 +434,7 @@ docs = [
     { name = "sphinx", version = "9.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "sphinx-autodoc-typehints", version = "3.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "sphinx-autodoc-typehints", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
-    { name = "sphinx-autodoc-typehints", version = "3.6.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
+    { name = "sphinx-autodoc-typehints", version = "3.7.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "sphinx-book-theme" },
     { name = "sphinx-copybutton" },
     { name = "sphinx-design", version = "0.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
@@ -876,18 +854,6 @@ wheels = [
 ]
 
 [[package]]
-name = "autograd"
-version = "1.8.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "numpy" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/67/1c/3c24ec03c8ba4decc742b1df5a10c52f98c84ca8797757f313e7bdcdf276/autograd-1.8.0.tar.gz", hash = "sha256:107374ded5b09fc8643ac925348c0369e7b0e73bbed9565ffd61b8fd04425683", size = 2562146, upload-time = "2025-05-05T12:49:02.502Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/84/ea/e16f0c423f7d83cf8b79cae9452040fb7b2e020c7439a167ee7c317de448/autograd-1.8.0-py3-none-any.whl", hash = "sha256:4ab9084294f814cf56c280adbe19612546a35574d67c574b04933c7d2ecb7d78", size = 51478, upload-time = "2025-05-05T12:49:00.585Z" },
-]
-
-[[package]]
 name = "av"
 version = "16.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1267,18 +1233,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/27/fb/576f067976d320f5f0114a8d9fa1215425441bb35627b1993e5afd8111e5/cloudpickle-3.1.2.tar.gz", hash = "sha256:7fda9eb655c9c230dab534f1983763de5835249750e85fbcef43aaa30a9a2414", size = 22330, upload-time = "2025-11-03T09:25:26.604Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl", hash = "sha256:9acb47f6afd73f60dc1df93bb801b472f05ff42fa6c84167d25cb206be1fbf4a", size = 22228, upload-time = "2025-11-03T09:25:25.534Z" },
-]
-
-[[package]]
-name = "cma"
-version = "4.4.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "numpy" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/a9/54/1a04d4badaca8f2508a24b59e60c51f4fc96de356adf79a48915f9957e56/cma-4.4.2.tar.gz", hash = "sha256:edd1d1f22d11ebf7a2ccae713bc3838931e31002410d19910d9d7ca9c4911fe1", size = 301082, upload-time = "2026-01-23T23:57:36.643Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/97/dd/1a316ae2bade89afa7631def756f08a6b6a54a7a8482f9abee75802afd4a/cma-4.4.2-py3-none-any.whl", hash = "sha256:75c45f201e689ffaf72e02dc1f2ba2f98fbb6cc4e89847f3173e9bf099d1f10c", size = 312069, upload-time = "2026-01-23T23:57:31.952Z" },
 ]
 
 [[package]]
@@ -1812,10 +1766,10 @@ wheels = [
 
 [[package]]
 name = "cuda-pathfinder"
-version = "1.3.4"
+version = "1.3.5"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b8/5e/db279a3bfbd18d59d0598922a3b3c1454908d0969e8372260afec9736376/cuda_pathfinder-1.3.4-py3-none-any.whl", hash = "sha256:fb983f6e0d43af27ef486e14d5989b5f904ef45cedf40538bfdcbffa6bb01fb2", size = 30878, upload-time = "2026-02-11T18:50:31.008Z" },
+    { url = "https://files.pythonhosted.org/packages/ca/b5/e4056e4058fb56519fcddf1face6fe3ff2398953b41615fafe9fb1540bf2/cuda_pathfinder-1.3.5-py3-none-any.whl", hash = "sha256:6c88220f8637cb35d2a75c620d72efebf683b248b923713d8fbe235844c1a4b9", size = 33711, upload-time = "2026-02-23T18:34:27.253Z" },
 ]
 
 [[package]]
@@ -1829,16 +1783,16 @@ wheels = [
 
 [[package]]
 name = "databricks-sdk"
-version = "0.91.0"
+version = "0.92.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "google-auth" },
     { name = "protobuf" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/af/a9/83dee5b4bbea94f21c4990aafdb1b1893d25d5bbbe5cd9a95ed2afaf0d42/databricks_sdk-0.91.0.tar.gz", hash = "sha256:7b16f424f509609dd86cb69073a9a80a755c00a7b4be8cdaac3595ce3421a274", size = 857905, upload-time = "2026-02-19T08:22:21.415Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/df/40/0ae3bace60e9409f8ac060e8f9b783d823be9e3e5d5b713a75d58bf2cc5b/databricks_sdk-0.92.0.tar.gz", hash = "sha256:50cbd3fa3757b98779ca28c4c885c671486bf2be8a493cc1e5c44d27c80eba41", size = 860422, upload-time = "2026-02-24T08:23:04.359Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/92/38/3afd8da94fa076226c470f33632d6df726c469738c01224068f009357985/databricks_sdk-0.91.0-py3-none-any.whl", hash = "sha256:f4481780e66a4c7d24d9d2acdf6778efdb82031532852ccc42b8619b81d0f73f", size = 808425, upload-time = "2026-02-19T08:22:19.161Z" },
+    { url = "https://files.pythonhosted.org/packages/b7/14/0e343205fbaffc3e2dedc6bb51bd106e063e88915262c099c884376c98f5/databricks_sdk-0.92.0-py3-none-any.whl", hash = "sha256:6d45bd9e6ee21a639c31239e095ad55215cb2f8c51092950c083693f709c013b", size = 810587, upload-time = "2026-02-24T08:23:02.282Z" },
 ]
 
 [[package]]
@@ -2168,7 +2122,7 @@ wheels = [
 
 [[package]]
 name = "fastapi"
-version = "0.131.0"
+version = "0.133.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-doc" },
@@ -2177,9 +2131,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "typing-inspection" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/91/32/158cbf685b7d5a26f87131069da286bf10fc9fbf7fc968d169d48a45d689/fastapi-0.131.0.tar.gz", hash = "sha256:6531155e52bee2899a932c746c9a8250f210e3c3303a5f7b9f8a808bfe0548ff", size = 369612, upload-time = "2026-02-22T16:38:11.252Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c2/04/ab382c7c03dd545f2c964d06e87ad0d5faa944a2434186ad9c285f5d87e0/fastapi-0.133.0.tar.gz", hash = "sha256:b900a2bf5685cdb0647a41d5900bdeafc3a9e8a28ac08c6246b76699e164d60d", size = 373265, upload-time = "2026-02-24T09:53:40.143Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ff/94/b58ec24c321acc2ad1327f69b033cadc005e0f26df9a73828c9e9c7db7ce/fastapi-0.131.0-py3-none-any.whl", hash = "sha256:ed0e53decccf4459de78837ce1b867cd04fa9ce4579497b842579755d20b405a", size = 103854, upload-time = "2026-02-22T16:38:09.814Z" },
+    { url = "https://files.pythonhosted.org/packages/bf/b4/023e75a2ec3f5440e380df6caf4d28edc0806d007193e6fb0707237886a4/fastapi-0.133.0-py3-none-any.whl", hash = "sha256:0a78878483d60702a1dde864c24ab349a1a53ef4db6b6f74f8cd4a2b2bc67d2f", size = 104787, upload-time = "2026-02-24T09:53:41.404Z" },
 ]
 
 [[package]]
@@ -2567,15 +2521,6 @@ wheels = [
 ]
 
 [[package]]
-name = "graphemeu"
-version = "0.7.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/76/20/d012f71e7d00e0d5bb25176b9a96c5313d0e30cf947153bfdfa78089f4bb/graphemeu-0.7.2.tar.gz", hash = "sha256:42bbe373d7c146160f286cd5f76b1a8ad29172d7333ce10705c5cc282462a4f8", size = 307626, upload-time = "2025-01-15T09:48:59.488Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/69/18/36503ea63e1ecd0a95590d7b6b8b7d227a1e4541a154e1612a231def1bdc/graphemeu-0.7.2-py3-none-any.whl", hash = "sha256:1444520f6899fd30114fc2a39f297d86d10fa0f23bf7579f772f8bc7efaa2542", size = 22670, upload-time = "2025-01-15T09:48:57.241Z" },
-]
-
-[[package]]
 name = "graphene"
 version = "3.4.3"
 source = { registry = "https://pypi.org/simple" }
@@ -2764,31 +2709,31 @@ wheels = [
 
 [[package]]
 name = "hf-xet"
-version = "1.2.0"
+version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/5e/6e/0f11bacf08a67f7fb5ee09740f2ca54163863b07b70d579356e9222ce5d8/hf_xet-1.2.0.tar.gz", hash = "sha256:a8c27070ca547293b6890c4bf389f713f80e8c478631432962bb7f4bc0bd7d7f", size = 506020, upload-time = "2025-10-24T19:04:32.129Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4f/3a/9aa61729228fb03e946409c51963f0cd2fd7c109f4ab93edc5f04a10be86/hf_xet-1.3.0.tar.gz", hash = "sha256:9c154ad63e17aca970987b2cf17dbd8a0c09bb18aeb246f637647a8058e4522b", size = 641390, upload-time = "2026-02-24T00:16:19.935Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9e/a5/85ef910a0aa034a2abcfadc360ab5ac6f6bc4e9112349bd40ca97551cff0/hf_xet-1.2.0-cp313-cp313t-macosx_10_12_x86_64.whl", hash = "sha256:ceeefcd1b7aed4956ae8499e2199607765fbd1c60510752003b6cc0b8413b649", size = 2861870, upload-time = "2025-10-24T19:04:11.422Z" },
-    { url = "https://files.pythonhosted.org/packages/ea/40/e2e0a7eb9a51fe8828ba2d47fe22a7e74914ea8a0db68a18c3aa7449c767/hf_xet-1.2.0-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:b70218dd548e9840224df5638fdc94bd033552963cfa97f9170829381179c813", size = 2717584, upload-time = "2025-10-24T19:04:09.586Z" },
-    { url = "https://files.pythonhosted.org/packages/a5/7d/daf7f8bc4594fdd59a8a596f9e3886133fdc68e675292218a5e4c1b7e834/hf_xet-1.2.0-cp313-cp313t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7d40b18769bb9a8bc82a9ede575ce1a44c75eb80e7375a01d76259089529b5dc", size = 3315004, upload-time = "2025-10-24T19:04:00.314Z" },
-    { url = "https://files.pythonhosted.org/packages/b1/ba/45ea2f605fbf6d81c8b21e4d970b168b18a53515923010c312c06cd83164/hf_xet-1.2.0-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:cd3a6027d59cfb60177c12d6424e31f4b5ff13d8e3a1247b3a584bf8977e6df5", size = 3222636, upload-time = "2025-10-24T19:03:58.111Z" },
-    { url = "https://files.pythonhosted.org/packages/4a/1d/04513e3cab8f29ab8c109d309ddd21a2705afab9d52f2ba1151e0c14f086/hf_xet-1.2.0-cp313-cp313t-musllinux_1_2_aarch64.whl", hash = "sha256:6de1fc44f58f6dd937956c8d304d8c2dea264c80680bcfa61ca4a15e7b76780f", size = 3408448, upload-time = "2025-10-24T19:04:20.951Z" },
-    { url = "https://files.pythonhosted.org/packages/f0/7c/60a2756d7feec7387db3a1176c632357632fbe7849fce576c5559d4520c7/hf_xet-1.2.0-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:f182f264ed2acd566c514e45da9f2119110e48a87a327ca271027904c70c5832", size = 3503401, upload-time = "2025-10-24T19:04:22.549Z" },
-    { url = "https://files.pythonhosted.org/packages/4e/64/48fffbd67fb418ab07451e4ce641a70de1c40c10a13e25325e24858ebe5a/hf_xet-1.2.0-cp313-cp313t-win_amd64.whl", hash = "sha256:293a7a3787e5c95d7be1857358a9130694a9c6021de3f27fa233f37267174382", size = 2900866, upload-time = "2025-10-24T19:04:33.461Z" },
-    { url = "https://files.pythonhosted.org/packages/e2/51/f7e2caae42f80af886db414d4e9885fac959330509089f97cccb339c6b87/hf_xet-1.2.0-cp314-cp314t-macosx_10_12_x86_64.whl", hash = "sha256:10bfab528b968c70e062607f663e21e34e2bba349e8038db546646875495179e", size = 2861861, upload-time = "2025-10-24T19:04:19.01Z" },
-    { url = "https://files.pythonhosted.org/packages/6e/1d/a641a88b69994f9371bd347f1dd35e5d1e2e2460a2e350c8d5165fc62005/hf_xet-1.2.0-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:2a212e842647b02eb6a911187dc878e79c4aa0aa397e88dd3b26761676e8c1f8", size = 2717699, upload-time = "2025-10-24T19:04:17.306Z" },
-    { url = "https://files.pythonhosted.org/packages/df/e0/e5e9bba7d15f0318955f7ec3f4af13f92e773fbb368c0b8008a5acbcb12f/hf_xet-1.2.0-cp314-cp314t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:30e06daccb3a7d4c065f34fc26c14c74f4653069bb2b194e7f18f17cbe9939c0", size = 3314885, upload-time = "2025-10-24T19:04:07.642Z" },
-    { url = "https://files.pythonhosted.org/packages/21/90/b7fe5ff6f2b7b8cbdf1bd56145f863c90a5807d9758a549bf3d916aa4dec/hf_xet-1.2.0-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:29c8fc913a529ec0a91867ce3d119ac1aac966e098cf49501800c870328cc090", size = 3221550, upload-time = "2025-10-24T19:04:05.55Z" },
-    { url = "https://files.pythonhosted.org/packages/6f/cb/73f276f0a7ce46cc6a6ec7d6c7d61cbfe5f2e107123d9bbd0193c355f106/hf_xet-1.2.0-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:66e159cbfcfbb29f920db2c09ed8b660eb894640d284f102ada929b6e3dc410a", size = 3408010, upload-time = "2025-10-24T19:04:28.598Z" },
-    { url = "https://files.pythonhosted.org/packages/b8/1e/d642a12caa78171f4be64f7cd9c40e3ca5279d055d0873188a58c0f5fbb9/hf_xet-1.2.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:9c91d5ae931510107f148874e9e2de8a16052b6f1b3ca3c1b12f15ccb491390f", size = 3503264, upload-time = "2025-10-24T19:04:30.397Z" },
-    { url = "https://files.pythonhosted.org/packages/17/b5/33764714923fa1ff922770f7ed18c2daae034d21ae6e10dbf4347c854154/hf_xet-1.2.0-cp314-cp314t-win_amd64.whl", hash = "sha256:210d577732b519ac6ede149d2f2f34049d44e8622bf14eb3d63bbcd2d4b332dc", size = 2901071, upload-time = "2025-10-24T19:04:37.463Z" },
-    { url = "https://files.pythonhosted.org/packages/96/2d/22338486473df5923a9ab7107d375dbef9173c338ebef5098ef593d2b560/hf_xet-1.2.0-cp37-abi3-macosx_10_12_x86_64.whl", hash = "sha256:46740d4ac024a7ca9b22bebf77460ff43332868b661186a8e46c227fdae01848", size = 2866099, upload-time = "2025-10-24T19:04:15.366Z" },
-    { url = "https://files.pythonhosted.org/packages/7f/8c/c5becfa53234299bc2210ba314eaaae36c2875e0045809b82e40a9544f0c/hf_xet-1.2.0-cp37-abi3-macosx_11_0_arm64.whl", hash = "sha256:27df617a076420d8845bea087f59303da8be17ed7ec0cd7ee3b9b9f579dff0e4", size = 2722178, upload-time = "2025-10-24T19:04:13.695Z" },
-    { url = "https://files.pythonhosted.org/packages/9a/92/cf3ab0b652b082e66876d08da57fcc6fa2f0e6c70dfbbafbd470bb73eb47/hf_xet-1.2.0-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3651fd5bfe0281951b988c0facbe726aa5e347b103a675f49a3fa8144c7968fd", size = 3320214, upload-time = "2025-10-24T19:04:03.596Z" },
-    { url = "https://files.pythonhosted.org/packages/46/92/3f7ec4a1b6a65bf45b059b6d4a5d38988f63e193056de2f420137e3c3244/hf_xet-1.2.0-cp37-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:d06fa97c8562fb3ee7a378dd9b51e343bc5bc8190254202c9771029152f5e08c", size = 3229054, upload-time = "2025-10-24T19:04:01.949Z" },
-    { url = "https://files.pythonhosted.org/packages/0b/dd/7ac658d54b9fb7999a0ccb07ad863b413cbaf5cf172f48ebcd9497ec7263/hf_xet-1.2.0-cp37-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:4c1428c9ae73ec0939410ec73023c4f842927f39db09b063b9482dac5a3bb737", size = 3413812, upload-time = "2025-10-24T19:04:24.585Z" },
-    { url = "https://files.pythonhosted.org/packages/92/68/89ac4e5b12a9ff6286a12174c8538a5930e2ed662091dd2572bbe0a18c8a/hf_xet-1.2.0-cp37-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:a55558084c16b09b5ed32ab9ed38421e2d87cf3f1f89815764d1177081b99865", size = 3508920, upload-time = "2025-10-24T19:04:26.927Z" },
-    { url = "https://files.pythonhosted.org/packages/cb/44/870d44b30e1dcfb6a65932e3e1506c103a8a5aea9103c337e7a53180322c/hf_xet-1.2.0-cp37-abi3-win_amd64.whl", hash = "sha256:e6584a52253f72c9f52f9e549d5895ca7a471608495c4ecaa6cc73dba2b24d69", size = 2905735, upload-time = "2025-10-24T19:04:35.928Z" },
+    { url = "https://files.pythonhosted.org/packages/b7/18/16954a87cfdfdc04792f1ffc9a29c0a48253ab10ec0f4856f39c7f7bf7cd/hf_xet-1.3.0-cp313-cp313t-macosx_10_12_x86_64.whl", hash = "sha256:95bdeab4747cb45f855601e39b9e86ae92b4a114978ada6e0401961fcc5d2958", size = 3759481, upload-time = "2026-02-24T00:16:03.387Z" },
+    { url = "https://files.pythonhosted.org/packages/d8/6f/a55752047e9b0e69517775531c14680331f00c9cd4dc07f5e9b7f7f68a12/hf_xet-1.3.0-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:f99992583f27b139392601fe99e88df155dc4de7feba98ed27ce2d3e6b4a65bb", size = 3517927, upload-time = "2026-02-24T00:16:02.108Z" },
+    { url = "https://files.pythonhosted.org/packages/ef/71/a909dbf9c8b166aa3f15db2bcf5d8afbe9d53170922edde2b919cf0bc455/hf_xet-1.3.0-cp313-cp313t-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:687a71fc6d2eaa79d864da3aa13e5d887e124d357f5f306bfff6c385eea9d990", size = 4174328, upload-time = "2026-02-24T00:15:55.056Z" },
+    { url = "https://files.pythonhosted.org/packages/21/cc/dec0d971bb5872345b8d64363a0b78ed6a147eea5b4281575ce5a8150f42/hf_xet-1.3.0-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:75d19813ed0e24525409bc22566282ae9bc93e5d764b185565e863dc28280a45", size = 3953184, upload-time = "2026-02-24T00:15:53.43Z" },
+    { url = "https://files.pythonhosted.org/packages/3d/d8/d4259146e7c7089dd3f22cd62676d665bcfbc27428a070abee8985e0ab33/hf_xet-1.3.0-cp313-cp313t-musllinux_1_2_aarch64.whl", hash = "sha256:078af43569c2e05233137a93a33d2293f95c272745eaf030a9bb5f27bb0c9e9c", size = 4152800, upload-time = "2026-02-24T00:16:10.391Z" },
+    { url = "https://files.pythonhosted.org/packages/c9/0d/39d9d32e4cde689da618739197e264bba5a55d870377d5d32cdd5c03fad8/hf_xet-1.3.0-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:be8731e1620cc8549025c39ed3917c8fd125efaeae54ae679214a3d573e6c109", size = 4390499, upload-time = "2026-02-24T00:16:11.671Z" },
+    { url = "https://files.pythonhosted.org/packages/d9/27/5b9c323bf5513e8971702eeac43ba5cb554921e0f292ad52f20ed6028131/hf_xet-1.3.0-cp313-cp313t-win_amd64.whl", hash = "sha256:1552616c0e0fa728a4ffdffa106e91faa0fd4edb44868e79b464fad00b2758ee", size = 3634124, upload-time = "2026-02-24T00:16:20.964Z" },
+    { url = "https://files.pythonhosted.org/packages/85/32/76949adb65b7ca54c1e2b0519a98f7c88221b9091ae8780fc76d7d1bae70/hf_xet-1.3.0-cp314-cp314t-macosx_10_12_x86_64.whl", hash = "sha256:a61496eccf412d7c51a5613c31a2051d357ddea6be53a0672c7644cf39bfefe9", size = 3759780, upload-time = "2026-02-24T00:16:09.037Z" },
+    { url = "https://files.pythonhosted.org/packages/63/c4/ad6fa712611711c129fa49eb17baaf0665647eb0abce32d94ccd44b69c6d/hf_xet-1.3.0-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:aba35218871cc438826076778958f7ab2a1f4f8d654e91c307073a815360558f", size = 3517640, upload-time = "2026-02-24T00:16:07.536Z" },
+    { url = "https://files.pythonhosted.org/packages/15/6b/b44659c5261cde6320a579d0acc949f19283a13d32fc9389fc49639f435e/hf_xet-1.3.0-cp314-cp314t-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:c444d8f657dedd7a72aa0ef0178fe01fe92b04b58014ee49e2b3b4985aea1529", size = 4174285, upload-time = "2026-02-24T00:16:00.848Z" },
+    { url = "https://files.pythonhosted.org/packages/61/cf/16ef1b366482fa4e71d1642b019158d7ac891bcb961477102ceadfe69436/hf_xet-1.3.0-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:6d1bbda7900d72bc591cd39a64e35ad07f89a24f90e3d7b7c692cb93a1926cde", size = 3952705, upload-time = "2026-02-24T00:15:59.355Z" },
+    { url = "https://files.pythonhosted.org/packages/d5/5a/d03453902ab9373715f50f3969979782a355df94329ea958ae78304ca06b/hf_xet-1.3.0-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:588f5df302e7dba5c3b60d4e5c683f95678526c29b9f64cbeb23e9f1889c6b83", size = 4152353, upload-time = "2026-02-24T00:16:15.857Z" },
+    { url = "https://files.pythonhosted.org/packages/ab/98/d3cd8cdd8d771bee9a03bd52faed6fa114a68a107a0e337aaf0b4c52bf0c/hf_xet-1.3.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:944ae454b296c42b18219c37f245c78d0e64a734057423e9309f4938faa85d7f", size = 4390010, upload-time = "2026-02-24T00:16:18.713Z" },
+    { url = "https://files.pythonhosted.org/packages/1f/10/3c58501d44d7a148d749ffa6046cbd14aa75a7ab07c9e7a984f86294cc53/hf_xet-1.3.0-cp314-cp314t-win_amd64.whl", hash = "sha256:34cdd5f10e61b7a1a7542672d20887c85debcfeb70a471ff1506f5a4c9441e42", size = 3634277, upload-time = "2026-02-24T00:16:23.718Z" },
+    { url = "https://files.pythonhosted.org/packages/a1/00/22d3d896466ded4c46ef6465b85fa434fa97d79f8f61cea322afde1d6157/hf_xet-1.3.0-cp37-abi3-macosx_10_12_x86_64.whl", hash = "sha256:df4447f69086dcc6418583315eda6ed09033ac1fbbc784fedcbbbdf67bea1680", size = 3761293, upload-time = "2026-02-24T00:16:06.012Z" },
+    { url = "https://files.pythonhosted.org/packages/97/fd/ebb0ea49e9bd9eb9f52844e417e0e6e9c8a59a1e84790691873fa910adc5/hf_xet-1.3.0-cp37-abi3-macosx_11_0_arm64.whl", hash = "sha256:39f4fe714628adc2214ab4a67391182ee751bc4db581868cb3204900817758a8", size = 3523345, upload-time = "2026-02-24T00:16:04.615Z" },
+    { url = "https://files.pythonhosted.org/packages/8a/bb/72ceaaf619cad23d151a281d52e15456bae72f52c3795e820c0b64a5f637/hf_xet-1.3.0-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:9b16e53ed6b5c8197cefb3fd12047a430b7034428effed463c03cec68de7e9a3", size = 4178623, upload-time = "2026-02-24T00:15:57.857Z" },
+    { url = "https://files.pythonhosted.org/packages/19/30/3280f4b5e407b442923a80ac0b2d96a65be7494457c55695e63f9a2b33dd/hf_xet-1.3.0-cp37-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:92051a1f73019489be77f6837671024ec785a3d1b888466b09d3a9ea15c4a1b5", size = 3958884, upload-time = "2026-02-24T00:15:56.326Z" },
+    { url = "https://files.pythonhosted.org/packages/8f/13/5174c6d52583e54a761c88570ca657d621ac684747613f47846debfd6d4d/hf_xet-1.3.0-cp37-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:943046b160e7804a85e68a659d2eee1a83ce3661f72d1294d3cc5ece0f45a355", size = 4158146, upload-time = "2026-02-24T00:16:13.158Z" },
+    { url = "https://files.pythonhosted.org/packages/12/13/ea8619021b119e19efdcaeec72f762b5be923cf79b5d4434f2cbbff39829/hf_xet-1.3.0-cp37-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:9b798a95d41b4f33b0b455c8aa76ff1fd26a587a4dd3bdec29f0a37c60b78a2f", size = 4395565, upload-time = "2026-02-24T00:16:14.574Z" },
+    { url = "https://files.pythonhosted.org/packages/64/cd/b81d922118a171bfbbecffd60a477e79188ab876260412fac47226a685bf/hf_xet-1.3.0-cp37-abi3-win_amd64.whl", hash = "sha256:227eee5b99d19b9f20c31d901a0c2373af610a24a34e6c2701072c9de48d6d95", size = 3637830, upload-time = "2026-02-24T00:16:22.474Z" },
 ]
 
 [[package]]
@@ -3675,7 +3620,7 @@ wheels = [
 
 [[package]]
 name = "jupyterlab"
-version = "4.5.4"
+version = "4.5.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "async-lru" },
@@ -3693,9 +3638,9 @@ dependencies = [
     { name = "tornado" },
     { name = "traitlets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7c/6b/21af7c0512bdf67e0c54c121779a1f2a97a164a7657e13fced79db8fa5a0/jupyterlab-4.5.4.tar.gz", hash = "sha256:c215f48d8e4582bd2920ad61cc6a40d8ebfef7e5a517ae56b8a9413c9789fdfb", size = 23943597, upload-time = "2026-02-11T00:26:55.308Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6e/2d/953a5612a34a3c799a62566a548e711d103f631672fd49650e0f2de80870/jupyterlab-4.5.5.tar.gz", hash = "sha256:eac620698c59eb810e1729909be418d9373d18137cac66637141abba613b3fda", size = 23968441, upload-time = "2026-02-23T18:57:34.339Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f5/9f/a70972ece62ead2d81acc6223188f6d18a92f665ccce17796a0cdea4fcf5/jupyterlab-4.5.4-py3-none-any.whl", hash = "sha256:cc233f70539728534669fb0015331f2a3a87656207b3bb2d07916e9289192f12", size = 12391867, upload-time = "2026-02-11T00:26:51.23Z" },
+    { url = "https://files.pythonhosted.org/packages/b9/52/372d3494766d690dfdd286871bf5f7fb9a6c61f7566ccaa7153a163dd1df/jupyterlab-4.5.5-py3-none-any.whl", hash = "sha256:a35694a40a8e7f2e82f387472af24e61b22adcce87b5a8ab97a5d9c486202a6d", size = 12446824, upload-time = "2026-02-23T18:57:30.398Z" },
 ]
 
 [[package]]
@@ -4465,26 +4410,6 @@ wheels = [
 ]
 
 [[package]]
-name = "moocore"
-version = "0.2.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "cffi" },
-    { name = "numpy" },
-    { name = "platformdirs" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/3b/34/19341fe4ee06a82bf364fa7ac0998ec0cc67750133b55de3564312971116/moocore-0.2.0.tar.gz", hash = "sha256:3dc601f85f9a4743ed50ddd027dca30e3bb55c899916a092c2ece495b1b2de08", size = 404160, upload-time = "2026-01-11T11:43:18.16Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/36/aa/25a060b31e3b2f54d63f78331a324875c08226e1841da43ec3f371cf8e17/moocore-0.2.0-cp310-abi3-macosx_10_9_universal2.whl", hash = "sha256:653449231f328d3c9e69693ec3d44e8c77f38ab7e9ef0c69dd9ded40449e980d", size = 565572, upload-time = "2026-01-11T11:43:06.08Z" },
-    { url = "https://files.pythonhosted.org/packages/ef/0d/a37abf346507a81554e43c8cfaedceac4776d8d29803a86e32d9eecfaafb/moocore-0.2.0-cp310-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:cf8f091a7304532ed605acd82acd051e89af22ece8e2a27a3cee0faf9f2ea185", size = 743600, upload-time = "2026-01-11T11:43:08.047Z" },
-    { url = "https://files.pythonhosted.org/packages/6d/aa/30e081884a653ab7f4a6bd9da99824c5d641c369928cee3cac4a7d801f36/moocore-0.2.0-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:e93c07062adefd0fcba73a521f325f7fb874f2af92aaeec203cf9db31a41894b", size = 731717, upload-time = "2026-01-11T11:43:11.485Z" },
-    { url = "https://files.pythonhosted.org/packages/52/9f/31d86de8a3bc21100b8a8b4c56d7d5a93f78e3c32c3c4a3395d985eb6baf/moocore-0.2.0-cp310-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:b90c7bde2164f9b95c6b2e870f0ca6ccc5dabff2bf8086162d7318c770e5868f", size = 737006, upload-time = "2026-01-11T11:43:13.024Z" },
-    { url = "https://files.pythonhosted.org/packages/45/b0/79f0a968595c1d8a804fa9c66aa21cf676ffa9aacedf2ea50bd35d7f83d6/moocore-0.2.0-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:d0699b770b5eebdeac477a356d539efa8807c6cf067a453a0682e0df2299a512", size = 724847, upload-time = "2026-01-11T11:43:14.275Z" },
-    { url = "https://files.pythonhosted.org/packages/3f/f0/535c1d448dbfa8ee79a83c36a6ded5a54ea35d02fac1fe2907ae540e369b/moocore-0.2.0-cp310-abi3-win_amd64.whl", hash = "sha256:ea057409731e73dbc4ba4214cbf7747309695b01314f8786678b758cc9c561c4", size = 485644, upload-time = "2026-01-11T11:43:15.598Z" },
-    { url = "https://files.pythonhosted.org/packages/ce/ca/29bdef14758bfe869b74a0eae94d1a1ce220f75ce26ed6e7f4965ca70b49/moocore-0.2.0-cp310-abi3-win_arm64.whl", hash = "sha256:a7683feddfd2a47b4a0f89ee8d370cae72331792f68e67f083ccb37bb2f1c8cf", size = 476178, upload-time = "2026-01-11T11:43:16.919Z" },
-]
-
-[[package]]
 name = "mpmath"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -4771,15 +4696,6 @@ linkify = [
 ]
 
 [[package]]
-name = "natsort"
-version = "8.4.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e2/a9/a0c57aee75f77794adaf35322f8b6404cbd0f89ad45c87197a937764b7d0/natsort-8.4.0.tar.gz", hash = "sha256:45312c4a0e5507593da193dedd04abb1469253b601ecaf63445ad80f0a1ea581", size = 76575, upload-time = "2023-06-20T04:17:19.925Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ef/82/7a9d0550484a62c6da82858ee9419f3dd1ccc9aa1c26a1e43da3ecd20b0d/natsort-8.4.0-py3-none-any.whl", hash = "sha256:4732914fb471f56b5cce04d7bae6f164a592c7712e1c85f9ef585e197299521c", size = 38268, upload-time = "2023-06-20T04:17:17.522Z" },
-]
-
-[[package]]
 name = "nbclient"
 version = "0.10.4"
 source = { registry = "https://pypi.org/simple" }
@@ -4900,11 +4816,9 @@ wheels = [
 
 [[package]]
 name = "nncf"
-version = "2.19.0"
+version = "3.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "jsonschema" },
-    { name = "natsort" },
     { name = "networkx" },
     { name = "ninja" },
     { name = "numpy" },
@@ -4913,7 +4827,6 @@ dependencies = [
     { name = "pandas" },
     { name = "psutil" },
     { name = "pydot" },
-    { name = "pymoo" },
     { name = "rich" },
     { name = "safetensors" },
     { name = "scikit-learn", version = "1.7.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
@@ -4922,9 +4835,9 @@ dependencies = [
     { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "tabulate" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3e/c5/902ae10b9b223a5859c70d925731a4c784d59d4dedc6acee2bef738c482b/nncf-2.19.0.tar.gz", hash = "sha256:d32a9667e6b2837557bdd340895bb49e8d103eb1ec004031386e8c2bb4554cac", size = 1016699, upload-time = "2025-12-01T16:41:28.514Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b6/63/9a5756bf700685dcf00ad48bad43a5574010bbfd16cbba526dd4d29dbcbb/nncf-3.0.0.tar.gz", hash = "sha256:4b307bcb9d73f0fee2043df098f52a957d2f4d370fde9c90a2aac151ed90c2c7", size = 562310, upload-time = "2026-02-24T10:55:04.239Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/66/9e/fef9c48608372c68c1f99e53984202c961e595d9ff337afffb2d03138d47/nncf-2.19.0-py3-none-any.whl", hash = "sha256:6c782b0e5a8120d36a3249cd61edaf311b6270dd90095661700658899726e523", size = 1486562, upload-time = "2025-12-01T16:41:27.275Z" },
+    { url = "https://files.pythonhosted.org/packages/f0/42/a3692380f404db87c5a6b563d1157f33714bf476eb3b12284b8fb3aa1c37/nncf-3.0.0-py3-none-any.whl", hash = "sha256:4b0dae59b792434e60a95a39f14720571f3a4e94656d491485c42d44e8e2d27a", size = 807462, upload-time = "2026-02-24T10:55:02.569Z" },
 ]
 
 [[package]]
@@ -5816,17 +5729,19 @@ wheels = [
 
 [[package]]
 name = "onnx-ir"
-version = "0.1.16"
+version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ml-dtypes" },
     { name = "numpy" },
     { name = "onnx" },
+    { name = "sympy", version = "1.13.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-8-anomalib-cu121' or extra == 'extra-8-anomalib-cu124' or extra == 'extra-8-anomalib-rocm' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra != 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu121' and extra != 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu121' and extra != 'extra-8-anomalib-cu124' and extra != 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
+    { name = "sympy", version = "1.14.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-8-anomalib-cpu' or extra == 'extra-8-anomalib-cu118' or extra == 'extra-8-anomalib-cu130' or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu') or (extra != 'extra-8-anomalib-cu121' and extra != 'extra-8-anomalib-cu124' and extra != 'extra-8-anomalib-rocm')" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d5/19/367df21add30ba9a3e0b183e8327f0424d13e4415450682ef3a7f1a0d163/onnx_ir-0.1.16.tar.gz", hash = "sha256:dda5c90f9d941767d3bba43adca20923b7fc020eee0cbf947b847a21701f93d9", size = 137287, upload-time = "2026-02-09T21:04:23.285Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b2/a5/acc43c8fa6edbc584d127fb6bbd13ae9ebfc01b9675c74e0da2de15fa4a6/onnx_ir-0.2.0.tar.gz", hash = "sha256:8bad3906691987290789b26d05e0dbff467029a0b1e411e12e4cae02e43503e4", size = 141693, upload-time = "2026-02-24T02:31:10.998Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a5/b3/80c001c9737a75795e4601bfaf79175ce8f190a14f225b8df03dd4b48ff3/onnx_ir-0.1.16-py3-none-any.whl", hash = "sha256:a8182f2ba716640aafdd10c5c973a02e2a4f7c10ed57b6b000a3be90e9ea6d38", size = 159314, upload-time = "2026-02-09T21:04:21.948Z" },
+    { url = "https://files.pythonhosted.org/packages/4a/df/a99736bcca6b16e36c687ce4996abcf4ce73c514fddd9e730cfcb6a334f2/onnx_ir-0.2.0-py3-none-any.whl", hash = "sha256:eb14d1399c2442bd1ff702719e70074e9cedfa3af5729416a32752c9e0f82591", size = 164100, upload-time = "2026-02-24T02:31:09.454Z" },
 ]
 
 [[package]]
@@ -5884,7 +5799,7 @@ wheels = [
 
 [[package]]
 name = "openai"
-version = "2.21.0"
+version = "2.23.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -5896,9 +5811,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/92/e5/3d197a0947a166649f566706d7a4c8f7fe38f1fa7b24c9bcffe4c7591d44/openai-2.21.0.tar.gz", hash = "sha256:81b48ce4b8bbb2cc3af02047ceb19561f7b1dc0d4e52d1de7f02abfd15aa59b7", size = 644374, upload-time = "2026-02-14T00:12:01.577Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/61/4b/dc1d84b8237205ebe48a1b1c9c3a8e1ab9fd08b30811b6d787196df58fd6/openai-2.23.0.tar.gz", hash = "sha256:7d24cc8087d5e8eed58e98aaa823391d39d12f9a9a2755770f67c7bb2004d94c", size = 657323, upload-time = "2026-02-24T03:20:20.323Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cc/56/0a89092a453bb2c676d66abee44f863e742b2110d4dbb1dbcca3f7e5fc33/openai-2.21.0-py3-none-any.whl", hash = "sha256:0bc1c775e5b1536c294eded39ee08f8407656537ccc71b1004104fe1602e267c", size = 1103065, upload-time = "2026-02-14T00:11:59.603Z" },
+    { url = "https://files.pythonhosted.org/packages/1d/5f/bcdf0fb510c24f021e485f920677da363cd59d6e0310171bf2cad6e052b5/openai-2.23.0-py3-none-any.whl", hash = "sha256:1041d40bebf845053fda1946104f8bf9c3e2df957a41c3878c55c72c352630e9", size = 1118971, upload-time = "2026-02-24T03:20:18.708Z" },
 ]
 
 [[package]]
@@ -5973,42 +5888,35 @@ wheels = [
 
 [[package]]
 name = "openvino"
-version = "2025.4.1"
+version = "2026.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
     { name = "openvino-telemetry" },
-    { name = "packaging" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/45/b4/d534747b511a5fd481e4ec887e10d6b6c92b9c915b574d28343016381d13/openvino-2025.4.1-20426-cp310-cp310-macosx_10_15_x86_64.whl", hash = "sha256:4fd1bf11820c6d331234748422a9e118961b77f1984c22f52591f0ed8580ec6f", size = 37639757, upload-time = "2025-12-17T16:17:34.734Z" },
-    { url = "https://files.pythonhosted.org/packages/84/10/b993036d4bfdae5bfc0cada9ed84d863efea4e46f2c3f4f5eeae666c5913/openvino-2025.4.1-20426-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:73a3500de6191a1742615a2412909894d436728d26635e4fc3c23a4a93038a39", size = 32839385, upload-time = "2025-12-17T16:17:37.774Z" },
-    { url = "https://files.pythonhosted.org/packages/49/24/67df322ba2a222bf5e0716a8255e5d8bc416ad729495d18bc72ccd6a421c/openvino-2025.4.1-20426-cp310-cp310-manylinux2014_x86_64.whl", hash = "sha256:19c3cfd5f80b548106ccb2d91449c3b11a29ba7987e85c121ad16079e7846924", size = 50261673, upload-time = "2025-12-17T16:17:40.785Z" },
-    { url = "https://files.pythonhosted.org/packages/eb/95/6ae139a534170810b84d7b980cb7380ec857c4c59555cb370b7643de228f/openvino-2025.4.1-20426-cp310-cp310-manylinux_2_35_aarch64.whl", hash = "sha256:ee82dd3c0ed408cb1d93fea15e143948daafba276b53ad56f437d5a15354fb8c", size = 28250730, upload-time = "2025-12-17T16:17:46.949Z" },
-    { url = "https://files.pythonhosted.org/packages/18/b5/67a40ffd6504b2c7a7dec8fa5b6e235d17364f1354e50929e6909e3b6438/openvino-2025.4.1-20426-cp310-cp310-win_amd64.whl", hash = "sha256:1147b86c96535fbc362ac1980bfe726272c4ae3952280fbb55f7de8a9cef4b7a", size = 41792159, upload-time = "2025-12-17T16:17:49.902Z" },
-    { url = "https://files.pythonhosted.org/packages/21/13/5e75a1ff33473e2c59502068cd3997b70dcc5f5c0e227de136394c5c7a74/openvino-2025.4.1-20426-cp311-cp311-macosx_10_15_x86_64.whl", hash = "sha256:ee8ce8ebf22d407ce3b50f7926ee9b2fb9b17d131bae4bee68eba3bb5bbee203", size = 37647388, upload-time = "2025-12-17T16:17:52.78Z" },
-    { url = "https://files.pythonhosted.org/packages/b3/80/8f0682271baef15e5baf469b2d1400fefbbc23a963f0dbcded5400c7b60b/openvino-2025.4.1-20426-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:12c482011835d72341f038021129036089c6571f8d713810caaeba88750062e8", size = 32847644, upload-time = "2025-12-17T16:17:56.28Z" },
-    { url = "https://files.pythonhosted.org/packages/38/86/084a1d7e69c309e1e6a2c48a374cd78c99bed5acd74b9a3fb5653b151a71/openvino-2025.4.1-20426-cp311-cp311-manylinux2014_x86_64.whl", hash = "sha256:c552a68c094b0d75f48b7c19cbd3482c44e4e267821897dcb7c9f7c36ba5f88b", size = 50270056, upload-time = "2025-12-17T16:17:59.424Z" },
-    { url = "https://files.pythonhosted.org/packages/bd/dc/797b7874184d7c0b54cceef8c5a9066ef681e0235df6e8f496a1338dd4a6/openvino-2025.4.1-20426-cp311-cp311-manylinux_2_35_aarch64.whl", hash = "sha256:86d2d7c94cd3d29d4080cd105a3af50d3497a348b0e3414c2c04a2532feb4c12", size = 28261416, upload-time = "2025-12-17T16:18:01.898Z" },
-    { url = "https://files.pythonhosted.org/packages/37/a5/4fcef1515b893b503f4ac54d7b17668fde9cdbed1c06cd8b2f798833cab4/openvino-2025.4.1-20426-cp311-cp311-win_amd64.whl", hash = "sha256:695f9b5cdb1bc6315383548517e9836b7580220b711ca9417a034ce55028bf85", size = 41798606, upload-time = "2025-12-17T16:18:04.753Z" },
-    { url = "https://files.pythonhosted.org/packages/a8/9f/77da5039032063747dcf39434662f31d914fd515de86a20a405eea315c53/openvino-2025.4.1-20426-cp312-cp312-macosx_10_15_x86_64.whl", hash = "sha256:8994fcc9082fe4aed1ed2a6e531280de38d7293943c00284560b854945d5af9b", size = 37709218, upload-time = "2025-12-17T16:18:07.829Z" },
-    { url = "https://files.pythonhosted.org/packages/a0/79/57b35b05875e9155d8802815ad2c93bdc46e7c8883ce53109b7ba95f9d8d/openvino-2025.4.1-20426-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:8d082e73af653a40b97efaa8219adf62c60f32060b9929ebcb60d7f14e79e4f1", size = 32880775, upload-time = "2025-12-17T16:18:10.792Z" },
-    { url = "https://files.pythonhosted.org/packages/8a/91/807f4e288969bc696dee2e56d7269abffb56626249642effb8ec2ab7d424/openvino-2025.4.1-20426-cp312-cp312-manylinux2014_x86_64.whl", hash = "sha256:88f074286d420c1a1a95e7f2ba11109a899f2f3b3fd818cfe1e47ead22cc7e45", size = 50278348, upload-time = "2025-12-17T16:18:13.894Z" },
-    { url = "https://files.pythonhosted.org/packages/2e/b4/6c8f68db079b4a140c301c00f9c361df011b4d1205bbdb4cff93f9192348/openvino-2025.4.1-20426-cp312-cp312-manylinux_2_35_aarch64.whl", hash = "sha256:9fb7d45c8bb6c1ea9f90a18b6c9e18c4d3ce0d249198b6d9544b446285a33d3b", size = 28257849, upload-time = "2025-12-17T16:18:16.514Z" },
-    { url = "https://files.pythonhosted.org/packages/64/c2/582bd6d01fc6588bfe35c0f363d294a54daa4587cafe30e932fa51420d04/openvino-2025.4.1-20426-cp312-cp312-win_amd64.whl", hash = "sha256:c50293d1463698012eaa526dcc83f841b85a3f4952eea4c9445c83e0346f8e80", size = 41791284, upload-time = "2025-12-17T16:18:19.673Z" },
-    { url = "https://files.pythonhosted.org/packages/66/13/b00fa1dc7c6829b10c595031ad9cf883ba0f3af0ebbb4f0c39eec74587b1/openvino-2025.4.1-20426-cp313-cp313-macosx_10_15_x86_64.whl", hash = "sha256:526578080e4f593361b2beb03c3549a6a4446b7acfad19ff8b43b27837fa0fc7", size = 37709495, upload-time = "2025-12-17T16:18:22.596Z" },
-    { url = "https://files.pythonhosted.org/packages/a4/b9/2a53eb9f0e9854a9be5f7cd4938c60a8cc7c5683f0fc08aa6ff7c87f5221/openvino-2025.4.1-20426-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:5dd7947a63c89a4b7133a0cecb7b641f05e5ba22133b99241542884ab59117ef", size = 32880891, upload-time = "2025-12-17T16:18:25.159Z" },
-    { url = "https://files.pythonhosted.org/packages/d7/76/099c34ac7563a350325efe6dbc91b5cc20f0aa2331a6e036f2da262bab57/openvino-2025.4.1-20426-cp313-cp313-manylinux2014_x86_64.whl", hash = "sha256:68f8d6cfd74c7a74d68a62c8156830ddaa5b9f1f782d3643def83f659c0a6671", size = 50280569, upload-time = "2025-12-17T16:18:28.621Z" },
-    { url = "https://files.pythonhosted.org/packages/67/84/8b3e5d5599ec093b92f3b7d80323862fd33dbe309267b71df30b932cba85/openvino-2025.4.1-20426-cp313-cp313-manylinux_2_35_aarch64.whl", hash = "sha256:94c80dfd144eb2b5ea075e7127d59ec7160c567ce1d9a68167aa147a4aa50e0e", size = 28257839, upload-time = "2025-12-17T16:18:31.165Z" },
-    { url = "https://files.pythonhosted.org/packages/3c/e5/da52a86cc5f1c86871002712429cdcca0c0dbff12dfbce730b05db60340b/openvino-2025.4.1-20426-cp313-cp313-win_amd64.whl", hash = "sha256:a28eef35e3ed497c3238eb8f3d1ee90647c449707a8b0a7630758cd15555d8dd", size = 41791079, upload-time = "2025-12-17T16:18:34.307Z" },
-    { url = "https://files.pythonhosted.org/packages/36/cb/8fbf8bac4d7a217905410bb98be22db7c9a738b4674bcb32d576905cf9cb/openvino-2025.4.1-20426-cp314-cp314-macosx_10_15_x86_64.whl", hash = "sha256:ea79341a1a4f9215de6f5052addadc724b7789c5c23be2815876675bf9e6d1a9", size = 37693208, upload-time = "2025-12-17T16:18:36.859Z" },
-    { url = "https://files.pythonhosted.org/packages/05/56/ab685085a4a0e8321b0c64ed67fb3f7ea995d90e0d38c5d11d382c627bdc/openvino-2025.4.1-20426-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:87e3451ea9590b181020ec7fdb2c6e8a5700fd679d834b017433dab577d7538a", size = 32883027, upload-time = "2025-12-17T16:18:40.024Z" },
-    { url = "https://files.pythonhosted.org/packages/0d/3a/641acacdcbd4ad440592d3caf11e1ecc90e653d0b82ed1571ea16e14d8df/openvino-2025.4.1-20426-cp314-cp314-manylinux2014_x86_64.whl", hash = "sha256:35498cb7fdae04bcb255637ed1162aa05afd266268effc6fb5b1acb3d56fd0a4", size = 50283186, upload-time = "2025-12-17T16:18:42.831Z" },
-    { url = "https://files.pythonhosted.org/packages/11/62/c23fdd85bfa1d5aae890cfbfd355f2539c181e79bdfeb8d3e506a06977a2/openvino-2025.4.1-20426-cp314-cp314-win_amd64.whl", hash = "sha256:922ab6a53cc832fca07f7da40511ad89dfe5572df596a3944990777147f8fbdd", size = 41797514, upload-time = "2025-12-17T16:18:45.874Z" },
-    { url = "https://files.pythonhosted.org/packages/fe/44/ba24b4b1c9f0dc9e3474c532452d8777da198e820b7d6770f1af77f62fb8/openvino-2025.4.1-20426-cp314-cp314t-macosx_10_15_x86_64.whl", hash = "sha256:f95086869c276fca0a819acc0dd483a90450541be9d4432b01a4efd07e0e2b53", size = 37889115, upload-time = "2025-12-17T16:18:48.556Z" },
-    { url = "https://files.pythonhosted.org/packages/20/6f/1326055d48b4e7447149cb07158dbf8d3812a85af5826f59a2f51aab1b73/openvino-2025.4.1-20426-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:facd552e978926e5f084ee49d90b44746e5d90abc00ec237d9a50b1144cd9a51", size = 33210907, upload-time = "2025-12-17T16:18:51.854Z" },
-    { url = "https://files.pythonhosted.org/packages/49/ed/194a559f77893c7208ce6168890726cea04707114c8eaa6e090f343a4ae0/openvino-2025.4.1-20426-cp314-cp314t-manylinux2014_x86_64.whl", hash = "sha256:840a853c3879879fe465caca41e8bdc21a4e5eda51fb2347f2a7d450f9a5de2f", size = 50332115, upload-time = "2025-12-17T16:18:54.955Z" },
-    { url = "https://files.pythonhosted.org/packages/66/34/6a4e0e89f49f08e90020e6aa9df283bbd4b0311efcad30097decc43624f2/openvino-2025.4.1-20426-cp314-cp314t-win_amd64.whl", hash = "sha256:1f4b38357a88c81a0976525821240dc3e21aeaccee94590d97d62fd5a70836da", size = 41970516, upload-time = "2025-12-17T16:18:57.85Z" },
+    { url = "https://files.pythonhosted.org/packages/cf/cd/056d312d5d69b432a0f057dc2816b0f4f09f12c95a0354b43f4d71b8e97b/openvino-2026.0.0-20965-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:8f1a91a00514280cf2f758c1a6227abddd53330cd783234541a6227526bfd600", size = 30813142, upload-time = "2026-02-23T16:10:04.608Z" },
+    { url = "https://files.pythonhosted.org/packages/e9/7d/d7e428f469021c1ce309d1c000a6f186be414c08655a55250229b6b789c7/openvino-2026.0.0-20965-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:3c6a7d9bf433888b85c916a37b0c7c9b9747158760f6fc8a852299cd231fd20a", size = 53425782, upload-time = "2026-02-23T16:10:07.582Z" },
+    { url = "https://files.pythonhosted.org/packages/1a/4e/487e6e909909aea5d039b98476cdf3514c4e9f58bfa485ce722d2449b446/openvino-2026.0.0-20965-cp310-cp310-manylinux_2_35_aarch64.whl", hash = "sha256:31793138e81f76dd5066063f923c4dbd88f29d9c028e67aa8633d3150cbfe979", size = 28383096, upload-time = "2026-02-23T16:10:10.437Z" },
+    { url = "https://files.pythonhosted.org/packages/c7/b4/95a9c1de9259e83ac420f500278e30ccd52cd9979bb5473b27ec762f8a6e/openvino-2026.0.0-20965-cp310-cp310-win_amd64.whl", hash = "sha256:f7b28ad59dc2017ef7d2622628f8b31d052caa1565ce64d4f39937a2db044dc6", size = 69154088, upload-time = "2026-02-23T16:10:13.676Z" },
+    { url = "https://files.pythonhosted.org/packages/a1/23/171d151d9ccd62cc588fcd5b28e20098a256df27e709c4fb28b2de9e6d4b/openvino-2026.0.0-20965-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:107743d5d5b8c7f5adfce67ab4a2941e6da86073eb06f77522b95597fe5d16e5", size = 30819210, upload-time = "2026-02-23T16:10:17.015Z" },
+    { url = "https://files.pythonhosted.org/packages/0f/f1/21ebfb8f496fe1732de217c6cf676299c884b2e027217d1dec08a8030d65/openvino-2026.0.0-20965-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:ba999f7fea57958a533a715afa976704ea6acf39dfd271a89ce78594e7aaa488", size = 53433492, upload-time = "2026-02-23T16:10:20.075Z" },
+    { url = "https://files.pythonhosted.org/packages/55/bb/97671885490686dfb80a6ca67daaf6d22fcb0889ef466d520d6cb3c427dc/openvino-2026.0.0-20965-cp311-cp311-manylinux_2_35_aarch64.whl", hash = "sha256:61fd7649f123aa04e90222ca30f4288a72fd100c91bea4577f464ee8e94e901c", size = 28389429, upload-time = "2026-02-23T16:10:22.72Z" },
+    { url = "https://files.pythonhosted.org/packages/c8/e2/712d8ad00e577fbf1f0081132f199a1a6885bfafd6739cc18c560ec7eee2/openvino-2026.0.0-20965-cp311-cp311-win_amd64.whl", hash = "sha256:eee912bf4370a4f454c9bcf2cfe31eda85ba6f324c85137d225edffcbc50c456", size = 69161445, upload-time = "2026-02-23T16:10:26.165Z" },
+    { url = "https://files.pythonhosted.org/packages/3b/f3/4273b37e9a7903b09f9dd6cf1907e56c00a6b95d7a7ad801b4af53598192/openvino-2026.0.0-20965-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:98426e7df6366e8a90dec93eac48a1df5c67ab18eb4b5d96ff14884e9910ade0", size = 30862938, upload-time = "2026-02-23T16:10:29.118Z" },
+    { url = "https://files.pythonhosted.org/packages/3c/f8/bd25df6ebd42b2425a2d5fe504389e941adbee41356078a97357469d18cb/openvino-2026.0.0-20965-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:4ad9cbf77ed954b64b056cb91ebb95e5691da1c86238e610b565e5347e73a5c5", size = 53443036, upload-time = "2026-02-23T16:10:32.025Z" },
+    { url = "https://files.pythonhosted.org/packages/d9/6f/570781f36cc270cc573904a2cf1206fdb7329774918eac10f78a264cd855/openvino-2026.0.0-20965-cp312-cp312-manylinux_2_35_aarch64.whl", hash = "sha256:dbf31cc6a29611b0b3e957f51468f5640195b1087d1d875f4c9f03adef24c2cb", size = 28382411, upload-time = "2026-02-23T16:10:34.772Z" },
+    { url = "https://files.pythonhosted.org/packages/30/ed/dd3886bdfd822bb1671c0f892a007a9e27a7fa1f97ea1a7c0c8e901a137c/openvino-2026.0.0-20965-cp312-cp312-win_amd64.whl", hash = "sha256:10af8a90373547c5dec2b53c60dac38a7a29df8662fe097a3c6c67750e7c88c6", size = 69160616, upload-time = "2026-02-23T16:10:39.123Z" },
+    { url = "https://files.pythonhosted.org/packages/6e/76/0b42c62e29b0100425c8cb1577dec8368ccb5def889b136c4bf0d954a89a/openvino-2026.0.0-20965-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:830b42adb5c1ef57c0d7de2e72943f7186783046b0b3b62128f0f6b4bc507fad", size = 30863111, upload-time = "2026-02-23T16:10:42.812Z" },
+    { url = "https://files.pythonhosted.org/packages/71/3f/95b15760d7ae4b7dfefdbadeccae9604985d4335b221350e1bb04701a158/openvino-2026.0.0-20965-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:452902e4b8fba526e8740622cd5638c457d3ae44da7b39e6d4ef7919be0e95d4", size = 53444542, upload-time = "2026-02-23T16:10:46.343Z" },
+    { url = "https://files.pythonhosted.org/packages/9b/ee/73c6866929bfbdb67a0b611358539758aa2970c14a01f3e5fcb2b7caa65b/openvino-2026.0.0-20965-cp313-cp313-manylinux_2_35_aarch64.whl", hash = "sha256:01b963e6eefcfb00e10831a8b5dc14e158e3ed49ae403a64dedd4037c81e9264", size = 28383413, upload-time = "2026-02-23T16:10:49.374Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/26/82d326f3769c9e5c17d34ef10dd0aff4a94a3b550e1d2efe977e5754b84e/openvino-2026.0.0-20965-cp313-cp313-win_amd64.whl", hash = "sha256:14069e5af2ac8a77f6ea55d7020d34cc7d3538d49ebda91a18c00d4da830ab58", size = 69160606, upload-time = "2026-02-23T16:10:52.9Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/0c/26a4efd110f4cef5830c60e8c4cce1aad796526e01af32013297f944bb2d/openvino-2026.0.0-20965-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:f4ef8ddaece0d0815ec7aa6b41390c23551b5a51572cdd46e0136558b2e2d489", size = 30835617, upload-time = "2026-02-23T16:10:56.307Z" },
+    { url = "https://files.pythonhosted.org/packages/fe/8e/52df01e8687f4711259729433226219c6839a0495988ddeb7e27af59aba8/openvino-2026.0.0-20965-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:79ce4b5d7f3a7f84de878752d97620b84e0c4a8ee550fb3bca9fc36fe5669450", size = 53449059, upload-time = "2026-02-23T16:10:59.54Z" },
+    { url = "https://files.pythonhosted.org/packages/f7/a8/bc8e75d3f75ee2529a12be9522f52a8d0e5614f24c00f95a20b69f587d3c/openvino-2026.0.0-20965-cp314-cp314-win_amd64.whl", hash = "sha256:6d33440d290e67836825418134ecf9e17f150d50d3d9c07cf481997f5b1f0e6d", size = 69165824, upload-time = "2026-02-23T16:11:03.127Z" },
+    { url = "https://files.pythonhosted.org/packages/2c/f1/4c0278d333269fff90ee2b9a46ee2c90de4768030393b3d1f079aadb56f7/openvino-2026.0.0-20965-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:b0b8c48d8b033e89a304e0305b2789557793445483d3f86b22a1e177a3da7b2d", size = 31056358, upload-time = "2026-02-23T16:11:06.113Z" },
+    { url = "https://files.pythonhosted.org/packages/a8/06/1a2caa07bfcb4e057048b8d5515a7aff35a2aa53ab5379762c1685cbeacc/openvino-2026.0.0-20965-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:8cbe36e0dacd8676eb69c9a4b564fa430d784f6e2b0e18e7ebc363599256c184", size = 53502042, upload-time = "2026-02-23T16:11:09.744Z" },
+    { url = "https://files.pythonhosted.org/packages/2c/dd/6a05a399d90ad4e8b15e0d5a4dd7de90c10484cb1585bd65e7e69e779762/openvino-2026.0.0-20965-cp314-cp314t-win_amd64.whl", hash = "sha256:a9e5524322c42f6a1283148fb70085aba8640a7d3067ede896085abbff5e33fe", size = 69325734, upload-time = "2026-02-23T16:11:13.283Z" },
 ]
 
 [[package]]
@@ -6859,60 +6767,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b0/77/a5b8c569bf593b0140bde72ea885a803b82086995367bf2037de0159d924/pygments-2.19.2.tar.gz", hash = "sha256:636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887", size = 4968631, upload-time = "2025-06-21T13:39:12.283Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c7/21/705964c7812476f378728bdf590ca4b771ec72385c533964653c68e86bdc/pygments-2.19.2-py3-none-any.whl", hash = "sha256:86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b", size = 1225217, upload-time = "2025-06-21T13:39:07.939Z" },
-]
-
-[[package]]
-name = "pymoo"
-version = "0.6.1.6"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "alive-progress" },
-    { name = "autograd" },
-    { name = "cma" },
-    { name = "deprecated" },
-    { name = "matplotlib" },
-    { name = "moocore" },
-    { name = "numpy" },
-    { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
-    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ad/6c/5637688bb0e484ad7cd84e9f24f575d1b3c4ef28ce0974836bce7660106a/pymoo-0.6.1.6.tar.gz", hash = "sha256:d48077c7b612b149e7db5351459bf96a0950e84ebcd5b7b953bf46b3dcf1ac28", size = 1216128, upload-time = "2025-11-25T03:18:30.651Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/cb/ec/091de8458b96421030aadfa10b0e4c25bd75d1c7123d1b24d76d8f7d902c/pymoo-0.6.1.6-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:f2d48fa7f8f8ea314405ad49a6b7f3dcf8f12c2024e319e2d47ede0937f8b39b", size = 2408116, upload-time = "2025-11-25T03:16:40.894Z" },
-    { url = "https://files.pythonhosted.org/packages/6c/ce/cbbb604855fd9d8acce7f677f0c8d56b26722bae8b6ed1f71cf0226d1a85/pymoo-0.6.1.6-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:c8cfd085b74b3f673378109d8d0734d0cab460e3e78c09f691120ac0c2698aad", size = 1874607, upload-time = "2025-11-25T03:16:43.279Z" },
-    { url = "https://files.pythonhosted.org/packages/52/39/ddbb1aab87dd8d43fb0ef996697f71bdfe9c1b1d80431dffc843137cf7f4/pymoo-0.6.1.6-cp310-cp310-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:49a9cde6ff7cc8497458166e2c14734bf4879c76256412cce0de2af86d2b71a8", size = 4963620, upload-time = "2025-11-25T03:16:47.068Z" },
-    { url = "https://files.pythonhosted.org/packages/de/31/1db5fb5184dd422c62084e68e72de2dccfeea37ef5764ec6c1c152637ef0/pymoo-0.6.1.6-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:007bdabe638d5cc1ff98d1df096e7cea42f266ecc7b84fc0aac695a20b6f02f6", size = 5033031, upload-time = "2025-11-25T03:16:50.849Z" },
-    { url = "https://files.pythonhosted.org/packages/3e/39/a53c970509bef5cec678adca422029e3be3a3adbd9563d521498b5a443e1/pymoo-0.6.1.6-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:62599637724f74820e16d813e6ca86af1733add4251e22b5a6c677df75dec06b", size = 5904102, upload-time = "2025-11-25T03:16:55.102Z" },
-    { url = "https://files.pythonhosted.org/packages/11/3e/b76929def757beedf75deba214958af0a71548bab210b2cd1219265e4462/pymoo-0.6.1.6-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:a4f590fc62021d2583afdc88a2eb5ec878699786585f9ca82edf1fc32557ac96", size = 6088135, upload-time = "2025-11-25T03:16:59.41Z" },
-    { url = "https://files.pythonhosted.org/packages/d6/49/ce483ad86ad9d767e33488f5b1cc39544b21121b481ce4f3c15eb1b1c3e8/pymoo-0.6.1.6-cp310-cp310-win_amd64.whl", hash = "sha256:3b9dcb6959cf2b12c0f1d4ac971fa53074430eb976367b2e7eec0d0301423f31", size = 1830499, upload-time = "2025-11-25T03:17:01.616Z" },
-    { url = "https://files.pythonhosted.org/packages/52/94/0abcc60bd65b2cac34e951d4bbe87514f142772b894de30e643efcd8f02f/pymoo-0.6.1.6-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:e0a42b6f3c26b2725b1edb1d4cfb98e5640bb0638813080ba1aa0daf23b2fd05", size = 2402920, upload-time = "2025-11-25T03:17:04.179Z" },
-    { url = "https://files.pythonhosted.org/packages/d5/00/c252683f897e8a8bac00d8b16210327a631372fd2f8f7d1344f02c96947e/pymoo-0.6.1.6-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:b3e990dea0ad84fa2f89462215e34960579dbb9fef4d880aecb09f50cc18e713", size = 1871767, upload-time = "2025-11-25T03:17:06.368Z" },
-    { url = "https://files.pythonhosted.org/packages/93/6d/f9772585189eec4990e7a39a6c87bb4202cbb89b92fe1800c58897a1b467/pymoo-0.6.1.6-cp311-cp311-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:642308eae98c5b8aee96272e10c6409dd97289ef214ec7383b39425f01549b5f", size = 5120039, upload-time = "2025-11-25T03:17:10.424Z" },
-    { url = "https://files.pythonhosted.org/packages/ef/a3/b48789ba434f0015dc9dd14ab918e0fb0bd8bfb354d8c0b8c491d62255bc/pymoo-0.6.1.6-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:50472dfb93b90b4801c63070a4afc786c52f7f56b345f345024b39cd35ff06c4", size = 5190633, upload-time = "2025-11-25T03:17:14.331Z" },
-    { url = "https://files.pythonhosted.org/packages/df/37/59b1b0e1a1331692b63e0e019cc2b32ed22a33621e447b5aeccbf7b64151/pymoo-0.6.1.6-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:38fa5bf507cd7c07eae0286948db79f761b5b4c5d5956a31fd0e5a771c83fa47", size = 6061562, upload-time = "2025-11-25T03:17:18.037Z" },
-    { url = "https://files.pythonhosted.org/packages/71/06/5f5ceb1daa38693ed5fd83c0f1568e69c7a9b7b65973ea81b6a248d31817/pymoo-0.6.1.6-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:a68fb9d807c1cb6f36e13c24731c496b1e98b9c8810125072f19bd56baa6a4d5", size = 6247686, upload-time = "2025-11-25T03:17:22.399Z" },
-    { url = "https://files.pythonhosted.org/packages/d7/9e/250d5ca97f9474acafb0162695716bf94ba68fdbbb953f269a513ad8c30a/pymoo-0.6.1.6-cp311-cp311-win_amd64.whl", hash = "sha256:df9520fd7fab0761d5698dd36eabcfb18b5eb970ddf01e10eb30b764e4bb72af", size = 1829941, upload-time = "2025-11-25T03:17:24.898Z" },
-    { url = "https://files.pythonhosted.org/packages/19/94/9c6b9b5f18349dd797c0e7effe0dfd51402fa15e7cb293a525d6f73ffe03/pymoo-0.6.1.6-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:fd4715b4015b10ad3cf02e5eb9abb57fe4bfa4d3378f9076b76d60c1ddfa46d6", size = 2417332, upload-time = "2025-11-25T03:17:27.374Z" },
-    { url = "https://files.pythonhosted.org/packages/1b/a5/cc8a39a4ea8e425dbc94db44f35f9e5dda3e1c0fbfdfba9fe9c58db600ab/pymoo-0.6.1.6-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:f62fb1e2ba15f22ff5569c6d364dbf9dfe8b3722a114e6bc1df3cc10f8dd5044", size = 1876468, upload-time = "2025-11-25T03:17:29.407Z" },
-    { url = "https://files.pythonhosted.org/packages/15/e8/c025f7330039cb320280b770a28f843174bddf9372bb9727add1031d21b7/pymoo-0.6.1.6-cp312-cp312-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:cd2b0fb19ce3e71a177ed3b965ce2d4334ffb6aad8f621c124de6dafa09b7758", size = 5086314, upload-time = "2025-11-25T03:17:32.513Z" },
-    { url = "https://files.pythonhosted.org/packages/65/bb/402205166c567bb0b5452e2176dbf2af4b88d3577096f53fdc95be8ef562/pymoo-0.6.1.6-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:533de86c284bf3b7b6da871e2ae07a914eaa5d3a51f5c4e6d7c055d3471c4467", size = 5181206, upload-time = "2025-11-25T03:17:35.211Z" },
-    { url = "https://files.pythonhosted.org/packages/61/62/ef60d8e7674906347dc9877afb4343fd7b21d0bdea60f736db3b857ea903/pymoo-0.6.1.6-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:2a2e9524b07baef135a7143700cc65a504c2123c717a6924fa939947b4fdba73", size = 6006960, upload-time = "2025-11-25T03:17:38.252Z" },
-    { url = "https://files.pythonhosted.org/packages/e6/ec/79ca5ca57d4d9e40691d3d0153675e4b1520278637c372380addc66a5823/pymoo-0.6.1.6-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:819a27ff19c146a64853a86ebab02bc6bbf28fb9fcf119e93cfc855ec6314f72", size = 6208775, upload-time = "2025-11-25T03:17:41.916Z" },
-    { url = "https://files.pythonhosted.org/packages/08/b0/ac4f541e03fdd7e752c1e8ee766b1a6edcdff4d65930b3d593171eec02b3/pymoo-0.6.1.6-cp312-cp312-win_amd64.whl", hash = "sha256:5607e0359c96691158192bd3e2b939beab6d4ed25032ef4cb79edf588c2bb475", size = 1834431, upload-time = "2025-11-25T03:17:44.346Z" },
-    { url = "https://files.pythonhosted.org/packages/7f/96/4e87b2330aaea8a23fe8fcfa3e1d7c60a57c4d968bdd330f2b9cbfeee7ea/pymoo-0.6.1.6-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:798e5af41527324303e56ac806f9ec34c65f31c2df9e904daeca68027bf91266", size = 2408764, upload-time = "2025-11-25T03:17:46.644Z" },
-    { url = "https://files.pythonhosted.org/packages/22/5c/7b2ddc6f764b49a96a9653cc0f758cc773268d88b149ab889fdf42a5abfc/pymoo-0.6.1.6-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:01e848762e04d183e8dcc12e1cfb1e2cdd2c5efeda47961dbcf6c86c09751e30", size = 1872399, upload-time = "2025-11-25T03:17:48.817Z" },
-    { url = "https://files.pythonhosted.org/packages/3e/b9/a70078ae29fe3363e06b0b3c761d9a53474d1fa25ce1f4a3a890ec3cc99a/pymoo-0.6.1.6-cp313-cp313-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:718b9e971e436c2ded520c4a6fe8c83b7f305da1fcc539d6386d025c6e9bfe66", size = 5066526, upload-time = "2025-11-25T03:17:52.178Z" },
-    { url = "https://files.pythonhosted.org/packages/89/94/7896e833bd29d45e5e721b0f71fdef9cf895e593ac28e7f83585218709ed/pymoo-0.6.1.6-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:981bd5b8581e959814a0e51982be1a964945fb7f599cfe7857a63cbc1ad97d58", size = 5176441, upload-time = "2025-11-25T03:17:55.925Z" },
-    { url = "https://files.pythonhosted.org/packages/f5/fe/6b8e2d82f118ef29fada61c0ac473b95cd0d5c742b0bad22bae178cde5c5/pymoo-0.6.1.6-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:7c042120df86240c1451e2a1afb0f76b64acb8d736fb7687bc5e4aec40f7ff9e", size = 5984679, upload-time = "2025-11-25T03:17:59.917Z" },
-    { url = "https://files.pythonhosted.org/packages/02/c3/5f1dd554fef9476642334dd923bc6943136f9d1af7dc97c304f0e3c1684e/pymoo-0.6.1.6-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:5086f46020aa1a13a0e3142ef87b6487e91ea5d25b7b69467039f0d3f5a57cb2", size = 6201995, upload-time = "2025-11-25T03:18:04.152Z" },
-    { url = "https://files.pythonhosted.org/packages/66/34/287e3cae3b2bc3b387cbd1c8f0fecc5038190eef62d823f8b810dca43a95/pymoo-0.6.1.6-cp313-cp313-win_amd64.whl", hash = "sha256:c16e05b36e081d0ea6aee499346f65466811f63f5837f0d09de866624cb7355b", size = 1833324, upload-time = "2025-11-25T03:18:06.495Z" },
-    { url = "https://files.pythonhosted.org/packages/51/ec/f0f65e8abd724e62c9b5ebfcaa2280ed327edd33303d4acc8df1c832e07f/pymoo-0.6.1.6-cp314-cp314-macosx_10_15_universal2.whl", hash = "sha256:7d13e14434f0555fbeda20764d34be4dc94f53ae7040a337928d7bfe42d3422a", size = 2426044, upload-time = "2025-11-25T03:18:08.742Z" },
-    { url = "https://files.pythonhosted.org/packages/dd/19/0113bd220b0e20834216a28fad49eac88c3770660d32aeca7ac29b1a382e/pymoo-0.6.1.6-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:466f88073c9f498bcf75334a2e47279968003d91b7fe01df1b056b5a6c3434d8", size = 1888556, upload-time = "2025-11-25T03:18:11.451Z" },
-    { url = "https://files.pythonhosted.org/packages/fa/dc/e2bba2460219be070316bd0f93a61ff72fc6ae3d14b964cf4e837acf0f5f/pymoo-0.6.1.6-cp314-cp314-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:791188677b42e104c41cd1c65370a94fbbec756d8894947863f42a1f76352c90", size = 5057079, upload-time = "2025-11-25T03:18:16.47Z" },
-    { url = "https://files.pythonhosted.org/packages/fa/a4/7d7e423022ab7ca14893312cc9f41121a1c1edc197b1404ac0b489d9647b/pymoo-0.6.1.6-cp314-cp314-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b9dd7da8b18bffac6b09c75b4a4a645232994d91fc0cdfe39baffdc08fa5d252", size = 5143465, upload-time = "2025-11-25T03:18:20.758Z" },
-    { url = "https://files.pythonhosted.org/packages/06/f1/115a03e18820d09107c1aae1029719bd5a42ed9712f8fcf5e6334f44fe8c/pymoo-0.6.1.6-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:f41b359d6de6c9d99ab7da94f115c5aea4d21e74a252bef7c8debec8f20f0b9f", size = 5985143, upload-time = "2025-11-25T03:18:23.937Z" },
-    { url = "https://files.pythonhosted.org/packages/7d/33/ac62bb650197df717bde976b5edf6e46856714900106df0d541f99f5aa0b/pymoo-0.6.1.6-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:ecf1ce515e72d59b78c909aa142d2369cc3c6d771ac7c9162831c0b62a869c8f", size = 6188089, upload-time = "2025-11-25T03:18:27.163Z" },
-    { url = "https://files.pythonhosted.org/packages/03/bd/76eecf37a469a2e19c82c85b20402cbeece261ef9d9286189502f39e3566/pymoo-0.6.1.6-cp314-cp314-win_amd64.whl", hash = "sha256:56ecb6f9f5ac0559829e183a23ea3672eae8c1eb9d745305bef98da8d1614d28", size = 1851874, upload-time = "2025-11-25T03:18:28.969Z" },
 ]
 
 [[package]]
@@ -8880,7 +8734,7 @@ wheels = [
 
 [[package]]
 name = "sphinx-autodoc-typehints"
-version = "3.6.3"
+version = "3.7.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'linux' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu118' and extra != 'extra-8-anomalib-cu121' and extra != 'extra-8-anomalib-cu124' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu'",
@@ -8941,9 +8795,9 @@ resolution-markers = [
 dependencies = [
     { name = "sphinx", version = "9.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/64/5f/ebcaed1a67e623e4a7622808a8be6b0fd8344313e185f62e85a26b0ce26a/sphinx_autodoc_typehints-3.6.3.tar.gz", hash = "sha256:6c387b47d9ad5e75b157810af5bad46901f0a22708ed5e4adf466885a9c60910", size = 38288, upload-time = "2026-02-18T04:22:08.384Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b9/54/319628e24e98102e6f73cf6e5f345324a94d9adc18d456193b84f2ac1608/sphinx_autodoc_typehints-3.7.0.tar.gz", hash = "sha256:f7c536f4c0a729324cfebfaa3787c80ca14d08817952153e6da4e971c5306c20", size = 41344, upload-time = "2026-02-23T20:54:58.529Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0a/bd/2b853836d152e40a27655828fdc02c5128f294ac452ad9a13424bb7f92fa/sphinx_autodoc_typehints-3.6.3-py3-none-any.whl", hash = "sha256:46ebc68fa85b320d55887a8d836a01e12e3b7744da973e70af8cedc74072aad5", size = 20882, upload-time = "2026-02-18T04:22:07.238Z" },
+    { url = "https://files.pythonhosted.org/packages/ec/2c/ded433effc5943195a64e18404fd46c195aca559cd9bede1ae73f8bbf67f/sphinx_autodoc_typehints-3.7.0-py3-none-any.whl", hash = "sha256:ad0c9759bac0c7462768003bb57e7bb853c75b74d603e818511c56c10931e72f", size = 21558, upload-time = "2026-02-23T20:54:57.015Z" },
 ]
 
 [[package]]
@@ -9550,7 +9404,7 @@ wheels = [
 
 [[package]]
 name = "timm"
-version = "1.0.24"
+version = "1.0.25"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "huggingface-hub" },
@@ -9575,9 +9429,9 @@ dependencies = [
     { name = "torchvision", version = "0.24.1+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" }, marker = "(extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra != 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu') or (extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu118' and extra != 'extra-8-anomalib-cu121' and extra != 'extra-8-anomalib-cu124' and extra != 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu')" },
     { name = "torchvision", version = "0.25.0+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "extra == 'extra-8-anomalib-cu130' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra != 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra != 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra != 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra != 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu')" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f4/9d/0ea45640be447445c8664ce2b10c74f763b0b0b9ed11620d41a4d4baa10c/timm-1.0.24.tar.gz", hash = "sha256:c7b909f43fe2ef8fe62c505e270cd4f1af230dfbc37f2ee93e3608492b9d9a40", size = 2412239, upload-time = "2026-01-07T00:26:17.541Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d7/2c/593109822fe735e637382aca6640c1102c19797f7791f1fd1dab2d6c3cb1/timm-1.0.25.tar.gz", hash = "sha256:47f59fc2754725735cc81bb83bcbfce5bec4ebd5d4bb9e69da57daa92fcfa768", size = 2414743, upload-time = "2026-02-23T16:49:00.137Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/92/dd/c1f5b0890f7b5db661bde0864b41cb0275be76851047e5f7e085fe0b455a/timm-1.0.24-py3-none-any.whl", hash = "sha256:8301ac783410c6ad72c73c49326af6d71a9e4d1558238552796e825c2464913f", size = 2560563, upload-time = "2026-01-07T00:26:13.956Z" },
+    { url = "https://files.pythonhosted.org/packages/ef/50/de09f69a74278a16f08f1d562047a2d6713783765ee3c6971881a2b21a3f/timm-1.0.25-py3-none-any.whl", hash = "sha256:bef7f61dd717cb2dbbb7e326f143e13d660a47ecbd84116e6fe33732bed5c484", size = 2565837, upload-time = "2026-02-23T16:48:58.324Z" },
 ]
 
 [[package]]
@@ -10488,7 +10342,7 @@ wheels = [
 
 [[package]]
 name = "tox"
-version = "4.44.0"
+version = "4.45.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cachetools" },
@@ -10503,9 +10357,9 @@ dependencies = [
     { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "virtualenv" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0b/73/dadb7954bdb3f67662322faaef9fe5ede418527d8cff0c57fa368c558f37/tox-4.44.0.tar.gz", hash = "sha256:0c911cbc448a2ac5dd7cbb6be2f9ffa26d0a10405982f9efea654803b23cec77", size = 243605, upload-time = "2026-02-20T21:29:15.879Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9c/ea/9af964c08db7f08d31b296201191157979443b4dbfbbada41d2539d8bba3/tox-4.45.0.tar.gz", hash = "sha256:c0ce50ce0f7ace524cca9cf85d4a9fbd8e338aaa830e33521d3355f3f2f97c05", size = 246134, upload-time = "2026-02-23T19:47:45.827Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/78/cc/6f3b1775effb0511df6136fd66b59000b1a7977e7d908725d8336649d0fa/tox-4.44.0-py3-none-any.whl", hash = "sha256:b850fb8d1803d132c3120a189b2ae7fe319a07a9cb4254d81ac9c94e3230bc0f", size = 197333, upload-time = "2026-02-20T21:29:14.007Z" },
+    { url = "https://files.pythonhosted.org/packages/78/b3/c38c4b790e1447ccb2457cf626e7cf429ec989fb741fcaaa10c98bc07f4d/tox-4.45.0-py3-none-any.whl", hash = "sha256:a9910fab652c9b378659a4d13a2cbdaebd3737c60bd1a96b7b573a89824f4e7c", size = 199116, upload-time = "2026-02-23T19:47:44.248Z" },
 ]
 
 [[package]]
@@ -10760,7 +10614,7 @@ wheels = [
 
 [[package]]
 name = "virtualenv"
-version = "20.38.0"
+version = "20.39.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "distlib" },
@@ -10768,9 +10622,9 @@ dependencies = [
     { name = "platformdirs" },
     { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu118') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu121') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu118' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu124') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu121' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu124' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d2/03/a94d404ca09a89a7301a7008467aed525d4cdeb9186d262154dd23208709/virtualenv-20.38.0.tar.gz", hash = "sha256:94f39b1abaea5185bf7ea5a46702b56f1d0c9aa2f41a6c2b8b0af4ddc74c10a7", size = 5864558, upload-time = "2026-02-19T07:48:02.385Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ed/54/809199edc537dbace273495ac0884d13df26436e910a5ed4d0ec0a69806b/virtualenv-20.39.0.tar.gz", hash = "sha256:a15f0cebd00d50074fd336a169d53422436a12dfe15149efec7072cfe817df8b", size = 5869141, upload-time = "2026-02-23T18:09:13.349Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/42/d7/394801755d4c8684b655d35c665aea7836ec68320304f62ab3c94395b442/virtualenv-20.38.0-py3-none-any.whl", hash = "sha256:d6e78e5889de3a4742df2d3d44e779366325a90cf356f15621fddace82431794", size = 5837778, upload-time = "2026-02-19T07:47:59.778Z" },
+    { url = "https://files.pythonhosted.org/packages/f7/b4/8268da45f26f4fe84f6eae80a6ca1485ffb490a926afecff75fc48f61979/virtualenv-20.39.0-py3-none-any.whl", hash = "sha256:44888bba3775990a152ea1f73f8e5f566d49f11bbd1de61d426fd7732770043e", size = 5839121, upload-time = "2026-02-23T18:09:11.173Z" },
 ]
 
 [[package]]

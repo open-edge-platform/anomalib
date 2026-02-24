@@ -1,6 +1,6 @@
 # Anomalib Studio UI Architecture
 
-The Anomalib studio aims to provide a user experience and design language consistent with the Geti ecosystem. To achieve this, it reuses many architectural decisions from Geti.
+Anomalib Studio aims to provide a user experience and design language consistent with the Geti ecosystem. To achieve this, it reuses many architectural decisions from Geti.
 
 ## Goals
 

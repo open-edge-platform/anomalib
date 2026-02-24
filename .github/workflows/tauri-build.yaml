@@ -1,0 +1,347 @@
+# Tauri Application Build Workflow
+#
+# This workflow builds the Anomalib Studio Tauri application for Linux (.deb),
+# Windows (MSIX), and macOS (.dmg).
+#
+# Key Features:
+# - Builds Python backend sidecar using PyInstaller
+# - Builds UI frontend
+# - Linux: Creates Tauri .deb package
+# - Windows: Creates MSIX package (makeappx + optional signing)
+# - macOS: Creates .dmg with patched .app bundle (moves _internal/ to Contents/Frameworks/)
+#
+# Process Stages (Linux):
+# 1. Setup -> 2. Build Sidecar -> 3. Build UI -> 4. Build Tauri -> 5. Upload .deb
+#
+# Process Stages (Windows):
+# 1. Setup -> 2. Build Sidecar -> 3. Build UI -> 4. Build Tauri -> 5. Create MSIX -> 6. (Optional) Sign -> 7. Upload
+#
+# Process Stages (macOS):
+# 1. Setup -> 2. Build Sidecar -> 3. Build UI -> 4. Build Tauri .dmg -> 5. Patch DMG -> 6. Upload .dmg
+
+name: Tauri Build
+
+on:
+  push:
+    branches: ["main", "feature/**"]
+    paths:
+      - "application/**"
+      - ".github/workflows/tauri-build.yaml"
+  pull_request:
+    branches: ["main", "feature/**"]
+    paths:
+      - "application/**"
+      - ".github/workflows/tauri-build.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # build-linux:
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 90
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       accelerator: [cpu, cu124, xpu]
+
+  #   steps:
+  #     - name: Runner cleanup
+  #       uses: open-edge-platform/geti-ci/actions/cleanup-runner@63eb5023d2b0c0a1bd9f15341add63b167fc9458
+  #       with:
+  #         type: "all"
+  #     - name: Checkout repository
+  #       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+  #       with:
+  #         persist-credentials: false
+
+  #     - name: Setup Python
+  #       uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+  #       with:
+  #         python-version: "3.13"
+
+  #     - name: Install uv
+  #       uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+  #       with:
+  #         version: "latest"
+
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+  #       with:
+  #         node-version: "24"
+
+  #     - name: Install Rust
+  #       uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
+
+  #     - name: Cache Rust dependencies
+  #       uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+  #       with:
+  #         path: |
+  #           ~/.cargo/bin/
+  #           ~/.cargo/registry/index/
+  #           ~/.cargo/registry/cache/
+  #           ~/.cargo/git/db/
+  #           application/binary/tauri/src-tauri/target/
+  #         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-cargo-
+
+  #     - name: Build Python sidecar (${{ matrix.accelerator }})
+  #       working-directory: application/backend
+  #       run: |
+  #         uv sync --no-dev --extra ${{ matrix.accelerator }}
+  #         source .venv/bin/activate
+  #         cd ../binary/sidecar
+  #         uv run --active --with pyinstaller pyinstaller anomalib_studio.spec
+  #         # Rename binary with target triple
+  #         TARGET_TRIPLE=$(rustc -Vv | grep host | cut -f2 -d' ')
+  #         mv dist/anomalib-studio-backend/anomalib-studio-backend "dist/anomalib-studio-backend/anomalib-studio-backend-${TARGET_TRIPLE}"
+
+  #     - name: Install Tauri dependencies
+  #       working-directory: application/binary/tauri
+  #       run: npm ci
+
+  #     - name: Build Tauri .deb package
+  #       working-directory: application/binary/tauri
+  #       run: |
+  #         npx tauri build --no-sign --bundles deb -v
+
+  #     - name: Upload .deb artifact
+  #       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+  #       with:
+  #         name: anomalib-studio-linux-deb-${{ matrix.accelerator }}
+  #         path: application/binary/tauri/src-tauri/target/release/bundle/deb/*.deb
+  #         retention-days: 30
+  #         if-no-files-found: error
+
+  build-windows:
+    name: Build Windows MSIX
+    # Only run Windows build when signing secrets are available.
+    # On fork PRs, GitHub does not expose repository secrets, so this job will be skipped.
+    if: ${{ secrets.MSIX_SIGN_CERTIFICATE != '' && secrets.MSIX_SIGN_CERTIFICATE_PASSWORD != '' }}
+    runs-on: windows-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        accelerator: [cpu, cu124, xpu]
+    env:
+      TAURI_PATH: application/binary/tauri
+      TAURI_SRC_PATH: application/binary/tauri/src-tauri
+      SIDECAR_PATH: application/binary/sidecar
+      BACKEND_PATH: application/backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          persist-credentials: false
+
+      - name: Define paths
+        id: paths
+        env:
+          ACCELERATOR: ${{ matrix.accelerator }}
+        run: |
+          $version = "0.1.0"
+          $runNum = if ($env:GITHUB_RUN_NUMBER) { $env:GITHUB_RUN_NUMBER } else { "0" }
+          $buildVersion = "$version.$runNum"
+          $uiBuildPath = "$env:TAURI_SRC_PATH\target\release"
+          $msixBundlePath = "$uiBuildPath\bundle\msix"
+          $msixFileName = "anomalib-studio-$($env:ACCELERATOR)-$buildVersion.msix"
+          $msixFilePath = "$msixBundlePath\$msixFileName"
+
+          $sdkBin = "${env:ProgramFiles(x86)}\Windows Kits\10\bin"
+          $sdkVersion = Get-ChildItem $sdkBin -Directory | Where-Object { $_.Name -match '^10\.' } | Sort-Object Name -Descending | Select-Object -First 1 -ExpandProperty Name
+          $sdkRoot = "$sdkBin\$sdkVersion\x64"
+          $makeappx = "$sdkRoot\makeappx.exe"
+          $signtool = "$sdkRoot\signtool.exe"
+
+          "UI_BUILD_PATH=$uiBuildPath" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "MSIX_BUNDLE_PATH=$msixBundlePath" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "MSIX_FILE_NAME=$msixFileName" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "MSIX_FILE_PATH=$msixFilePath" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "MAKEAPPX_PATH=$makeappx" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "SIGNTOOL_PATH=$signtool" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Set up Python
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+        with:
+          version: "latest"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
+        with:
+          toolchain: stable
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            application/binary/tauri/src-tauri/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Setup Node.js
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: application/binary/tauri/package-lock.json
+
+      - name: Enable long paths
+        run: reg add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f
+
+      - name: Configure Git long paths
+        run: git config --system core.longpaths true
+
+      - name: Build Python sidecar (Windows ${{ matrix.accelerator }})
+        working-directory: application/backend
+        run: |
+          uv sync --no-dev --extra ${{ matrix.accelerator }}
+          .\.venv\Scripts\Activate.ps1
+          Push-Location ..\binary\sidecar
+          uv run --active --with pyinstaller pyinstaller anomalib_studio.spec
+          Pop-Location
+
+      - name: Install Tauri dependencies
+        working-directory: application/binary/tauri
+        run: npm ci
+
+      - name: Build Tauri app
+        working-directory: application/binary/tauri
+        # _internal is not in tauri.conf.json resources by default because
+        # Tauri's build script scans every resource file for rerun-if-changed,
+        # and _internal has thousands of Python runtime files that cause slow
+        # rebuilds and "file in use" errors on Windows during dev. We inject
+        # the resource mapping only for production builds via --config.
+        run: npx tauri build -v --config '{"bundle":{"resources":{"sidecar/_internal/":"_internal/"}}}'
+
+      - name: Create MSIX package
+        run: |
+          New-Item -ItemType Directory -Force -Path $env:MSIX_BUNDLE_PATH | Out-Null
+          Copy-Item "$env:UI_BUILD_PATH\anomalib-studio.exe" -Destination $env:MSIX_BUNDLE_PATH
+          $backendExe = Get-ChildItem "$env:UI_BUILD_PATH" -Filter "anomalib-studio-backend*.exe" | Select-Object -First 1
+          if ($backendExe) {
+            Copy-Item $backendExe.FullName -Destination $env:MSIX_BUNDLE_PATH
+            Copy-Item $backendExe.FullName -Destination "$env:MSIX_BUNDLE_PATH\anomalib-studio-backend.exe"
+          }
+          if (Test-Path "$env:UI_BUILD_PATH\_internal") {
+            Copy-Item "$env:UI_BUILD_PATH\_internal" -Destination $env:MSIX_BUNDLE_PATH -Recurse
+          }
+          Copy-Item "$env:TAURI_SRC_PATH\msix\*" -Destination $env:MSIX_BUNDLE_PATH -Recurse
+          New-Item -ItemType Directory -Force -Path "$env:MSIX_BUNDLE_PATH\Assets" | Out-Null
+          Copy-Item "$env:TAURI_SRC_PATH\icons\icon.png" -Destination "$env:MSIX_BUNDLE_PATH\Assets\logo.png"
+          & "$env:MAKEAPPX_PATH" pack /d $env:MSIX_BUNDLE_PATH /p $env:MSIX_FILE_PATH
+
+      - name: Sign MSIX package
+        env:
+          MSIX_SIGN_CERTIFICATE: ${{ secrets.MSIX_SIGN_CERTIFICATE }}
+          MSIX_SIGN_CERTIFICATE_PASSWORD: ${{ secrets.MSIX_SIGN_CERTIFICATE_PASSWORD }}
+        run: |
+          $bytes = [System.Convert]::FromBase64String($env:MSIX_SIGN_CERTIFICATE)
+          [System.IO.File]::WriteAllBytes("sign.pfx", $bytes)
+          try {
+            & "$env:SIGNTOOL_PATH" sign /fd SHA256 /a /f "sign.pfx" /p "$env:MSIX_SIGN_CERTIFICATE_PASSWORD" $env:MSIX_FILE_PATH
+          }
+          finally {
+            if (Test-Path "sign.pfx") { Remove-Item "sign.pfx" -Force }
+          }
+
+      - name: Upload MSIX artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: anomalib-studio-windows-msix-${{ matrix.accelerator }}
+          path: ${{ env.MSIX_FILE_PATH }}
+          retention-days: 30
+          if-no-files-found: error
+
+  # build-macos:
+  #   name: Build macOS DMG
+  #   runs-on: macos-latest
+  #   timeout-minutes: 90
+
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+  #       with:
+  #         persist-credentials: false
+
+  #     - name: Setup Python
+  #       uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+  #       with:
+  #         python-version: "3.13"
+
+  #     - name: Install uv
+  #       uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+  #       with:
+  #         version: "latest"
+
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+  #       with:
+  #         node-version: "24"
+
+  #     - name: Install Rust
+  #       uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7
+
+  #     - name: Cache Rust dependencies
+  #       uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
+  #       with:
+  #         path: |
+  #           ~/.cargo/bin/
+  #           ~/.cargo/registry/index/
+  #           ~/.cargo/registry/cache/
+  #           ~/.cargo/git/db/
+  #           application/binary/tauri/src-tauri/target/
+  #         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-cargo-
+
+  #     - name: Build Python sidecar
+  #       working-directory: application/backend
+  #       run: |
+  #         uv sync --no-dev
+  #         source .venv/bin/activate
+  #         cd ../binary/sidecar
+  #         uv run --active --with pyinstaller pyinstaller anomalib_studio.spec
+  #         # Rename binary with target triple
+  #         TARGET_TRIPLE=$(rustc -Vv | grep host | cut -f2 -d' ')
+  #         mv dist/anomalib-studio-backend/anomalib-studio-backend "dist/anomalib-studio-backend/anomalib-studio-backend-${TARGET_TRIPLE}"
+
+  #     - name: Install Tauri dependencies
+  #       working-directory: application/binary/tauri
+  #       run: npm ci
+
+  #     - name: Build Tauri .dmg package
+  #       working-directory: application/binary/tauri
+  #       run: |
+  #         npx tauri build --bundles dmg --no-sign -v --config '{"bundle":{"resources":{"sidecar/_internal/":"_internal/"}}}'
+
+  #     - name: Patch macOS .dmg (move _internal contents to Contents/Frameworks)
+  #       run: |
+  #         DMG_PATH=$(ls application/binary/tauri/src-tauri/target/release/bundle/dmg/*.dmg)
+  #         bash application/binary/tauri/src-tauri/install_scripts/macos_patch_dmg.sh "$DMG_PATH"
+
+  #     - name: Upload .dmg artifact
+  #       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+  #       with:
+  #         name: anomalib-studio-macos-dmg
+  #         path: application/binary/tauri/src-tauri/target/release/bundle/dmg/*.dmg
+  #         retention-days: 30
+  #         if-no-files-found: error
