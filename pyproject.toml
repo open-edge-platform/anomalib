@@ -75,6 +75,9 @@ loggers = [
     "mlflow >=1.0.0",
 ]
 notebooks = ["gitpython", "ipykernel", "ipywidgets", "notebook"]
+# dataset specific dependencies
+datasets = ["pyarrow"]
+# documentation dependencies
 docs = [
     "myst-parser[linkify]",
     "nbsphinx",
@@ -85,6 +88,7 @@ docs = [
     "sphinx-copybutton",
     "sphinx_design",
 ]
+# testing dependencies
 test = [
     "prek",
     "pytest",
@@ -129,7 +133,7 @@ xpu = [
     "torchvision>=0.19.0",
     "pytorch-triton-xpu ; sys_platform == 'linux' or sys_platform == 'win32'",
 ]
-full = ["anomalib[clip,openvino,loggers,notebooks,vlm,video]"]
+full = ["anomalib[clip,datasets,openvino,loggers,notebooks,vlm,video]"]
 dev = ["anomalib[full,docs,test]"]
 
 [project.scripts]
