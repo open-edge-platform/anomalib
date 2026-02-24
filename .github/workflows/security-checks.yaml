@@ -94,10 +94,12 @@ on:
 
 permissions:
   contents: read
-  security-events: write # needed to upload results
 
 jobs:
   security:
+    permissions:
+      contents: read
+      security-events: write # needed to upload results
     uses: ./.github/workflows/_reusable-security-scan.yaml
     with:
       # For scheduled runs, use full scan configuration
