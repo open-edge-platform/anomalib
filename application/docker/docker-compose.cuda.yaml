@@ -20,7 +20,7 @@ services:
       # Use root directory as context to build the image
       context: ../../
       dockerfile: application/docker/Dockerfile
-      target: anomalib-studio-cuda
+      target: anomalib-studio-gpu
       <<: *proxies
     working_dir: /app/application/backend
     container_name: anomalib-studio-${AI_DEVICE:-cpu}
