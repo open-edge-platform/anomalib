@@ -1,7 +1,58 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { selectPreferredDevice } from './device-metadata';
+import type { SchemaDeviceInfo } from 'src/api/openapi-spec';
+
+import { getDeviceDescription, getDeviceKey, getDeviceLabel, selectPreferredDevice } from './device-metadata';
+
+const makeDevice = (
+    type: string,
+    name: string,
+    index: number | null = null,
+    memory: number | null = null
+): SchemaDeviceInfo => ({
+    type: type as SchemaDeviceInfo['type'],
+    name,
+    memory,
+    index,
+    openvino_name: null,
+});
+
+describe('getDeviceKey', () => {
+    it('returns type for devices without index', () => {
+        expect(getDeviceKey(makeDevice('cpu', 'CPU'))).toBe('cpu');
+        expect(getDeviceKey(makeDevice('mps', 'MPS'))).toBe('mps');
+    });
+
+    it('returns type-index for devices with index', () => {
+        expect(getDeviceKey(makeDevice('xpu', 'Intel(R) Graphics', 0))).toBe('xpu-0');
+        expect(getDeviceKey(makeDevice('cuda', 'NVIDIA RTX 4090', 1))).toBe('cuda-1');
+    });
+});
+
+describe('getDeviceLabel', () => {
+    it('returns name for devices without index', () => {
+        expect(getDeviceLabel(makeDevice('cpu', 'CPU'))).toBe('CPU');
+        expect(getDeviceLabel(makeDevice('mps', 'MPS'))).toBe('MPS');
+    });
+
+    it('returns name with [index] for indexed devices', () => {
+        expect(getDeviceLabel(makeDevice('xpu', 'Intel(R) Graphics', 0))).toBe('Intel(R) Graphics [0]');
+        expect(getDeviceLabel(makeDevice('cuda', 'NVIDIA RTX 4090', 1))).toBe('NVIDIA RTX 4090 [1]');
+    });
+});
+
+describe('getDeviceDescription', () => {
+    it('returns description for known device types', () => {
+        expect(getDeviceDescription('cpu')).toBe('High compatibility. Can be slow for large models.');
+        expect(getDeviceDescription('XPU')).toBe('Intel unified accelerator architecture.');
+        expect(getDeviceDescription('CUDA')).toBe('Accelerated training on NVIDIA CUDA-capable GPUs.');
+    });
+
+    it('returns undefined for unknown device types', () => {
+        expect(getDeviceDescription('unknown')).toBeUndefined();
+    });
+});
 
 describe('selectPreferredDevice', () => {
     it('returns null for empty device list', () => {
@@ -9,27 +60,46 @@ describe('selectPreferredDevice', () => {
     });
 
     it('prefers XPU over CPU', () => {
-        expect(selectPreferredDevice(['CPU', 'XPU'])).toBe('XPU');
-        expect(selectPreferredDevice(['xpu', 'cpu'])).toBe('xpu');
+        const devices = [makeDevice('cpu', 'CPU'), makeDevice('xpu', 'Intel(R) Graphics', 0)];
+        expect(selectPreferredDevice(devices)).toBe('xpu-0');
     });
 
     it('prefers GPU/CUDA over CPU', () => {
-        expect(selectPreferredDevice(['CPU', 'GPU'])).toBe('GPU');
-        expect(selectPreferredDevice(['CPU', 'CUDA'])).toBe('CUDA');
-        expect(selectPreferredDevice(['cuda', 'cpu'])).toBe('cuda');
+        const devices = [makeDevice('cpu', 'CPU'), makeDevice('cuda', 'NVIDIA RTX 4090', 0)];
+        expect(selectPreferredDevice(devices)).toBe('cuda-0');
     });
 
-    it('returns first device if no preferred devices found', () => {
-        expect(selectPreferredDevice(['unknown1', 'unknown2'])).toBe('unknown1');
-        expect(selectPreferredDevice(['custom-device'])).toBe('custom-device');
+    it('returns first device key if no preferred devices found', () => {
+        // All known types are in DEVICE_PRIORITY, so this tests an unlikely edge case
+        const devices = [makeDevice('cpu', 'CPU')];
+        expect(selectPreferredDevice(devices)).toBe('cpu');
     });
 
     it('respects priority order', () => {
         // XPU has highest priority
-        expect(selectPreferredDevice(['CPU', 'GPU', 'XPU'])).toBe('XPU');
-        // GPU before TPU
-        expect(selectPreferredDevice(['CPU', 'TPU', 'GPU'])).toBe('GPU');
+        const devices1 = [
+            makeDevice('cpu', 'CPU'),
+            makeDevice('cuda', 'NVIDIA GPU', 0),
+            makeDevice('xpu', 'Intel(R) Graphics', 0),
+        ];
+        expect(selectPreferredDevice(devices1)).toBe('xpu-0');
+
+        // CUDA before MPS
+        const devices2 = [makeDevice('cpu', 'CPU'), makeDevice('mps', 'MPS'), makeDevice('cuda', 'NVIDIA GPU', 0)];
+        expect(selectPreferredDevice(devices2)).toBe('cuda-0');
+
         // MPS before CPU
-        expect(selectPreferredDevice(['CPU', 'MPS'])).toBe('MPS');
+        const devices3 = [makeDevice('cpu', 'CPU'), makeDevice('mps', 'MPS')];
+        expect(selectPreferredDevice(devices3)).toBe('mps');
+    });
+
+    it('handles multiple devices of the same type', () => {
+        const devices = [
+            makeDevice('cpu', 'CPU'),
+            makeDevice('xpu', 'Intel(R) Graphics', 0),
+            makeDevice('xpu', 'Intel(R) Graphics', 1),
+        ];
+        // Should prefer the first XPU found
+        expect(selectPreferredDevice(devices)).toBe('xpu-0');
     });
 });
