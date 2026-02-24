@@ -1,3 +1,5 @@
+import { getApiUrl } from '@anomalib-studio/api';
+import { isTauri } from '@tauri-apps/api/core';
 import { isString } from 'lodash-es';
 
 import { MediaItem } from './dataset/types';
@@ -10,7 +12,77 @@ export const isStatusActive = (status: string) => {
     return ['running', 'active'].includes(status);
 };
 
-export const downloadBlob = (blob: Blob, filename: string) => {
+/**
+ * Tauri save dialog extensions for downloads.
+ * Covers: compressed files, images, OpenVINO (xml/bin), ONNX, Torch (pt/pth).
+ * Using concrete extensions instead of '*' avoids platform/runtime issues.
+ */
+const TauriSaveDialogExtensions = [
+    // Compressed (model exports, logs, etc.)
+    'zip',
+    'tar',
+    'gz',
+    'tgz',
+    '7z',
+    // Images (dataset downloads)
+    'jpg',
+    'jpeg',
+    'png',
+    'gif',
+    'bmp',
+    'webp',
+    'tiff',
+    'tif',
+    'jfif',
+    // OpenVINO model
+    'xml',
+    'bin',
+    // ONNX model
+    'onnx',
+    // Torch model
+    'pt',
+    'pth',
+] as const;
+
+/**
+ * Downloads a blob as a file. In Tauri, shows a save dialog to let the user choose the location.
+ * In browser, uses the traditional download approach.
+ */
+export const downloadBlob = async (blob: Blob, filename: string): Promise<void> => {
+    if (isTauri()) {
+        try {
+            const { save } = await import('@tauri-apps/plugin-dialog');
+            const { writeFile } = await import('@tauri-apps/plugin-fs');
+
+            const filePath = await save({
+                defaultPath: filename,
+                filters: [
+                    {
+                        name: 'Supported types',
+                        extensions: [...TauriSaveDialogExtensions],
+                    },
+                ],
+            });
+
+            if (filePath) {
+                // Convert blob to Uint8Array and write to file
+                const arrayBuffer = await blob.arrayBuffer();
+                const contents = new Uint8Array(arrayBuffer);
+                await writeFile(filePath, contents);
+            }
+        } catch {
+            // Fallback to browser download if Tauri save fails
+            downloadBlobBrowser(blob, filename);
+        }
+    } else {
+        downloadBlobBrowser(blob, filename);
+    }
+};
+
+/**
+ * Browser-based blob download using anchor element
+ */
+const downloadBlobBrowser = (blob: Blob, filename: string): void => {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -52,7 +124,7 @@ export const formatSize = (bytes: number | null | undefined) => {
 export const isNonEmptyString = (value: unknown): value is string => isString(value) && value !== '';
 
 export const getThumbnailUrl = (mediaItem: MediaItem) =>
-    `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail`;
+    getApiUrl(`/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/thumbnail`);
 
 export const formatDuration = (seconds: number | null): string | null => {
     if (seconds === null) return null;
