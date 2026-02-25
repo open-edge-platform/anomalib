@@ -98,6 +98,7 @@ def test_update_cuda_version_with_available_torch_cuda_build() -> None:
     assert update_cuda_version_with_available_torch_cuda_build("11.8", "2.6.0") == "11.8"
     assert update_cuda_version_with_available_torch_cuda_build("12.4", "2.6.0") == "12.4"
     assert update_cuda_version_with_available_torch_cuda_build("12.6", "2.7.0") == "12.6"
+    assert update_cuda_version_with_available_torch_cuda_build("11.8", "2.8.0") == "12.6"
 
 
 def test_get_cuda_suffix() -> None:
