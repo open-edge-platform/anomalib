@@ -34,7 +34,7 @@ on:
       - ".github/workflows/tauri-build.yaml"
   workflow_dispatch:
 
-permissions: {} # No permissions by default on workflow level
+permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
