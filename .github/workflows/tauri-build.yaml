@@ -1,5 +1,9 @@
 # Tauri Application Build Workflow
 #
+# Build steps follow application/binary/README.md. Windows flow is aligned with
+# open-edge-platform/training_extensions .github/workflows/windows-installer.yml
+# (workflow_dispatch inputs, MSIX makeappx + signing).
+#
 # This workflow builds the Anomalib Studio Tauri application for Linux (.deb),
 # Windows (MSIX), and macOS (.dmg).
 #
@@ -33,6 +37,24 @@ on:
       - "application/**"
       - ".github/workflows/tauri-build.yaml"
   workflow_dispatch:
+    inputs:
+      build_version:
+        description: "Build version for produced MSIX (e.g. 0.1.0.123). Empty = 0.1.0.<run_number>"
+        type: string
+        required: false
+      accelerator:
+        description: "Backend accelerator to build (matrix: cpu, cu124, xpu)"
+        type: choice
+        options:
+          - cpu
+          - cu124
+          - xpu
+        default: cpu
+      debug_build:
+        description: "Produce debug build (unoptimized, with symbols)"
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -122,15 +144,19 @@ jobs:
 
   build-windows:
     name: Build Windows MSIX
-    # Only run Windows build when signing secrets are available.
-    # On fork PRs, GitHub does not expose repository secrets, so this job will be skipped.
-    if: ${{ secrets.MSIX_SIGN_CERTIFICATE != '' && secrets.MSIX_SIGN_CERTIFICATE_PASSWORD != '' }}
+    # Only run in the source repo where MSIX signing secrets are configured.
+    # Skipped on forks; run manually via workflow_dispatch from the repo.
+    if: github.repository == 'open-edge-platform/anomalib'
     runs-on: windows-latest
     timeout-minutes: 90
+    permissions:
+      contents: read
+      actions: write
     strategy:
       fail-fast: false
       matrix:
-        accelerator: [cpu, cu124, xpu]
+        # On workflow_dispatch use chosen accelerator; on push/PR build all.
+        accelerator: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', inputs.accelerator)) || fromJSON('["cpu", "cu124", "xpu"]') }}
     env:
       TAURI_PATH: application/binary/tauri
       TAURI_SRC_PATH: application/binary/tauri/src-tauri
@@ -147,13 +173,17 @@ jobs:
         id: paths
         env:
           ACCELERATOR: ${{ matrix.accelerator }}
+          BUILD_VERSION_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.build_version || '' }}
+          DEBUG_BUILD: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_build || false }}
         run: |
           $version = "0.1.0"
           $runNum = if ($env:GITHUB_RUN_NUMBER) { $env:GITHUB_RUN_NUMBER } else { "0" }
-          $buildVersion = "$version.$runNum"
-          $uiBuildPath = "$env:TAURI_SRC_PATH\target\release"
+          $buildVersion = if ($env:BUILD_VERSION_INPUT) { $env:BUILD_VERSION_INPUT } else { "$version.$runNum" }
+          $targetDir = if ($env:DEBUG_BUILD -eq "true") { "debug" } else { "release" }
+          $uiBuildPath = "$env:TAURI_SRC_PATH\target\$targetDir"
           $msixBundlePath = "$uiBuildPath\bundle\msix"
-          $msixFileName = "anomalib-studio-$($env:ACCELERATOR)-$buildVersion.msix"
+          $suffix = if ($env:DEBUG_BUILD -eq "true") { "-debug" } else { "" }
+          $msixFileName = "anomalib-studio-$($env:ACCELERATOR)-$buildVersion$suffix.msix"
           $msixFilePath = "$msixBundlePath\$msixFileName"
 
           $sdkBin = "${env:ProgramFiles(x86)}\Windows Kits\10\bin"
@@ -225,12 +255,18 @@ jobs:
 
       - name: Build Tauri app
         working-directory: application/binary/tauri
+        env:
+          DEBUG_BUILD: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_build || false }}
         # _internal is not in tauri.conf.json resources by default because
         # Tauri's build script scans every resource file for rerun-if-changed,
         # and _internal has thousands of Python runtime files that cause slow
         # rebuilds and "file in use" errors on Windows during dev. We inject
         # the resource mapping only for production builds via --config.
-        run: npx tauri build -v --config '{"bundle":{"resources":{"sidecar/_internal/":"_internal/"}}}'
+        # See application/binary/README.md for local build commands.
+        run: |
+          $opts = @("-v", "--config", '{"bundle":{"resources":{"sidecar/_internal/":"_internal/"}}}')
+          if ($env:DEBUG_BUILD -eq "true") { $opts += "--debug" }
+          npx tauri build @opts
 
       - name: Create MSIX package
         run: |
