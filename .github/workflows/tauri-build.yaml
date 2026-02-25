@@ -127,7 +127,6 @@ jobs:
     timeout-minutes: 90
     permissions:
       contents: read
-      actions: write
     strategy:
       fail-fast: false
       matrix:
