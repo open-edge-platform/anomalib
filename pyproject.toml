@@ -110,8 +110,8 @@ cpu = [
     "torchvision>=0.21.0",
 ]
 cu118 = [
-    "torch>=2.6.0,<=2.7.0", # CUDA 11.8 support dropped in torch 2.8+
-    "torchvision>=0.21.0,<=0.22.0",
+    "torch>=2.6.0,<=2.7.1", # CUDA 11.8 support dropped in torch 2.8+
+    "torchvision>=0.21.0,<=0.22.1",
 ]
 cu126 = [
     "torch>=2.6.0,<=2.8.0",
