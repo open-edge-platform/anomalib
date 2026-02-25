@@ -174,7 +174,7 @@ jobs:
           for check in ${CHECKS}; do
             echo "::notice::check=${check}"
             if [[ "$check" != "success" && "$check" != "skipped" ]]; then
-              echo "::error ::Build docker image status checks failed. They must succeed before this pull request can be merged."
+              echo "::error::Build docker image status checks failed. They must succeed before this pull request can be merged."
               exit 1
             fi
           done
