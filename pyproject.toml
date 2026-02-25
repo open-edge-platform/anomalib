@@ -103,34 +103,36 @@ test = [
     "commitizen",
 ]
 # PyTorch dependency groups
+# NOTE: Minimum torch>=2.6.0 required due to Critical CVE-2025-32434
+#   (torch.load weights_only=True RCE, patched in 2.6.0)
 cpu = [
-    "torch>=2.4.0,<=2.8.0",
-    "torchvision>=0.19.0",
+    "torch>=2.6.0,<=2.8.0",
+    "torchvision>=0.21.0",
 ]
 cu118 = [
-    "torch>=2.4.0,<=2.8.0",
-    "torchvision>=0.19.0",
+    "torch>=2.6.0,<=2.7.0", # CUDA 11.8 support dropped in torch 2.8+
+    "torchvision>=0.21.0,<=0.22.0",
 ]
 cu126 = [
     "torch>=2.6.0,<=2.8.0",
     "torchvision>=0.21.0",
 ]
 cu124 = [
-    "torch>=2.4.0,<=2.8.0",
-    "torchvision>=0.19.0",
+    "torch>=2.6.0,<=2.8.0",
+    "torchvision>=0.21.0",
 ]
 cu130 = [
-    "torch>=2.4.0", # Note: onnx export fails with torch>=2.9.0 and cuda 13 isn't supported by <=2.8.0
-    "torchvision>=0.19.0",
+    "torch>=2.6.0", # Note: onnx export fails with torch>=2.9.0 and cuda 13 isn't supported by <=2.8.0
+    "torchvision>=0.21.0",
 ]
 rocm = [
-    "torch>=2.4.0,<=2.8.0",
-    "torchvision>=0.19.0",
+    "torch>=2.6.0,<=2.8.0",
+    "torchvision>=0.21.0",
     "pytorch-triton-rocm ; sys_platform == 'linux'",
 ]
 xpu = [
-    "torch>=2.4.0", # Note : Last tested with torch+xpu (2.9.1)
-    "torchvision>=0.19.0",
+    "torch>=2.6.0", # Note : Last tested with torch+xpu (2.9.1)
+    "torchvision>=0.21.0",
     "pytorch-triton-xpu ; sys_platform == 'linux' or sys_platform == 'win32'",
 ]
 full = ["anomalib[clip,datasets,openvino,loggers,notebooks,vlm,video]"]
