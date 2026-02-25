@@ -92,13 +92,14 @@ on:
           - HIGH
         default: "LOW"
 
-permissions:
-  contents: read
-  security-events: write # needed to upload results
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   security:
     uses: ./.github/workflows/_reusable-security-scan.yaml
+    permissions:
+      contents: read
+      security-events: write # needed to upload results
     with:
       # For scheduled runs, use full scan configuration
       tools: ${{ inputs.tools || 'bandit,semgrep,trivy,zizmor' }}

@@ -70,14 +70,15 @@ on:
         description: "Whether any security issues were found"
         value: ${{ jobs.summarize.outputs.has_findings }}
 
-permissions:
-  contents: read
-  security-events: write # needed by nested workflows to upload results
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   bandit:
     if: contains(inputs.tools, 'bandit')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # needed by nested workflows to upload results
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -93,6 +94,9 @@ jobs:
   semgrep:
     if: contains(inputs.tools, 'semgrep')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # needed by nested workflows to upload results
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -108,6 +112,9 @@ jobs:
   trivy:
     if: contains(inputs.tools, 'trivy')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # needed by nested workflows to upload results
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -127,6 +134,9 @@ jobs:
   zizmor:
     if: contains(inputs.tools, 'zizmor')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # needed by nested workflows to upload results
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
