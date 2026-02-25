@@ -58,6 +58,7 @@ name: PR Checks
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches: ["main", "feature/**"]
   merge_group:
     branches: [main]
@@ -155,4 +156,25 @@ jobs:
     uses: ./.github/workflows/_reusable-docker-build.yaml
     permissions:
       contents: read
+      # write permissions are required to update PR comments with image sizes
       pull-requests: write
+
+  docker-build-status:
+    name: Docker build status check
+    needs:
+      - check-paths
+      - docker-build
+    runs-on: ubuntu-latest
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    if: always() && !cancelled()
+    steps:
+      - name: Check jobs results
+        run: |
+          for check in ${CHECKS}; do
+            echo "::notice::check=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error ::Build docker image status checks failed. They must succeed before this pull request can be merged."
+              exit 1
+            fi
+          done

@@ -10,7 +10,7 @@
 #
 # Process Stages:
 # 1. Build Docker images
-#    - Build images for specified devices (cpu, xpu, gpu)
+#    - Build images for specified devices (cpu, xpu, cuda)
 #    - Run simple health checks on the built images
 #    - Upload document with size of images as artifact (for PRs)
 # 2. Report image sizes as artifacts in PR comments
@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        device: [cpu, xpu, gpu]
+        device: [cpu, xpu, cuda]
     permissions:
       contents: read
     steps:
@@ -177,6 +177,7 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
+      # write permissions are required to update PR comments with image sizes
       pull-requests: write
     continue-on-error: true
     steps:
