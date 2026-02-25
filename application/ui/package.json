@@ -112,13 +112,24 @@
         ]
     },
     "overrides": {
-        "js-yaml": ">=4.1.1",
-        "ajv": ">=8.18.0",
+        "js-yaml": "4.1.1",
         "eslint": {
             "ajv": "6.14.0",
             "@eslint/eslintrc": {
                 "ajv": "6.14.0"
             }
+        },
+        "@scalar/api-reference-react": {
+            "ajv": "8.18.0"
+        },
+        "recharts": {
+            "lodash": "4.17.23"
+        },
+        "@mswjs/source": {
+            "lodash": "4.17.23"
+        },
+        "openapi-typescript": {
+            "minimatch": "5.1.7"
         }
     }
 }
