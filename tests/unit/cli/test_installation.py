@@ -137,7 +137,7 @@ def test_get_torch_install_args(mocker: MockerFixture) -> None:
     for arg in expected_args:
         assert arg in install_args
 
-    requirement = Requirement("torch>=2.6.0,<=2.8.0")
+    requirement = Requirement("torch>=2.6.0,<=2.7.1")
     mocker.patch("anomalib.cli.utils.installation.get_hardware_suffix", return_value="cu124")
     install_args = get_torch_install_args(requirement)
     expected_args = [
@@ -148,9 +148,10 @@ def test_get_torch_install_args(mocker: MockerFixture) -> None:
         assert arg in install_args
 
     requirement = Requirement("torch==2.8.0")
+    mocker.patch("anomalib.cli.utils.installation.get_hardware_suffix", return_value="cu126")
     expected_args = [
         "--extra-index-url",
-        "https://download.pytorch.org/whl/cu124",
+        "https://download.pytorch.org/whl/cu126",
         "torch==2.8.0",
         "torchvision==0.23.0",
     ]
