@@ -289,31 +289,15 @@ jobs:
           MSIX_SIGN_CERTIFICATE: ${{ secrets.MSIX_SIGN_CERTIFICATE }}
           MSIX_SIGN_CERTIFICATE_PASSWORD: ${{ secrets.MSIX_SIGN_CERTIFICATE_PASSWORD }}
         run: |
-          $b64 = ($env:MSIX_SIGN_CERTIFICATE -replace '\s', '').Trim()
-          $bytes = [System.Convert]::FromBase64String($b64)
+          $bytes = [System.Convert]::FromBase64String($env:MSIX_SIGN_CERTIFICATE)
           [System.IO.File]::WriteAllBytes("sign.pfx", $bytes)
           try {
-            $password = $env:MSIX_SIGN_CERTIFICATE_PASSWORD
-            $cert = $null
-            try {
-              $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2(
-                (Resolve-Path "sign.pfx").Path,
-                $password,
-                [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
-            } catch {
-              Write-Error "Certificate load failed (wrong password or invalid PFX). Check MSIX_SIGN_CERTIFICATE_PASSWORD and that MSIX_SIGN_CERTIFICATE is Base64-encoded PFX."
-              throw
-            }
-            if (-not $cert.HasPrivateKey) {
-              Write-Error "PFX has no private key. Use a PFX that includes the code-signing private key."
-              exit 1
-            }
-            $thumbprint = $cert.Thumbprint
-            $signResult = & "$env:SIGNTOOL_PATH" sign /fd SHA256 /f "sign.pfx" /p $password /sha1 $thumbprint /v $env:MSIX_FILE_PATH 2>&1
-            if ($LASTEXITCODE -ne 0) { Write-Error $signResult; exit $LASTEXITCODE }
+            & "${{ env.SIGNTOOL_PATH }}" sign /fd SHA256 /a /f "sign.pfx" /p "$env:MSIX_SIGN_CERTIFICATE_PASSWORD" $env:MSIX_FILE_PATH
           }
           finally {
-            if (Test-Path "sign.pfx") { Remove-Item "sign.pfx" -Force }
+            if (Test-Path "sign.pfx") {
+              Remove-Item "sign.pfx" -Force
+            }
           }
 
       - name: Upload MSIX artifact
