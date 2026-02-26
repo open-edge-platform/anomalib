@@ -185,7 +185,7 @@ jobs:
           $msixFileName = "anomalib-studio-$($ACCELERATOR)-$buildVersion$suffix.msix"
           $msixFilePath = "$msixBundlePath\$msixFileName"
 
-          $sdkBin = "${ProgramFiles(x86)}\Windows Kits\10\bin"
+          $sdkBin = "${env:ProgramFiles(x86)}\Windows Kits\10\bin"
           $sdkVersion = Get-ChildItem $sdkBin -Directory | Where-Object { $_.Name -match '^10\.' } | Sort-Object Name -Descending | Select-Object -First 1 -ExpandProperty Name
           $sdkRoot = "$sdkBin\$sdkVersion\x64"
           $makeappx = "$sdkRoot\makeappx.exe"
