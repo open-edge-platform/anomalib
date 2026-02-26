@@ -144,7 +144,9 @@ jobs:
     name: Build Windows MSIX
     # Only run in the source repo where MSIX signing secrets are configured.
     # Skipped on forks; run manually via workflow_dispatch from the repo.
-    if: github.repository == 'open-edge-platform/anomalib'
+    if: |
+      github.repository == 'open-edge-platform/anomalib' && 
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: windows-latest
     timeout-minutes: 90
     permissions:
