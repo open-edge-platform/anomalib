@@ -287,6 +287,9 @@ jobs:
             Copy-Item $backendExe.FullName -Destination "$($env:MSIX_BUNDLE_PATH)\anomalib-studio-backend.exe"
           }
           if (Test-Path "$env:UI_BUILD_PATH\_internal") {
+            if (Test-Path "$env:MSIX_BUNDLE_PATH\_internal") {
+              Remove-Item "$env:MSIX_BUNDLE_PATH\_internal" -Recurse -Force
+            }
             Copy-Item "$env:UI_BUILD_PATH\_internal" -Destination $env:MSIX_BUNDLE_PATH -Recurse
           }
           Copy-Item "$env:TAURI_SRC_PATH\msix\*" -Destination $env:MSIX_BUNDLE_PATH -Recurse
