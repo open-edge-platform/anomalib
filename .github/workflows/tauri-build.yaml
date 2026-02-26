@@ -308,7 +308,8 @@ jobs:
               Write-Error "PFX has no private key. Use a PFX that includes the code-signing private key."
               exit 1
             }
-            $signResult = & "$env:SIGNTOOL_PATH" sign /fd SHA256 /a /f "sign.pfx" /p $password /v $env:MSIX_FILE_PATH 2>&1
+            $thumbprint = $cert.Thumbprint
+            $signResult = & "$env:SIGNTOOL_PATH" sign /fd SHA256 /f "sign.pfx" /p $password /sha1 $thumbprint /v $env:MSIX_FILE_PATH 2>&1
             if ($LASTEXITCODE -ne 0) { Write-Error $signResult; exit $LASTEXITCODE }
           }
           finally {
