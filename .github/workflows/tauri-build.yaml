@@ -34,9 +34,7 @@ on:
       - ".github/workflows/tauri-build.yaml"
   workflow_dispatch:
 
-permissions:
-  contents: read
-  actions: write
+permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -127,6 +125,8 @@ jobs:
     if: ${{ secrets.MSIX_SIGN_CERTIFICATE != '' && secrets.MSIX_SIGN_CERTIFICATE_PASSWORD != '' }}
     runs-on: windows-latest
     timeout-minutes: 90
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
