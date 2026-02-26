@@ -1,0 +1,241 @@
+# Docker Image Build Workflow
+#
+# This reusable workflow handles Docker image building,
+# providing a standardized build process with verification.
+#
+# Key Features:
+# - Docker image building
+# - Image verification
+# - Image size reporting
+#
+# Process Stages:
+# 1. Build Docker images
+#    - Build images for specified devices (cpu, xpu, cuda)
+#    - Run simple health checks on the built images
+#    - Upload document with size of images as artifact (for PRs)
+# 2. Report image sizes as artifacts in PR comments
+#
+# Example Usage:
+# 1. Build docker images:
+#    jobs:
+#      build:
+#        uses: ./.github/workflows/_reusable-docker-build.yaml
+#        permissions:
+#          contents: read
+#          pull-requests: write
+#
+
+name: Reusable Docker Image Build
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions: {} # No permissions by default on workflow level
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and upload docker image size (${{ matrix.device }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        device: [cpu, xpu, cuda]
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Initial cleanup
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@d30e32248aa6bd06adeda7129b50a38bdbceca12
+        with:
+          type: "initial"
+
+      - name: Pre-build cleanup
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@d30e32248aa6bd06adeda7129b50a38bdbceca12
+        with:
+          type: "pre-build"
+
+      # Install the latest Docker, since the version available by default on the runners may be outdated
+      - name: Set up Docker
+        uses: docker/setup-docker-action@e43656e248c0bd0647d3f5c195d116aacf6fcaf4 #v4.7.0
+
+      - name: Set up Docker Compose
+        uses: docker/setup-compose-action@364cc21a5de5b1ee4a7f5f9d3fa374ce0ccde746 #v1.2.0
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+        with:
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build image for ${{ matrix.device }}
+        working-directory: application/docker
+        run: |
+          # Build and tag images using provided metadata
+          for TAG in $TAGS ; do
+              AI_DEVICE=${DEVICE} TAG=${TAG} docker compose build
+          done
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DEVICE: ${{ matrix.device }}
+          PUBLIC_API_BASE_URL: "/"
+
+      - name: Run simple checks on the built image
+        working-directory: application/docker
+        run: |
+          # Get the first tag for testing
+          FIRST_TAG=$(echo "$TAGS" | awk 'NR==1 {print $1}')
+          echo "Testing container with tag: $FIRST_TAG for device: $DEVICE"
+
+          # Start the container in detached mode
+          CONTAINER_ID=$(docker run -d --rm -v ./data:/app/data -v ./logs:/app/logs -p 8000:8000 anomalib-studio-${DEVICE}:${FIRST_TAG})
+          echo "Started container: $CONTAINER_ID"
+
+          # Function to cleanup container on exit
+          cleanup() {
+              echo "Cleaning up container: $CONTAINER_ID"
+              docker stop $CONTAINER_ID || true
+          }
+          trap cleanup EXIT
+
+          TEST_URL="localhost:8000"
+          # Wait for container to be ready (max 60 seconds)
+          echo "Waiting for container to be ready..."
+          for i in {1..12}; do
+              if curl -sf $TEST_URL/health > /dev/null 2>&1; then
+                  echo "✅ Health check passed!"
+                  break
+              fi
+              if [ $i -eq 12 ]; then
+                  echo "❌ Health check failed after 60 seconds"
+                  docker logs $CONTAINER_ID
+                  exit 1
+              fi
+              echo "Attempt $i/12 - waiting 5 seconds..."
+              sleep 5
+          done
+
+          EXPECTED_TITLE="Anomalib Studio"
+          echo "Checking HTML title..."
+
+          HTML_CONTENT=$(curl -sf $TEST_URL)
+          if echo "$HTML_CONTENT" | grep -q "<title>.*$EXPECTED_TITLE.*</title>"; then
+              echo "✅ HTML title check passed - found: $EXPECTED_TITLE"
+          else
+              echo "❌ HTML title check failed - expected title '$EXPECTED_TITLE' not found"
+              echo "Actual HTML content:"
+              echo "$HTML_CONTENT"
+              exit 1
+          fi
+
+          echo "All checks passed successfully!"
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DEVICE: ${{ matrix.device }}
+
+      - name: Get Docker image sizes
+        working-directory: application/docker
+        id: image-sizes
+        if: github.event_name == 'pull_request'
+        run: |
+          mkdir -p image-sizes
+
+          echo "| Image | Size |" > image-sizes/${DEVICE}.md
+          echo "|-------|------|" >> image-sizes/${DEVICE}.md
+
+          for TAG in $TAGS ; do
+            IMAGE="anomalib-studio-${DEVICE}:${TAG}"
+            if docker image inspect "$IMAGE" >/dev/null 2>&1; then
+              size_bytes=$(docker image inspect "$IMAGE" --format='{{.Size}}')
+              size_readable=$(numfmt --to=si --format "%.2f" "$size_bytes")
+              echo "| $IMAGE | $size_readable |" >> image-sizes/${DEVICE}.md
+            fi
+          done
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DEVICE: ${{ matrix.device }}
+
+      - name: Upload image sizes
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: image-sizes-${{ matrix.device }}
+          path: application/docker/image-sizes/${{ matrix.device }}.md
+          retention-days: 1
+
+  comment-sizes:
+    name: Comment PR with all image sizes
+    needs: build
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      # write permissions are required to update PR comments with image sizes
+      pull-requests: write
+    continue-on-error: true
+    steps:
+      - name: Download all image size artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: image-sizes-*
+          merge-multiple: true
+          path: image-sizes
+
+      - name: Combine image sizes and comment
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            // Read all device size files
+            const sizesDir = 'image-sizes';
+            const files = fs.readdirSync(sizesDir).sort();
+
+            let comment = '## Docker Image Sizes\n\n';
+
+            for (const file of files) {
+              const device = path.basename(file, '.md');
+              const content = fs.readFileSync(path.join(sizesDir, file), 'utf8');
+              comment += `### ${device.toUpperCase()}\n\n${content}\n\n`;
+            }
+
+            // Find existing comment
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existingComment = comments.data.find(commentItem =>
+              commentItem.body.includes('## Docker Image Sizes')
+            );
+
+            if (existingComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: comment
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }

@@ -34,6 +34,10 @@
 #    - Vulnerability detection
 #    - Security report generation
 #
+# 5. Docker Image Build:
+#    - Determines if docker images need to be built based on event type and changed paths
+#    - Builds and uploads docker images as artifacts
+#
 # Required Secrets:
 # - CODECOV_TOKEN: Coverage reporting token
 #
@@ -54,6 +58,7 @@ name: PR Checks
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches: ["main", "feature/**"]
   merge_group:
     branches: [main]
@@ -119,3 +124,57 @@ jobs:
       severity-level: "MEDIUM" # Minimum severity to report
       confidence-level: "HIGH" # High confidence to report
       fail-on-findings: true # explicitly set
+
+  # Determines if docker images must be built based on event type and changed paths
+  # If push or workflow_dispatch -> always run
+  # If PR or merge_group -> run only if files in specified paths changed
+  check-paths:
+    name: Check if docker build job should run
+    runs-on: ubuntu-latest
+    outputs:
+      run_build: ${{ steps.check-paths.outputs.run }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Check paths
+        id: check-paths
+        uses: open-edge-platform/geti-ci/actions/check-paths@375de2eb018dae396c959f9b3a464f40271de969
+        with:
+          files_yaml: |
+            test:
+              - application/**
+              - .github/**
+
+  # Docker image build job using reusable workflow
+  docker-build:
+    name: Build and upload docker image
+    needs: check-paths
+    if: needs.check-paths.outputs.run_build == 'true' && github.event.pull_request.draft != true
+    uses: ./.github/workflows/_reusable-docker-build.yaml
+    permissions:
+      contents: read
+      # write permissions are required to update PR comments with image sizes
+      pull-requests: write
+
+  docker-build-status:
+    name: Docker build status check
+    needs:
+      - check-paths
+      - docker-build
+    runs-on: ubuntu-latest
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    if: always() && !cancelled()
+    steps:
+      - name: Check jobs results
+        run: |
+          for check in ${CHECKS}; do
+            echo "::notice::check=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error::Build docker image status checks failed. They must succeed before this pull request can be merged."
+              exit 1
+            fi
+          done
