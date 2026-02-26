@@ -56,9 +56,7 @@ on:
         required: false
         default: false
 
-permissions:
-  contents: read
-  actions: write
+permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -151,7 +149,6 @@ jobs:
     timeout-minutes: 90
     permissions:
       contents: read
-      actions: write
     strategy:
       fail-fast: false
       matrix:
