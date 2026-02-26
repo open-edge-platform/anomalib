@@ -176,13 +176,13 @@ jobs:
           DEBUG_BUILD: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_build || false }}
         run: |
           $version = "0.1.0"
-          $runNum = if ($GITHUB_RUN_NUMBER) { $GITHUB_RUN_NUMBER } else { "0" }
-          $buildVersion = if ($BUILD_VERSION_INPUT) { $BUILD_VERSION_INPUT } else { "$version.$runNum" }
-          $targetDir = if ($DEBUG_BUILD -eq "true") { "debug" } else { "release" }
-          $uiBuildPath = "$TAURI_SRC_PATH\target\$targetDir"
+          $runNum = if ($env:GITHUB_RUN_NUMBER) { $env:GITHUB_RUN_NUMBER } else { "0" }
+          $buildVersion = if ($env:BUILD_VERSION_INPUT) { $env:BUILD_VERSION_INPUT } else { "$version.$runNum" }
+          $targetDir = if ($env:DEBUG_BUILD -eq "true") { "debug" } else { "release" }
+          $uiBuildPath = "$env:TAURI_SRC_PATH\target\$targetDir"
           $msixBundlePath = "$uiBuildPath\bundle\msix"
-          $suffix = if ($DEBUG_BUILD -eq "true") { "-debug" } else { "" }
-          $msixFileName = "anomalib-studio-$($ACCELERATOR)-$buildVersion$suffix.msix"
+          $suffix = if ($env:DEBUG_BUILD -eq "true") { "-debug" } else { "" }
+          $msixFileName = "anomalib-studio-$($env:ACCELERATOR)-$buildVersion$suffix.msix"
           $msixFilePath = "$msixBundlePath\$msixFileName"
 
           $sdkBin = "${env:ProgramFiles(x86)}\Windows Kits\10\bin"
@@ -191,12 +191,12 @@ jobs:
           $makeappx = "$sdkRoot\makeappx.exe"
           $signtool = "$sdkRoot\signtool.exe"
 
-          "UI_BUILD_PATH=$($uiBuildPath)" | Out-File -FilePath $GITHUB_ENV -Append
-          "MSIX_BUNDLE_PATH=$msixBundlePath" | Out-File -FilePath $GITHUB_ENV -Append
-          "MSIX_FILE_NAME=$msixFileName" | Out-File -FilePath $GITHUB_ENV -Append
-          "MSIX_FILE_PATH=$msixFilePath" | Out-File -FilePath $GITHUB_ENV -Append
-          "MAKEAPPX_PATH=$makeappx" | Out-File -FilePath $GITHUB_ENV -Append
-          "SIGNTOOL_PATH=$signtool" | Out-File -FilePath $GITHUB_ENV -Append
+          "UI_BUILD_PATH=$($uiBuildPath)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "MSIX_BUNDLE_PATH=$msixBundlePath" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "MSIX_FILE_NAME=$msixFileName" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "MSIX_FILE_PATH=$msixFilePath" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "MAKEAPPX_PATH=$makeappx" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "SIGNTOOL_PATH=$signtool" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Set up Python
         uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
@@ -264,35 +264,35 @@ jobs:
         # See application/binary/README.md for local build commands.
         run: |
           $opts = @("-v", "--config", '{"bundle":{"resources":{"sidecar/_internal/":"_internal/"}}}')
-          if ($DEBUG_BUILD -eq "true") { $opts += "--debug" }
+          if ($env:DEBUG_BUILD -eq "true") { $opts += "--debug" }
           npx tauri build @opts
 
       - name: Create MSIX package
         run: |
-          New-Item -ItemType Directory -Force -Path $MSIX_BUNDLE_PATH | Out-Null
-          Copy-Item "$UI_BUILD_PATH\anomalib-studio.exe" -Destination $MSIX_BUNDLE_PATH
-          $backendExe = Get-ChildItem "$($UI_BUILD_PATH)" -Filter "anomalib-studio-backend*.exe" | Select-Object -First 1
+          New-Item -ItemType Directory -Force -Path $env:MSIX_BUNDLE_PATH | Out-Null
+          Copy-Item "$env:UI_BUILD_PATH\anomalib-studio.exe" -Destination $env:MSIX_BUNDLE_PATH
+          $backendExe = Get-ChildItem "$($env:UI_BUILD_PATH)" -Filter "anomalib-studio-backend*.exe" | Select-Object -First 1
           if ($backendExe) {
-            Copy-Item $backendExe.FullName -Destination $MSIX_BUNDLE_PATH
-            Copy-Item $backendExe.FullName -Destination "$($MSIX_BUNDLE_PATH)\anomalib-studio-backend.exe"
+            Copy-Item $backendExe.FullName -Destination $env:MSIX_BUNDLE_PATH
+            Copy-Item $backendExe.FullName -Destination "$($env:MSIX_BUNDLE_PATH)\anomalib-studio-backend.exe"
           }
-          if (Test-Path "$UI_BUILD_PATH\_internal") {
-            Copy-Item "$UI_BUILD_PATH\_internal" -Destination $MSIX_BUNDLE_PATH -Recurse
+          if (Test-Path "$env:UI_BUILD_PATH\_internal") {
+            Copy-Item "$env:UI_BUILD_PATH\_internal" -Destination $env:MSIX_BUNDLE_PATH -Recurse
           }
-          Copy-Item "$TAURI_SRC_PATH\msix\*" -Destination $MSIX_BUNDLE_PATH -Recurse
-          New-Item -ItemType Directory -Force -Path "$MSIX_BUNDLE_PATH\Assets" | Out-Null
-          Copy-Item "$TAURI_SRC_PATH\icons\icon.png" -Destination "$($MSIX_BUNDLE_PATH)\Assets\logo.png"
-          & "$MAKEAPPX_PATH" pack /d $MSIX_BUNDLE_PATH /p $MSIX_FILE_PATH
+          Copy-Item "$env:TAURI_SRC_PATH\msix\*" -Destination $env:MSIX_BUNDLE_PATH -Recurse
+          New-Item -ItemType Directory -Force -Path "$env:MSIX_BUNDLE_PATH\Assets" | Out-Null
+          Copy-Item "$env:TAURI_SRC_PATH\icons\icon.png" -Destination "$($env:MSIX_BUNDLE_PATH)\Assets\logo.png"
+          & "$env:MAKEAPPX_PATH" pack /d $env:MSIX_BUNDLE_PATH /p $env:MSIX_FILE_PATH
 
       - name: Sign MSIX package
         env:
           MSIX_SIGN_CERTIFICATE: ${{ secrets.MSIX_SIGN_CERTIFICATE }}
           MSIX_SIGN_CERTIFICATE_PASSWORD: ${{ secrets.MSIX_SIGN_CERTIFICATE_PASSWORD }}
         run: |
-          $bytes = [System.Convert]::FromBase64String($MSIX_SIGN_CERTIFICATE)
+          $bytes = [System.Convert]::FromBase64String($env:MSIX_SIGN_CERTIFICATE)
           [System.IO.File]::WriteAllBytes("sign.pfx", $bytes)
           try {
-            & "$SIGNTOOL_PATH" sign /fd SHA256 /a /f "sign.pfx" /p "$MSIX_SIGN_CERTIFICATE_PASSWORD" $MSIX_FILE_PATH
+            & "$env:SIGNTOOL_PATH" sign /fd SHA256 /a /f "sign.pfx" /p "$env:MSIX_SIGN_CERTIFICATE_PASSWORD" $env:MSIX_FILE_PATH
           }
           finally {
             if (Test-Path "sign.pfx") { Remove-Item "sign.pfx" -Force }
