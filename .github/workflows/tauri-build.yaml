@@ -1,7 +1,7 @@
 # Tauri Application Build Workflow
 #
 # Build steps follow application/binary/README.md. Windows flow is aligned with
-# open-edge-platform/training_extensions .github/workflows/windows-installer.yml
+# open-edge-platform/training_extensions/.github/workflows/windows-installer.yml
 # (workflow_dispatch inputs, MSIX makeappx + signing).
 #
 # This workflow builds the Anomalib Studio Tauri application for Linux (.deb),
@@ -145,7 +145,7 @@ jobs:
     # Only run in the source repo where MSIX signing secrets are configured.
     # Skipped on forks; run manually via workflow_dispatch from the repo.
     if: |
-      github.repository == 'open-edge-platform/anomalib' && 
+      github.repository == 'open-edge-platform/anomalib' &&
       (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: windows-latest
     timeout-minutes: 90
@@ -177,7 +177,17 @@ jobs:
         run: |
           $version = "0.1.0"
           $runNum = if ($env:GITHUB_RUN_NUMBER) { $env:GITHUB_RUN_NUMBER } else { "0" }
-          $buildVersion = if ($env:BUILD_VERSION_INPUT) { $env:BUILD_VERSION_INPUT } else { "$version.$runNum" }
+
+          if ($env:BUILD_VERSION_INPUT) {
+            # Enforce strict numeric major.minor.patch.build pattern (e.g., 0.1.0.123)
+            if ($env:BUILD_VERSION_INPUT -notmatch '^\d+\.\d+\.\d+\.\d+$') {
+              Write-Error "Invalid build_version input '$($env:BUILD_VERSION_INPUT)'. Expected format: major.minor.patch.build (numeric, e.g. 0.1.0.123)."
+              exit 1
+            }
+            $buildVersion = $env:BUILD_VERSION_INPUT
+          } else {
+            $buildVersion = "$version.$runNum"
+          }
           $targetDir = if ($env:DEBUG_BUILD -eq "true") { "debug" } else { "release" }
           $uiBuildPath = "$env:TAURI_SRC_PATH\target\$targetDir"
           $msixBundlePath = "$uiBuildPath\bundle\msix"
@@ -292,7 +302,7 @@ jobs:
           $bytes = [System.Convert]::FromBase64String($env:MSIX_SIGN_CERTIFICATE)
           [System.IO.File]::WriteAllBytes("sign.pfx", $bytes)
           try {
-            & "${{ env.SIGNTOOL_PATH }}" sign /fd SHA256 /a /f "sign.pfx" /p "$env:MSIX_SIGN_CERTIFICATE_PASSWORD" $env:MSIX_FILE_PATH
+            & $env:SIGNTOOL_PATH sign /fd SHA256 /a /f "sign.pfx" /p "$env:MSIX_SIGN_CERTIFICATE_PASSWORD" $env:MSIX_FILE_PATH
           }
           finally {
             if (Test-Path "sign.pfx") {
