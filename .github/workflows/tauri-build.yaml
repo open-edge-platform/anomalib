@@ -259,7 +259,7 @@ jobs:
         run: |
           $opts = @("-v", "--config", '{"bundle":{"resources":{"sidecar/_internal/":"_internal/"}}}')
           if ($env:DEBUG_BUILD -eq "true") { $opts += "--debug" }
-          npx tauri build @opts
+          & npx tauri build $opts
 
       - name: Create MSIX package
         run: |
@@ -269,9 +269,23 @@ jobs:
           New-Item -ItemType Directory -Force -Path $env:MSIX_BUNDLE_PATH | Out-Null
           Copy-Item "$env:UI_BUILD_PATH\anomalib-studio.exe" -Destination $env:MSIX_BUNDLE_PATH
           $backendExe = Get-ChildItem "$($env:UI_BUILD_PATH)" -Filter "anomalib-studio-backend*.exe" | Select-Object -First 1
+          if (-not $backendExe) {
+            Write-Error "Backend executable matching 'anomalib-studio-backend*.exe' was not found in '$($env:UI_BUILD_PATH)'."
+            exit 1
+          }
+          if (-not (Test-Path $backendExe.FullName)) {
+            Write-Error "Resolved backend executable path '$($backendExe.FullName)' does not exist."
+            exit 1
+          }
           Copy-Item $backendExe.FullName -Destination $env:MSIX_BUNDLE_PATH
           Copy-Item $backendExe.FullName -Destination "$($env:MSIX_BUNDLE_PATH)\anomalib-studio-backend.exe"
-          Copy-Item "$env:UI_BUILD_PATH\_internal" -Destination $env:MSIX_BUNDLE_PATH -Recurse
+          if (Test-Path "$env:UI_BUILD_PATH\_internal") {
+            Copy-Item "$env:UI_BUILD_PATH\_internal" -Destination $env:MSIX_BUNDLE_PATH -Recurse
+          }
+          else {
+            Write-Error "Expected directory '$env:UI_BUILD_PATH\_internal' not found. The Python runtime _internal payload is missing from the UI build output."
+            exit 1
+          }
           Copy-Item "$env:TAURI_SRC_PATH\msix\*" -Destination $env:MSIX_BUNDLE_PATH -Recurse -Force
           New-Item -ItemType Directory -Force -Path "$env:MSIX_BUNDLE_PATH\Assets" | Out-Null
           Copy-Item "$env:TAURI_SRC_PATH\icons\icon.png" -Destination "$($env:MSIX_BUNDLE_PATH)\Assets\logo.png"
