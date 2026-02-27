@@ -23,14 +23,14 @@ Reference:
 from pathlib import Path
 
 import numpy as np
+import polars as pl
 from cv2 import imread
-from pandas import DataFrame
-from sklearn.model_selection import train_test_split
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datasets import AnomalibDataset
 from anomalib.data.errors import MisMatchError
 from anomalib.data.utils import Split, validate_path
+from anomalib.data.utils.dataframe import AnomalibDataFrame
 
 
 class KolektorDataset(AnomalibDataset):
@@ -74,7 +74,7 @@ def make_kolektor_dataset(
     root: str | Path,
     train_split_ratio: float = 0.8,
     split: str | Split | None = None,
-) -> DataFrame:
+) -> AnomalibDataFrame:
     """Create Kolektor samples by parsing the Kolektor data file structure.
 
     The files are expected to follow this structure:
@@ -124,59 +124,71 @@ def make_kolektor_dataset(
         raise RuntimeError(msg)
 
     # Create dataframes
-    samples = DataFrame(samples_list, columns=["path", "item", "image_path"])
-    masks = DataFrame(masks_list, columns=["path", "item", "image_path"])
+    samples = pl.DataFrame(samples_list, schema=["path", "item", "image_path"], orient="row")
+    masks = pl.DataFrame(masks_list, schema=["path", "item", "image_path"], orient="row")
 
     # Modify image_path column by converting to absolute path
-    samples["image_path"] = samples.path + "/" + samples.item + "/" + samples.image_path
-    masks["image_path"] = masks.path + "/" + masks.item + "/" + masks.image_path
+    samples = samples.with_columns(
+        (pl.col("path") + "/" + pl.col("item") + "/" + pl.col("image_path")).alias("image_path"),
+    )
+    masks = masks.with_columns(
+        (pl.col("path") + "/" + pl.col("item") + "/" + pl.col("image_path")).alias("image_path"),
+    )
 
     # Sort samples by image path
-    samples = samples.sort_values(by="image_path", ignore_index=True)
-    masks = masks.sort_values(by="image_path", ignore_index=True)
+    samples = samples.sort("image_path")
+    masks = masks.sort("image_path")
 
     # Add mask paths for sample images
-    samples["mask_path"] = masks.image_path.to_numpy()
+    samples = samples.with_columns(masks["image_path"].alias("mask_path"))
 
     # Use is_good func to configure the label_index
-    samples["label_index"] = samples["mask_path"].apply(is_mask_anomalous)
-    samples.label_index = samples.label_index.astype(int)
+    samples = samples.with_columns(
+        pl.col("mask_path").map_elements(is_mask_anomalous, return_dtype=pl.Int64).alias("label_index"),
+    )
 
     # Use label indexes to label data
-    samples.loc[(samples.label_index == 0), "label"] = "Good"
-    samples.loc[(samples.label_index == 1), "label"] = "Bad"
+    samples = samples.with_columns(
+        pl.when(pl.col("label_index") == 0).then(pl.lit("Good")).otherwise(pl.lit("Bad")).alias("label"),
+    )
 
     # Add all 'Bad' samples to test set
-    samples.loc[(samples.label == "Bad"), "split"] = "test"
+    samples = samples.with_columns(
+        pl.when(pl.col("label") == "Bad").then(pl.lit("test")).otherwise(pl.lit("")).alias("split"),
+    )
 
     # Divide 'good' images to train/test on 0.8/0.2 ratio
-    train_samples, test_samples = train_test_split(
-        samples[samples.label == "Good"],
-        train_size=train_split_ratio,
-        random_state=42,
-    )
-    samples.loc[train_samples.index, "split"] = "train"
-    samples.loc[test_samples.index, "split"] = "test"
+    good_samples = samples.filter(pl.col("label") == "Good")
+    n_train = int(len(good_samples) * train_split_ratio)
+    # Use consistent random split
+    rng = np.random.RandomState(42)
+    good_indices = rng.permutation(len(good_samples))
+    train_indices_good = good_indices[:n_train]
+    test_indices_good = good_indices[n_train:]
+
+    # Map back to full dataframe: good samples are those with split == ""
+    good_row_indices = samples.with_row_index("_idx").filter(pl.col("label") == "Good")["_idx"].to_list()
+    train_global = [good_row_indices[i] for i in train_indices_good]
+    test_global = [good_row_indices[i] for i in test_indices_good]
+
+    split_col = samples["split"].to_list()
+    for i in train_global:
+        split_col[i] = "train"
+    for i in test_global:
+        split_col[i] = "test"
+    samples = samples.with_columns(pl.Series("split", split_col))
 
     # Reorder columns
-    samples = samples[
-        [
-            "path",
-            "item",
-            "split",
-            "label",
-            "image_path",
-            "mask_path",
-            "label_index",
-        ]
-    ]
+    samples = samples.select(["path", "item", "split", "label", "image_path", "mask_path", "label_index"])
 
     # assert that the right mask files are associated with the right test images
-    if not (
-        samples.loc[samples.label_index == 1]
-        .apply(lambda x: Path(x.image_path).stem in Path(x.mask_path).stem, axis=1)
-        .all()
-    ):
+    abnormal = samples.filter(pl.col("label_index") == 1)
+    mismatch = False
+    for row in abnormal.iter_rows(named=True):
+        if Path(row["image_path"]).stem not in Path(row["mask_path"]).stem:
+            mismatch = True
+            break
+    if mismatch:
         msg = """Mismatch between anomalous images and ground truth masks. Make
         sure the mask files follow the same naming convention as the anomalous
         images in the dataset (e.g. image: 'Part0.jpg', mask:
@@ -184,13 +196,13 @@ def make_kolektor_dataset(
         raise MisMatchError(msg)
 
     # infer the task type
-    samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
+    task = "classification" if (samples["mask_path"] == "").all() else "segmentation"
 
     # Get the dataframe for the required split
     if split:
-        samples = samples[samples.split == split].reset_index(drop=True)
+        samples = samples.filter(pl.col("split") == split)
 
-    return samples
+    return AnomalibDataFrame(samples, attrs={"task": task})
 
 
 def is_mask_anomalous(path: str) -> int:

@@ -28,14 +28,13 @@ Reference:
 
 from pathlib import Path
 
-import numpy as np
-import pandas as pd
-from pandas.core.frame import DataFrame
+import polars as pl
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datasets.base.image import AnomalibDataset
 from anomalib.data.errors import MisMatchError
 from anomalib.data.utils import LabelName, Split, validate_path
+from anomalib.data.utils.dataframe import AnomalibDataFrame
 
 CATEGORIES = ("Brain", "Chest", "Histopathology", "Liver", "Retina_OCT2017", "Retina_RESC")
 
@@ -105,7 +104,7 @@ class BMADDataset(AnomalibDataset):
         self.samples = make_bmad_dataset(path=self.root_category, split=self.split)
 
 
-def make_bmad_dataset(path: Path, split: str | Split | None = None) -> DataFrame:
+def make_bmad_dataset(path: Path, split: str | Split | None = None) -> AnomalibDataFrame:
     """Create BMAD samples by parsing the dataset structure.
 
     The files are expected to follow the structure:
@@ -168,58 +167,72 @@ def make_bmad_dataset(path: Path, split: str | Split | None = None) -> DataFrame
         if filename.suffix in {".png", ".PNG"}
     ]
 
-    samples = pd.DataFrame(samples_list, columns=["path", "split", "label", "temp", "image_path"])
+    samples = pl.DataFrame(samples_list, schema=["path", "split", "label", "temp", "image_path"], orient="row")
 
-    samples["image_path"] = (
-        samples.path
-        + "/"
-        + samples.split
-        + "/"
-        + samples.label
-        + "/"
-        + np.where(samples.temp != "", samples.temp + "/", "")
-        + samples.image_path
+    samples = samples.with_columns(
+        (
+            pl.col("path")
+            + "/"
+            + pl.col("split")
+            + "/"
+            + pl.col("label")
+            + "/"
+            + pl.when(pl.col("temp") != "").then(pl.col("temp") + "/").otherwise(pl.lit(""))
+            + pl.col("image_path")
+        ).alias("image_path"),
     )
 
-    samples.loc[(samples.label == "good"), "label_index"] = LabelName.NORMAL
-    samples.loc[(samples.label != "good"), "label_index"] = LabelName.ABNORMAL
-    samples.label_index = samples.label_index.astype(int)
-
-    mask_samples = samples.loc[samples.temp == "label"].sort_values(
-        by="image_path",
-        ignore_index=True,
-    )
-    samples = samples[samples.temp != "label"].sort_values(
-        by="image_path",
-        ignore_index=True,
+    samples = samples.with_columns(
+        pl.when(pl.col("label") == "good")
+        .then(pl.lit(int(LabelName.NORMAL)))
+        .otherwise(pl.lit(int(LabelName.ABNORMAL)))
+        .alias("label_index"),
     )
 
-    samples["mask_path"] = None
-    if len(mask_samples):
-        samples.loc[
-            ((samples.split == "test") | (samples.split == "valid")) & (samples.label_index == LabelName.ABNORMAL),
-            "mask_path",
-        ] = mask_samples[mask_samples.label_index == LabelName.ABNORMAL].image_path.to_numpy()
+    mask_samples = samples.filter(pl.col("temp") == "label").sort("image_path")
+    samples = samples.filter(pl.col("temp") != "label").sort("image_path")
 
-    if len(mask_samples):
-        abnormal_samples = samples.loc[samples.label_index == LabelName.ABNORMAL]
-        if (
-            len(abnormal_samples)
-            and not abnormal_samples.apply(
-                lambda x: Path(x.image_path).stem in Path(x.mask_path).stem,
-                axis=1,
-            ).all()
-        ):
-            msg = (
-                "Mismatch between anomalous images and ground truth masks. Make sure "
-                "mask files in 'Ungood/label/' folder follow the same naming "
-                "convention as the anomalous images (e.g. image: '000.png', "
-                "mask: '000.png')."
+    samples = samples.with_columns(pl.lit("").alias("mask_path"))
+    if len(mask_samples) > 0:
+        abnormal_masks = mask_samples.filter(pl.col("label_index") == int(LabelName.ABNORMAL))
+        abnormal_test_valid = samples.with_row_index("_idx").filter(
+            ((pl.col("split") == "test") | (pl.col("split") == "valid"))
+            & (pl.col("label_index") == int(LabelName.ABNORMAL)),
+        )
+        if len(abnormal_test_valid) > 0 and len(abnormal_masks) > 0:
+            update = pl.DataFrame(
+                {
+                    "_idx": abnormal_test_valid["_idx"],
+                    "_mask_path": abnormal_masks["image_path"][: len(abnormal_test_valid)],
+                },
             )
-            raise MisMatchError(msg)
+            samples = (
+                samples.with_row_index("_idx")
+                .join(update, on="_idx", how="left")
+                .with_columns(
+                    pl.when(pl.col("_mask_path").is_not_null())
+                    .then(pl.col("_mask_path"))
+                    .otherwise(pl.col("mask_path"))
+                    .alias("mask_path"),
+                )
+                .drop("_idx", "_mask_path")
+            )
 
-    samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
+    if len(mask_samples) > 0:
+        abnormal_samples = samples.filter(pl.col("label_index") == int(LabelName.ABNORMAL))
+        if len(abnormal_samples) > 0:
+            for row in abnormal_samples.iter_rows(named=True):
+                if row["mask_path"] and Path(row["image_path"]).stem not in Path(row["mask_path"]).stem:
+                    msg = (
+                        "Mismatch between anomalous images and ground truth masks. Make sure "
+                        "mask files in 'Ungood/label/' folder follow the same naming "
+                        "convention as the anomalous images (e.g. image: '000.png', "
+                        "mask: '000.png')."
+                    )
+                    raise MisMatchError(msg)
+
+    task = "classification" if (samples["mask_path"] == "").all() else "segmentation"
     if split:
-        samples = samples[samples.split == split].reset_index(drop=True)
+        samples = samples.filter(pl.col("split") == split)
 
-    return samples
+    return AnomalibDataFrame(samples, attrs={"task": task})

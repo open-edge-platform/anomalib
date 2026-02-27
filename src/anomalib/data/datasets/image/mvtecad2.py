@@ -32,12 +32,13 @@ from collections.abc import Sequence
 from enum import Enum
 from pathlib import Path
 
-from pandas import DataFrame
+import polars as pl
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datasets.base.image import AnomalibDataset
 from anomalib.data.errors import MisMatchError
 from anomalib.data.utils import Split, validate_path
+from anomalib.data.utils.dataframe import AnomalibDataFrame
 
 
 class TestType(str, Enum):
@@ -163,7 +164,7 @@ def make_mvtec2_dataset(
     split: str | Split | None = None,
     test_type: TestType = TestType.PUBLIC,
     extensions: Sequence[str] | None = None,
-) -> DataFrame:
+) -> AnomalibDataFrame:
     """Create MVTec AD 2 samples by parsing the data directory structure.
 
     The files are expected to follow this structure::
@@ -279,15 +280,15 @@ def make_mvtec2_dataset(
             ]
             samples_list.extend(test_samples)
 
-    samples = DataFrame(
+    samples = pl.DataFrame(
         samples_list,
-        columns=["path", "split", "label", "image_path", "mask_path", "label_index"],
+        schema=["path", "split", "label", "image_path", "mask_path", "label_index"],
+        orient="row",
     )
 
     # Filter by split if specified
     if split:
         split = Split(split) if isinstance(split, str) else split
-        samples = samples[samples.split == split.value]
+        samples = samples.filter(pl.col("split") == split.value)
 
-    samples.attrs["task"] = "segmentation"
-    return samples
+    return AnomalibDataFrame(samples, attrs={"task": "segmentation"})

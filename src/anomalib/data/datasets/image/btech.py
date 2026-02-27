@@ -23,12 +23,12 @@ Reference:
 
 from pathlib import Path
 
-import pandas as pd
-from pandas.core.frame import DataFrame
+import polars as pl
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datasets.base.image import AnomalibDataset
 from anomalib.data.utils import LabelName, Split, validate_path
+from anomalib.data.utils.dataframe import AnomalibDataFrame
 
 CATEGORIES = ("01", "02", "03")
 
@@ -84,7 +84,7 @@ class BTechDataset(AnomalibDataset):
         self.samples = make_btech_dataset(path=self.root_category, split=self.split)
 
 
-def make_btech_dataset(path: Path, split: str | Split | None = None) -> DataFrame:
+def make_btech_dataset(path: Path, split: str | Split | None = None) -> AnomalibDataFrame:
     """Create BTech samples by parsing the BTech data file structure.
 
     The files are expected to follow the structure:
@@ -128,37 +128,50 @@ def make_btech_dataset(path: Path, split: str | Split | None = None) -> DataFram
         msg = f"Found 0 images in {path}"
         raise RuntimeError(msg)
 
-    samples = pd.DataFrame(samples_list, columns=["path", "split", "label", "image_path"])
-    samples = samples[samples.split != "ground_truth"]
+    samples = pl.DataFrame(samples_list, schema=["path", "split", "label", "image_path"], orient="row")
+    samples = samples.filter(pl.col("split") != "ground_truth")
 
     # Create mask_path column
     # (safely handles cases where non-mask image_paths end with either .png or .bmp)
-    samples["mask_path"] = (
-        samples.path
-        + "/ground_truth/"
-        + samples.label
-        + "/"
-        + samples.image_path.str.rstrip("png").str.rstrip(".").str.rstrip("bmp").str.rstrip(".")
-        + ".png"
+    # Strip extension from image filename for mask path construction
+    samples = samples.with_columns(
+        (
+            pl.col("path")
+            + "/ground_truth/"
+            + pl.col("label")
+            + "/"
+            + pl.col("image_path").str.replace(r"\.(png|bmp)$", "")
+            + ".png"
+        ).alias("mask_path"),
     )
 
     # Modify image_path column by converting to absolute path
-    samples["image_path"] = samples.path + "/" + samples.split + "/" + samples.label + "/" + samples.image_path
+    samples = samples.with_columns(
+        (pl.col("path") + "/" + pl.col("split") + "/" + pl.col("label") + "/" + pl.col("image_path")).alias(
+            "image_path",
+        ),
+    )
 
     # Good images don't have mask
-    samples.loc[(samples.split == "test") & (samples.label == "ok"), "mask_path"] = ""
+    samples = samples.with_columns(
+        pl.when((pl.col("split") == "test") & (pl.col("label") == "ok"))
+        .then(pl.lit(""))
+        .otherwise(pl.col("mask_path"))
+        .alias("mask_path"),
+    )
 
     # Create label index for normal (0) and anomalous (1) images.
-    samples.loc[(samples.label == "ok"), "label_index"] = LabelName.NORMAL
-    samples.loc[(samples.label != "ok"), "label_index"] = LabelName.ABNORMAL
-    samples.label_index = samples.label_index.astype(int)
+    samples = samples.with_columns(
+        pl.when(pl.col("label") == "ok")
+        .then(pl.lit(int(LabelName.NORMAL)))
+        .otherwise(pl.lit(int(LabelName.ABNORMAL)))
+        .alias("label_index"),
+    )
 
     # infer the task type
-    samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
+    task = "classification" if (samples["mask_path"] == "").all() else "segmentation"
 
-    # Get the data frame for the split.
     if split:
-        samples = samples[samples.split == split]
-        samples = samples.reset_index(drop=True)
+        samples = samples.filter(pl.col("split") == split)
 
-    return samples
+    return AnomalibDataFrame(samples, attrs={"task": task})
