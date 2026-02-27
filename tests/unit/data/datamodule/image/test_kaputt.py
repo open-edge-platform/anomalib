@@ -5,6 +5,7 @@
 
 from pathlib import Path
 
+import polars as pl
 import pytest
 from torchvision.transforms.v2 import Resize
 
@@ -48,7 +49,7 @@ class TestKaputt(_TestAnomalibImageDatamodule):
 
         assert len(samples_with) > len(samples_without)
         # All reference rows should be normal
-        added = samples_with[~samples_with["image_path"].isin(samples_without["image_path"])]
+        added = samples_with.filter(~pl.col("image_path").is_in(samples_without["image_path"]))
         assert (added["label"] == "normal").all()
         assert (added["label_index"] == int(LabelName.NORMAL)).all()
         # Reference paths must point into reference-image/
@@ -72,8 +73,8 @@ class TestKaputt(_TestAnomalibImageDatamodule):
         # Use val split which has both normal and abnormal in the dummy data
         samples = make_kaputt_dataset(root, split=Split.VAL)
 
-        abnormal = samples[samples["label_index"] == int(LabelName.ABNORMAL)]
-        normal = samples[samples["label_index"] == int(LabelName.NORMAL)]
+        abnormal = samples.filter(pl.col("label_index") == int(LabelName.ABNORMAL))
+        normal = samples.filter(pl.col("label_index") == int(LabelName.NORMAL))
 
         assert len(abnormal) > 0, "Expected abnormal samples in val split"
         assert len(normal) > 0, "Expected normal samples in val split"
@@ -86,6 +87,6 @@ class TestKaputt(_TestAnomalibImageDatamodule):
         root = dataset_path / "kaputt"
         samples = make_kaputt_dataset(root, split=Split.TRAIN, image_type="crop", use_reference=True)
 
-        ref_rows = samples[samples["image_path"].str.contains("reference-")]
+        ref_rows = samples.filter(pl.col("image_path").str.contains("reference-"))
         assert len(ref_rows) > 0
         assert ref_rows["image_path"].str.contains("reference-crop").all()

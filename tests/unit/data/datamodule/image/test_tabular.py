@@ -6,11 +6,11 @@
 import tempfile
 from pathlib import Path
 
-import pandas as pd
 import pytest
 from torchvision.transforms.v2 import Resize
 
 from anomalib.data import Folder, Tabular
+from anomalib.data.utils import AnomalibDataFrame
 from tests.unit.data.datamodule.base.image import _TestAnomalibImageDatamodule
 
 
@@ -18,7 +18,7 @@ class TestTabular(_TestAnomalibImageDatamodule):
     """Tabular Datamodule Unit Tests."""
 
     @staticmethod
-    def get_samples_dataframe(dataset_path: Path) -> pd.DataFrame:
+    def get_samples_dataframe(dataset_path: Path) -> AnomalibDataFrame:
         """Create samples DataFrame using the Folder datamodule."""
         datamodule_ = Folder(
             name="dummy",
@@ -32,7 +32,7 @@ class TestTabular(_TestAnomalibImageDatamodule):
             num_workers=0,
         )
         datamodule_.setup()
-        return pd.concat([
+        return AnomalibDataFrame.concat([
             datamodule_.train_data.samples,
             datamodule_.test_data.samples,
             datamodule_.val_data.samples,
@@ -58,7 +58,7 @@ class TestTabular(_TestAnomalibImageDatamodule):
         """Create and return a Tabular datamodule."""
         samples = TestTabular.get_samples_dataframe(dataset_path)
         if columns_to_drop:
-            samples = samples.drop(columns_to_drop, axis="columns")
+            samples = samples.drop(columns_to_drop)
         datamodule_ = Tabular(
             name="dummy",
             samples=samples,
@@ -89,7 +89,7 @@ class TestTabularFromFile(TestTabular):
         """Create and return a Tabular datamodule."""
         samples = TestTabular.get_samples_dataframe(dataset_path)
         with tempfile.NamedTemporaryFile(suffix=".csv") as samples_file:
-            samples.to_csv(samples_file)
+            samples.write_csv(samples_file.name)
             samples_file.seek(0)
 
             datamodule_ = Tabular.from_file(
