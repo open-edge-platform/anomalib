@@ -66,13 +66,12 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-import pandas as pd
+import polars as pl
 import torch
-from pandas import DataFrame
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datasets.base.video import AnomalibVideoDataset, VideoTargetFrame
-from anomalib.data.utils import Split, read_image, validate_path
+from anomalib.data.utils import AnomalibDataFrame, Split, read_image, validate_path
 from anomalib.data.utils.video import ClipsIndexer
 
 
@@ -215,7 +214,7 @@ class ShanghaiTechTestClipsIndexer(ClipsIndexer):
         return video, torch.empty((1, 0)), {}, video_idx
 
 
-def make_shanghaitech_dataset(root: Path, scene: int, split: Split | str | None = None) -> DataFrame:
+def make_shanghaitech_dataset(root: Path, scene: int, split: Split | str | None = None) -> AnomalibDataFrame:
     """Create ShanghaiTech dataset by parsing the file structure.
 
     The files are expected to follow the structure::
@@ -260,32 +259,37 @@ def make_shanghaitech_dataset(root: Path, scene: int, split: Split | str | None 
     root = validate_path(root)
     train_root = root / "training/converted_videos"
     train_list = [(str(train_root), *filename.parts[-2:]) for filename in train_root.glob(f"{scene_prefix}_*.avi")]
-    train_samples = DataFrame(train_list, columns=["root", "folder", "image_path"])
-    train_samples["split"] = "train"
+    train_samples = pl.DataFrame(train_list, schema=["root", "folder", "image_path"], orient="row")
+    train_samples = train_samples.with_columns(pl.lit("train").alias("split"))
 
     # get paths to testing folders
     test_root = Path(root) / "testing/frames"
     test_folders = [filename for filename in sorted(test_root.glob(f"{scene_prefix}_*")) if filename.is_dir()]
     test_folders = [folder for folder in test_folders if len(list(folder.glob("*.jpg"))) > 0]
     test_list = [(str(test_root), *folder.parts[-2:]) for folder in test_folders]
-    test_samples = DataFrame(test_list, columns=["root", "folder", "image_path"])
-    test_samples["split"] = "test"
+    test_samples = pl.DataFrame(test_list, schema=["root", "folder", "image_path"], orient="row")
+    test_samples = test_samples.with_columns(pl.lit("test").alias("split"))
 
-    samples = pd.concat([train_samples, test_samples], ignore_index=True)
+    samples = pl.concat([train_samples, test_samples])
 
     gt_root = Path(root) / "testing/test_pixel_mask"
-    samples["mask_path"] = ""
-    samples.loc[samples.root == str(test_root), "mask_path"] = (
-        str(gt_root) + "/" + samples.image_path.str.split(".").str[0] + ".npy"
+    samples = samples.with_columns(
+        pl.when(pl.col("root") == str(test_root))
+        .then(
+            pl.lit(str(gt_root) + "/") + pl.col("image_path").str.split(".").list.first() + pl.lit(".npy"),
+        )
+        .otherwise(pl.lit(""))
+        .alias("mask_path"),
     )
 
-    samples["image_path"] = samples.root + "/" + samples.image_path
+    samples = samples.with_columns(
+        (pl.col("root") + "/" + pl.col("image_path")).alias("image_path"),
+    )
 
     # infer the task type
-    samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
+    task = "classification" if (samples["mask_path"] == "").all() else "segmentation"
 
     if split:
-        samples = samples[samples.split == split]
-        samples = samples.reset_index(drop=True)
+        samples = samples.filter(pl.col("split") == split)
 
-    return samples
+    return AnomalibDataFrame(samples, attrs={"task": task})
