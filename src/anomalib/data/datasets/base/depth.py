@@ -68,10 +68,11 @@ class AnomalibDepthDataset(AnomalibDataset, ABC):
             ValueError: If the task type is neither classification nor
                 segmentation.
         """
-        image_path = self.samples.iloc[index].image_path
-        mask_path = self.samples.iloc[index].mask_path
-        label_index = self.samples.iloc[index].label_index
-        depth_path = self.samples.iloc[index].depth_path
+        row = self.samples.row_as_dict(index)
+        image_path = row["image_path"]
+        mask_path = row["mask_path"]
+        label_index = row["label_index"]
+        depth_path = row["depth_path"]
 
         image = to_tensor(Image.open(image_path))
         depth_image = to_tensor(read_depth_image(depth_path))

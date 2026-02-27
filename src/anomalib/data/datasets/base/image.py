@@ -20,7 +20,8 @@ The DataFrame must include at least the following columns:
       only). Required if task is 'segmentation'.
 
 Example DataFrame:
-    >>> df = pd.DataFrame({
+    >>> from anomalib.data.utils.dataframe import AnomalibDataFrame
+    >>> df = AnomalibDataFrame({
     ...     'image_path': ['path/to/image.png'],
     ...     'label': ['anomalous'],
     ...     'label_index': [1],
@@ -35,9 +36,8 @@ from abc import ABC
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
-import pandas as pd
+import polars as pl
 import torch
-from pandas import DataFrame
 from torch.utils.data import Dataset
 from torchvision.transforms.v2 import Transform
 from torchvision.tv_tensors import Mask
@@ -45,6 +45,7 @@ from torchvision.tv_tensors import Mask
 from anomalib import TaskType
 from anomalib.data.dataclasses import DatasetItem, ImageBatch, ImageItem
 from anomalib.data.utils import LabelName, read_image, read_mask
+from anomalib.data.utils.dataframe import AnomalibDataFrame
 
 _EXPECTED_COLUMNS = ["image_path", "split"]
 
@@ -82,7 +83,7 @@ class AnomalibDataset(Dataset, ABC):
     def __init__(self, augmentations: Transform | None = None) -> None:
         super().__init__()
         self.augmentations = augmentations
-        self._samples: DataFrame | None = None
+        self._samples: AnomalibDataFrame | None = None
         self._category: str | None = None
 
     @property
@@ -141,15 +142,15 @@ class AnomalibDataset(Dataset, ABC):
             msg = "No duplicates allowed in indices."
             raise ValueError(msg)
         dataset = self if inplace else copy.deepcopy(self)
-        dataset.samples = self.samples.iloc[indices].reset_index(drop=True)
+        dataset.samples = self.samples[list(indices)]
         return dataset
 
     @property
-    def samples(self) -> DataFrame:
+    def samples(self) -> AnomalibDataFrame:
         """Get the samples DataFrame.
 
         Returns:
-            DataFrame: DataFrame containing dataset samples.
+            AnomalibDataFrame: DataFrame containing dataset samples.
 
         Raises:
             RuntimeError: If samples DataFrame has not been set.
@@ -163,39 +164,40 @@ class AnomalibDataset(Dataset, ABC):
         return self._samples
 
     @samples.setter
-    def samples(self, samples: DataFrame) -> None:
+    def samples(self, samples: AnomalibDataFrame | pl.DataFrame) -> None:
         """Set the samples DataFrame.
 
         Args:
-            samples (DataFrame): DataFrame containing dataset samples.
+            samples (AnomalibDataFrame | pl.DataFrame): DataFrame containing dataset samples.
 
         Raises:
-            TypeError: If samples is not a pandas DataFrame.
+            TypeError: If samples is not an AnomalibDataFrame or polars DataFrame.
             ValueError: If required columns are missing.
             FileNotFoundError: If any image paths do not exist.
 
         Example:
-            >>> df = pd.DataFrame({
-            ...     'image_path': ['image.png'],
-            ...     'split': ['train']
-            ... })
+            >>> import polars as pl
+            >>> from anomalib.data.utils.dataframe import AnomalibDataFrame
+            >>> df = AnomalibDataFrame({"image_path": ["image.png"], "split": ["train"]})
             >>> dataset = AnomalibDataset()
             >>> dataset.samples = df
         """
-        # validate the passed samples by checking the
-        if not isinstance(samples, DataFrame):
-            msg = f"samples must be a pandas.DataFrame, found {type(samples)}"
+        # Wrap plain pl.DataFrame if needed
+        if isinstance(samples, pl.DataFrame):
+            samples = AnomalibDataFrame(samples)
+        if not isinstance(samples, AnomalibDataFrame):
+            msg = f"samples must be an AnomalibDataFrame or polars DataFrame, found {type(samples)}"
             raise TypeError(msg)
 
         if not all(col in samples.columns for col in _EXPECTED_COLUMNS):
             msg = f"samples must have (at least) columns {_EXPECTED_COLUMNS}, found {samples.columns}"
             raise ValueError(msg)
 
-        if not samples["image_path"].apply(lambda p: Path(p).exists()).all():
+        if not samples["image_path"].map_elements(lambda p: Path(p).exists(), return_dtype=pl.Boolean).all():
             msg = "missing file path(s) in samples"
             raise FileNotFoundError(msg)
 
-        self._samples = samples.sort_values(by="image_path", ignore_index=True)
+        self._samples = samples.sort(by="image_path")
 
     @property
     def category(self) -> str | None:
@@ -222,7 +224,7 @@ class AnomalibDataset(Dataset, ABC):
         Returns:
             bool: True if dataset contains normal samples, False otherwise.
         """
-        return LabelName.NORMAL in list(self.samples.label_index)
+        return LabelName.NORMAL in self.samples["label_index"].to_list()
 
     @property
     def has_anomalous(self) -> bool:
@@ -231,7 +233,7 @@ class AnomalibDataset(Dataset, ABC):
         Returns:
             bool: True if dataset contains anomalous samples, False otherwise.
         """
-        return LabelName.ABNORMAL in list(self.samples.label_index)
+        return LabelName.ABNORMAL in self.samples["label_index"].to_list()
 
     @property
     def task(self) -> TaskType:
@@ -260,9 +262,10 @@ class AnomalibDataset(Dataset, ABC):
             >>> isinstance(item.image, torch.Tensor)
             True
         """
-        image_path = self.samples.iloc[index].image_path
-        mask_path = self.samples.iloc[index].mask_path
-        label_index = self.samples.iloc[index].label_index
+        row = self.samples.row_as_dict(index)
+        image_path = row["image_path"]
+        mask_path = row["mask_path"]
+        label_index = row["label_index"]
 
         # Read the image
         image = read_image(image_path, as_tensor=True)
@@ -327,7 +330,7 @@ class AnomalibDataset(Dataset, ABC):
             msg = "Cannot concatenate datasets that are not of the same type."
             raise TypeError(msg)
         dataset = copy.deepcopy(self)
-        dataset.samples = pd.concat([self.samples, other_dataset.samples], ignore_index=True)
+        dataset.samples = AnomalibDataFrame.concat([self.samples, other_dataset.samples])
         return dataset
 
     @property
