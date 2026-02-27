@@ -42,7 +42,7 @@ class TabularDataset(AnomalibDataset):
 
     Args:
         name (str): Name of the dataset. Used for logging/saving.
-        samples (dict | list | DataFrame): Pandas ``DataFrame`` or compatible ``list``
+        samples (dict | list | DataFrame): Polars ``DataFrame`` or compatible ``list``
             or ``dict`` containing the dataset information.
         augmentations (Transform | None, optional): Augmentations to apply to the images.
             Defaults to ``None``.
@@ -218,7 +218,7 @@ def make_tabular_dataset(
     """Create a dataset from a table of image paths and labels.
 
     Args:
-        samples (dict | list | DataFrame): Pandas ``DataFrame`` or compatible
+        samples (dict | list | DataFrame): Polars ``DataFrame`` or compatible
             ``list`` or ``dict`` containing the dataset information.
         root (str | Path | None, optional): Root directory of the dataset.
             Defaults to ``None``.
