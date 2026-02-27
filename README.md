@@ -12,7 +12,7 @@
 [License](LICENSE)
 
 [![python](https://img.shields.io/badge/python-3.10%2B-green)]()
-[![pytorch](https://img.shields.io/badge/pytorch-2.0%2B-orange)]()
+[![pytorch](https://img.shields.io/badge/pytorch-2.6%2B-orange)]()
 [![lightning](https://img.shields.io/badge/lightning-2.2%2B-blue)]()
 [![openvino](https://img.shields.io/badge/openvino-2024.0%2B-purple)]()
 
