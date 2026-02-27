@@ -8,7 +8,7 @@ from collections.abc import Generator
 from pathlib import Path
 from typing import Any
 
-import pandas as pd
+import polars as pl
 from tqdm import tqdm
 
 from anomalib.metrics import Evaluator
@@ -98,8 +98,8 @@ class MetricsCalculationJob(Job):
         results_path.parent.mkdir(parents=True, exist_ok=True)
 
         df_dict = {k: [v] for k, v in results.items()}
-        metrics_df = pd.DataFrame(df_dict)
-        metrics_df.to_csv(results_path, index=False)
+        metrics_df = pl.DataFrame(df_dict)
+        metrics_df.write_csv(results_path)
 
 
 class MetricsCalculationJobGenerator(JobGenerator):

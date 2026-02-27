@@ -38,7 +38,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
-import pandas as pd
+import polars as pl
 from lightning import seed_everything
 from rich.console import Console
 from rich.table import Table
@@ -164,7 +164,7 @@ class BenchmarkJob(Job):
         return output
 
     @staticmethod
-    def collect(results: list[dict[str, Any]]) -> pd.DataFrame:
+    def collect(results: list[dict[str, Any]]) -> pl.DataFrame:
         """Collect and aggregate results from multiple benchmark runs.
 
         Args:
@@ -172,7 +172,7 @@ class BenchmarkJob(Job):
                 individual benchmark runs.
 
         Returns:
-            pd.DataFrame: DataFrame containing aggregated results with each row
+            pl.DataFrame: DataFrame containing aggregated results with each row
                 representing a benchmark run.
         """
         output: dict[str, Any] = {}
@@ -181,36 +181,36 @@ class BenchmarkJob(Job):
         for result in results:
             for key, value in result.items():
                 output[key].append(value)
-        return pd.DataFrame(output)
+        return pl.DataFrame(output)
 
     @staticmethod
-    def save(result: pd.DataFrame) -> None:
+    def save(result: pl.DataFrame) -> None:
         """Save benchmark results to CSV file.
 
         The results are saved in the ``runs/benchmark/YYYY-MM-DD-HH_MM_SS``
         directory. The method also prints a tabular view of the results.
 
         Args:
-            result (pd.DataFrame): DataFrame containing benchmark results to save.
+            result (pl.DataFrame): DataFrame containing benchmark results to save.
         """
         BenchmarkJob._print_tabular_results(result)
         file_path = Path("runs") / BenchmarkJob.name / datetime.now().strftime("%Y-%m-%d-%H_%M_%S") / "results.csv"
         file_path.parent.mkdir(parents=True, exist_ok=True)
-        result.to_csv(file_path, index=False)
+        result.write_csv(file_path)
         logger.info(f"Saved results to {file_path}")
 
     @staticmethod
-    def _print_tabular_results(gathered_result: pd.DataFrame) -> None:
+    def _print_tabular_results(gathered_result: pl.DataFrame) -> None:
         """Print benchmark results in a formatted table.
 
         Args:
-            gathered_result (pd.DataFrame): DataFrame containing results to
+            gathered_result (pl.DataFrame): DataFrame containing results to
                 display.
         """
         if gathered_result is not None:
             console = Console()
             table = Table(title=f"{BenchmarkJob.name} Results", show_header=True, header_style="bold magenta")
-            results = gathered_result.to_dict("list")
+            results = gathered_result.to_dict(as_series=False)
             for column in results:
                 table.add_column(column)
             for row in zip(*results.values(), strict=False):
