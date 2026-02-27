@@ -1,5 +1,9 @@
 # Tauri Application Build Workflow
 #
+# Build steps follow application/binary/README.md. Windows flow is aligned with
+# open-edge-platform/training_extensions/.github/workflows/windows-installer.yml
+# (workflow_dispatch inputs, MSIX makeappx + signing).
+#
 # This workflow builds the Anomalib Studio Tauri application for Linux (.deb),
 # Windows (MSIX), and macOS (.dmg).
 #
@@ -33,6 +37,20 @@ on:
       - "application/**"
       - ".github/workflows/tauri-build.yaml"
   workflow_dispatch:
+    inputs:
+      accelerator:
+        description: "Backend accelerator to build (matrix: cpu, cu124, xpu)"
+        type: choice
+        options:
+          - cpu
+          - cu124
+          - xpu
+        default: cpu
+      debug_build:
+        description: "Produce debug build (unoptimized, with symbols)"
+        type: boolean
+        required: false
+        default: false
 
 permissions: {}
 
@@ -120,9 +138,11 @@ jobs:
 
   build-windows:
     name: Build Windows MSIX
-    # Only run Windows build when signing secrets are available.
-    # On fork PRs, GitHub does not expose repository secrets, so this job will be skipped.
-    if: ${{ secrets.MSIX_SIGN_CERTIFICATE != '' && secrets.MSIX_SIGN_CERTIFICATE_PASSWORD != '' }}
+    # Only run in the source repo where MSIX signing secrets are configured.
+    # Skipped on forks; run manually via workflow_dispatch from the repo.
+    if: |
+      github.repository == 'open-edge-platform/anomalib' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: windows-latest
     timeout-minutes: 90
     permissions:
@@ -130,7 +150,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        accelerator: [cpu, cu124, xpu]
+        # On workflow_dispatch use chosen accelerator; on push/PR build all.
+        accelerator: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', inputs.accelerator)) || fromJSON('["cpu", "cu124", "xpu"]') }}
     env:
       TAURI_PATH: application/binary/tauri
       TAURI_SRC_PATH: application/binary/tauri/src-tauri
@@ -147,13 +168,15 @@ jobs:
         id: paths
         env:
           ACCELERATOR: ${{ matrix.accelerator }}
+          DEBUG_BUILD: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_build || false }}
         run: |
-          $version = "0.1.0"
           $runNum = if ($env:GITHUB_RUN_NUMBER) { $env:GITHUB_RUN_NUMBER } else { "0" }
-          $buildVersion = "$version.$runNum"
-          $uiBuildPath = "$env:TAURI_SRC_PATH\target\release"
+          $targetDir = if ($env:DEBUG_BUILD -eq "true") { "debug" } else { "release" }
+          $uiBuildPath = "$env:TAURI_SRC_PATH\target\$targetDir"
           $msixBundlePath = "$uiBuildPath\bundle\msix"
-          $msixFileName = "anomalib-studio-$($env:ACCELERATOR)-$buildVersion.msix"
+          $suffix = if ($env:DEBUG_BUILD -eq "true") { "-debug" } else { "" }
+          # File name uses GitHub run number; MSIX package version is defined in AppxManifest.xml.
+          $msixFileName = "anomalib-studio-$($env:ACCELERATOR)-build-$runNum$suffix.msix"
           $msixFilePath = "$msixBundlePath\$msixFileName"
 
           $sdkBin = "${env:ProgramFiles(x86)}\Windows Kits\10\bin"
@@ -162,7 +185,7 @@ jobs:
           $makeappx = "$sdkRoot\makeappx.exe"
           $signtool = "$sdkRoot\signtool.exe"
 
-          "UI_BUILD_PATH=$uiBuildPath" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "UI_BUILD_PATH=$($uiBuildPath)" | Out-File -FilePath $env:GITHUB_ENV -Append
           "MSIX_BUNDLE_PATH=$msixBundlePath" | Out-File -FilePath $env:GITHUB_ENV -Append
           "MSIX_FILE_NAME=$msixFileName" | Out-File -FilePath $env:GITHUB_ENV -Append
           "MSIX_FILE_PATH=$msixFilePath" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -225,28 +248,47 @@ jobs:
 
       - name: Build Tauri app
         working-directory: application/binary/tauri
+        env:
+          DEBUG_BUILD: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_build || false }}
         # _internal is not in tauri.conf.json resources by default because
         # Tauri's build script scans every resource file for rerun-if-changed,
         # and _internal has thousands of Python runtime files that cause slow
         # rebuilds and "file in use" errors on Windows during dev. We inject
         # the resource mapping only for production builds via --config.
-        run: npx tauri build -v --config '{"bundle":{"resources":{"sidecar/_internal/":"_internal/"}}}'
+        # See application/binary/README.md for local build commands.
+        run: |
+          $opts = @("-v", "--config", '{"bundle":{"resources":{"sidecar/_internal/":"_internal/"}}}')
+          if ($env:DEBUG_BUILD -eq "true") { $opts += "--debug" }
+          & npx tauri build $opts
 
       - name: Create MSIX package
         run: |
+          if (Test-Path $env:MSIX_BUNDLE_PATH) {
+            Remove-Item $env:MSIX_BUNDLE_PATH -Recurse -Force
+          }
           New-Item -ItemType Directory -Force -Path $env:MSIX_BUNDLE_PATH | Out-Null
           Copy-Item "$env:UI_BUILD_PATH\anomalib-studio.exe" -Destination $env:MSIX_BUNDLE_PATH
           $backendExe = Get-ChildItem "$env:UI_BUILD_PATH" -Filter "anomalib-studio-backend*.exe" | Select-Object -First 1
-          if ($backendExe) {
-            Copy-Item $backendExe.FullName -Destination $env:MSIX_BUNDLE_PATH
-            Copy-Item $backendExe.FullName -Destination "$env:MSIX_BUNDLE_PATH\anomalib-studio-backend.exe"
+          if (-not $backendExe) {
+            Write-Error "Backend executable matching 'anomalib-studio-backend*.exe' was not found in '$($env:UI_BUILD_PATH)'."
+            exit 1
           }
+          if (-not (Test-Path $backendExe.FullName)) {
+            Write-Error "Resolved backend executable path '$($backendExe.FullName)' does not exist."
+            exit 1
+          }
+          Copy-Item $backendExe.FullName -Destination $env:MSIX_BUNDLE_PATH
+          Copy-Item $backendExe.FullName -Destination "$($env:MSIX_BUNDLE_PATH)\anomalib-studio-backend.exe"
           if (Test-Path "$env:UI_BUILD_PATH\_internal") {
             Copy-Item "$env:UI_BUILD_PATH\_internal" -Destination $env:MSIX_BUNDLE_PATH -Recurse
           }
-          Copy-Item "$env:TAURI_SRC_PATH\msix\*" -Destination $env:MSIX_BUNDLE_PATH -Recurse
+          else {
+            Write-Error "Expected directory '$env:UI_BUILD_PATH\_internal' not found. The Python runtime _internal payload is missing from the UI build output."
+            exit 1
+          }
+          Copy-Item "$env:TAURI_SRC_PATH\msix\*" -Destination $env:MSIX_BUNDLE_PATH -Recurse -Force
           New-Item -ItemType Directory -Force -Path "$env:MSIX_BUNDLE_PATH\Assets" | Out-Null
-          Copy-Item "$env:TAURI_SRC_PATH\icons\icon.png" -Destination "$env:MSIX_BUNDLE_PATH\Assets\logo.png"
+          Copy-Item "$env:TAURI_SRC_PATH\icons\icon.png" -Destination "$($env:MSIX_BUNDLE_PATH)\Assets\logo.png"
           & "$env:MAKEAPPX_PATH" pack /d $env:MSIX_BUNDLE_PATH /p $env:MSIX_FILE_PATH
 
       - name: Sign MSIX package
@@ -257,10 +299,12 @@ jobs:
           $bytes = [System.Convert]::FromBase64String($env:MSIX_SIGN_CERTIFICATE)
           [System.IO.File]::WriteAllBytes("sign.pfx", $bytes)
           try {
-            & "$env:SIGNTOOL_PATH" sign /fd SHA256 /a /f "sign.pfx" /p "$env:MSIX_SIGN_CERTIFICATE_PASSWORD" $env:MSIX_FILE_PATH
+            & $env:SIGNTOOL_PATH sign /fd SHA256 /a /f "sign.pfx" /p "$env:MSIX_SIGN_CERTIFICATE_PASSWORD" $env:MSIX_FILE_PATH
           }
           finally {
-            if (Test-Path "sign.pfx") { Remove-Item "sign.pfx" -Force }
+            if (Test-Path "sign.pfx") {
+              Remove-Item "sign.pfx" -Force
+            }
           }
 
       - name: Upload MSIX artifact
