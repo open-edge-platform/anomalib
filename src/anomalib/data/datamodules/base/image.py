@@ -39,7 +39,7 @@ from torch.utils.data.dataloader import DataLoader
 from torchvision.transforms.v2 import Compose, Resize, Transform
 
 from anomalib.data.transforms.utils import extract_transforms_by_type
-from anomalib.data.utils import TestSplitMode, ValSplitMode, random_split, split_by_label
+from anomalib.data.utils import AnomalibDataFrame, TestSplitMode, ValSplitMode, random_split, split_by_label
 from anomalib.data.utils.synthetic import SyntheticAnomalyDataset
 from anomalib.utils.attrs import get_nested_attr
 
@@ -47,7 +47,6 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from lightning.pytorch.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
-    from pandas import DataFrame
 
     from anomalib import TaskType
     from anomalib.data.datasets.base.image import AnomalibDataset
@@ -126,7 +125,7 @@ class AnomalibDataModule(LightningDataModule, ABC):
         self.val_data: AnomalibDataset
         self.test_data: AnomalibDataset
 
-        self._samples: DataFrame | None = None
+        self._samples: AnomalibDataFrame | None = None
         self._category: str = ""
 
         self._is_setup = False  # flag to track if setup has been called
