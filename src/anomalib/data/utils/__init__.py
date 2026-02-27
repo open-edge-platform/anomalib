@@ -23,6 +23,7 @@ Example:
 """
 
 from .boxes import boxes_to_anomaly_maps, boxes_to_masks, masks_to_boxes
+from .dataframe import AnomalibDataFrame
 from .download import DownloadInfo, download_and_extract
 from .generators import generate_perlin_noise
 from .image import (
@@ -49,6 +50,7 @@ __all__ = [
     "get_image_filenames",
     "get_image_height_and_width",
     "generate_perlin_noise",
+    "AnomalibDataFrame",
     "read_image",
     "read_mask",
     "read_depth_image",

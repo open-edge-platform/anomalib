@@ -23,8 +23,9 @@ Example:
 """
 
 from pathlib import Path
+from typing import Any
 
-import pandas as pd
+import polars as pl
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datamodules.base.image import AnomalibDataModule
@@ -37,7 +38,7 @@ class Tabular(AnomalibDataModule):
 
     Args:
         name (str): Name of the dataset. Used for logging/saving.
-        samples (dict | list | DataFrame): Pandas ``DataFrame`` or compatible ``list``
+        samples (dict | list | pl.DataFrame): Polars ``DataFrame`` or compatible ``list``
             or ``dict`` containing the dataset information.
         root (str | Path | None): Root folder containing normal and abnormal
             directories. Defaults to ``None``.
@@ -101,7 +102,7 @@ class Tabular(AnomalibDataModule):
     def __init__(
         self,
         name: str,
-        samples: dict | list | pd.DataFrame,
+        samples: dict | list | pl.DataFrame,
         root: str | Path | None = None,
         normal_split_ratio: float = 0.2,
         train_batch_size: int = 32,
@@ -169,7 +170,7 @@ class Tabular(AnomalibDataModule):
         name: str,
         file_path: str | Path,
         file_format: str | None = None,
-        pd_kwargs: dict | None = None,
+        pl_kwargs: dict | None = None,
         **kwargs,
     ) -> "Tabular":
         """Create Tabular Datamodule from file.
@@ -177,12 +178,12 @@ class Tabular(AnomalibDataModule):
         Args:
             name (str): Name of the dataset. This is used to name the datamodule,
                 especially when logging/saving.
-            file_path (str | Path): Path to tabular file containing the datset
+            file_path (str | Path): Path to tabular file containing the dataset
                 information.
-            file_format (str): File format supported by a pd.read_* method, such
+            file_format (str): File format supported by a pl.read_* method, such
                 as ``csv``, ``parquet`` or ``json``.
                 Defaults to ``None`` (inferred from file suffix).
-            pd_kwargs (dict | None): Keyword argument dictionary for the pd.read_* method.
+            pl_kwargs (dict | None): Keyword argument dictionary for the pl.read_* method.
                 Defaults to ``None``.
             kwargs (dict): Additional keyword arguments for the Tabular Datamodule class.
 
@@ -227,12 +228,22 @@ class Tabular(AnomalibDataModule):
         if not file_format:
             msg = f"File format not specified and could not be inferred from file name: '{Path(file_path).name}'"
             raise ValueError(msg)
-        read_func = getattr(pd, f"read_{file_format}", None)
+        readers: dict[str, Any] = {
+            "csv": pl.read_csv,
+            "parquet": pl.read_parquet,
+            "json": pl.read_json,
+            "ndjson": pl.read_ndjson,
+            "ipc": pl.read_ipc,
+            "avro": pl.read_avro,
+            "excel": pl.read_excel,
+            "ods": pl.read_ods,
+        }
+        read_func = readers.get(file_format)
         if read_func is None:
             msg = f"Unsupported file format: '{file_format}'"
             raise ValueError(msg)
 
         # Read the file and return Tabular dataset
-        pd_kwargs = pd_kwargs or {}
-        samples = read_func(file_path, **pd_kwargs)
+        pl_kwargs = pl_kwargs or {}
+        samples = read_func(file_path, **pl_kwargs)
         return cls(name, samples, **kwargs)

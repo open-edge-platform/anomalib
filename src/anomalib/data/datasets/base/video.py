@@ -25,12 +25,12 @@ from collections.abc import Callable
 from enum import Enum
 
 import torch
-from pandas import DataFrame
 from torchvision.transforms.v2 import Transform
 from torchvision.transforms.v2.functional import to_dtype, to_dtype_video
 from torchvision.tv_tensors import Mask
 
 from anomalib.data.dataclasses import VideoBatch, VideoItem
+from anomalib.data.utils.dataframe import AnomalibDataFrame
 from anomalib.data.utils.video import ClipsIndexer
 
 from .image import AnomalibDataset
@@ -117,20 +117,20 @@ class AnomalibVideoDataset(AnomalibDataset, ABC):
         return self.indexer.num_clips()
 
     @property
-    def samples(self) -> DataFrame:
+    def samples(self) -> AnomalibDataFrame:
         """Get the samples dataframe.
 
         Returns:
-            DataFrame: DataFrame containing dataset samples.
+            AnomalibDataFrame: DataFrame containing dataset samples.
         """
         return super().samples
 
     @samples.setter
-    def samples(self, samples: DataFrame) -> None:
+    def samples(self, samples: AnomalibDataFrame) -> None:
         """Overwrite samples and re-index subvideos.
 
         Args:
-            samples (DataFrame): DataFrame with new samples.
+            samples (AnomalibDataFrame): DataFrame with new samples.
 
         Raises:
             ValueError: If the indexer class is not set.
@@ -150,8 +150,8 @@ class AnomalibVideoDataset(AnomalibDataset, ABC):
             msg = "self.indexer_cls must be callable."
             raise TypeError(msg)
         self.indexer = self.indexer_cls(  # pylint: disable=not-callable
-            video_paths=list(self.samples.image_path),
-            mask_paths=list(self.samples.mask_path),
+            video_paths=self.samples["image_path"].to_list(),
+            mask_paths=self.samples["mask_path"].to_list(),
             clip_length_in_frames=self.clip_length_in_frames,
             frames_between_clips=self.frames_between_clips,
         )

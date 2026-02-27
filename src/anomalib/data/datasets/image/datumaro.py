@@ -33,17 +33,18 @@ Example:
 import json
 from pathlib import Path
 
-import pandas as pd
+import polars as pl
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datasets.base import AnomalibDataset
 from anomalib.data.utils import LabelName, Split
+from anomalib.data.utils.dataframe import AnomalibDataFrame
 
 
 def make_datumaro_dataset(
     root: str | Path,
     split: str | Split | None = None,
-) -> pd.DataFrame:
+) -> AnomalibDataFrame:
     """Create a DataFrame of image samples from a Datumaro dataset.
 
     Args:
@@ -52,7 +53,7 @@ def make_datumaro_dataset(
             ``Split.TRAIN`` or ``Split.TEST``. Defaults to ``None``.
 
     Returns:
-        pd.DataFrame: DataFrame containing samples with columns:
+        pl.DataFrame: DataFrame containing samples with columns:
             - ``image_path``: Path to the image file
             - ``label``: Class label name
             - ``label_index``: Numeric label index
@@ -87,24 +88,21 @@ def make_datumaro_dataset(
             "split": None,
             "mask_path": "",  # mask is provided in annotation file
         })
-    samples_df = pd.DataFrame(
-        samples,
-        columns=["image_path", "label", "label_index", "split", "mask_path"],
-        index=range(len(samples)),
-    )
+    samples_df = pl.DataFrame(samples)
     # Create test/train split
     # By default assign all "Normal" samples to train and all "Anomalous" to test
-    samples_df.loc[samples_df["label_index"] == LabelName.NORMAL, "split"] = Split.TRAIN
-    samples_df.loc[samples_df["label_index"] == LabelName.ABNORMAL, "split"] = Split.TEST
+    samples_df = samples_df.with_columns(
+        pl.when(pl.col("label_index") == int(LabelName.NORMAL))
+        .then(pl.lit(Split.TRAIN))
+        .otherwise(pl.lit(Split.TEST))
+        .alias("split"),
+    )
 
     # datumaro only supports classification
-    samples_df.attrs["task"] = "classification"
-
-    # Get the data frame for the split.
     if split:
-        samples_df = samples_df[samples_df.split == split].reset_index(drop=True)
+        samples_df = samples_df.filter(pl.col("split") == split)
 
-    return samples_df
+    return AnomalibDataFrame(samples_df, attrs={"task": "classification"})
 
 
 class DatumaroDataset(AnomalibDataset):

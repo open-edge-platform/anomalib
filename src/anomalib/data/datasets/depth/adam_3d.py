@@ -19,12 +19,12 @@ Reference: https://arxiv.org/abs/2507.07838
 from collections.abc import Sequence
 from pathlib import Path
 
-from pandas import DataFrame
+import polars as pl
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datasets.base.depth import AnomalibDepthDataset
 from anomalib.data.errors import MisMatchError
-from anomalib.data.utils import LabelName, Split, validate_path
+from anomalib.data.utils import AnomalibDataFrame, LabelName, Split, validate_path
 
 IMG_EXTENSIONS = [".png", ".PNG", ".tiff"]
 CATEGORIES = (
@@ -98,7 +98,7 @@ def make_adam_3d_dataset(
     root: str | Path,
     split: str | Split | None = None,
     extensions: Sequence[str] | None = None,
-) -> DataFrame:
+) -> AnomalibDataFrame:
     """Create 3D-ADAM samples by parsing the data directory structure.
 
     The files are expected to follow this structure::
@@ -122,7 +122,7 @@ def make_adam_3d_dataset(
             Defaults to ``None``.
 
     Returns:
-        DataFrame: DataFrame containing the dataset samples.
+        AnomalibDataFrame: DataFrame containing the dataset samples.
 
     Example:
         >>> from pathlib import Path
@@ -147,51 +147,93 @@ def make_adam_3d_dataset(
         msg = f"Found 0 images in {root}"
         raise RuntimeError(msg)
 
-    samples = DataFrame(
+    samples = pl.DataFrame(
         samples_list,
-        columns=["path", "split", "label", "type", "file_name"],
+        schema=["path", "split", "label", "type", "file_name"],
+        orient="row",
     )
 
     # Modify image_path column by converting to absolute path
-    samples.loc[(samples.type == "rgb"), "image_path"] = (
-        samples.path + "/" + samples.split + "/" + samples.label + "/" + "rgb/" + samples.file_name
+    samples = samples.with_columns(
+        pl.when(pl.col("type") == "rgb")
+        .then(pl.col("path") + "/" + pl.col("split") + "/" + pl.col("label") + "/" + "rgb/" + pl.col("file_name"))
+        .otherwise(pl.lit(None))
+        .alias("image_path"),
     )
-    samples.loc[(samples.type == "rgb"), "depth_path"] = (
-        samples.path
-        + "/"
-        + samples.split
-        + "/"
-        + samples.label
-        + "/"
-        + "xyz/"
-        + samples.file_name.str.split(".").str[0]
-        + ".tiff"
+    samples = samples.with_columns(
+        pl.when(pl.col("type") == "rgb")
+        .then(
+            pl.col("path")
+            + "/"
+            + pl.col("split")
+            + "/"
+            + pl.col("label")
+            + "/"
+            + "xyz/"
+            + pl.col("file_name").str.split(".").list.first()
+            + ".tiff",
+        )
+        .otherwise(pl.lit(None))
+        .alias("depth_path"),
     )
 
     # Create label index for normal (0) and anomalous (1) images.
-    samples.loc[(samples.label == "good"), "label_index"] = LabelName.NORMAL
-    samples.loc[(samples.label != "good"), "label_index"] = LabelName.ABNORMAL
-    samples.label_index = samples.label_index.astype(int)
+    samples = samples.with_columns(
+        pl.when(pl.col("label") == "good")
+        .then(pl.lit(int(LabelName.NORMAL)))
+        .otherwise(pl.lit(int(LabelName.ABNORMAL)))
+        .alias("label_index"),
+    )
 
     # separate masks from samples
-    mask_samples = samples.loc[((samples.split == "test") & (samples.type == "rgb"))].sort_values(
-        by="image_path",
-        ignore_index=True,
-    )
-    samples = samples.sort_values(by="image_path", ignore_index=True)
+    mask_samples = samples.filter(
+        (pl.col("split") == "test") & (pl.col("type") == "rgb"),
+    ).sort(by="image_path")
+    samples = samples.sort(by="image_path")
 
     # assign mask paths to all test images
-    samples.loc[((samples.split == "test") & (samples.type == "rgb")), "mask_path"] = (
-        mask_samples.path + "/" + samples.split + "/" + samples.label + "/" + "ground_truth/" + samples.file_name
+    if "mask_path" not in samples.columns:
+        samples = samples.with_columns(pl.lit(None).cast(pl.Utf8).alias("mask_path"))
+
+    test_rgb_indices = samples.with_row_index("_idx").filter(
+        (pl.col("split") == "test") & (pl.col("type") == "rgb"),
+    )["_idx"]
+
+    if len(test_rgb_indices) > 0 and len(mask_samples) > 0:
+        mask_paths = (
+            mask_samples["path"]
+            + "/"
+            + mask_samples["split"]
+            + "/"
+            + mask_samples["label"]
+            + "/"
+            + "ground_truth/"
+            + mask_samples["file_name"]
+        )
+        update = pl.DataFrame({"_idx": test_rgb_indices, "_mask_path": mask_paths})
+        samples = (
+            samples.with_row_index("_idx")
+            .join(update, on="_idx", how="left")
+            .with_columns(
+                pl.when(pl.col("_mask_path").is_not_null())
+                .then(pl.col("_mask_path"))
+                .otherwise(pl.col("mask_path"))
+                .alias("mask_path"),
+            )
+            .drop("_idx", "_mask_path")
+        )
+
+    samples = samples.drop_nulls(subset=["image_path"])
+    samples = samples.with_columns(
+        pl.col("image_path").cast(pl.Utf8),
+        pl.col("mask_path").fill_null("").cast(pl.Utf8),
+        pl.col("depth_path").fill_null("").cast(pl.Utf8),
     )
-    samples = samples.dropna(subset=["image_path"])
-    samples = samples.astype({"image_path": "str", "mask_path": "str", "depth_path": "str"})
 
     # assert that the right mask files are associated with the right test images
-    mismatch_masks = (
-        samples.loc[samples.label_index == LabelName.ABNORMAL]
-        .apply(lambda x: Path(x.image_path).stem in Path(x.mask_path).stem, axis=1)
-        .all()
+    mismatch_masks = all(
+        Path(row["image_path"]).stem in Path(row["mask_path"]).stem
+        for row in samples.filter(pl.col("label_index") == int(LabelName.ABNORMAL)).iter_rows(named=True)
     )
     if not mismatch_masks:
         msg = (
@@ -201,10 +243,9 @@ def make_adam_3d_dataset(
         )
         raise MisMatchError(msg)
 
-    mismatch_depth = (
-        samples.loc[samples.label_index == LabelName.ABNORMAL]
-        .apply(lambda x: Path(x.image_path).stem in Path(x.depth_path).stem, axis=1)
-        .all()
+    mismatch_depth = all(
+        Path(row["image_path"]).stem in Path(row["depth_path"]).stem
+        for row in samples.filter(pl.col("label_index") == int(LabelName.ABNORMAL)).iter_rows(named=True)
     )
     if not mismatch_depth:
         msg = (
@@ -215,9 +256,9 @@ def make_adam_3d_dataset(
         raise MisMatchError(msg)
 
     # infer the task type
-    samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
+    task = "classification" if samples.select((pl.col("mask_path") == "").all()).item() else "segmentation"
 
     if split:
-        samples = samples[samples.split == split].reset_index(drop=True)
+        samples = samples.filter(pl.col("split") == split)
 
-    return samples
+    return AnomalibDataFrame(samples, attrs={"task": task})

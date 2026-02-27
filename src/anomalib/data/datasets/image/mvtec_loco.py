@@ -23,8 +23,8 @@ import logging
 from collections.abc import Sequence
 from pathlib import Path
 
+import polars as pl
 import torch
-from pandas import DataFrame
 from torchvision.transforms.v2 import Transform
 from torchvision.tv_tensors import Mask
 
@@ -39,6 +39,7 @@ from anomalib.data.utils import (
     read_mask,
     validate_path,
 )
+from anomalib.data.utils.dataframe import AnomalibDataFrame
 
 logger = logging.getLogger(__name__)
 
@@ -139,9 +140,10 @@ class MVTecLOCODataset(AnomalibDataset):
         Returns:
             ImageItem: The dataset item.
         """
-        image_path = self.samples.iloc[index].image_path
-        mask_path = self.samples.iloc[index].mask_path
-        label_index = self.samples.iloc[index].label_index
+        row = self.samples.row_as_dict(index)
+        image_path = row["image_path"]
+        mask_path = row["mask_path"]
+        label_index = row["label_index"]
 
         image = read_image(image_path, as_tensor=True)
         item = {"image_path": image_path, "gt_label": label_index}
@@ -180,7 +182,7 @@ def make_dataset(
     root: str | Path,
     split: str | Split | None = None,
     extensions: Sequence[str] = IMG_EXTENSIONS,
-) -> DataFrame:
+) -> AnomalibDataFrame:
     """Create MVTec LOCO AD samples by parsing the original MVTec LOCO AD data file structure.
 
     The files are expected to follow the structure:
@@ -244,58 +246,75 @@ def make_dataset(
         msg = f"Found 0 images in {root}"
         raise RuntimeError(msg)
 
-    samples = DataFrame(samples_list, columns=["path", "split", "label", "image_folder", "image_path"])
+    samples = pl.DataFrame(samples_list, schema=["path", "split", "label", "image_folder", "image_path"], orient="row")
 
     # Replace validation to Split.VAL.value in the split column
-    samples["split"] = samples["split"].replace("validation", Split.VAL.value)
+    samples = samples.with_columns(
+        pl.col("split").str.replace("validation", Split.VAL.value).alias("split"),
+    )
 
     # Create label index for normal (0) and anomalous (1) images.
-    samples.loc[(samples.label == "good"), "label_index"] = LabelName.NORMAL
-    samples.loc[(samples.label != "good"), "label_index"] = LabelName.ABNORMAL
-    samples.label_index = samples.label_index.astype(int)
+    samples = samples.with_columns(
+        pl.when(pl.col("label") == "good")
+        .then(pl.lit(int(LabelName.NORMAL)))
+        .otherwise(pl.lit(int(LabelName.ABNORMAL)))
+        .alias("label_index"),
+    )
 
     # separate ground-truth masks from samples
-    mask_samples = samples.loc[samples.split == "ground_truth"].sort_values(by="image_path", ignore_index=True)
-    samples = samples[samples.split != "ground_truth"].sort_values(by="image_path", ignore_index=True)
+    mask_samples = samples.filter(pl.col("split") == "ground_truth").sort("image_path")
+    samples = samples.filter(pl.col("split") != "ground_truth").sort("image_path")
 
     # Group masks and aggregate the path into a list
-    mask_samples = (
-        mask_samples.groupby(["path", "split", "label", "image_folder"])["image_path"]
-        .agg(list)
-        .reset_index()
-        .rename(columns={"image_path": "mask_path"})
+    mask_samples = mask_samples.group_by(["path", "split", "label", "image_folder"]).agg(
+        pl.col("image_path").alias("mask_path"),
     )
 
     # assign mask paths to anomalous test images
-    samples["mask_path"] = ""
-    samples.loc[
-        (samples.split == "test") & (samples.label_index == LabelName.ABNORMAL),
-        "mask_path",
-    ] = mask_samples.mask_path.to_numpy()
-
-    # validate that the right mask files are associated with the right test images
-    if len(samples.loc[samples.label_index == LabelName.ABNORMAL]):
-        image_stems = samples.loc[samples.label_index == LabelName.ABNORMAL]["image_path"].apply(lambda x: Path(x).stem)
-        mask_parent_stems = samples.loc[samples.label_index == LabelName.ABNORMAL]["mask_path"].apply(
-            lambda x: {Path(mask_path).parent.stem for mask_path in x},
+    samples = samples.with_columns(pl.lit(None).cast(pl.List(pl.Utf8)).alias("mask_path"))
+    abnormal_test = samples.with_row_index("_idx").filter(
+        (pl.col("split") == "test") & (pl.col("label_index") == int(LabelName.ABNORMAL)),
+    )
+    if len(abnormal_test) > 0 and len(mask_samples) > 0:
+        # Sort mask_samples to match the ordering of abnormal test images
+        # Sort by (label, image_folder) to align with abnormal_test sorted by image_path
+        mask_samples_sorted = mask_samples.sort(["label", "image_folder"])
+        update = pl.DataFrame(
+            {"_idx": abnormal_test["_idx"], "_mask_path": mask_samples_sorted["mask_path"][: len(abnormal_test)]},
+        )
+        samples = (
+            samples.with_row_index("_idx")
+            .join(update, on="_idx", how="left")
+            .with_columns(
+                pl.when(pl.col("_mask_path").is_not_null())
+                .then(pl.col("_mask_path"))
+                .otherwise(pl.col("mask_path"))
+                .alias("mask_path"),
+            )
+            .drop("_idx", "_mask_path")
         )
 
-        if not all(
-            next(iter(mask_stems)) == image_stem
-            for image_stem, mask_stems in zip(image_stems, mask_parent_stems, strict=True)
-        ):
-            msg = (
-                "Mismatch between anomalous images and ground truth masks. "
-                "Make sure the parent folder of the mask files in 'ground_truth' folder "
-                "follows the same naming convention as the anomalous images in the dataset "
-                "(e.g., image: '005.png', mask: '005/000.png')."
-            )
-            raise MisMatchError(msg)
+    # validate that the right mask files are associated with the right test images
+    abnormal_samples = samples.filter(pl.col("label_index") == int(LabelName.ABNORMAL))
+    if len(abnormal_samples) > 0:
+        for row in abnormal_samples.iter_rows(named=True):
+            image_stem = Path(row["image_path"]).stem
+            mask_paths = row["mask_path"]
+            if isinstance(mask_paths, list) and mask_paths:
+                mask_parent_stems = {Path(mp).parent.stem for mp in mask_paths}
+                if image_stem not in mask_parent_stems:
+                    msg = (
+                        "Mismatch between anomalous images and ground truth masks. "
+                        "Make sure the parent folder of the mask files in 'ground_truth' folder "
+                        "follows the same naming convention as the anomalous images in the dataset "
+                        "(e.g., image: '005.png', mask: '005/000.png')."
+                    )
+                    raise MisMatchError(msg)
 
     # infer the task type
-    samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
+    task = "classification" if not samples["mask_path"].is_not_null().any() else "segmentation"
 
     if split:
-        samples = samples[samples.split == split].reset_index(drop=True)
+        samples = samples.filter(pl.col("split") == split)
 
-    return samples
+    return AnomalibDataFrame(samples, attrs={"task": task})

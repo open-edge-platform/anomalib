@@ -45,13 +45,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
+import polars as pl
 import scipy
 import torch
-from pandas import DataFrame
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datasets.base.video import AnomalibVideoDataset, VideoTargetFrame
-from anomalib.data.utils import Split, read_mask, validate_path
+from anomalib.data.utils import AnomalibDataFrame, Split, read_mask, validate_path
 from anomalib.data.utils.video import ClipsIndexer
 
 if TYPE_CHECKING:
@@ -119,7 +119,7 @@ def make_avenue_dataset(
     root: Path,
     gt_dir: Path,
     split: Split | str | None = None,
-) -> DataFrame:
+) -> AnomalibDataFrame:
     """Create CUHK Avenue dataset by parsing the file structure.
 
     The files are expected to follow the structure:
@@ -149,29 +149,39 @@ def make_avenue_dataset(
     root = validate_path(root)
 
     samples_list = [(str(root), *filename.parts[-2:]) for filename in root.glob("**/*.avi")]
-    samples = DataFrame(samples_list, columns=["root", "folder", "image_path"])
+    samples = pl.DataFrame(samples_list, schema=["root", "folder", "image_path"], orient="row")
 
-    samples.loc[samples.folder == "testing_videos", "mask_path"] = (
-        samples.image_path.str.split(".").str[0].str.lstrip("0") + "_label.mat"
+    samples = samples.with_columns(
+        pl.when(pl.col("folder") == "testing_videos")
+        .then(
+            pl.lit(str(gt_dir) + "/testing_label_mask/")
+            + pl.col("image_path").str.split(".").list.first().str.strip_chars_start("0")
+            + pl.lit("_label.mat"),
+        )
+        .otherwise(pl.lit(""))
+        .alias("mask_path"),
     )
-    samples.loc[samples.folder == "testing_videos", "mask_path"] = (
-        str(gt_dir) + "/testing_label_mask/" + samples.mask_path
+
+    samples = samples.with_columns(
+        (pl.col("root") + "/" + pl.col("folder") + "/" + pl.col("image_path")).alias("image_path"),
     )
-    samples.loc[samples.folder == "training_videos", "mask_path"] = ""
 
-    samples["image_path"] = samples.root + "/" + samples.folder + "/" + samples.image_path
-
-    samples.loc[samples.folder == "training_videos", "split"] = "train"
-    samples.loc[samples.folder == "testing_videos", "split"] = "test"
+    samples = samples.with_columns(
+        pl.when(pl.col("folder") == "training_videos")
+        .then(pl.lit("train"))
+        .when(pl.col("folder") == "testing_videos")
+        .then(pl.lit("test"))
+        .otherwise(pl.lit(None))
+        .alias("split"),
+    )
 
     # infer the task type
-    samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
+    task = "classification" if (samples["mask_path"] == "").all() else "segmentation"
 
     if split:
-        samples = samples[samples.split == split]
-        samples = samples.reset_index(drop=True)
+        samples = samples.filter(pl.col("split") == split)
 
-    return samples
+    return AnomalibDataFrame(samples, attrs={"task": task})
 
 
 class AvenueClipsIndexer(ClipsIndexer):

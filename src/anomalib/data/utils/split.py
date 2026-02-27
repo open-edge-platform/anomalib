@@ -35,6 +35,7 @@ from collections.abc import Sequence
 from enum import Enum
 from typing import TYPE_CHECKING
 
+import polars as pl
 import torch
 
 if TYPE_CHECKING:
@@ -153,7 +154,8 @@ def random_split(
 
     # create list of source data
     if label_aware and "label_index" in dataset.samples:
-        indices_per_label = [group.index for _, group in dataset.samples.groupby("label_index")]
+        temp = dataset.samples.with_row_index("_idx")
+        indices_per_label = [group["_idx"].to_list() for group in temp.df.partition_by("label_index")]
         per_label_datasets = [dataset.subsample(indices) for indices in indices_per_label]
     else:
         per_label_datasets = [dataset]
@@ -204,9 +206,10 @@ def split_by_label(
         True
     """
     samples = dataset.samples
-    normal_indices = samples[samples.label_index == 0].index
-    anomalous_indices = samples[samples.label_index == 1].index
+    temp = samples.with_row_index("_idx")
+    normal_indices = temp.filter(pl.col("label_index") == 0)["_idx"].to_list()
+    anomalous_indices = temp.filter(pl.col("label_index") == 1)["_idx"].to_list()
 
-    normal_subset = dataset.subsample(list(normal_indices))
-    anomalous_subset = dataset.subsample(list(anomalous_indices))
+    normal_subset = dataset.subsample(normal_indices)
+    anomalous_subset = dataset.subsample(anomalous_indices)
     return normal_subset, anomalous_subset

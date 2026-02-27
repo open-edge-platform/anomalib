@@ -25,12 +25,13 @@ Example:
 from collections.abc import Sequence
 from pathlib import Path
 
-from pandas import DataFrame
+import polars as pl
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datasets.base.image import AnomalibDataset
 from anomalib.data.errors import MisMatchError
 from anomalib.data.utils import DirType, LabelName, Split
+from anomalib.data.utils.dataframe import AnomalibDataFrame
 from anomalib.data.utils.path import _prepare_files_labels, validate_and_resolve_path
 
 
@@ -137,7 +138,7 @@ def make_folder_dataset(
     mask_dir: str | Path | Sequence[str | Path] | None = None,
     split: str | Split | None = None,
     extensions: tuple[str, ...] | None = None,
-) -> DataFrame:
+) -> AnomalibDataFrame:
     """Create a dataset from a folder structure.
 
     Args:
@@ -227,66 +228,82 @@ def make_folder_dataset(
             filenames += filename
             labels += label
 
-    samples = DataFrame({"image_path": filenames, "label": labels})
-    samples = samples.sort_values(by="image_path", ignore_index=True)
+    samples = pl.DataFrame({"image_path": [str(f) for f in filenames], "label": [str(lbl) for lbl in labels]})
+    samples = samples.sort("image_path")
 
     # Create label index for normal (0) and abnormal (1) images.
-    samples.loc[
-        (samples.label == DirType.NORMAL) | (samples.label == DirType.NORMAL_TEST),
-        "label_index",
-    ] = LabelName.NORMAL
-    samples.loc[(samples.label == DirType.ABNORMAL), "label_index"] = LabelName.ABNORMAL
-    samples.label_index = samples.label_index.astype("Int64")
+    samples = samples.with_columns(
+        pl.when((pl.col("label") == str(DirType.NORMAL)) | (pl.col("label") == str(DirType.NORMAL_TEST)))
+        .then(pl.lit(int(LabelName.NORMAL)))
+        .when(pl.col("label") == str(DirType.ABNORMAL))
+        .then(pl.lit(int(LabelName.ABNORMAL)))
+        .otherwise(pl.lit(None).cast(pl.Int64))
+        .alias("label_index"),
+    )
 
     # If a path to mask is provided, add it to the sample dataframe.
 
     if len(mask_dir) > 0 and len(abnormal_dir) > 0:
-        samples.loc[samples.label == DirType.ABNORMAL, "mask_path"] = samples.loc[
-            samples.label == DirType.MASK
-        ].image_path.to_numpy()
-        samples["mask_path"] = samples["mask_path"].fillna("")
-        samples = samples.astype({"mask_path": "str"})
+        mask_paths = samples.filter(pl.col("label") == str(DirType.MASK))["image_path"]
+        abnormal_rows = samples.with_row_index("_idx").filter(pl.col("label") == str(DirType.ABNORMAL))
 
-        # make sure all every rgb image has a corresponding mask image.
-        if not (
-            samples.loc[samples.label_index == LabelName.ABNORMAL]
-            .apply(lambda x: Path(x.image_path).stem in Path(x.mask_path).stem, axis=1)
-            .all()
-        ):
-            msg = """Mismatch between anomalous images and mask images. Make sure
-                the mask files folder follow the same naming convention as the
-                anomalous images in the dataset (e.g. image: '000.png',
-                mask: '000.png')."""
-            raise MisMatchError(msg)
+        samples = samples.with_columns(pl.lit("").alias("mask_path"))
+        if len(abnormal_rows) > 0 and len(mask_paths) > 0:
+            update = pl.DataFrame(
+                {"_idx": abnormal_rows["_idx"], "_mask_path": mask_paths[: len(abnormal_rows)]},
+            )
+            samples = (
+                samples.with_row_index("_idx")
+                .join(update, on="_idx", how="left")
+                .with_columns(
+                    pl.when(pl.col("_mask_path").is_not_null())
+                    .then(pl.col("_mask_path"))
+                    .otherwise(pl.col("mask_path"))
+                    .alias("mask_path"),
+                )
+                .drop("_idx", "_mask_path")
+            )
+
+        # make sure every rgb image has a corresponding mask image.
+        abnormal_samples = samples.filter(pl.col("label_index") == int(LabelName.ABNORMAL))
+        for row in abnormal_samples.iter_rows(named=True):
+            if row["mask_path"] and Path(row["image_path"]).stem not in Path(row["mask_path"]).stem:
+                msg = """Mismatch between anomalous images and mask images. Make sure
+                    the mask files folder follow the same naming convention as the
+                    anomalous images in the dataset (e.g. image: '000.png',
+                    mask: '000.png')."""
+                raise MisMatchError(msg)
 
     else:
-        samples["mask_path"] = ""
+        samples = samples.with_columns(pl.lit("").alias("mask_path"))
 
     # remove all the rows with temporal image samples that have already been
     # assigned
-    samples = samples.loc[
-        (samples.label == DirType.NORMAL) | (samples.label == DirType.ABNORMAL) | (samples.label == DirType.NORMAL_TEST)
-    ]
+    samples = samples.filter(
+        (pl.col("label") == str(DirType.NORMAL))
+        | (pl.col("label") == str(DirType.ABNORMAL))
+        | (pl.col("label") == str(DirType.NORMAL_TEST)),
+    )
 
     # Ensure the pathlib objects are converted to str.
     # This is because torch dataloader doesn't like pathlib.
-    samples = samples.astype({"image_path": "str"})
+    samples = samples.with_columns(pl.col("image_path").cast(pl.Utf8))
 
     # Create train/test split.
     # By default, all the normal samples are assigned as train.
     #   and all the abnormal samples are test.
-    samples.loc[(samples.label == DirType.NORMAL), "split"] = Split.TRAIN
-    samples.loc[
-        (samples.label == DirType.ABNORMAL) | (samples.label == DirType.NORMAL_TEST),
-        "split",
-    ] = Split.TEST
+    samples = samples.with_columns(
+        pl.when(pl.col("label") == str(DirType.NORMAL))
+        .then(pl.lit(Split.TRAIN))
+        .otherwise(pl.lit(Split.TEST))
+        .alias("split"),
+    )
 
     # infer the task type
-    samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
+    task = "classification" if (samples["mask_path"] == "").all() else "segmentation"
 
     # Get the data frame for the split.
     if split:
-        samples = samples[samples.split == split]
-        samples = samples.reset_index(drop=True)
+        samples = samples.filter(pl.col("split") == split)
 
-    return samples
+    return AnomalibDataFrame(samples, attrs={"task": task})

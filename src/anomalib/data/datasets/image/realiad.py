@@ -36,11 +36,12 @@ import json
 from collections.abc import Sequence
 from pathlib import Path
 
-from pandas import DataFrame
+import polars as pl
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datasets.base import AnomalibDataset
 from anomalib.data.utils import LabelName, Split, validate_path
+from anomalib.data.utils.dataframe import AnomalibDataFrame
 
 IMG_EXTENSIONS = (".jpg", ".png", ".PNG", ".JPG")
 RESOLUTIONS = ("256", "512", "1024", "raw")
@@ -232,7 +233,7 @@ def make_realiad_dataset(
     split: str | Split | None = None,
     extensions: Sequence[str] | None = None,
     metadata: dict | None = None,
-) -> DataFrame:
+) -> AnomalibDataFrame:
     """Create Real-IAD samples by parsing the JSON metadata.
 
     Args:
@@ -283,9 +284,9 @@ def make_realiad_dataset(
         }
         samples_list.append(sample_data)
 
-    samples = DataFrame(samples_list)
+    samples = pl.DataFrame(samples_list)
 
     # Set task type
-    samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
+    task = "classification" if (samples["mask_path"] == "").all() else "segmentation"
 
-    return samples
+    return AnomalibDataFrame(samples, attrs={"task": task})
