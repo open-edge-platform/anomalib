@@ -24,6 +24,7 @@ return a new ``AnomalibDataFrame`` that preserves the metadata.
 
 from __future__ import annotations
 
+import functools
 from typing import TYPE_CHECKING, Any
 
 import polars as pl
@@ -147,6 +148,7 @@ class AnomalibDataFrame:
         attr = getattr(self._df, name)
         if callable(attr):
 
+            @functools.wraps(attr)
             def _wrapper(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
                 result = attr(*args, **kwargs)
                 if isinstance(result, pl.DataFrame):
