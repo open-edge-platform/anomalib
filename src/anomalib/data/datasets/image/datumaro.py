@@ -53,7 +53,7 @@ def make_datumaro_dataset(
             ``Split.TRAIN`` or ``Split.TEST``. Defaults to ``None``.
 
     Returns:
-        pd.DataFrame: DataFrame containing samples with columns:
+        pl.DataFrame: DataFrame containing samples with columns:
             - ``image_path``: Path to the image file
             - ``label``: Class label name
             - ``label_index``: Numeric label index

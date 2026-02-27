@@ -139,6 +139,9 @@ def make_synthetic_dataset(
             "split": Split.VAL,
         })
 
+    if not augmented_rows:
+        return AnomalibDataFrame(normal_samples)
+
     anomalous_samples = pl.DataFrame(augmented_rows)
     return AnomalibDataFrame(pl.concat([normal_samples, anomalous_samples]))
 
