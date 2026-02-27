@@ -30,12 +30,12 @@ from pathlib import Path
 from tempfile import gettempdir, mkdtemp
 
 import cv2
-import pandas as pd
-from pandas import DataFrame, Series
+import polars as pl
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datasets.base.image import AnomalibDataset
 from anomalib.data.utils import Split, read_image
+from anomalib.data.utils.dataframe import AnomalibDataFrame
 from anomalib.data.utils.generators.perlin import PerlinAnomalyGenerator
 
 logger = logging.getLogger(__name__)
@@ -46,11 +46,11 @@ ROOT = Path(gettempdir()) / "anomalib" / "synthetic_anomaly"
 
 
 def make_synthetic_dataset(
-    source_samples: DataFrame,
+    source_samples: AnomalibDataFrame | pl.DataFrame,
     image_dir: Path,
     mask_dir: Path,
     anomalous_ratio: float = 0.5,
-) -> DataFrame:
+) -> AnomalibDataFrame:
     """Convert normal samples into a mixed set with synthetic anomalies.
 
     The function generates synthetic anomalous images and their corresponding
@@ -82,7 +82,10 @@ def make_synthetic_dataset(
         >>> len(df[df.label == "abnormal"])  # 30% are anomalous
         30
     """
-    if 1 in source_samples.label_index.to_numpy():
+    # Ensure we work with a raw pl.DataFrame for internal operations
+    df = source_samples.df if isinstance(source_samples, AnomalibDataFrame) else source_samples
+
+    if 1 in df["label_index"].to_list():
         msg = "All source images must be normal."
         raise ValueError(msg)
 
@@ -95,12 +98,13 @@ def make_synthetic_dataset(
         raise NotADirectoryError(msg)
 
     # filter relevant columns
-    source_samples = source_samples.filter(["image_path", "label", "label_index", "mask_path", "split"])
+    df = df.select(["image_path", "label", "label_index", "mask_path", "split"])
     # randomly select samples for augmentation
-    n_anomalous = int(anomalous_ratio * len(source_samples))
-    anomalous_samples = source_samples.sample(n_anomalous)
-    normal_samples = source_samples.drop(anomalous_samples.index)
-    anomalous_samples = anomalous_samples.reset_index(drop=True)
+    n_anomalous = int(anomalous_ratio * len(df))
+    df = df.with_row_index("_idx")
+    anomalous_idx = df.sample(n=n_anomalous)["_idx"].to_list()
+    normal_samples = df.filter(~pl.col("_idx").is_in(anomalous_idx)).drop("_idx")
+    anomalous_rows = df.filter(pl.col("_idx").is_in(anomalous_idx)).drop("_idx")
 
     # initialize augmenter
     augmenter = PerlinAnomalyGenerator(
@@ -109,21 +113,15 @@ def make_synthetic_dataset(
         blend_factor=(0.01, 0.2),
     )
 
-    def augment(sample: Series) -> Series:
-        """Apply synthetic anomalous augmentation to a sample.
-
-        Args:
-            sample: DataFrame row containing image information.
-
-        Returns:
-            Series containing updated information about the augmented image.
-        """
+    # apply augmentations row-by-row
+    augmented_rows: list[dict] = []
+    for idx, row in enumerate(anomalous_rows.iter_rows(named=True)):
         # read and transform image
-        image = read_image(sample.image_path, as_tensor=True)
+        image = read_image(row["image_path"], as_tensor=True)
         # apply anomalous perturbation
         aug_im, mask = augmenter(image)
         # target file name with leading zeros
-        file_name = f"{str(sample.name).zfill(int(math.log10(n_anomalous)) + 1)}.png"
+        file_name = f"{str(idx).zfill(int(math.log10(n_anomalous)) + 1)}.png"
         # write image
         aug_im = (aug_im.squeeze().permute((1, 2, 0)) * 255).numpy()
         aug_im = cv2.cvtColor(aug_im, cv2.COLOR_RGB2BGR)
@@ -133,18 +131,16 @@ def make_synthetic_dataset(
         mask = (mask.squeeze() * 255).numpy()
         mask_path = mask_dir / file_name
         cv2.imwrite(str(mask_path), mask)
-        out = {
+        augmented_rows.append({
             "image_path": str(im_path),
             "label": "abnormal",
             "label_index": 1,
             "mask_path": str(mask_path),
             "split": Split.VAL,
-        }
-        return Series(out)
+        })
 
-    anomalous_samples = anomalous_samples.apply(augment, axis=1)
-
-    return pd.concat([normal_samples, anomalous_samples], ignore_index=True)
+    anomalous_samples = pl.DataFrame(augmented_rows)
+    return AnomalibDataFrame(pl.concat([normal_samples, anomalous_samples]))
 
 
 class SyntheticAnomalyDataset(AnomalibDataset):
@@ -172,7 +168,12 @@ class SyntheticAnomalyDataset(AnomalibDataset):
         100
     """
 
-    def __init__(self, augmentations: Transform | None, source_samples: DataFrame, dataset_name: str) -> None:
+    def __init__(
+        self,
+        augmentations: Transform | None,
+        source_samples: AnomalibDataFrame | pl.DataFrame,
+        dataset_name: str,
+    ) -> None:
         super().__init__(augmentations=augmentations)
 
         self.source_samples = source_samples
