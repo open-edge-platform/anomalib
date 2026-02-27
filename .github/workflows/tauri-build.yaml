@@ -268,7 +268,7 @@ jobs:
           }
           New-Item -ItemType Directory -Force -Path $env:MSIX_BUNDLE_PATH | Out-Null
           Copy-Item "$env:UI_BUILD_PATH\anomalib-studio.exe" -Destination $env:MSIX_BUNDLE_PATH
-          $backendExe = Get-ChildItem "$($env:UI_BUILD_PATH)" -Filter "anomalib-studio-backend*.exe" | Select-Object -First 1
+          $backendExe = Get-ChildItem "$env:UI_BUILD_PATH" -Filter "anomalib-studio-backend*.exe" | Select-Object -First 1
           if (-not $backendExe) {
             Write-Error "Backend executable matching 'anomalib-studio-backend*.exe' was not found in '$($env:UI_BUILD_PATH)'."
             exit 1
