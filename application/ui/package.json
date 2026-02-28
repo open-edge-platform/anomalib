@@ -129,7 +129,7 @@
             "lodash": "4.17.23"
         },
         "openapi-typescript": {
-            "minimatch": "5.1.7"
+            "minimatch": "5.1.8"
         }
     }
 }
