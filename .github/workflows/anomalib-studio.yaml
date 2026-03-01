@@ -35,7 +35,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b # v7.3.0
+        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
         with:
           version: "0.9.18"
 
@@ -56,7 +56,7 @@ jobs:
           export PYTHONPATH=.
           uv run src/cli.py gen-api --target-path openapi-spec.json
 
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: openapi-spec
           path: application/backend/openapi-spec.json
@@ -78,7 +78,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b # v7.3.0
+        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
         with:
           version: "0.9.18"
 
@@ -128,7 +128,7 @@ jobs:
         run: npm ci
 
       - name: Download OpenAPI spec artifact
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: openapi-spec
           path: application/ui/src/api
@@ -141,7 +141,7 @@ jobs:
         working-directory: "application/ui"
         run: tar -czf dist.tar.gz dist
 
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: ui-dist
           path: "application/ui/dist.tar.gz"
@@ -170,7 +170,7 @@ jobs:
         run: npm ci
 
       - name: Download OpenAPI spec artifact
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: openapi-spec
           path: application/ui/src/api
@@ -219,7 +219,7 @@ jobs:
         run: npm ci
 
       - name: Download OpenAPI spec artifact
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: openapi-spec
           path: application/ui/src/api
@@ -262,7 +262,7 @@ jobs:
         working-directory: "application/ui"
         run: npm ci
 
-      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: ui-dist
           path: "application/ui"
@@ -272,7 +272,7 @@ jobs:
         run: tar -xzf dist.tar.gz
 
       - name: Download OpenAPI spec artifact
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: openapi-spec
           path: application/ui/src/api
@@ -286,7 +286,7 @@ jobs:
         run: npm run test:component -- --project "Component tests"
 
       - name: Upload blob report to GitHub Actions Artifacts
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         if: always()
         with:
           name: playwright-report
