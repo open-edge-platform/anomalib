@@ -111,7 +111,7 @@ cpu = [
 ]
 cu118 = [
     "torch>=2.6.0,<=2.7.1", # CUDA 11.8 support dropped in torch 2.8+
-    "torchvision>=0.21.0,<=0.22.1",
+    "torchvision>=0.25.0,<=0.25.0",
 ]
 cu126 = [
     "torch>=2.6.0,<=2.8.0",
@@ -119,7 +119,7 @@ cu126 = [
 ]
 cu124 = [
     "torch>=2.6.0,<=2.7.1", # CUDA 12.4 support dropped in torch 2.8+
-    "torchvision>=0.21.0,<=0.22.1",
+    "torchvision>=0.25.0,<=0.25.0",
 ]
 cu130 = [
     "torch>=2.6.0", # Note: onnx export fails with torch>=2.9.0 and cuda 13 isn't supported by <=2.8.0
