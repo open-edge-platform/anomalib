@@ -124,9 +124,6 @@ class _F1AdaptiveThreshold(BinaryPrecisionRecallCurve, Threshold):
             self.value = torch.max(dim_zero_cat(self.preds))
             return self.value
 
-        with handle_mac(self):
-            precision, recall, thresholds = super().compute()
-
         if not any(0 in batch for batch in self.target):
             msg = (
                 "The validation set does not contain any normal images. As a result, the adaptive threshold will "
@@ -140,7 +137,8 @@ class _F1AdaptiveThreshold(BinaryPrecisionRecallCurve, Threshold):
 
             return self.value
 
-        precision, recall, thresholds = super().compute()
+        with handle_mac(self):
+            precision, recall, thresholds = super().compute()
         f1_score = (2 * precision * recall) / (precision + recall + 1e-10)
 
         # account for special case where recall is 1.0 even for the highest threshold.
