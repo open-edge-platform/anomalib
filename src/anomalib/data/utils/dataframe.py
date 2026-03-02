@@ -41,18 +41,16 @@ class AnomalibDataFrame:
     ``pl.DataFrame`` are automatically re-wrapped so that ``attrs`` is
     preserved through chained operations.
 
-    Parameters
-    ----------
-    data : pl.DataFrame | dict | list | None
-        Data to construct the frame from.  Accepts anything that the
-        ``pl.DataFrame`` constructor accepts, or an existing ``pl.DataFrame``
-        instance.
-    schema : dict | Sequence | None
-        Column name → dtype mapping (forwarded to ``pl.DataFrame``).
-    orient : str | None
-        Row / column orientation (forwarded to ``pl.DataFrame``).
-    attrs : dict | None
-        Initial metadata dictionary.  Defaults to an empty ``dict``.
+    Args:
+        data (pl.DataFrame | dict | list | None): Data to construct the frame
+            from.  Accepts anything that the ``pl.DataFrame`` constructor
+            accepts, or an existing ``pl.DataFrame`` instance.
+        schema (dict | Sequence | None): Column name → dtype mapping
+            (forwarded to ``pl.DataFrame``).
+        orient (str | None): Row / column orientation (forwarded to
+            ``pl.DataFrame``).
+        attrs (dict | None): Initial metadata dictionary.  Defaults to an
+            empty ``dict``.
     """
 
     __hash__ = None  # type: ignore[assignment]  # Unhashable (mutable container).
@@ -169,20 +167,16 @@ class AnomalibDataFrame:
     ) -> AnomalibDataFrame:
         """Concatenate multiple (Anomalib)DataFrames, preserving ``attrs``.
 
-        Parameters
-        ----------
-        frames : sequence of AnomalibDataFrame | pl.DataFrame
-            Frames to concatenate.
-        how : str
-            Concatenation strategy (forwarded to ``pl.concat``).
-        **kwargs
-            Extra keyword arguments forwarded to ``pl.concat``.
+        Args:
+            frames (Sequence[AnomalibDataFrame | pl.DataFrame]): Frames to
+                concatenate.
+            how (str): Concatenation strategy (forwarded to ``pl.concat``).
+            **kwargs: Extra keyword arguments forwarded to ``pl.concat``.
 
         Returns:
-        -------
-        AnomalibDataFrame
-            Concatenated frame whose ``attrs`` is the merged union of all
-            input ``attrs`` dictionaries (later frames win on key conflicts).
+            AnomalibDataFrame: Concatenated frame whose ``attrs`` is the merged
+                union of all input ``attrs`` dictionaries (later frames win on
+                key conflicts).
         """
         raw: list[pl.DataFrame] = []
         merged_attrs: dict[str, Any] = {}
