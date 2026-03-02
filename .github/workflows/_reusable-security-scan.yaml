@@ -1,0 +1,178 @@
+# Reusable Security Scan Workflow
+#
+# This reusable workflow orchestrates multiple security scanning tools to provide
+# comprehensive security analysis of the codebase.
+#
+# Key Features:
+# - Parallel security tool execution
+# - Configurable tool selection
+# - Comprehensive result aggregation
+# - Artifact preservation
+# - Customizable failure thresholds
+#
+# Process Stages:
+# 1. Tool Selection and Configuration
+# 2. Parallel Security Scans
+# 3. Result Aggregation
+# 4. Report Generation
+#
+# Required Inputs:
+# - tools: Comma-separated list of tools to run
+# - scan-scope: Scope of scanning
+# - severity-level: Minimum severity threshold
+# - confidence-level: Minimum confidence threshold
+# - fail-on-findings: Whether to fail on security findings
+#
+# Outputs:
+# - has-findings: Boolean indicating if security issues were found
+#
+# Example Usage:
+#   jobs:
+#     security:
+#       uses: ./.github/workflows/_reusable-security-scan.yaml
+#       with:
+#         tools: "bandit,semgrep"
+#         scan-scope: "changed"
+#         severity-level: "MEDIUM"
+#         confidence-level: "HIGH"
+#         fail-on-findings: true
+#
+# Note: Different security tools may require specific permissions
+# or configurations.
+
+name: Reusable Security Scan
+
+on:
+  workflow_call:
+    inputs:
+      tools:
+        description: "Security tools to run (comma-separated: bandit,semgrep,trivy,zizmor)"
+        type: string
+        default: "bandit,semgrep"
+      scan-scope:
+        description: "Scan scope (all/changed)"
+        type: string
+        default: "changed"
+      severity-level:
+        description: "Minimum severity level (LOW/MEDIUM/HIGH)"
+        type: string
+        default: "LOW"
+      confidence-level:
+        description: "Minimum confidence level (LOW/MEDIUM/HIGH)"
+        type: string
+        default: "LOW"
+      fail-on-findings:
+        description: "Fail workflow if issues found"
+        type: boolean
+        default: true
+    outputs:
+      has-findings:
+        description: "Whether any security issues were found"
+        value: ${{ jobs.summarize.outputs.has_findings }}
+
+permissions: {} # No permissions by default on workflow level
+
+jobs:
+  bandit:
+    if: contains(inputs.tools, 'bandit')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # needed by nested workflows to upload results
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+      - name: Run Bandit scan
+        uses: open-edge-platform/geti-ci/actions/bandit@4d46c7fb444d8fae6390348e76d96bb0749c5632
+        with:
+          scan-scope: ${{ inputs.scan-scope }}
+          severity-level: ${{ inputs.severity-level }}
+          confidence-level: ${{ inputs.confidence-level }}
+          fail-on-findings: ${{ inputs.fail-on-findings }}
+
+  semgrep:
+    if: contains(inputs.tools, 'semgrep')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # needed by nested workflows to upload results
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Run Semgrep scan
+        uses: open-edge-platform/geti-ci/actions/semgrep@4d46c7fb444d8fae6390348e76d96bb0749c5632
+        with:
+          scan-scope: ${{ inputs.scan-scope }}
+          severity: ${{ inputs.severity-level }}
+          fail-on-findings: ${{ inputs.fail-on-findings }}
+
+  trivy:
+    if: contains(inputs.tools, 'trivy')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # needed by nested workflows to upload results
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      - name: Run Trivy scan
+        uses: open-edge-platform/geti-ci/actions/trivy@4d46c7fb444d8fae6390348e76d96bb0749c5632
+        with:
+          scan_type: "fs"
+          scan-scope: ${{ inputs.scan-scope }}
+          severity: ${{ inputs.severity-level }}
+          scanners: "vuln,secret,config"
+          format: "sarif"
+          timeout: "15m"
+          ignore_unfixed: "false"
+
+  zizmor:
+    if: contains(inputs.tools, 'zizmor')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # needed by nested workflows to upload results
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+      - name: Run Zizmor scan
+        uses: open-edge-platform/geti-ci/actions/zizmor@4d46c7fb444d8fae6390348e76d96bb0749c5632
+        with:
+          scan-scope: ${{ inputs.scan-scope }}
+          severity-level: ${{ inputs.severity-level }}
+          confidence-level: ${{ inputs.confidence-level }}
+          fail-on-findings: ${{ inputs.fail-on-findings }}
+
+  summarize:
+    needs: [bandit, semgrep, trivy, zizmor]
+    runs-on: ubuntu-latest
+    if: ${{ always() && !cancelled() }}
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    outputs:
+      has_findings: ${{ steps.check-results.outputs.has_findings }}
+    steps:
+      - name: Check security scan results
+        id: check-results
+        run: |
+          has_findings=false
+
+          for check in ${CHECKS}; do
+            echo "::notice::Security scan result=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error::Security scan checks failed. One or more scans detected issues."
+              has_findings=true
+            fi
+          done
+
+          echo "has_findings=$has_findings" >> $GITHUB_OUTPUT
+
+          if [[ "$has_findings" == "true" ]]; then
+            exit 1
+          fi

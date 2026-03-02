@@ -1,7 +1,7 @@
-"""Tiled ensemble test pipeline."""
-
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tiled ensemble test pipeline."""
 
 import logging
 from pathlib import Path
@@ -20,7 +20,7 @@ from anomalib.pipelines.tiled_ensemble.components import (
     ThresholdingJobGenerator,
     VisualizationJobGenerator,
 )
-from anomalib.pipelines.tiled_ensemble.components.utils import NormalizationStage, PredictData, ThresholdStage
+from anomalib.pipelines.tiled_ensemble.components.utils import NormalizationStage, PredictData, ThresholdingStage
 
 logger = logging.getLogger(__name__)
 
@@ -57,10 +57,8 @@ class EvalTiledEnsemble(Pipeline):
         tiling_args = args["tiling"]
         data_args = args["data"]
         normalization_stage = NormalizationStage(args["normalization_stage"])
-        threshold_stage = ThresholdStage(args["thresholding"]["stage"])
+        thresholding_stage = ThresholdingStage(args["thresholding_stage"])
         model_args = args["TrainModels"]["model"]
-        task = args["data"]["init_args"]["task"]
-        metrics = args["TrainModels"]["metrics"]
 
         predict_job_generator = PredictJobGenerator(
             PredictData.TEST,
@@ -101,12 +99,12 @@ class EvalTiledEnsemble(Pipeline):
         if normalization_stage == NormalizationStage.IMAGE:
             runners.append(SerialRunner(NormalizationJobGenerator(self.root_dir)))
         # 5. (optional) threshold to get labels from scores
-        if threshold_stage == ThresholdStage.IMAGE:
+        if thresholding_stage == ThresholdingStage.IMAGE:
             runners.append(SerialRunner(ThresholdingJobGenerator(self.root_dir, normalization_stage)))
 
         # 6. visualize predictions
         runners.append(
-            SerialRunner(VisualizationJobGenerator(self.root_dir, task=task, normalization_stage=normalization_stage)),
+            SerialRunner(VisualizationJobGenerator(self.root_dir, data_args=data_args)),
         )
         # calculate metrics
         runners.append(
@@ -114,9 +112,7 @@ class EvalTiledEnsemble(Pipeline):
                 MetricsCalculationJobGenerator(
                     accelerator=accelerator,
                     root_dir=self.root_dir,
-                    task=task,
-                    metrics=metrics,
-                    normalization_stage=normalization_stage,
+                    model_args=model_args,
                 ),
             ),
         )

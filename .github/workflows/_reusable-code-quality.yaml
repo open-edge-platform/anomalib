@@ -1,0 +1,72 @@
+# Code Quality Workflow
+#
+# This reusable workflow executes code quality checks using prek (prek workspace tool)
+# with support for monorepo configurations and multiple prek configs.
+#
+# Key Features:
+# - Workspace mode support (multiple .pre-commit-config.yaml files)
+# - Multi-language support (Python, Node.js, etc.)
+# - Automatic environment management
+# - Dependency caching
+# - Parallel check execution
+#
+# Process Stages:
+# 1. Checkout:
+#    - Full repository history
+#    - LFS file support
+#
+# 2. Quality Checks (via prek):
+#    - Code linting
+#    - Style verification
+#    - Type checking
+#    - Best practices validation
+#    - Runs appropriate hooks based on file location
+#
+# 3. Results Processing:
+#    - Error reporting
+#    - Check summaries
+#    - Status updates
+#
+# Required Inputs:
+# - python-version: Python version for checks (default: "3.10")
+#
+# Example Usage:
+# 1. Default Configuration:
+#    jobs:
+#      quality:
+#        uses: ./.github/workflows/_reusable-code-quality.yaml
+#
+# 2. Custom Versions:
+#    jobs:
+#      quality:
+#        uses: ./.github/workflows/_reusable-code-quality.yaml
+#        with:
+#          python-version: "3.11"
+#
+# Note: Uses prek-action (https://github.com/j178/prek-action) which supports
+# multiple pre-commit configs in workspace mode for monorepo setups
+
+name: Reusable Code Quality
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: "Python version for checks"
+        type: string
+        default: "3.10"
+
+permissions:
+  contents: read
+
+jobs:
+  prek:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: false
+      - uses: j178/prek-action@0bb87d7f00b0c99306c8bcb8b8beba1eb581c037 # v1

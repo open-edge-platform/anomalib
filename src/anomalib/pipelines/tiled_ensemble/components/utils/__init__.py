@@ -1,9 +1,26 @@
-"""Tiled ensemble utils and helper functions."""
+# Copyright (C) 2024-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Utility Functions for the Tiled Ensemble Pipeline.
+
+This module provides auxiliary functions and classes that support the core
+components of the Tiled Ensemble approach.
+
+Included Utilities:
+    - `ensemble_engine`: Modified Anomalib Engine, adjusted to support ensemble training.
+    - `ensemble_tiling`: Functions to divide images into tiles and manage their positions.
+    - `helper_functions`: Miscellaneous helper functions used across the pipeline.
+    - `prediction_data`: Data structure to store and manage predictions.
+    - `prediction_merging`: Functions to merge predictions from different tiles.
+
+Reference:
+    Blaž Rolih, Dick Ameln, Ashwin Vaidya, Samet Akçay:
+    "Divide and Conquer: High-Resolution Industrial Anomaly Detection via
+    Memory Efficient Tiled Ensemble." Proceedings of the IEEE/CVF Conference
+    on Computer Vision and Pattern Recognition Workshops (VAND 2.0). 2024.
+"""
 
 from enum import Enum
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 
 class NormalizationStage(str, Enum):
@@ -19,7 +36,7 @@ class NormalizationStage(str, Enum):
     NONE = "none"
 
 
-class ThresholdStage(str, Enum):
+class ThresholdingStage(str, Enum):
     """Enum signaling at which stage the thresholding is applied.
 
     In case of tile, thresholding is applied for each tile location separately.
@@ -39,6 +56,6 @@ class PredictData(Enum):
 
 __all__ = [
     "NormalizationStage",
-    "ThresholdStage",
+    "ThresholdingStage",
     "PredictData",
 ]

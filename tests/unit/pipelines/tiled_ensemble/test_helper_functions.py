@@ -1,7 +1,7 @@
-"""Test ensemble helper functions."""
-
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test ensemble helper functions."""
 
 from pathlib import Path
 
@@ -9,13 +9,10 @@ import pytest
 from jsonargparse import Namespace
 from lightning.pytorch.callbacks import EarlyStopping
 
-from anomalib.callbacks.normalization import _MinMaxNormalizationCallback
-from anomalib.models import AnomalyModule
 from anomalib.pipelines.tiled_ensemble.components.utils import NormalizationStage
 from anomalib.pipelines.tiled_ensemble.components.utils.ensemble_tiling import EnsembleTiler, TileCollater
 from anomalib.pipelines.tiled_ensemble.components.utils.helper_functions import (
     get_ensemble_datamodule,
-    get_ensemble_engine,
     get_ensemble_model,
     get_ensemble_tiler,
     get_threshold_values,
@@ -27,29 +24,64 @@ class TestHelperFunctions:
     """Test ensemble helper functions."""
 
     @staticmethod
-    def test_ensemble_datamodule(get_ensemble_config: dict, get_tiler: EnsembleTiler) -> None:
+    def test_ensemble_datamodule_collate_attr(get_ensemble_config: dict, get_tiler: EnsembleTiler) -> None:
         """Test that datamodule is created and has correct collate function."""
         config = get_ensemble_config
         tiler = get_tiler
-        datamodule = get_ensemble_datamodule(config, tiler, (0, 0))
+        datamodule = get_ensemble_datamodule(config, config["tiling"]["image_size"], tiler, (0, 0))
 
-        assert isinstance(datamodule.collate_fn, TileCollater)
+        assert isinstance(datamodule.external_collate_fn, TileCollater)
 
     @staticmethod
-    def test_ensemble_model(get_ensemble_config: dict, get_tiler: EnsembleTiler) -> None:
-        """Test that model is successfully created with correct input shape."""
+    def test_ensemble_datamodule_img_size(get_ensemble_config: dict, get_tiler: EnsembleTiler) -> None:
+        """Test that datamodule is created and has correct collate function."""
         config = get_ensemble_config
         tiler = get_tiler
-        model = get_ensemble_model(config["TrainModels"]["model"], tiler)
+        datamodule = get_ensemble_datamodule(config, config["tiling"]["image_size"], tiler, (0, 0))
 
-        assert model.input_size == tuple(config["tiling"]["tile_size"])
+        data = datamodule.test_data[0]
+
+        # check that transforms were correctly set to dataset
+        assert list(data.image.shape[1:]) == config["tiling"]["image_size"]
+
+    @staticmethod
+    def test_ensemble_model(get_ensemble_config: dict) -> None:
+        """Test that model is successfully created with correct input shape."""
+        config = get_ensemble_config
+        model = get_ensemble_model(
+            config["TrainModels"]["model"],
+            normalization_stage=config["normalization_stage"],
+            input_size=config["tiling"]["tile_size"],
+        )
+        if hasattr(model.model, "input_size"):
+            # if model has fixed input_size, it should be set to tile_size
+            assert model.model.input_size == tuple(config["tiling"]["tile_size"])
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "normalization_stage",
+        [NormalizationStage.NONE, NormalizationStage.IMAGE, NormalizationStage.TILE],
+    )
+    def test_normalisation_stage(get_ensemble_config: dict, normalization_stage: NormalizationStage) -> None:
+        """Test that model postprocessor has normalisation enabled only on tile level."""
+        config = get_ensemble_config
+        model = get_ensemble_model(
+            config["TrainModels"]["model"],
+            normalization_stage=normalization_stage,
+            input_size=config["tiling"]["tile_size"],
+        )
+
+        if normalization_stage == NormalizationStage.TILE:
+            assert model.post_processor.enable_normalization
+        else:
+            assert not model.post_processor.enable_normalization
 
     @staticmethod
     def test_tiler(get_ensemble_config: dict) -> None:
         """Test that tiler is successfully instantiated."""
         config = get_ensemble_config
 
-        tiler = get_ensemble_tiler(config["tiling"], config["data"])
+        tiler = get_ensemble_tiler(config["tiling"])
         assert isinstance(tiler, EnsembleTiler)
 
     @staticmethod
@@ -78,36 +110,3 @@ class TestHelperFunctions:
             assert i_thresh == p_thresh == 0.5
         else:
             assert i_thresh == p_thresh == 0.1111
-
-
-class TestEnsembleEngine:
-    """Test ensemble engine configuration."""
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "normalization_stage",
-        [NormalizationStage.NONE, NormalizationStage.IMAGE, NormalizationStage.TILE],
-    )
-    def test_normalisation(normalization_stage: NormalizationStage, get_model: AnomalyModule) -> None:
-        """Test that normalization callback is correctly initialized."""
-        engine = get_ensemble_engine(
-            tile_index=(0, 0),
-            accelerator="cpu",
-            devices="1",
-            root_dir=Path("mock"),
-            normalization_stage=normalization_stage,
-        )
-
-        engine._setup_anomalib_callbacks(get_model)  # noqa: SLF001
-
-        # verify that only in case of tile level normalization the callback is present
-        if normalization_stage == NormalizationStage.TILE:
-            assert any(
-                isinstance(x, _MinMaxNormalizationCallback)
-                for x in engine._cache.args["callbacks"]  # noqa: SLF001
-            )
-        else:
-            assert not any(
-                isinstance(x, _MinMaxNormalizationCallback)
-                for x in engine._cache.args["callbacks"]  # noqa: SLF001
-            )

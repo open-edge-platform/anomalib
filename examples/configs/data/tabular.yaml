@@ -1,0 +1,73 @@
+class_path: anomalib.data.Tabular
+init_args:
+  name: bottle
+  root: "datasets/MVTecAD/bottle"
+  train_batch_size: 32
+  eval_batch_size: 32
+  num_workers: 8
+  test_split_mode: from_dir
+  test_split_ratio: 0.2
+  val_split_mode: same_as_test
+  val_split_ratio: 0.5
+  seed: null
+  samples:
+    - image_path: train/good/000.png
+      label_index: 0
+      mask_path: ""
+      split: train
+    - image_path: train/good/001.png
+      label_index: 0
+      mask_path: ""
+      split: train
+    - image_path: train/good/002.png
+      label_index: 0
+      mask_path: ""
+      split: train
+    - image_path: train/good/003.png
+      label_index: 0
+      mask_path: ""
+      split: train
+    - image_path: train/good/004.png
+      label_index: 0
+      mask_path: ""
+      split: train
+    - image_path: test/broken_large/000.png
+      label_index: 1
+      mask_path: ground_truth/broken_large/000_mask.png
+      split: test
+    - image_path: test/broken_large/002.png
+      label_index: 1
+      mask_path: ground_truth/broken_large/002_mask.png
+      split: test
+    - image_path: test/broken_large/004.png
+      label_index: 1
+      mask_path: ground_truth/broken_large/004_mask.png
+      split: test
+    - image_path: test/good/000.png
+      label_index: 0
+      mask_path: ""
+      split: test
+    - image_path: test/good/001.png
+      label_index: 0
+      mask_path: ""
+      split: test
+    - image_path: test/good/003.png
+      label_index: 0
+      mask_path: ""
+      split: test
+    - image_path: test/broken_large/001.png
+      label_index: 1
+      mask_path: ground_truth/broken_large/001_mask.png
+      split: test
+    - image_path: test/broken_large/003.png
+      label_index: 1
+      mask_path: ground_truth/broken_large/003_mask.png
+      split: test
+    - image_path: test/good/002.png
+      label_index: 0
+      mask_path: ""
+      split: test
+    - image_path: test/good/004.png
+      label_index: 0
+      mask_path: ""
+      split: test

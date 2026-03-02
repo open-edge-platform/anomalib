@@ -1,7 +1,7 @@
-"""Test model utils."""
-
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test model utils."""
 
 import pytest
 from jsonargparse import Namespace

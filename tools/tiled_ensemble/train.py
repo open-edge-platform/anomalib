@@ -1,7 +1,7 @@
-"""Run tiled ensemble training."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Run tiled ensemble training."""
 
 from anomalib.pipelines.tiled_ensemble import EvalTiledEnsemble, TrainTiledEnsemble
 

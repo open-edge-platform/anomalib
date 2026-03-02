@@ -1,0 +1,180 @@
+# Pull Request Workflow
+#
+# This workflow orchestrates quality checks, tests, and security scans for
+# pull requests using reusable workflows.
+#
+# Key Features:
+# - PR title validation (conventional commits)
+# - Code quality validation
+# - Test suite execution
+# - Security scanning
+# - Concurrent execution handling
+# - Automated feedback
+#
+# Process Stages:
+# All stages run in parallel for faster feedback:
+#
+# 1. PR Title Validation:
+#    - Conventional commit format verification
+#    - Ensures proper changelog generation
+#    - Can be fixed later while other checks run
+#
+# 2. Quality Checks:
+#    - Code style verification
+#    - Type checking
+#    - Pre-commit hook validation
+#
+# 3. Testing:
+#    - Unit test execution
+#    - Integration testing
+#    - Coverage reporting
+#
+# 4. Security:
+#    - Changed files scanning
+#    - Vulnerability detection
+#    - Security report generation
+#
+# 5. Docker Image Build:
+#    - Determines if docker images need to be built based on event type and changed paths
+#    - Builds and uploads docker images as artifacts
+#
+# Required Secrets:
+# - CODECOV_TOKEN: Coverage reporting token
+#
+# Example Usage:
+# Automatically triggered on:
+# 1. Pull requests to main branch
+# 2. Pull requests to feature/* branches
+# 3. Merge group events
+#
+# Note:
+# - PR title validation only runs on actual pull requests
+# - Individual commit messages are not validated (since PRs are squash merged)
+# - Other checks run in parallel with PR title validation for faster feedback
+# - PR title can be fixed later while tests are already running
+# - Configured to cancel outdated runs when new commits are pushed
+
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: ["main", "feature/**"]
+  merge_group:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # PR title validation - runs first as it's quick and fundamental
+  # Only runs on actual pull requests, not merge groups
+  pr-title-check:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/_reusable-pr-title-check.yaml
+    with:
+      python-version: "3.10"
+
+  # Code quality job using reusable workflow
+  quality:
+    if: github.event.pull_request.draft != true
+    uses: ./.github/workflows/_reusable-code-quality.yaml
+    with:
+      python-version: "3.10"
+
+  # Test suite job using reusable workflow
+  unit-tests:
+    if: github.event.pull_request.draft != true
+    uses: ./.github/workflows/_reusable-test-suite.yaml
+    with:
+      test-type: "unit"
+      runner: "ubuntu-latest"
+      timeout: 30
+      enable-cache: "true"
+    secrets:
+      codecov-token: ${{ secrets.CODECOV_TOKEN }}
+
+  integration-tests:
+    if: github.event.pull_request.draft != true
+    uses: ./.github/workflows/_reusable-test-suite.yaml
+    with:
+      test-type: "integration"
+      runner: "self-hosted"
+      timeout: 60
+      enable-cache: "false"
+    secrets:
+      codecov-token: ${{ secrets.CODECOV_TOKEN }}
+
+  # NOTE: When we have e2e or other tests, we can add them here.
+
+  # Security scanning job using reusable workflow
+  security:
+    if: github.event.pull_request.draft != true
+    uses: ./.github/workflows/_reusable-security-scan.yaml
+    permissions:
+      security-events: write # needed to upload results
+      contents: read
+    with:
+      tools: "semgrep,bandit,zizmor" # Security tools to run
+      scan-scope: "changed" # Only scan changed files
+      severity-level: "MEDIUM" # Minimum severity to report
+      confidence-level: "HIGH" # High confidence to report
+      fail-on-findings: true # explicitly set
+
+  # Determines if docker images must be built based on event type and changed paths
+  # If push or workflow_dispatch -> always run
+  # If PR or merge_group -> run only if files in specified paths changed
+  check-paths:
+    name: Check if docker build job should run
+    runs-on: ubuntu-latest
+    outputs:
+      run_build: ${{ steps.check-paths.outputs.run }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Check paths
+        id: check-paths
+        uses: open-edge-platform/geti-ci/actions/check-paths@4d46c7fb444d8fae6390348e76d96bb0749c5632
+        with:
+          files_yaml: |
+            test:
+              - application/**
+              - .github/**
+
+  # Docker image build job using reusable workflow
+  docker-build:
+    name: Build and upload docker image
+    needs: check-paths
+    if: needs.check-paths.outputs.run_build == 'true' && github.event.pull_request.draft != true
+    uses: ./.github/workflows/_reusable-docker-build.yaml
+    permissions:
+      contents: read
+      # write permissions are required to update PR comments with image sizes
+      pull-requests: write
+
+  docker-build-status:
+    name: Docker build status check
+    needs:
+      - check-paths
+      - docker-build
+    runs-on: ubuntu-latest
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    if: always() && !cancelled()
+    steps:
+      - name: Check jobs results
+        run: |
+          for check in ${CHECKS}; do
+            echo "::notice::check=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error::Build docker image status checks failed. They must succeed before this pull request can be merged."
+              exit 1
+            fi
+          done

@@ -31,9 +31,18 @@ Learn more about image and video models.
 Learn more about anomalib Engine.
 :::
 
-:::{grid-item-card} {octicon}`meter` Metrics
+:::{grid-item-card} {octicon}`meter` Evaluation
+:link: ./evaluation/index
+:link-type: doc
 
-Learn more about anomalib metrics
+Learn more about model evaluation.
+:::
+
+:::{grid-item-card} {octicon}`graph` Visualization
+:link: ./visualization/index
+:link-type: doc
+
+Learn more about anomalib visualization
 :::
 
 :::{grid-item-card} {octicon}`graph` Loggers
@@ -63,6 +72,13 @@ Learn more about anomalib's deployment capabilities
 Learn more about anomalib hpo, sweep and benchmarking pipelines
 :::
 
+:::{grid-item-card} {octicon}`cpu` Training on Intel GPUs
+:link: ./training_on_intel_gpus/index
+:link-type: doc
+
+Learn more about training on Intel GPUs
+:::
+
 ::::
 
 ```{toctree}
@@ -70,6 +86,9 @@ Learn more about anomalib hpo, sweep and benchmarking pipelines
 :hidden:
 
 ./data/index
+./evaluation/index
 ./models/index
 ./pipelines/index
+./visualization/index
+./training_on_intel_gpus/index
 ```

@@ -1,10 +1,35 @@
-"""Explanation visualization generator.
-
-Note: This is a temporary visualizer, and will be replaced with the new visualizer in the future.
-"""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Explanation visualization generator for model interpretability.
+
+This module provides utilities for visualizing model explanations and
+interpretability results. The key components include:
+
+    - Text-based explanations rendered on images
+    - Label visualization for model decisions
+    - Combined visualization with original image and explanation
+
+Example:
+    >>> from anomalib.utils.visualization import ExplanationVisualizer
+    >>> # Create visualizer
+    >>> visualizer = ExplanationVisualizer()
+    >>> # Generate visualization
+    >>> results = visualizer.generate(
+    ...     outputs={
+    ...         "image": images,
+    ...         "explanation": explanations,
+    ...         "image_path": paths
+    ...     }
+    ... )
+
+Note:
+    This is a temporary visualizer that will be replaced with an enhanced
+    version in a future release.
+
+The module ensures consistent visualization of model explanations across
+different interpretability approaches.
+"""
 
 from collections.abc import Iterator
 from pathlib import Path
@@ -25,7 +50,7 @@ class ExplanationVisualizer(BaseVisualizer):
 
     def generate(self, **kwargs) -> Iterator[GeneratorResult]:
         """Generate images and return them as an iterator."""
-        outputs = kwargs.get("outputs", None)
+        outputs = kwargs.get("outputs")
         if outputs is None:
             msg = "Outputs must be provided to generate images."
             raise ValueError(msg)

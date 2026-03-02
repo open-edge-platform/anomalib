@@ -1,21 +1,18 @@
-"""Implements custom Anomalib engine for tiled ensemble training."""
-
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Implements custom Anomalib engine for tiled ensemble training."""
 
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from lightning.pytorch.callbacks import Callback, RichModelSummary
+if TYPE_CHECKING:
+    from lightning.pytorch.callbacks import Callback
 
 from anomalib.callbacks import ModelCheckpoint, TimerCallback
-from anomalib.callbacks.metrics import _MetricsCallback
-from anomalib.callbacks.normalization import get_normalization_callback
-from anomalib.callbacks.post_processor import _PostProcessorCallback
-from anomalib.callbacks.thresholding import _ThresholdCallback
 from anomalib.engine import Engine
-from anomalib.models import AnomalyModule
-from anomalib.utils.path import create_versioned_dir
+from anomalib.utils.path import create_versioned_dir, resolve_versioned_path
 
 logger = logging.getLogger(__name__)
 
@@ -50,43 +47,31 @@ class TiledEnsembleEngine(Engine):
             Path: path to new workspace root dir
         """
         model_name = args["TrainModels"]["model"]["class_path"].split(".")[-1]
-        dataset_name = args["data"]["class_path"].split(".")[-1]
-        category = args["data"]["init_args"]["category"]
+        # get dataset name if present in init_args
+        dataset_name = args["data"]["init_args"].get("name", None)
+        if dataset_name is None:
+            # if not specified, take class name
+            dataset_name = args["data"]["class_path"].split(".")[-1]
+        category = args["data"]["init_args"].get("category", "")
         root_dir = Path(args["default_root_dir"]) / model_name / dataset_name / category
-        return create_versioned_dir(root_dir) if versioned_dir else root_dir / "latest"
+        return create_versioned_dir(root_dir) if versioned_dir else resolve_versioned_path(root_dir / "latest")
 
-    def _setup_anomalib_callbacks(self, model: AnomalyModule) -> None:
+    def _setup_anomalib_callbacks(self) -> None:
         """Modified method to enable individual model training. It's called when Trainer is being set up."""
-        del model  # not used here
-
-        _callbacks: list[Callback] = [RichModelSummary()]
+        callbacks: list[Callback] = []
 
         # Add ModelCheckpoint if it is not in the callbacks list.
         has_checkpoint_callback = any(isinstance(c, ModelCheckpoint) for c in self._cache.args["callbacks"])
         if not has_checkpoint_callback:
             tile_i, tile_j = self.tile_index
-            _callbacks.append(
+            callbacks.append(
                 ModelCheckpoint(
                     dirpath=self._cache.args["default_root_dir"] / "weights" / "lightning",
                     filename=f"model{tile_i}_{tile_j}",
                     auto_insert_metric_name=False,
                 ),
             )
-
-        # Add the post-processor callbacks. Used for thresholding and label calculation.
-        _callbacks.append(_PostProcessorCallback())
-
-        # Add the  normalization callback if tile level normalization was specified (is not none).
-        normalization_callback = get_normalization_callback(self.normalization)
-        if normalization_callback is not None:
-            _callbacks.append(normalization_callback)
-
-        # Add the thresholding and metrics callbacks in all cases,
-        # because individual model might still need this for early stop.
-        _callbacks.append(_ThresholdCallback(self.threshold))
-        _callbacks.append(_MetricsCallback(self.task, self.image_metric_names, self.pixel_metric_names))
-
-        _callbacks.append(TimerCallback())
+        callbacks.append(TimerCallback())
 
         # Combine the callbacks, and update the trainer callbacks.
-        self._cache.args["callbacks"] = _callbacks + self._cache.args["callbacks"]
+        self._cache.args["callbacks"] = callbacks + self._cache.args["callbacks"]

@@ -1,7 +1,7 @@
-"""Tiled ensemble training pipeline."""
-
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tiled ensemble training pipeline."""
 
 from typing import TYPE_CHECKING
 
@@ -54,7 +54,6 @@ class TrainTiledEnsemble(Pipeline):
         tiling_args = args["tiling"]
         data_args = args["data"]
         normalization_stage = NormalizationStage(args["normalization_stage"])
-        thresholding_method = args["thresholding"]["method"]
         model_args = args["TrainModels"]["model"]
 
         train_job_generator = TrainModelJobGenerator(
@@ -118,6 +117,6 @@ class TrainTiledEnsemble(Pipeline):
             )
 
         # 5. calculate statistics used for inference
-        runners.append(SerialRunner(StatisticsJobGenerator(self.root_dir, thresholding_method)))
+        runners.append(SerialRunner(StatisticsJobGenerator(self.root_dir)))
 
         return runners

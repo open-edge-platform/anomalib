@@ -12,10 +12,27 @@
 import hashlib
 import logging
 import os
-from typing import List, Union
+from typing import TYPE_CHECKING, List, Union
 from urllib.parse import urlparse
 
-import requests
+from lightning_utilities.core.imports import module_available
+
+if TYPE_CHECKING or module_available("requests"):
+    import requests
+else:
+
+    class requests:  # noqa: N801
+        """Dummy requests class for when requests is not installed."""
+
+        @staticmethod
+        def get(*args, **kwargs) -> None:  # noqa: ARG004
+            msg = (
+                "requests is not installed. "
+                "Please install it using: `pip install anomalib[video]` or `uv pip install anomalib[video]`"
+            )
+            raise ImportError(msg)
+
+
 import torch
 from PIL import Image
 from packaging import version
@@ -156,7 +173,7 @@ def load(
     with open(model_path, "rb") as opened_file:
         try:
             # loading JIT archive
-            model = torch.jit.load(opened_file, map_location=device if jit else "cpu").eval()
+            model = torch.jit.load(opened_file, map_location=device if jit else "cpu").eval()  # nosec B614 # false positive
             state_dict = None
         except RuntimeError:
             # loading saved state dict
@@ -164,7 +181,10 @@ def load(
                 msg = f"File {model_path} is not a JIT archive. Loading as a state dict instead"
                 logger.warn(msg)
                 jit = False
-            state_dict = torch.load(opened_file, map_location="cpu")
+            # Weights_only is set to True
+            # See mitigation details in https://github.com/open-edge-platform/anomalib/pull/2729
+            # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
+            state_dict = torch.load(opened_file, map_location="cpu", weights_only=True)  # nosec B614
 
     if not jit:
         model = build_model(state_dict or model.state_dict()).to(device)

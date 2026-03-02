@@ -1,0 +1,233 @@
+# Test Runner Action
+#
+# This composite action executes Python tests with pytest, providing
+# comprehensive test execution and reporting capabilities.
+#
+# Key Features:
+# - Multiple test type support
+# - Parallel execution
+# - Coverage reporting
+# - Performance tracking
+# - Result analysis
+#
+# Process Stages:
+# 1. Environment Setup:
+#    - Python configuration
+#    - Virtual environment creation
+#    - Dependency installation
+#
+# 2. Test Execution:
+#    - Test scope determination
+#    - Parallel processing
+#    - Coverage tracking
+#    - Performance monitoring
+#
+# 3. Results Processing:
+#    - Coverage analysis
+#    - Performance reporting
+#    - Results aggregation
+#
+# Required Inputs:
+# - python-version: Python version for tests
+# - test-type: Type of tests to run
+# - codecov-token: Token for coverage upload
+# - max-test-time: Maximum test duration
+# - device: Device to run tests on (cpu/gpu)
+# - enable-cache: Enable pip caching
+#
+# Outputs:
+# - coverage-percentage: Total coverage
+# - tests-passed: Test success status
+# - test-duration: Execution time
+#
+# Example Usage:
+# steps:
+#   - uses: ./.github/actions/pytest
+#     with:
+#       python-version: "3.11"
+#       test-type: "unit"
+#       codecov-token: ${{ secrets.CODECOV_TOKEN }}
+#
+# Note: Requires proper pytest configuration in pyproject.toml
+
+name: "Python Tests Runner"
+description: "Runs Python unit and integration tests with pytest and uploads coverage to Codecov"
+
+inputs:
+  python-version:
+    description: "Python version to use"
+    required: false
+    default: "3.10"
+  test-type:
+    description: "Type of tests to run (unit/integration/all)"
+    required: false
+    default: "all"
+  codecov-token:
+    description: "Codecov upload token"
+    required: true
+  max-test-time:
+    description: "Maximum time in seconds for the test suite to run"
+    required: false
+    default: "3600"
+  device:
+    description: "Device to run tests on (cpu/gpu)"
+    required: false
+    default: "gpu"
+  enable-cache:
+    description: "Enable pip caching"
+    required: false
+    default: "true"
+
+outputs:
+  coverage-percentage:
+    description: "Total coverage percentage"
+    value: ${{ steps.coverage.outputs.percentage }}
+  tests-passed:
+    description: "Whether all tests passed"
+    value: ${{ steps.test-execution.outputs.success }}
+  test-duration:
+    description: "Total test duration in seconds"
+    value: ${{ steps.test-execution.outputs.duration }}
+
+runs:
+  using: composite
+  steps:
+    # Set up Python with pip caching
+    - name: Set up Python environment
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: ${{ inputs.enable-cache == 'true' && 'pip' || '' }}
+        cache-dependency-path: ${{ inputs.enable-cache == 'true' && 'pyproject.toml' || '' }}
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
+
+    # Create and configure virtual environment
+    - name: Configure virtual environment
+      id: setup-venv
+      shell: bash
+      run: |
+        # Create isolated test environment with uv using the configured Python
+        uv venv --python "$(command -v python)" .venv
+        source .venv/bin/activate
+        # Install dependencies with dev extras into the uv-managed environment
+        uv pip install ".[dev,cu124]" # TODO(ashwinvaidya17): See issue #3050
+        uv pip install codecov
+
+    # Determine which tests to run based on input
+    - name: Determine test scope
+      id: test-scope
+      shell: bash
+      env:
+        INPUTS_TEST_TYPE: ${{ inputs.test-type }}
+      run: |
+        case "$INPUTS_TEST_TYPE" in
+          "unit")
+            echo "path=tests/unit" >> $GITHUB_OUTPUT
+            ;;
+          "integration")
+            echo "path=tests/integration" >> $GITHUB_OUTPUT
+            ;;
+          *)
+            # Run both test types if not specified
+            echo "path=tests/unit tests/integration" >> $GITHUB_OUTPUT
+            ;;
+        esac
+
+    - name: Execute test suite
+      id: test-execution
+      shell: bash
+      continue-on-error: true
+      env:
+        INPUTS_DEVICE: ${{ inputs.device }}
+        INPUTS_MAX_TEST_TIME: ${{ inputs.max-test-time }}
+        STEPS_TEST_SCOPE_OUTPUTS_PATH: ${{ steps.test-scope.outputs.path }}
+      run: |
+        source .venv/bin/activate
+        start_time=$(date +%s)
+        set -o pipefail
+
+        # Set device-specific pytest arguments
+        if [ "$INPUTS_DEVICE" = "cpu" ]; then
+          marker="-m cpu"  # Only run CPU tests
+        else
+          marker=""  # Run all tests (both CPU and GPU marked tests)
+        fi
+
+        # Run pytest
+        PYTHONPATH=src pytest "$STEPS_TEST_SCOPE_OUTPUTS_PATH" \
+          --numprocesses=0 \
+          --durations=10 \
+          --durations-min=1.0 \
+          --timeout="$INPUTS_MAX_TEST_TIME" \
+          --verbosity=1 \
+          --cov=src \
+          --cov-report=xml \
+          --cov-report=term-missing \
+          ${marker} | tee pytest_output.log
+
+        test_exit_code=${PIPESTATUS[0]}
+
+        # Calculate and store duration
+        end_time=$(date +%s)
+        duration=$((end_time - start_time))
+        echo "duration=$duration" >> $GITHUB_OUTPUT
+        echo "success=$([[ $test_exit_code == 0 ]] && echo true || echo false)" >> $GITHUB_OUTPUT
+
+        # Store test results summary
+        if [ $test_exit_code -ne 0 ]; then
+          echo "::error::Tests failed. See summary below:"
+          echo "----------------------------------------"
+          # Extract the summary section from pytest output
+          sed -n '/=* short test summary info =*/,$p' pytest_output.log || true
+          echo "----------------------------------------"
+          echo "Full test output saved to artifacts"
+        fi
+
+        exit $test_exit_code
+
+    - name: Upload test results
+      if: always() && steps.test-execution.outcome == 'failure'
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+      with:
+        name: pytest-results-${{ inputs.test-type }}
+        path: pytest_output.log
+        retention-days: 7
+
+    - name: Check test results
+      if: always() && steps.test-execution.outcome == 'failure'
+      shell: bash
+      run: exit 1
+
+    - name: Check test duration
+      if: always()
+      shell: bash
+      env:
+        INPUTS_MAX_TEST_TIME: ${{ inputs.max-test-time }}
+        STEPS_TEST_EXECUTION_OUTPUTS_DURATION: ${{ steps.test-execution.outputs.duration }}
+      run: |
+        if [ -n "$STEPS_TEST_EXECUTION_OUTPUTS_DURATION" ]; then
+          echo "Test Duration: $STEPS_TEST_EXECUTION_OUTPUTS_DURATION seconds"
+
+          if [ "$STEPS_TEST_EXECUTION_OUTPUTS_DURATION" -gt "$INPUTS_MAX_TEST_TIME" ]; then
+            echo "::warning::Test suite exceeded recommended duration of $INPUTS_MAX_TEST_TIME seconds"
+          fi
+        else
+          echo "Test Duration: Not available"
+        fi
+
+    - name: Upload coverage to Codecov
+      if: success()
+      shell: bash
+      env:
+        INPUTS_CODECOV_TOKEN: ${{ inputs.codecov-token }}
+        INPUTS_TEST_TYPE: ${{ inputs.test-type }}
+        INPUTS_PYTHON_VERSION: ${{ inputs.python-version }}
+
+      run: |
+        source .venv/bin/activate
+        uv run codecov --token "$INPUTS_CODECOV_TOKEN" \
+                --file coverage.xml \
+                --flags "$INPUTS_TEST_TYPE_py$INPUTS_PYTHON_VERSION" \
+                --name "$INPUTS_TEST_TYPE tests (Python $INPUTS_PYTHON_VERSION)"

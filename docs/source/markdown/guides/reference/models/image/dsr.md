@@ -11,7 +11,7 @@ DSR is a quantized-feature based algorithm that consists of an autoencoder with 
 ## Architecture
 
 ```{eval-rst}
-.. image:: https://raw.githubusercontent.com/openvinotoolkit/anomalib/main/docs/source/images/dsr/architecture.png
+.. image:: https://raw.githubusercontent.com/open-edge-platform/anomalib/main/docs/source/images/dsr/architecture.png
     :alt: DSR Architecture
 ```
 

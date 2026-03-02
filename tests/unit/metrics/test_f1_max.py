@@ -1,11 +1,11 @@
-"""Test F1Max metric."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+"""Test F1Max metric."""
+
 import torch
 
-from anomalib.metrics.f1_max import F1Max
+from anomalib.metrics.f1_score import _F1Max as F1Max
 
 
 def test_f1_max_logits() -> None:

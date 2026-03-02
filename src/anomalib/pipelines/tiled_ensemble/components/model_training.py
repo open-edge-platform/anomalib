@@ -1,7 +1,7 @@
-"""Tiled ensemble - ensemble training job."""
-
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tiled ensemble - ensemble training job."""
 
 import logging
 from collections.abc import Generator
@@ -11,7 +11,7 @@ from pathlib import Path
 from lightning import seed_everything
 
 from anomalib.data import AnomalibDataModule
-from anomalib.models import AnomalyModule
+from anomalib.models import AnomalibModule
 from anomalib.pipelines.components import Job, JobGenerator
 from anomalib.pipelines.types import GATHERED_RESULTS, PREV_STAGE_RESULT
 
@@ -52,9 +52,8 @@ class TrainModelJob(Job):
         root_dir: Path,
         tile_index: tuple[int, int],
         normalization_stage: str,
-        metrics: dict,
         trainer_args: dict | None,
-        model: AnomalyModule,
+        model: AnomalibModule,
         datamodule: AnomalibDataModule,
     ) -> None:
         super().__init__()
@@ -63,7 +62,6 @@ class TrainModelJob(Job):
         self.root_dir = root_dir
         self.tile_index = tile_index
         self.normalization_stage = normalization_stage
-        self.metrics = metrics
         self.trainer_args = trainer_args
         self.model = model
         self.datamodule = datamodule
@@ -94,8 +92,6 @@ class TrainModelJob(Job):
             accelerator=self.accelerator,
             devices=devices,
             root_dir=self.root_dir,
-            normalization_stage=self.normalization_stage,
-            metrics=self.metrics,
             trainer_args=self.trainer_args,
         )
         engine.fit(model=self.model, datamodule=self.datamodule)
@@ -166,7 +162,7 @@ class TrainModelJobGenerator(JobGenerator):
             raise ValueError(msg)
 
         # tiler used for splitting the image and getting the tile count
-        tiler = get_ensemble_tiler(self.tiling_args, self.data_args)
+        tiler = get_ensemble_tiler(self.tiling_args)
 
         logger.info(
             "Tiled ensemble training started. Separate models will be trained for %d tile locations.",
@@ -175,8 +171,17 @@ class TrainModelJobGenerator(JobGenerator):
         # go over all tile positions
         for tile_index in product(range(tiler.num_patches_h), range(tiler.num_patches_w)):
             # prepare datamodule with custom collate function that only provides specific tile of image
-            datamodule = get_ensemble_datamodule(self.data_args, tiler, tile_index)
-            model = get_ensemble_model(args["model"], tiler)
+            datamodule = get_ensemble_datamodule(
+                data_config=self.data_args,
+                image_size=self.tiling_args["image_size"],
+                tiler=tiler,
+                tile_index=tile_index,
+            )
+            model = get_ensemble_model(
+                model_args=args["model"],
+                normalization_stage=self.normalization_stage,
+                input_size=self.tiling_args["tile_size"],
+            )
 
             # pass root_dir to engine so all models in ensemble have the same root dir
             yield TrainModelJob(
@@ -185,7 +190,6 @@ class TrainModelJobGenerator(JobGenerator):
                 root_dir=self.root_dir,
                 tile_index=tile_index,
                 normalization_stage=self.normalization_stage,
-                metrics=args["metrics"],
                 trainer_args=args.get("trainer", {}),
                 model=model,
                 datamodule=datamodule,

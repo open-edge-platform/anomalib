@@ -1,7 +1,26 @@
-"""Optical Flow extraction module for AI-VAD implementation."""
-
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Optical Flow extraction module for AI-VAD implementation.
+
+This module implements the optical flow extraction stage of the AI-VAD model. It uses
+RAFT (Recurrent All-Pairs Field Transforms) to compute dense optical flow between
+consecutive video frames.
+
+Example:
+    >>> from anomalib.models.video.ai_vad.flow import FlowExtractor
+    >>> import torch
+    >>> extractor = FlowExtractor()
+    >>> first_frame = torch.randn(32, 3, 256, 256)  # (N, C, H, W)
+    >>> last_frame = torch.randn(32, 3, 256, 256)  # (N, C, H, W)
+    >>> flow = extractor(first_frame, last_frame)
+    >>> flow.shape
+    torch.Size([32, 2, 256, 256])
+
+The module provides the following components:
+    - :class:`FlowExtractor`: Main class that handles optical flow computation using
+      RAFT model
+"""
 
 import torch
 import torchvision.transforms.functional as F  # noqa: N812

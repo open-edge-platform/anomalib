@@ -1,7 +1,7 @@
-"""Tiled ensemble - visualization job."""
-
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tiled ensemble - visualization job."""
 
 import logging
 from collections.abc import Generator
@@ -10,12 +10,15 @@ from typing import Any
 
 from tqdm import tqdm
 
-from anomalib import TaskType
-from anomalib.data.utils.image import save_image
 from anomalib.pipelines.components import Job, JobGenerator
-from anomalib.pipelines.tiled_ensemble.components.utils import NormalizationStage
 from anomalib.pipelines.types import GATHERED_RESULTS, RUN_RESULTS
-from anomalib.utils.visualization import ImageVisualizer
+from anomalib.utils.path import generate_output_filename
+from anomalib.visualization import visualize_image_item
+from anomalib.visualization.image.item_visualizer import (
+    DEFAULT_FIELDS_CONFIG,
+    DEFAULT_OVERLAY_FIELDS_CONFIG,
+    DEFAULT_TEXT_CONFIG,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,18 +29,28 @@ class VisualizationJob(Job):
     Args:
         predictions (list[Any]): list of image-level predictions.
         root_dir (Path): Root directory to save checkpoints, stats and images.
-        task (TaskType): type of task the predictions represent.
-        normalize (bool): if predictions need to be normalized
+        data_args (Dict): data args used to get data name and category name.
     """
 
     name = "Visualize"
 
-    def __init__(self, predictions: list[Any], root_dir: Path, task: TaskType, normalize: bool) -> None:
+    def __init__(self, predictions: list[Any], root_dir: Path, data_args: dict) -> None:
         super().__init__()
         self.predictions = predictions
         self.root_dir = root_dir / "images"
-        self.task = task
-        self.normalize = normalize
+
+        self.fields = ["image", "gt_mask"]
+        self.overlay_fields = [("image", ["anomaly_map"]), ("image", ["pred_mask"])]
+        self.field_size = (256, 256)
+        self.fields_config = DEFAULT_FIELDS_CONFIG
+        self.overlay_fields_config = DEFAULT_OVERLAY_FIELDS_CONFIG
+        self.text_config = DEFAULT_TEXT_CONFIG
+
+        self.dataset_name = data_args["init_args"].get("name", None)
+        if self.dataset_name is None:
+            # if not specified, take class name
+            self.dataset_name = data_args["class_path"].split(".")[-1]
+        self.category = data_args["init_args"].get("category", "")
 
     def run(self, task_id: int | None = None) -> list[Any]:
         """Run job that visualizes all prediction data.
@@ -50,23 +63,31 @@ class VisualizationJob(Job):
         """
         del task_id  # not needed here
 
-        visualizer = ImageVisualizer(task=self.task, normalize=self.normalize)
-
         logger.info("Starting visualization.")
 
-        for data in tqdm(self.predictions, desc="Visualizing"):
-            for result in visualizer(outputs=data):
-                # Finally image path is root/defect_type/image_name
-                if result.file_name is not None:
-                    file_path = Path(result.file_name)
-                else:
-                    msg = "file_path should exist in returned Visualizer."
-                    raise ValueError(msg)
+        for batch in tqdm(self.predictions, desc="Visualizing"):
+            for item in batch:
+                image = visualize_image_item(
+                    item,
+                    fields=self.fields,
+                    overlay_fields=self.overlay_fields,
+                    field_size=self.field_size,
+                    fields_config=self.fields_config,
+                    overlay_fields_config=self.overlay_fields_config,
+                    text_config=self.text_config,
+                )
 
-                root = self.root_dir / file_path.parent.name
-                filename = file_path.name
+                if image is not None:
+                    # Get the dataset name and category to save the image
+                    filename = generate_output_filename(
+                        input_path=item.image_path or "",
+                        output_path=self.root_dir,
+                        dataset_name=self.dataset_name,
+                        category=self.category,
+                    )
 
-                save_image(image=result.image, root=root, filename=filename)
+                    # Save the image to the specified filename
+                    image.save(filename)
 
         return self.predictions
 
@@ -92,10 +113,9 @@ class VisualizationJobGenerator(JobGenerator):
         root_dir (Path): Root directory where images will be saved (root/images).
     """
 
-    def __init__(self, root_dir: Path, task: TaskType, normalization_stage: NormalizationStage) -> None:
+    def __init__(self, root_dir: Path, data_args: dict) -> None:
         self.root_dir = root_dir
-        self.task = task
-        self.normalize = normalization_stage == NormalizationStage.NONE
+        self.data_args = data_args
 
     @property
     def job_class(self) -> type:
@@ -119,7 +139,7 @@ class VisualizationJobGenerator(JobGenerator):
         del args  # args not used here
 
         if prev_stage_result is not None:
-            yield VisualizationJob(prev_stage_result, self.root_dir, self.task, self.normalize)
+            yield VisualizationJob(prev_stage_result, self.root_dir, data_args=self.data_args)
         else:
             msg = "Visualization job requires tile level predictions from previous step."
             raise ValueError(msg)

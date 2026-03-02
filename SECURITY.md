@@ -6,40 +6,40 @@ mitigation.
 
 ## Security Tools and Practices
 
-### Integrated Security Scanning with Bandit and Trivy
+### Integrated Security Scanning
 
 To ensure our codebase remains secure, we leverage GitHub Actions for continuous
-security scanning with the following tools:
+security scanning (on pre-commit, PR and periodically) with the following tools:
 
-- **Bandit:** Automatically scans our Python code for common security issues,
-  helping us identify and mitigate potential vulnerabilities proactively.
-- **Trivy:** Integrated into our CI/CD pipeline via GitHub Actions, Trivy scans
-  our project's dependencies and container images for known vulnerabilities,
-  ensuring our external components are secure.
+- [CodeQL](https://docs.github.com/en/code-security/code-scanning/introduction-to-code-scanning/about-code-scanning-with-codeql): static analysis tool to check Python code and GitHub Actions workflows
+- [Semgrep](https://github.com/semgrep/semgrep): static analysis tool to check Python code; ML-specific Semgrep rules developed by [Trail of Bits](https://github.com/trailofbits/semgrep-rules?tab=readme-ov-file#python) are used
+- [Bandit](https://github.com/PyCQA/bandit): Static analysis tool to check Python code
+- [Zizmor](https://github.com/woodruffw/zizmor): Static analysis tool to check GitHub Actions workflows
+- [Trivy](https://github.com/aquasecurity/trivy): Check misconfigurations and detect security issues in dependencies
+- [Dependabot](https://docs.github.com/en/code-security/getting-started/dependabot-quickstart-guide): to detect security issues in dependencies
 
-These integrations ensure that every commit and pull request is automatically
-checked for security issues, allowing us to maintain a high security standard
-across our development lifecycle.
+| Tool       | Pre-commit | PR-checks | Periodic |
+| ---------- | ---------- | --------- | -------- |
+| CodeQL     |            | ✅        | ✅       |
+| Semgrep    |            | ✅        | ✅       |
+| Bandit     | ✅         | ✅        | ✅       |
+| Zizmor     | ✅         | ✅        | ✅       |
+| Trivy      |            |           | ✅       |
+| Dependabot |            |           | ✅       |
 
-### External Security Scanning with Checkmarx
-
-In addition to our integrated tools, we utilize Checkmarx for static application
-security testing (SAST). This comprehensive analysis tool is run externally to
-scrutinize our source code for security vulnerabilities, complementing our
-internal security measures with its advanced detection capabilities.
+> **NOTE:** Semgrep [does not support](https://github.com/semgrep/semgrep/issues/1330) Windows, therefore it is not currently used in pre-commit.
 
 ## 🚨 Reporting a Vulnerability
 
-Please report any security vulnerabilities in this project utilizing the
-guidelines [here](https://www.intel.com/content/www/us/en/security-center/vulnerability-handling-guidelines.html).
+Please report any security vulnerabilities in this project utilizing [Intel's vulnerability handling guidelines](https://www.intel.com/content/www/us/en/security-center/vulnerability-handling-guidelines.html).
 
 ## 📢 Security Updates and Announcements
 
 Users interested in keeping up-to-date with security announcements and updates
 can:
 
-- Follow the [GitHub repository](https://github.com/openvinotoolkit/anomalib) 🌐
-- Check the [Releases](https://github.com/openvinotoolkit/anomalib/releases)
+- Follow the [GitHub repository](https://github.com/open-edge-platform/anomalib) 🌐
+- Check the [Releases](https://github.com/open-edge-platform/anomalib/releases)
   section of our GitHub project 📦
 
 We encourage users to report security issues and contribute to the security of

@@ -1,7 +1,7 @@
-"""Run tiled ensemble prediction."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Run tiled ensemble prediction."""
 
 from pathlib import Path
 
@@ -14,7 +14,7 @@ def get_parser() -> ArgumentParser:
     """Create a new parser if none is provided."""
     parser = ArgumentParser()
     parser.add_argument("--config", type=str | Path, help="Configuration file path.", required=True)
-    parser.add_argument("--root", type=str | Path, help="Weights file path.", required=True)
+    parser.add_argument("--root", type=str | Path, help="Results root dir path.", required=True)
 
     return parser
 

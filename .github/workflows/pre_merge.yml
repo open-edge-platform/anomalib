@@ -1,8 +1,9 @@
 name: Pre-Merge Checks
-permissions: read-all
+permissions:
+  contents: read
 
 on:
-  push:
+  merge_group:
     branches: [main]
   pull_request:
     types:
@@ -19,18 +20,21 @@ concurrency:
 
 jobs:
   Code-Quality-Checks:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: CHECKOUT REPOSITORY
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          lfs: true
+          persist-credentials: false
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
           python-version: "3.10"
       - name: Install Tox
         run: pip install tox
       - name: Code quality checks
-        run: tox -e pre-commit
+        run: tox -e prek
   Pre-Merge-Checks:
     runs-on: [self-hosted, linux, x64, anomalib]
     needs: Code-Quality-Checks
@@ -43,9 +47,11 @@ jobs:
             tox-env: "py310"
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
       - name: Install Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install Tox
@@ -53,7 +59,7 @@ jobs:
       - name: Link the dataset path to the dataset directory in the repository root.
         run: |
           ln -s $ANOMALIB_DATASET_PATH ./datasets
-          ln -s $ANOMALIB_DATASET_PATH ./notebooks/datasets
+          ln -s $ANOMALIB_DATASET_PATH ./examples/notebooks/datasets
       - name: Coverage
         run: tox -e pre-merge-${{ matrix.tox-env }}
       - name: Upload coverage report
@@ -78,9 +84,11 @@ jobs:
           fi
 
   md-dead-link-check:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: AlexanderDokuchaev/md-dead-link-check@v0.9
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+      - uses: AlexanderDokuchaev/md-dead-link-check@5b5641a92ec95d13a5b04927e0e11de5c3405298 # v1.3.0
         with:
           config: pyproject.toml
