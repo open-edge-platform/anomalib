@@ -8,7 +8,7 @@ does).  This wrapper stores arbitrary metadata alongside the data so that the
 existing ``samples.attrs["task"]`` pattern keeps working without changes to
 every downstream consumer.
 
-Usage::
+Example:
 
     >>> import polars as pl
     >>> from anomalib.data.utils.dataframe import AnomalibDataFrame
