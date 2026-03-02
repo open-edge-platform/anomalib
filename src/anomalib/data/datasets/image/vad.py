@@ -119,6 +119,14 @@ def make_vad_dataset(
         extensions (Sequence[str] | None, optional): Valid file extensions
             Defaults to ``None``.
 
+    Example:
+        >>> root = Path("./datasets/VAD/vad")
+        >>> samples = make_vad_dataset(root, split="train")
+        >>> samples.head()
+           path                split label image_path           mask_path label_index
+        0  datasets/VAD/vad train good  [...]/good/2041.png                         0
+        1  datasets/VAD/vad train good  [...]/good/2565.png                         0
+
     Returns:
         AnomalibDataFrame: Dataset samples with columns:
             - path: Base path to dataset
