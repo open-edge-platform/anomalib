@@ -9,7 +9,6 @@ existing ``samples.attrs["task"]`` pattern keeps working without changes to
 every downstream consumer.
 
 Example:
-
     >>> import polars as pl
     >>> from anomalib.data.utils.dataframe import AnomalibDataFrame
     >>> df = AnomalibDataFrame({"image_path": ["a.png"], "split": ["train"]})
