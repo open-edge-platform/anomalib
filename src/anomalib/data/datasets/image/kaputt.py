@@ -45,13 +45,13 @@ Dataset URL:
 import logging
 from pathlib import Path
 
-import pandas as pd
+import polars as pl
 from lightning_utilities.core.imports import module_available
-from pandas import DataFrame
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datasets.base import AnomalibDataset
 from anomalib.data.utils import LabelName, Split, validate_path
+from anomalib.data.utils.dataframe import AnomalibDataFrame
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +148,7 @@ def make_kaputt_dataset(
     split: str | Split | None = None,
     image_type: str = "image",
     use_reference: bool = False,
-) -> DataFrame:
+) -> AnomalibDataFrame:
     """Create Kaputt samples by parsing the Parquet metadata files.
 
     The Kaputt dataset uses Parquet files containing metadata about each image,
@@ -194,7 +194,7 @@ def make_kaputt_dataset(
     # Parquet files use "validation" while anomalib uses "val"
     parquet_splits = {"train": "train", "validation": "val", "test": "test"}
 
-    frames: list[DataFrame] = []
+    frames: list[pl.DataFrame] = []
 
     if not module_available("pyarrow"):
         msg = (
@@ -210,33 +210,50 @@ def make_kaputt_dataset(
             msg = f"Query parquet file not found: {query_parquet}"
             raise FileNotFoundError(msg)
 
-        query_df = pd.read_parquet(query_parquet)
+        query_df = pl.read_parquet(query_parquet)
 
         # Build image paths: root / "query-{image_type}" / <relative path from parquet>
         image_col = f"query_{image_type}"  # "query_image" or "query_crop"
         root_prefix = str(root / f"query-{image_type}") + "/"
         mask_prefix = str(root / "query-mask") + "/"
 
-        samples = DataFrame()
-        samples["image_path"] = root_prefix + query_df[image_col]
-        samples["capture_id"] = query_df["capture_id"]
-        samples["item_material"] = query_df["item_material"].fillna("")
-        samples["defect_types"] = query_df["defect_types"].fillna("")
-        samples["split"] = anomalib_name
+        samples = pl.DataFrame({
+            "image_path": query_df[image_col].cast(pl.Utf8),
+            "capture_id": query_df["capture_id"],
+            "item_material": query_df["item_material"].fill_null(""),
+            "defect_types": query_df["defect_types"].fill_null(""),
+        }).with_columns(
+            (pl.lit(root_prefix) + pl.col("image_path")).alias("image_path"),
+            pl.lit(anomalib_name).alias("split"),
+        )
 
         # Label assignment
-        samples.loc[query_df["defect"] == False, "label_index"] = LabelName.NORMAL  # noqa: E712
-        samples.loc[query_df["defect"] != False, "label_index"] = LabelName.ABNORMAL  # noqa: E712
-        samples["label_index"] = samples["label_index"].astype(int)
-        samples.loc[samples["label_index"] == LabelName.NORMAL, "label"] = "normal"
-        samples.loc[samples["label_index"] == LabelName.ABNORMAL, "label"] = "abnormal"
+        defect_col = query_df["defect"].fill_null(value=False).cast(pl.Boolean)
+        samples = samples.with_columns(defect_col.alias("_defect"))
+        samples = (
+            samples.with_columns(
+                pl.when(pl.col("_defect").not_())
+                .then(pl.lit(int(LabelName.NORMAL)))
+                .otherwise(pl.lit(int(LabelName.ABNORMAL)))
+                .alias("label_index"),
+            )
+            .with_columns(
+                pl.when(pl.col("label_index") == int(LabelName.NORMAL))
+                .then(pl.lit("normal"))
+                .otherwise(pl.lit("abnormal"))
+                .alias("label"),
+            )
+            .drop("_defect")
+        )
 
         # Mask paths: only for defective images
-        samples["mask_path"] = ""
-        samples.loc[
-            samples["label_index"] == LabelName.ABNORMAL,
-            "mask_path",
-        ] = mask_prefix + query_df.loc[query_df["defect"] != False, "query_mask"]  # noqa: E712
+        samples = samples.with_columns(query_df["query_mask"].fill_null("").alias("_query_mask"))
+        samples = samples.with_columns(
+            pl.when(pl.col("label_index") == int(LabelName.ABNORMAL))
+            .then(pl.lit(mask_prefix) + pl.col("_query_mask"))
+            .otherwise(pl.lit(""))
+            .alias("mask_path"),
+        ).drop("_query_mask")
 
         frames.append(samples)
 
@@ -244,19 +261,22 @@ def make_kaputt_dataset(
         if use_reference:
             ref_parquet = root / "datasets" / f"reference-{parquet_name}.parquet"
             if ref_parquet.exists():
-                ref_df = pd.read_parquet(ref_parquet)
+                ref_df = pl.read_parquet(ref_parquet)
                 ref_image_col = f"reference_{image_type}"
                 ref_prefix = str(root / f"reference-{image_type}") + "/"
 
-                ref_samples = DataFrame()
-                ref_samples["image_path"] = ref_prefix + ref_df[ref_image_col]
-                ref_samples["capture_id"] = ref_df["item_identifier"]
-                ref_samples["item_material"] = ""
-                ref_samples["defect_types"] = ""
-                ref_samples["split"] = anomalib_name
-                ref_samples["label"] = "normal"
-                ref_samples["label_index"] = int(LabelName.NORMAL)
-                ref_samples["mask_path"] = ""
+                ref_samples = pl.DataFrame({
+                    "image_path": ref_df[ref_image_col].cast(pl.Utf8),
+                    "capture_id": ref_df["item_identifier"],
+                }).with_columns(
+                    (pl.lit(ref_prefix) + pl.col("image_path")).alias("image_path"),
+                    pl.lit("").alias("item_material"),
+                    pl.lit("").alias("defect_types"),
+                    pl.lit(anomalib_name).alias("split"),
+                    pl.lit(int(LabelName.NORMAL)).alias("label_index"),
+                    pl.lit("normal").alias("label"),
+                    pl.lit("").alias("mask_path"),
+                )
 
                 frames.append(ref_samples)
             else:
@@ -267,13 +287,12 @@ def make_kaputt_dataset(
         msg = f"Found 0 images in {root}"
         raise RuntimeError(msg)
 
-    samples = pd.concat(frames, ignore_index=True)
-    samples = samples.sort_values(by="image_path", ignore_index=True)
+    samples = pl.concat(frames).sort("image_path")
 
     # infer the task type
-    samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
+    task = "classification" if (samples["mask_path"] == "").all() else "segmentation"
 
     if split:
-        samples = samples[samples.split == split].reset_index(drop=True)
+        samples = samples.filter(pl.col("split") == split)
 
-    return samples
+    return AnomalibDataFrame(samples, attrs={"task": task})

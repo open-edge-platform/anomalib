@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Unit Tests - Base Image Datamodules."""
@@ -36,16 +36,16 @@ class _TestAnomalibImageDatamodule(_TestAnomalibDataModule):
         if datamodule.val_split_mode == "from_test":
             assert (
                 len(
-                    set(datamodule.test_data.samples["image_path"].values).intersection(
-                        set(datamodule.train_data.samples["image_path"].values),
+                    set(datamodule.test_data.samples["image_path"].to_list()).intersection(
+                        set(datamodule.train_data.samples["image_path"].to_list()),
                     ),
                 )
                 == 0
             ), "Found train and test split contamination"
             assert (
                 len(
-                    set(datamodule.val_data.samples["image_path"].values).intersection(
-                        set(datamodule.test_data.samples["image_path"].values),
+                    set(datamodule.val_data.samples["image_path"].to_list()).intersection(
+                        set(datamodule.test_data.samples["image_path"].to_list()),
                     ),
                 )
                 == 0

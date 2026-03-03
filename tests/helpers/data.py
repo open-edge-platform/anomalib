@@ -13,7 +13,7 @@ from tempfile import mkdtemp
 
 import cv2
 import numpy as np
-import pandas as pd
+import polars as pl
 from scipy.io import savemat
 from skimage import img_as_ubyte
 from skimage.io import imsave
@@ -822,11 +822,11 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
             datasets_dir = self.dataset_root / "datasets"
             datasets_dir.mkdir(parents=True, exist_ok=True)
 
-            query_df = pd.DataFrame(query_samples)
-            query_df.to_parquet(datasets_dir / f"query-{split}.parquet", index=False)
+            query_df = pl.DataFrame(query_samples)
+            query_df.write_parquet(datasets_dir / f"query-{split}.parquet")
 
-            ref_df = pd.DataFrame(reference_samples)
-            ref_df.to_parquet(datasets_dir / f"reference-{split}.parquet", index=False)
+            ref_df = pl.DataFrame(reference_samples)
+            ref_df.write_parquet(datasets_dir / f"reference-{split}.parquet")
 
 
 class DummyVideoDatasetGenerator(DummyDatasetGenerator):
