@@ -222,7 +222,6 @@ class TrainingService:
             val_split_mode=ValSplitMode.SYNTHETIC,
             train_batch_size=8,
             eval_batch_size=8,
-            num_workers=4,
         )
 
         # Initialize anomalib model and engine
