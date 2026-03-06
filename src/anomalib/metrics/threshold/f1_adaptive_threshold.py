@@ -55,9 +55,15 @@ def handle_mac(metric: "_F1AdaptiveThreshold") -> Generator[None, None, None]:
     predictions on an MPS device. If so, it moves both predictions and
     targets to CPU for the duration of the context and restores them to
     the original device on exit.
+
+    Note:
+        This only applies when ``thresholds=None`` (non-binned mode) where
+        ``preds`` and ``target`` lists are used. When thresholds are specified,
+        only ``confmat`` is used which doesn't require this handling.
     """
-    # Check if we have any predictions and if they're on MPS
-    if bool(metric.preds) and metric.preds[0].is_mps:
+    # Only handle MPS for non-binned mode (thresholds=None) where preds/target exist
+    # When thresholds are specified, confmat is used instead
+    if metric.thresholds is None and bool(metric.preds) and metric.preds[0].is_mps:
         original_device = metric.preds[0].device
         metric.preds = [pred.cpu() for pred in metric.preds]
         metric.target = [target.cpu() for target in metric.target]
@@ -91,6 +97,19 @@ class _F1AdaptiveThreshold(BinaryPrecisionRecallCurve, Threshold):
         Optimal threshold: 0.5000
     """
 
+    def _has_anomalous_samples(self) -> bool:
+        """Check if the validation set contains any anomalous samples.
+
+        Returns:
+            bool: True if anomalous samples (target=1) exist, False otherwise.
+        """
+        if self.thresholds is None:
+            return any(1 in batch for batch in self.target)
+        # confmat has shape (n_thresholds, 2, 2) where confmat[i] = [[TN, FP], [FN, TP]]
+        # Actual positives = FN + TP = confmat[:, 1, 0] + confmat[:, 1, 1]
+        # Use the first threshold's values (all thresholds see the same total positives)
+        return (self.confmat[0, 1, 0] + self.confmat[0, 1, 1]).item() > 0
+
     def compute(self) -> torch.Tensor:
         """Compute optimal threshold by maximizing F1 score.
 
@@ -109,7 +128,7 @@ class _F1AdaptiveThreshold(BinaryPrecisionRecallCurve, Threshold):
         recall: torch.Tensor
         thresholds: torch.Tensor
 
-        if not any(1 in batch for batch in self.target):
+        if not self._has_anomalous_samples():
             msg = (
                 "The validation set does not contain any anomalous images. As a "
                 "result, the adaptive threshold will take the value of the "
