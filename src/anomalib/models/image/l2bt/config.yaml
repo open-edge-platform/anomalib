@@ -1,0 +1,30 @@
+dataset:
+  name: visa
+  format: visa
+  task: segmentation
+  image_size: 224
+  train_batch_size: 1
+  eval_batch_size: 1
+  num_workers: 4
+
+model:
+  checkpoint_folder: ./checkpoints/checkpoints_visa
+  class_name: capsules
+  label: final_model
+  epochs_no: 50
+  batch_size: 4
+  layers: [7, 11]
+
+metrics:
+  image:
+    - AUROC
+  pixel:
+    - AUROC
+
+visualization:
+  show: false
+  save: true
+
+trainer:
+  accelerator: auto
+  devices: 1

@@ -179,3 +179,6 @@ mlruns
 # application data
 application/**/data/
 application/**/logs/
+checkpoints/
+src/anomalib/models/image/l2bt/images/
+l2bt_predict.yaml
