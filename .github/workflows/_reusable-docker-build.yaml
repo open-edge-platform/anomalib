@@ -53,25 +53,25 @@ jobs:
           persist-credentials: false
 
       - name: Initial cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@4d46c7fb444d8fae6390348e76d96bb0749c5632
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@cc6fbe840db6ebd16ebd18d409f475bff5a8c182
         with:
           type: "initial"
 
       - name: Pre-build cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@4d46c7fb444d8fae6390348e76d96bb0749c5632
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@cc6fbe840db6ebd16ebd18d409f475bff5a8c182
         with:
           type: "pre-build"
 
       # Install the latest Docker, since the version available by default on the runners may be outdated
       - name: Set up Docker
-        uses: docker/setup-docker-action@e43656e248c0bd0647d3f5c195d116aacf6fcaf4 #v4.7.0
+        uses: docker/setup-docker-action@1a6edb0ba9ac496f6850236981f15d8f9a82254d # v5.0.0
 
       - name: Set up Docker Compose
-        uses: docker/setup-compose-action@2fe291b7677a45ee1269ec56a42604c143505e7e # v1.3.0
+        uses: docker/setup-compose-action@8cccb8c14b6500aaffebff1aa49c502c34d2e5e6 # v2.1.0
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
         with:
           tags: |
             type=sha
