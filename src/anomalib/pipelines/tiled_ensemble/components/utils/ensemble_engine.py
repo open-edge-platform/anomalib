@@ -1,4 +1,4 @@
-# Copyright (C) 2024-2025 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Implements custom Anomalib engine for tiled ensemble training."""
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 from anomalib.callbacks import ModelCheckpoint, TimerCallback
 from anomalib.engine import Engine
-from anomalib.utils.path import create_versioned_dir
+from anomalib.utils.path import create_versioned_dir, resolve_versioned_path
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ class TiledEnsembleEngine(Engine):
             dataset_name = args["data"]["class_path"].split(".")[-1]
         category = args["data"]["init_args"].get("category", "")
         root_dir = Path(args["default_root_dir"]) / model_name / dataset_name / category
-        return create_versioned_dir(root_dir) if versioned_dir else root_dir / "latest"
+        return create_versioned_dir(root_dir) if versioned_dir else resolve_versioned_path(root_dir / "latest")
 
     def _setup_anomalib_callbacks(self) -> None:
         """Modified method to enable individual model training. It's called when Trainer is being set up."""

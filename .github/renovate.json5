@@ -31,26 +31,88 @@
   // `matchBaseBranches` in specific rule
   baseBranches: ["main"],
 
-  enabledManagers: ["github-actions", "pep621", "custom.regex"],
+  enabledManagers: ["github-actions", "pep621", "dockerfile", "npm"],
+
+  // ignore Geti components
+  ignoreDeps: ["@geti/config", "@geti/ui"],
 
   // Set limit to 10
   ignorePresets: [":prHourlyLimit2"],
   prHourlyLimit: 10,
 
   packageRules: [
-    // weekly dependencies upgrades
+    // Enable pinning for container images
+    // https://docs.renovatebot.com/presets-docker/#dockerpindigests
     {
       enabled: true,
-      matchManagers: ["pep621"],
+      matchDatasources: ["docker"],
+      pinDigests: true,
+      groupName: "Pin images",
+      groupSlug: "pin-images",
       schedule: ["* * * * 0"], // weekly
     },
 
-    // Python version is upgraded manually
+    // Python bi-weekly minor and patch dependencies upgrades
+    {
+      enabled: true,
+      matchManagers: ["pep621"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "Python dependencies non-major",
+      groupSlug: "python-dependencies-non-major",
+      schedule: ["* * 1,15 * *"], // bi-weekly (1st and 15th of each month)
+    },
+
+    // Python major dependencies are updated manually
+    {
+      enabled: false,
+      matchManagers: ["pep621"],
+      matchUpdateTypes: ["major"],
+    },
+
+    // Disable python base image upgrades, except patch and digest pinning
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["python"],
+      matchUpdateTypes: ["major", "minor"],
+    },
+
+    // Disable node image upgrades, except patch and digest pinning
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["node"],
+      matchUpdateTypes: ["major", "minor"],
+    },
+
+    // Disable docker.io/astral/uv image upgrades, except digest pinning,
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["docker.io/astral/uv"],
+      matchUpdateTypes: ["major", "minor", "patch"],
+    },
+
+    // Disable non-security and lock file upgrades for npm
+    // Lock is updated manually
+    {
+      enabled: false,
+      matchManagers: ["npm"],
+    },
+
+    // Python version in TOML is updated manually
     {
       enabled: false,
       matchDatasources: ["python-version"],
       matchDepNames: ["python"],
       matchDepTypes: ["requires-python"],
+    },
+
+    // Disable upgrades for Dockerfile syntax (docker/dockerfile)
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchDepNames: ["docker/dockerfile"],
     },
 
     // disable open-clip-torch upgrades as
@@ -60,6 +122,21 @@
       matchDatasources: ["pypi"],
       matchDepNames: ["open-clip-torch"],
       matchDepTypes: ["project.optional-dependencies"],
+    },
+
+    // torch is upgraded manually
+    {
+      enabled: false,
+      matchDatasources: ["pypi"],
+      matchDepNames: ["torch"],
+    },
+
+    // Disable ruff upgrades in application/backend/pyproject.toml
+    {
+      enabled: false,
+      matchDatasources: ["pypi"],
+      matchDepNames: ["ruff"],
+      matchFileNames: ["application/backend/pyproject.toml"],
     },
 
     // Group GitHub Actions updates
@@ -72,6 +149,13 @@
       schedule: ["* * 1 * *"], // every month
     },
 
+    // uv version used in GitHub Actions is updated manually
+    {
+      enabled: false,
+      matchDatasources: ["github-releases"],
+      matchDepNames: ["astral-sh/uv"],
+    },
+
     // Python version used in GitHub Actions is updated manually
     {
       enabled: false,
@@ -79,16 +163,14 @@
       matchDepNames: ["python"],
       matchDepTypes: ["uses-with"],
     },
-  ],
 
-  // is used to upgrade Zizmor version
-  customManagers: [
+    // Disable mcr.microsoft.com/playwright image upgrades, except digital pinning,
     {
-      fileMatch: ["^\\.github/actions/security/zizmor/[^/]+\\.ya?ml$"],
-      //   https://docs.renovatebot.com/modules/manager/regex/#advanced-capture
-      matchStrings: [
-        "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\s+.+default: (?<currentValue>.*)",
-      ],
+      enabled: false,
+      matchManagers: ["github-actions"],
+      matchDepTypes: ["container"],
+      matchDepNames: ["mcr.microsoft.com/playwright"],
+      matchUpdateTypes: ["major", "minor", "patch"],
     },
   ],
 

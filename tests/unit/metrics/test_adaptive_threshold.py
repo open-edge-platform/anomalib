@@ -14,6 +14,8 @@ from anomalib.metrics.threshold.f1_adaptive_threshold import _F1AdaptiveThreshol
     [
         (torch.tensor([0, 0, 0, 1, 1]), torch.tensor([2.3, 1.6, 2.6, 7.9, 3.3]), 3.3),  # standard case
         (torch.tensor([1, 0, 0, 0]), torch.tensor([4, 3, 2, 1]), 4),  # 100% recall for all thresholds
+        (torch.tensor([1, 1, 1, 1]), torch.tensor([4, 3, 2, 1]), 1),  # use minimum value when all images are anomalous
+        (torch.tensor([0, 0, 0, 0]), torch.tensor([4, 3, 2, 1]), 4),  # use maximum value when all images are normal
     ],
 )
 def test_adaptive_threshold(labels: torch.Tensor, preds: torch.Tensor, target_threshold: int | float) -> None:

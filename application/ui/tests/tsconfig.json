@@ -1,0 +1,10 @@
+{
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@anomalib-studio/test-fixtures": ["./fixtures"]
+        }
+    },
+    "include": ["./"]
+}

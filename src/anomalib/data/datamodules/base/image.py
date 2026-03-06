@@ -25,20 +25,19 @@ Example:
         ... )
 """
 
+from __future__ import annotations
+
 import copy
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from lightning.pytorch import LightningDataModule
+from lightning.pytorch.core.datamodule import LightningDataModule
 from lightning.pytorch.trainer.states import TrainerFn
-from lightning.pytorch.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
 from torch.utils.data.dataloader import DataLoader
 from torchvision.transforms.v2 import Compose, Resize, Transform
 
-from anomalib import TaskType
-from anomalib.data.datasets.base.image import AnomalibDataset
 from anomalib.data.transforms.utils import extract_transforms_by_type
 from anomalib.data.utils import TestSplitMode, ValSplitMode, random_split, split_by_label
 from anomalib.data.utils.synthetic import SyntheticAnomalyDataset
@@ -47,7 +46,11 @@ from anomalib.utils.attrs import get_nested_attr
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from lightning.pytorch.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
     from pandas import DataFrame
+
+    from anomalib import TaskType
+    from anomalib.data.datasets.base.image import AnomalibDataset
 
 
 logger = logging.getLogger(__name__)
@@ -63,7 +66,7 @@ class AnomalibDataModule(LightningDataModule, ABC):
         train_batch_size (int): Batch size used by the train dataloader.
         eval_batch_size (int): Batch size used by the val and test dataloaders.
         num_workers (int): Number of workers used by the train, val and test dataloaders.
-        train_augmentations (Transform | None): Augmentations to apply dto the training images
+        train_augmentations (Transform | None): Augmentations to apply to the training images
             Defaults to ``None``.
         val_augmentations (Transform | None): Augmentations to apply to the validation images.
             Defaults to ``None``.
@@ -216,7 +219,7 @@ class AnomalibDataModule(LightningDataModule, ABC):
                 if model_resize.antialias != aug_resize.antialias:
                     msg = f"Conflicting antialiasing setting found between augmentations and model transforms. You are \
                         using a Resize transform in your input data augmentations. Please be aware that the model also \
-                        applies a Resize transform with a different antialising setting. Using conflicting \
+                        applies a Resize transform with a different antialiasing setting. Using conflicting \
                         antialiasing settings can lead to unexpected behaviour, so it is recommended to use the same \
                         antialiasing setting between augmentations and model transforms. Augmentations: \
                         antialias={aug_resize.antialias}, Model transforms: antialias={model_resize.antialias}"
@@ -415,10 +418,10 @@ class AnomalibDataModule(LightningDataModule, ABC):
 
     @classmethod
     def from_config(
-        cls: type["AnomalibDataModule"],
+        cls: type[AnomalibDataModule],
         config_path: str | Path,
         **kwargs,
-    ) -> "AnomalibDataModule":
+    ) -> AnomalibDataModule:
         """Create datamodule instance from config file.
 
         Args:

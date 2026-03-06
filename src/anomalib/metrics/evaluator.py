@@ -147,9 +147,15 @@ class Evaluator(nn.Module, Callback):
         pl_module: LightningModule,
     ) -> None:
         """Compute and log validation metrics."""
-        del trainer, pl_module  # Unused argument.
+        del pl_module  # Unused argument.
         for metric in self.val_metrics:
             self.log(metric.name, metric)
+            # In barebones mode, logging is disabled. We manually update trainer metrics
+            # to ensure they're available in both callback_metrics and the validate() return value
+            if trainer.barebones:
+                metric_value = metric.compute()
+                trainer.callback_metrics[metric.name] = metric_value
+                trainer.logged_metrics[metric.name] = metric_value
 
     def on_test_batch_end(
         self,
@@ -171,9 +177,15 @@ class Evaluator(nn.Module, Callback):
         pl_module: LightningModule,
     ) -> None:
         """Compute and log test metrics."""
-        del trainer, pl_module  # Unused argument.
+        del pl_module  # Unused argument.
         for metric in self.test_metrics:
             self.log(metric.name, metric)
+            # In barebones mode, logging is disabled. We manually update trainer metrics
+            # to ensure they're available in both callback_metrics and the return value of the trainer.test() method
+            if trainer.barebones:
+                metric_value = metric.compute()
+                trainer.callback_metrics[metric.name] = metric_value
+                trainer.logged_metrics[metric.name] = metric_value
 
     def metrics_to_cpu(self, metrics: Metric | list[Metric] | ModuleList) -> None:
         """Set the compute_on_cpu attribute of the metrics to True."""

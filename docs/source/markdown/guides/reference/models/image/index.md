@@ -4,6 +4,13 @@
 :margin: 1 1 0 0
 :gutter: 1
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` AnomalyDINO
+:link: ./anomaly_dino
+:link-type: doc
+
+Boosting Patch-based Few-shot Anomaly Detection with DINOv2
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` CFA
 :link: ./cfa
 :link-type: doc
@@ -37,6 +44,14 @@ Deep Feature Kernel Density Estimation
 :link-type: doc
 
 Probabilistic Modeling of Deep Features for Out-of-Distribution and Adversarial Detection
+:::
+
+:::{grid-item-card} {material-regular}`model_training;1.5em` Dinomaly
+:link: ./dinomaly
+:link-type: doc
+
+Dinomaly: The Less Is More Philosophy in Unsupervised Anomaly Detection
+
 :::
 
 :::{grid-item-card} {material-regular}`model_training;1.5em` DRAEM
@@ -113,7 +128,7 @@ Student-Teacher Feature Pyramid Matching for Unsupervised Anomaly Detection
 :link: ./supersimplenet
 :link-type: doc
 
-SuperSimpleNet: Unifying Unsupervised and Supervised Learning for Fast and Reliable Surface Defect Detection
+SuperSimpleNet: A Unified Surface Defect Detection Model for all Supervision Regimes
 :::
 
 :::{grid-item-card} {material-regular}`model_training;1.5em` U-Flow
@@ -121,6 +136,13 @@ SuperSimpleNet: Unifying Unsupervised and Supervised Learning for Fast and Relia
 :link-type: doc
 
 U-Flow: A U-shaped Normalizing Flow for Anomaly Detection with Unsupervised Threshold
+:::
+
+:::{grid-item-card} {material-regular}`model_training;1.5em` UniNet
+:link: ./uninet
+:link-type: doc
+
+UniNet: A Contrastive Learning-guided Unified Framework with Feature Selection for Anomaly Detection
 :::
 
 :::{grid-item-card} {material-regular}`model_training;1.5em` VLM-AD
@@ -142,11 +164,13 @@ WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation
 :caption: Data
 :hidden:
 
+./anomaly_dino
 ./cfa
 ./cflow
 ./csflow
 ./dfkde
 ./dfm
+./dinomaly
 ./draem
 ./dsr
 ./efficient_ad
@@ -157,6 +181,9 @@ WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation
 ./patchcore
 ./reverse_distillation
 ./stfpm
+./supersimplenet
 ./uflow
+./uninet
+./vlm_ad
 ./winclip
 ```

@@ -269,6 +269,11 @@ class PerlinAnomalyGenerator(v2.Transform):
         """
         # Generate perlin noise
         perlin_noise = generate_perlin_noise(height, width, device=device)
+        # in some cases the perlin noise is all less than 0.5, so we need to rescale it between 0 and 1
+        if not (perlin_noise > 0.5).any():
+            perlin_noise = (perlin_noise - perlin_noise.min()) / (perlin_noise.max() - perlin_noise.min())
+            # rescale to [-1, 1] range
+            perlin_noise = (perlin_noise * 2) - 1
 
         # Create rotated noise pattern
         perlin_noise = perlin_noise.unsqueeze(0)  # [1, H, W]

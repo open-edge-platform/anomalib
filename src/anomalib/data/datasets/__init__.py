@@ -13,6 +13,7 @@ Base Classes:
 Depth Datasets:
     - ``Folder3DDataset``: Custom RGB-D dataset from folder structure
     - ``MVTec3DDataset``: MVTec 3D AD dataset with industrial objects
+    - ``ADAM3DDataset``: 3D ADAM dataset with additive manufactured objects
 
 Image Datasets:
     - ``BTechDataset``: BTech dataset containing industrial objects
@@ -40,8 +41,9 @@ Example:
 """
 
 from .base import AnomalibDataset, AnomalibDepthDataset, AnomalibVideoDataset
-from .depth import Folder3DDataset, MVTec3DDataset
+from .depth import ADAM3DDataset, Folder3DDataset, MVTec3DDataset
 from .image import (
+    BMADDataset,
     BTechDataset,
     DatumaroDataset,
     FolderDataset,
@@ -62,7 +64,9 @@ __all__ = [
     # Depth
     "Folder3DDataset",
     "MVTec3DDataset",
+    "ADAM3DDataset",
     # Image
+    "BMADDataset",
     "BTechDataset",
     "DatumaroDataset",
     "FolderDataset",

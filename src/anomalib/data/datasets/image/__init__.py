@@ -6,6 +6,7 @@
 This module provides dataset implementations for various image anomaly detection
 datasets:
 
+- ``BMADDataset``: BMAD dataset containing medical images
 - ``BTechDataset``: BTech dataset containing industrial objects
 - ``DatumaroDataset``: Dataset in Datumaro format (Intel Geti™ export)
 - ``FolderDataset``: Custom dataset from folder structure
@@ -25,9 +26,11 @@ Example:
     ... )
 """
 
+from .bmad import BMADDataset
 from .btech import BTechDataset
 from .datumaro import DatumaroDataset
 from .folder import FolderDataset
+from .kaputt import KaputtDataset
 from .kolektor import KolektorDataset
 from .mpdd import MPDDDataset
 from .mvtec_loco import MVTecLOCODataset
@@ -39,9 +42,11 @@ from .vad import VADDataset
 from .visa import VisaDataset
 
 __all__ = [
+    "BMADDataset",
     "BTechDataset",
     "DatumaroDataset",
     "FolderDataset",
+    "KaputtDataset",
     "KolektorDataset",
     "MPDDDataset",
     "MVTecDataset",

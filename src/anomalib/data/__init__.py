@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Anomalib Datasets.
@@ -48,14 +48,16 @@ from .dataclasses import (
 
 # Datamodules
 from .datamodules.base import AnomalibDataModule
-from .datamodules.depth import DepthDataFormat, Folder3D, MVTec3D
+from .datamodules.depth import ADAM3D, DepthDataFormat, Folder3D, MVTec3D
 from .datamodules.image import (
+    BMAD,
     MPDD,
     VAD,
     BTech,
     Datumaro,
     Folder,
     ImageDataFormat,
+    Kaputt,
     Kolektor,
     MVTec,
     MVTecAD,
@@ -69,11 +71,13 @@ from .datamodules.video import Avenue, ShanghaiTech, UCSDped, VideoDataFormat
 
 # Datasets
 from .datasets import AnomalibDataset
-from .datasets.depth import Folder3DDataset, MVTec3DDataset
+from .datasets.depth import ADAM3DDataset, Folder3DDataset, MVTec3DDataset
 from .datasets.image import (
+    BMADDataset,
     BTechDataset,
     DatumaroDataset,
     FolderDataset,
+    KaputtDataset,
     KolektorDataset,
     MPDDDataset,
     MVTecADDataset,
@@ -175,10 +179,13 @@ __all__ = [
     # Depth Data Modules
     "Folder3D",
     "MVTec3D",
+    "ADAM3D",
     # Image Data Modules
+    "BMAD",
     "BTech",
     "Datumaro",
     "Folder",
+    "Kaputt",
     "Kolektor",
     "MPDD",
     "MVTec",  # Include MVTec for backward compatibility
@@ -199,8 +206,10 @@ __all__ = [
     "BTechDataset",
     "DatumaroDataset",
     "FolderDataset",
+    "KaputtDataset",
     "KolektorDataset",
     "MPDDDataset",
+    "ADAM3DDataset",
     "MVTecADDataset",
     "MVTecLOCODataset",
     "TabularDataset",
@@ -210,6 +219,7 @@ __all__ = [
     "ShanghaiTechDataset",
     "UCSDpedDataset",
     "PredictDataset",
+    "BMADDataset",
     # Functions
     "get_datamodule",
     # Exceptions

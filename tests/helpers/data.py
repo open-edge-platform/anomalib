@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2025 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Test Helpers - Dataset."""
@@ -13,6 +13,7 @@ from tempfile import mkdtemp
 
 import cv2
 import numpy as np
+import pandas as pd
 from scipy.io import savemat
 from skimage import img_as_ubyte
 from skimage.io import imsave
@@ -415,12 +416,42 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
         """Generate dummy folder structure for tabular dataset in a temporary directory."""
         self._generate_dummy_folder_dataset()
 
+    def _generate_dummy_bmad_dataset(self) -> None:
+        """Generate dummy BMAD dataset in directory."""
+        dataset_category = "dummy"
+        # train split. Images are in train/good
+        split_path = self.dataset_root / dataset_category / "train" / self.normal_category
+        for i in range(self.num_train):
+            label = LabelName.NORMAL
+            image_filename = split_path / f"{i:03}.png"
+            self.image_generator.generate_image(label=label, image_filename=image_filename)
+        # Good images are in subset/normal_category/img/i000.png
+        for split in ("test", "valid"):
+            split_path = self.dataset_root / dataset_category / split / self.normal_category / "img"
+            for i in range(self.num_test):
+                label = LabelName.NORMAL
+                image_filename = split_path / f"{i:03}.png"
+                self.image_generator.generate_image(label=label, image_filename=image_filename)
+        # Abnormal images are in subset/abnormal_category/img/i000.png
+        # and subset/abnormal_category/label/i000.png
+        for split in ("test", "valid"):
+            split_path = self.dataset_root / dataset_category / split / self.abnormal_category
+            for i in range(self.num_test):
+                label = LabelName.ABNORMAL
+                image_filename = split_path / "img" / f"{i:03}.png"
+                mask_filename = split_path / "label" / f"{i:03}.png"
+                self.image_generator.generate_image(
+                    label=label,
+                    image_filename=image_filename,
+                    mask_filename=mask_filename,
+                )
+
     def _generate_dummy_btech_dataset(self) -> None:
         """Generate dummy BeanTech dataset in directory using the same convention as BeanTech AD."""
         # BeanTech AD follows the same convention as MVTec AD.
         self._generate_dummy_mvtecad_dataset(normal_dir="ok", abnormal_dir="ko", mask_suffix="")
 
-    def _generate_dummy_mvtec_3d_dataset(self) -> None:
+    def _generate_dummy_mvtec_3d_dataset(self, ground_truth_dir: str = "gt") -> None:
         """Generate dummy MVTec 3D AD dataset in a temporary directory using the same convention as MVTec AD."""
         # MVTec 3D AD has multiple subcategories within the dataset.
         dataset_category = "dummy"
@@ -444,15 +475,19 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
                 image, mask = self.image_generator.generate_image(label=label)
 
                 # Create rgb, xyz, and gt filenames.
-                for directory in ("rgb", "xyz", "gt"):
+                for directory in ("rgb", "xyz", ground_truth_dir):
                     extension = ".png" if directory == "gt" else ".tiff" if directory == "xyz" else ".png"
                     filename = test_path / category / directory / f"{i:03}{extension}"
 
                     # Save image or mask.
-                    if directory == "gt":
+                    if directory == ground_truth_dir:
                         self.image_generator.save_image(filename=filename, image=img_as_ubyte(mask))
                     else:
                         self.image_generator.save_image(filename=filename, image=image)
+
+    def _generate_dummy_adam_3d_dataset(self) -> None:
+        """Generates dummy 3D-ADAM dataset in a temporary directory using the same convention as 3D-ADAM."""
+        self._generate_dummy_mvtec_3d_dataset(ground_truth_dir="ground_truth")
 
     def _generate_dummy_mvtec_loco_dataset(self) -> None:
         """Generates dummy MVTec LOCO AD dataset in a temporary directory using the same convention as MVTec LOCO AD."""
@@ -651,6 +686,147 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
         # The only difference is that the root directory has a subdirectory called "visa_pytorch".
         self.dataset_root = self.dataset_root.parent / "visa_pytorch"
         self._generate_dummy_mvtecad_dataset(normal_dir="good", abnormal_dir="bad", image_extension=".jpg")
+
+    def _generate_dummy_kaputt_dataset(self) -> None:
+        """Generate dummy Kaputt dataset with Parquet metadata files.
+
+        The Kaputt dataset structure matches the real Kaputt parquet schema:
+        - Query parquets have columns: capture_id, item_material, item_identifier,
+          defect, major_defect, defect_types, query_image, query_crop, query_mask
+        - Reference parquets have columns: item_identifier, reference_image,
+          reference_crop, reference_mask
+        - Image/crop/mask directories:
+            query-image/data/<split>/query-data/image/
+            query-crop/data/<split>/query-data/crop/
+            query-mask/data/<split>/query-data/mask/
+            reference-image/data/<split>/reference-data/image/
+            reference-crop/data/<split>/reference-data/crop/
+            reference-mask/data/<split>/reference-data/mask/
+        """
+        # Splits to generate
+        splits = ["train", "validation", "test"]
+
+        for split in splits:
+            query_samples = []
+            reference_samples = []
+
+            # Generate normal query images
+            for i in range(self.num_train if split == "train" else self.num_test):
+                capture_id = f"normal_{split}_{i:03d}"
+                item_identifier = f"item_{split}_{i:03d}"
+
+                # Relative paths as stored in real parquets
+                rel_image = f"data/{split}/query-data/image/{capture_id}.jpg"
+                rel_crop = f"data/{split}/query-data/crop/{capture_id}.jpg"
+                rel_mask = f"data/{split}/query-data/mask/{capture_id}.png"
+
+                # Create full-size image
+                image_path = self.dataset_root / "query-image" / rel_image
+                self.image_generator.generate_image(
+                    label=LabelName.NORMAL,
+                    image_filename=image_path,
+                )
+
+                # Create crop image (same content for dummy)
+                crop_path = self.dataset_root / "query-crop" / rel_crop
+                self.image_generator.generate_image(
+                    label=LabelName.NORMAL,
+                    image_filename=crop_path,
+                )
+
+                query_samples.append({
+                    "capture_id": capture_id,
+                    "item_material": "cardboard",
+                    "item_identifier": item_identifier,
+                    "defect": False,
+                    "major_defect": False,
+                    "defect_types": "",
+                    "query_image": rel_image,
+                    "query_crop": rel_crop,
+                    "query_mask": rel_mask,
+                })
+
+            # Generate abnormal query images (only for validation and test)
+            if split in {"validation", "test"}:
+                for i in range(self.num_test):
+                    capture_id = f"abnormal_{split}_{i:03d}"
+                    item_identifier = f"item_abn_{split}_{i:03d}"
+
+                    # Relative paths as stored in real parquets
+                    rel_image = f"data/{split}/query-data/image/{capture_id}.jpg"
+                    rel_crop = f"data/{split}/query-data/crop/{capture_id}.jpg"
+                    rel_mask = f"data/{split}/query-data/mask/{capture_id}.png"
+
+                    # Create full-size image
+                    image_path = self.dataset_root / "query-image" / rel_image
+                    mask_path = self.dataset_root / "query-mask" / rel_mask
+                    self.image_generator.generate_image(
+                        label=LabelName.ABNORMAL,
+                        image_filename=image_path,
+                        mask_filename=mask_path,
+                    )
+
+                    # Create crop image
+                    crop_path = self.dataset_root / "query-crop" / rel_crop
+                    crop_mask_path = self.dataset_root / "query-mask" / rel_mask
+                    self.image_generator.generate_image(
+                        label=LabelName.ABNORMAL,
+                        image_filename=crop_path,
+                        mask_filename=crop_mask_path,
+                    )
+
+                    query_samples.append({
+                        "capture_id": capture_id,
+                        "item_material": "plastic",
+                        "item_identifier": item_identifier,
+                        "defect": True,
+                        "major_defect": True,
+                        "defect_types": "damage",
+                        "query_image": rel_image,
+                        "query_crop": rel_crop,
+                        "query_mask": rel_mask,
+                    })
+
+            # Generate reference images (always normal)
+            for i in range(self.num_train if split == "train" else self.num_test):
+                ref_id = f"ref_{split}_{i:03d}"
+                item_identifier = f"item_{split}_{i:03d}"
+
+                # Relative paths as stored in real parquets
+                rel_image = f"data/{split}/reference-data/image/{ref_id}.jpg"
+                rel_crop = f"data/{split}/reference-data/crop/{ref_id}.jpg"
+                rel_mask = f"data/{split}/reference-data/mask/{ref_id}.png"
+
+                # Create full-size image
+                image_path = self.dataset_root / "reference-image" / rel_image
+                self.image_generator.generate_image(
+                    label=LabelName.NORMAL,
+                    image_filename=image_path,
+                )
+
+                # Create crop image
+                crop_path = self.dataset_root / "reference-crop" / rel_crop
+                self.image_generator.generate_image(
+                    label=LabelName.NORMAL,
+                    image_filename=crop_path,
+                )
+
+                reference_samples.append({
+                    "item_identifier": item_identifier,
+                    "reference_image": rel_image,
+                    "reference_crop": rel_crop,
+                    "reference_mask": rel_mask,
+                })
+
+            # Create parquet files
+            datasets_dir = self.dataset_root / "datasets"
+            datasets_dir.mkdir(parents=True, exist_ok=True)
+
+            query_df = pd.DataFrame(query_samples)
+            query_df.to_parquet(datasets_dir / f"query-{split}.parquet", index=False)
+
+            ref_df = pd.DataFrame(reference_samples)
+            ref_df.to_parquet(datasets_dir / f"reference-{split}.parquet", index=False)
 
 
 class DummyVideoDatasetGenerator(DummyDatasetGenerator):

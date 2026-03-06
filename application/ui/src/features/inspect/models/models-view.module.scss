@@ -1,0 +1,73 @@
+.modelName {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1 1 auto;
+    display: block;
+}
+
+.modelTimestamp {
+    font-size: 0.85rem;
+    color: var(--spectrum-global-color-gray-500);
+}
+
+.modelSize {
+    font-size: 0.85rem;
+    color: var(--spectrum-global-color-gray-700);
+}
+
+.badge {
+    line-height: calc(var(--spectrum-global-dimension-size-175));
+    padding-inline: var(--spectrum-global-dimension-static-size-75);
+    display: inline-flex;
+    align-items: center;
+    padding: var(--spectrum-global-dimension-static-size-25) var(--spectrum-global-dimension-static-size-75);
+    gap: var(--spectrum-global-dimension-static-size-25);
+    svg {
+        padding-inline-start: var(--spectrum-global-dimension-size-25) !important;
+        padding-inline-end: var(--spectrum-global-dimension-size-25) !important;
+    }
+}
+
+.badge[class*='spectrum-Badge--info'] {
+    gap: var(--spectrum-global-dimension-static-size-50);
+    padding: var(--spectrum-global-dimension-static-size-50) var(--spectrum-global-dimension-static-size-75);
+    background-color: var(--spectrum-accent-background-color-default) !important;
+    color: var(--spectrum-global-color-gray-50) !important;
+}
+
+.table :global([role='row'][aria-selected='true']) {
+    position: relative;
+
+    &::before {
+        content: '';
+        position: absolute;
+        inset-block: 0;
+        inset-inline-start: 0;
+        width: var(--spectrum-global-dimension-static-size-50);
+        background-color: var(--spectrum-accent-background-color-default);
+        pointer-events: none;
+        z-index: 2;
+    }
+}
+
+.table :global([class*='spectrum-Table']) {
+    --spectrum-table-row-background-color-selected: var(--selection-dark-blue);
+    --spectrum-table-background-color: var(--spectrum-global-color-gray-75);
+    --spectrum-table-row-background-color-selected-hover: var(--spectrum-table-row-background-color-hover);
+    --spectrum-table-row-background-color-hover: var(--spectrum-global-color-gray-300);
+    --spectrum-table-row-background-color: var(--spectrum-global-color-gray-75);
+    --spectrum-table-row-border-color-selected: var(
+        --spectrum-table-row-border-color,
+        var(--spectrum-global-color-gray-200)
+    );
+}
+
+.table :global([class*='spectrum-Table-row'][aria-selected='true'])::after {
+    box-shadow: inset 0 -1px 0 0 var(--spectrum-table-cell-border-color, var(--spectrum-global-color-gray-200));
+}
+
+.table :global([class*='spectrum-Table-head']) {
+    background-color: var(--spectrum-global-color-gray-200);
+}

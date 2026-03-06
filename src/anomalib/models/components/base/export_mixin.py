@@ -50,7 +50,7 @@ from torch import nn
 from torchmetrics import Metric
 
 from anomalib import TaskType
-from anomalib.data import AnomalibDataModule
+from anomalib.data import AnomalibDataModule, ImageBatch
 from anomalib.deploy.export import CompressionType, ExportType
 
 if TYPE_CHECKING:
@@ -179,6 +179,7 @@ class ExportMixin:
             dynamic_axes=kwargs.pop("dynamic_axes", dynamic_axes),
             input_names=kwargs.pop("input_names", ["input"]),
             output_names=kwargs.pop("output_names", output_names),
+            dynamo=kwargs.pop("dynamo", False),  # Dynamo is changed to True by default in torch 2.9
             **kwargs,
         )
 
@@ -193,6 +194,7 @@ class ExportMixin:
         datamodule: AnomalibDataModule | None = None,
         metric: Metric | None = None,
         task: TaskType | None = None,
+        max_drop: float = 0.01,
         ov_kwargs: dict[str, Any] | None = None,
         onnx_kwargs: dict[str, Any] | None = None,
     ) -> Path:
@@ -209,9 +211,14 @@ class ExportMixin:
             datamodule (AnomalibDataModule | None): DataModule for quantization.
                 Required for ``INT8_PTQ`` and ``INT8_ACQ``. Defaults to ``None``
             metric (Metric | None): Metric for accuracy-aware quantization.
-                Required for ``INT8_ACQ``. Defaults to ``None``
+                Used for ``INT8_ACQ``. If not provided, a default F1Score at image level
+                will be used. Defaults to ``None``
             task (TaskType | None): Task type (classification/segmentation).
                 Defaults to ``None``
+            max_drop (float): Maximum acceptable accuracy drop during quantization.
+                Only used for ``INT8_ACQ`` compression. Value should be between 0 and 1
+                (e.g., 0.01 means 1% accuracy drop is acceptable).
+                Defaults to ``0.01``
             ov_kwargs (dict[str, Any] | None): OpenVINO model optimizer arguments.
                 Defaults to ``None``
             onnx_kwargs (dict[str, Any] | None): Additional arguments to pass to torch.onnx.export
@@ -257,7 +264,7 @@ class ExportMixin:
 
             model = ov.convert_model(model_path, **(ov_kwargs or {}))
             if compression_type and compression_type != CompressionType.FP16:
-                model = self._compress_ov_model(model, compression_type, datamodule, metric, task)
+                model = self._compress_ov_model(model, compression_type, datamodule, metric, task, max_drop)
 
             # fp16 compression is enabled by default
             compress_to_fp16 = compression_type == CompressionType.FP16
@@ -272,6 +279,7 @@ class ExportMixin:
         datamodule: AnomalibDataModule | None = None,
         metric: Metric | None = None,
         task: TaskType | None = None,
+        max_drop: float = 0.01,
     ) -> "CompiledModel":
         """Compress OpenVINO model using NNCF.
 
@@ -285,6 +293,8 @@ class ExportMixin:
                 Required for ``INT8_ACQ``. Defaults to ``None``
             task (TaskType | None): Task type (classification/segmentation).
                 Defaults to ``None``
+            max_drop (float): Maximum acceptable accuracy drop during quantization.
+                Only used for ``INT8_ACQ``. Defaults to ``0.01``
 
         Returns:
             CompiledModel: Compressed OpenVINO model
@@ -304,7 +314,7 @@ class ExportMixin:
         elif compression_type == CompressionType.INT8_PTQ:
             model = self._post_training_quantization_ov(model, datamodule)
         elif compression_type == CompressionType.INT8_ACQ:
-            model = self._accuracy_control_quantization_ov(model, datamodule, metric, task)
+            model = self._accuracy_control_quantization_ov(model, datamodule, metric, task, max_drop)
         else:
             msg = f"Unrecognized compression type: {compression_type}"
             raise ValueError(msg)
@@ -356,6 +366,7 @@ class ExportMixin:
         datamodule: AnomalibDataModule | None = None,
         metric: Metric | None = None,
         task: TaskType | None = None,
+        max_drop: float = 0.01,
     ) -> "CompiledModel":
         """Apply accuracy-aware quantization to OpenVINO model.
 
@@ -366,15 +377,19 @@ class ExportMixin:
                 Defaults to ``None``
             metric (Metric | None): Metric to measure accuracy during quantization.
                 Higher values should indicate better performance.
+                If not provided, defaults to F1Score at image level.
                 Defaults to ``None``
             task (TaskType | None): Task type (classification/segmentation).
                 Defaults to ``None``
+            max_drop (float): Maximum acceptable accuracy drop during quantization.
+                Value should be between 0 and 1 (e.g., 0.01 means 1% drop is acceptable).
+                Defaults to ``0.01``
 
         Returns:
             CompiledModel: Quantized OpenVINO model
 
         Raises:
-            ValueError: If datamodule or metric is not provided
+            ValueError: If datamodule is not provided, or if max_drop is out of valid range
         """
         import nncf
 
@@ -386,9 +401,25 @@ class ExportMixin:
         # if task is not provided, use the task from the datamodule
         task = task or datamodule.task
 
-        if metric is None:
-            msg = "Metric must be provided for OpenVINO INT8_ACQ compression"
+        # Validate max_drop parameter
+        if not 0 <= max_drop <= 1:
+            msg = f"max_drop must be between 0 and 1, got {max_drop}"
             raise ValueError(msg)
+        if max_drop > 0.1:
+            logger.warning(
+                f"max_drop={max_drop} is a large value (>10%% accuracy drop). "
+                "Typical values are in the 0.01-0.03 range (1-3%%).",
+            )
+
+        # Set default metric if not provided
+        if metric is None:
+            from anomalib.metrics import F1Score
+
+            metric = F1Score(fields=["pred_label", "gt_label"])
+            logger.info(
+                "No metric provided for INT8_ACQ quantization. "
+                "Using default: F1Score at image level (fields=['pred_label', 'gt_label']).",
+            )
 
         model_input = model.input(0)
 
@@ -408,12 +439,32 @@ class ExportMixin:
         # validation function to evaluate the quality loss after quantization
         def val_fn(nncf_model: "CompiledModel", validation_data: Iterable) -> float:
             for batch in validation_data:
-                preds = torch.from_numpy(nncf_model(batch["image"])[0])
-                target = batch["label"] if task == TaskType.CLASSIFICATION else batch["mask"][:, None, :, :]
-                metric.update(preds, target)
+                ov_model_output = nncf_model(batch["image"])
+                result_batch = ImageBatch(
+                    image=batch["image"],
+                    # pred_score must be same size as gt_label for metrics like AUROC
+                    pred_score=torch.from_numpy(ov_model_output["pred_score"]).squeeze(),
+                    pred_label=torch.from_numpy(ov_model_output["pred_label"]).squeeze(),
+                    gt_label=batch["gt_label"],
+                    anomaly_map=torch.from_numpy(ov_model_output["anomaly_map"])
+                    if "anomaly_map" in ov_model_output
+                    else None,
+                    pred_mask=torch.from_numpy(ov_model_output["pred_mask"])
+                    if "pred_mask" in ov_model_output
+                    else None,
+                    gt_mask=batch["gt_mask"][:, None, :, :] if "gt_mask" in batch else None,
+                )
+                metric.update(result_batch)
+
             return metric.compute()
 
-        return nncf.quantize_with_accuracy_control(model, calibration_dataset, validation_dataset, val_fn)
+        return nncf.quantize_with_accuracy_control(
+            model,
+            calibration_dataset,
+            validation_dataset,
+            val_fn,
+            max_drop=max_drop,
+        )
 
 
 def _create_export_root(export_root: str | Path, export_type: ExportType) -> Path:

@@ -94,24 +94,26 @@ runs:
   steps:
     # Set up Python with pip caching
     - name: Set up Python environment
-      uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
       with:
         python-version: ${{ inputs.python-version }}
         cache: ${{ inputs.enable-cache == 'true' && 'pip' || '' }}
         cache-dependency-path: ${{ inputs.enable-cache == 'true' && 'pyproject.toml' || '' }}
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
 
     # Create and configure virtual environment
     - name: Configure virtual environment
       id: setup-venv
       shell: bash
       run: |
-        # Create isolated test environment
-        python -m venv .venv
+        # Create isolated test environment with uv using the configured Python
+        uv venv --python "$(command -v python)" .venv
         source .venv/bin/activate
-        # Install dependencies with dev extras
-        python -m pip install --upgrade pip
-        pip install ".[dev]"
-        pip install codecov
+        # Install dependencies with dev extras into the uv-managed environment
+        uv pip install ".[dev,cu124]" # TODO(ashwinvaidya17): See issue #3050
+        uv pip install codecov
 
     # Determine which tests to run based on input
     - name: Determine test scope
@@ -144,6 +146,7 @@ runs:
       run: |
         source .venv/bin/activate
         start_time=$(date +%s)
+        set -o pipefail
 
         # Set device-specific pytest arguments
         if [ "$INPUTS_DEVICE" = "cpu" ]; then
@@ -162,7 +165,7 @@ runs:
           --cov=src \
           --cov-report=xml \
           --cov-report=term-missing \
-          ${marker}
+          ${marker} | tee pytest_output.log
 
         test_exit_code=${PIPESTATUS[0]}
 
@@ -186,7 +189,7 @@ runs:
 
     - name: Upload test results
       if: always() && steps.test-execution.outcome == 'failure'
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
       with:
         name: pytest-results-${{ inputs.test-type }}
         path: pytest_output.log
@@ -224,7 +227,7 @@ runs:
 
       run: |
         source .venv/bin/activate
-        codecov --token "$INPUTS_CODECOV_TOKEN" \
+        uv run codecov --token "$INPUTS_CODECOV_TOKEN" \
                 --file coverage.xml \
                 --flags "$INPUTS_TEST_TYPE_py$INPUTS_PYTHON_VERSION" \
                 --name "$INPUTS_TEST_TYPE tests (Python $INPUTS_PYTHON_VERSION)"

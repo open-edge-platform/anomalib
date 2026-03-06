@@ -10,20 +10,26 @@ The base class is used by both the PyTorch and OpenVINO inferencers to ensure
 a consistent API across different backends.
 """
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import cv2
 import numpy as np
-import torch
 from omegaconf import DictConfig, OmegaConf
 from skimage.morphology import dilation
 from skimage.segmentation import find_boundaries
 
 from anomalib.utils.normalization.min_max import normalize as normalize_min_max
 from anomalib.utils.post_processing import compute_mask
-from anomalib.utils.visualization import ImageResult
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    import torch
+
+    from anomalib.utils.visualization import ImageResult
 
 
 class Inferencer(ABC):

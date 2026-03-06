@@ -1,7 +1,12 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""SuperSimpleNet: Unifying Unsupervised and Supervised Learning for Fast and Reliable Surface Defect Detection.
+"""SuperSimpleNet.
+
+ICPR 2024 -
+SuperSimpleNet: Unifying Unsupervised and Supervised Learning for Fast and Reliable Surface Defect Detection.
+
+JIMS 2025 - No Label Left Behind: A Unified Surface Defect Detection Model for all Supervision Regimes
 
 This module implements the SuperSimpleNet model for surface defect / anomaly detection.
 SuperSimpleNet is a simple yet strong discriminative model consisting of a pretrained feature extractor with upscaling,
@@ -25,8 +30,12 @@ Example:
 
 
 Paper:
-    Title: SuperSimpleNet: Unifying Unsupervised and Supervised Learning for Fast and Reliable Surface Defect Detection.
+    Original: SuperSimpleNet:
+    Unifying Unsupervised and Supervised Learning for Fast and Reliable Surface Defect Detection.
     URL: https://arxiv.org/pdf/2408.03143
+
+    Extension: No label left behind: a unified surface defect detection model for all supervision regimes
+    URL: https://link.springer.com/article/10.1007/s10845-025-02680-8
 
 Notes:
     This implementation supports both unsupervised and supervised setting,
@@ -64,6 +73,7 @@ class Supersimplenet(AnomalibModule):
         backbone (str): backbone name. IMPORTANT! use only backbones with torchvision V1 weights ending on ".tv".
         layers (list[str]): backbone layers utilised
         supervised (bool): whether the model will be trained in supervised mode. False by default (unsupervised).
+        adapt_cls_features (bool): whether to adapt classification features (ICPR - True, JIMS - False (default)).
         pre_processor (PreProcessor | bool, optional): Pre-processor instance or
             flag to use default. Defaults to ``True``.
         post_processor (PostProcessor | bool, optional): Post-processor instance
@@ -80,6 +90,7 @@ class Supersimplenet(AnomalibModule):
         backbone: str = "wide_resnet50_2.tv_in1k",  # IMPORTANT: use .tv weights, not tv2
         layers: list[str] = ["layer2", "layer3"],  # noqa: B006
         supervised: bool = False,
+        adapt_cls_features: bool = False,
         pre_processor: PreProcessor | bool = True,
         post_processor: PostProcessor | bool = True,
         evaluator: Evaluator | bool = True,
@@ -105,6 +116,7 @@ class Supersimplenet(AnomalibModule):
             backbone=backbone,
             layers=layers,
             stop_grad=stop_grad,
+            adapt_cls_features=adapt_cls_features,
         )
         self.loss = SSNLoss()
 

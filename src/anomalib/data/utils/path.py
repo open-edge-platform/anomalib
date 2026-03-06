@@ -103,6 +103,9 @@ def _prepare_files_labels(
     if extensions is None:
         extensions = IMG_EXTENSIONS
 
+    # convert extensions to lowercase for case-insensitive matching
+    extensions = tuple(ext.lower() for ext in extensions)
+
     if isinstance(extensions, str):
         extensions = (extensions,)
 
@@ -110,7 +113,7 @@ def _prepare_files_labels(
         msg = f"All extensions {extensions} must start with the dot"
         raise RuntimeError(msg)
 
-    filenames = [f for f in path.glob("**/*") if f.suffix in extensions and not f.is_dir()]
+    filenames = [f for f in path.glob("**/*") if f.suffix.lower() in extensions and not f.is_dir()]
     # list of files that are in hidden directories or are hidden files themselves
     hidden_files = [f for f in filenames if any(part.startswith(".") for part in f.parts)]
     if hidden_files:

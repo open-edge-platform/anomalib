@@ -1,0 +1,10 @@
+class_path: anomalib.data.ADAM3D
+init_args:
+  root: ./datasets/ADAM3D
+  category: "1m1"
+  train_batch_size: 32
+  eval_batch_size: 32
+  num_workers: 8
+  test_split_mode: from_dir
+  val_split_mode: from_dir
+  seed: null

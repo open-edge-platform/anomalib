@@ -35,8 +35,12 @@
 # - version: Version to release
 # - artifact-name: Name of build artifact
 #
-# Required Secrets:
-# - test-pypi-token: PyPI token for test deployments
+# Note: PyPI publishing uses OIDC (OpenID Connect) authentication.
+# Configure trusted publisher in Test PyPI project settings:
+# - Owner: <your-org>
+# - Repository name: anomalib
+# - Workflow name: release.yaml
+# - Environment name: technical-review
 #
 # Example Usage:
 # 1. Standard RC Process:
@@ -62,12 +66,10 @@ on:
       artifact-name:
         required: true
         type: string
-    secrets:
-      test-pypi-token:
-        required: true
 
 permissions:
   contents: read
+  id-token: write # Required for OIDC authentication with PyPI
 
 jobs:
   technical-review:
@@ -84,40 +86,37 @@ jobs:
           echo "url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >> $GITHUB_OUTPUT
 
       - name: Download build artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8
         with:
           name: ${{ inputs.artifact-name }}
           path: dist
 
       - name: Download test results
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8
         with:
           pattern: "*-test-results"
           merge-multiple: true
           path: test-results
 
       - name: Download security results
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8
         with:
           pattern: "*-security-results"
           merge-multiple: true
           path: security-results
 
       - name: Download quality results
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8
         with:
           pattern: "*-quality-results"
           merge-multiple: true
           path: quality-results
 
       - name: Deploy to Test PyPI
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.test-pypi-token }}
-          TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
-        run: |
-          pip install --upgrade pip twine
-          twine upload dist/*
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          verbose: true
 
       - name: Validate deployment
         id: validate-deployment
@@ -177,7 +176,7 @@ jobs:
           EOF
 
       - name: Upload technical review report
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: technical-review-report
           path: technical-review-report.md
@@ -195,7 +194,7 @@ jobs:
           echo "url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >> $GITHUB_OUTPUT
 
       - name: Download technical review report
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8
         with:
           name: technical-review-report
           path: qa-review
@@ -225,7 +224,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download technical review report
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8
         with:
           name: technical-review-report
 

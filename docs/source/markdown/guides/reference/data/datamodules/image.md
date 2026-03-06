@@ -7,6 +7,13 @@ Image datamodules in Anomalib are designed to handle image-based anomaly detecti
 ```{grid} 3
 :gutter: 2
 
+:::{grid-item-card} BMAD
+:link: anomalib.data.datamodules.image.bmad
+:link-type: doc
+
+BMAD dataset datamodule for medical anomaly detection.
+:::
+
 :::{grid-item-card} BTech
 :link: anomalib.data.datamodules.image.BTech
 :link-type: doc
@@ -33,6 +40,13 @@ Custom folder-based dataset organization.
 :link-type: doc
 
 Surface defect detection in electrical commutators.
+:::
+
+:::{grid-item-card} MPDD
+:link: anomalib.data.datamodules.image.MPDD
+:link-type: doc
+
+Metal parts defect detection dataset for visual defect detection in manufacturing
 :::
 
 :::{grid-item-card} MVTecAD
@@ -89,7 +103,7 @@ Visual Anomaly dataset.
 
 ```{eval-rst}
 .. automodule:: anomalib.data
-   :members: BTech, Datumaro, Folder, Kolektor, MVTecAD, MVTecAD2, MVTecLOCO, RealIAD, Tabular, VAD, Visa
+   :members: BMAD, BTech, Datumaro, Folder, Kolektor, MPDD, MVTecAD, MVTecAD2, MVTecLOCO, RealIAD, Tabular, VAD, Visa
    :undoc-members:
    :show-inheritance:
 ```

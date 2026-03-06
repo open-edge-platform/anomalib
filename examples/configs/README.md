@@ -8,6 +8,7 @@ The configurations in this folder are organized as follows.
 configs/
 ├── data
 │   ├── avenue.yaml
+│   ├── bmad.yaml
 │   ├── btech.yaml
 │   ├── folder_3d.yaml
 │   ├── folder.yaml
@@ -20,6 +21,7 @@ configs/
 │   └── visa.yaml
 └── model
     ├── ai_vad.yaml
+    ├── anomaly_dino.yaml
     ├── cfa.yaml
     ├── cflow.yaml
     ├── csflow.yaml
