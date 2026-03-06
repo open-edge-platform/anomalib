@@ -5,19 +5,25 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import torch
 import torch.nn as nn
 
 from anomalib.data import InferenceBatch
 
-from .teacher import FeatureExtractor
-from .students import FeatureProjectionMLP
-
 from .anomaly_map import L2BTAnomalyMapGenerator
+from .students import FeatureProjectionMLP
+from .teacher import FeatureExtractor
 
 
 class L2BTModel(nn.Module):
-    """PyTorch implementation of L2BT (teacher + two students)."""
+    """PyTorch implementation of L2BT (teacher + two students).
+
+    This class now supports both:
+    - training from scratch inside anomalib
+    - inference with optional loading of pre-trained student checkpoints
+    """
 
     def __init__(
         self,
@@ -34,45 +40,36 @@ class L2BTModel(nn.Module):
         blur_repeats_l: int = 5,
         blur_repeats_u: int = 3,
         topk_ratio: float = 0.001,
+        load_pretrained: bool | None = None,
+        strict_checkpoint_load: bool = True,
     ) -> None:
         super().__init__()
 
         self.layers = list(layers)
+        self.checkpoint_folder = checkpoint_folder
+        self.class_name = class_name
+        self.label = label
+        self.epochs_no = epochs_no
+        self.batch_size = batch_size
+        self.load_pretrained = load_pretrained
+        self.strict_checkpoint_load = strict_checkpoint_load
+        self.cos_sim = nn.CosineSimilarity(dim=-1, eps=1e-6)
 
-        # Teacher (frozen)
+        # Teacher is always frozen, exactly as in the original training code.
         self.teacher = FeatureExtractor(layers=self.layers).eval()
-        for p in self.teacher.parameters():
-            p.requires_grad = False
+        for param in self.teacher.parameters():
+            param.requires_grad = False
 
-        # Students
+        # Students are trainable by default. This is required for anomalib training.
         self.backward_net = FeatureProjectionMLP(
             in_features=self.teacher.embed_dim,
             out_features=self.teacher.embed_dim,
-        ).eval()
+        )
         self.forward_net = FeatureProjectionMLP(
             in_features=self.teacher.embed_dim,
             out_features=self.teacher.embed_dim,
-        ).eval()
-
-        for p in self.backward_net.parameters():
-            p.requires_grad = False
-        for p in self.forward_net.parameters():
-            p.requires_grad = False
-
-        # Load checkpoints (same naming as the original script)
-        forward_net_path = (
-            f"{checkpoint_folder}/{class_name}/"
-            f"forward_net_{label}_{class_name}_{epochs_no}ep_{batch_size}bs.pth"
-        )
-        backward_net_path = (
-            f"{checkpoint_folder}/{class_name}/"
-            f"backward_net_{label}_{class_name}_{epochs_no}ep_{batch_size}bs.pth"
         )
 
-        self.forward_net.load_state_dict(torch.load(forward_net_path, weights_only=False))
-        self.backward_net.load_state_dict(torch.load(backward_net_path, weights_only=False))
-
-        # Anomaly map generator (encapsulates blur + topk score)
         self.anomaly_map_generator = L2BTAnomalyMapGenerator(
             patch_size=int(self.teacher.patch_size),
             blur_w_l=blur_w_l,
@@ -84,17 +81,102 @@ class L2BTModel(nn.Module):
             topk_ratio=topk_ratio,
         )
 
+        self._maybe_load_students()
+
+    def _checkpoint_paths(self) -> tuple[Path, Path]:
+        checkpoint_dir = Path(self.checkpoint_folder) / self.class_name
+        forward_path = checkpoint_dir / (
+            f"forward_net_{self.label}_{self.class_name}_{self.epochs_no}ep_{self.batch_size}bs.pth"
+        )
+        backward_path = checkpoint_dir / (
+            f"backward_net_{self.label}_{self.class_name}_{self.epochs_no}ep_{self.batch_size}bs.pth"
+        )
+        return forward_path, backward_path
+
+    def _maybe_load_students(self) -> None:
+        forward_path, backward_path = self._checkpoint_paths()
+        checkpoints_exist = forward_path.exists() and backward_path.exists()
+
+        should_load = self.load_pretrained
+        if should_load is None:
+            should_load = checkpoints_exist
+
+        if not should_load:
+            return
+
+        if not checkpoints_exist:
+            raise FileNotFoundError(
+                "Requested loading pre-trained L2BT checkpoints, but at least one file was not found. "
+                f"Expected: {forward_path} and {backward_path}"
+            )
+
+        self.forward_net.load_state_dict(
+            torch.load(forward_path, map_location="cpu", weights_only=False),
+            strict=self.strict_checkpoint_load,
+        )
+        self.backward_net.load_state_dict(
+            torch.load(backward_path, map_location="cpu", weights_only=False),
+            strict=self.strict_checkpoint_load,
+        )
+
     @torch.no_grad()
-    def forward(self, images: torch.Tensor) -> InferenceBatch:
-        """Return Anomalib InferenceBatch(pred_score, anomaly_map)."""
+    def extract_teacher_features(self, images: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Extract frozen teacher features for the two selected ViT layers."""
         if images.ndim != 4:
             raise ValueError(f"Expected images with shape (B,C,H,W), got {tuple(images.shape)}")
-
-        output_size = images.shape[-2:]
-
         middle_patch, last_patch = self.teacher(images)
+        return middle_patch, last_patch
+
+    def predict_student_features(
+        self,
+        middle_patch: torch.Tensor,
+        last_patch: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Predict the cross-layer mappings learned by the two student MLPs."""
         predicted_middle_patch = self.backward_net(last_patch)
         predicted_last_patch = self.forward_net(middle_patch)
+        return predicted_middle_patch, predicted_last_patch
+
+    def compute_losses(
+        self,
+        middle_patch: torch.Tensor,
+        last_patch: torch.Tensor,
+        predicted_middle_patch: torch.Tensor,
+        predicted_last_patch: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Return total loss plus the two directional losses used in the original code."""
+        loss_middle = 1 - self.cos_sim(predicted_middle_patch, middle_patch).mean()
+        loss_last = 1 - self.cos_sim(predicted_last_patch, last_patch).mean()
+        loss = loss_middle + loss_last
+        return loss, loss_middle, loss_last
+
+    def training_forward(self, images: torch.Tensor) -> dict[str, torch.Tensor]:
+        """Forward pass used during training inside anomalib."""
+        middle_patch, last_patch = self.extract_teacher_features(images)
+        predicted_middle_patch, predicted_last_patch = self.predict_student_features(middle_patch, last_patch)
+        loss, loss_middle, loss_last = self.compute_losses(
+            middle_patch=middle_patch,
+            last_patch=last_patch,
+            predicted_middle_patch=predicted_middle_patch,
+            predicted_last_patch=predicted_last_patch,
+        )
+        return {
+            "loss": loss,
+            "loss_middle": loss_middle,
+            "loss_last": loss_last,
+            "middle_patch": middle_patch,
+            "last_patch": last_patch,
+            "predicted_middle_patch": predicted_middle_patch,
+            "predicted_last_patch": predicted_last_patch,
+        }
+
+    @torch.no_grad()
+    def forward(self, images: torch.Tensor) -> InferenceBatch:
+        """Return anomalib InferenceBatch(pred_score, anomaly_map)."""
+        output_size = images.shape[-2:]
+
+        middle_patch, last_patch = self.extract_teacher_features(images)
+        predicted_middle_patch, predicted_last_patch = self.predict_student_features(middle_patch, last_patch)
 
         anomaly_map, pred_score = self.anomaly_map_generator(
             middle_patch=middle_patch,
