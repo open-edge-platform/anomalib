@@ -118,8 +118,8 @@ class _F1Max(Metric):
         """Update the precision-recall curve with new predictions and targets.
 
         Args:
-            preds (torch.Tensor): Predicted scores or probabilities. If passed as boolean as with pred_label
-                or gt_label, it is converted to float.
+            preds (torch.Tensor): Predicted scores or probabilities. If passed as boolean (e.g., from pred_label),
+                it is converted to float.
             target (torch.Tensor): Ground truth binary labels.
             *args: Additional positional arguments (unused).
             **kwargs: Additional keyword arguments (unused).
