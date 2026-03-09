@@ -152,10 +152,19 @@ class _F1AdaptiveThreshold(BinaryPrecisionRecallCurve, Threshold):
             torch.Tensor: Optimal threshold value.
 
         Warning:
-            If the validation set contains no anomalous samples, the threshold
-            defaults to the maximum anomaly score so that normal images are not
-            flagged. If the validation set contains no normal samples, the
-            threshold defaults to the minimum anomaly score.
+            The fallback behavior when a class is missing depends on whether
+            raw predictions are available or binned statistics are used:
+
+            * When raw anomaly scores are available (``self.thresholds`` is
+              ``None``), if the validation set contains no anomalous samples,
+              the threshold defaults to the maximum anomaly score so that
+              normal images are not flagged. If the validation set contains no
+              normal samples, the threshold defaults to the minimum anomaly
+              score.
+            * When only binned statistics are available (``self.thresholds`` is
+              not ``None``), raw predictions are not retained and the metric
+              instead falls back to the highest or lowest candidate threshold,
+              respectively. See :meth:`_get_max_pred` and :meth:`_get_min_pred`.
         """
         precision: torch.Tensor
         recall: torch.Tensor
