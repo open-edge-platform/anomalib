@@ -104,6 +104,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
+WORKDIR /app/application/backend
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --extra cu124
+
 #------------------------------------------
 # Anomalib Studio CUDA intermediate stage to cleanup CUDA non-distributable dependencies
 #------------------------------------------
@@ -112,9 +117,13 @@ FROM anomalib-studio-cuda-base AS anomalib-studio-cuda-cleanup
 # CUDA EULA Compliance Cleanup
 RUN echo "Removing non-redistributable CUDA components per NVIDIA EULA..." && \
     # Define search paths including venv
-    SEARCH_PATHS="/usr /opt ${PYTHONPATH}" && \
-    # Add any detected venvs
-    for venv in $(find ${PYTHONPATH} -name "site-packages" -type d 2>/dev/null | sed 's|/lib/python[0-9.]*/site-packages||' | sort -u); do \
+    SEARCH_PATHS="/usr /opt /app/.venv" && \
+     # Include PYTHONPATH in search paths if it is set
+    if [ -n "${PYTHONPATH}" ]; then \
+    SEARCH_PATHS="$SEARCH_PATHS ${PYTHONPATH}"; \
+    fi && \
+    # Add any detected venvs from /app/.venv and PYTHONPATH (if set)
+    for venv in $(find /app/.venv ${PYTHONPATH:+${PYTHONPATH}} -name "site-packages" -type d 2>/dev/null | sed 's|/lib/python[0-9.]*/site-packages||' | sort -u); do \
     if [ -d "$venv" ]; then \
     SEARCH_PATHS="$SEARCH_PATHS $venv"; \
     fi; \
@@ -182,15 +191,9 @@ RUN echo "Removing non-redistributable CUDA components per NVIDIA EULA..." && \
 #------------------------------------------
 # Anomalib Studio CUDA version
 #------------------------------------------
-FROM anomalib-studio-base AS anomalib-studio-cuda
-
-COPY --link --from=anomalib-studio-cuda-cleanup --chown=${UID} /usr/local /usr/local
-COPY --link --from=anomalib-studio-cuda-cleanup --chown=${UID} ${PYTHONPATH} ${PYTHONPATH}
+FROM anomalib-studio-cuda-cleanup AS anomalib-studio-cuda
 
 WORKDIR /app/application/backend
-
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --extra cu124
 
 EXPOSE 8000
 
