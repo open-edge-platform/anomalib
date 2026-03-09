@@ -242,7 +242,8 @@ class TestTrainingService:
                 cls,
                 model,
                 synchronization_parameters: ProgressSyncParams,
-                device=None,
+                device_type=None,
+                device_index=None,
                 dataset_root=None,
                 max_epochs=1,
             ):

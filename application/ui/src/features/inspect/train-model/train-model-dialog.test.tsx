@@ -24,7 +24,19 @@ interface MockDeviceInfo {
 
 const DEFAULT_MOCK_DEVICES: MockDeviceInfo[] = [
     { type: 'cpu', name: 'CPU', memory: null, index: null },
-    { type: 'cuda', name: 'NVIDIA GPU', memory: 8589934592, index: 0 },
+    { type: 'cuda', name: 'NVIDIA RTX 4090', memory: 8589934592, index: 0 },
+];
+
+const MULTI_GPU_DEVICES: MockDeviceInfo[] = [
+    { type: 'cpu', name: 'CPU', memory: null, index: null },
+    { type: 'cuda', name: 'NVIDIA RTX 4090', memory: 8589934592, index: 0 },
+    { type: 'cuda', name: 'NVIDIA RTX 3090', memory: 8589934592, index: 1 },
+];
+
+const MULTI_XPU_DEVICES: MockDeviceInfo[] = [
+    { type: 'cpu', name: 'CPU', memory: null, index: null },
+    { type: 'xpu', name: 'Intel(R) Graphics', memory: 30673268736, index: 0 },
+    { type: 'xpu', name: 'Intel(R) Graphics', memory: 30673268736, index: 1 },
 ];
 
 describe('TrainModelDialog', () => {
@@ -112,6 +124,40 @@ describe('TrainModelDialog', () => {
             await waitFor(() => {
                 expect(closeMock).toHaveBeenCalled();
             });
+        });
+    });
+
+    describe('Multi-device support', () => {
+        it('shows distinct entries for multiple CUDA devices', async () => {
+            renderDialog({ devices: MULTI_GPU_DEVICES });
+
+            expect(await screen.findByText('Train model')).toBeVisible();
+
+            // Both GPUs should appear with their name and index
+            // Picker renders both <option> and visible text, so use getAllByText
+            expect(screen.getAllByText('NVIDIA RTX 4090 [0]').length).toBeGreaterThanOrEqual(1);
+            expect(screen.getAllByText('NVIDIA RTX 3090 [1]').length).toBeGreaterThanOrEqual(1);
+        });
+
+        it('shows distinct entries for multiple XPU devices with same name', async () => {
+            renderDialog({ devices: MULTI_XPU_DEVICES });
+
+            expect(await screen.findByText('Train model')).toBeVisible();
+
+            // Both XPUs should appear with index to distinguish them
+            expect(screen.getAllByText('Intel(R) Graphics [0]').length).toBeGreaterThanOrEqual(1);
+            expect(screen.getAllByText('Intel(R) Graphics [1]').length).toBeGreaterThanOrEqual(1);
+        });
+
+        it('shows CPU without index suffix', async () => {
+            renderDialog();
+
+            expect(await screen.findByText('Train model')).toBeVisible();
+
+            // CPU has index=null, so no [index] suffix
+            // NVIDIA RTX 4090 should show with index
+            expect(screen.getAllByText('CPU').length).toBeGreaterThanOrEqual(1);
+            expect(screen.getAllByText('NVIDIA RTX 4090 [0]').length).toBeGreaterThanOrEqual(1);
         });
     });
 });

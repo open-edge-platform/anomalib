@@ -19,4 +19,4 @@ sink/
 
 .idea
 .DS_Store
-.inspect.db
+.anomalib-studio.db

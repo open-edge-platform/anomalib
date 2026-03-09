@@ -19,6 +19,7 @@ from anomalib.data import AnomalibDataModule, Folder
 from anomalib.deploy import CompressionType, ExportType, OpenVINOInferencer
 from anomalib.engine import Engine
 from anomalib.models import get_model
+from anomalib.utils.path import resolve_versioned_path
 from loguru import logger
 from PIL import Image
 from sqlalchemy.ext.asyncio.session import AsyncSession
@@ -34,7 +35,7 @@ from services.dataset_snapshot_service import DatasetSnapshotService
 from services.exceptions import DeviceNotFoundError, ResourceType
 from services.system_service import SystemService
 
-DEFAULT_DEVICE = "AUTO"
+DEFAULT_DEVICE = "CPU"
 
 
 @dataclass
@@ -45,7 +46,9 @@ class LoadedModel:
     device: str | None = None
 
     def __post_init__(self):
-        self.device = self.device or DEFAULT_DEVICE
+        if not self.device:
+            logger.warning(f"No inference device set for model '{self.name}'; falling back to {DEFAULT_DEVICE}")
+            self.device = DEFAULT_DEVICE
 
 
 class ModelService:
@@ -185,6 +188,9 @@ class ModelService:
             / "lightning"
             / "model.ckpt"
         )
+
+        # Resolve 'latest' to actual version dir to avoid traversing junction (e.g. WinError 448 on Windows)
+        ckpt_path = resolve_versioned_path(ckpt_path)
 
         if not ckpt_path.exists():
             # Try alternative path for older structure or if title case isn't used

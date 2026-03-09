@@ -1,5 +1,7 @@
 import { createContext, Dispatch, ReactNode, SetStateAction, useCallback, useContext, useState } from 'react';
 
+import { getApiUrl } from '../../api/client';
+
 export type StreamConnectionStatus = 'idle' | 'connecting' | 'connected' | 'failed' | 'disconnected';
 
 export type StreamConnectionState = null | {
@@ -20,7 +22,7 @@ const useStreamConnectionState = () => {
 
     const start = useCallback(async () => {
         setStatus('connecting');
-        setStreamUrl(`${STREAM_ENDPOINT}?ts=${Date.now()}`);
+        setStreamUrl(`${getApiUrl(STREAM_ENDPOINT)}?ts=${Date.now()}`);
     }, []);
 
     const stop = useCallback(async () => {

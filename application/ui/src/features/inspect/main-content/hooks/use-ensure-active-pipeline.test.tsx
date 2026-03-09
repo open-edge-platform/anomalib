@@ -25,7 +25,9 @@ describe('useEnsureActivePipeline', () => {
     describe('Active Pipeline Detection', () => {
         it('returns hasActiveProject as true when there is an active pipeline', async () => {
             server.use(
-                http.get('/api/active-pipeline', () => HttpResponse.json({ project_id: mockProjectId, status: 'idle' }))
+                http.get('/api/active-pipeline', () =>
+                    HttpResponse.json({ project_id: mockProjectId, status: 'idle', inference_device: 'CPU' })
+                )
             );
 
             const { result } = renderHookWithProviders('123');
@@ -50,7 +52,7 @@ describe('useEnsureActivePipeline', () => {
             const currentProjectId = '321';
             server.use(
                 http.get('/api/active-pipeline', () =>
-                    HttpResponse.json({ project_id: activeProjectId, status: 'idle' })
+                    HttpResponse.json({ project_id: activeProjectId, status: 'idle', inference_device: 'CPU' })
                 )
             );
 
@@ -86,7 +88,9 @@ describe('useEnsureActivePipeline', () => {
             const activationSpy = vi.fn();
 
             server.use(
-                http.get('/api/active-pipeline', () => HttpResponse.json({ project_id: '456', status: 'idle' })),
+                http.get('/api/active-pipeline', () =>
+                    HttpResponse.json({ project_id: '456', status: 'idle', inference_device: 'CPU' })
+                ),
                 http.post('/api/projects/{project_id}/pipeline:activate', () => {
                     activationSpy();
                     return HttpResponse.json({});
@@ -103,7 +107,7 @@ describe('useEnsureActivePipeline', () => {
 
             server.use(
                 http.get('/api/active-pipeline', () => {
-                    return HttpResponse.json({ project_id: mockProjectId, status: 'idle' });
+                    return HttpResponse.json({ project_id: mockProjectId, status: 'idle', inference_device: 'CPU' });
                 }),
                 http.post('/api/projects/{project_id}/pipeline:activate', () => {
                     activationSpy();

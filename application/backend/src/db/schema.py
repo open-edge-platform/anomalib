@@ -90,7 +90,7 @@ class PipelineDB(Base):
     source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="RESTRICT"))
     sink_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sinks.id", ondelete="RESTRICT"))
     model_id: Mapped[str | None] = mapped_column(Text, ForeignKey("models.id", ondelete="RESTRICT"))
-    inference_device: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    inference_device: Mapped[str] = mapped_column(String(64), nullable=False, default="CPU")
     overlay: Mapped[bool | None] = mapped_column(Boolean, default=True)
     is_running: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)

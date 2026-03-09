@@ -38,6 +38,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 
 import torch
+from torchmetrics.utilities.data import dim_zero_cat
 
 from anomalib.metrics import AnomalibMetric
 from anomalib.metrics.precision_recall_curve import BinaryPrecisionRecallCurve
@@ -138,9 +139,24 @@ class _F1AdaptiveThreshold(BinaryPrecisionRecallCurve, Threshold):
             )
             logger.warning(msg)
 
+            self.value = torch.max(dim_zero_cat(self.preds))
+            return self.value
+
+        if not any(0 in batch for batch in self.target):
+            msg = (
+                "The validation set does not contain any normal images. As a result, the adaptive threshold will "
+                "take the value of the lowest anomaly score observed in the anomalous validation images, which may "
+                "lead to poor predictions. For a more reliable adaptive threshold computation, please add some normal "
+                "images to the validation set."
+            )
+            logging.warning(msg)
+
+            self.value = torch.min(dim_zero_cat(self.preds))
+
+            return self.value
+
         with handle_mac(self):
             precision, recall, thresholds = super().compute()
-
         f1_score = (2 * precision * recall) / (precision + recall + 1e-10)
         # NaN arises when precision is 0/0 (no predictions); argmax would select it.
         # This might happen in binned mode

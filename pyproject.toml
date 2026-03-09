@@ -51,7 +51,7 @@ dependencies = [
     "imagecodecs",
     "kornia>=0.6.6",
     # Data science and analysis
-    "pandas>=1.1.0",
+    "pandas>=1.1.0,<3.0.0",  # Temporary pin: pandas 3.0 breaks DirType enum comparisons in DataFrame.loc (issue #3303)
     "matplotlib>=3.4.3",
     "scikit-learn",
 ]
@@ -75,6 +75,9 @@ loggers = [
     "mlflow >=1.0.0",
 ]
 notebooks = ["gitpython", "ipykernel", "ipywidgets", "notebook"]
+# dataset specific dependencies
+datasets = ["pyarrow"]
+# documentation dependencies
 docs = [
     "myst-parser[linkify]",
     "nbsphinx",
@@ -85,6 +88,7 @@ docs = [
     "sphinx-copybutton",
     "sphinx_design",
 ]
+# testing dependencies
 test = [
     "prek",
     "pytest",
@@ -99,37 +103,39 @@ test = [
     "commitizen",
 ]
 # PyTorch dependency groups
+# NOTE: Minimum torch>=2.6.0 required due to Critical CVE-2025-32434
+#   (torch.load weights_only=True RCE, patched in 2.6.0)
 cpu = [
-    "torch>=2.4.0,<=2.8.0",
-    "torchvision>=0.19.0",
+    "torch>=2.6.0,<=2.8.0",
+    "torchvision>=0.21.0",
 ]
 cu118 = [
-    "torch>=2.4.0,<=2.8.0",
-    "torchvision>=0.19.0",
+    "torch>=2.6.0,<=2.7.1", # CUDA 11.8 support dropped in torch 2.8+
+    "torchvision>=0.21.0,<=0.22.1",
 ]
-cu121 = [
-    "torch>=2.4.0,<=2.8.0",
-    "torchvision>=0.19.0",
+cu126 = [
+    "torch>=2.6.0,<=2.8.0",
+    "torchvision>=0.21.0",
 ]
 cu124 = [
-    "torch>=2.4.0,<=2.8.0",
-    "torchvision>=0.19.0",
+    "torch>=2.6.0,<=2.7.1", # CUDA 12.4 support dropped in torch 2.8+
+    "torchvision>=0.21.0,<=0.22.1",
 ]
 cu130 = [
-    "torch>=2.4.0", # Note: onnx export fails with torch>=2.9.0 and cuda 13 isn't supported by <=2.8.0
-    "torchvision>=0.19.0",
+    "torch>=2.6.0", # Note: onnx export fails with torch>=2.9.0 and cuda 13 isn't supported by <=2.8.0
+    "torchvision>=0.21.0",
 ]
 rocm = [
-    "torch>=2.4.0,<=2.8.0",
-    "torchvision>=0.19.0",
+    "torch>=2.6.0,<=2.8.0",
+    "torchvision>=0.21.0",
     "pytorch-triton-rocm ; sys_platform == 'linux'",
 ]
 xpu = [
-    "torch>=2.4.0", # Note : Last tested with torch+xpu (2.9.1)
-    "torchvision>=0.19.0",
+    "torch>=2.6.0", # Note : Last tested with torch+xpu (2.9.1)
+    "torchvision>=0.21.0",
     "pytorch-triton-xpu ; sys_platform == 'linux' or sys_platform == 'win32'",
 ]
-full = ["anomalib[clip,openvino,loggers,notebooks,vlm,video]"]
+full = ["anomalib[clip,datasets,openvino,loggers,notebooks,vlm,video]"]
 dev = ["anomalib[full,docs,test]"]
 
 [project.scripts]
@@ -160,7 +166,7 @@ conflicts = [
     [
         { extra = "cpu" },
         { extra = "cu118" },
-        { extra = "cu121" },
+        { extra = "cu126" },
         { extra = "cu124" },
         { extra = "cu130" },
         { extra = "rocm" },
@@ -180,8 +186,8 @@ url = "https://download.pytorch.org/whl/cu118"
 explicit = true
 
 [[tool.uv.index]]
-name = "pytorch-cu121"
-url = "https://download.pytorch.org/whl/cu121"
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
 explicit = true
 
 [[tool.uv.index]]
@@ -209,7 +215,7 @@ explicit = true
 torch = [
     { index = "pytorch-cpu", extra = "cpu" },
     { index = "pytorch-cu118", extra = "cu118" },
-    { index = "pytorch-cu121", extra = "cu121" },
+    { index = "pytorch-cu126", extra = "cu126" },
     { index = "pytorch-cu124", extra = "cu124" },
     { index = "pytorch-cu130", extra = "cu130" },
     { index = "pytorch-rocm61", extra = "rocm" },
@@ -218,7 +224,7 @@ torch = [
 torchvision = [
     { index = "pytorch-cpu", extra = "cpu" },
     { index = "pytorch-cu118", extra = "cu118" },
-    { index = "pytorch-cu121", extra = "cu121" },
+    { index = "pytorch-cu126", extra = "cu126" },
     { index = "pytorch-cu124", extra = "cu124" },
     { index = "pytorch-cu130", extra = "cu130" },
     { index = "pytorch-rocm61", extra = "rocm" },

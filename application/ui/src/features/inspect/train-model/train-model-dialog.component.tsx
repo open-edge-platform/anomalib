@@ -21,6 +21,7 @@ import { toast as sonnerToast } from 'sonner';
 
 import { TrainableModelListBox } from './trainable-model-list-box.component';
 import { TrainingDevicePicker, useTrainingDevice } from './training-device-picker.component';
+import { getDeviceKey } from './utils/device-metadata';
 
 import classes from './train-model.module.scss';
 
@@ -34,8 +35,11 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
     const { selectedDevice, setSelectedDevice, devices } = useTrainingDevice();
     const [selectedModel, setSelectedModel] = useState<string | null>(null);
 
+    // Resolve selected key back to the full device object
+    const selectedDeviceInfo = devices.find((d) => getDeviceKey(d) === selectedDevice);
+
     const startTraining = async () => {
-        if (selectedModel === null || selectedDevice === null) {
+        if (selectedModel === null || selectedDeviceInfo === undefined) {
             return;
         }
 
@@ -43,7 +47,7 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
             body: {
                 project_id: projectId,
                 model_name: selectedModel,
-                device: selectedDevice,
+                device: { type: selectedDeviceInfo.type, index: selectedDeviceInfo.index },
             },
         });
 
@@ -54,7 +58,8 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
         setSearchParams(searchParams);
     };
 
-    const isStartDisabled = selectedModel === null || selectedDevice === null || startTrainingMutation.isPending;
+    const isStartDisabled =
+        selectedModel === null || selectedDeviceInfo === undefined || startTrainingMutation.isPending;
 
     return (
         <Dialog size='L' UNSAFE_style={{ width: 'fit-content' }}>

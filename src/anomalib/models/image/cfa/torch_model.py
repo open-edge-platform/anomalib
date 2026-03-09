@@ -241,9 +241,16 @@ class CfaModel(DynamicBufferMixin):
         if self.gamma_c > 1:
             # TODO(samet-akcay): Create PyTorch KMeans class.
             # CVS-122673
-            k_means = KMeans(n_clusters=(scale[0] * scale[1]) // self.gamma_c, max_iter=3000)
+            k_means = KMeans(
+                n_clusters=(scale[0] * scale[1]) // self.gamma_c,
+                max_iter=3000,
+            )
             cluster_centers = k_means.fit(self.memory_bank.cpu()).cluster_centers_
-            self.memory_bank = torch.tensor(cluster_centers, requires_grad=False).to(device)
+            self.memory_bank = torch.tensor(
+                cluster_centers,
+                dtype=torch.float32,
+                requires_grad=False,
+            ).to(device)
 
         self.memory_bank = rearrange(self.memory_bank, "h w -> w h")
 
@@ -263,11 +270,17 @@ class CfaModel(DynamicBufferMixin):
             >>> distances = model.compute_distance(features)
         """
         if target_oriented_features.ndim == 4:
-            target_oriented_features = rearrange(target_oriented_features, "b c h w -> b (h w) c")
+            target_oriented_features = rearrange(
+                target_oriented_features,
+                "b c h w -> b (h w) c",
+            )
 
         features = target_oriented_features.pow(2).sum(dim=2, keepdim=True)
         centers = self.memory_bank.pow(2).sum(dim=0, keepdim=True).to(features.device)
-        f_c = 2 * torch.matmul(target_oriented_features, (self.memory_bank.to(features.device)))
+        f_c = 2 * torch.matmul(
+            target_oriented_features,
+            (self.memory_bank.to(features.device)),
+        )
         return features + centers - f_c
 
     def forward(self, input_tensor: torch.Tensor) -> torch.Tensor | InferenceBatch:
@@ -338,13 +351,25 @@ class Descriptor(nn.Module):
 
         # TODO(samet-akcay): Automatically infer the number of dims
         # CVS-122673
-        backbone_dims = {"vgg19_bn": 1280, "resnet18": 448, "wide_resnet50_2": 1792, "efficientnet_b5": 568}
+        backbone_dims = {
+            "vgg19_bn": 1280,
+            "resnet18": 448,
+            "wide_resnet50_2": 1792,
+            "efficientnet_b5": 568,
+        }
         dim = backbone_dims[backbone]
         out_channels = 2 * dim // gamma_d if backbone == "efficientnet_b5" else dim // gamma_d
 
-        self.layer = CoordConv2d(in_channels=dim, out_channels=out_channels, kernel_size=1)
+        self.layer = CoordConv2d(
+            in_channels=dim,
+            out_channels=out_channels,
+            kernel_size=1,
+        )
 
-    def forward(self, features: list[torch.Tensor] | dict[str, torch.Tensor]) -> torch.Tensor:
+    def forward(
+        self,
+        features: list[torch.Tensor] | dict[str, torch.Tensor],
+    ) -> torch.Tensor:
         """Forward pass through the descriptor network.
 
         Args:
@@ -372,7 +397,13 @@ class Descriptor(nn.Module):
             patch_features = (
                 pooled_features
                 if patch_features is None
-                else torch.cat((patch_features, F.interpolate(feature, patch_features.size(2), mode="bilinear")), dim=1)
+                else torch.cat(
+                    (
+                        patch_features,
+                        F.interpolate(feature, patch_features.size(2), mode="bilinear"),
+                    ),
+                    dim=1,
+                )
             )
 
         return self.layer(patch_features)
@@ -533,7 +564,9 @@ class AddCoords(nn.Module):
         out = torch.cat([input_tensor, xx_channel, yy_channel], dim=1)
 
         if self.with_r:
-            rr_channel = torch.sqrt(torch.pow(xx_channel - 0.5, 2) + torch.pow(yy_channel - 0.5, 2))
+            rr_channel = torch.sqrt(
+                torch.pow(xx_channel - 0.5, 2) + torch.pow(yy_channel - 0.5, 2),
+            )
             out = torch.cat([out, rr_channel], dim=1)
 
         return out

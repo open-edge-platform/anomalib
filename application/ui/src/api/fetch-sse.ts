@@ -1,8 +1,10 @@
+import { getApiUrl } from './client';
+
 // Connect to an SSE endpoint and yield its messages
 export function fetchSSE<T = unknown>(url: string) {
     return {
         async *[Symbol.asyncIterator](): AsyncGenerator<T> {
-            const eventSource = new EventSource(url);
+            const eventSource = new EventSource(getApiUrl(url));
 
             try {
                 let { promise, resolve, reject } = Promise.withResolvers<string>();

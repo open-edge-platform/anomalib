@@ -70,20 +70,21 @@ on:
         description: "Whether any security issues were found"
         value: ${{ jobs.summarize.outputs.has_findings }}
 
-permissions:
-  contents: read
-  security-events: write # needed by nested workflows to upload results
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   bandit:
     if: contains(inputs.tools, 'bandit')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # needed by nested workflows to upload results
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/geti-ci/actions/bandit@3a4b81ea648711eb638b34757427cd3ef71d19f1
+        uses: open-edge-platform/geti-ci/actions/bandit@cc6fbe840db6ebd16ebd18d409f475bff5a8c182
         with:
           scan-scope: ${{ inputs.scan-scope }}
           severity-level: ${{ inputs.severity-level }}
@@ -93,13 +94,16 @@ jobs:
   semgrep:
     if: contains(inputs.tools, 'semgrep')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # needed by nested workflows to upload results
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
           fetch-depth: 0
       - name: Run Semgrep scan
-        uses: open-edge-platform/geti-ci/actions/semgrep@3a4b81ea648711eb638b34757427cd3ef71d19f1
+        uses: open-edge-platform/geti-ci/actions/semgrep@cc6fbe840db6ebd16ebd18d409f475bff5a8c182
         with:
           scan-scope: ${{ inputs.scan-scope }}
           severity: ${{ inputs.severity-level }}
@@ -108,13 +112,16 @@ jobs:
   trivy:
     if: contains(inputs.tools, 'trivy')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # needed by nested workflows to upload results
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
 
       - name: Run Trivy scan
-        uses: open-edge-platform/geti-ci/actions/trivy@3a4b81ea648711eb638b34757427cd3ef71d19f1
+        uses: open-edge-platform/geti-ci/actions/trivy@cc6fbe840db6ebd16ebd18d409f475bff5a8c182
         with:
           scan_type: "fs"
           scan-scope: ${{ inputs.scan-scope }}
@@ -127,12 +134,15 @@ jobs:
   zizmor:
     if: contains(inputs.tools, 'zizmor')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # needed by nested workflows to upload results
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
       - name: Run Zizmor scan
-        uses: open-edge-platform/geti-ci/actions/zizmor@3a4b81ea648711eb638b34757427cd3ef71d19f1
+        uses: open-edge-platform/geti-ci/actions/zizmor@cc6fbe840db6ebd16ebd18d409f475bff5a8c182
         with:
           scan-scope: ${{ inputs.scan-scope }}
           severity-level: ${{ inputs.severity-level }}

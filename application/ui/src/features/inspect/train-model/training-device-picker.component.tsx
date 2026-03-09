@@ -5,24 +5,25 @@ import { Key, useState } from 'react';
 
 import { $api } from '@anomalib-studio/api';
 import { Heading, InlineAlert, Item, Link, Picker, Text } from '@geti/ui';
+import type { SchemaDeviceInfo } from 'src/api/openapi-spec';
 
-import { getDeviceMetadata, selectPreferredDevice } from './utils/device-metadata';
+import { getDeviceDescription, getDeviceKey, getDeviceLabel, selectPreferredDevice } from './utils/device-metadata';
 
 interface UseTrainingDeviceResult {
     selectedDevice: string | null;
     setSelectedDevice: (device: string | null) => void;
-    devices: string[];
+    devices: SchemaDeviceInfo[];
 }
 
 export const useTrainingDevice = (): UseTrainingDeviceResult => {
     const { data: availableDevices } = $api.useSuspenseQuery('get', '/api/system/devices/training');
-    const devices = (availableDevices ?? []).map((device) => device.type.toUpperCase());
+    const devices = availableDevices ?? [];
 
     const [selectedDevice, setSelectedDevice] = useState<string | null>(() => {
         if (devices.length === 0) {
             return null;
         }
-        return selectPreferredDevice(devices) ?? devices[0];
+        return selectPreferredDevice(devices) ?? getDeviceKey(devices[0]);
     });
 
     return {
@@ -35,7 +36,7 @@ export const useTrainingDevice = (): UseTrainingDeviceResult => {
 interface TrainingDevicePickerProps {
     selectedDevice: string | null;
     onDeviceChange: (device: string | null) => void;
-    devices: string[];
+    devices: SchemaDeviceInfo[];
 }
 
 export const TrainingDevicePicker = ({ selectedDevice, onDeviceChange, devices }: TrainingDevicePickerProps) => {
@@ -71,8 +72,10 @@ export const TrainingDevicePicker = ({ selectedDevice, onDeviceChange, devices }
             onSelectionChange={handleDeviceChange}
             width='size-3400'
             items={devices.map((device) => {
-                const meta = getDeviceMetadata(device);
-                return { id: device, ...meta };
+                const key = getDeviceKey(device);
+                const label = getDeviceLabel(device);
+                const description = getDeviceDescription(device.type);
+                return { id: key, label, description };
             })}
         >
             {(item) => (

@@ -49,7 +49,7 @@ class Pipeline(BaseModel):
         exclude=True,
     )  # ID of the model, used for DB mapping, not exposed in API
     status: PipelineStatus = PipelineStatus.IDLE  # Current status of the pipeline
-    inference_device: str | None = Field(default=None)
+    inference_device: str = Field(default="CPU")
     overlay: bool | None = Field(default=None)
 
     # TODO: can be confused with status.is_running / is_active, consider refactoring

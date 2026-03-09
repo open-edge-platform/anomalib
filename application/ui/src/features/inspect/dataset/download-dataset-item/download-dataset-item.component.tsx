@@ -14,9 +14,9 @@ export interface DownloadDatasetItemProps {
 }
 
 export const DownloadDatasetItem = ({ mediaItem }: DownloadDatasetItemProps) => {
-    const handleDownload = () => {
+    const handleDownload = async () => {
         const url = `/api/projects/${mediaItem.project_id}/images/${mediaItem.id}/full`;
-        downloadFile(url, mediaItem.filename);
+        await downloadFile(url, mediaItem.filename);
     };
 
     return (

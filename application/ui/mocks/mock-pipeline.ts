@@ -32,6 +32,7 @@ export const getMockedPipeline = (customPipeline?: Partial<SchemaPipeline>): Sch
             rate_limit: 0.2,
             sink_type: 'folder' as const,
         },
+        inference_device: 'CPU',
         ...customPipeline,
     };
 };
