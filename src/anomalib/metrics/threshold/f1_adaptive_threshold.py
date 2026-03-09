@@ -106,10 +106,41 @@ class _F1AdaptiveThreshold(BinaryPrecisionRecallCurve, Threshold):
         """
         if self.thresholds is None:
             return any(1 in batch for batch in self.target)
-        # confmat has shape (n_thresholds, 2, 2) where confmat[i] = [[TN, FP], [FN, TP]]
-        # Actual positives = FN + TP = confmat[:, 1, 0] + confmat[:, 1, 1]
-        # Use the first threshold's values (all thresholds see the same total positives)
+        # confmat[i] = [[TN, FP], [FN, TP]]; positives = FN + TP  #  noqa: ERA001
         return (self.confmat[0, 1, 0] + self.confmat[0, 1, 1]).item() > 0
+
+    def _has_normal_samples(self) -> bool:
+        """Check if the validation set contains any normal samples.
+
+        Returns:
+            bool: True if normal samples (target=0) exist, False otherwise.
+        """
+        if self.thresholds is None:
+            return any(0 in batch for batch in self.target)
+        # confmat[i] = [[TN, FP], [FN, TP]]; negatives = TN + FP  # noqa: ERA001
+        return (self.confmat[0, 0, 0] + self.confmat[0, 0, 1]).item() > 0
+
+    def _get_max_pred(self) -> torch.Tensor:
+        """Get the maximum prediction score.
+
+        Returns:
+            torch.Tensor: Maximum prediction score. In binned mode, returns the
+                highest candidate threshold since raw predictions are unavailable.
+        """
+        if self.thresholds is None:
+            return torch.max(dim_zero_cat(self.preds))
+        return self.thresholds[-1]
+
+    def _get_min_pred(self) -> torch.Tensor:
+        """Get the minimum prediction score.
+
+        Returns:
+            torch.Tensor: Minimum prediction score. In binned mode, returns the
+                lowest candidate threshold since raw predictions are unavailable.
+        """
+        if self.thresholds is None:
+            return torch.min(dim_zero_cat(self.preds))
+        return self.thresholds[0]
 
     def compute(self) -> torch.Tensor:
         """Compute optimal threshold by maximizing F1 score.
@@ -121,9 +152,10 @@ class _F1AdaptiveThreshold(BinaryPrecisionRecallCurve, Threshold):
             torch.Tensor: Optimal threshold value.
 
         Warning:
-            If validation set contains no anomalous samples, the F1 score will
-            be zero for all thresholds and the returned threshold will be
-            unreliable.
+            If the validation set contains no anomalous samples, the threshold
+            defaults to the maximum anomaly score so that normal images are not
+            flagged. If the validation set contains no normal samples, the
+            threshold defaults to the minimum anomaly score.
         """
         precision: torch.Tensor
         recall: torch.Tensor
@@ -132,34 +164,36 @@ class _F1AdaptiveThreshold(BinaryPrecisionRecallCurve, Threshold):
         if not self._has_anomalous_samples():
             msg = (
                 "The validation set does not contain any anomalous images. As a "
-                "result, the adaptive threshold will be unreliable since the F1 "
-                "score is zero for all thresholds. For a more reliable adaptive "
-                "threshold computation, please add some anomalous images to the "
-                "validation set."
+                "result, the adaptive threshold will take the value of the "
+                "highest anomaly score observed in the normal validation images, "
+                "which may lead to poor predictions. For a more reliable "
+                "adaptive threshold computation, please add some anomalous "
+                "images to the validation set."
             )
             logger.warning(msg)
 
-            self.value = torch.max(dim_zero_cat(self.preds))
+            self.value = self._get_max_pred()
             return self.value
 
-        if not any(0 in batch for batch in self.target):
+        if not self._has_normal_samples():
             msg = (
-                "The validation set does not contain any normal images. As a result, the adaptive threshold will "
-                "take the value of the lowest anomaly score observed in the anomalous validation images, which may "
-                "lead to poor predictions. For a more reliable adaptive threshold computation, please add some normal "
-                "images to the validation set."
+                "The validation set does not contain any normal images. As a "
+                "result, the adaptive threshold will take the value of the "
+                "lowest anomaly score observed in the anomalous validation "
+                "images, which may lead to poor predictions. For a more "
+                "reliable adaptive threshold computation, please add some "
+                "normal images to the validation set."
             )
-            logging.warning(msg)
+            logger.warning(msg)
 
-            self.value = torch.min(dim_zero_cat(self.preds))
-
+            self.value = self._get_min_pred()
             return self.value
 
         with handle_mac(self):
             precision, recall, thresholds = super().compute()
+
         f1_score = (2 * precision * recall) / (precision + recall + 1e-10)
         # NaN arises when precision is 0/0 (no predictions); argmax would select it.
-        # This might happen in binned mode
         f1_score = torch.nan_to_num(f1_score, nan=0.0)
 
         # account for special case where recall is 1.0 even for the highest threshold.
