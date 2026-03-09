@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """F1 adaptive threshold metric for anomaly detection.
@@ -120,9 +120,9 @@ class _F1AdaptiveThreshold(BinaryPrecisionRecallCurve, Threshold):
             torch.Tensor: Optimal threshold value.
 
         Warning:
-            If validation set contains no anomalous samples, the threshold will
-            default to the maximum anomaly score, which may lead to poor
-            performance.
+            If validation set contains no anomalous samples, the F1 score will
+            be zero for all thresholds and the returned threshold will be
+            unreliable.
         """
         precision: torch.Tensor
         recall: torch.Tensor
@@ -131,18 +131,20 @@ class _F1AdaptiveThreshold(BinaryPrecisionRecallCurve, Threshold):
         if not self._has_anomalous_samples():
             msg = (
                 "The validation set does not contain any anomalous images. As a "
-                "result, the adaptive threshold will take the value of the "
-                "highest anomaly score observed in the normal validation images, "
-                "which may lead to poor predictions. For a more reliable "
-                "adaptive threshold computation, please add some anomalous "
-                "images to the validation set."
+                "result, the adaptive threshold will be unreliable since the F1 "
+                "score is zero for all thresholds. For a more reliable adaptive "
+                "threshold computation, please add some anomalous images to the "
+                "validation set."
             )
-            logging.warning(msg)
+            logger.warning(msg)
 
         with handle_mac(self):
             precision, recall, thresholds = super().compute()
 
         f1_score = (2 * precision * recall) / (precision + recall + 1e-10)
+        # NaN arises when precision is 0/0 (no predictions); argmax would select it.
+        # This might happen in binned mode
+        f1_score = torch.nan_to_num(f1_score, nan=0.0)
 
         # account for special case where recall is 1.0 even for the highest threshold.
         # In this case 'thresholds' will be scalar.
