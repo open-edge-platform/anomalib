@@ -171,10 +171,13 @@ class _F1AdaptiveThreshold(BinaryPrecisionRecallCurve, Threshold):
         thresholds: torch.Tensor
 
         if not self._has_anomalous_samples():
+            if self.thresholds is None:
+                fallback = "the highest anomaly score observed in the normal validation images"
+            else:
+                fallback = "the highest candidate threshold boundary"
             msg = (
                 "The validation set does not contain any anomalous images. As a "
-                "result, the adaptive threshold will take the value of the "
-                "highest anomaly score observed in the normal validation images, "
+                f"result, the adaptive threshold will take the value of {fallback}, "
                 "which may lead to poor predictions. For a more reliable "
                 "adaptive threshold computation, please add some anomalous "
                 "images to the validation set."
@@ -185,13 +188,16 @@ class _F1AdaptiveThreshold(BinaryPrecisionRecallCurve, Threshold):
             return self.value
 
         if not self._has_normal_samples():
+            if self.thresholds is None:
+                fallback = "the lowest anomaly score observed in the anomalous validation images"
+            else:
+                fallback = "the lowest candidate threshold boundary"
             msg = (
                 "The validation set does not contain any normal images. As a "
-                "result, the adaptive threshold will take the value of the "
-                "lowest anomaly score observed in the anomalous validation "
-                "images, which may lead to poor predictions. For a more "
-                "reliable adaptive threshold computation, please add some "
-                "normal images to the validation set."
+                f"result, the adaptive threshold will take the value of {fallback}, "
+                "which may lead to poor predictions. For a more reliable "
+                "adaptive threshold computation, please add some normal "
+                "images to the validation set."
             )
             logger.warning(msg)
 

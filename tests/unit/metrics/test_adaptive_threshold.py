@@ -54,6 +54,7 @@ class TestF1AdaptiveThresholdNonBinned:
             threshold_value = adaptive_threshold.compute()
 
         assert "validation set does not contain any anomalous images" in caplog.text
+        assert "highest anomaly score observed" in caplog.text
         assert threshold_value == pytest.approx(preds.max().item())
 
     @staticmethod
@@ -69,6 +70,7 @@ class TestF1AdaptiveThresholdNonBinned:
             threshold_value = adaptive_threshold.compute()
 
         assert "validation set does not contain any normal images" in caplog.text
+        assert "lowest anomaly score observed" in caplog.text
         assert threshold_value == pytest.approx(preds.min().item())
 
 
@@ -119,6 +121,7 @@ class TestF1AdaptiveThresholdBinned:
             _ = adaptive_threshold.compute()
 
         assert "validation set does not contain any anomalous images" in caplog.text
+        assert "highest candidate threshold boundary" in caplog.text
 
     @staticmethod
     def test_no_anomalous_samples_returns_max_threshold(caplog: pytest.LogCaptureFixture) -> None:
@@ -149,6 +152,7 @@ class TestF1AdaptiveThresholdBinned:
             threshold_value = adaptive_threshold.compute()
 
         assert "validation set does not contain any normal images" in caplog.text
+        assert "lowest candidate threshold boundary" in caplog.text
         assert threshold_value == pytest.approx(thresholds[0].item())
 
     @staticmethod
