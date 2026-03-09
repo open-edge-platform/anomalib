@@ -141,7 +141,7 @@ jobs:
 
       - name: Check paths
         id: check-paths
-        uses: open-edge-platform/geti-ci/actions/check-paths@4d46c7fb444d8fae6390348e76d96bb0749c5632
+        uses: open-edge-platform/geti-ci/actions/check-paths@cc6fbe840db6ebd16ebd18d409f475bff5a8c182
         with:
           files_yaml: |
             test:
