@@ -43,10 +43,11 @@ class LoggerStdoutWriter:
     """Wrapper for redirecting stdout/stderr to loguru."""
 
     @staticmethod
-    def write(msg: str) -> None:
+    def write(msg: str) -> int:
+        original_length = len(msg)
         msg = _ANSI_ESCAPE_RE.sub("", msg).rstrip("\n")
         if not msg:
-            return
+            return original_length
         # For progress bars, only log the final step of each epoch (N/N).
         # Intermediate redraws (1/N, 2/N, …) fire many times per second
         # and overwhelm the async log-file queue.
@@ -54,8 +55,9 @@ class LoggerStdoutWriter:
         if match:
             step, total = match.group(1), match.group(2)
             if step != total:
-                return
+                return original_length
         logger.info(msg)
+        return original_length
 
     @staticmethod
     def flush() -> None:
