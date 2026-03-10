@@ -5,6 +5,8 @@ import logging
 import os
 from collections.abc import Generator
 from contextlib import ContextDecorator, contextmanager, redirect_stderr, redirect_stdout
+from types import TracebackType
+from typing import Self
 from uuid import UUID
 
 from loguru import logger
@@ -37,7 +39,7 @@ class capture_output(ContextDecorator):
             engine.fit(model, datamodule)
     """
 
-    def __enter__(self) -> "capture_output":
+    def __enter__(self) -> Self:
         self._log_writer = LoggerStdoutWriter()
         self._stdout_ctx = redirect_stdout(self._log_writer)  # type: ignore[type-var]
         self._stderr_ctx = redirect_stderr(self._log_writer)  # type: ignore[type-var]
@@ -58,7 +60,12 @@ class capture_output(ContextDecorator):
 
         return self
 
-    def __exit__(self, *exc: object) -> bool:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         # Restore ML library loggers.
         for name in _ML_LOGGER_NAMES:
             lib_logger = logging.getLogger(name)
@@ -66,9 +73,8 @@ class capture_output(ContextDecorator):
             lib_logger.level = self._original_levels[name]
             lib_logger.propagate = True
 
-        self._stderr_ctx.__exit__(*exc)
-        self._stdout_ctx.__exit__(*exc)
-        return False
+        self._stderr_ctx.__exit__(exc_type, exc_val, exc_tb)
+        self._stdout_ctx.__exit__(exc_type, exc_val, exc_tb)
 
 
 def _validate_job_id(job_id: str | UUID) -> str | UUID:
