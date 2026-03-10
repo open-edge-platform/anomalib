@@ -3,10 +3,12 @@
 
 import logging
 import os
+import sys
+import threading
 from collections.abc import Generator
-from contextlib import ContextDecorator, contextmanager, redirect_stderr, redirect_stdout
+from contextlib import ContextDecorator, contextmanager
 from types import TracebackType
-from typing import Self
+from typing import IO, Any, Self
 from uuid import UUID
 
 from loguru import logger
@@ -21,6 +23,62 @@ _ML_LOGGER_NAMES = (
 )
 
 
+class _ThreadLocalStream:
+    """Stream wrapper that delegates writes to a per-thread target.
+
+    When no thread-local override is active, writes fall through to the
+    original stream that was wrapped at installation time.  Each thread
+    can independently push/pop its own override via :meth:`push` /
+    :meth:`pop`, so concurrent ``CaptureOutput`` contexts in different
+    threads never interfere with each other.  The stack also supports
+    nesting within a single thread.
+    """
+
+    def __init__(self, original: IO[str]) -> None:
+        self._original = original
+        self._local: threading.local = threading.local()
+
+    # -- per-thread stream stack ----------------------------------------
+
+    def push(self, stream: IO[str]) -> None:
+        """Set *stream* as the active target for the calling thread."""
+        if not hasattr(self._local, "stack"):
+            self._local.stack = []  # list[IO[str]] per thread
+        self._local.stack.append(stream)
+
+    def pop(self) -> None:
+        """Remove the most recent override for the calling thread."""
+        stack: list[IO[str]] | None = getattr(self._local, "stack", None)
+        if stack:
+            stack.pop()
+
+    @property
+    def _target(self) -> IO[str]:
+        """Return the stream the calling thread should write to."""
+        stack: list[IO[str]] | None = getattr(self._local, "stack", None)
+        if stack:
+            return stack[-1]
+        return self._original
+
+    # -- stream interface -----------------------------------------------
+
+    def write(self, msg: str) -> int:
+        return self._target.write(msg)
+
+    def flush(self) -> None:
+        self._target.flush()
+
+    def fileno(self) -> int:
+        # Always return the real FD so subprocess / C-extension code works.
+        return self._original.fileno()
+
+    def isatty(self) -> bool:
+        return self._original.isatty()
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._target, name)
+
+
 class CaptureOutput(ContextDecorator):
     """Redirect stdout, stderr, and ML library logging into loguru.
 
@@ -28,13 +86,18 @@ class CaptureOutput(ContextDecorator):
     output, tqdm progress bars, and standard-logging calls from common ML
     libraries are forwarded to loguru so they appear in per-job log files.
 
-    Thread-safety note:
-        ``redirect_stdout`` / ``redirect_stderr`` modify the process-global
-        ``sys.stdout`` and ``sys.stderr``.  This is safe as long as only one
-        training job runs at a time (``MAX_CONCURRENT_TRAINING = 1`` in
-        ``workers/training.py``).  If concurrency is ever increased, replace
-        these redirections with a thread-local approach so that concurrent
-        threads do not overwrite each other's streams.
+    Thread-safety:
+        Redirection is **thread-local** — each thread that enters this
+        context gets its own capture without affecting other threads.
+        Threads that have not entered ``CaptureOutput`` continue to write
+        to the original ``sys.stdout`` / ``sys.stderr`` as usual.  Nesting
+        within a single thread is also supported (stack-based).
+
+    Note:
+        ML-library logger interception (``logging.getLogger`` handlers)
+        is still process-global.  This is acceptable because loguru sinks
+        are already thread-safe, but be aware that handler lists are shared
+        across threads.
 
     Example (decorator)::
 
@@ -47,12 +110,32 @@ class CaptureOutput(ContextDecorator):
             engine.fit(model, datamodule)
     """
 
+    _lock: threading.Lock = threading.Lock()
+    _stdout_wrapper: _ThreadLocalStream | None = None
+    _stderr_wrapper: _ThreadLocalStream | None = None
+
+    @classmethod
+    def _ensure_wrappers_installed(cls) -> None:
+        """Install thread-local stream wrappers on sys.stdout/stderr (idempotent)."""
+        if cls._stdout_wrapper is not None:
+            return
+        with cls._lock:
+            # Double-checked locking.
+            if cls._stdout_wrapper is None:
+                cls._stdout_wrapper = _ThreadLocalStream(sys.stdout)
+                sys.stdout = cls._stdout_wrapper  # type: ignore[assignment]
+            if cls._stderr_wrapper is None:
+                cls._stderr_wrapper = _ThreadLocalStream(sys.stderr)
+                sys.stderr = cls._stderr_wrapper  # type: ignore[assignment]
+
     def __enter__(self) -> Self:
+        self._ensure_wrappers_installed()
+
         self._log_writer = LoggerStdoutWriter()
-        self._stdout_ctx = redirect_stdout(self._log_writer)  # type: ignore[type-var]
-        self._stderr_ctx = redirect_stderr(self._log_writer)  # type: ignore[type-var]
-        self._stdout_ctx.__enter__()
-        self._stderr_ctx.__enter__()
+        assert self._stdout_wrapper is not None  # guaranteed by _ensure_wrappers_installed  # noqa: S101
+        assert self._stderr_wrapper is not None  # noqa: S101
+        self._stdout_wrapper.push(self._log_writer)  # type: ignore[arg-type]
+        self._stderr_wrapper.push(self._log_writer)  # type: ignore[arg-type]
 
         # Intercept standard logging from ML libraries.
         self._original_handlers: dict[str, list[logging.Handler]] = {}
@@ -81,8 +164,10 @@ class CaptureOutput(ContextDecorator):
             lib_logger.level = self._original_levels[name]
             lib_logger.propagate = True
 
-        self._stderr_ctx.__exit__(exc_type, exc_val, exc_tb)
-        self._stdout_ctx.__exit__(exc_type, exc_val, exc_tb)
+        assert self._stderr_wrapper is not None  # noqa: S101
+        assert self._stdout_wrapper is not None  # noqa: S101
+        self._stderr_wrapper.pop()
+        self._stdout_wrapper.pop()
 
 
 def _validate_job_id(job_id: str | UUID) -> str | UUID:
