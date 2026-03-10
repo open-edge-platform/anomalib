@@ -65,6 +65,7 @@ def test_f1_max_bool_preds() -> None:
     metric.update(preds, labels)
     f1_score = metric.compute()
     assert f1_score == 1.0
+    assert metric.threshold == 1.0
 
     metric.reset()
     preds = torch.tensor([False, False, True, True])
@@ -72,3 +73,4 @@ def test_f1_max_bool_preds() -> None:
     metric.update(preds, labels)
     f1_score = metric.compute()
     assert f1_score.round(decimals=4) == torch.tensor(0.8571)
+    assert metric.threshold == 0.0
