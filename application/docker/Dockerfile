@@ -50,7 +50,7 @@ ENV LOG_DIR="/app/logs"
 ENV PYTHONPATH=/app/application/backend
 
 COPY --link --from=web-ui /home/app/web_ui/dist ${STATIC_FILES_DIR}
-COPY  application/backend/run.sh /app/application/backend/run.sh
+COPY --link application/backend/run.sh /app/application/backend/run.sh
 
 # Copy anomalib source code (pyproject.toml depends on README and LICENSE as well)
 COPY --link src ./src
@@ -191,7 +191,10 @@ RUN echo "Removing non-redistributable CUDA components per NVIDIA EULA..." && \
 #------------------------------------------
 # Anomalib Studio CUDA version
 #------------------------------------------
-FROM anomalib-studio-cuda-cleanup AS anomalib-studio-cuda
+FROM anomalib-studio-base AS anomalib-studio-cuda
+
+COPY --link --from=anomalib-studio-cuda-cleanup /usr/local /usr/local
+COPY --link --from=anomalib-studio-cuda-cleanup ${PYTHONPATH} ${PYTHONPATH}
 
 WORKDIR /app/application/backend
 
