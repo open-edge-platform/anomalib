@@ -129,6 +129,7 @@ export const ModelsView = ({ onModelSelect }: ModelsViewProps) => {
                                         <ModelStatusBadges
                                             isSelected={selectedModelId === model.id}
                                             jobStatus={model.job?.status}
+                                            progress={model.progress}
                                         />
                                     </Flex>
                                     <Text UNSAFE_className={classes.modelTimestamp}>{model.timestamp}</Text>

@@ -2,8 +2,18 @@
 # SPDX-License-Identifier: Apache-2.0
 import inspect
 import logging
+import re
 
 from loguru import logger
+
+# Matches progress bar output (tqdm / Rich).
+# Captures the step numerator and denominator so we can detect completed epochs.
+# Example: "Epoch 3/199 ━━━━━━━━━━━━━━━━━━ 4/4 0:00:10 …" → groups ("4", "4")
+_PROGRESS_BAR_RE = re.compile(r"[━╸╺█▏▎▍▌▋▊▉].*?(\d+)/(\d+)\s")
+
+# Strips ANSI escape sequences (colors, bold, cursor moves) from captured output.
+# Example: "\x1b[1mTrainable params\x1b[0m" → "Trainable params"
+_ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*[a-zA-Z]")
 
 
 class InterceptHandler(logging.Handler):
@@ -30,13 +40,22 @@ class InterceptHandler(logging.Handler):
 
 
 class LoggerStdoutWriter:
-    """Wrapper for redirecting stdout to logger"""
+    """Wrapper for redirecting stdout/stderr to loguru."""
 
     @staticmethod
     def write(msg: str) -> None:
-        msg = msg.rstrip("\n")
-        if msg:
-            logger.info(msg)
+        msg = _ANSI_ESCAPE_RE.sub("", msg).rstrip("\n")
+        if not msg:
+            return
+        # For progress bars, only log the final step of each epoch (N/N).
+        # Intermediate redraws (1/N, 2/N, …) fire many times per second
+        # and overwhelm the async log-file queue.
+        match = _PROGRESS_BAR_RE.search(msg)
+        if match:
+            step, total = match.group(1), match.group(2)
+            if step != total:
+                return
+        logger.info(msg)
 
     @staticmethod
     def flush() -> None:

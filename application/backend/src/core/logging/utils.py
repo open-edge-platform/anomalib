@@ -1,14 +1,74 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import logging
 import os
 from collections.abc import Generator
-from contextlib import contextmanager
+from contextlib import ContextDecorator, contextmanager, redirect_stderr, redirect_stdout
 from uuid import UUID
 
 from loguru import logger
 
+from core.logging.handlers import InterceptHandler, LoggerStdoutWriter
 from core.logging.setup import global_log_config
+
+# Also logs the weights if they are being downloaded.
+_ML_LOGGER_NAMES = (
+    "timm",
+    "huggingface_hub",
+)
+
+
+class capture_output(ContextDecorator):
+    """Redirect stdout, stderr, and ML library logging into loguru.
+
+    Usable as a decorator or context manager. While active, all print()
+    output, tqdm progress bars, and standard-logging calls from common ML
+    libraries are forwarded to loguru so they appear in per-job log files.
+
+    Example (decorator)::
+
+        @capture_output()
+        def train(model): ...
+
+    Example (context manager)::
+
+        with capture_output():
+            engine.fit(model, datamodule)
+    """
+
+    def __enter__(self) -> "capture_output":
+        self._log_writer = LoggerStdoutWriter()
+        self._stdout_ctx = redirect_stdout(self._log_writer)  # type: ignore[type-var]
+        self._stderr_ctx = redirect_stderr(self._log_writer)  # type: ignore[type-var]
+        self._stdout_ctx.__enter__()
+        self._stderr_ctx.__enter__()
+
+        # Intercept standard logging from ML libraries.
+        self._original_handlers: dict[str, list[logging.Handler]] = {}
+        self._original_levels: dict[str, int] = {}
+        intercept = InterceptHandler()
+        for name in _ML_LOGGER_NAMES:
+            lib_logger = logging.getLogger(name)
+            self._original_handlers[name] = lib_logger.handlers[:]
+            self._original_levels[name] = lib_logger.level
+            lib_logger.handlers = [intercept]
+            lib_logger.setLevel(logging.DEBUG)
+            lib_logger.propagate = False
+
+        return self
+
+    def __exit__(self, *exc: object) -> bool:
+        # Restore ML library loggers.
+        for name in _ML_LOGGER_NAMES:
+            lib_logger = logging.getLogger(name)
+            lib_logger.handlers = self._original_handlers[name]
+            lib_logger.level = self._original_levels[name]
+            lib_logger.propagate = True
+
+        self._stderr_ctx.__exit__(*exc)
+        self._stdout_ctx.__exit__(*exc)
+        return False
 
 
 def _validate_job_id(job_id: str | UUID) -> str | UUID:
