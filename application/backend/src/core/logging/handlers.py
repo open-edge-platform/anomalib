@@ -11,9 +11,10 @@ from loguru import logger
 # Example: "Epoch 3/199 ━━━━━━━━━━━━━━━━━━ 4/4 0:00:10 …" → groups ("4", "4")
 _PROGRESS_BAR_RE = re.compile(r"[━╸╺█▏▎▍▌▋▊▉].*?(\d+)/(\d+)\s")
 
-# Strips ANSI escape sequences (colors, bold, cursor moves) from captured output.
+# Strips ANSI escape sequences (colors, bold, cursor hide/show, etc.) from captured output.
+# Includes CSI sequences with '?' (e.g., \x1b[?25l cursor hide) emitted by tqdm/Rich.
 # Example: "\x1b[1mTrainable params\x1b[0m" → "Trainable params"
-_ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*[a-zA-Z]")
+_ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;?]*[a-zA-Z]")
 
 
 class InterceptHandler(logging.Handler):
