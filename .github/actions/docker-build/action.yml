@@ -42,7 +42,8 @@ runs:
         type: all
 
     - name: Set up Docker engine
-      uses: docker/setup-docker-action@v4
+      uses: docker/setup-docker-action@1a6edb0ba9ac496f6850236981f15d8f9a82254d # v5.0.0
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
@@ -59,7 +60,6 @@ runs:
         labels: ${{ inputs.labels }}
         # When not pushing, validate the build and populate the cache only.
         outputs: ${{ inputs.push != 'true' && 'type=cacheonly' || '' }}
-        build-args: GIT_SHA=${{ github.sha }}
         # Registry-based cache: each device variant gets its own cache
         # image in GHCR, avoiding the 10 GB GHA cache limit that caused
         # cache thrashing across cpu/xpu/cuda scopes (~18-20 GB total).

@@ -8,7 +8,7 @@ on:
 permissions: {} # No permissions by default on workflow level
 
 concurrency:
-  group: docker-publish
+  group: docker-publish-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
