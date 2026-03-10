@@ -19,7 +19,7 @@ from lightning.pytorch.callbacks import EarlyStopping
 from loguru import logger
 from pydantic import ValidationError
 
-from core.logging.utils import capture_output
+from core.logging.utils import CaptureOutput
 from pydantic_models import Job, JobStatus, JobType, Model
 from pydantic_models.job import TrainJobPayload
 from repositories.binary_repo import ModelBinaryRepository
@@ -171,7 +171,7 @@ class TrainingService:
                 await DatasetSnapshotService.delete_snapshot_if_unused(snapshot_id=snapshot_id, project_id=project_id)
 
     @staticmethod
-    @capture_output()
+    @CaptureOutput()
     def _train_model(
         model: Model,
         synchronization_parameters: ProgressSyncParams,

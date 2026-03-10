@@ -21,21 +21,29 @@ _ML_LOGGER_NAMES = (
 )
 
 
-class capture_output(ContextDecorator):
+class CaptureOutput(ContextDecorator):
     """Redirect stdout, stderr, and ML library logging into loguru.
 
     Usable as a decorator or context manager. While active, all print()
     output, tqdm progress bars, and standard-logging calls from common ML
     libraries are forwarded to loguru so they appear in per-job log files.
 
+    Thread-safety note:
+        ``redirect_stdout`` / ``redirect_stderr`` modify the process-global
+        ``sys.stdout`` and ``sys.stderr``.  This is safe as long as only one
+        training job runs at a time (``MAX_CONCURRENT_TRAINING = 1`` in
+        ``workers/training.py``).  If concurrency is ever increased, replace
+        these redirections with a thread-local approach so that concurrent
+        threads do not overwrite each other's streams.
+
     Example (decorator)::
 
-        @capture_output()
+        @CaptureOutput()
         def train(model): ...
 
     Example (context manager)::
 
-        with capture_output():
+        with CaptureOutput():
             engine.fit(model, datamodule)
     """
 
