@@ -1,4 +1,4 @@
-name: Docker Publish
+name: Daily Docker Publish
 
 on:
   schedule:
