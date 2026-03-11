@@ -27,6 +27,12 @@ inputs:
       fork PRs where GITHUB_TOKEN cannot write to the org's packages.
     required: false
     default: "true"
+  use-cache:
+    description: >
+      Enable build cache (true/false). Should be disabled for RC and release
+      builds to ensure reproducibility and prevent cache poisoning attacks.
+    required: false
+    default: "true"
 
 outputs:
   digest:
@@ -60,11 +66,16 @@ runs:
         labels: ${{ inputs.labels }}
         # When not pushing, validate the build and populate the cache only.
         outputs: ${{ inputs.push != 'true' && 'type=cacheonly' || '' }}
+        # Disable all caching (local and remote) when use-cache=false to
+        # ensure reproducible builds for RC/release without any cached layers.
+        no-cache: ${{ inputs.use-cache != 'true' }}
         # Registry-based cache: each device variant gets its own cache
         # image in GHCR, avoiding the 10 GB GHA cache limit that caused
         # cache thrashing across cpu/xpu/cuda scopes (~18-20 GB total).
         # The caller must log in to ghcr.io before invoking this action.
         # Cache reads always work (public packages); writes require
         # packages:write which fork PRs do not have.
-        cache-from: type=registry,ref=ghcr.io/open-edge-platform/anomalib-studio-${{ inputs.device }}:buildcache
-        cache-to: ${{ inputs.cache-write == 'true' && format('type=registry,ref=ghcr.io/open-edge-platform/anomalib-studio-{0}:buildcache,mode=max', inputs.device) || '' }}
+        # Cache is disabled for RC/release builds (use-cache=false)
+        # to prevent cache poisoning and ensure reproducible builds.
+        cache-from: ${{ inputs.use-cache == 'true' && format('type=registry,ref=ghcr.io/open-edge-platform/anomalib-studio-{0}:buildcache', inputs.device) || '' }}
+        cache-to: ${{ inputs.cache-write == 'true' && inputs.use-cache == 'true' && format('type=registry,ref=ghcr.io/open-edge-platform/anomalib-studio-{0}:buildcache,mode=max', inputs.device) || '' }}
