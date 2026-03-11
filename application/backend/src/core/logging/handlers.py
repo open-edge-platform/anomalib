@@ -46,18 +46,29 @@ class LoggerStdoutWriter:
     @staticmethod
     def write(msg: str) -> int:
         original_length = len(msg)
-        msg = _ANSI_ESCAPE_RE.sub("", msg).rstrip("\n")
-        if not msg:
+        msg = _ANSI_ESCAPE_RE.sub("", msg)
+        # tqdm/Rich progress bars rely heavily on carriage returns to redraw a single line in-place.
+        # When captured via stdout redirection, those \r characters leak into log files and produce
+        # visually broken output, so we strip them before any further processing.
+        msg = msg.replace("\r", "").rstrip("\n")
+        if not msg.strip():
             return original_length
-        # For progress bars, only log the final step of each epoch (N/N).
-        # Intermediate redraws (1/N, 2/N, …) fire many times per second
-        # and overwhelm the async log-file queue.
+        # Collapse rich/tqdm progress bars into a compact textual summary so that logs still capture
+        # coarse-grained progress (e.g., "1/4 epochs", "14% weights downloaded") without drawing the
+        # full bar or leaking control characters into log files.
         match = _PROGRESS_BAR_RE.search(msg)
         if match:
-            step, total = match.group(1), match.group(2)
-            if step != total:
-                return original_length
-        logger.info(msg)
+            step_str, total_str = match.group(1), match.group(2)
+            try:
+                step = int(step_str)
+                total = int(total_str)
+                pct = int(step * 100 / total) if total else 0
+                replacement = f" {step}/{total} ({pct}%) "
+            except ValueError:
+                # Fallback: keep the raw ratio if parsing fails.
+                replacement = f" {step_str}/{total_str} "
+            msg = _PROGRESS_BAR_RE.sub(replacement, msg)
+        logger.info(msg.strip())
         return original_length
 
     @staticmethod
