@@ -162,7 +162,9 @@ class CaptureOutput(ContextDecorator):
             lib_logger = logging.getLogger(name)
             lib_logger.handlers = self._original_handlers[name]
             lib_logger.level = self._original_levels[name]
-            lib_logger.propagate = True
+            # Restore the original propagate flag if it was captured; fall back to True.
+            original_propagate = getattr(self, "_original_propagate", {}).get(name, True)
+            lib_logger.propagate = original_propagate
 
         assert self._stderr_wrapper is not None  # noqa: S101
         assert self._stdout_wrapper is not None  # noqa: S101
