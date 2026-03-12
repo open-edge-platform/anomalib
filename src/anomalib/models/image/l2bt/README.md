@@ -107,10 +107,11 @@ Example command:
 
 ```bash
 anomalib predict \
-  --model l2bt \
-  --dataset visa \
-  --dataset.category capsules
+  --config src/anomalib/models/image/l2bt/config.yaml \
+  --ckpt_path <path_to_checkpoint>
 ```
+
+The checkpoint is generated automatically after training and can be found in the results directory created by anomalib.
 
 This command generates anomaly scores and anomaly maps for the selected dataset.
 
@@ -122,9 +123,7 @@ Example command:
 
 ```bash
 anomalib train \
-  --model l2bt \
-  --dataset visa \
-  --dataset.category capsules
+  --config src/anomalib/models/image/l2bt/config.yaml
 ```
 
 During training, anomalib automatically manages:
