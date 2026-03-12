@@ -38,7 +38,7 @@
 # 2. Manual Trigger:
 #    workflow_dispatch:
 #      inputs:
-#        tools: "bandit,semgrep,trivy"
+#        tools: "bandit,semgrep,trivy-scan"
 #        scan-scope: "changed"
 #        severity-level: "MEDIUM"
 #
@@ -62,10 +62,10 @@ on:
         type: choice
         options:
           - "bandit,semgrep"
-          - "bandit,semgrep,trivy"
-          - "bandit,semgrep,trivy,zizmor"
-          - "bandit,semgrep,trivy,zizmor,trivy-image"
-        default: "bandit,semgrep,trivy,zizmor"
+          - "bandit,semgrep,trivy-scan"
+          - "bandit,semgrep,trivy-scan,zizmor"
+          - "bandit,semgrep,trivy-scan,zizmor,trivy-image-scan"
+        default: "bandit,semgrep,trivy-scan,zizmor"
       scan-scope:
         description: "Scan scope"
         required: true
@@ -103,9 +103,8 @@ jobs:
       security-events: write # needed to upload results
     with:
       # For scheduled runs, use full scan configuration
-      tools: ${{ inputs.tools || 'bandit,semgrep,trivy,zizmor' }}
-      scan-scope: ${{ github.event_name == 'schedule' && 'trivy-image' || inputs.scan-scope || 'all' }}
-
+      tools: ${{ inputs.tools || 'bandit,semgrep,trivy-scan,zizmor,trivy-image-scan' }}
+      scan-scope: ${{ inputs.scan-scope || 'all' }}
       severity-level: ${{ inputs.severity-level || 'LOW' }}
       confidence-level: ${{ inputs.confidence-level || 'LOW' }}
       fail-on-findings: false # reports only

@@ -46,7 +46,7 @@ on:
   workflow_call:
     inputs:
       tools:
-        description: "Security tools to run (comma-separated: bandit,semgrep,trivy,zizmor,trivy-image)"
+        description: "Security tools to run (comma-separated: bandit,semgrep,trivy-scan,zizmor,trivy-image-scan)"
         type: string
         default: "bandit,semgrep"
       scan-scope:
@@ -109,8 +109,8 @@ jobs:
           severity: ${{ inputs.severity-level }}
           fail-on-findings: ${{ inputs.fail-on-findings }}
 
-  trivy:
-    if: contains(inputs.tools, 'trivy')
+  trivy-scan:
+    if: contains(inputs.tools, 'trivy-scan')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -149,8 +149,8 @@ jobs:
           confidence-level: ${{ inputs.confidence-level }}
           fail-on-findings: ${{ inputs.fail-on-findings }}
 
-  trivy-image:
-    if: contains(inputs.tools, 'trivy-image')
+  trivy-image-scan:
+    if: contains(inputs.tools, 'trivy-image-scan')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -164,7 +164,7 @@ jobs:
           artifact-name: "trivy-scan-container-${{ matrix.ai-device }}"
           scan_type: "image"
           scan_target: "ghcr.io/open-edge-platform/anomalib-studio-${{ matrix.ai-device }}:main"
-          scan-scope: all
+          scan-scope: ${{ inputs.scan-scope }}
           severity: "LOW"
           scanners: "vuln,secret,config"
           format: "table"
@@ -172,7 +172,7 @@ jobs:
           ignore_unfixed: "true"
 
   summarize:
-    needs: [bandit, semgrep, trivy, zizmor, trivy-image]
+    needs: [bandit, semgrep, trivy-scan, zizmor, trivy-image-scan]
     runs-on: ubuntu-latest
     if: ${{ always() && !cancelled() }}
     env:
