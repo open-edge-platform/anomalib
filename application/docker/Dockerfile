@@ -117,18 +117,17 @@ FROM anomalib-studio-cuda-base AS anomalib-studio-cuda-cleanup
 # CUDA EULA Compliance Cleanup
 RUN echo "Removing non-redistributable CUDA components per NVIDIA EULA..." && \
     # Define search paths including venv
-    SEARCH_PATHS="/usr /opt /app/.venv" && \
+    SEARCH_PATHS="/usr /opt" && \
      # Include PYTHONPATH in search paths if it is set
     if [ -n "${PYTHONPATH}" ]; then \
     SEARCH_PATHS="$SEARCH_PATHS ${PYTHONPATH}"; \
     fi && \
-    # Add any detected venvs from /app/.venv and PYTHONPATH (if set)
-    for venv in $(find /app/.venv ${PYTHONPATH:+${PYTHONPATH}} -name "site-packages" -type d 2>/dev/null | sed 's|/lib/python[0-9.]*/site-packages||' | sort -u); do \
+    # Add any detected venvs from PYTHONPATH (if set)
+    for venv in $(find ${PYTHONPATH:+${PYTHONPATH}} -name "site-packages" -type d 2>/dev/null | sed 's|/lib/python[0-9.]*/site-packages||' | sort -u); do \
     if [ -d "$venv" ]; then \
     SEARCH_PATHS="$SEARCH_PATHS $venv"; \
     fi; \
     done && \
-
     echo "Cleaning CUDA components in: $SEARCH_PATHS" && \
     # Remove development tools (non-redistributable)
     find $SEARCH_PATHS -type f \( \
