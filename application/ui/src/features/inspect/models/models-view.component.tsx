@@ -43,7 +43,6 @@ export const ModelsView = ({ onModelSelect }: ModelsViewProps) => {
     const selectedModelId = pipeline.model?.id;
     const models = useCompletedModels();
 
-
     useRefreshModelsOnJobUpdates(jobs);
 
     const completedModelsJobsIDs = new Set(models.map((model) => model.job?.id));
@@ -70,7 +69,6 @@ export const ModelsView = ({ onModelSelect }: ModelsViewProps) => {
             };
         });
 
-
     const useShowModels = (models: ModelData[], nonCompletedJobs: ModelData[]) => {
         const { data: trainableModelsData } = $api.useSuspenseQuery('get', '/api/trainable-models');
         console.log(trainableModelsData.trainable_models);
@@ -78,12 +76,15 @@ export const ModelsView = ({ onModelSelect }: ModelsViewProps) => {
         for (const model of trainableModelsData?.trainable_models ?? []) {
             modelDisplayNames.set(model.id, model.name);
         }
-        return sortBy([...nonCompletedJobs, ...models].map(model => {
-            return {
-                ...model,
-                name: modelDisplayNames.get(model.name) ?? model.name,
-            };
-        }), (model) => -model.startTime);
+        return sortBy(
+            [...nonCompletedJobs, ...models].map((model) => {
+                return {
+                    ...model,
+                    name: modelDisplayNames.get(model.name) ?? model.name,
+                };
+            }),
+            (model) => -model.startTime
+        );
     };
 
     const showModels = useShowModels(models, nonCompletedJobs);
