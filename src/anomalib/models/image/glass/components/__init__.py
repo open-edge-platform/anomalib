@@ -4,14 +4,17 @@
 """Utility functions for GLASS Model."""
 
 from .aggregator import Aggregator
+from .anomaly_augmentor import GlassAnomalyAugmentor
 from .discriminator import Discriminator
 from .patch_maker import PatchMaker
 from .preprocessing import Preprocessing
 from .projection import Projection
 from .rescale_segmentor import RescaleSegmentor
 
-__all__ = ["Aggregator",
+__all__ = [
+    "Aggregator",
     "Discriminator",
+    "GlassAnomalyAugmentor",
     "PatchMaker",
     "Preprocessing",
     "Projection",
