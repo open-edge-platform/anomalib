@@ -8,7 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 from anomalib.data import InferenceBatch
 
@@ -105,10 +105,11 @@ class L2BTModel(nn.Module):
             return
 
         if not checkpoints_exist:
-            raise FileNotFoundError(
+            msg = (
                 "Requested loading pre-trained L2BT checkpoints, but at least one file was not found. "
                 f"Expected: {forward_path} and {backward_path}"
             )
+            raise FileNotFoundError(msg)
 
         self.forward_net.load_state_dict(
             torch.load(forward_path, map_location="cpu", weights_only=False),
@@ -123,7 +124,8 @@ class L2BTModel(nn.Module):
     def extract_teacher_features(self, images: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Extract frozen teacher features for the two selected ViT layers."""
         if images.ndim != 4:
-            raise ValueError(f"Expected images with shape (B,C,H,W), got {tuple(images.shape)}")
+            msg = f"Expected images with shape (B,C,H,W), got {tuple(images.shape)}"
+            raise ValueError(msg)
         middle_patch, last_patch = self.teacher(images)
         return middle_patch, last_patch
 

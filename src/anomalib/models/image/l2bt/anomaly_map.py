@@ -6,8 +6,8 @@
 from __future__ import annotations
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+from torch import nn
+from torch.nn import functional
 
 
 class L2BTAnomalyMapGenerator(nn.Module):
@@ -40,18 +40,18 @@ class L2BTAnomalyMapGenerator(nn.Module):
 
     def _blur(self, anomaly_map: torch.Tensor) -> torch.Tensor:
         for _ in range(self.blur_repeats_l):
-            anomaly_map = F.conv2d(anomaly_map, padding=self.blur_pad_l, weight=self.weight_l)
+            anomaly_map = functional.conv2d(anomaly_map, padding=self.blur_pad_l, weight=self.weight_l)
         for _ in range(self.blur_repeats_u):
-            anomaly_map = F.conv2d(anomaly_map, padding=self.blur_pad_u, weight=self.weight_u)
+            anomaly_map = functional.conv2d(anomaly_map, padding=self.blur_pad_u, weight=self.weight_u)
         return anomaly_map
 
     def _score_topk_mean(self, anomaly_map: torch.Tensor) -> torch.Tensor:
         b, _, h, w = anomaly_map.shape
         n = h * w
         k = max(1, int(n * self.topk_ratio))
-        flat = anomaly_map.view(b, -1)  # (B, H*W) because channel=1
+        flat = anomaly_map.view(b, -1)
         topk_vals = torch.topk(flat, k=k, dim=1).values
-        return topk_vals.mean(dim=1)  # (B,)
+        return topk_vals.mean(dim=1)
 
     def forward(
         self,
@@ -61,29 +61,34 @@ class L2BTAnomalyMapGenerator(nn.Module):
         predicted_last_patch: torch.Tensor,
         output_size: tuple[int, int],
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        """Return (anomaly_map, pred_score).
+        """Return anomaly map and image-level anomaly score.
 
         Args:
-            middle_patch, last_patch: teacher features
-            predicted_middle_patch, predicted_last_patch: student predictions
-            output_size: (H, W) of the input image
+            middle_patch: Teacher features from the intermediate transformer layer.
+            last_patch: Teacher features from the final transformer layer.
+            predicted_middle_patch: Student prediction of the intermediate teacher features.
+            predicted_last_patch: Student prediction of the final teacher features.
+            output_size: Spatial size ``(H, W)`` of the input image.
 
         Returns:
-            anomaly_map: (B, 1, H, W)
-            pred_score: (B,)
+            anomaly_map: Anomaly map of shape ``(B, 1, H, W)``.
+            pred_score: Image-level anomaly scores of shape ``(B,)``.
         """
         b = middle_patch.shape[0]
         h, w = output_size
         h_p, w_p = h // self.patch_size, w // self.patch_size
 
         middle_anom = (
-            (F.normalize(predicted_middle_patch, dim=-1) - F.normalize(middle_patch, dim=-1))
+            (
+                functional.normalize(predicted_middle_patch, dim=-1)
+                - functional.normalize(middle_patch, dim=-1)
+            )
             .pow(2)
             .sum(-1)
             .sqrt()
         )
         last_anom = (
-            (F.normalize(predicted_last_patch, dim=-1) - F.normalize(last_patch, dim=-1))
+            (functional.normalize(predicted_last_patch, dim=-1) - functional.normalize(last_patch, dim=-1))
             .pow(2)
             .sum(-1)
             .sqrt()
@@ -91,14 +96,15 @@ class L2BTAnomalyMapGenerator(nn.Module):
 
         combined = middle_anom * last_anom
         if combined.numel() != b * h_p * w_p:
-            raise RuntimeError(
+            msg = (
                 "Patch grid reshape mismatch. "
-                f"combined.numel()={combined.numel()}, expected {b*h_p*w_p} "
+                f"combined.numel()={combined.numel()}, expected {b * h_p * w_p} "
                 f"from output_size={(h, w)} and patch_size={self.patch_size}."
             )
+            raise RuntimeError(msg)
 
         anomaly_map = combined.view(b, 1, h_p, w_p)
-        anomaly_map = F.interpolate(anomaly_map, size=(h, w), mode="bilinear", align_corners=False)
+        anomaly_map = functional.interpolate(anomaly_map, size=(h, w), mode="bilinear", align_corners=False)
         anomaly_map = self._blur(anomaly_map)
 
         pred_score = self._score_topk_mean(anomaly_map)

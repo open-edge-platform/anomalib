@@ -18,7 +18,7 @@ model:
     epochs_no: 50
     batch_size: 4
     layers: [7, 11]
-    load_pretrained: false
+    load_pretrained: true
 
 trainer:
   accelerator: auto
