@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 
+import { $api } from '@anomalib-studio/api';
 import { usePipeline } from '@anomalib-studio/hooks';
 import {
     Cell,
@@ -42,6 +43,18 @@ export const ModelsView = ({ onModelSelect }: ModelsViewProps) => {
     const selectedModelId = pipeline.model?.id;
     const models = useCompletedModels();
 
+    const { data: trainableModelsData } = $api.useQuery('get', '/api/trainable-models');
+
+    const modelDisplayNames = useMemo(() => {
+        const map = new Map<string, string>();
+
+        for (const model of trainableModelsData?.trainable_models ?? []) {
+            map.set(model.id, model.name);
+        }
+
+        return map;
+    }, [trainableModelsData]);
+
     useRefreshModelsOnJobUpdates(jobs);
 
     const completedModelsJobsIDs = new Set(models.map((model) => model.job?.id));
@@ -68,7 +81,13 @@ export const ModelsView = ({ onModelSelect }: ModelsViewProps) => {
             };
         });
 
-    const showModels = sortBy([...nonCompletedJobs, ...models], (model) => -model.startTime);
+    const resolveDisplayName = (model: ModelData): ModelData => {
+        const displayName = modelDisplayNames.get(model.name) ?? model.name;
+
+        return displayName === model.name ? model : { ...model, name: displayName, architecture: displayName };
+    };
+
+    const showModels = sortBy([...nonCompletedJobs, ...models].map(resolveDisplayName), (model) => -model.startTime);
 
     const tableSelectedKeys = useMemo(() => {
         if (selectedModelId === undefined) {
