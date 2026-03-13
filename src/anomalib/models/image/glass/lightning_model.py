@@ -28,7 +28,7 @@ from torchvision.transforms.v2 import CenterCrop, Compose, Normalize, Resize
 from anomalib import LearningType
 from anomalib.data import Batch
 from anomalib.data.utils import DownloadInfo, download_and_extract
-from anomalib.metrics import Evaluator
+from anomalib.metrics import AUROC, Evaluator, F1Score
 from anomalib.models.components import AnomalibModule
 from anomalib.post_processing import PostProcessor
 from anomalib.pre_processing import PreProcessor
@@ -89,6 +89,18 @@ class Glass(AnomalibModule):
             Defaults to `20`.
         svd (int, optional): Flag to enable SVD-based feature projection.
             Defaults to `0`.
+        downsampling (int, optional): Downsampling factor for feature-level anomaly masks.
+            The feature map size is ``input_size // downsampling``. Defaults to ``8``.
+        limit (int, optional): Maximum number of training samples per epoch.
+            Matches the official GLASS implementation. Defaults to ``392``.
+        noise (float, optional): Standard deviation of Gaussian noise added to features
+            for global anomaly synthesis. Defaults to ``0.015``.
+        radius (float, optional): Quantile used to compute the truncated projection radius
+            during gradient ascent. Defaults to ``0.75``.
+        p (float, optional): Quantile threshold for hard example mining in focal loss
+            computation. When ``0``, all samples are used. Defaults to ``0.5``.
+        mining (int, optional): Whether to perform gradient ascent (1) or skip it (0).
+            Defaults to ``1``.
         pre_processor (PreProcessor | bool, optional): reprocessing module or flag to enable default preprocessing.
             Set to `True` to apply default normalization and resizing.
             Defaults to `True`.
@@ -120,6 +132,12 @@ class Glass(AnomalibModule):
         learning_rate: float = 0.0001,
         step: int = 20,
         svd: int = 0,
+        downsampling: int = 8,
+        limit: int = 392,
+        noise: float = 0.015,
+        radius: float = 0.75,
+        p: float = 0.5,
+        mining: int = 1,
         pre_processor: PreProcessor | bool = True,
         post_processor: PostProcessor | bool = True,
         evaluator: Evaluator | bool = True,
@@ -156,10 +174,16 @@ class Glass(AnomalibModule):
             discriminator_margin=discriminator_margin,
             step=step,
             svd=svd,
+            downsampling=downsampling,
+            noise=noise,
+            radius=radius,
+            p=p,
+            mining=mining,
         )
 
         self.learning_rate = learning_rate
         self.pre_trained = pre_trained
+        self.limit = limit
 
         if pre_projection > 0:
             self.projection_opt = optim.Adam(
@@ -229,6 +253,35 @@ class Glass(AnomalibModule):
 
         return PreProcessor(transform=transform)
 
+    @staticmethod
+    def configure_evaluator() -> Evaluator:
+        """Configure the evaluator with validation and test metrics.
+
+        Overrides the default evaluator to include both ``image_AUROC`` and
+        ``pixel_AUROC`` as validation metrics. The official GLASS implementation
+        selects the best checkpoint based on ``image_auroc + pixel_auroc``, so
+        both must be available during validation.
+
+        Returns:
+            Evaluator: Configured evaluator with both validation and test metrics.
+
+        Example:
+            >>> evaluator = Glass.configure_evaluator()
+            >>> len(evaluator.val_metrics) > 0
+            True
+        """
+        val_image_auroc = AUROC(fields=["pred_score", "gt_label"], prefix="image_")
+        val_pixel_auroc = AUROC(fields=["anomaly_map", "gt_mask"], prefix="pixel_", strict=False)
+        val_metrics = [val_image_auroc, val_pixel_auroc]
+
+        image_auroc = AUROC(fields=["pred_score", "gt_label"], prefix="image_")
+        image_f1score = F1Score(fields=["pred_label", "gt_label"], prefix="image_")
+        pixel_auroc = AUROC(fields=["anomaly_map", "gt_mask"], prefix="pixel_", strict=False)
+        pixel_f1score = F1Score(fields=["pred_mask", "gt_mask"], prefix="pixel_", strict=False)
+        test_metrics = [image_auroc, image_f1score, pixel_auroc, pixel_f1score]
+
+        return Evaluator(val_metrics=val_metrics, test_metrics=test_metrics)
+
     def configure_optimizers(self) -> optim.Optimizer:
         """Configure optimizer for the discriminator.
 
@@ -248,6 +301,10 @@ class Glass(AnomalibModule):
             STEP_OUTPUT: Dictionary containing loss values and metrics
         """
         del batch_idx
+
+        samples_seen = getattr(self, "_epoch_samples_seen", 0)
+        if self.limit > 0 and samples_seen > self.limit:
+            return None
 
         discriminator_opt = self.optimizers()
 
@@ -278,6 +335,8 @@ class Glass(AnomalibModule):
         self.log("focal_loss", focal_loss, prog_bar=True)
         self.log("loss", loss, prog_bar=True)
 
+        self._epoch_samples_seen = getattr(self, "_epoch_samples_seen", 0) + batch.image.shape[0]
+
     def validation_step(self, batch: Batch, batch_idx: int) -> STEP_OUTPUT:
         """Performs a single validation step during model evaluation.
 
@@ -304,8 +363,23 @@ class Glass(AnomalibModule):
         This method is called at the start of training and computes a mean feature vector
         that serves as a reference point for the normal class distribution.
         """
+        self._epoch_samples_seen = 0
         dataloader = self.trainer.train_dataloader
         self.model.calculate_center(dataloader, self.device)
+
+    def on_validation_epoch_end(self) -> None:
+        """Log combined AUROC (image + pixel) for checkpoint selection.
+
+        The official GLASS selects the best checkpoint by maximizing
+        ``image_auroc + pixel_auroc``. This hook logs that sum so
+        ``ModelCheckpoint(monitor="combined_AUROC")`` can replicate the
+        same selection criterion.
+        """
+        metrics = self.trainer.callback_metrics
+        image_auroc = metrics.get("image_AUROC", 0.0)
+        pixel_auroc = metrics.get("pixel_AUROC", 0.0)
+        combined = float(image_auroc) + float(pixel_auroc)
+        self.log("combined_AUROC", combined, prog_bar=True)
 
     @property
     def learning_type(self) -> LearningType:

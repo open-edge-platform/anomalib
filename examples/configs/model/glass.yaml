@@ -2,11 +2,14 @@ model:
   class_path: anomalib.models.Glass
   init_args:
     input_shape: [288, 288]
-    backbone: resnet18
-    pretrain_embed_dim: 1024
-    target_embed_dim: 1024
+    backbone: wide_resnet50_2
+    layers:
+      - layer2
+      - layer3
+    pretrain_embed_dim: 1536
+    target_embed_dim: 1536
     patchsize: 3
-    patchstride: 1 
+    patchstride: 1
     pre_trained: true
     pre_projection: 1
     discriminator_layers: 2
@@ -15,12 +18,12 @@ model:
     learning_rate: 0.0001
     step: 20
     svd: 0
+    downsampling: 8
+    limit: 392
+    noise: 0.015
+    radius: 0.75
+    p: 0.5
+    mining: 1
 
 trainer:
-  max_epochs: 640
-  callbacks:
-    - class_path: lightning.pytorch.callbacks.EarlyStopping
-      init_args:
-        patience: 5
-        monitor: pixel_AUROC
-        mode: max
+  max_epochs: 100
