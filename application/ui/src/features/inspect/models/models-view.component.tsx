@@ -35,6 +35,19 @@ interface ModelsViewProps {
     onModelSelect: (modelId: string) => void;
 }
 
+const useShowModels = (models: ModelData[], nonCompletedJobs: ModelData[]) => {
+    const { data: trainableModelsData } = $api.useSuspenseQuery('get', '/api/trainable-models');
+    return sortBy(
+        [...nonCompletedJobs, ...models].map((model) => {
+            return {
+                ...model,
+                name: trainableModelsData?.trainable_models?.find((m) => m.id === model.name)?.name ?? model.name,
+            };
+        }),
+        (model) => -model.startTime
+    );
+};
+
 export const ModelsView = ({ onModelSelect }: ModelsViewProps) => {
     const { data: pipeline } = usePipeline();
     const { jobs = [] } = useProjectTrainingJobs();
@@ -68,24 +81,6 @@ export const ModelsView = ({ onModelSelect }: ModelsViewProps) => {
                 sizeBytes: null,
             };
         });
-
-    const useShowModels = (models: ModelData[], nonCompletedJobs: ModelData[]) => {
-        const { data: trainableModelsData } = $api.useSuspenseQuery('get', '/api/trainable-models');
-        console.log(trainableModelsData.trainable_models);
-        const modelDisplayNames = new Map<string, string>();
-        for (const model of trainableModelsData?.trainable_models ?? []) {
-            modelDisplayNames.set(model.id, model.name);
-        }
-        return sortBy(
-            [...nonCompletedJobs, ...models].map((model) => {
-                return {
-                    ...model,
-                    name: modelDisplayNames.get(model.name) ?? model.name,
-                };
-            }),
-            (model) => -model.startTime
-        );
-    };
 
     const showModels = useShowModels(models, nonCompletedJobs);
 
