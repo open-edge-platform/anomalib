@@ -49,6 +49,8 @@ from .anomaly_map import AnomalyMapGenerator
 if TYPE_CHECKING:
     from anomalib.data.utils.tiler import Tiler
 
+DEFAULT_CHUNK_SIZE = 1000
+
 
 class PatchcoreModel(DynamicBufferMixin, nn.Module):
     """PatchCore PyTorch model for anomaly detection.
@@ -340,7 +342,7 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
             (torch.Size([100, 5]), torch.Size([100, 5]))
         """
         n = embedding.shape[0]
-        chunk_size = 1000
+        chunk_size = DEFAULT_CHUNK_SIZE
         
         if n <= chunk_size:
             # Small embedding set: process all at once
