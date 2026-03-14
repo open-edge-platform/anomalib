@@ -310,10 +310,14 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
             This implementation avoids using ``torch.cdist()`` for better
             compatibility with ONNX export and OpenVINO conversion.
         """
-        x_norm = x.pow(2).sum(dim=-1, keepdim=True)  # |x|
-        y_norm = y.pow(2).sum(dim=-1, keepdim=True)  # |y|
+        x_norm = x.pow(2).sum(dim=-1, keepdim=True)
+        y_norm = y.pow(2).sum(dim=-1, keepdim=True)
+        res = torch.empty(x.shape[0], y.shape[0], device=x.device, dtype=x.dtype)
         # row distance can be rewritten as sqrt(|x| - 2 * x @ y.T + |y|.T)
-        res = x_norm - 2 * torch.matmul(x, y.transpose(-2, -1)) + y_norm.transpose(-2, -1)
+        torch.matmul(x, y.transpose(-2, -1), out=res)
+        res.mul_(-2)
+        res.add_(x_norm)
+        res.add_(y_norm.transpose(-2, -1))
         return res.clamp_min_(0).sqrt_()
 
     def nearest_neighbors(self, embedding: torch.Tensor, n_neighbors: int) -> tuple[torch.Tensor, torch.Tensor]:
