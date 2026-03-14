@@ -49,7 +49,7 @@ from .anomaly_map import AnomalyMapGenerator
 if TYPE_CHECKING:
     from anomalib.data.utils.tiler import Tiler
 
-DEFAULT_CHUNK_SIZE = 1000
+DEFAULT_CHUNK_SIZE = 1024
 
 
 class PatchcoreModel(DynamicBufferMixin, nn.Module):
