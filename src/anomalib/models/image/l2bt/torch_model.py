@@ -112,11 +112,11 @@ class L2BTModel(nn.Module):
             raise FileNotFoundError(msg)
 
         self.forward_net.load_state_dict(
-            torch.load(forward_path, map_location="cpu", weights_only=False),
+            torch.load(forward_path, map_location="cpu", weights_only=True),
             strict=self.strict_checkpoint_load,
         )
         self.backward_net.load_state_dict(
-            torch.load(backward_path, map_location="cpu", weights_only=False),
+            torch.load(backward_path, map_location="cpu", weights_only=True),
             strict=self.strict_checkpoint_load,
         )
 

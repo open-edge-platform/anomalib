@@ -79,10 +79,7 @@ class L2BTAnomalyMapGenerator(nn.Module):
         h_p, w_p = h // self.patch_size, w // self.patch_size
 
         middle_anom = (
-            (
-                functional.normalize(predicted_middle_patch, dim=-1)
-                - functional.normalize(middle_patch, dim=-1)
-            )
+            (functional.normalize(predicted_middle_patch, dim=-1) - functional.normalize(middle_patch, dim=-1))
             .pow(2)
             .sum(-1)
             .sqrt()

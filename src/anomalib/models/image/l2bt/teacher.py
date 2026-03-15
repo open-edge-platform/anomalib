@@ -19,7 +19,7 @@ class FeatureExtractor(torch.nn.Module):
         """
         super().__init__()
 
-        self.fe = torch.hub.load("facebookresearch/dinov2", "dinov2_vitb14_reg")
+        self.fe = torch.hub.load("facebookresearch/dinov2", "dinov2_vitb14_reg")  # nosec B614
         self.layers = list(layers)
 
         self.patch_size = self.fe.patch_size
