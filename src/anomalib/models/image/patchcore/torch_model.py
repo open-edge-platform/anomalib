@@ -312,9 +312,7 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         """
         x_norm = x.pow(2).sum(dim=-1, keepdim=True)
         y_norm = y.pow(2).sum(dim=-1, keepdim=True)
-        res = torch.empty(x.shape[0], y.shape[0], device=x.device, dtype=x.dtype)
-        # row distance can be rewritten as sqrt(|x| - 2 * x @ y.T + |y|.T)
-        torch.matmul(x, y.transpose(-2, -1), out=res)
+        res = torch.matmul(x, y.transpose(-2, -1), out=res)
         res.mul_(-2)
         res.add_(x_norm)
         res.add_(y_norm.transpose(-2, -1))
