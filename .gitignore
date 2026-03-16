@@ -1,4 +1,4 @@
-# Project related
+#Project related
 datasets
 !src/anomalib/data/datasets
 pre_trained

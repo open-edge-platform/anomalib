@@ -38,6 +38,7 @@ Available Models:
     - :class:`Ganomaly`: Generative Adversarial Networks
     - :class:`Padim`: Patch Distribution Modeling
     - :class:`Patchcore`: Patch Core
+    - :class:`Patchflow`: Patch Flow
     - :class:`ReverseDistillation`: Reverse Knowledge Distillation
     - :class:`Stfpm`: Student-Teacher Feature Pyramid Matching
     - :class:`SuperSimpleNet`: SuperSimpleNet
@@ -62,6 +63,7 @@ from .fre import Fre
 from .ganomaly import Ganomaly
 from .padim import Padim
 from .patchcore import Patchcore
+from .patchflow import Patchflow
 from .reverse_distillation import ReverseDistillation
 from .stfpm import Stfpm
 from .supersimplenet import Supersimplenet
@@ -86,6 +88,7 @@ __all__ = [
     "Ganomaly",
     "Padim",
     "Patchcore",
+    "Patchflow",
     "ReverseDistillation",
     "Stfpm",
     "Supersimplenet",
