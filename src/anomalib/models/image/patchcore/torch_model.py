@@ -345,7 +345,7 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         """
         n = embedding.shape[0]
         chunk_size = DEFAULT_CHUNK_SIZE
-        
+
         if n <= chunk_size:
             # Small embedding set: process all at once
             distances = self.euclidean_dist(embedding, self.memory_bank)
@@ -358,28 +358,28 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
             # Large embedding set: process in chunks
             all_scores = []
             all_locations = []
-            
+
             for start_idx in range(0, n, chunk_size):
                 end_idx = min(start_idx + chunk_size, n)
                 embedding_chunk = embedding[start_idx:end_idx]
-                
+
                 # Compute distances for this chunk against full memory bank
                 distances = self.euclidean_dist(embedding_chunk, self.memory_bank)
-                
+
                 # Find top-k neighbors immediately and discard full distance matrix
                 if n_neighbors == 1:
                     chunk_scores, chunk_locations = distances.min(1)
                 else:
                     chunk_scores, chunk_locations = distances.topk(k=n_neighbors, largest=False, dim=1)
-                
+
                 all_scores.append(chunk_scores)
                 all_locations.append(chunk_locations)
                 del distances  # Free memory immediately
-            
+
             # Concatenate results from all chunks
             patch_scores = torch.cat(all_scores, dim=0)
             locations = torch.cat(all_locations, dim=0)
-        
+
         return patch_scores, locations
 
     def compute_anomaly_score(
