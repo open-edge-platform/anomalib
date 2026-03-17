@@ -374,7 +374,7 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
 
                 all_scores.append(chunk_scores)
                 all_locations.append(chunk_locations)
-                del distances  # Free memory immediately
+                del distances  # Drop reference to allow garbage collection
 
             # Concatenate results from all chunks
             patch_scores = torch.cat(all_scores, dim=0)
