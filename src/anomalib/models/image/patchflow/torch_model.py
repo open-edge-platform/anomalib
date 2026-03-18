@@ -64,6 +64,9 @@ class PatchflowModel(nn.Module):
         num_scales: Number of input resolutions for multi-scale extraction.
         patch_size: Kernel size of the AvgPool for local aggregation.
         flow_hidden_dim: Hidden channels in the flow subnet.
+        crop_size: Optional center crop size ``(H, W)`` applied before
+            feature extraction. The anomaly map is zero-padded back to
+            ``input_size``. Defaults to ``None`` (no cropping).
     """
 
     def __init__(
@@ -76,9 +79,13 @@ class PatchflowModel(nn.Module):
         num_scales: int = 3,
         patch_size: int = 3,
         flow_hidden_dim: int = 128,
+        crop_size: tuple[int, int] | None = None,
     ) -> None:
         super().__init__()
         self.input_size = input_size
+        self.crop_size = crop_size
+        # Internal size used for backbone, flow, and anomaly map generation
+        self._internal_size = crop_size if crop_size is not None else input_size
         self.num_scales = num_scales
         self.backbone_name = backbone
         self.is_dinov2 = backbone.startswith(_DINOV2_PREFIX)
@@ -86,8 +93,8 @@ class PatchflowModel(nn.Module):
         # --- Feature extractor (frozen) ---
         if self.is_dinov2:
             self.feature_extractor = DinoV2Loader.from_name(backbone)
-            # Use last 3 intermediate layers by default
-            self.dino_layer_indices: list[int] = [9, 10, 11]
+            # Use early, middle, and late intermediate layers
+            self.dino_layer_indices: list[int] = [0, 6, 11]
             embed_dim: int = self.feature_extractor.embed_dim
             total_channels = embed_dim * len(self.dino_layer_indices) * num_scales
         else:
@@ -105,7 +112,11 @@ class PatchflowModel(nn.Module):
 
         # --- Feature fuser (AvgPool + upsample + concat) ---
         self.avg_pool = nn.AvgPool2d(kernel_size=patch_size, stride=1, padding=patch_size // 2)
-        self.fused_spatial_size = (input_size[0] // 8, input_size[1] // 8)
+        if self.is_dinov2:
+            dino_patch = self.feature_extractor.patch_size
+            self.fused_spatial_size = (self._internal_size[0] // dino_patch, self._internal_size[1] // dino_patch)
+        else:
+            self.fused_spatial_size = (self._internal_size[0] // 8, self._internal_size[1] // 8)
 
         # --- Feature adaptor (1x1 conv) ---
         self.feature_adaptor = nn.Conv2d(total_channels, flow_feature_dim, kernel_size=1)
@@ -118,8 +129,8 @@ class PatchflowModel(nn.Module):
                 subnet_constructor=_build_subnet_constructor(flow_hidden_dim),
             )
 
-        # --- Anomaly map generator ---
-        self.anomaly_map_generator = AnomalyMapGenerator(input_size=input_size)
+        # --- Anomaly map generator (operates at crop_size, padded to input_size later) ---
+        self.anomaly_map_generator = AnomalyMapGenerator(input_size=self._internal_size)
 
     # ------------------------------------------------------------------
     # Feature extraction helpers
@@ -136,7 +147,7 @@ class PatchflowModel(nn.Module):
             if s > 0:
                 scaled = F.interpolate(
                     x,
-                    size=(self.input_size[0] // (2**s), self.input_size[1] // (2**s)),
+                    size=(self._internal_size[0] // (2**s), self._internal_size[1] // (2**s)),
                     mode="bilinear",
                     align_corners=False,
                 )
@@ -156,8 +167,8 @@ class PatchflowModel(nn.Module):
         all_features: list[torch.Tensor] = []
         for s in range(self.num_scales):
             if s > 0:
-                h = self.input_size[0] // (2**s)
-                w = self.input_size[1] // (2**s)
+                h = self._internal_size[0] // (2**s)
+                w = self._internal_size[1] // (2**s)
                 # Ensure dimensions are divisible by the DINOv2 patch size
                 h = (h // patch_size) * patch_size
                 w = (w // patch_size) * patch_size
@@ -206,11 +217,20 @@ class PatchflowModel(nn.Module):
         """
         self.feature_extractor.eval()
 
+        # 0. Center crop if crop_size is set
+        x = input_tensor
+        if self.crop_size is not None:
+            _, _, h_in, w_in = x.shape
+            ch, cw = self.crop_size
+            top = (h_in - ch) // 2
+            left = (w_in - cw) // 2
+            x = x[:, :, top : top + ch, left : left + cw]
+
         # 1. Extract multi-scale features
         if self.is_dinov2:
-            features = self._extract_dinov2_features(input_tensor)
+            features = self._extract_dinov2_features(x)
         else:
-            features = self._extract_cnn_features(input_tensor)
+            features = self._extract_cnn_features(x)
 
         # 2. Fuse features
         fused = self._fuse_features(features)
@@ -224,7 +244,20 @@ class PatchflowModel(nn.Module):
         if self.training:
             return hidden_variables, log_jacobians
 
-        # 5. Generate anomaly map
+        # 5. Generate anomaly map (at crop_size)
         anomaly_map = self.anomaly_map_generator(hidden_variables)
+
+        # 6. Compute pred_score from cropped region before padding
         pred_score = torch.amax(anomaly_map, dim=(-2, -1))
+
+        # 7. pad anomaly map back to input_size if cropped
+        if self.crop_size is not None:
+            _, _, h_in, w_in = input_tensor.shape
+            ch, cw = self.crop_size
+            pad_top = (h_in - ch) // 2
+            pad_bottom = h_in - ch - pad_top
+            pad_left = (w_in - cw) // 2
+            pad_right = w_in - cw - pad_left
+            anomaly_map = F.pad(anomaly_map, (pad_left, pad_right, pad_top, pad_bottom), mode="constant", value=-1)
+
         return InferenceBatch(pred_score=pred_score, anomaly_map=anomaly_map)

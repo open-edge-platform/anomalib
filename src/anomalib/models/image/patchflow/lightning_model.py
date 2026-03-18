@@ -3,9 +3,18 @@
 
 """PatchFlow Lightning Model Implementation.
 
-PatchFlow is a normalizing-flow-based anomaly detection model that fuses
-multi-scale backbone features and runs a single flow on the fused
-representation.
+This model implements the PatchFlow algorithm for anomaly detection and localization.
+PatchFlow models the distribution of patch-level feature embeddings using a learnable normalizing flow.
+
+The model extracts patch embeddings from intermediate layers of a pretrained backbone.
+It then passes them through a feature adaptor, which projects and aligns features into a space suited for density estimation.
+These patch features are then transformed by a flow-based density estimator that learns the distribution of normal data.
+
+During inference, the model computes the likelihood of each patch under the learned flow. 
+Low-likelihood patches indicate anomalies. 
+The patch-level scores are aggregated to produce both an image-level anomaly score and a pixel-wise anomaly map.
+
+Paper: https://arxiv.org/abs/2602.05238
 
 Example:
     >>> from anomalib.data import MVTecAD
@@ -56,6 +65,10 @@ class Patchflow(AnomalibModule):
             Defaults to ``3``.
         flow_hidden_dim: Hidden channels in the flow subnet.
             Defaults to ``128``.
+        crop_size: Optional center crop size ``(H, W)``. When set, the
+            input is center-cropped before feature extraction and the
+            anomaly map is zero-padded back to the original input size.
+            Defaults to ``None``.
         pre_processor: Pre-processor instance or boolean.
             Defaults to ``True``.
         post_processor: Post-processor instance or boolean.
@@ -68,13 +81,16 @@ class Patchflow(AnomalibModule):
 
     def __init__(
         self,
-        backbone: str = "tf_efficientnet_b5",
+        backbone: str = "tf_efficientnet_b5", # option:{dinov2_vit_base_14}
         pre_trained: bool = True,
         flow_steps: int = 1,
         flow_feature_dim: int = 128,
         num_scales: int = 3,
         patch_size: int = 3,
         flow_hidden_dim: int = 128,
+        crop_size: tuple[int, int] | None = None,
+        lr: float = 0.001,
+        weight_decay: float = 0.0001,
         pre_processor: PreProcessor | bool = True,
         post_processor: PostProcessor | bool = True,
         evaluator: Evaluator | bool = True,
@@ -99,7 +115,10 @@ class Patchflow(AnomalibModule):
             num_scales=num_scales,
             patch_size=patch_size,
             flow_hidden_dim=flow_hidden_dim,
+            crop_size=crop_size,
         )
+        self.lr = lr
+        self.weight_decay = weight_decay
         self.loss = PatchflowLoss()
 
     def training_step(self, batch: Batch, *args, **kwargs) -> STEP_OUTPUT:
@@ -149,8 +168,8 @@ class Patchflow(AnomalibModule):
         """
         return optim.Adam(
             params=self.model.parameters(),
-            lr=0.001,
-            weight_decay=0.0001,
+            lr=self.lr,
+            weight_decay=self.weight_decay,
         )
 
     @property

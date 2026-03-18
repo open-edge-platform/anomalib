@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- 🚀 **model**: Add Patchflow model for normalizing-flow-based anomaly detection
+- ✅ **tests**: Add pytest coverage for Patchflow torch model, lightning module, loss, and anomaly map
+- 📄 **config**: Add example config for Patchflow with DINOv2 backbone
 - 🚀 **model**: Enable Patchcore Training Half Precision by @alexriedel1 in https://github.com/open-edge-platform/anomalib/pull/3047
 
 ### Removed
