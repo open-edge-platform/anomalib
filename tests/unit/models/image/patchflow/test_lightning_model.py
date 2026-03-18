@@ -3,6 +3,8 @@
 
 """Unit tests for PatchFlow lightning model."""
 
+from unittest.mock import MagicMock
+
 import pytest
 import torch
 
@@ -38,6 +40,7 @@ def test_initialization(model: Patchflow) -> None:
 
 def test_training_step(model: Patchflow, batch: ImageBatch) -> None:
     """Test that training_step returns a dict with a scalar loss."""
+    model.log = MagicMock()
     model.model.train()
     output = model.training_step(batch)
 
