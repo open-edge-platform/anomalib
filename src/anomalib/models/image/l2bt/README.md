@@ -38,7 +38,7 @@ The method can spot anomalies from high-resolution images and runs significantly
 
 <h4 align="center"></h4>
 
-<img src="../../../../../docs/source/images/models/l2bt/architecture.jpg" alt="architecture" style="width: 800px;" title="architecture">
+![architecture](../../../../../docs/source/images/l2bt/architecture.jpg)
 
 :fountain_pen: If you find this work useful in your research, please cite:
 
@@ -62,12 +62,7 @@ Within **anomalib**, the model can be used with datasets supported by the framew
 
 <h2 id="inbox_tray"> :inbox_tray: Checkpoints </h2>
 
-Pretrained weights used in the original paper are available at the following link:
-
-[Download checkpoints](https://drive.google.com/drive/folders/1cdcfW8cV_iURK_OwWkKjJFpzJvnJMbeb?usp=sharing)
-
-These weights are **optional** and are not required to use the model within **anomalib**.  
-During training, anomalib automatically handles checkpoint creation, saving, and loading.
+Within anomalib, checkpoints are automatically managed during training and stored in the experiment output directory. No external checkpoint management is required.
 
 ---
 
