@@ -29,6 +29,13 @@ services:
       - ../backend/data:/app/data
       # Persist logs
       - ../backend/logs:/app/logs
+      # Optional: mount a host images directory for "Images folder" source.
+      # Usage:
+      #   export HOST_IMAGES_DIR="/absolute/path/to/your/images"
+      #   docker compose up -d
+      #
+      # Then set "Images folder path" in the UI to: /data/images
+      - ${HOST_IMAGES_DIR:-/dev/null}:/data/images:ro
     ports:
       # nosemgrep: trailofbits.yaml.docker-compose.port-all-interfaces.port-all-interfaces # to be replaced
       - "${HOST_PORT:-8000}:8000"

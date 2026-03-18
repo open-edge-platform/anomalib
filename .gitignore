@@ -179,3 +179,4 @@ mlruns
 # application data
 application/**/data/
 application/**/logs/
+application/ui/public/mockServiceWorker.js
