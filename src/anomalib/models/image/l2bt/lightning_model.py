@@ -24,12 +24,6 @@ class L2BT(AnomalibModule):
         self,
         lr: float = 1e-4,
         image_size: int = 1036,
-        load_pretrained: bool | None = None,
-        checkpoint_folder: str = "./checkpoints/checkpoints_visa",
-        class_name: str = "candle",
-        label: str = "final_model",
-        epochs_no: int = 50,
-        batch_size: int = 4,
         layers: tuple[int, int] = (7, 11),
         blur_w_l: int = 5,
         blur_w_u: int = 7,
@@ -38,19 +32,12 @@ class L2BT(AnomalibModule):
         blur_repeats_l: int = 5,
         blur_repeats_u: int = 3,
         topk_ratio: float = 0.001,
-        strict_checkpoint_load: bool = True,
     ) -> None:
         """Initialize the L2BT lightning module.
 
         Args:
             lr: Learning rate for student optimization.
             image_size: Input image size used by the pre-processor.
-            load_pretrained: Whether to load pretrained student checkpoints.
-            checkpoint_folder: Directory containing pretrained student checkpoints.
-            class_name: Dataset category name.
-            label: Label identifying the checkpoint files.
-            epochs_no: Number of training epochs used for the checkpoints.
-            batch_size: Batch size used during training.
             layers: Teacher transformer layers used for feature extraction.
             blur_w_l: Lower blur kernel width.
             blur_w_u: Upper blur kernel width.
@@ -59,7 +46,6 @@ class L2BT(AnomalibModule):
             blur_repeats_l: Number of repetitions for the lower blur kernel.
             blur_repeats_u: Number of repetitions for the upper blur kernel.
             topk_ratio: Fraction of highest anomaly-map values used for image scoring.
-            strict_checkpoint_load: Whether checkpoint loading should be strict.
         """
         pre_processor = PreProcessor(transform=Resize((image_size, image_size)))
         super().__init__(pre_processor=pre_processor)
@@ -67,11 +53,6 @@ class L2BT(AnomalibModule):
         self.save_hyperparameters(ignore=["pre_processor"])
         self.lr = lr
         self.model = L2BTModel(
-            checkpoint_folder=checkpoint_folder,
-            class_name=class_name,
-            label=label,
-            epochs_no=epochs_no,
-            batch_size=batch_size,
             layers=layers,
             blur_w_l=blur_w_l,
             blur_w_u=blur_w_u,
@@ -80,8 +61,6 @@ class L2BT(AnomalibModule):
             blur_repeats_l=blur_repeats_l,
             blur_repeats_u=blur_repeats_u,
             topk_ratio=topk_ratio,
-            load_pretrained=load_pretrained,
-            strict_checkpoint_load=strict_checkpoint_load,
         )
 
     @property
@@ -110,7 +89,7 @@ class L2BT(AnomalibModule):
     def training_step(self, batch: object, _batch_idx: int, *_args: object, **_kwargs: object) -> torch.Tensor:
         """Compute the training loss for a batch."""
         images = self._get_images(batch)
-        out = self.model.training_forward(images)
+        out = self.model(images)
 
         loss = out["loss"]
         self.log("train_loss", loss, prog_bar=True, on_step=True, on_epoch=True, batch_size=images.shape[0])

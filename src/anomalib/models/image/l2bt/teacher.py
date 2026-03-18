@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import torch
 
+from anomalib.models.components.dinov2 import DinoV2Loader
+
 
 class FeatureExtractor(torch.nn.Module):
     """Frozen DINOv2 teacher used to extract patch-level features."""
@@ -19,7 +21,8 @@ class FeatureExtractor(torch.nn.Module):
         """
         super().__init__()
 
-        self.fe = torch.hub.load("facebookresearch/dinov2", "dinov2_vitb14_reg")  # nosec B614
+        loader = DinoV2Loader()
+        self.fe = loader.load("dinov2reg_base_14")
         self.layers = list(layers)
 
         self.patch_size = self.fe.patch_size
