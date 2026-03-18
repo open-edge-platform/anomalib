@@ -195,9 +195,9 @@ class PatchflowModel(nn.Module):
         """
         fused: list[torch.Tensor] = []
         for feat in features:
-            feat = self.avg_pool(feat)
-            feat = F.interpolate(feat, size=self.fused_spatial_size, mode="bilinear", align_corners=False)
-            fused.append(feat)
+            pooled = self.avg_pool(feat)
+            pooled = F.interpolate(pooled, size=self.fused_spatial_size, mode="bilinear", align_corners=False)
+            fused.append(pooled)
         return torch.cat(fused, dim=1)
 
     # ------------------------------------------------------------------
@@ -227,10 +227,7 @@ class PatchflowModel(nn.Module):
             x = x[:, :, top : top + ch, left : left + cw]
 
         # 1. Extract multi-scale features
-        if self.is_dinov2:
-            features = self._extract_dinov2_features(x)
-        else:
-            features = self._extract_cnn_features(x)
+        features = self._extract_dinov2_features(x) if self.is_dinov2 else self._extract_cnn_features(x)
 
         # 2. Fuse features
         fused = self._fuse_features(features)

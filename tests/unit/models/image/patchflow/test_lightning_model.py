@@ -30,31 +30,30 @@ def batch() -> ImageBatch:
     return ImageBatch(image=torch.randn(2, 3, 256, 256))
 
 
-class TestPatchflow:
-    """Tests for Patchflow lightning module."""
+def test_initialization(model: Patchflow) -> None:
+    """Test that the lightning module initialises."""
+    assert isinstance(model, Patchflow)
+    assert model.learning_type.name == "ONE_CLASS"
 
-    def test_initialization(self, model: Patchflow) -> None:
-        """Test that the lightning module initialises."""
-        assert isinstance(model, Patchflow)
-        assert model.learning_type.name == "ONE_CLASS"
 
-    def test_training_step(self, model: Patchflow, batch: ImageBatch) -> None:
-        """Test that training_step returns a dict with a scalar loss."""
-        model.model.train()
-        output = model.training_step(batch)
+def test_training_step(model: Patchflow, batch: ImageBatch) -> None:
+    """Test that training_step returns a dict with a scalar loss."""
+    model.model.train()
+    output = model.training_step(batch)
 
-        assert isinstance(output, dict)
-        assert "loss" in output
-        assert output["loss"].dim() == 0  # scalar
-        assert not torch.isnan(output["loss"])
+    assert isinstance(output, dict)
+    assert "loss" in output
+    assert output["loss"].dim() == 0  # scalar
+    assert not torch.isnan(output["loss"])
 
-    def test_validation_step(self, model: Patchflow, batch: ImageBatch) -> None:
-        """Test that validation_step returns predictions."""
-        model.model.eval()
-        with torch.no_grad():
-            output = model.validation_step(batch)
 
-        assert hasattr(output, "pred_score")
-        assert hasattr(output, "anomaly_map")
-        assert output.pred_score is not None
-        assert output.anomaly_map is not None
+def test_validation_step(model: Patchflow, batch: ImageBatch) -> None:
+    """Test that validation_step returns predictions."""
+    model.model.eval()
+    with torch.no_grad():
+        output = model.validation_step(batch)
+
+    assert hasattr(output, "pred_score")
+    assert hasattr(output, "anomaly_map")
+    assert output.pred_score is not None
+    assert output.anomaly_map is not None

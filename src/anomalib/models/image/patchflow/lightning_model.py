@@ -7,11 +7,12 @@ This model implements the PatchFlow algorithm for anomaly detection and localiza
 PatchFlow models the distribution of patch-level feature embeddings using a learnable normalizing flow.
 
 The model extracts patch embeddings from intermediate layers of a pretrained backbone.
-It then passes them through a feature adaptor, which projects and aligns features into a space suited for density estimation.
+It then passes them through a feature adaptor, which projects and aligns
+features into a space suited for density estimation.
 These patch features are then transformed by a flow-based density estimator that learns the distribution of normal data.
 
-During inference, the model computes the likelihood of each patch under the learned flow. 
-Low-likelihood patches indicate anomalies. 
+During inference, the model computes the likelihood of each patch under the learned flow.
+Low-likelihood patches indicate anomalies.
 The patch-level scores are aggregated to produce both an image-level anomaly score and a pixel-wise anomaly map.
 
 Paper: https://arxiv.org/abs/2602.05238
@@ -81,7 +82,7 @@ class Patchflow(AnomalibModule):
 
     def __init__(
         self,
-        backbone: str = "tf_efficientnet_b5", # option:{dinov2_vit_base_14}
+        backbone: str = "tf_efficientnet_b5",  # option:{dinov2_vit_base_14}
         pre_trained: bool = True,
         flow_steps: int = 1,
         flow_feature_dim: int = 128,
