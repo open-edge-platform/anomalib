@@ -1,0 +1,224 @@
+name: Publish Application RC
+
+on:
+  push:
+    tags:
+      - 'app/v[0-9]+\.[0-9]+\.[0-9]+rc[0-9]+'
+
+permissions: {} # No permissions by default
+
+jobs:
+  validate:
+    name: Validate RC tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 5
+    outputs:
+      rc_version: "${{ steps.validate.outputs.rc_version }}"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0 # Fetch all history and branches for validation
+
+      - name: Validate RC tag
+        id: validate
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          # Extract version from tag: app/v0.1.0rc1 -> 0.1.0rc1
+          RC_VERSION="${TAG#app/v}"
+
+          # Extract base version without rc suffix: 0.1.0rc1 -> 0.1.0
+          TAG_VERSION="${RC_VERSION%rc*}"
+
+          # Extract RC number: 0.1.0rc1 -> 1
+          RC_NUMBER="${RC_VERSION##*rc}"
+
+          # Extract major.minor for branch validation: 0.1.0 -> 0.1
+          MAJOR_MINOR="${TAG_VERSION%.*}"
+
+          # Construct expected release branch name
+          EXPECTED_BRANCH="release/app-${MAJOR_MINOR}"
+
+          # Read VERSION file
+          FILE_VERSION="$(tr -d '[:space:]' < application/VERSION)"
+
+          # Get the commit SHA that the tag points to (works for annotated and lightweight tags)
+          TAG_COMMIT="$(git rev-parse "${TAG}^{commit}")"
+
+          echo "::group::Validation parameters"
+          echo "Tag: $TAG"
+          echo "RC version: $RC_VERSION"
+          echo "Tag base version: $TAG_VERSION"
+          echo "RC number: $RC_NUMBER"
+          echo "VERSION file: $FILE_VERSION"
+          echo "Expected release branch: $EXPECTED_BRANCH"
+          echo "Tagged commit: $TAG_COMMIT"
+          echo "::endgroup::"
+
+          # Validate RC number is a positive integer
+          if ! [[ "$RC_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+            echo "::error::Invalid RC number '$RC_NUMBER'. RC number must be a positive integer (rc1, rc2, etc.)"
+            exit 1
+          fi
+          echo "✓ RC number is valid"
+
+          # Validate VERSION file format (semver: major.minor.patch)
+          if ! [[ "$FILE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::VERSION file contains invalid semver format: '$FILE_VERSION'"
+            exit 1
+          fi
+          echo "✓ VERSION file has valid semver format"
+
+          # Validate tag version matches VERSION file
+          if [[ "$TAG_VERSION" != "$FILE_VERSION" ]]; then
+            echo "::error::Tag version '$TAG_VERSION' does not match VERSION file '$FILE_VERSION'"
+            exit 1
+          fi
+          echo "✓ Tag version matches VERSION file"
+
+          # Validate expected release branch exists
+          if ! git rev-parse --verify "origin/${EXPECTED_BRANCH}" >/dev/null 2>&1; then
+            echo "::error::Release branch '${EXPECTED_BRANCH}' does not exist"
+            echo "::error::Expected to find: origin/${EXPECTED_BRANCH}"
+            echo "::error::Available release branches:"
+            git branch -r | grep "origin/release/app-" || echo "  (none found)"
+            exit 1
+          fi
+          echo "✓ Release branch exists"
+
+          # Validate tagged commit is on the release branch
+          if ! git merge-base --is-ancestor "${TAG_COMMIT}" "origin/${EXPECTED_BRANCH}"; then
+            echo "::error::Tag '${TAG}' (commit ${TAG_COMMIT}) is not on release branch '${EXPECTED_BRANCH}'"
+            echo "::error::RC tags must be created from commits on the corresponding release branch"
+            exit 1
+          fi
+          echo "✓ Tag is correctly assigned to release branch ${EXPECTED_BRANCH}"
+
+          # Validate base release exists for patch releases
+          PATCH_VERSION="${TAG_VERSION##*.}"
+          if [[ "$PATCH_VERSION" != "0" ]]; then
+            BASE_VERSION="${TAG_VERSION%.*}.0"
+            BASE_TAG="app/v${BASE_VERSION}"
+
+            echo "::group::Patch release validation"
+            echo "Patch version detected: $TAG_VERSION"
+            echo "Base version: $BASE_VERSION"
+            echo "Expected base tag: $BASE_TAG"
+            echo "::endgroup::"
+
+            if ! git rev-parse --verify "refs/tags/${BASE_TAG}" >/dev/null 2>&1; then
+              echo "::error::Patch release tag '${TAG}' requires base release tag '${BASE_TAG}' to exist"
+              echo "::error::Cannot release patch version ${TAG_VERSION} without base version ${BASE_VERSION}"
+              exit 1
+            fi
+            echo "✓ Base release tag ${BASE_TAG} exists"
+          fi
+
+          # Validate previous RC exists for RC N > 1
+          if [[ "$RC_NUMBER" -gt 1 ]]; then
+            PREV_RC_NUMBER=$((RC_NUMBER - 1))
+            PREV_RC_TAG="app/v${TAG_VERSION}rc${PREV_RC_NUMBER}"
+
+            echo "::group::Sequential RC validation"
+            echo "Current RC number: $RC_NUMBER"
+            echo "Previous RC number: $PREV_RC_NUMBER"
+            echo "Expected previous RC tag: $PREV_RC_TAG"
+            echo "::endgroup::"
+
+            if ! git rev-parse --verify "refs/tags/${PREV_RC_TAG}" >/dev/null 2>&1; then
+              echo "::error::RC tag '${TAG}' requires previous RC tag '${PREV_RC_TAG}' to exist"
+              echo "::error::Cannot create RC${RC_NUMBER} without first creating RC${PREV_RC_NUMBER}"
+              echo "::error::Please create RC tags sequentially: rc1, rc2, rc3, ..."
+              exit 1
+            fi
+            echo "✓ Previous RC tag ${PREV_RC_TAG} exists"
+          fi
+
+          echo "rc_version=$RC_VERSION" >> "$GITHUB_OUTPUT"
+
+  publish-rc:
+    name: Build and push container RC (${{ matrix.device }})
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Checkout code
+      packages: write # Push images to GHCR
+      id-token: write # Cosign keyless signing (OIDC)
+
+    strategy:
+      fail-fast: false
+      matrix:
+        device: [cpu, xpu, cuda]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
+        with:
+          images: ghcr.io/open-edge-platform/anomalib-studio-${{ matrix.device }}
+          tags: |
+            type=raw,value=${{ needs.validate.outputs.rc_version }}
+
+      - name: Build and push Docker image
+        uses: ./.github/actions/docker-build
+        with:
+          device: ${{ matrix.device }}
+          push: "true"
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          use-cache: "false" # Disable cache for RC builds (security and reproducibility)
+
+      - name: Sign Docker image
+        uses: open-edge-platform/geti-ci/actions/sign-image@9b1ef60a8b2b802da428621e192c322960f4b3d5
+        with:
+          image-uri: ${{ steps.meta.outputs.tags }}
+
+      - name: Output summary
+        env:
+          RC_VERSION: ${{ needs.validate.outputs.rc_version }}
+          DEVICE: ${{ matrix.device }}
+          IMAGE_TAG: ${{ steps.meta.outputs.tags }}
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY <<EOF
+          ## ✅ Release Candidate Container Image Published
+
+          ### Release Candidate Information
+          - **RC Version:** \`${RC_VERSION}\`
+          - **Device:** \`${DEVICE}\`
+          - **Commit:** \`${GITHUB_SHA:0:8}\`
+
+          ### Published Container Image
+          \`\`\`
+          ${IMAGE_TAG}
+          \`\`\`
+
+          ### Pull Container Image
+          \`\`\`bash
+          docker pull ${IMAGE_TAG}
+          \`\`\`
+
+          ### Verify Container Image Signature
+          \`\`\`bash
+          cosign verify ${IMAGE_TAG} \\
+            --certificate-identity-regexp="^https://github\.com/${GITHUB_REPOSITORY}/\.github/workflows/.+" \\
+            --certificate-oidc-issuer='https://token.actions.githubusercontent.com'
+          \`\`\`
+          EOF
