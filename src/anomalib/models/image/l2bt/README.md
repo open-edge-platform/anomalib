@@ -31,16 +31,14 @@ University of Bologna
 
 To efficiently deploy strong, often pre-trained feature extractors, recent Industrial Anomaly Detection and Segmentation (IADS) methods process low-resolution images, e.g., 224x224 pixels, obtained by downsampling the original input images. However, while numerous industrial applications demand the identification of both large and small defects, downsampling the input image to a low resolution may hinder a method's ability to pinpoint tiny anomalies.
 
-The L2BT method introduces a Teacher-Student paradigm to leverage strong pre-trained features while processing high-resolution input images very efficiently.
+The L2BT method introduces a Teacher-Student paradigm to leverage strong pre-trained features while processing high-resolution input images very efficiently.  
 The core idea concerns training two shallow MLPs (the Students) on nominal images so as to mimic the mappings between the patch embeddings induced by the self-attention layers of a frozen Vision Transformer (the Teacher). Indeed, learning these mappings sets forth a challenging pretext task that small-capacity models are unlikely to accomplish on out-of-distribution data such as anomalous images.
 
 The method can spot anomalies from high-resolution images and runs significantly faster than competitors, achieving state-of-the-art performance on MVTec AD and the best segmentation results on VisA. Novel evaluation metrics are also proposed to capture robustness to defect size, i.e., the ability to preserve good localisation from large anomalies to tiny ones. Evaluating the method with these metrics further highlights its superior performance.
 
-<h4 align="center">
+<h4 align="center"></h4>
 
-</h4>
-
-<img src="./assets/architecture.jpg" alt="Alt text" style="width: 800px;" title="architecture">
+<img src="../../../../../docs/source/images/models/l2bt/architecture.jpg" alt="architecture" style="width: 800px;" title="architecture">
 
 :fountain_pen: If you find this work useful in your research, please cite:
 
@@ -68,7 +66,8 @@ Pretrained weights used in the original paper are available at the following lin
 
 [Download checkpoints](https://drive.google.com/drive/folders/1cdcfW8cV_iURK_OwWkKjJFpzJvnJMbeb?usp=sharing)
 
-Within the **anomalib** framework, checkpoints are automatically managed during training and stored in the experiment output directory.
+These weights are **optional** and are not required to use the model within **anomalib**.  
+During training, anomalib automatically handles checkpoint creation, saving, and loading.
 
 ---
 
@@ -84,15 +83,29 @@ Ensure that the required dependencies for **anomalib** are installed.
 
 Refer to the anomalib installation instructions for environment setup.
 
+### :rocket: Train L2BT
+
+```bash
+anomalib train \
+  --model l2bt \
+  --dataset visa \
+  --dataset.category capsules
+```
+
+During training, anomalib automatically manages:
+
+- dataset loading  
+- experiment logging  
+- checkpoint saving  
+- evaluation metrics  
+
 ### :rocket: Inference L2BT
-
-Inference can be performed using the standard **anomalib** command-line interface.
-
-Example command:
 
 ```bash
 anomalib predict \
-  --config src/anomalib/models/image/l2bt/config.yaml \
+  --model l2bt \
+  --dataset visa \
+  --dataset.category capsules \
   --ckpt_path <path_to_checkpoint>
 ```
 
@@ -100,28 +113,12 @@ The checkpoint is generated automatically after training and can be found in the
 
 This command generates anomaly scores and anomaly maps for the selected dataset.
 
-### :rocket: Train L2BT
+### Model Configuration
 
-Training can be performed using the anomalib training interface.
+Model parameters can be configured using:
 
-Example command:
-
-```bash
-anomalib train \
-  --config src/anomalib/models/image/l2bt/config.yaml
 ```
-
-During training, anomalib automatically manages:
-
-- dataset loading
-- experiment logging
-- checkpoint saving
-- evaluation metrics
-
-Model parameters can be configured in:
-
-```text
-src/anomalib/models/image/l2bt/config.yaml
+examples/configs/model/l2bt.yaml
 ```
 
 ## :envelope: Contacts
