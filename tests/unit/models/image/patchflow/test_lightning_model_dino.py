@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Unit tests for PatchFlow lightning model."""
+"""Unit tests for PatchFlow lightning model with DINOv2 backbone."""
 
 from unittest.mock import MagicMock
 
@@ -14,22 +14,23 @@ from anomalib.models.image.patchflow import Patchflow
 
 @pytest.fixture(scope="module")
 def model() -> Patchflow:
-    """Create a Patchflow lightning module with small settings."""
+    """Create a Patchflow lightning module with DINOv2 backbone and small settings."""
     return Patchflow(
-        backbone="tf_efficientnet_b5", 
+        backbone="dinov2_vit_base_14",
         pre_trained=True,
         flow_steps=1,
         flow_feature_dim=64,
         num_scales=2,
-        patch_size=3,
+        patch_size=5,
         flow_hidden_dim=64,
+        crop_size=(672, 672),
     )
 
 
 @pytest.fixture(scope="module")
 def batch() -> ImageBatch:
     """Create a fake batch."""
-    return ImageBatch(image=torch.randn(2, 3, 256, 256))
+    return ImageBatch(image=torch.randn(2, 3, 672, 672))
 
 
 def test_initialization(model: Patchflow) -> None:

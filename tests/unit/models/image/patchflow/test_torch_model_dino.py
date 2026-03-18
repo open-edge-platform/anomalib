@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Unit tests for PatchFlow torch model."""
+"""Unit tests for PatchFlow torch model with DINOv2 backbone."""
 
 import pytest
 import torch
@@ -11,29 +11,31 @@ from anomalib.models.image.patchflow.torch_model import PatchflowModel
 
 @pytest.fixture(scope="module")
 def model() -> PatchflowModel:
-    """Create a PatchflowModel with small settings for fast testing."""
+    """Create a PatchflowModel with DINOv2 backbone and small settings for fast testing."""
     return PatchflowModel(
-        input_size=(224, 224),
-        backbone="tf_efficientnet_b5", 
+        input_size=(672, 672),
+        backbone="dinov2_vit_base_14",
         pre_trained=True,
         flow_steps=1,
         flow_feature_dim=64,
         num_scales=2,
-        patch_size=3,
+        patch_size=5,
         flow_hidden_dim=64,
+        crop_size=(672, 672),
     )
 
 
 @pytest.fixture(scope="module")
 def input_tensor() -> torch.Tensor:
     """Create a random input tensor."""
-    return torch.randn(2, 3, 224, 224)
+    return torch.randn(2, 3, 672, 672)
 
 
 def test_initialization(model: PatchflowModel) -> None:
     """Test that the model initialises without errors."""
     assert isinstance(model, PatchflowModel)
-    assert model.input_size == (224, 224)
+    assert model.input_size == (672, 672)
+    assert model.is_dinov2 is True
 
 
 def test_forward_train(model: PatchflowModel, input_tensor: torch.Tensor) -> None:
@@ -56,8 +58,8 @@ def test_forward_eval(model: PatchflowModel, input_tensor: torch.Tensor) -> None
     assert hasattr(output, "pred_score")
 
     assert output.anomaly_map.shape[0] == 2
-    assert output.anomaly_map.shape[2] == 224
-    assert output.anomaly_map.shape[3] == 224
+    assert output.anomaly_map.shape[2] == 672
+    assert output.anomaly_map.shape[3] == 672
 
     assert output.pred_score.shape[0] == 2
 

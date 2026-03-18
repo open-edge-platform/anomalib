@@ -1,7 +1,9 @@
+# PatchFlow with DINOv2 ViT backbone.
+# For EfficientNet backbone, see patchflow_efficientnet.yaml.
 model:
   class_path: anomalib.models.Patchflow
   init_args:
-    backbone: dinov2_vit_base_14
+    backbone: dinov2_vit_base_14  # DINOv2 ViT backbone
     pre_trained: true
     flow_steps: 2
     flow_feature_dim: 128

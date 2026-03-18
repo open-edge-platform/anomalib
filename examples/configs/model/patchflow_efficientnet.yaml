@@ -1,0 +1,23 @@
+# PatchFlow with EfficientNet (timm CNN) backbone.
+# For DINOv2 ViT backbone, see patchflow.yaml.
+model:
+  class_path: anomalib.models.Patchflow
+  init_args:
+    backbone: tf_efficientnet_b5  # timm CNN backbone
+    pre_trained: true
+    flow_steps: 1
+    flow_feature_dim: 128
+    flow_hidden_dim: 128
+    num_scales: 3
+    patch_size: 3
+    lr: 0.001
+    weight_decay: 0.0001
+
+trainer:
+  max_epochs: 200
+  callbacks:
+    - class_path: lightning.pytorch.callbacks.EarlyStopping
+      init_args:
+        patience: 10
+        monitor: image_AUROC
+        mode: max
