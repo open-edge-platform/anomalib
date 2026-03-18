@@ -18,7 +18,11 @@ const useIsTrainingButtonDisabled = () => {
     return uploadedNormalImages < REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING;
 };
 
-export const TrainModelButton = () => {
+interface TrainModelButtonProps {
+    onOpen?: () => void;
+}
+
+export const TrainModelButton = ({ onOpen }: TrainModelButtonProps) => {
     const isDisabled = useIsTrainingButtonDisabled();
 
     return (
@@ -30,7 +34,9 @@ export const TrainModelButton = () => {
             }
         >
             <DialogTrigger type='modal'>
-                <Button isDisabled={isDisabled}>Train model</Button>
+                <Button isDisabled={isDisabled} onPress={onOpen}>
+                    Train model
+                </Button>
                 {(close) => <TrainModelDialog close={close} />}
             </DialogTrigger>
         </Suspense>
