@@ -33,6 +33,7 @@ Image Models:
     - FastFlow (:class:`anomalib.models.image.Fastflow`)
     - FRE (:class:`anomalib.models.image.Fre`)
     - GANomaly (:class:`anomalib.models.image.Ganomaly`)
+    - L2BT (:class:`anomalib.models.image.L2BT`)
     - PaDiM (:class:`anomalib.models.image.Padim`)
     - PatchCore (:class:`anomalib.models.image.Patchcore`)
     - Reverse Distillation (:class:`anomalib.models.image.ReverseDistillation`)
@@ -71,6 +72,7 @@ from .image import (
     Fastflow,
     Fre,
     Ganomaly,
+    L2BT,
     Padim,
     Patchcore,
     ReverseDistillation,
@@ -112,6 +114,7 @@ __all__ = [
     "Fre",
     "Fuvas",
     "Ganomaly",
+    "L2BT",
     "Padim",
     "Patchcore",
     "ReverseDistillation",
