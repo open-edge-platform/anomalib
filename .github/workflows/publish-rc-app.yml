@@ -48,8 +48,8 @@ jobs:
           # Read VERSION file
           FILE_VERSION="$(tr -d '[:space:]' < application/VERSION)"
 
-          # Get the commit SHA that the tag points to
-          TAG_COMMIT="${GITHUB_SHA}"
+          # Get the commit SHA that the tag points to (works for annotated and lightweight tags)
+          TAG_COMMIT="$(git rev-parse "${TAG}^{commit}")"
 
           echo "::group::Validation parameters"
           echo "Tag: $TAG"
@@ -171,7 +171,7 @@ jobs:
 
       - name: Extract metadata (tags, labels)
         id: meta
-        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
         with:
           images: ghcr.io/open-edge-platform/anomalib-studio-${{ matrix.device }}
           tags: |
@@ -196,7 +196,6 @@ jobs:
           RC_VERSION: ${{ needs.validate.outputs.rc_version }}
           DEVICE: ${{ matrix.device }}
           IMAGE_TAG: ${{ steps.meta.outputs.tags }}
-          REPO_OWNER: ${{ github.repository_owner }}
         run: |
           cat >> $GITHUB_STEP_SUMMARY <<EOF
           ## ✅ Release Candidate Container Image Published
