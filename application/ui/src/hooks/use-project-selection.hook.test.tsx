@@ -1,7 +1,7 @@
 import { Suspense, type ReactNode } from 'react';
 
 import { renderHook, waitFor } from '@testing-library/react';
-import { HttpResponse, http } from 'msw';
+import { http, HttpResponse } from 'msw';
 
 import { server } from '../msw-node-setup';
 import { TestProviders } from '../providers';
