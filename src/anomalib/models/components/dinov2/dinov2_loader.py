@@ -63,10 +63,10 @@ class DinoV2Loader:
 
     def __init__(
         self,
-        cache_dir: str | Path = "./pre_trained/",
+        cache_dir: str | Path | None = None,
         vit_factory: object | None = None,
     ) -> None:
-        self.cache_dir = Path(cache_dir)
+        self.cache_dir = Path(cache_dir) if cache_dir is not None else Path(torch.hub.get_dir()) / "dinov2"
         self.vit_factory = vit_factory
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -93,7 +93,7 @@ class DinoV2Loader:
     def from_name(
         cls,
         model_name: str,
-        cache_dir: str | Path = "./pre_trained/",
+        cache_dir: str | Path | None = None,
     ) -> torch.nn.Module:
         """Instantiate a loader and return the requested model."""
         loader = cls(cache_dir)
