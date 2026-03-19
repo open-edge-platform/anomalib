@@ -63,7 +63,7 @@ class TestProjectSelectionService:
         assert result.project_id == fxt_project.id
         assert result.source == StartupProjectSelectionSource.LAST_USED
         fxt_pipeline_repository.get_active_pipeline.assert_not_called()
-        fxt_project_repository.get_all_pagination.assert_not_called()
+        fxt_project_repository.get_first_project.assert_not_called()
 
     def test_get_startup_project_selection_falls_back_to_active_pipeline_when_last_used_is_missing(
         self,
@@ -85,7 +85,7 @@ class TestProjectSelectionService:
 
         assert result.project_id == fxt_pipeline.project_id
         assert result.source == StartupProjectSelectionSource.ACTIVE_PIPELINE
-        fxt_project_repository.get_all_pagination.assert_not_called()
+        fxt_project_repository.get_first_project.assert_not_called()
 
     def test_get_startup_project_selection_falls_back_to_first_project(
         self,
@@ -97,7 +97,7 @@ class TestProjectSelectionService:
         fxt_app_state_repository.get_last_used_project_id = AsyncMock(return_value=None)
         fxt_app_state_repository.clear_last_used_project_id = AsyncMock()
         fxt_pipeline_repository.get_active_pipeline = AsyncMock(return_value=None)
-        fxt_project_repository.get_all_pagination = AsyncMock(return_value=[fxt_project])
+        fxt_project_repository.get_first_project = AsyncMock(return_value=fxt_project)
 
         with (
             patch("services.project_selection_service.AppStateRepository", return_value=fxt_app_state_repository),
@@ -118,7 +118,7 @@ class TestProjectSelectionService:
         fxt_app_state_repository.get_last_used_project_id = AsyncMock(return_value=None)
         fxt_app_state_repository.clear_last_used_project_id = AsyncMock()
         fxt_pipeline_repository.get_active_pipeline = AsyncMock(return_value=None)
-        fxt_project_repository.get_all_pagination = AsyncMock(return_value=[])
+        fxt_project_repository.get_first_project = AsyncMock(return_value=None)
 
         with (
             patch("services.project_selection_service.AppStateRepository", return_value=fxt_app_state_repository),

@@ -42,10 +42,10 @@ class ProjectSelectionService:
                     source=StartupProjectSelectionSource.ACTIVE_PIPELINE,
                 )
 
-            first_project = await project_repo.get_all_pagination(limit=1, offset=0)
-            if first_project:
+            first_project = await project_repo.get_first_project()
+            if first_project is not None:
                 return StartupProjectSelection(
-                    project_id=first_project[0].id,
+                    project_id=first_project.id,
                     source=StartupProjectSelectionSource.FIRST_PROJECT,
                 )
 
