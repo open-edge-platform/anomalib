@@ -154,7 +154,9 @@ class TestProjectSelectionService:
         assert result.source == StartupProjectSelectionSource.ACTIVE_PIPELINE
         fxt_app_state_repository.clear_last_used_project_id.assert_called_once_with()
 
-    def test_set_last_used_project_persists_project_id(self, fxt_app_state_repository, fxt_project_repository, fxt_project):
+    def test_set_last_used_project_persists_project_id(
+        self, fxt_app_state_repository, fxt_project_repository, fxt_project
+    ):
         fxt_project_repository.get_by_id = AsyncMock(return_value=fxt_project)
         fxt_app_state_repository.set_last_used_project_id = AsyncMock()
 
@@ -179,8 +181,8 @@ class TestProjectSelectionService:
         with (
             patch("services.project_selection_service.AppStateRepository", return_value=fxt_app_state_repository),
             patch("services.project_selection_service.ProjectRepository", return_value=fxt_project_repository),
+            pytest.raises(ResourceNotFoundError),
         ):
-            with pytest.raises(ResourceNotFoundError):
-                asyncio.run(ProjectSelectionService.set_last_used_project(project_id))
+            asyncio.run(ProjectSelectionService.set_last_used_project(project_id))
 
         fxt_app_state_repository.set_last_used_project_id.assert_not_called()

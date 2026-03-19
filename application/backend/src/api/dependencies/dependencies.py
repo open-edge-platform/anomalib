@@ -12,8 +12,8 @@ from services import (
     JobService,
     MediaService,
     PipelineService,
-    ProjectService,
     ProjectSelectionService,
+    ProjectService,
 )
 from services.metrics_service import MetricsService
 from services.model_service import ModelService
