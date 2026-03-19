@@ -3,14 +3,12 @@
 
 import { $api } from '@anomalib-studio/api';
 import { useProjectIdentifier } from '@anomalib-studio/hooks';
-import { Button, FileTrigger, removeToast, toast } from '@geti/ui';
+import { Button, FileTrigger, toast } from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { useUploadStatus } from '../footer/status-bar/adapters/use-upload-status';
 import { TrainModelButton } from '../train-model/train-model-button.component';
 import { REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING } from './utils';
-
-const TRAIN_READY_TOAST_ID = 'train-ready-notification';
 
 export const UploadImages = () => {
     const { projectId } = useProjectIdentifier();
@@ -46,14 +44,11 @@ export const UploadImages = () => {
 
         if (images.media.length >= REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING) {
             toast({
-                id: TRAIN_READY_TOAST_ID,
                 title: 'Train',
                 type: 'info',
                 message: `You can start model training now with your collected dataset.`,
                 duration: Infinity,
-                actionButtons: [
-                    <TrainModelButton key='train' onOpen={() => removeToast(TRAIN_READY_TOAST_ID)} />,
-                ],
+                actionButtons: [<TrainModelButton key='train' />],
                 position: 'bottom-left',
             });
         }
