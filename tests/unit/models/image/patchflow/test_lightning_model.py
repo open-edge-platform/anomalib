@@ -16,7 +16,7 @@ from anomalib.models.image.patchflow import Patchflow
 def model() -> Patchflow:
     """Create a Patchflow lightning module with small settings."""
     return Patchflow(
-        backbone="tf_efficientnet_b5", 
+        backbone="tf_efficientnet_b5",
         pre_trained=True,
         flow_steps=1,
         flow_feature_dim=64,

@@ -3,7 +3,7 @@
 model:
   class_path: anomalib.models.Patchflow
   init_args:
-    backbone: tf_efficientnet_b5  # timm CNN backbone
+    backbone: tf_efficientnet_b5 # timm CNN backbone
     pre_trained: true
     flow_steps: 1
     flow_feature_dim: 128
