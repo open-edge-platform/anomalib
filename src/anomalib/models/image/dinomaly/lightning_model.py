@@ -44,6 +44,7 @@ import math
 from typing import Any
 
 import torch
+from lightning.pytorch.callbacks.progress.rich_progress import RichProgressBar
 from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 from torch.nn.init import trunc_normal_
 from torchvision.transforms.v2 import CenterCrop, Compose, Normalize, Resize
@@ -207,14 +208,30 @@ class Dinomaly(AnomalibModule):
         provided. The Rich progress bar then displays "Epoch X/-2" because it
         computes ``max_epochs - 1``. This hook calculates the estimated number
         of epochs from ``max_steps`` and ``num_training_batches`` so the
-        progress bar shows a meaningful "Epoch X/N (step-based)" instead.
+        progress bar shows "Epoch X/M", where ``M`` is the estimated last
+        epoch index (``estimated_epochs - 1``).
+
+        Note:
+            This is a narrow compatibility layer for Lightning's
+            ``RichProgressBar`` and relies on its private
+            ``_get_train_description`` method, as implemented in Lightning 2.x.
+            If the Lightning/Rich progress bar internals change in future
+            versions, this hook may need updating.
         """
         if self.trainer.max_epochs is not None and self.trainer.max_epochs < 0:
-            progress_bar = self.trainer.progress_bar_callback
-            if progress_bar is not None and hasattr(progress_bar, "_get_train_description"):
+            progress_bar = getattr(self.trainer, "progress_bar_callback", None)
+            if isinstance(progress_bar, RichProgressBar) and hasattr(
+                progress_bar,
+                "_get_train_description",
+            ):
                 num_batches = self.trainer.num_training_batches
                 max_steps = self.trainer.max_steps
-                if max_steps > 0 and isinstance(num_batches, (int, float)) and num_batches > 0:
+                if (
+                    max_steps > 0
+                    and isinstance(num_batches, (int, float))
+                    and num_batches > 0
+                    and math.isfinite(num_batches)
+                ):
                     est_max_epochs = math.ceil(max_steps / num_batches)
                 else:
                     est_max_epochs = None
@@ -233,7 +250,6 @@ class Dinomaly(AnomalibModule):
                         desc = f"{desc:{len(_val_desc)}}"
                     return desc
 
-                # Needed to overwrite the number of epochs displayed in the progress bar
                 progress_bar._get_train_description = _fixed_get_train_description  # noqa: SLF001
 
     @classmethod
