@@ -8,7 +8,7 @@ import { $api } from '../api/client';
 import Background from '../assets/background.png';
 import { Fireworks } from '../assets/icons';
 import { generateShortUUID } from '../utils/short-uuid';
-import { paths } from './paths';
+import { getInspectProjectPath, paths } from './paths';
 
 const useCreateProject = () => {
     const createProjectMutation = $api.useMutation('post', '/api/projects', {
@@ -28,7 +28,7 @@ const useCreateProject = () => {
             },
             {
                 onSuccess: () => {
-                    navigate(`${paths.project({ projectId })}?mode=Dataset`);
+                    navigate(getInspectProjectPath(projectId));
                 },
             }
         );
