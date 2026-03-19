@@ -9,8 +9,10 @@ from .pipeline_repo import PipelineRepository
 from .project_repo import ProjectRepository
 from .sink_repo import SinkRepository
 from .source_repo import SourceRepository
+from .app_state_repo import AppStateRepository
 
 __all__ = [
+    "AppStateRepository",
     "DatasetSnapshotRepository",
     "JobRepository",
     "MediaRepository",

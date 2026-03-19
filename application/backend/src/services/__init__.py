@@ -16,6 +16,7 @@ from .media_service import MediaService
 from .model_service import ModelService
 from .pipeline_service import PipelineService
 from .project_service import ProjectService
+from .project_selection_service import ProjectSelectionService
 from .training_service import TrainingService
 from .video_service import VideoService
 from .video_stream_service import VideoStreamService
@@ -31,6 +32,7 @@ __all__ = [
     "ModelService",
     "PipelineService",
     "ProjectService",
+    "ProjectSelectionService",
     "ResourceAlreadyExistsError",
     "ResourceInUseError",
     "ResourceNotFoundError",
