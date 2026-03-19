@@ -23,9 +23,37 @@ fn spawn_backend<R: tauri::Runtime>(app: &tauri::App<R>) -> std::io::Result<Comm
     }
     let command = command.env("CORS_ORIGINS", cors_origins);
 
-    let (_rx, child) = command
+    let (mut rx, child) = command
         .spawn()
         .map_err(|e| std::io::Error::other(format!("Failed to spawn backend sidecar: {e}")))?;
+
+    // Pipe sidecar stdout/stderr to the terminal in a background thread.
+    // useful for debugging
+    #[cfg(debug_assertions)]
+    {
+    tauri::async_runtime::spawn(async move {
+            use tauri_plugin_shell::process::CommandEvent;
+            while let Some(event) = rx.recv().await {
+                match event {
+                    CommandEvent::Stdout(line) => {
+                        print!("{}", String::from_utf8_lossy(&line));
+                    }
+                    CommandEvent::Stderr(line) => {
+                        eprint!("{}", String::from_utf8_lossy(&line));
+                    }
+                    CommandEvent::Terminated(status) => {
+                        log::info!("Backend sidecar terminated: {status:?}");
+                        break;
+                    }
+                    CommandEvent::Error(err) => {
+                        log::error!("Backend sidecar error: {err}");
+                        break;
+                    }
+                    _ => {}
+                }
+            }
+        });
+    }
 
     log::info!("Spawned backend sidecar: {}", SIDECAR_NAME);
     Ok(child)
