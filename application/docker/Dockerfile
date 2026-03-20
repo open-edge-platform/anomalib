@@ -37,6 +37,106 @@
     libgl1 \
     libglib2.0-0 \
     g++ \
+FROM node:24-alpine3.22@sha256:76db75ca7e7da9148ae42c92d9be12d12a8d7b03e171f18339355d8078d644a0 AS web-ui-base
+
+WORKDIR /home/app/web_ui/
+
+# Install git for degit
+RUN apk add --no-cache git
+
+
+COPY --link application/ui/package.json ./package.json
+COPY --link application/ui/package-lock.json ./package-lock.json
+RUN npm ci --audit=false
+
+
+COPY --link application/ui/tsconfig.json ./tsconfig.json
+COPY --link application/ui/rsbuild.config.ts ./rsbuild.config.ts
+COPY --link application/ui/src ./src
+
+FROM web-ui-base AS web-ui
+
+RUN npm run build
+
+
+#------------------------------------------
+# Anomalib Studio Base with UI built
+#------------------------------------------
+FROM python:3.13-slim@sha256:5a7bc62572092e849a3de833858cd2e5542fe24bc49e3fc54948c8b0d8ca4b29 AS anomalib-studio-base
+COPY --from=docker.io/astral/uv:0.9.7@sha256:ba4857bf2a068e9bc0e64eed8563b065908a4cd6bfb66b531a9c424c8e25e142 /uv /uvx /bin/
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+ENV UV_PYTHON_DOWNLOADS=0
+
+
+RUN apt-get update \
+&& apt-get install -y --no-install-recommends \
+libgl1 \
+libglib2.0-0 \
+g++ \
+&& rm -rf /var/lib/apt/lists/* \
+&& apt-get clean
+
+ENV PATH=/app/.venv/bin:$PATH
+WORKDIR /app
+
+ARG STATIC_FILES_DIR="/app/application/ui/"
+ENV STATIC_FILES_DIR=${STATIC_FILES_DIR}
+ENV DATA_DIR="/app/data"
+ENV LOG_DIR="/app/logs"
+ENV PYTHONPATH=/app/application/backend
+
+COPY --link --from=web-ui /home/app/web_ui/dist ${STATIC_FILES_DIR}
+COPY --link application/backend/run.sh /app/application/backend/run.sh
+
+# Copy anomalib source code (pyproject.toml depends on README and LICENSE as well)
+COPY --link src ./src
+COPY --link pyproject.toml uv.lock ./
+COPY --link LICENSE ./LICENSE
+COPY --link README.md ./README.md
+
+# Copy backend application
+COPY --link application/backend /app/application/backend
+
+# Create data and logs directories with write permissions for mounted volumes
+RUN mkdir -p /app/data /app/logs
+
+
+#------------------------------------------
+# Anomalib Studio CPU version
+#------------------------------------------
+FROM anomalib-studio-base AS anomalib-studio-cpu
+
+WORKDIR /app/application/backend
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --extra cpu
+
+EXPOSE 8000
+
+# nosemgrep: dockerfile.security.missing-user.missing-user # will fix later
+CMD ["sh", "-c", "exec ./run.sh"]
+
+#------------------------------------------
+# Anomalib Studio CUDA intermediate stage to install CUDA dependencies
+#------------------------------------------
+FROM anomalib-studio-base AS anomalib-studio-cuda-base
+
+RUN apt-get update  \
+    && apt-get install -y --no-install-recommends wget=1.25.0-2 \
+    && wget -q https://developer.download.nvidia.com/compute/cuda/repos/debian13/x86_64/cuda-keyring_1.1-1_all.deb \
+    && dpkg -i cuda-keyring_1.1-1_all.deb \
+    && rm -rf cuda-keyring_1.1-1_all.deb \
+    && apt-get remove -y wget \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cuda-cudart-13-1 \
+    libcublas-13-1 \
+    libcufft-13-1 \
+    libcurand-13-1 \
+    libcusolver-13-1 \
+    libcusparse-13-1 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
     
