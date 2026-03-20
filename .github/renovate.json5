@@ -31,7 +31,7 @@
   // `matchBaseBranches` in specific rule
   baseBranches: ["main"],
 
-  enabledManagers: ["github-actions", "pep621", "dockerfile", "npm"],
+  enabledManagers: ["github-actions", "pep621", "dockerfile", "npm", "cargo"],
 
   // ignore Geti components
   ignoreDeps: ["@geti/config", "@geti/ui"],
@@ -50,23 +50,6 @@
       groupName: "Pin images",
       groupSlug: "pin-images",
       schedule: ["* * * * 0"], // weekly
-    },
-
-    // Python bi-weekly minor and patch dependencies upgrades
-    {
-      enabled: true,
-      matchManagers: ["pep621"],
-      matchUpdateTypes: ["minor", "patch"],
-      groupName: "Python dependencies non-major",
-      groupSlug: "python-dependencies-non-major",
-      schedule: ["* * 1,15 * *"], // bi-weekly (1st and 15th of each month)
-    },
-
-    // Python major dependencies are updated manually
-    {
-      enabled: false,
-      matchManagers: ["pep621"],
-      matchUpdateTypes: ["major"],
     },
 
     // Disable python base image upgrades, except patch and digest pinning
@@ -93,6 +76,12 @@
       matchUpdateTypes: ["major", "minor", "patch"],
     },
 
+    // Disable non-security upgrades for pypi and crate, except lock file update
+    {
+      enabled: false,
+      matchDatasources: ["pypi", "crate"],
+    },
+
     // Disable non-security and lock file upgrades for npm
     // Lock is updated manually
     {
@@ -113,30 +102,6 @@
       enabled: false,
       matchDatasources: ["docker"],
       matchDepNames: ["docker/dockerfile"],
-    },
-
-    // disable open-clip-torch upgrades as
-    // open-clip-torch throws error on v2.26.1
-    {
-      enabled: false,
-      matchDatasources: ["pypi"],
-      matchDepNames: ["open-clip-torch"],
-      matchDepTypes: ["project.optional-dependencies"],
-    },
-
-    // torch is upgraded manually
-    {
-      enabled: false,
-      matchDatasources: ["pypi"],
-      matchDepNames: ["torch"],
-    },
-
-    // Disable ruff upgrades in application/backend/pyproject.toml
-    {
-      enabled: false,
-      matchDatasources: ["pypi"],
-      matchDepNames: ["ruff"],
-      matchFileNames: ["application/backend/pyproject.toml"],
     },
 
     // Group GitHub Actions updates
