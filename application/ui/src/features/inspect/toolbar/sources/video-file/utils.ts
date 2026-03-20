@@ -2,7 +2,7 @@ import { VideoFileSourceConfig } from '../util';
 
 export const getVideoFileInitialConfig = (projectId: string): VideoFileSourceConfig => ({
     id: '',
-    name: '',
+    name: 'Video file source',
     video_path: '',
     project_id: projectId,
     source_type: 'video_file',

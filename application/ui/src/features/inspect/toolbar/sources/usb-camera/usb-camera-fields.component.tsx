@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { $api } from '@anomalib-studio/api';
 import { ActionButton, Flex, Item, Key, Loading, Picker, TextField } from '@geti/ui';
@@ -30,6 +30,14 @@ export const UsbCameraFields = ({ defaultState }: UsbCameraFieldsProps) => {
         name: device.name,
     }));
 
+    useEffect(() => {
+        if (!isSystemName.current || devices.length === 0) return;
+        const device = devices.find(({ id }) => id === defaultState.device_id);
+        if (device) {
+            setName(device.name);
+        }
+    }, [devices, defaultState.device_id]);
+
     const handleNameChange = (value: string) => {
         setName(value);
         isSystemName.current = false;
@@ -48,14 +56,7 @@ export const UsbCameraFields = ({ defaultState }: UsbCameraFieldsProps) => {
             <TextField isHidden label='id' name='id' defaultValue={defaultState?.id} />
             <TextField isHidden label='project_id' name='project_id' defaultValue={defaultState.project_id} />
             <TextField isHidden label='name' name='name' value={name} />
-            <TextField
-                isRequired
-                width='100%'
-                label='Name'
-                name='name_display'
-                value={name}
-                onChange={handleNameChange}
-            />
+            <TextField width='100%' label='Name' name='name_display' value={name} onChange={handleNameChange} />
 
             <Flex alignItems='end' gap='size-200'>
                 <Picker
