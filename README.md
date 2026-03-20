@@ -31,24 +31,28 @@
 
 ---
 
-> 🌟 **Announcing v2.2.0 Release!** 🌟
+> 🌟 **Announcing v2.3.0 Release!** 🌟
 >
-> We’re thrilled to announce the release of Anomalib v2.2.0, packed with new datasets, metrics, and performance improvements! Some of the highlights are:
-> New datasets
+> We're thrilled to announce the release of Anomalib v2.3.0, featuring new models and many quality-of-life improvements! Some of the highlights are:
+> New models
 >
-> - **3D-ADAM** : A comprehensive dataset for 3D anomaly detection in additive manufacturing.
-> - **BMAD** : Benchmarks for Medical Anomaly Detection, featuring six datasets across five medical domains
+> - **AnomalyDINO** : A new anomaly detection model leveraging DINOv2 features.
+> - **SuperSimpleNet** : Updated to the latest version with improved performance.
 >
-> New metrics
+> New features
 >
-> - **PGn and PBn (CVPR2025)** : Presorted good/bad metrics for more insightful performance evaluation.
-> - **Histogram visualization** of anomaly scores for better interpretability.
+> - **PatchCore half-precision** : Support for FP16 training, reducing memory usage.
+> - **Barebones Engine mode** : A simplified engine mode for lightweight workflows.
+> - **Kaput dataset** : A new dataset for anomaly detection benchmarking.
+> - **XPU device support** : Intel XPU support in TorchInferencer for accelerated inference.
 >
-> Other Improvements
+> Bug fixes
 >
-> - Faster coreset selection for PatchCore model, resulting in ~30% quicker training.
-> - Reduced memory usage for memory bank–based models like PatchCore, PaDiM, and DfKDE.
-> - Many more code and documentation updates.
+> - Fixed PatchCore GPU memory bottleneck (kNN) during inference.
+> - Fixed `F1AdaptiveThreshold` bug when no anomalous images are in the validation set.
+> - Fixed support for non-square input images in Dinomaly model.
+> - Fixed INT8_PTQ and INT8_ACQ export issues.
+> - Improved Windows path compatibility.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 
