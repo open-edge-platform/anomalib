@@ -27,8 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 🚀 **data**: Add Kaput dataset by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3330
 - 🚀 **postprocess**: Cleanup MEBin post-processor by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3321
 - 🚀 **postprocess**: Add MEBin post-processing method by @StarPlatinum7 in https://github.com/open-edge-platform/anomalib/pull/3116
-- 🚀 **application**: Add Anomalib Studio desktop application with Tauri by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3358
-- 🚀 **application**: Add Anomalib Studio by @ActiveChooN, @AlexanderBarabanov, @ashwinvaidya17, @camiloHimura, @dwesolow, @MarkRedeman, @maxxgx, @mramotowski in https://github.com/open-edge-platform/anomalib/pull/3158
+- 🚀 **application**: Add Anomalib Studio Beta by @ActiveChooN, @AlexanderBarabanov, @ashwinvaidya17, @camiloHimura, @dwesolow, @MarkRedeman, @maxxgx, @mramotowski in https://github.com/open-edge-platform/anomalib/pull/3158
 
 ### Fixed
 
@@ -52,11 +51,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 🐞 **metrics**: Disable MPS for torch metrics by @maxxgx in https://github.com/open-edge-platform/anomalib/pull/3019
 - 🐞 **dependencies**: Update Lightning, torch+xpu, and add requests by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3180
 - 🐞 **config**: Add openvino to mypy skip-imports overrides by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3447
-- 🐞 **application**: Use model names by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3416
-- 🐞 **application**: Training percentage and logging by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3399
-- 🐞 **studio**: Selectable training accelerator by @maxxgx in https://github.com/open-edge-platform/anomalib/pull/3363
-- 🐞 **studio**: Fix get inference devices by @maxxgx in https://github.com/open-edge-platform/anomalib/pull/3346
-- 🐞 **application**: Add integrated XPU (inference) and adjustable host port by @maxxgx in https://github.com/open-edge-platform/anomalib/pull/3331
 
 ### Changed
 

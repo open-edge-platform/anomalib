@@ -53,6 +53,7 @@
 > - Fixed support for non-square input images in Dinomaly model.
 > - Fixed INT8_PTQ and INT8_ACQ export issues.
 > - Improved Windows path compatibility.
+> - Many more code and documentation updates.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 
