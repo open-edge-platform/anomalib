@@ -44,11 +44,11 @@ g++ \
 && apt-get clean
 
 # Remove pip because uv is used as the package manager.
-# This reduces attack surface and image size (a little bit)
+# This reduces attack surface and image size (a little bit).
 # python:3.13-slim only ships pip (not setuptools/wheel).
-RUN pip3 uninstall -y --root-user-action=ignore pip \
+ENV PIP_ROOT_USER_ACTION=ignore
+RUN python -m pip uninstall -y pip \ 
     && rm -rf /root/.cache/pip
-
 ENV PATH=/app/.venv/bin:$PATH
 WORKDIR /app
 
