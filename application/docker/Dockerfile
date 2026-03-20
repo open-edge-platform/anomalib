@@ -1,3 +1,6 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
 #------------------------------------------
 # Web UI Build Stage
 #------------------------------------------
@@ -39,6 +42,11 @@ libglib2.0-0 \
 g++ \
 && rm -rf /var/lib/apt/lists/* \
 && apt-get clean
+
+# Remove setuptools, pip, and wheel because uv is used as the package manager.
+# This reduces image size and attack surface, and avoids conflicts with uv.
+RUN pip3 uninstall -y setuptools pip wheel \
+    && rm -rf /root/.cache/pip
 
 ENV PATH=/app/.venv/bin:$PATH
 WORKDIR /app
