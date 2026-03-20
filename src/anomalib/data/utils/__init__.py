@@ -24,7 +24,13 @@ Example:
 
 from .boxes import boxes_to_anomaly_maps, boxes_to_masks, masks_to_boxes
 from .download import DownloadInfo, download_and_extract
-from .generators import generate_perlin_noise
+from .generators import (
+    DEFAULT_PERLIN_SCALE_EXPONENT_RANGE,
+    GLASS_PERLIN_SCALE_EXPONENT_RANGE,
+    apply_perlin_threshold_rescale,
+    generate_perlin_noise,
+    generate_perlin_noise_glass,
+)
 from .image import (
     generate_output_image_filename,
     get_image_filenames,
@@ -49,6 +55,10 @@ __all__ = [
     "get_image_filenames",
     "get_image_height_and_width",
     "generate_perlin_noise",
+    "generate_perlin_noise_glass",
+    "apply_perlin_threshold_rescale",
+    "DEFAULT_PERLIN_SCALE_EXPONENT_RANGE",
+    "GLASS_PERLIN_SCALE_EXPONENT_RANGE",
     "read_image",
     "read_mask",
     "read_depth_image",

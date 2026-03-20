@@ -23,6 +23,20 @@ Example:
     >>> mask = generator.generate(256, 256)
 """
 
-from .perlin import PerlinAnomalyGenerator, generate_perlin_noise
+from .perlin import (
+    DEFAULT_PERLIN_SCALE_EXPONENT_RANGE,
+    GLASS_PERLIN_SCALE_EXPONENT_RANGE,
+    PerlinAnomalyGenerator,
+    apply_perlin_threshold_rescale,
+    generate_perlin_noise,
+    generate_perlin_noise_glass,
+)
 
-__all__ = ["PerlinAnomalyGenerator", "generate_perlin_noise"]
+__all__ = [
+    "PerlinAnomalyGenerator",
+    "generate_perlin_noise",
+    "generate_perlin_noise_glass",
+    "apply_perlin_threshold_rescale",
+    "DEFAULT_PERLIN_SCALE_EXPONENT_RANGE",
+    "GLASS_PERLIN_SCALE_EXPONENT_RANGE",
+]
