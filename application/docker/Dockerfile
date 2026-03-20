@@ -43,9 +43,10 @@ g++ \
 && rm -rf /var/lib/apt/lists/* \
 && apt-get clean
 
-# Remove setuptools, pip, and wheel because uv is used as the package manager.
-# This reduces image size and attack surface, and avoids conflicts with uv.
-RUN pip3 uninstall -y setuptools pip wheel \
+# Remove pip because uv is used as the package manager.
+# This reduces attack surface and image size (a little bit)
+# python:3.13-slim only ships pip (not setuptools/wheel).
+RUN pip3 uninstall -y --root-user-action=ignore pip \
     && rm -rf /root/.cache/pip
 
 ENV PATH=/app/.venv/bin:$PATH
