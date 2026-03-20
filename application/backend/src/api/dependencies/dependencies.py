@@ -13,6 +13,7 @@ from services import (
     JobService,
     MediaService,
     PipelineService,
+    ProjectSelectionService,
     ProjectService,
 )
 from services.metrics_service import MetricsService
@@ -25,6 +26,11 @@ from webrtc.manager import WebRTCManager
 async def get_project_service() -> ProjectService:
     """Provides a ProjectService"""
     return ProjectService()
+
+
+async def get_project_selection_service() -> ProjectSelectionService:
+    """Provides a ProjectSelectionService."""
+    return ProjectSelectionService()
 
 
 async def get_job_service() -> JobService:

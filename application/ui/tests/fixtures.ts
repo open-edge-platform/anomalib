@@ -14,6 +14,12 @@ interface Fixtures {
 const test = testBase.extend<Fixtures>({
     network: createNetworkFixture({
         initialHandlers: [
+            http.get('/api/projects/startup-selection', ({ response }) => {
+                return response(200).json({
+                    project_id: '12',
+                    source: 'last_used',
+                });
+            }),
             http.get('/api/projects', ({ response }) => {
                 return response(200).json({
                     projects: [
@@ -23,6 +29,9 @@ const test = testBase.extend<Fixtures>({
                         },
                     ],
                 });
+            }),
+            http.put('/api/projects/last-used', ({ response }) => {
+                return response(200).json({});
             }),
             http.get('/api/projects/{project_id}', ({ response }) => {
                 return response(200).json({
