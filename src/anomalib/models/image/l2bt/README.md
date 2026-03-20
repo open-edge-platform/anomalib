@@ -31,8 +31,7 @@ University of Bologna
 
 To efficiently deploy strong, often pre-trained feature extractors, recent Industrial Anomaly Detection and Segmentation (IADS) methods process low-resolution images, e.g., 224x224 pixels, obtained by downsampling the original input images. However, while numerous industrial applications demand the identification of both large and small defects, downsampling the input image to a low resolution may hinder a method's ability to pinpoint tiny anomalies.
 
-The L2BT method introduces a Teacher-Student paradigm to leverage strong pre-trained features while processing high-resolution input images very efficiently.  
-The core idea concerns training two shallow MLPs (the Students) on nominal images so as to mimic the mappings between the patch embeddings induced by the self-attention layers of a frozen Vision Transformer (the Teacher). Indeed, learning these mappings sets forth a challenging pretext task that small-capacity models are unlikely to accomplish on out-of-distribution data such as anomalous images.
+The L2BT method introduces a Teacher-Student paradigm to leverage strong pre-trained features while processing high-resolution input images very efficiently. The core idea concerns training two shallow MLPs (the Students) on nominal images so as to mimic the mappings between the patch embeddings induced by the self-attention layers of a frozen Vision Transformer (the Teacher). Indeed, learning these mappings sets forth a challenging pretext task that small-capacity models are unlikely to accomplish on out-of-distribution data such as anomalous images.
 
 The method can spot anomalies from high-resolution images and runs significantly faster than competitors, achieving state-of-the-art performance on MVTec AD and the best segmentation results on VisA. Novel evaluation metrics are also proposed to capture robustness to defect size, i.e., the ability to preserve good localisation from large anomalies to tiny ones. Evaluating the method with these metrics further highlights its superior performance.
 
@@ -82,26 +81,47 @@ Refer to the anomalib installation instructions for environment setup.
 
 ```bash
 anomalib train \
-  --model l2bt \
-  --dataset visa \
-  --dataset.category capsules
+  --model L2BT \
+  --data Visa \
+  --data.category capsules
 ```
+
+> **Note:** If you encounter dataloader or shared-memory issues on your machine, you can reduce workers and batch size:
+>
+> ```bash
+> anomalib train \
+>   --model L2BT \
+>   --data Visa \
+>   --data.category capsules \
+>   --data.num_workers 0 \
+>   --data.train_batch_size 1 \
+>   --data.eval_batch_size 1 \
+>   --trainer.max_epochs 1
+> ```
 
 During training, anomalib automatically manages:
 
-- dataset loading  
-- experiment logging  
-- checkpoint saving  
-- evaluation metrics  
+- dataset loading
+- experiment logging
+- checkpoint saving
+- evaluation metrics
 
 ### :rocket: Inference L2BT
 
 ```bash
 anomalib predict \
-  --model l2bt \
-  --dataset visa \
-  --dataset.category capsules \
-  --ckpt_path <path_to_checkpoint>
+  --model L2BT \
+  --data <PATH_TO_IMAGE_OR_FOLDER> \
+  --ckpt_path <PATH_TO_CHECKPOINT>
+```
+
+Example:
+
+```bash
+anomalib predict \
+  --model L2BT \
+  --data datasets/visa/visa_pytorch/capsules/test \
+  --ckpt_path results/L2BT/Visa/capsules/latest/weights/lightning/model.ckpt
 ```
 
 The checkpoint is generated automatically after training and can be found in the results directory created by anomalib.
@@ -112,7 +132,7 @@ This command generates anomaly scores and anomaly maps for the selected dataset.
 
 Model parameters can be configured using:
 
-```
+```text
 examples/configs/model/l2bt.yaml
 ```
 

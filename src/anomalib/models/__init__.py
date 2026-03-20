@@ -59,6 +59,7 @@ from anomalib.models.components import AnomalibModule
 from anomalib.utils.path import convert_snake_to_pascal_case, convert_to_snake_case, convert_to_title_case
 
 from .image import (
+    L2BT,
     AnomalyDINO,
     Cfa,
     Cflow,
@@ -72,7 +73,6 @@ from .image import (
     Fastflow,
     Fre,
     Ganomaly,
-    L2BT,
     Padim,
     Patchcore,
     ReverseDistillation,
