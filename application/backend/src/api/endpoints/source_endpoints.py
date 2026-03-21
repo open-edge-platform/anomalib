@@ -74,7 +74,7 @@ UPDATE_SOURCE_BODY_EXAMPLES = {
         summary="Update USB camera source",
         description="Rename a USB camera source",
         value={
-            "name": "Updated Webcam Name",
+            "name": "Updated USB Camera Name",
         },
     ),
     "video_file": Example(
