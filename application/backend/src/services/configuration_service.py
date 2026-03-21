@@ -4,8 +4,8 @@
 import asyncio
 from collections.abc import Callable
 from enum import StrEnum
-from pathlib import Path
 from multiprocessing.synchronize import Condition
+from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -16,12 +16,11 @@ from db import get_async_db_session_ctx
 from pydantic_models import Sink, Source
 from pydantic_models.base import Pagination
 from pydantic_models.sink import SinkList
-from pydantic_models.source import SourceList
+from pydantic_models.source import SourceList, SourceType
 from repositories import PipelineRepository, SinkRepository, SourceRepository
 from services.active_pipeline_service import ActivePipelineService
 from services.exceptions import ResourceNotFoundError, ResourceType
 from services.video_stream_service import VideoStreamService
-from pydantic_models.source import SourceType
 
 if TYPE_CHECKING:
     from entities.video_stream import VideoStream
@@ -187,10 +186,10 @@ class ConfigurationService:
         try:
             if source.source_type == SourceType.IMAGES_FOLDER:
                 folder_path = Path(source.images_folder_path)
-                if not folder_path.exists():
+                if not await asyncio.to_thread(folder_path.exists):
                     logger.error(f"Images folder path does not exist: {folder_path}")
                     return False
-                if not folder_path.is_dir():
+                if not await asyncio.to_thread(folder_path.is_dir):
                     logger.error(f"Images folder path is not a directory: {folder_path}")
                     return False
                 if not folder_path.is_absolute():
