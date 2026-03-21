@@ -34,12 +34,46 @@ from torchvision.transforms import v2
 
 from anomalib.data.transforms import MultiRandomChoice
 
+DEFAULT_PERLIN_SCALE_EXPONENT_RANGE = (0, 6)
+GLASS_PERLIN_SCALE_EXPONENT_RANGE = (0, 4)
+
+
+def apply_perlin_threshold_rescale(
+    perlin_noise: torch.Tensor,
+    threshold: float,
+    enabled: bool = True,
+) -> torch.Tensor:
+    """Rescale Perlin noise if no values exceed threshold.
+
+    Some pipelines expect masks from ``perlin_noise > threshold``. If all values are
+    below threshold, this optional normalization rescales noise back to ``[-1, 1]``.
+
+    Args:
+        perlin_noise: Input perlin noise tensor.
+        threshold: Threshold used for mask generation.
+        enabled: Whether to apply the fallback rescaling.
+
+    Returns:
+        Rescaled (or original) perlin noise tensor.
+    """
+    if not enabled or (perlin_noise > threshold).any():
+        return perlin_noise
+
+    denominator = perlin_noise.max() - perlin_noise.min()
+    if denominator == 0:
+        return perlin_noise
+
+    perlin_noise = (perlin_noise - perlin_noise.min()) / denominator
+    return (perlin_noise * 2) - 1
+
 
 def generate_perlin_noise(
     height: int,
     width: int,
     scale: tuple[int, int] | None = None,
     device: torch.device | None = None,
+    scale_exponent_range: tuple[int, int] = DEFAULT_PERLIN_SCALE_EXPONENT_RANGE,
+    pad_to_power_of_2: bool = True,
 ) -> torch.Tensor:
     """Generate a Perlin noise pattern.
 
@@ -54,8 +88,11 @@ def generate_perlin_noise(
         scale: Tuple of ``(scale_x, scale_y)`` for noise granularity. If ``None``,
             random scales will be used. Larger scales produce coarser noise patterns,
             while smaller scales produce finer patterns.
-        device: Device to generate the noise on. If ``None``, uses current default
-            device.
+        device: Device to generate the noise on. If ``None``, uses current default device.
+        scale_exponent_range: Exponent range for random scale sampling when ``scale``
+            is ``None``. Scale is sampled as ``2**k`` where ``k`` is in this range.
+        pad_to_power_of_2: If ``True``, pad internal noise grid to next power-of-two
+            resolution.
 
     Returns:
         torch.Tensor: Tensor of shape ``[height, width]`` containing the noise
@@ -81,7 +118,7 @@ def generate_perlin_noise(
 
     # Handle scale parameter
     if scale is None:
-        min_scale, max_scale = 0, 6
+        min_scale, max_scale = scale_exponent_range
         scalex = 2 ** torch.randint(min_scale, max_scale, (1,), device=device).item()
         scaley = 2 ** torch.randint(min_scale, max_scale, (1,), device=device).item()
     else:
@@ -91,8 +128,10 @@ def generate_perlin_noise(
     def nextpow2(value: int) -> int:
         return int(2 ** torch.ceil(torch.log2(torch.tensor(value))).int().item())
 
-    pad_h = nextpow2(height)
-    pad_w = nextpow2(width)
+    pad_h_base = nextpow2(height) if pad_to_power_of_2 else height
+    pad_w_base = nextpow2(width) if pad_to_power_of_2 else width
+    pad_h = ((pad_h_base + scalex - 1) // scalex) * scalex
+    pad_w = ((pad_w_base + scaley - 1) // scaley) * scaley
 
     # Generate base grid
     delta = (scalex / pad_h, scaley / pad_w)
@@ -151,6 +190,23 @@ def generate_perlin_noise(
     return noise[:height, :width]
 
 
+def generate_perlin_noise_glass(
+    height: int,
+    width: int,
+    scale: tuple[int, int] | None = None,
+    device: torch.device | None = None,
+) -> torch.Tensor:
+    """Generate Perlin noise with GLASS-compatible defaults."""
+    return generate_perlin_noise(
+        height=height,
+        width=width,
+        scale=scale,
+        device=device,
+        scale_exponent_range=GLASS_PERLIN_SCALE_EXPONENT_RANGE,
+        pad_to_power_of_2=False,
+    )
+
+
 class PerlinAnomalyGenerator(v2.Transform):
     """Perlin noise-based synthetic anomaly generator.
 
@@ -204,10 +260,17 @@ class PerlinAnomalyGenerator(v2.Transform):
         probability: float = 0.5,
         blend_factor: float | tuple[float, float] = (0.2, 1.0),
         rotation_range: tuple[float, float] = (-90, 90),
+        *,
+        perlin_pad_to_power_of_2: bool = True,
+        perlin_scale_exponent_range: tuple[int, int] = DEFAULT_PERLIN_SCALE_EXPONENT_RANGE,
+        perlin_rescale_below_threshold: bool = True,
     ) -> None:
         super().__init__()
         self.probability = probability
         self.blend_factor = blend_factor
+        self.perlin_pad_to_power_of_2 = perlin_pad_to_power_of_2
+        self.perlin_scale_exponent_range = perlin_scale_exponent_range
+        self.perlin_rescale_below_threshold = perlin_rescale_below_threshold
 
         # Load anomaly source paths
         self.anomaly_source_paths: list[Path] = []
@@ -268,12 +331,18 @@ class PerlinAnomalyGenerator(v2.Transform):
                 - Mask tensor of shape ``[H, W, 1]``
         """
         # Generate perlin noise
-        perlin_noise = generate_perlin_noise(height, width, device=device)
-        # in some cases the perlin noise is all less than 0.5, so we need to rescale it between 0 and 1
-        if not (perlin_noise > 0.5).any():
-            perlin_noise = (perlin_noise - perlin_noise.min()) / (perlin_noise.max() - perlin_noise.min())
-            # rescale to [-1, 1] range
-            perlin_noise = (perlin_noise * 2) - 1
+        perlin_noise = generate_perlin_noise(
+            height,
+            width,
+            device=device,
+            scale_exponent_range=self.perlin_scale_exponent_range,
+            pad_to_power_of_2=self.perlin_pad_to_power_of_2,
+        )
+        perlin_noise = apply_perlin_threshold_rescale(
+            perlin_noise,
+            threshold=0.5,
+            enabled=self.perlin_rescale_below_threshold,
+        )
 
         # Create rotated noise pattern
         perlin_noise = perlin_noise.unsqueeze(0)  # [1, H, W]
