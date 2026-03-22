@@ -65,7 +65,7 @@ class PatchflowModel(nn.Module):
         patch_size: Kernel size of the AvgPool for local aggregation.
         flow_hidden_dim: Hidden channels in the flow subnet.
         crop_size: Optional center crop size ``(H, W)`` applied before
-            feature extraction. The anomaly map is zero-padded back to
+            feature extraction. The anomaly map is padded with ``-1`` back to
             ``input_size``. Defaults to ``None`` (no cropping).
     """
 
