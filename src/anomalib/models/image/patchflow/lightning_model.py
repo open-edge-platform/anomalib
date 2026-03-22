@@ -68,7 +68,7 @@ class Patchflow(AnomalibModule):
             Defaults to ``128``.
         crop_size: Optional center crop size ``(H, W)``. When set, the
             input is center-cropped before feature extraction and the
-            anomaly map is zero-padded back to the original input size.
+            anomaly map is padded with value ``-1`` back to the original input size.
             Defaults to ``None``.
         pre_processor: Pre-processor instance or boolean.
             Defaults to ``True``.
