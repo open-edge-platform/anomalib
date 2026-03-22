@@ -17,20 +17,20 @@ def model() -> Patchflow:
     """Create a Patchflow lightning module with DINOv2 backbone and small settings."""
     return Patchflow(
         backbone="dinov2_vit_base_14",
-        pre_trained=True,
+        pre_trained=False,
         flow_steps=1,
         flow_feature_dim=64,
         num_scales=2,
         patch_size=5,
         flow_hidden_dim=64,
-        crop_size=(672, 672),
+        crop_size=(64, 64),
     )
 
 
 @pytest.fixture(scope="module")
 def batch() -> ImageBatch:
     """Create a fake batch."""
-    return ImageBatch(image=torch.randn(2, 3, 672, 672))
+    return ImageBatch(image=torch.randn(2, 3, 64, 64))
 
 
 def test_initialization(model: Patchflow) -> None:
