@@ -19,8 +19,7 @@ class PatchflowLoss(nn.Module):
     dimension of the fused hidden variable tensor.
     """
 
-    @staticmethod
-    def forward(hidden_variables: torch.Tensor, jacobians: torch.Tensor) -> torch.Tensor:
+    def forward(self, hidden_variables: torch.Tensor, jacobians: torch.Tensor) -> torch.Tensor:
         """Calculate the PatchFlow loss.
 
         Args:
