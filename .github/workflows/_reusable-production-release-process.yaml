@@ -15,7 +15,7 @@
 #    - Production bundle creation
 #    - Documentation updates
 #
-# 2. Publication:
+# 2. Publication (in release.yaml):
 #    - Production PyPI deployment
 #    - GitHub release creation
 #    - Documentation publishing
@@ -55,10 +55,14 @@ on:
       artifact-name:
         required: true
         type: string
+      dry-run:
+        description: "Perform a dry run without creating a release"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
-  id-token: write # Required for OIDC authentication with PyPI
 
 jobs:
   prepare-release:
@@ -78,14 +82,3 @@ jobs:
           name: production-release-artifacts
           path: dist/
           retention-days: 1
-
-  publish:
-    needs: [prepare-release]
-    uses: ./.github/workflows/_reusable-release-publisher.yaml
-    permissions:
-      contents: write # is required by action-gh-release (nested)
-      id-token: write # Required for OIDC authentication with PyPI
-    with:
-      version: ${{ inputs.version }}
-      artifact-name: production-release-artifacts
-      is-prerelease: false

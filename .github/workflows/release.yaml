@@ -16,10 +16,12 @@
 #    - Test suite execution
 #    - Security assessment
 #
-# 2. Production Release:
+# 2. Production staging:
+#    - Artifact repackaging (reusable workflow; environment approval)
+#
+# 3. Publish (defined in this file so PyPI OIDC matches workflow release.yaml):
 #    - Production PyPI deployment
 #    - GitHub release creation
-#    - Documentation updates
 #
 # Required Secrets:
 # - CODECOV_TOKEN: Coverage reporting
@@ -81,16 +83,43 @@ jobs:
     needs: [validation]
     uses: ./.github/workflows/_reusable-production-release-process.yaml
     permissions:
-      contents: write # is required by action-gh-release (nested)
-      id-token: write # Required for OIDC authentication with PyPI
+      contents: read
     with:
       version: ${{ needs.validation.outputs.version }}
       artifact-name: ${{ needs.validation.outputs.artifact-name }}
+      dry-run: ${{ inputs.dry_run || false }}
+
+  # Putlish is moved here due to PyPi's policy: Reusable workflows
+  # are not currently supported by PyPI's Trusted Publishing
+  # functionality, and are subject to breakage.
+  publish:
+    needs: [production-release-process]
+    if: success() && !inputs.dry_run
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: write
+      id-token: write # Required for OIDC authentication with PyPI
+    steps:
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8
+        with:
+          name: production-release-artifacts
+          path: dist
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
+      - uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
+        with:
+          tag_name: ${{ needs.validation.outputs.version }}
+          name: Release ${{ needs.validation.outputs.version }}
+          draft: false
+          prerelease: false
+          files: dist/*
+          generate_release_notes: true
 
   status:
-    needs: [validation, production-release-process]
+    needs: [validation, production-release-process, publish]
     if: always() && !inputs.dry_run
     uses: ./.github/workflows/_reusable-release-status.yaml
     with:
       version: ${{ needs.validation.outputs.version }}
-      prod-status: ${{ needs.production-release-process.result }}
+      prod-status: ${{ needs.publish.result != 'skipped' && needs.publish.result || needs.production-release-process.result }}
