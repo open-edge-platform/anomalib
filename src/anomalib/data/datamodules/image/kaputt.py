@@ -73,6 +73,9 @@ class Kaputt(AnomalibDataModule):
     Args:
         root (Path | str): Path to the root of the dataset.
             Defaults to ``"./datasets/kaputt"``.
+        category (str): Category of the dataset. Defaults to ``"book_other"``.
+            Kaputt uses `item_material` which is exposed as category to make the
+            API consistent with other datasets.
         train_batch_size (int, optional): Training batch size.
             Defaults to ``32``.
         eval_batch_size (int, optional): Test batch size.
@@ -139,6 +142,7 @@ class Kaputt(AnomalibDataModule):
     def __init__(
         self,
         root: Path | str = "./datasets/kaputt",
+        category: str = "book_other",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
         num_workers: int = 8,
@@ -170,6 +174,7 @@ class Kaputt(AnomalibDataModule):
         )
 
         self.root = Path(root)
+        self.category = category
         self.image_type = image_type
         self.use_reference = use_reference
 
@@ -185,12 +190,14 @@ class Kaputt(AnomalibDataModule):
         self.train_data = KaputtDataset(
             split=Split.TRAIN,
             root=self.root,
+            category=self.category,
             image_type=self.image_type,
             use_reference=self.use_reference,
         )
         self.test_data = KaputtDataset(
             split=Split.TEST,
             root=self.root,
+            category=self.category,
             image_type=self.image_type,
             use_reference=False,  # Don't use reference for test
         )
@@ -200,6 +207,7 @@ class Kaputt(AnomalibDataModule):
             self.val_data = KaputtDataset(
                 split=Split.VAL,
                 root=self.root,
+                category=self.category,
                 image_type=self.image_type,
                 use_reference=False,  # Don't use reference for validation
             )
