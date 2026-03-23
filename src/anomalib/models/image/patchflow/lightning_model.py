@@ -70,6 +70,10 @@ class Patchflow(AnomalibModule):
             input is center-cropped before feature extraction and the
             anomaly map is padded with value ``-1`` back to the original input size.
             Defaults to ``None``.
+        lr: Learning rate for the Adam optimizer.
+            Defaults to ``0.001``.
+        weight_decay: Weight decay (L2 penalty) for the Adam optimizer.
+            Defaults to ``0.0001``.
         pre_processor: Pre-processor instance or boolean.
             Defaults to ``True``.
         post_processor: Post-processor instance or boolean.

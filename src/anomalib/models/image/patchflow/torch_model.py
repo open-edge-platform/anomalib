@@ -83,6 +83,9 @@ class PatchflowModel(nn.Module):
     ) -> None:
         super().__init__()
         self.input_size = input_size
+        if crop_size is not None and (crop_size[0] > input_size[0] or crop_size[1] > input_size[1]):
+            msg = f"crop_size {crop_size} exceeds input_size {input_size}."
+            raise ValueError(msg)
         self.crop_size = crop_size
         # Internal size used for backbone, flow, and anomaly map generation
         self._internal_size = crop_size if crop_size is not None else input_size
@@ -112,7 +115,8 @@ class PatchflowModel(nn.Module):
             if crop_size is not None:
                 self.crop_size = self._internal_size
             # Use early, middle, and late intermediate layers
-            self.dino_layer_indices: list[int] = [0, 6, 11]
+            num_blocks = len(self.feature_extractor.blocks)
+            self.dino_layer_indices: list[int] = [0, num_blocks // 2, num_blocks - 1]
             embed_dim: int = self.feature_extractor.embed_dim
             total_channels = embed_dim * len(self.dino_layer_indices) * num_scales
         else:
