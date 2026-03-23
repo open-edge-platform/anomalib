@@ -232,8 +232,9 @@ class PatchflowModel(nn.Module):
             left = (w_in - cw) // 2
             x = x[:, :, top : top + ch, left : left + cw]
 
-        # 1. Extract multi-scale features
-        features = self._extract_dinov2_features(x) if self.is_dinov2 else self._extract_cnn_features(x)
+        # 1. Extract multi-scale features (backbone is frozen, so disable grad to save memory/time)
+        with torch.no_grad():
+            features = self._extract_dinov2_features(x) if self.is_dinov2 else self._extract_cnn_features(x)
 
         # 2. Fuse features
         fused = self._fuse_features(features)
