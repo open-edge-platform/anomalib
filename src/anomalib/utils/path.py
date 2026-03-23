@@ -156,10 +156,7 @@ def _make_latest_windows(latest: Path, target: Path) -> None:
                 )
                 msg = f"Unsafe path detected: {tmp} -> {target}"
                 raise ValueError(msg)
-            cmd_exe = os.environ.get("ComSpec")
-            if not cmd_exe:
-                system_root = os.environ.get("SystemRoot", r"C:\Windows")
-                cmd_exe = str(Path(system_root) / "System32" / "cmd.exe")
+            cmd_exe = r"C:\Windows\System32\cmd.exe"
             result = subprocess.run(  # noqa: S603  # nosec B603
                 [
                     cmd_exe,
