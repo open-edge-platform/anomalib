@@ -1,13 +1,12 @@
 # Release Workflow
 #
-# This workflow manages the complete release process for both production
-# and release candidate versions.
+# This workflow manages the production release process.
 #
 # Key Features:
 # - Version validation
 # - Comprehensive testing
 # - Security scanning
-# - RC and production releases
+# - Production release
 # - Manual and automated triggers
 #
 # Process Stages:
@@ -17,12 +16,7 @@
 #    - Test suite execution
 #    - Security assessment
 #
-# 2. RC Process:
-#    - Test PyPI deployment
-#    - Validation steps
-#    - Approval collection
-#
-# 3. Production Release:
+# 2. Production Release:
 #    - Production PyPI deployment
 #    - GitHub release creation
 #    - Documentation updates
@@ -32,27 +26,21 @@
 #
 # Note: PyPI publishing uses OIDC (OpenID Connect) authentication.
 # Configure trusted publishers in PyPI project settings:
-# - For production/beta releases (PyPI):
+# - For production releases (PyPI):
 #   - Owner: <your-org>
 #   - Repository name: anomalib
 #   - Workflow name: release.yaml
 #   - Environment name: production
-# - For RC releases (Test PyPI):
-#   - Owner: <your-org>
-#   - Repository name: anomalib
-#   - Workflow name: release.yaml
-#   - Environment name: technical-review
 #
 # Example Usage:
 # 1. Automated (Tag Push):
 #    - Production: Push tag v1.2.3
-#    - RC: Push tag v1.2.3-rc1
 #
 # 2. Manual Trigger:
 #    - With version input
 #    - Optional dry-run mode
 #
-# Note: Supports both automated tag-based and manual releases
+# Note: Supports both automated tag-based and manual production releases
 
 name: Release
 
@@ -60,12 +48,10 @@ on:
   push:
     tags:
       - "v*.*.*"
-      - "v*.*.*-rc*"
-      - "v*.*.*b*"
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release (e.g., v1.2.3 or v1.2.3-rc1)"
+        description: "Version to release (e.g., v1.2.3)"
         required: true
         type: string
       dry_run:
@@ -88,13 +74,11 @@ jobs:
       python-version: "3.10"
       verify-package: true
       dry-run: ${{ inputs.dry_run || false }}
-      allow-prerelease: true
     secrets:
       codecov-token: ${{ secrets.CODECOV_TOKEN }}
 
   production-release-process:
     needs: [validation]
-    if: ${{ !contains(needs.validation.outputs.version, '-rc') && !contains(needs.validation.outputs.version, 'b') }}
     uses: ./.github/workflows/_reusable-production-release-process.yaml
     permissions:
       contents: write # is required by action-gh-release (nested)
@@ -109,6 +93,4 @@ jobs:
     uses: ./.github/workflows/_reusable-release-status.yaml
     with:
       version: ${{ needs.validation.outputs.version }}
-      rc-status: ${{ needs.rc-release-process.result }}
       prod-status: ${{ needs.production-release-process.result }}
-      beta-status: ${{ needs.beta-release-process.result }}

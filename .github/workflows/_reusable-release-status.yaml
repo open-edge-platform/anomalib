@@ -1,25 +1,22 @@
 # Release Status Workflow
 #
-# This reusable workflow validates and reports the status of release processes,
-# handling both RC and production releases.
+# This reusable workflow validates and reports the status of production releases.
 #
 # Key Features:
 # - Status verification
 # - Error detection
-# - Release type handling
 # - Status reporting
 # - Process validation
 #
 # Process Stages:
 # 1. Status Collection:
-#    - RC status check
 #    - Production status check
 #    - Process completion verification
 #
 # 2. Validation:
 #    - Error detection
 #    - Status analysis
-#    - Release type determination
+#    - Outcome determination
 #
 # 3. Reporting:
 #    - Status summary
@@ -28,7 +25,6 @@
 #
 # Required Inputs:
 # - version: Release version
-# - rc-status: RC process status
 # - prod-status: Production process status
 #
 # Example Usage:
@@ -38,7 +34,6 @@
 #        uses: ./.github/workflows/_reusable-release-status.yaml
 #        with:
 #          version: "v1.2.3"
-#          rc-status: "success"
 #          prod-status: "success"
 #
 # Note: Should be used as final step in release workflows
@@ -51,13 +46,7 @@ on:
       version:
         required: true
         type: string
-      rc-status:
-        required: true
-        type: string
       prod-status:
-        required: true
-        type: string
-      beta-status:
         required: true
         type: string
 
@@ -71,19 +60,11 @@ jobs:
       - name: Verify workflow status
         env:
           INPUTS_VERSION: ${{ inputs.version }}
-          INPUTS_RC_STATUS: ${{ inputs.rc-status }}
           INPUTS_PROD_STATUS: ${{ inputs.prod-status }}
-          INPUTS_BETA_STATUS: ${{ inputs.beta-status }}
         run: |
-          if [[ "$INPUTS_RC_STATUS" == "failure" || "$INPUTS_PROD_STATUS" == "failure" || "$INPUTS_BETA_STATUS" == "failure" ]]; then
+          if [[ "$INPUTS_PROD_STATUS" == "failure" ]]; then
             echo "::error::Release workflow failed"
             exit 1
           fi
 
-          if [[ "$INPUTS_VERSION" =~ -rc ]]; then
-            echo "Release candidate $INPUTS_VERSION processed successfully"
-          elif [[ "$INPUTS_VERSION" =~ b[0-9]+ ]]; then
-            echo "Beta release $INPUTS_VERSION processed successfully"
-          else
-            echo "Production release $INPUTS_VERSION completed successfully"
-          fi
+          echo "Production release $INPUTS_VERSION completed successfully"

@@ -9,12 +9,10 @@
 # - Test suite execution
 # - Security scanning
 # - Package building
-# - Pre-release validation
 #
 # Process Stages:
 # 1. Version Validation:
 #    - Checks version string format
-#    - Validates pre-release compatibility
 #    - Ensures version consistency
 #
 # 2. Quality Assurance:
@@ -42,7 +40,6 @@
 # - python-version: Python version for building
 # - verify-package: Whether to verify built package
 # - dry-run: Run without creating artifacts
-# - allow-prerelease: Allow RC versions
 #
 # Required Secrets:
 # - codecov-token: Token for coverage reporting
@@ -62,19 +59,8 @@
 #        secrets:
 #          codecov-token: ${{ secrets.CODECOV_TOKEN }}
 #
-# 2. Pre-release Validation:
-#    jobs:
-#      rc-validate:
-#        uses: ./.github/workflows/_reusable-release-validation.yaml
-#        with:
-#          version: "v1.2.3-rc1"
-#          python-version: "3.10"
-#          allow-prerelease: true
-#        secrets:
-#          codecov-token: ${{ secrets.CODECOV_TOKEN }}
-#
 # Note: This workflow is a critical part of the release pipeline and should
-# be completed successfully before proceeding with RC or production releases.
+# be completed successfully before proceeding with production releases.
 
 name: Release Validation
 
@@ -92,10 +78,6 @@ on:
         type: boolean
         default: true
       dry-run:
-        required: false
-        type: boolean
-        default: false
-      allow-prerelease:
         required: false
         type: boolean
         default: false
@@ -123,14 +105,9 @@ jobs:
         id: validate-version
         env:
           INPUTS_VERSION: ${{ inputs.version }}
-          INPUTS_ALLOW_PRERELEASE: ${{ inputs.allow-prerelease }}
         run: |
-          if [[ ! "$INPUTS_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
+          if [[ ! "$INPUTS_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "::error::Invalid version format: $INPUTS_VERSION"
-            exit 1
-          fi
-          if [[ "$INPUTS_VERSION" =~ -rc[0-9]+$ ]] && [[ "$INPUTS_ALLOW_PRERELEASE" != "true" ]]; then
-            echo "::error::Pre-release versions not allowed"
             exit 1
           fi
           echo "version=$INPUTS_VERSION" >> $GITHUB_OUTPUT
