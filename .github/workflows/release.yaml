@@ -87,7 +87,7 @@ jobs:
       version: ${{ github.event_name == 'push' && github.ref_name || inputs.version }}
       python-version: "3.10"
       verify-package: true
-      dry-run: ${{ github.event.inputs.dry_run || false }}
+      dry-run: ${{ inputs.dry_run || false }}
       allow-prerelease: true
     secrets:
       codecov-token: ${{ secrets.CODECOV_TOKEN }}
