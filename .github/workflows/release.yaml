@@ -92,31 +92,9 @@ jobs:
     secrets:
       codecov-token: ${{ secrets.CODECOV_TOKEN }}
 
-  rc-release-process:
-    needs: [validation]
-    if: contains(needs.validation.outputs.version, '-rc')
-    uses: ./.github/workflows/_reusable-rc-release-process.yaml
-    permissions:
-      contents: read
-      id-token: write # Required for OIDC authentication with PyPI
-    with:
-      version: ${{ needs.validation.outputs.version }}
-      artifact-name: ${{ needs.validation.outputs.artifact-name }}
-
   production-release-process:
     needs: [validation]
     if: ${{ !contains(needs.validation.outputs.version, '-rc') && !contains(needs.validation.outputs.version, 'b') }}
-    uses: ./.github/workflows/_reusable-production-release-process.yaml
-    permissions:
-      contents: write # is required by action-gh-release (nested)
-      id-token: write # Required for OIDC authentication with PyPI
-    with:
-      version: ${{ needs.validation.outputs.version }}
-      artifact-name: ${{ needs.validation.outputs.artifact-name }}
-
-  beta-release-process:
-    needs: [validation]
-    if: contains(needs.validation.outputs.version, 'b')
     uses: ./.github/workflows/_reusable-production-release-process.yaml
     permissions:
       contents: write # is required by action-gh-release (nested)
