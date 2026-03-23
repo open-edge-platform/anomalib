@@ -92,7 +92,13 @@ class PatchflowModel(nn.Module):
 
         # --- Feature extractor (frozen) ---
         if self.is_dinov2:
-            self.feature_extractor = DinoV2Loader.from_name(backbone)
+            if pre_trained:
+                # Load DINOv2 backbone with pretrained weights (may download if missing).
+                self.feature_extractor = DinoV2Loader.from_name(backbone)
+            else:
+                # Create DINOv2 backbone architecture without loading pretrained weights.
+                dino_loader = DinoV2Loader()
+                self.feature_extractor = dino_loader.create_model(backbone)
             # Use early, middle, and late intermediate layers
             self.dino_layer_indices: list[int] = [0, 6, 11]
             embed_dim: int = self.feature_extractor.embed_dim
