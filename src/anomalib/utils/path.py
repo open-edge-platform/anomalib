@@ -146,7 +146,7 @@ def _make_latest_windows(latest: Path, target: Path) -> None:
     except (OSError, NotImplementedError):
         # Try using Windows mklink command via subprocess
         try:
-            import subprocess
+            import subprocess  # nosec B404
 
             # Note: Using subprocess with mklink is safe here as we control
             # the command and arguments. This is a standard Windows command.
@@ -156,9 +156,13 @@ def _make_latest_windows(latest: Path, target: Path) -> None:
                 )
                 msg = f"Unsafe path detected: {tmp} -> {target}"
                 raise ValueError(msg)
-            result = subprocess.run(  # noqa: S603
-                [  # noqa: S607
-                    "cmd",
+            cmd_exe = os.environ.get("ComSpec")
+            if not cmd_exe:
+                system_root = os.environ.get("SystemRoot", r"C:\Windows")
+                cmd_exe = str(Path(system_root) / "System32" / "cmd.exe")
+            result = subprocess.run(  # noqa: S603  # nosec B603
+                [
+                    cmd_exe,
                     "/c",
                     "mklink",
                     "/J",

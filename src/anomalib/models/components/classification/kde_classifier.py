@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Kernel Density Estimation Classifier.
@@ -27,7 +27,6 @@ Example:
 """
 
 import logging
-import random
 from enum import Enum
 
 import torch
@@ -151,11 +150,8 @@ class KDEClassifier(nn.Module):
 
         # if max training points is non-zero and smaller than number of staged features, select random subset
         if embeddings.shape[0] > self.max_training_points:
-            selected_idx = torch.tensor(
-                random.sample(range(embeddings.shape[0]), self.max_training_points),
-                device=embeddings.device,
-            )
-            selected_features = embeddings[selected_idx]
+            perm = torch.randperm(embeddings.shape[0], device=embeddings.device)[: self.max_training_points]
+            selected_features = embeddings[perm]
         else:
             selected_features = embeddings
 
