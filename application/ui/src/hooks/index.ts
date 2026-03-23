@@ -4,3 +4,4 @@
  */
 export { useProjectIdentifier } from './use-project-identifier.hook';
 export * from './use-pipeline.hook';
+export * from './use-project-selection.hook';

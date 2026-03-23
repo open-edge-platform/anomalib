@@ -9,7 +9,7 @@ import { Flex, Text } from '@geti/ui';
 import { clsx } from 'clsx';
 import { useNavigate } from 'react-router';
 
-import { paths } from '../../../../routes/paths';
+import { getInspectProjectPath } from '../../../../routes/paths';
 import { isNonEmptyString } from '../../utils';
 import { ProjectThumbnail } from '../project-thumbnail/project-thumbnail.component';
 import { ProjectEdition } from './project-edition/project-edition.component';
@@ -57,7 +57,7 @@ export const ProjectListItem = ({
             return;
         }
 
-        navigate(`${paths.project({ projectId: project.id })}?mode=Dataset`);
+        navigate(getInspectProjectPath(project.id));
     };
 
     return (
