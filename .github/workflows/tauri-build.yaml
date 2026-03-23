@@ -144,6 +144,7 @@ jobs:
       github.repository == 'open-edge-platform/anomalib' &&
       (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: windows-latest
+    environment: windows-msix-signing
     timeout-minutes: 90
     permissions:
       contents: read
@@ -202,10 +203,10 @@ jobs:
         with:
           version: "latest"
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9 # stable
-        with:
-          toolchain: stable
+      - name: Install Rust toolchain
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
 
       - name: Cache Rust dependencies
         uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
@@ -235,8 +236,10 @@ jobs:
 
       - name: Build Python sidecar (Windows ${{ matrix.accelerator }})
         working-directory: application/backend
+        env:
+          MATRIX_ACCELERATOR: ${{ matrix.accelerator }}
         run: |
-          uv sync --no-dev --extra ${{ matrix.accelerator }}
+          uv sync --no-dev --extra $env:MATRIX_ACCELERATOR
           .\.venv\Scripts\Activate.ps1
           Push-Location ..\binary\sidecar
           uv run --active --with pyinstaller pyinstaller anomalib_studio.spec
