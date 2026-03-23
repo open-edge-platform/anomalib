@@ -97,8 +97,20 @@ class PatchflowModel(nn.Module):
                 self.feature_extractor = DinoV2Loader.from_name(backbone)
             else:
                 # Create DINOv2 backbone architecture without loading pretrained weights.
+                # Parse backbone name (e.g. "dinov2_vit_base_14") into components.
+                parts = backbone.split("_")
+                prefix, arch, ps = parts[0], parts[-2], int(parts[-1])
+                model_type = "dinov2_reg" if prefix == "dinov2reg" else prefix
                 dino_loader = DinoV2Loader()
-                self.feature_extractor = dino_loader.create_model(backbone)
+                self.feature_extractor = dino_loader.create_model(model_type, arch, ps)
+            # Ensure internal size is divisible by DINOv2 patch size
+            dino_patch = self.feature_extractor.patch_size
+            self._internal_size = (
+                (self._internal_size[0] // dino_patch) * dino_patch,
+                (self._internal_size[1] // dino_patch) * dino_patch,
+            )
+            if crop_size is not None:
+                self.crop_size = self._internal_size
             # Use early, middle, and late intermediate layers
             self.dino_layer_indices: list[int] = [0, 6, 11]
             embed_dim: int = self.feature_extractor.embed_dim

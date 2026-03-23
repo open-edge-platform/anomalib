@@ -15,7 +15,7 @@ def model() -> PatchflowModel:
     return PatchflowModel(
         input_size=(224, 224),
         backbone="tf_efficientnet_b5",
-        pre_trained=True,
+        pre_trained=False,
         flow_steps=1,
         flow_feature_dim=64,
         num_scales=2,

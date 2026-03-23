@@ -15,7 +15,7 @@ def model() -> PatchflowModel:
     return PatchflowModel(
         input_size=(672, 672),
         backbone="dinov2_vit_base_14",
-        pre_trained=True,
+        pre_trained=False,
         flow_steps=1,
         flow_feature_dim=64,
         num_scales=2,
