@@ -104,13 +104,7 @@ jobs:
       artifact-name: ${{ needs.validation.outputs.artifact-name }}
 
   status:
-    needs:
-      [
-        validation,
-        rc-release-process,
-        production-release-process,
-        beta-release-process,
-      ]
+    needs: [validation, production-release-process]
     if: always() && !inputs.dry_run
     uses: ./.github/workflows/_reusable-release-status.yaml
     with:
