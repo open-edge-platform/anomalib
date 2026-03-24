@@ -16,6 +16,11 @@ on:
         required: false
         type: boolean
         default: false
+      force:
+        description: 'Force promotion even if stable tags already exist with a different digest'
+        required: false
+        type: boolean
+        default: false
 
 permissions: {} # No permissions by default
 
@@ -126,6 +131,7 @@ jobs:
           DOCKER_MINOR_TAG: ${{ steps.validate.outputs.docker_minor_tag }}
           DOCKER_MAJOR_TAG: ${{ steps.validate.outputs.docker_major_tag }}
           DRY_RUN: ${{ inputs.dry_run }}
+          FORCE: ${{ inputs.force }}
         run: |
           {
             echo "## Promotion Summary"
@@ -138,9 +144,13 @@ jobs:
             echo "| Docker RC tag | \`${DOCKER_RC_TAG}\` |"
             echo "| Docker stable tags | \`${DOCKER_PATCH_TAG}\`, \`${DOCKER_MINOR_TAG}\`, \`${DOCKER_MAJOR_TAG}\` |"
             echo "| Dry run | \`${DRY_RUN}\` |"
+            echo "| Force | \`${FORCE}\` |"
             echo ""
             if [[ "${DRY_RUN}" == "true" ]]; then
               echo "> **Dry run mode:** No changes will be made."
+            fi
+            if [[ "${FORCE}" == "true" ]]; then
+              echo "> **Force mode:** Existing stable tags with a different digest will be overwritten."
             fi
           } >> "${GITHUB_STEP_SUMMARY}"
 
@@ -208,9 +218,37 @@ jobs:
           DOCKER_PATCH_TAG: ${{ needs.validate.outputs.docker_patch_tag }}
           DOCKER_MINOR_TAG: ${{ needs.validate.outputs.docker_minor_tag }}
           DOCKER_MAJOR_TAG: ${{ needs.validate.outputs.docker_major_tag }}
+          FORCE: ${{ inputs.force }}
         run: |
           set -euo pipefail
           for IMAGE in ghcr.io/open-edge-platform/anomalib-studio-${DEVICE}; do
+            RC_DIGEST=$(docker buildx imagetools inspect "${IMAGE}:${DOCKER_RC_TAG}" --format '{{.Manifest.Digest}}')
+            if [[ -z "${RC_DIGEST}" ]]; then
+              echo "::error::Could not retrieve digest for RC image ${IMAGE}:${DOCKER_RC_TAG}. Ensure the image exists and is accessible."
+              exit 1
+            fi
+            echo "${IMAGE}:${DOCKER_RC_TAG} digest: ${RC_DIGEST}"
+            FORCE_OVERRIDE_USED=false
+            for TAG in "${DOCKER_PATCH_TAG}" "${DOCKER_MINOR_TAG}" "${DOCKER_MAJOR_TAG}"; do
+              if EXISTING_DIGEST=$(docker buildx imagetools inspect "${IMAGE}:${TAG}" --format '{{.Manifest.Digest}}' 2>/dev/null); then
+                if [[ "${EXISTING_DIGEST}" != "${RC_DIGEST}" ]]; then
+                  if [[ "${FORCE}" == "true" ]]; then
+                    echo "::warning::${IMAGE}:${TAG} already exists with digest ${EXISTING_DIGEST} (RC digest: ${RC_DIGEST}). Force mode enabled — will overwrite."
+                    FORCE_OVERRIDE_USED=true
+                  else
+                    echo "::error::${IMAGE}:${TAG} already exists with digest ${EXISTING_DIGEST} but RC digest is ${RC_DIGEST}. Aborting to prevent overwrite. Use force=true to override."
+                    exit 1
+                  fi
+                else
+                  echo "${IMAGE}:${TAG} already exists at the correct digest (idempotent re-run)"
+                fi
+              else
+                echo "${IMAGE}:${TAG} does not yet exist — safe to create"
+              fi
+            done
+            if [[ "${FORCE_OVERRIDE_USED}" == "true" ]]; then
+              echo "::warning::Overwriting one or more existing stable tags due to force=true"
+            fi
             echo "Re-tagging ${IMAGE}:${DOCKER_RC_TAG} -> ${DOCKER_PATCH_TAG}, ${DOCKER_MINOR_TAG}, ${DOCKER_MAJOR_TAG}"
             docker buildx imagetools create \
               --tag "${IMAGE}:${DOCKER_PATCH_TAG}" \
