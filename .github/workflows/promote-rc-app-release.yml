@@ -159,7 +159,7 @@ jobs:
     if: inputs.dry_run == false
     name: Create release git tag
     runs-on: ubuntu-latest
-    environment: "prod"
+    environment: "production"
     permissions:
       contents: write # Permission to push release tag to git
     steps:
