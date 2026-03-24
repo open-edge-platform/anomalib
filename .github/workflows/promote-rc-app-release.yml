@@ -191,6 +191,7 @@ jobs:
     if: inputs.dry_run == false
     name: Promote RC image to release image
     runs-on: ubuntu-latest
+    environment: "production"
     permissions:
       packages: write # Permission to push packages to GHCR
       id-token: write # Permission to request OIDC token for signing images
