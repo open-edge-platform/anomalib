@@ -66,7 +66,11 @@ class DinoV2Loader:
         cache_dir: str | Path | None = None,
         vit_factory: object | None = None,
     ) -> None:
-        self.cache_dir = Path(cache_dir) if cache_dir is not None else Path(torch.hub.get_dir()) / "dinov2"
+        self.cache_dir = (
+            Path(cache_dir)
+            if cache_dir is not None
+            else Path(torch.hub.get_dir()) / "anomalib" / "pre_trained" / "dinov2"
+        )
         self.vit_factory = vit_factory
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 

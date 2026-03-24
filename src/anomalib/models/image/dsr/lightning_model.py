@@ -139,7 +139,7 @@ class Dsr(AnomalibModule):
             >>> weights_path.name
             'vq_model_pretrained_128_4096.pckl'
         """
-        pretrained_models_dir = Path("./pre_trained/")
+        pretrained_models_dir = Path(torch.hub.get_dir()) / "anomalib" / "pre_trained" / "dsr"
         if not (pretrained_models_dir / "vq_model_pretrained_128_4096.pckl").is_file():
             download_and_extract(pretrained_models_dir, WEIGHTS_DOWNLOAD_INFO)
         return pretrained_models_dir / "vq_model_pretrained_128_4096.pckl"

@@ -159,7 +159,7 @@ class EfficientAd(AnomalibModule):
         Downloads and loads pretrained weights for the teacher model if not already
         present.
         """
-        pretrained_models_dir = Path("./pre_trained/")
+        pretrained_models_dir = Path(torch.hub.get_dir()) / "anomalib" / "pre_trained"
         if not (pretrained_models_dir / "efficientad_pretrained_weights").is_dir():
             download_and_extract(pretrained_models_dir, WEIGHTS_DOWNLOAD_INFO)
         model_size_str = self.model_size.value if isinstance(self.model_size, EfficientAdModelSize) else self.model_size
