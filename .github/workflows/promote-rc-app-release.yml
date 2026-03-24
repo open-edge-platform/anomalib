@@ -149,14 +149,10 @@ jobs:
     if: inputs.dry_run == false
     name: Create release git tag
     runs-on: ubuntu-latest
+    environment: "prod"
     permissions:
       contents: write # Permission to push release tag to git
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
       - name: Create release git tag
         env:
           GH_TOKEN: ${{ github.token }}
@@ -164,8 +160,8 @@ jobs:
           RC_SHA: ${{ needs.validate.outputs.rc_sha }}
         run: |
           set -euo pipefail
-          if gh api "repos/${{ github.repository }}/git/refs/tags/${RELEASE_TAG}" --silent >/dev/null 2>&1; then
-            EXISTING_SHA=$(gh api "repos/${{ github.repository }}/git/refs/tags/${RELEASE_TAG}" --jq '.object.sha')
+          if gh api "repos/${{ github.repository }}/git/ref/tags/${RELEASE_TAG}" --silent >/dev/null 2>&1; then
+            EXISTING_SHA=$(gh api "repos/${{ github.repository }}/git/ref/tags/${RELEASE_TAG}" --jq '.object.sha')
             if [[ "${EXISTING_SHA}" == "${RC_SHA}" ]]; then
               echo "Tag ${RELEASE_TAG} already exists at ${RC_SHA}, skipping creation"
             else
@@ -185,7 +181,6 @@ jobs:
     if: inputs.dry_run == false
     name: Promote RC image to release image
     runs-on: ubuntu-latest
-    environment: "prod"
     permissions:
       packages: write # Permission to push packages to GHCR
       id-token: write # Permission to request OIDC token for signing images
