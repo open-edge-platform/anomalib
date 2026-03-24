@@ -1,3 +1,6 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
 #------------------------------------------
 # Web UI Build Stage
 #------------------------------------------
@@ -40,6 +43,12 @@ g++ \
 && rm -rf /var/lib/apt/lists/* \
 && apt-get clean
 
+# Remove pip because uv is used as the package manager.
+# This reduces attack surface and image size (a little bit).
+# python:3.13-slim only ships pip (not setuptools/wheel).
+ENV PIP_ROOT_USER_ACTION=ignore
+RUN python -m pip uninstall -y pip \ 
+    && rm -rf /root/.cache/pip
 ENV PATH=/app/.venv/bin:$PATH
 WORKDIR /app
 
