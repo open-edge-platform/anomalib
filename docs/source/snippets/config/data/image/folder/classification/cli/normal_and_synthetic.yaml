@@ -4,5 +4,8 @@ init_args:
   normal_dir: "good"
   normalization: imagenet
   test_split_mode: synthetic
+  synthetic_generator_type: perlin
+  synthetic_probability: 1.0
   synthetic_blend_factor: [0.01, 0.2]
+  synthetic_mask_threshold: 0.001
   task: classification

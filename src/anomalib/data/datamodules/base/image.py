@@ -95,6 +95,16 @@ class AnomalibDataModule(LightningDataModule, ABC):
             when synthetic anomalies are generated via
             :class:`~anomalib.data.utils.synthetic.SyntheticAnomalyDataset`.
             Defaults to ``(0.01, 0.2)``.
+        synthetic_generator_type (str): Synthetic generator backend used for
+            synthetic splits. Options are ``"perlin"`` and ``"cutpaste"``.
+            Defaults to ``"perlin"``.
+        synthetic_probability (float): Probability of applying augmentation in the
+            synthetic generator. Must be in ``[0, 1]``. Defaults to ``1.0``.
+        synthetic_mask_threshold (float): Threshold used to filter out numerical
+            noise when computing synthetic anomaly masks from image differences.
+            Small values (for example, ``1e-3``) prevent false positives caused by
+            floating point precision errors during blending.
+            Defaults to ``1e-3``.
     """
 
     def __init__(
@@ -112,6 +122,9 @@ class AnomalibDataModule(LightningDataModule, ABC):
         test_split_ratio: float | None = None,
         seed: int | None = None,
         synthetic_blend_factor: float | tuple[float, float] = (0.01, 0.2),
+        synthetic_generator_type: str = "perlin",
+        synthetic_probability: float = 1.0,
+        synthetic_mask_threshold: float = 1e-3,
     ) -> None:
         super().__init__()
         self.train_batch_size = train_batch_size
@@ -123,6 +136,9 @@ class AnomalibDataModule(LightningDataModule, ABC):
         self.val_split_ratio = val_split_ratio or 0.5
         self.seed = seed
         self.synthetic_blend_factor = synthetic_blend_factor
+        self.synthetic_generator_type = synthetic_generator_type
+        self.synthetic_probability = synthetic_probability
+        self.synthetic_mask_threshold = synthetic_mask_threshold
 
         self.train_augmentations = train_augmentations or augmentations
         self.val_augmentations = val_augmentations or augmentations
@@ -328,6 +344,9 @@ class AnomalibDataModule(LightningDataModule, ABC):
             self.test_data = SyntheticAnomalyDataset.from_dataset(
                 normal_test_data,
                 blend_factor=self.synthetic_blend_factor,
+                generator_type=self.synthetic_generator_type,
+                probability=self.synthetic_probability,
+                mask_threshold=self.synthetic_mask_threshold,
             )
         elif self.test_split_mode != TestSplitMode.NONE:
             msg = f"Unsupported Test Split Mode: {self.test_split_mode}"
@@ -371,6 +390,9 @@ class AnomalibDataModule(LightningDataModule, ABC):
             self.val_data = SyntheticAnomalyDataset.from_dataset(
                 normal_val_data,
                 blend_factor=self.synthetic_blend_factor,
+                generator_type=self.synthetic_generator_type,
+                probability=self.synthetic_probability,
+                mask_threshold=self.synthetic_mask_threshold,
             )
         elif self.val_split_mode != ValSplitMode.NONE:
             msg = f"Unknown validation split mode: {self.val_split_mode}"

@@ -25,6 +25,7 @@ Example:
 from .boxes import boxes_to_anomaly_maps, boxes_to_masks, masks_to_boxes
 from .download import DownloadInfo, download_and_extract
 from .generators import (
+    CutPasteGenerator,
     DEFAULT_PERLIN_SCALE_EXPONENT_RANGE,
     GLASS_PERLIN_SCALE_EXPONENT_RANGE,
     apply_perlin_threshold_rescale,
@@ -55,6 +56,7 @@ __all__ = [
     "get_image_filenames",
     "get_image_height_and_width",
     "generate_perlin_noise",
+    "CutPasteGenerator",
     "generate_perlin_noise_glass",
     "apply_perlin_threshold_rescale",
     "DEFAULT_PERLIN_SCALE_EXPONENT_RANGE",

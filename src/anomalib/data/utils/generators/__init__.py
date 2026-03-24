@@ -23,6 +23,7 @@ Example:
     >>> mask = generator.generate(256, 256)
 """
 
+from .cutpaste import CutPasteGenerator
 from .perlin import (
     DEFAULT_PERLIN_SCALE_EXPONENT_RANGE,
     GLASS_PERLIN_SCALE_EXPONENT_RANGE,
@@ -33,6 +34,7 @@ from .perlin import (
 )
 
 __all__ = [
+    "CutPasteGenerator",
     "PerlinAnomalyGenerator",
     "generate_perlin_noise",
     "generate_perlin_noise_glass",

@@ -7,10 +7,11 @@ from copy import copy
 from pathlib import Path
 
 import pytest
+import torch
 from torchvision.transforms.v2 import Resize
 
 from anomalib.data.datasets.image.folder import FolderDataset
-from anomalib.data.utils.synthetic import SyntheticAnomalyDataset
+from anomalib.data.utils.synthetic import DEFAULT_SYNTHETIC_MASK_THRESHOLD, SyntheticAnomalyDataset, _compute_change_mask
 
 
 @pytest.fixture(scope="module")
@@ -73,6 +74,60 @@ class TestSyntheticAnomalyDataset:
         """Test that blend factor can be configured and propagates from factory."""
         synthetic_dataset = SyntheticAnomalyDataset.from_dataset(folder_dataset, blend_factor=0.2)
         assert synthetic_dataset.blend_factor == 0.2
+
+    @staticmethod
+    def test_cutpaste_generator_type_is_exposed(folder_dataset: FolderDataset) -> None:
+        """Test that CutPaste backend can be selected from factory."""
+        synthetic_dataset = SyntheticAnomalyDataset.from_dataset(
+            folder_dataset,
+            blend_factor=0.2,
+            generator_type="cutpaste",
+            probability=0.8,
+            mask_threshold=5e-4,
+        )
+        assert synthetic_dataset.generator_type == "cutpaste"
+        assert synthetic_dataset.probability == 0.8
+        assert synthetic_dataset.mask_threshold == 5e-4
+
+    @staticmethod
+    def test_default_generator_type_is_perlin(folder_dataset: FolderDataset) -> None:
+        """Test backward-compatible default synthetic generator."""
+        synthetic_dataset = SyntheticAnomalyDataset.from_dataset(folder_dataset)
+        assert synthetic_dataset.generator_type == "perlin"
+
+    @staticmethod
+    def test_change_mask_threshold_stability() -> None:
+        """Test tiny numerical changes do not trigger anomaly mask."""
+        image = torch.zeros(3, 16, 16)
+        augmented = image.clone()
+        augmented[:, 4:8, 4:8] += DEFAULT_SYNTHETIC_MASK_THRESHOLD * 0.1
+        mask = _compute_change_mask(image, augmented, threshold=DEFAULT_SYNTHETIC_MASK_THRESHOLD)
+        assert mask.dtype == torch.float32
+        assert mask.shape == (1, 16, 16)
+        assert torch.count_nonzero(mask) == 0
+
+    @staticmethod
+    def test_change_mask_correctness_for_local_changes() -> None:
+        """Test mask activates only where image changes exceed threshold."""
+        image = torch.zeros(3, 16, 16)
+        augmented = image.clone()
+        augmented[:, 2:6, 3:7] = 0.1
+        mask = _compute_change_mask(image, augmented, threshold=1e-3)
+        assert torch.count_nonzero(mask[:, 2:6, 3:7]) > 0
+        assert torch.count_nonzero(mask[:, :2, :]) == 0
+        assert torch.count_nonzero(mask[:, 6:, :]) == 0
+
+    @staticmethod
+    def test_invalid_generator_type_raises(folder_dataset: FolderDataset) -> None:
+        """Test helpful error for invalid synthetic generator selection."""
+        with pytest.raises(ValueError, match="generator_type"):
+            SyntheticAnomalyDataset.from_dataset(folder_dataset, generator_type="unknown")  # type: ignore[arg-type]
+
+    @staticmethod
+    def test_invalid_probability_raises(folder_dataset: FolderDataset) -> None:
+        """Test helpful error for out-of-range probability."""
+        with pytest.raises(ValueError, match="probability"):
+            SyntheticAnomalyDataset.from_dataset(folder_dataset, probability=1.5)
 
     @staticmethod
     def test_cleanup(folder_dataset: FolderDataset) -> None:

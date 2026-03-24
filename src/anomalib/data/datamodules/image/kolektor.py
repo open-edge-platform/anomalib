@@ -104,6 +104,9 @@ class Kolektor(AnomalibDataModule):
         val_split_ratio: float = 0.5,
         seed: int | None = None,
         synthetic_blend_factor: float | tuple[float, float] = (0.01, 0.2),
+        synthetic_generator_type: str = "perlin",
+        synthetic_probability: float = 1.0,
+        synthetic_mask_threshold: float = 1e-3,
     ) -> None:
         super().__init__(
             train_batch_size=train_batch_size,
@@ -119,6 +122,9 @@ class Kolektor(AnomalibDataModule):
             val_split_ratio=val_split_ratio,
             seed=seed,
             synthetic_blend_factor=synthetic_blend_factor,
+            synthetic_generator_type=synthetic_generator_type,
+            synthetic_probability=synthetic_probability,
+            synthetic_mask_threshold=synthetic_mask_threshold,
         )
 
         self.root = Path(root)

@@ -53,15 +53,21 @@ class TestFolder(_TestAnomalibImageDatamodule):
     @staticmethod
     def test_synthetic_blend_factor_is_forwarded(dataset_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Ensure datamodule forwards synthetic blend factor into synthetic split creation."""
-        captured: dict[str, float | tuple[float, float]] = {}
+        captured: dict[str, float | tuple[float, float] | str] = {}
 
         def _spy_from_dataset(
             cls: type[object],
             dataset: AnomalibDataset,
             blend_factor: float | tuple[float, float] = (0.01, 0.2),
+            generator_type: str = "perlin",
+            probability: float = 1.0,
+            mask_threshold: float = 1e-3,
         ) -> AnomalibDataset:
             del cls
             captured["blend_factor"] = blend_factor
+            captured["generator_type"] = generator_type
+            captured["probability"] = probability
+            captured["mask_threshold"] = mask_threshold
             # Return original dataset to keep setup flow lightweight.
             return dataset
 
@@ -83,10 +89,16 @@ class TestFolder(_TestAnomalibImageDatamodule):
             augmentations=Resize((256, 256)),
             val_split_mode=ValSplitMode.SYNTHETIC,
             synthetic_blend_factor=(0.3, 0.4),
+            synthetic_generator_type="cutpaste",
+            synthetic_probability=0.75,
+            synthetic_mask_threshold=5e-4,
         )
         datamodule.setup()
 
         assert captured["blend_factor"] == (0.3, 0.4)
+        assert captured["generator_type"] == "cutpaste"
+        assert captured["probability"] == 0.75
+        assert captured["mask_threshold"] == 5e-4
 
     @staticmethod
     def test_synthetic_blend_factor_is_forwarded_for_test_split(
@@ -94,15 +106,18 @@ class TestFolder(_TestAnomalibImageDatamodule):
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Ensure test synthetic split also receives datamodule blend factor."""
-        captured: list[float | tuple[float, float]] = []
+        captured: list[tuple[float | tuple[float, float], str, float, float]] = []
 
         def _spy_from_dataset(
             cls: type[object],
             dataset: AnomalibDataset,
             blend_factor: float | tuple[float, float] = (0.01, 0.2),
+            generator_type: str = "perlin",
+            probability: float = 1.0,
+            mask_threshold: float = 1e-3,
         ) -> AnomalibDataset:
             del cls
-            captured.append(blend_factor)
+            captured.append((blend_factor, generator_type, probability, mask_threshold))
             return dataset
 
         monkeypatch.setattr(
@@ -124,7 +139,10 @@ class TestFolder(_TestAnomalibImageDatamodule):
             test_split_mode="synthetic",
             val_split_mode=ValSplitMode.NONE,
             synthetic_blend_factor=0.25,
+            synthetic_generator_type="cutpaste",
+            synthetic_probability=0.5,
+            synthetic_mask_threshold=1e-4,
         )
         datamodule.setup()
 
-        assert captured == [0.25]
+        assert captured == [(0.25, "cutpaste", 0.5, 1e-4)]
