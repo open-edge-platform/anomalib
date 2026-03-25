@@ -68,9 +68,6 @@ jobs:
             exit 1
           fi
           VERSION="${RELEASE_TAG#app/v}"
-          MAJOR="${VERSION%%.*}"
-          MINOR_PATCH="${VERSION#*.}"
-          MINOR="${MINOR_PATCH%%.*}"
 
           # Docker image tags (no app/v prefix)
           DOCKER_RC_TAG="${RC_TAG#app/v}"
