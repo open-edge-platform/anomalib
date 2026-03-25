@@ -156,7 +156,18 @@ def _make_latest_windows(latest: Path, target: Path) -> None:
                 )
                 msg = f"Unsafe path detected: {tmp} -> {target}"
                 raise ValueError(msg)
-            cmd_exe = os.environ.get("COMSPEC", "cmd.exe")
+            # Resolve cmd.exe via COMSPEC (standard Windows env var) or
+            # PATH lookup.  Validate the result to guard against a
+            # tampered COMSPEC value (Semgrep: tainted-env-args).
+            cmd_candidate = os.environ.get("COMSPEC") or shutil.which("cmd.exe")
+            if not cmd_candidate:
+                msg = "Cannot locate cmd.exe via COMSPEC or PATH"
+                raise OSError(msg)  # noqa: TRY301
+            cmd_path = Path(cmd_candidate).resolve()
+            if cmd_path.name.lower() != "cmd.exe" or not cmd_path.is_file():
+                msg = f"COMSPEC does not resolve to cmd.exe: {cmd_candidate}"
+                raise OSError(msg)  # noqa: TRY301
+            cmd_exe = str(cmd_path)
             result = subprocess.run(  # noqa: S603  # nosec B603
                 [
                     cmd_exe,
