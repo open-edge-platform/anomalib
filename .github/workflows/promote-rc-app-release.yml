@@ -149,8 +149,9 @@ jobs:
           RC_SHA: ${{ needs.validate.outputs.rc_sha }}
         run: |
           set -euo pipefail
-          if gh api "repos/${{ github.repository }}/git/ref/tags/${RELEASE_TAG}" --silent >/dev/null 2>&1; then
-            EXISTING_SHA=$(gh api "repos/${{ github.repository }}/git/ref/tags/${RELEASE_TAG}" --jq '.object.sha')
+          URL_RELEASE_TAG="${RELEASE_TAG//\//%2F}"
+          if gh api "repos/${{ github.repository }}/git/ref/tags/${URL_RELEASE_TAG}" --silent >/dev/null 2>&1; then
+            EXISTING_SHA=$(gh api "repos/${{ github.repository }}/git/ref/tags/${URL_RELEASE_TAG}" --jq '.object.sha')
             if [[ "${EXISTING_SHA}" == "${RC_SHA}" ]]; then
               echo "Tag ${RELEASE_TAG} already exists at ${RC_SHA}, skipping creation"
             else
