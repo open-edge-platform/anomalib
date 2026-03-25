@@ -44,7 +44,6 @@ import math
 from typing import Any
 
 import torch
-from lightning.pytorch.callbacks.progress.rich_progress import RichProgressBar
 from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 from torch.nn.init import trunc_normal_
 from torchvision.transforms.v2 import CenterCrop, Compose, Normalize, Resize
@@ -212,13 +211,16 @@ class Dinomaly(AnomalibModule):
         epoch index (``estimated_epochs - 1``).
 
         Note:
-            This is a narrow compatibility layer for Lightning's
-            ``RichProgressBar`` and relies on its private
-            ``_get_train_description`` method, as implemented in Lightning 2.x.
-            If the Lightning/Rich progress bar internals change in future
+            This relies on Lightning's ``RichProgressBar._get_train_description``
+            as implemented in Lightning 2.x. If the internals change in future
             versions, this hook may need updating.
         """
         if self.trainer.max_epochs is not None and self.trainer.max_epochs < 0:
+            try:
+                from lightning.pytorch.callbacks.progress.rich_progress import RichProgressBar
+            except ImportError:
+                return
+
             progress_bar = getattr(self.trainer, "progress_bar_callback", None)
             if isinstance(progress_bar, RichProgressBar) and hasattr(
                 progress_bar,
@@ -238,19 +240,18 @@ class Dinomaly(AnomalibModule):
 
                 val_desc = getattr(progress_bar, "validation_description", "Validation")
 
-                def _fixed_get_train_description(
-                    current_epoch: int,
-                    _est: int | None = est_max_epochs,
-                    _val_desc: str = val_desc,
-                ) -> str:
-                    desc = f"Epoch {current_epoch}"
-                    if _est is not None:
-                        desc += f"/{_est - 1}"
-                    if len(_val_desc) > len(desc):
-                        desc = f"{desc:{len(_val_desc)}}"
-                    return desc
+                class _FixedRichProgressBar(RichProgressBar):
+                    """RichProgressBar subclass with corrected epoch display for step-based training."""
 
-                progress_bar._get_train_description = _fixed_get_train_description  # noqa: SLF001
+                    def _get_train_description(self, current_epoch: int) -> str:  # noqa: PLR6301
+                        desc = f"Epoch {current_epoch}"
+                        if est_max_epochs is not None:
+                            desc += f"/{est_max_epochs - 1}"
+                        if len(val_desc) > len(desc):
+                            desc = f"{desc:{len(val_desc)}}"
+                        return desc
+
+                progress_bar.__class__ = _FixedRichProgressBar
 
     @classmethod
     def configure_pre_processor(
