@@ -1,318 +1,215 @@
 # Contributing to Anomalib
 
-We welcome your input! 👐
+This document is the checklist for code and PRs: setup, DCO, structure for models/data, and review expectations. For **bugs, discussions, and feature requests**, use [Issues](https://github.com/open-edge-platform/anomalib/issues) and [Discussions](https://github.com/open-edge-platform/anomalib/discussions) as in the project README.
 
-We want to make it as simple and straightforward as possible to contribute to this project, whether it is a:
+## Contents
 
-- Bug Report
-- Discussion
-- Feature Request
-- Creating a Pull Request (PR)
-- Becoming a maintainer
+1. [Quick start](#quick-start)
+2. [Repository layout](#repository-layout)
+3. [DCO sign-off](#dco-sign-off)
+4. [Environment and checks](#environment-and-checks)
+5. [Adding a new model](#adding-a-new-model)
+6. [Adding a new dataset](#adding-a-new-dataset)
+7. [Extending other components](#extending-other-components)
+8. [Bug fixes](#bug-fixes)
+9. [Pull requests](#pull-requests)
+10. [PR checklist](#pr-checklist)
+11. [Maintainers: do’s and don’ts](#maintainers-dos-and-donts)
 
-## Bug Report
+---
 
-We use GitHub issues to track the bugs. Report a bug by using our Bug Report Template in [Issues](https://github.com/open-edge-platform/anomalib/issues/new?assignees=&labels=&projects=&template=bug_report.yaml&title=%5BBug%5D%3A+).
+## Quick start
 
-## Discussion
+1. Fork the repo; branch from latest `main` ([branch naming](#pull-requests)).
+2. Install dev deps, hook **prek**, run **prek** + **pytest** before push ([below](#environment-and-checks)).
+3. Sign commits with **DCO** (`git commit -s`).
+4. Open a PR whose **title** is Conventional Commits ([below](#pull-requests))—it becomes the squash merge message.
 
-We enabled [GitHub Discussions](https://github.com/open-edge-platform/anomalib/discussions/) in anomalib to welcome the community to ask questions and/or propose ideas/solutions. This will not only provide a medium to the community to discuss about anomalib but also help us de-clutter [Issues](https://github.com/open-edge-platform/anomalib/issues/new?assignees=&labels=&template=bug_report.md).
+---
 
-## Feature Request
+## Repository layout
 
-We utilize GitHub issues to track the feature requests as well. If you are certain regarding the feature you are interested and have a solid proposal, you could then create the feature request by using our [Feature Request Template](https://github.com/open-edge-platform/anomalib/issues/new?assignees=&labels=&template=feature_request.md) in Issues. If it's still in an idea phase, you could then discuss that with the community in our [Discussion](https://github.com/open-edge-platform/anomalib/discussions/categories/ideas).
+The architecture follows a hierarchical structure:
 
-## Development & PRs
+- **Top Level:** Configs and the CLI.
+- **Middle Level:** **`Engine`** (train/val/test/predict).
+- **Bottom Level Components:**
+  - **Data (`src/anomalib/data/`):** **`AnomalibDataModule` + dataset**.
+  - **Models:** **`AnomalibModule`** (`src/anomalib/models/components/base/anomalib_module.py`).
 
-We actively welcome your pull requests:
+> **Note:** New models are only discoverable if their subclass is **imported** with the rest of `anomalib.models`—`get_model` / `list_models` use `AnomalibModule.__subclasses__()`.
 
-### Getting Started
+---
 
-#### 1. Fork and Clone the Repository
+## DCO sign-off
 
-First, fork the Anomalib repository by following the GitHub documentation on [forking a repo](https://docs.github.com/en/enterprise-cloud@latest/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo). Then, clone your forked repository to your local machine and create a new branch from `main`.
+This project uses the [Developer Certificate of Origin (DCO)](https://developercertificate.org/). **Every commit** must end with a `Signed-off-by` line (real name and email).
 
-#### 2. Set Up Your Development Environment
+**Signing a new commit:**
+```bash
+git commit -s -m "fix(data): describe change"
+```
 
-Set up your development environment to start contributing. This involves installing the required dependencies and setting up pre-commit hooks for code quality checks. Note that this guide assumes you are using [Conda](https://docs.conda.io/en/latest/) for package management. However, the steps are similar for other package managers.
+**If you already committed without sign-off:**
+```bash
+git rebase HEAD~N --signoff   # N = commits to fix
+git push --force-with-lease origin <branch>
+```
 
-<details>
-<summary>Development Environment Setup Instructions</summary>
+> Contributions are accepted under **Apache-2.0** (see `LICENSE`).
 
-1. Create and activate a new Conda environment:
+---
 
-   ```bash
-   conda create -n anomalib_dev python=3.10
-   conda activate anomalib_dev
-   ```
+## Environment and checks
 
-2. Install the development requirements:
+### 1. Setup
 
-   ```bash
-   # Option I: Via anomalib install
-   anomalib install --option dev
+```bash
+conda create -n anomalib_dev python=3.10 && conda activate anomalib_dev
+pip install -e .[dev]    # or: anomalib install --option dev
+prek install
+```
 
-   #Option II: Via pip install
-   pip install -e .[dev]
-   ```
+### 2. Pre-push Checks
 
-   Optionally, for a full installation with all dependencies:
-
-   ```bash
-   # Option I: via anomalib install
-   anomalib install --option full
-
-   # Option II: via pip install
-   pip install -e .[full]
-   ```
-
-3. Install and configure pre-commit hooks:
-
-   ```bash
-   prek install
-   ```
-
-Pre-commit hooks help ensure code quality and consistency. After each commit,
-`prek` will automatically run the configured checks for the changed file.
-If you would like to manually run the checks for all files, use:
+Before you push your branch, always run:
 
 ```bash
 prek run --all-files
+pytest   # or: pytest path/to/test_file.py
 ```
 
-To bypass pre-commit hooks temporarily (e.g., for a work-in-progress commit),
-use:
+### 3. Guidelines
+- **Local WIP:** Use `git commit --no-verify` for local work in progress only (**do not** leave this for the final PR).
+- **Style Rules:** Regulated by **Ruff** in `pyproject.toml`.
+- **Testing:** Prefer fast tests under `tests/unit/`.
 
-```bash
-git commit -m 'WIP commit' --no-verify
+---
+
+## Adding a new model
+
+### 1. File Structure
+Mirror an existing image model (e.g. `src/anomalib/models/image/padim/`):
+
+```text
+src/anomalib/models/image/<your_model>/
+  ├── __init__.py           # export YourModel
+  ├── lightning_model.py    # YourModel(AnomalibModule), …
+  └── torch_model.py        # nn.Module (typical)
 ```
 
-However, make sure to address any pre-commit issues before finalizing your pull request.
+### 2. Registration (Required)
+Without these imports, the class never appears in `list_models` / `get_model` (this is a **common mistake**!):
+1. Export from `src/anomalib/models/image/__init__.py`.
+2. Export from `src/anomalib/models/__init__.py` and add to **`__all__`** there.
 
-</details>
-
-### Making Changes
-
-1. **Write Code:** Follow the project's coding standards and write your code with clear intent. Ensure your code is well-documented and includes examples where appropriate. For code quality we use ruff, whose configuration is in [`pyproject.toml`](pyproject.toml) file.
-
-2. **Add Tests:** If your code includes new functionality, add corresponding tests using [pytest](https://docs.pytest.org/en/7.4.x/) to maintain coverage and reliability.
-
-3. **Update Documentation:** If you've changed APIs or added new features, update the documentation accordingly. Ensure your docstrings are clear and follow [Google's docstring guide](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings).
-
-4. **Pass Tests and Quality Checks:** Ensure the test suite passes and that your code meets quality standards by running:
-
-   ```bash
-   prek run --all-files
-   pytest tests/
-   ```
-
-5. **Update the Changelog:** For significant changes, add a summary to the [CHANGELOG](CHANGELOG.md).
-
-6. **Check Licensing:** Ensure you own the code or have rights to use it, adhering to appropriate licensing.
-
-7. **Follow Conventional Commits for PR Titles:** We use [Commitizen](https://commitizen-tools.github.io/commitizen/) to enforce conventional commit format for PR titles and branch names. Since we squash merge PRs, individual commit messages can be in any format during development, but your **PR title must follow conventional commit format**.
-
-   <details>
-   <summary>PR Title Format (Required)</summary>
-
-   Your **PR title** must follow conventional commit format. Individual commit messages during development can be any format (e.g., "wip", "fix typo"), but the PR title becomes the squash commit message.
-
-   Each PR title consists of a **header**, and optionally a **body** and **footer**:
-
-   ```text
-   <type>(<scope>): <description>
-
-   [optional body]
-
-   [optional footer]
-   ```
-
-   **Types:**
-   - `feat`: A new feature
-   - `fix`: A bug fix
-   - `docs`: Documentation changes
-   - `style`: Code style changes
-   - `refactor`: Code refactoring
-   - `perf`: Performance improvements
-   - `test`: Adding or modifying tests
-   - `build`: Build system changes
-   - `ci`: CI configuration changes
-   - `chore`: General maintenance
-
-   **Scopes:**
-   - `data`: Data loading, processing, or augmentation
-   - `model`: Model architecture or implementation
-   - `metric`: Evaluation metrics
-   - `utils`: Utility functions
-   - `cli`: Command-line interface
-   - `docs`: Documentation
-   - `ci`: CI/CD configuration
-   - `engine`: Training/inference engine
-   - `visualization`: Visualization tools
-   - `benchmarking`: Benchmarking tools
-   - `logger`: Logging functionality
-   - `openvino`: OpenVINO integration
-   - `notebooks`: Jupyter notebooks
-
-   **Rules:**
-   - The type and scope are case-sensitive
-   - The type must be lowercase
-   - The description should be in present tense
-   - The description should not end with a period
-   - The description should not be in sentence-case, start-case, pascal-case, or upper-case
-
-   **PR Title Examples:**
-
-   ```text
-   feat(model): add transformer architecture for anomaly detection
-   ```
-
-   ```text
-   fix(data): handle corrupted image files during training
-   ```
-
-   ```text
-   docs: update installation instructions for Windows
-   ```
-
-   ```text
-   chore(ci): migrate from commit message validation to PR title validation
-   ```
-
-   **Note:** The PR description can contain additional details, but the title must be concise and follow the format above.
-
-   **Optional Emojis:**
-   You can optionally add emojis at the beginning of your PR title for better visual distinction:
-
-   ```text
-   🚀 feat(model): add transformer architecture for anomaly detection
-   🐞 fix(data): handle corrupted image files during training
-   📚 docs: update installation instructions for Windows
-   🔧 chore(ci): migrate from commit message validation to PR title validation
-   ```
-
-   **Suggested Emoji Mapping (Optional):**
-   - 🚀 for `feat` (new features)
-   - 🐞 for `fix` (bug fixes)
-   - 📚 for `docs` (documentation)
-   - 🎨 for `style` (code style/formatting)
-   - 🔄 for `refactor` (code refactoring)
-   - ⚡ for `perf` (performance improvements)
-   - 🧪 for `test` (adding/modifying tests)
-   - 📦 for `build` (build system changes)
-   - 🔧 for `chore` (general maintenance)
-   - 🚧 for `ci` (CI/CD configuration)
-
-   **Note:** Emojis are completely optional. PR titles without emojis are equally valid.
-
-   </details>
-
-   <details>
-   <summary>Branch Naming</summary>
-
-   Branch names must follow the format:
-
-   ```text
-   <type>/<scope>/<description>
-   ```
-
-   **Examples:**
-   - `feat/model/add-transformer`
-   - `fix/data/load-image-bug`
-   - `docs/readme/update-installation`
-   - `refactor/utils/optimize-performance`
-
-   The type and scope should match the ones used in commit messages.
-   </details>
-
-   <details>
-   <summary>Development Workflow</summary>
-
-   **During Development:**
-   Individual commits can use any format for convenience:
-
-   ```bash
-   git add <files>
-   git commit -m "wip: working on transformer model"
-   git commit -m "fix typo"
-   git commit -m "address review comments"
-   ```
-
-   **Creating the PR:**
-   Ensure your PR title follows conventional commit format. The PR title becomes the final commit message when merged.
-
-   **Optional - Using Commitizen for PR titles:**
-   You can use Commitizen to help format your PR titles:
-
-   ```bash
-   # Check if a message follows conventional format
-   echo "feat(model): add transformer architecture" | cz check --commit-msg-file -
-   ```
-
-   To check if your commits follow the conventional format:
-
-   ```bash
-   cz check
-   ```
-
-   To bump the version based on commit history:
-
-   ```bash
-   cz bump
-   ```
-
-   </details>
-
-<details>
-<summary>Suppressing False Positives</summary>
-
-If necessary, to suppress _false_ positives, add inline comment with specific syntax.
-Please also add a comment explaining _why_ you decided to disable a rule or provide a risk-acceptance reason.
-
-#### Bandit
-
-Findings can be ignored inline with `# nosec BXXX` comments.
-
-```python
-import subprocess # nosec B404 # this is actually fine
-```
-
-[Details](https://bandit.readthedocs.io/en/latest/config.html#exclusions) in Bandit docs.
-
-#### Zizmor
-
-Findings can be ignored inline with `# zizmor: ignore[rulename]` comments.
-
+### 3. Example Config (CLI / YAML workflows)
 ```yaml
-uses: actions/checkout@v3 # zizmor: ignore[artipacked] this is actually fine
+# examples/configs/model/your_model.yaml
+model:
+  class_path: anomalib.models.YourModel
+  init_args:
+    backbone: resnet18
 ```
 
-[Details](https://woodruffw.github.io/zizmor/usage/#with-comments) in Zizmor docs.
+### 4. Tests
+- At least construction on **CPU**.
+- Forward/shape or light smoke testing where cheap.
+- Regression test if you are fixing a bug.
 
-#### Semgrep
+---
 
-Findings can be ignored inline with `# nosemgrep: rule-id` comments.
+## Adding a new dataset
 
-```python
-    # nosemgrep: python.lang.security.audit.dangerous-system-call.dangerous-system-call # this is actually fine
-    r = os.system(' '.join(command))
+### Steps:
+1. **Dataset Class:** Subclass **`AnomalibDataset`** (`src/anomalib/data/datasets/base/image.py`).
+2. **DataModule:** Wrap with a **`LightningDataModule`** subclass of **`AnomalibDataModule`** (`src/anomalib/data/datamodules/base/image.py`).
+3. **References:** Use **`Folder`** (`src/anomalib/data/datamodules/image/folder.py`) and the base image datamodule as references before inventing a new layout.
+
+### Edge cases to handle explicitly (and test):
+- Missing masks/labels.
+- Optional masks per split.
+- Tiny images.
+- Ensure `task` (classification vs segmentation) matches what metrics expect.
+
+---
+
+## Extending other components
+
+For elements like:
+- **Post-processors:** `src/anomalib/post_processing/`
+- **Pre-processors:** *Same as above*
+- **Metrics:** `src/anomalib/metrics/`
+- **Visualization:** `src/anomalib/visualization/`
+- **Utils:** `src/anomalib/utils/`, `src/anomalib/data/utils/`
+
+**Guidelines:**
+1. Follow existing modules.
+2. Keep APIs small.
+3. Add tests.
+4. Expose behavior via YAML **`class_path` + `init_args`** when users need to select it from the CLI.
+
+---
+
+## Bug fixes
+
+1. **Reproduce** on current `main` (minimal command or short script; note `python` / `torch` versions if relevant).
+2. **Fix** with the smallest change that solves it (avoid drive-by refactors in the same PR unless agreed).
+3. **Add a regression test** that fails before and passes after (usually `tests/unit/...`).
+
+---
+
+## Pull requests
+
+### 1. Title (Required)
+Squash merge uses the PR title as the final commit subject. 
+
+**Format:**
+```text
+<type>(<scope>): <description in lowercase, no period at end>
+```
+**Examples:** `feat(model): add yourmodel`, `fix(data): handle empty mask dir`
+
+- **Allowed Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`.
+- **Allowed Scopes:** `data`, `model`, `metric`, `utils`, `cli`, `docs`, `ci`, `engine`, `visualization`, `benchmarking`, `logger`, `openvino`, `notebooks`.
+
+### 2. Branch names
+**Format:**
+```text
+<type>/<scope>/<short-description>
 ```
 
-[Details](https://semgrep.dev/docs/ignoring-files-folders-code) in Semgrep docs.
+### 3. Description
+- **One coherent change per PR.**
+- State intent, non-goals, and how to verify. 
+- API or behavior changes need docstrings and, when useful, a config snippet.
 
-</details>
+### 4. Submitting
+Push to your fork and open a PR against the upstream repo; use the provided PR template.
 
-### Submitting Pull Requests
+---
 
-Once you've followed the above steps and are satisfied with your changes:
+## PR checklist
 
-1. Push your changes to your forked repository.
-2. Go to the original Anomalib repository you forked and click "New pull request".
-3. Choose your fork and the branch with your changes to open a pull request.
-4. Fill in the pull request template with the necessary details about your changes.
+- [ ] **DCO** on every commit (`git commit -s` or `rebase --signoff`).
+- [ ] **`prek run --all-files`** and **`pytest`** pass.
+- [ ] New behavior covered by tests; bugfixes include a regression test.
+- [ ] User-facing changes: docstrings / docs / `CHANGELOG.md` as appropriate.
+- [ ] **PR title** matches Conventional Commits.
+- [ ] PR is focused (no stray binaries, debug noise, or unrelated refactors).
 
-We look forward to your contributions!
+---
 
-## License
+## Maintainers: do’s and don’ts
 
-You accept that your contributions will be licensed under the [Apache-2.0 License](https://choosealicense.com/licenses/apache-2.0/) if you contribute to this repository. If this is a concern, please notify the maintainers.
+**Do:** 
+- Copy structure from a neighboring feature; 
+- Prefer composition (pre/post, evaluator); 
+- Keep PRs review-sized; 
+- Default tests should run on **CPU** unless marked for GPU.
+
+**Don’t:** 
+- Skip model registration; 
+- Silently change existing defaults; 
+- Merge “WIP”/vague PR titles; 
+- Drop tests on research-only grounds.
