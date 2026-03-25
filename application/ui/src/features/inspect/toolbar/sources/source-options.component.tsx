@@ -14,7 +14,7 @@ import { IpCameraFields } from './ip-camera/ip-camera-fields.component';
 import { getIpCameraInitialConfig, ipCameraBodyFormatter } from './ip-camera/utils';
 import { UsbCameraFields } from './usb-camera/usb-camera-fields.component';
 import { getUsbCameraInitialConfig, usbCameraBodyFormatter } from './usb-camera/utils';
-import { IPCameraSourceConfig, ImagesFolderSourceConfig, UsbCameraSourceConfig, VideoFileSourceConfig } from './util';
+import { ImagesFolderSourceConfig, IPCameraSourceConfig, UsbCameraSourceConfig, VideoFileSourceConfig } from './util';
 import { getVideoFileInitialConfig, videoFileBodyFormatter } from './video-file/utils';
 import { VideoFileFields } from './video-file/video-file-fields.component';
 

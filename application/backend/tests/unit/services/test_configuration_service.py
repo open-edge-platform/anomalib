@@ -9,7 +9,7 @@ import pytest
 
 from pydantic_models import Pipeline, PipelineStatus
 from pydantic_models.sink import FolderSinkConfig
-from pydantic_models.source import ImagesFolderSourceConfig, VideoFileSourceConfig
+from pydantic_models.source import ImagesFolderSourceConfig, SourceType, VideoFileSourceConfig
 from repositories import PipelineRepository, SinkRepository, SourceRepository
 from services import ActivePipelineService
 from services.configuration_service import ConfigurationService, PipelineField
@@ -573,7 +573,7 @@ def _images_folder_source(fxt_project, folder_path: str) -> ImagesFolderSourceCo
     return ImagesFolderSourceConfig(
         id=uuid.uuid4(),
         project_id=fxt_project.id,
-        source_type="images_folder",
+        source_type=SourceType.IMAGES_FOLDER,
         name="Test Images Folder",
         images_folder_path=folder_path,
         ignore_existing_images=True,

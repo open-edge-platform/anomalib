@@ -22,7 +22,7 @@ export const ImageFolderFields = ({ defaultState }: ImageFolderFieldsProps) => {
             title: 'Folder selection',
             type: 'info',
             message:
-                "A folder picker can help you choose a local folder, but the backend can only read folders that exist on the server (or inside the Docker container). " +
+                'A folder picker can help you choose a local folder, but the backend can only read folders that exist on the server (or inside the Docker container). ' +
                 "If you're running in Docker, mount the folder into the container and enter the container path here (for example: /data/images).",
             duration: 8000,
             position: 'bottom-left',
