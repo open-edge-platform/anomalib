@@ -139,7 +139,7 @@ class PadimModel(nn.Module):
         # Since idx is randomly selected, save it with model to get same results
         self.register_buffer(
             "idx",
-            torch.randperm(self.n_features_original)[: self.n_features].long(),
+            torch.randperm(self.n_features_original)[: self.n_features],
         )
         self.idx: torch.Tensor
         self.loss = None
