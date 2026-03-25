@@ -16,11 +16,6 @@ on:
         required: false
         type: boolean
         default: false
-      force:
-        description: 'Force promotion even if stable tags already exist with a different digest'
-        required: false
-        type: boolean
-        default: false
 
 permissions: {} # No permissions by default
 
@@ -36,8 +31,6 @@ jobs:
       release_tag: ${{ steps.validate.outputs.release_tag }}
       docker_rc_tag: ${{ steps.validate.outputs.docker_rc_tag }}
       docker_patch_tag: ${{ steps.validate.outputs.docker_patch_tag }}
-      docker_minor_tag: ${{ steps.validate.outputs.docker_minor_tag }}
-      docker_major_tag: ${{ steps.validate.outputs.docker_major_tag }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -82,13 +75,11 @@ jobs:
           # Docker image tags (no app/v prefix)
           DOCKER_RC_TAG="${RC_TAG#app/v}"
           DOCKER_PATCH_TAG="${VERSION}"
-          DOCKER_MINOR_TAG="${MAJOR}.${MINOR}"
-          DOCKER_MAJOR_TAG="${MAJOR}"
 
-          echo "RC tag:           ${RC_TAG}"
-          echo "Release tag:      ${RELEASE_TAG}"
-          echo "Docker RC tag:    ${DOCKER_RC_TAG}"
-          echo "Docker tags:      ${DOCKER_PATCH_TAG}, ${DOCKER_MINOR_TAG}, ${DOCKER_MAJOR_TAG}"
+          echo "RC tag:             ${RC_TAG}"
+          echo "Release tag:        ${RELEASE_TAG}"
+          echo "Docker RC tag:      ${DOCKER_RC_TAG}"
+          echo "Docker release tag: ${DOCKER_PATCH_TAG}"
 
           # Verify RC tag exists in git
           if ! git rev-parse "refs/tags/${RC_TAG}" >/dev/null 2>&1; then
@@ -96,7 +87,7 @@ jobs:
             exit 1
           fi
           RC_SHA=$(git rev-parse "refs/tags/${RC_TAG}^{commit}")
-          echo "RC SHA:           ${RC_SHA}"
+          echo "RC SHA:             ${RC_SHA}"
 
           # Verify RC SHA matches expected SHA input
           if [[ "${RC_SHA}" != "${EXPECTED_SHA}" ]]; then
@@ -118,8 +109,6 @@ jobs:
           echo "release_tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
           echo "docker_rc_tag=${DOCKER_RC_TAG}" >> "$GITHUB_OUTPUT"
           echo "docker_patch_tag=${DOCKER_PATCH_TAG}" >> "$GITHUB_OUTPUT"
-          echo "docker_minor_tag=${DOCKER_MINOR_TAG}" >> "$GITHUB_OUTPUT"
-          echo "docker_major_tag=${DOCKER_MAJOR_TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Print promotion summary
         env:
@@ -128,10 +117,7 @@ jobs:
           RC_SHA: ${{ steps.validate.outputs.rc_sha }}
           DOCKER_RC_TAG: ${{ steps.validate.outputs.docker_rc_tag }}
           DOCKER_PATCH_TAG: ${{ steps.validate.outputs.docker_patch_tag }}
-          DOCKER_MINOR_TAG: ${{ steps.validate.outputs.docker_minor_tag }}
-          DOCKER_MAJOR_TAG: ${{ steps.validate.outputs.docker_major_tag }}
           DRY_RUN: ${{ inputs.dry_run }}
-          FORCE: ${{ inputs.force }}
         run: |
           {
             echo "## Promotion Summary"
@@ -142,15 +128,11 @@ jobs:
             echo "| Release tag | \`${RELEASE_TAG}\` |"
             echo "| Commit SHA | \`${RC_SHA}\` |"
             echo "| Docker RC tag | \`${DOCKER_RC_TAG}\` |"
-            echo "| Docker stable tags | \`${DOCKER_PATCH_TAG}\`, \`${DOCKER_MINOR_TAG}\`, \`${DOCKER_MAJOR_TAG}\` |"
+            echo "| Docker release tag | \`${DOCKER_PATCH_TAG}\` |"
             echo "| Dry run | \`${DRY_RUN}\` |"
-            echo "| Force | \`${FORCE}\` |"
             echo ""
             if [[ "${DRY_RUN}" == "true" ]]; then
               echo "> **Dry run mode:** No changes will be made."
-            fi
-            if [[ "${FORCE}" == "true" ]]; then
-              echo "> **Force mode:** Existing stable tags with a different digest will be overwritten."
             fi
           } >> "${GITHUB_STEP_SUMMARY}"
 
@@ -210,74 +192,23 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
-
-      - name: Re-tag Docker image for ${{ matrix.device }}
+      - name: Promote application image for ${{ matrix.device }}
         env:
           DOCKER_RC_TAG: ${{ needs.validate.outputs.docker_rc_tag }}
           DOCKER_PATCH_TAG: ${{ needs.validate.outputs.docker_patch_tag }}
-          DOCKER_MINOR_TAG: ${{ needs.validate.outputs.docker_minor_tag }}
-          DOCKER_MAJOR_TAG: ${{ needs.validate.outputs.docker_major_tag }}
-          FORCE: ${{ inputs.force }}
+          DEVICE: ${{ matrix.device }}
         run: |
-          set -euo pipefail
-          for IMAGE in ghcr.io/open-edge-platform/anomalib-studio-${DEVICE}; do
-            RC_DIGEST=$(docker buildx imagetools inspect "${IMAGE}:${DOCKER_RC_TAG}" --format '{{.Manifest.Digest}}')
-            if [[ -z "${RC_DIGEST}" ]]; then
-              echo "::error::Could not retrieve digest for RC image ${IMAGE}:${DOCKER_RC_TAG}. Ensure the image exists and is accessible."
-              exit 1
-            fi
-            echo "${IMAGE}:${DOCKER_RC_TAG} digest: ${RC_DIGEST}"
-            FORCE_OVERRIDE_USED=false
-            for TAG in "${DOCKER_PATCH_TAG}" "${DOCKER_MINOR_TAG}" "${DOCKER_MAJOR_TAG}"; do
-              if EXISTING_DIGEST=$(docker buildx imagetools inspect "${IMAGE}:${TAG}" --format '{{.Manifest.Digest}}' 2>/dev/null); then
-                if [[ "${EXISTING_DIGEST}" != "${RC_DIGEST}" ]]; then
-                  if [[ "${FORCE}" == "true" ]]; then
-                    echo "::warning::${IMAGE}:${TAG} already exists with digest ${EXISTING_DIGEST} (RC digest: ${RC_DIGEST}). Force mode enabled — will overwrite."
-                    FORCE_OVERRIDE_USED=true
-                  else
-                    echo "::error::${IMAGE}:${TAG} already exists with digest ${EXISTING_DIGEST} but RC digest is ${RC_DIGEST}. Aborting to prevent overwrite. Use force=true to override."
-                    exit 1
-                  fi
-                else
-                  echo "${IMAGE}:${TAG} already exists at the correct digest (idempotent re-run)"
-                fi
-              else
-                echo "${IMAGE}:${TAG} does not yet exist — safe to create"
-              fi
-            done
-            if [[ "${FORCE_OVERRIDE_USED}" == "true" ]]; then
-              echo "::warning::Overwriting one or more existing stable tags due to force=true"
-            fi
-            echo "Re-tagging ${IMAGE}:${DOCKER_RC_TAG} -> ${DOCKER_PATCH_TAG}, ${DOCKER_MINOR_TAG}, ${DOCKER_MAJOR_TAG}"
-            docker buildx imagetools create \
-              --tag "${IMAGE}:${DOCKER_PATCH_TAG}" \
-              --tag "${IMAGE}:${DOCKER_MINOR_TAG}" \
-              --tag "${IMAGE}:${DOCKER_MAJOR_TAG}" \
-              "${IMAGE}:${DOCKER_RC_TAG}"
-          done
+          SOURCE_IMAGE="ghcr.io/ivanzati/anomalib-studio-${DEVICE}:${DOCKER_RC_TAG}"
+          TARGET_IMAGE="ghcr.io/ivanzati/anomalib-studio-${DEVICE}:${DOCKER_PATCH_TAG}"
 
-      - name: Verify Docker image digests
-        env:
-          DOCKER_RC_TAG: ${{ needs.validate.outputs.docker_rc_tag }}
-          DOCKER_PATCH_TAG: ${{ needs.validate.outputs.docker_patch_tag }}
-          DOCKER_MINOR_TAG: ${{ needs.validate.outputs.docker_minor_tag }}
-          DOCKER_MAJOR_TAG: ${{ needs.validate.outputs.docker_major_tag }}
-        run: |
-          set -euo pipefail
-          for IMAGE in ghcr.io/open-edge-platform/anomalib-studio-${DEVICE}; do
-            RC_DIGEST=$(docker buildx imagetools inspect "${IMAGE}:${DOCKER_RC_TAG}" | awk '/^Digest:/{print $2}')
-            echo "${IMAGE}:${DOCKER_RC_TAG} digest: ${RC_DIGEST}"
-            for TAG in "${DOCKER_PATCH_TAG}" "${DOCKER_MINOR_TAG}" "${DOCKER_MAJOR_TAG}"; do
-              RELEASE_DIGEST=$(docker buildx imagetools inspect "${IMAGE}:${TAG}" | awk '/^Digest:/{print $2}')
-              if [[ "${RC_DIGEST}" != "${RELEASE_DIGEST}" ]]; then
-                echo "::error::Digest mismatch for ${IMAGE}:${TAG} (expected ${RC_DIGEST}, got ${RELEASE_DIGEST})"
-                exit 1
-              fi
-              echo "Verified ${IMAGE}:${TAG} digest matches RC"
-            done
-          done
+          echo "Pulling ${SOURCE_IMAGE}"
+          docker pull "${SOURCE_IMAGE}"
+
+          echo "Tagging ${TARGET_IMAGE}"
+          docker tag "${SOURCE_IMAGE}" "${TARGET_IMAGE}"
+
+          echo "Pushing ${TARGET_IMAGE}"
+          docker push "${TARGET_IMAGE}"
 
       - name: Sign Docker image
         uses: open-edge-platform/geti-ci/actions/sign-image@9b1ef60a8b2b802da428621e192c322960f4b3d5
@@ -286,19 +217,13 @@ jobs:
 
       - name: Print summary
         env:
-          RC_TAG: ${{ needs.validate.outputs.rc_tag }}
-          RELEASE_TAG: ${{ needs.validate.outputs.release_tag }}
-          RC_SHA: ${{ needs.validate.outputs.rc_sha }}
           DOCKER_PATCH_TAG: ${{ needs.validate.outputs.docker_patch_tag }}
-          DOCKER_MINOR_TAG: ${{ needs.validate.outputs.docker_minor_tag }}
-          DOCKER_MAJOR_TAG: ${{ needs.validate.outputs.docker_major_tag }}
+          DEVICE: ${{ matrix.device }}
         run: |
           {
             echo "## Promotion Complete"
             echo ""
             echo "### Docker Images"
             echo "- \`ghcr.io/open-edge-platform/anomalib-studio-${DEVICE}:${DOCKER_PATCH_TAG}\`"
-            echo "- \`ghcr.io/open-edge-platform/anomalib-studio-${DEVICE}:${DOCKER_MINOR_TAG}\`"
-            echo "- \`ghcr.io/open-edge-platform/anomalib-studio-${DEVICE}:${DOCKER_MAJOR_TAG}\`"
             echo ""
           } >> "${GITHUB_STEP_SUMMARY}"
