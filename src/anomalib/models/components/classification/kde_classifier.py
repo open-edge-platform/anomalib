@@ -150,7 +150,8 @@ class KDEClassifier(nn.Module):
 
         # if max training points is non-zero and smaller than number of staged features, select random subset
         if embeddings.shape[0] > self.max_training_points:
-            perm = torch.randperm(embeddings.shape[0], device=embeddings.device)[: self.max_training_points]
+            perm = torch.randperm(embeddings.shape[0], device="cpu")[: self.max_training_points]
+            perm = perm.to(embeddings.device)
             selected_features = embeddings[perm]
         else:
             selected_features = embeddings

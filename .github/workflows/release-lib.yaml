@@ -38,7 +38,7 @@ name: Release
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "lib/v*.*.*"
   workflow_dispatch:
     inputs:
       version:
@@ -139,7 +139,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     permissions:
-      contents: write
+      contents: write # Required by softprops/action-gh-release to publish release
       id-token: write # Required for OIDC authentication with PyPI
     steps:
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8
