@@ -9,7 +9,7 @@ import pytest
 
 from pydantic_models import Pipeline, PipelineStatus
 from pydantic_models.sink import FolderSinkConfig
-from pydantic_models.source import VideoFileSourceConfig
+from pydantic_models.source import ImagesFolderSourceConfig, SourceType, VideoFileSourceConfig
 from repositories import PipelineRepository, SinkRepository, SourceRepository
 from services import ActivePipelineService
 from services.configuration_service import ConfigurationService, PipelineField
@@ -567,3 +567,86 @@ class TestConfigurationService:
         """Test PipelineField enum has correct values."""
         assert PipelineField.SOURCE_ID == "source_id"
         assert PipelineField.SINK_ID == "sink_id"
+
+
+def _images_folder_source(fxt_project, folder_path: str) -> ImagesFolderSourceConfig:
+    return ImagesFolderSourceConfig(
+        id=uuid.uuid4(),
+        project_id=fxt_project.id,
+        source_type=SourceType.IMAGES_FOLDER,
+        name="Test Images Folder",
+        images_folder_path=folder_path,
+        ignore_existing_images=True,
+    )
+
+
+class TestValidateSourceConnectivity:
+    """Tests for ConfigurationService.validate_source_connectivity (images folder)."""
+
+    def test_images_folder_nonexistent_path_returns_false(self, fxt_project, tmp_path):
+        """Missing directory -> False (no stream initialization)."""
+        missing = tmp_path / "does_not_exist"
+        source = _images_folder_source(fxt_project, str(missing))
+
+        with patch("services.configuration_service.VideoStreamService.get_video_stream") as mock_get_stream:
+            result = asyncio.run(ConfigurationService.validate_source_connectivity(source))
+
+        assert result is False
+        mock_get_stream.assert_not_called()
+
+    def test_images_folder_path_is_file_returns_false(self, fxt_project, tmp_path):
+        """Path exists but is a file -> False."""
+        file_path = tmp_path / "not_a_dir.txt"
+        file_path.write_text("x", encoding="utf-8")
+        source = _images_folder_source(fxt_project, str(file_path))
+
+        with patch("services.configuration_service.VideoStreamService.get_video_stream") as mock_get_stream:
+            result = asyncio.run(ConfigurationService.validate_source_connectivity(source))
+
+        assert result is False
+        mock_get_stream.assert_not_called()
+
+    def test_images_folder_valid_directory_returns_true(self, fxt_project, tmp_path):
+        """Existing directory -> True after stream validation."""
+        folder = tmp_path / "images"
+        folder.mkdir()
+        source = _images_folder_source(fxt_project, str(folder.resolve()))
+
+        mock_stream = MagicMock()
+        mock_stream.get_data.return_value = None
+
+        with patch(
+            "services.configuration_service.VideoStreamService.get_video_stream",
+            return_value=mock_stream,
+        ) as mock_get_stream:
+            result = asyncio.run(ConfigurationService.validate_source_connectivity(source))
+
+        assert result is True
+        mock_get_stream.assert_called_once_with(source)
+        mock_stream.get_data.assert_called_once()
+        mock_stream.release.assert_called_once()
+
+    def test_images_folder_relative_path_returns_true_and_warns(self, fxt_project, tmp_path, monkeypatch):
+        """Relative path that exists: still True; loguru warning for non-absolute path."""
+        monkeypatch.chdir(tmp_path)
+        rel_name = "mounted_images"
+        (tmp_path / rel_name).mkdir()
+        source = _images_folder_source(fxt_project, rel_name)
+
+        mock_stream = MagicMock()
+        mock_stream.get_data.return_value = None
+
+        with (
+            patch(
+                "services.configuration_service.VideoStreamService.get_video_stream",
+                return_value=mock_stream,
+            ),
+            patch("services.configuration_service.logger") as mock_logger,
+        ):
+            result = asyncio.run(ConfigurationService.validate_source_connectivity(source))
+
+        assert result is True
+        mock_logger.warning.assert_called_once()
+        warn_message = mock_logger.warning.call_args[0][0]
+        assert "not absolute" in warn_message.lower()
+        mock_stream.release.assert_called_once()

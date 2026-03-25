@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Callable
 from enum import StrEnum
 from multiprocessing.synchronize import Condition
+from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -15,7 +16,7 @@ from db import get_async_db_session_ctx
 from pydantic_models import Sink, Source
 from pydantic_models.base import Pagination
 from pydantic_models.sink import SinkList
-from pydantic_models.source import SourceList
+from pydantic_models.source import SourceList, SourceType
 from repositories import PipelineRepository, SinkRepository, SourceRepository
 from services.active_pipeline_service import ActivePipelineService
 from services.exceptions import ResourceNotFoundError, ResourceType
@@ -183,6 +184,17 @@ class ConfigurationService:
         """Validate connectivity for a source"""
         video_stream: VideoStream | None = None
         try:
+            if source.source_type == SourceType.IMAGES_FOLDER:
+                folder_path = Path(source.images_folder_path)
+                if not await asyncio.to_thread(folder_path.exists):
+                    logger.error(f"Images folder path does not exist: {folder_path}")
+                    return False
+                if not await asyncio.to_thread(folder_path.is_dir):
+                    logger.error(f"Images folder path is not a directory: {folder_path}")
+                    return False
+                if not folder_path.is_absolute():
+                    logger.warning(f"Images folder path is not absolute: {folder_path}")
+
             video_stream = VideoStreamService.get_video_stream(source)
             if video_stream:
                 video_stream.get_data()
