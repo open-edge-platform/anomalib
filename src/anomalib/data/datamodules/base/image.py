@@ -31,7 +31,7 @@ import copy
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, cast
 
 from lightning.pytorch.core.datamodule import LightningDataModule
 from lightning.pytorch.trainer.states import TrainerFn
@@ -136,7 +136,10 @@ class AnomalibDataModule(LightningDataModule, ABC):
         self.val_split_ratio = val_split_ratio or 0.5
         self.seed = seed
         self.synthetic_blend_factor = synthetic_blend_factor
-        self.synthetic_generator_type = synthetic_generator_type
+        self.synthetic_generator_type: Literal["perlin", "cutpaste"] = cast(
+            "Literal['perlin', 'cutpaste']",
+            synthetic_generator_type,
+        )
         self.synthetic_probability = synthetic_probability
         self.synthetic_mask_threshold = synthetic_mask_threshold
 

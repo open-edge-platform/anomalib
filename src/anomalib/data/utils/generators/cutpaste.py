@@ -97,11 +97,7 @@ class CutPasteGenerator(nn.Module):
         if not 0.0 <= blend_factor <= 1.0:
             msg = f"blend_factor must be in [0, 1], got {blend_factor}"
             raise ValueError(msg)
-        if (
-            patch_size_ratio[0] <= 0
-            or patch_size_ratio[1] <= 0
-            or patch_size_ratio[0] > patch_size_ratio[1]
-        ):
+        if patch_size_ratio[0] <= 0 or patch_size_ratio[1] <= 0 or patch_size_ratio[0] > patch_size_ratio[1]:
             msg = f"patch_size_ratio must satisfy 0 < min <= max, got {patch_size_ratio}"
             raise ValueError(msg)
         if color_jitter_strength < 0:
@@ -162,14 +158,15 @@ class CutPasteGenerator(nn.Module):
 
     def _sample_patch_scar(self, height: int, width: int, device: torch.device) -> tuple[int, int]:
         """Sample scar-like elongated patch dimensions."""
-        long_min = min(self.scar_length_range[0], max(height, width))
-        long_max = min(self.scar_length_range[1], max(height, width))
-        thin_min = min(self.scar_thickness_range[0], min(height, width))
-        thin_max = min(self.scar_thickness_range[1], min(height, width))
-        if long_min > long_max:
-            long_min = long_max
-        if thin_min > thin_max:
-            thin_min = thin_max
+        max_hw = max(height, width)
+        min_hw = min(height, width)
+
+        long_min = min(self.scar_length_range[0], max_hw)
+        long_max = min(self.scar_length_range[1], max_hw)
+        thin_min = min(self.scar_thickness_range[0], min_hw)
+        thin_max = min(self.scar_thickness_range[1], min_hw)
+        long_min = min(long_min, long_max)
+        thin_min = min(thin_min, thin_max)
         long_side = torch.randint(long_min, long_max + 1, (1,), device=device).item()
         thin_side = torch.randint(thin_min, thin_max + 1, (1,), device=device).item()
 
@@ -202,6 +199,8 @@ class CutPasteGenerator(nn.Module):
 
         Args:
             patch: Patch tensor of shape ``(C, H, W)``.
+            selected_mode: Chosen CutPaste variant for this patch (``"normal"``,
+                ``"scar"``, or the selected subtype in ``"union"``).
 
         Returns:
             tuple[torch.Tensor, torch.Tensor]: Transformed patch ``(C, H, W)`` and a
@@ -248,12 +247,8 @@ class CutPasteGenerator(nn.Module):
             )
 
         if self.enable_color_jitter and self.color_jitter_strength > 0:
-            brightness_factor = 1.0 + (
-                (torch.rand(1, device=device).item() * 2 - 1) * self.color_jitter_strength
-            )
-            contrast_factor = 1.0 + (
-                (torch.rand(1, device=device).item() * 2 - 1) * self.color_jitter_strength
-            )
+            brightness_factor = 1.0 + ((torch.rand(1, device=device).item() * 2 - 1) * self.color_jitter_strength)
+            contrast_factor = 1.0 + ((torch.rand(1, device=device).item() * 2 - 1) * self.color_jitter_strength)
             transformed = v2.functional.adjust_brightness(transformed, brightness_factor)
             transformed = v2.functional.adjust_contrast(transformed, contrast_factor)
 
@@ -303,9 +298,7 @@ class CutPasteGenerator(nn.Module):
 
         output = image.clone()
         region = output[:, dst_y : dst_y + patch_h, dst_x : dst_x + patch_w]
-        blended_region = (
-            (1.0 - self.blend_factor) * region + self.blend_factor * patch
-        )
+        blended_region = (1.0 - self.blend_factor) * region + self.blend_factor * patch
         valid = patch_valid_mask.expand_as(region) > 0.5
         region[valid] = blended_region[valid]
         output[:, dst_y : dst_y + patch_h, dst_x : dst_x + patch_w] = region

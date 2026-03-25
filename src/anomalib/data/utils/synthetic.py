@@ -29,7 +29,7 @@ import shutil
 from copy import deepcopy
 from pathlib import Path
 from tempfile import gettempdir, mkdtemp
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import cv2
 import pandas as pd
@@ -42,6 +42,9 @@ from anomalib.data.utils.generators.cutpaste import CutPasteGenerator
 from anomalib.data.utils.generators.perlin import PerlinAnomalyGenerator
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    import torch
 
 
 # Use system temp dir to avoid "Access denied" when CWD is write-restricted (e.g. packaged apps on Windows)
@@ -182,6 +185,9 @@ def make_synthetic_dataset(
             blend_factor=blend_factor,
         )
     elif generator_type == "cutpaste":
+        if not isinstance(blend_factor, float):
+            msg = "For generator_type='cutpaste', blend_factor must be a float."
+            raise ValueError(msg)
         augmenter = CutPasteGenerator(probability=probability, blend_factor=blend_factor)
     else:
         msg = f"Unsupported generator_type: {generator_type}"

@@ -3,6 +3,7 @@
 
 """Tests for CutPaste synthetic anomaly generator."""
 
+import pytest
 import torch
 
 from anomalib.data.utils.generators import CutPasteGenerator
@@ -47,11 +48,8 @@ def test_cutpaste_modifies_local_region() -> None:
 
 def test_cutpaste_invalid_mode_raises() -> None:
     """Ensure invalid mode values are rejected."""
-    try:
+    with pytest.raises(ValueError, match="mode"):
         CutPasteGenerator(mode="invalid")  # type: ignore[arg-type]
-        assert False
-    except ValueError as exc:
-        assert "mode" in str(exc)
 
 
 def test_cutpaste_scar_mode_produces_elongated_patches() -> None:
@@ -59,7 +57,7 @@ def test_cutpaste_scar_mode_produces_elongated_patches() -> None:
     generator = CutPasteGenerator(mode="scar")
     aspects: list[float] = []
     for _ in range(50):
-        h, w, _ = generator._sample_patch_size(height=256, width=256, device=torch.device("cpu"))
+        h, w, _ = generator._sample_patch_size(height=256, width=256, device=torch.device("cpu"))  # noqa: SLF001
         aspects.append(max(h, w) / max(1, min(h, w)))
     assert max(aspects) >= 3.0
 
@@ -70,7 +68,7 @@ def test_cutpaste_union_mode_samples_both_variants() -> None:
     elongated = 0
     regular = 0
     for _ in range(120):
-        h, w, _ = generator._sample_patch_size(height=256, width=256, device=torch.device("cpu"))
+        h, w, _ = generator._sample_patch_size(height=256, width=256, device=torch.device("cpu"))  # noqa: SLF001
         aspect = max(h, w) / max(1, min(h, w))
         if aspect >= 3.0:
             elongated += 1
@@ -91,14 +89,19 @@ def test_cutpaste_brightness_shift_changes_patch_intensity() -> None:
         rotation_range=(0.0, 0.0),
         brightness_shift_range=(1.2, 1.2),
     )
-    transformed_patch, _ = generator._transform_patch(patch)
+    transformed_patch, _ = generator._transform_patch(patch, selected_mode="normal")  # noqa: SLF001
     assert not torch.allclose(transformed_patch, patch)
 
 
 def test_cutpaste_shape_safety_small_image() -> None:
     """Ensure no out-of-bounds issues on small images."""
     image = torch.rand(3, 32, 32)
-    generator = CutPasteGenerator(mode="scar", probability=1.0, scar_length_range=(20, 150), scar_thickness_range=(2, 10))
+    generator = CutPasteGenerator(
+        mode="scar",
+        probability=1.0,
+        scar_length_range=(20, 150),
+        scar_thickness_range=(2, 10),
+    )
     output = generator.generate(image)
     assert output.shape == image.shape
 
@@ -106,5 +109,5 @@ def test_cutpaste_shape_safety_small_image() -> None:
 def test_cutpaste_scar_rotation_range_is_used() -> None:
     """Ensure scar mode uses dedicated small rotation range."""
     generator = CutPasteGenerator(mode="scar", rotation_range=(-45.0, 45.0), scar_rotation_range=(-10.0, 10.0))
-    angle = generator._sample_rotation_angle(selected_mode="scar", device=torch.device("cpu"))
+    angle = generator._sample_rotation_angle(selected_mode="scar", device=torch.device("cpu"))  # noqa: SLF001
     assert -10.0 <= angle <= 10.0

@@ -11,17 +11,21 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import Sequence
+from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
-import numpy as np
 import torch
-from matplotlib.figure import Figure
 from PIL import Image
 from torchvision.transforms import v2
 
 from anomalib.data.utils.generators import CutPasteGenerator
 from anomalib.data.utils.synthetic import DEFAULT_SYNTHETIC_MASK_THRESHOLD
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    import numpy as np
+    from matplotlib.figure import Figure
 
 
 def _to_display_image(image: torch.Tensor) -> np.ndarray:
@@ -182,8 +186,18 @@ def _collect_image_paths(input_path: str | Path | None) -> list[Path] | None:
 def main() -> None:
     """CLI entrypoint to generate CutPaste visualization examples."""
     parser = argparse.ArgumentParser(description="Generate CutPaste visualization examples.")
-    parser.add_argument("--input", type=str, default=None, help="Image file or directory. If omitted, random images are used.")
-    parser.add_argument("--output-dir", type=str, default="outputs/cutpaste_examples", help="Directory to save example PNG files.")
+    parser.add_argument(
+        "--input",
+        type=str,
+        default=None,
+        help="Image file or directory. If omitted, random images are used.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default="outputs/cutpaste_examples",
+        help="Directory to save example PNG files.",
+    )
     parser.add_argument("--num-samples", type=int, default=3, help="Number of examples to generate.")
     parser.add_argument("--height", type=int, default=256, help="Image height.")
     parser.add_argument("--width", type=int, default=256, help="Image width.")
