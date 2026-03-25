@@ -81,6 +81,7 @@ jobs:
 
   production-release-process:
     needs: [validation]
+    if: ${{ !inputs.dry_run }}
     uses: ./.github/workflows/_reusable-production-release-process.yaml
     permissions:
       contents: read
@@ -89,7 +90,7 @@ jobs:
       artifact-name: ${{ needs.validation.outputs.artifact-name }}
       dry-run: ${{ inputs.dry_run || false }}
 
-  # Putlish is moved here due to PyPi's policy: Reusable workflows
+  # Publish is moved here due to PyPi's policy: Reusable workflows
   # are not currently supported by PyPI's Trusted Publishing
   # functionality, and are subject to breakage.
   publish:

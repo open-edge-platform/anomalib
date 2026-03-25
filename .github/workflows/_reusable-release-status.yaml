@@ -62,8 +62,8 @@ jobs:
           INPUTS_VERSION: ${{ inputs.version }}
           INPUTS_PROD_STATUS: ${{ inputs.prod-status }}
         run: |
-          if [[ "$INPUTS_PROD_STATUS" == "failure" ]]; then
-            echo "::error::Release workflow failed"
+          if [[ "$INPUTS_PROD_STATUS" != "success" ]]; then
+            echo "::error::Release workflow failed with status: $INPUTS_PROD_STATUS"
             exit 1
           fi
 
