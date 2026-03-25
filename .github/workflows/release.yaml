@@ -94,7 +94,7 @@ jobs:
   # are not currently supported by PyPI's Trusted Publishing
   # functionality, and are subject to breakage.
   publish:
-    needs: [production-release-process]
+    needs: [validation, production-release-process]
     if: success() && !inputs.dry_run
     runs-on: ubuntu-latest
     environment: production
