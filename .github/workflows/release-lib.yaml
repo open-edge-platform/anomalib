@@ -1,0 +1,175 @@
+# Release Workflow
+#
+# This workflow manages the production release process.
+#
+# Key Features:
+# - Version validation
+# - Comprehensive testing
+# - Security scanning
+# - Production release
+# - Manual and automated triggers
+#
+# Process Stages:
+# 1. Validation:
+#    - Version format check
+#    - Code quality verification
+#    - Test suite execution
+#    - Security assessment
+#    - Package build and verification
+#
+# 2. Publish:
+#    - Environment approval gate (production)
+#    - Production PyPI deployment (OIDC)
+#    - GitHub release creation
+#
+# Required Secrets:
+# - CODECOV_TOKEN: Coverage reporting
+#
+# Note: PyPI publishing uses OIDC (OpenID Connect) authentication.
+# Configure trusted publishers in PyPI project settings:
+# - For production releases (PyPI):
+#   - Owner: <your-org>
+#   - Repository name: anomalib
+#   - Workflow name: release-lib.yaml
+#   - Environment name: production
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g., v1.2.3)"
+        required: true
+        type: string
+      dry_run:
+        description: "Perform a dry run without creating a release"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  version-check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.validate-version.outputs.version }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+          sparse-checkout: src/anomalib/__init__.py
+      - name: Validate version
+        id: validate-version
+        env:
+          INPUTS_VERSION: ${{ github.event_name == 'push' && github.ref_name || inputs.version }}
+        run: |
+          if [[ ! "$INPUTS_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version format: $INPUTS_VERSION"
+            exit 1
+          fi
+
+          TAG_VERSION="${INPUTS_VERSION#v}"
+          PKG_VERSION=$(python3 -c "import re, pathlib; m = re.search(r'__version__\s*=\s*[\"'"'"']([^\"'"'"']+)[\"'"'"']', pathlib.Path('src/anomalib/__init__.py').read_text()); print(m.group(1))")
+          if [[ "$PKG_VERSION" != "$TAG_VERSION" ]]; then
+            echo "::error::Tag version ($TAG_VERSION) does not match __version__ in src/anomalib/__init__.py ($PKG_VERSION)"
+            exit 1
+          fi
+
+          echo "version=$INPUTS_VERSION" >> $GITHUB_OUTPUT
+
+  quality:
+    needs: [version-check]
+    uses: ./.github/workflows/_reusable-code-quality.yaml
+    with:
+      python-version: "3.10"
+
+  unit-tests:
+    needs: [version-check]
+    uses: ./.github/workflows/_reusable-test-suite.yaml
+    with:
+      python-version: "3.10"
+      test-type: "unit"
+      runner: "ubuntu-latest"
+      timeout: 30
+    secrets:
+      codecov-token: ${{ secrets.CODECOV_TOKEN }}
+
+  integration-tests:
+    needs: [version-check]
+    uses: ./.github/workflows/_reusable-test-suite.yaml
+    with:
+      python-version: "3.10"
+      test-type: "integration"
+      runner: "self-hosted"
+      timeout: 60
+    secrets:
+      codecov-token: ${{ secrets.CODECOV_TOKEN }}
+
+  security:
+    needs: [version-check]
+    uses: ./.github/workflows/_reusable-security-scan.yaml
+    permissions:
+      security-events: write
+      contents: read
+    with:
+      tools: "bandit,semgrep,trivy,zizmor"
+      scan-scope: "all"
+      severity-level: "LOW"
+      fail-on-findings: true
+
+  build:
+    needs: [version-check, quality, unit-tests, integration-tests, security]
+    if: |
+      !inputs.dry_run &&
+      !failure() && !cancelled()
+    uses: ./.github/workflows/_reusable-artifact-builder.yaml
+    with:
+      python-version: "3.10"
+      verify-package: true
+
+  publish:
+    needs: [version-check, build]
+    if: ${{ !inputs.dry_run }}
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: write
+      id-token: write # Required for OIDC authentication with PyPI
+    steps:
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8
+        with:
+          name: ${{ needs.build.outputs.artifact-name }}
+          path: dist
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
+      - uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
+        with:
+          tag_name: ${{ needs.version-check.outputs.version }}
+          name: Release Anomalib ${{ needs.version-check.outputs.version }}
+          draft: false
+          prerelease: false
+          files: dist/*
+          generate_release_notes: true
+
+  status:
+    needs: [version-check, publish]
+    if: always() && !inputs.dry_run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify workflow status
+        env:
+          RELEASE_VERSION: ${{ needs.version-check.outputs.version }}
+          PUBLISH_STATUS: ${{ needs.publish.result }}
+        run: |
+          if [[ "$PUBLISH_STATUS" != "success" ]]; then
+            echo "::error::Release workflow failed with status: $PUBLISH_STATUS"
+            exit 1
+          fi
+
+          echo "Production release $RELEASE_VERSION completed successfully"
