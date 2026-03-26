@@ -59,7 +59,6 @@ from .datamodules.image import (
     ImageDataFormat,
     Kaputt,
     Kolektor,
-    MVTec,
     MVTecAD,
     MVTecAD2,
     MVTecLOCO,
@@ -188,7 +187,6 @@ __all__ = [
     "Kaputt",
     "Kolektor",
     "MPDD",
-    "MVTec",  # Include MVTec for backward compatibility
     "MVTecAD",
     "MVTecAD2",
     "MVTecLOCO",
