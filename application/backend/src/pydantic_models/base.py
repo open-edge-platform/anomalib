@@ -39,7 +39,7 @@ class NoRequiredIDs(BaseModel):
     from the URL path parameter in the endpoint handler.
     """
 
-    project_id: SkipJsonSchema[ShortUUID] = Field(exclude=True, default="2222222222222222222222")
+    project_id: SkipJsonSchema[ShortUUID] = Field(exclude=True, default=ShortUUID("2222222222222222222222"))
     id: SkipJsonSchema[ShortUUID] = Field(exclude=True, default_factory=ShortUUID.generate)
 
 

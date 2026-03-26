@@ -65,7 +65,10 @@ class ShortUUID(str):
 
     @classmethod
     def __get_pydantic_core_schema__(cls, source_type: type, handler: GetCoreSchemaHandler) -> CoreSchema:  # noqa: PLW3201
-        return core_schema.no_info_plain_validator_function(
-            cls._pydantic_validate,
+        return core_schema.chain_schema(
+            [
+                core_schema.str_schema(),
+                core_schema.no_info_plain_validator_function(cls._pydantic_validate),
+            ],
             serialization=core_schema.to_string_ser_schema(),
         )
