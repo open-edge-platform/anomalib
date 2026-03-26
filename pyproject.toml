@@ -413,7 +413,7 @@ show_error_codes = true
 
 
 [[tool.mypy.overrides]]
-module = ["torch.*", "wandb.*"]
+module = ["torch.*", "wandb.*", "openvino.*"]
 follow_imports = "skip"
 follow_imports_for_stubs = true
 
