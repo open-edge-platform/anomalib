@@ -16,6 +16,11 @@ on:
         required: false
         type: boolean
         default: false
+      force:
+        description: 'Force overwrite if the stable tag already exists in GHCR with a different digest'
+        required: false
+        type: boolean
+        default: false
 
 permissions: {} # No permissions by default
 
@@ -115,6 +120,7 @@ jobs:
           DOCKER_RC_TAG: ${{ steps.validate.outputs.docker_rc_tag }}
           DOCKER_PATCH_TAG: ${{ steps.validate.outputs.docker_patch_tag }}
           DRY_RUN: ${{ inputs.dry_run }}
+          FORCE: ${{ inputs.force }}
         run: |
           {
             echo "## Promotion Summary"
@@ -127,6 +133,7 @@ jobs:
             echo "| Docker RC tag | \`${DOCKER_RC_TAG}\` |"
             echo "| Docker release tag | \`${DOCKER_PATCH_TAG}\` |"
             echo "| Dry run | \`${DRY_RUN}\` |"
+            echo "| Force overwrite | \`${FORCE}\` |"
             echo ""
             if [[ "${DRY_RUN}" == "true" ]]; then
               echo "> **Dry run mode:** No changes will be made."
@@ -195,12 +202,31 @@ jobs:
           DOCKER_RC_TAG: ${{ needs.validate.outputs.docker_rc_tag }}
           DOCKER_PATCH_TAG: ${{ needs.validate.outputs.docker_patch_tag }}
           DEVICE: ${{ matrix.device }}
+          FORCE: ${{ inputs.force }}
         run: |
+          set -euo pipefail
           SOURCE_IMAGE="ghcr.io/open-edge-platform/anomalib-studio-${DEVICE}:${DOCKER_RC_TAG}"
           TARGET_IMAGE="ghcr.io/open-edge-platform/anomalib-studio-${DEVICE}:${DOCKER_PATCH_TAG}"
 
           echo "Pulling ${SOURCE_IMAGE}"
           docker pull "${SOURCE_IMAGE}"
+
+          # Pre-check: verify target tag is absent or already points to the same image
+          if docker manifest inspect "${TARGET_IMAGE}" >/dev/null 2>&1; then
+            echo "Target image ${TARGET_IMAGE} already exists in GHCR."
+            docker pull "${TARGET_IMAGE}"
+            SOURCE_ID=$(docker inspect --format='{{.Id}}' "${SOURCE_IMAGE}")
+            TARGET_ID=$(docker inspect --format='{{.Id}}' "${TARGET_IMAGE}")
+            if [[ "${SOURCE_ID}" == "${TARGET_ID}" ]]; then
+              echo "::notice::${TARGET_IMAGE} already points to the same image as ${SOURCE_IMAGE}. Skipping push (idempotent re-run)."
+              exit 0
+            elif [[ "${FORCE}" == "true" ]]; then
+              echo "::warning::${TARGET_IMAGE} exists with a different digest; overwriting because force=true."
+            else
+              echo "::error::${TARGET_IMAGE} already exists in GHCR with a different digest. Set 'force: true' to overwrite."
+              exit 1
+            fi
+          fi
 
           echo "Tagging ${TARGET_IMAGE}"
           docker tag "${SOURCE_IMAGE}" "${TARGET_IMAGE}"
