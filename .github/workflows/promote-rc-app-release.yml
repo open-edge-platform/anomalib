@@ -12,12 +12,12 @@ on:
         required: true
         type: string
       dry_run:
-        description: 'Dry run mode (validate only, make no changes)'
+        description: "Dry run mode (validate only, make no changes)"
         required: false
         type: boolean
         default: false
       force:
-        description: 'Force overwrite if the stable tag already exists in GHCR with a different digest'
+        description: "Force overwrite if the stable tag already exists in GHCR with a different digest"
         required: false
         type: boolean
         default: false
