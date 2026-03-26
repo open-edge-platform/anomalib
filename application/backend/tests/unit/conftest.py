@@ -1,6 +1,5 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import uuid
 from io import BytesIO
 from unittest.mock import AsyncMock, MagicMock
 
@@ -25,13 +24,14 @@ from pydantic_models import (
 )
 from pydantic_models.base import Pagination
 from pydantic_models.job import TrainJobPayload
+from utils.short_uuid import ShortUUID
 
 
 @pytest.fixture
 def fxt_project():
     """Fixture for a test project."""
     return Project(
-        id=uuid.uuid4(),
+        id=ShortUUID.generate(),
         name="Test Project",
     )
 
@@ -62,7 +62,7 @@ def fxt_job_payload(fxt_project):
 def fxt_media(fxt_project):
     """Fixture for a test media."""
     return Media(
-        id=uuid.uuid4(),
+        id=ShortUUID.generate(),
         project_id=fxt_project.id,
         filename="test_image.jpg",
         size=1024,
@@ -76,14 +76,14 @@ def fxt_media(fxt_project):
 def fxt_model(fxt_project):
     """Fixture for a test model."""
     return Model(
-        id=uuid.uuid4(),
+        id=ShortUUID.generate(),
         project_id=fxt_project.id,
         name="padim",
         format="openvino",
         is_ready=True,
         export_path="/path/to/model",
-        train_job_id=uuid.uuid4(),
-        dataset_snapshot_id=uuid.uuid4(),
+        train_job_id=ShortUUID.generate(),
+        dataset_snapshot_id=ShortUUID.generate(),
         size=0,
     )
 

@@ -25,7 +25,7 @@ SIZE = DTYPE.itemsize * MAX_MEASUREMENTS  # 160 * 1024 = 163840 bytes (160KB) al
 class LatencyMeasurement(NamedTuple):
     """Individual latency measurement"""
 
-    model_id: str  # UUID as 22 character string "0000000000000000000000"
+    model_id: str  # ShortUUID as 22 character string e.g. "Bf8KYoUmuTV3hLdiEaarSA"
     latency_ms: float
     timestamp: float
 

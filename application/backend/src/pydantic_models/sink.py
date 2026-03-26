@@ -36,7 +36,7 @@ class BaseSinkConfig(BaseIDNameModel):
 
 class DisconnectedSinkConfig(BaseSinkConfig):
     sink_type: Literal[SinkType.DISCONNECTED] = SinkType.DISCONNECTED
-    project_id: ShortUUID = ShortUUID("0000000000000000000000")
+    project_id: ShortUUID = ShortUUID("2222222222222222222222")
     name: str = "No Sink"
     output_formats: list[OutputFormat] = []
 
@@ -45,7 +45,7 @@ class DisconnectedSinkConfig(BaseSinkConfig):
             "example": {
                 "sink_type": "disconnected",
                 "name": "No Sink",
-                "id": "0000000000000000000000",
+                "id": "2222222222222222222222",
             },
         },
     }

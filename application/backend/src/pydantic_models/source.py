@@ -31,7 +31,7 @@ class BaseSourceConfig(BaseIDNameModel):
 
 class DisconnectedSourceConfig(BaseSourceConfig):
     source_type: Literal[SourceType.DISCONNECTED] = SourceType.DISCONNECTED
-    project_id: ShortUUID = ShortUUID("0000000000000000000000")
+    project_id: ShortUUID = ShortUUID("2222222222222222222222")
     name: str = "No Source"
 
 

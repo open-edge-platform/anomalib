@@ -3,7 +3,6 @@
 
 import asyncio
 import statistics
-import uuid
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -17,13 +16,14 @@ from pydantic_models.source import SourceType, VideoFileSourceConfig
 from services.metrics_service import MetricsService
 from services.pipeline_metrics_service import PipelineMetricsService
 from services.pipeline_service import PipelineService
+from utils.short_uuid import ShortUUID
 
 
 @pytest.fixture
 def fxt_project() -> Project:
     """Fixture for a test project."""
     return Project(
-        id=uuid.uuid4(),
+        id=ShortUUID.generate(),
         name="Test Project",
     )
 
@@ -32,11 +32,11 @@ def fxt_project() -> Project:
 def fxt_model(fxt_project) -> Model:
     """Fixture for a test model."""
     return Model(
-        id=uuid.uuid4(),
+        id=ShortUUID.generate(),
         project_id=fxt_project.id,
         name="Test Model",
-        train_job_id=uuid.uuid4(),
-        dataset_snapshot_id=uuid.uuid4(),
+        train_job_id=ShortUUID.generate(),
+        dataset_snapshot_id=ShortUUID.generate(),
     )
 
 
@@ -44,14 +44,14 @@ def fxt_model(fxt_project) -> Model:
 def fxt_pipeline(fxt_project, fxt_model) -> Pipeline:
     """Fixture for a test pipeline."""
     source = VideoFileSourceConfig(
-        id=uuid.uuid4(),
+        id=ShortUUID.generate(),
         project_id=fxt_project.id,
         source_type=SourceType.VIDEO_FILE,
         name="Test Source",
         video_path="/path/to/video.mp4",
     )
     sink = FolderSinkConfig(
-        id=uuid.uuid4(),
+        id=ShortUUID.generate(),
         project_id=fxt_project.id,
         sink_type=SinkType.FOLDER,
         name="Test Sink",

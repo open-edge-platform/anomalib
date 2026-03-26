@@ -4,9 +4,14 @@
 from __future__ import annotations
 
 import re
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
 import shortuuid
+from pydantic_core import core_schema
+
+if TYPE_CHECKING:
+    from pydantic import GetCoreSchemaHandler
+    from pydantic_core import CoreSchema
 
 _SHORTUUID_RE = re.compile(r"^[23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{22}$")
 
@@ -57,3 +62,10 @@ class ShortUUID(str):
         if isinstance(value, str):
             return cls(value)
         raise ValueError(f"string required, got {type(value).__name__}")
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type: type, handler: GetCoreSchemaHandler) -> CoreSchema:  # noqa: PLW3201
+        return core_schema.no_info_plain_validator_function(
+            cls._pydantic_validate,
+            serialization=core_schema.to_string_ser_schema(),
+        )
