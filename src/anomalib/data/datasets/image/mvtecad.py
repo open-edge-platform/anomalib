@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """MVTec AD Dataset.
@@ -36,7 +36,6 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datasets.base import AnomalibDataset
 from anomalib.data.errors import MisMatchError
 from anomalib.data.utils import LabelName, Split, validate_path
-from anomalib.utils import deprecate
 
 IMG_EXTENSIONS = (".png", ".PNG")
 CATEGORIES = (
@@ -221,15 +220,3 @@ def make_mvtec_ad_dataset(
         samples = samples[samples.split == split].reset_index(drop=True)
 
     return samples
-
-
-@deprecate(since="2.1.0", remove="2.3.0", use="MVTecADDataset")
-class MVTecDataset(MVTecADDataset):
-    """MVTec dataset class (Deprecated).
-
-    This class is deprecated and will be removed in a future version.
-    Please use MVTecADDataset instead.
-    """
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)

@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Image and video visualization generator.
@@ -62,7 +62,7 @@ from anomalib.data import ImageItem, NumpyImageItem, VideoItem
 from anomalib.data.utils import read_image
 from anomalib.utils.post_processing import add_anomalous_label, add_normal_label, superimpose_anomaly_map
 
-from .base import BaseVisualizer, GeneratorResult, VisualizationStep
+from .base import GeneratorResult, VisualizationStep, Visualizer
 
 if TYPE_CHECKING:
     from matplotlib.axis import Axes
@@ -165,7 +165,7 @@ class ImageResult:
         return cls(**{key: item_dict[key] for key in field_names})
 
 
-class ImageVisualizer(BaseVisualizer):
+class ImageVisualizer(Visualizer):
     """Image and video visualization generator.
 
     Args:
