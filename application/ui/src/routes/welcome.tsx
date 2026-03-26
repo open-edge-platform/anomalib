@@ -1,10 +1,13 @@
+// Copyright (C) 2025-2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { Button, Content, Flex, Grid, Heading, IllustratedMessage, Text } from '@geti/ui';
 import { Navigate, useNavigate } from 'react-router';
-import { v4 as uuid } from 'uuid';
 
 import { $api } from '../api/client';
 import Background from '../assets/background.png';
 import { Fireworks } from '../assets/icons';
+import { generateShortUUID } from '../utils/short-uuid';
 import { paths } from './paths';
 
 const useCreateProject = () => {
@@ -15,7 +18,7 @@ const useCreateProject = () => {
     });
     const navigate = useNavigate();
 
-    const createProject = (projectName: string, projectId: string = uuid()) => {
+    const createProject = (projectName: string, projectId: string = generateShortUUID()) => {
         createProjectMutation.mutate(
             {
                 body: {
