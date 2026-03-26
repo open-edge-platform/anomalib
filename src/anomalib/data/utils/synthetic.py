@@ -185,9 +185,6 @@ def make_synthetic_dataset(
             blend_factor=blend_factor,
         )
     elif generator_type == "cutpaste":
-        if not isinstance(blend_factor, float):
-            msg = "For generator_type='cutpaste', blend_factor must be a float."
-            raise ValueError(msg)
         augmenter = CutPasteGenerator(probability=probability, blend_factor=blend_factor)
     else:
         msg = f"Unsupported generator_type: {generator_type}"
