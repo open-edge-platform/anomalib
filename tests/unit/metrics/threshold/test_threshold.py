@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Test Threshold metric."""
@@ -6,7 +6,7 @@
 import pytest
 from torchmetrics import Metric
 
-from anomalib.metrics.threshold import BaseThreshold, Threshold
+from anomalib.metrics.threshold import Threshold
 
 
 class TestThreshold:
@@ -36,13 +36,13 @@ class TestBaseThreshold:
     @staticmethod
     def test_base_threshold_inheritance() -> None:
         """Test that BaseThreshold inherits from Threshold."""
-        base_threshold = BaseThreshold()
+        base_threshold = Threshold()
         assert isinstance(base_threshold, Threshold)
 
     @staticmethod
     def test_base_threshold_abstract_methods() -> None:
         """Test that BaseThreshold class raises NotImplementedError for abstract methods."""
-        base_threshold = BaseThreshold()
+        base_threshold = Threshold()
 
         with pytest.raises(NotImplementedError, match=r"Subclass of Threshold must implement the compute method"):
             base_threshold.compute()
