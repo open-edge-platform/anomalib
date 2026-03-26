@@ -1,7 +1,8 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import http
-from uuid import UUID
+
+from utils.short_uuid import ShortUUID
 
 
 class GetiBaseException(Exception):
@@ -77,7 +78,7 @@ class ResourceNotFoundException(GetiBaseException):
         resource_id: ID of the resource that was not found
     """
 
-    def __init__(self, resource_id: str | UUID, resource_name: str) -> None:
+    def __init__(self, resource_id: str | ShortUUID, resource_name: str) -> None:
         super().__init__(
             message=f"The requested {resource_name} could not be found. {resource_name.title()} ID: `{resource_id}`.",
             error_code=f"{resource_name}_not_found",
