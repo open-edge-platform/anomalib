@@ -51,6 +51,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.mvtec_loco import MVTecLOCODataset
 from anomalib.data.utils import Split, TestSplitMode, ValSplitMode
+from anomalib.utils.path import get_datasets_dir
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +61,7 @@ class MVTecLOCO(AnomalibDataModule):
 
     Args:
         root (Path | str): Path to the root of the dataset.
-            Defaults to ``"./datasets/MVTec_LOCO"``.
+            Defaults to ``None``.
         category (str): Category of the MVTec LOCO dataset (e.g. ``"breakfast_box"`` or
             ``"juice_bottle"``). Defaults to ``"breakfast_box"``.
         train_batch_size (int, optional): Training batch size.
@@ -122,7 +123,7 @@ class MVTecLOCO(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/MVTec_LOCO",
+        root: Path | str | None = None,
         category: str = "breakfast_box",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
@@ -152,6 +153,7 @@ class MVTecLOCO(AnomalibDataModule):
             seed=seed,
         )
 
+        root = root if root is not None else get_datasets_dir() / "MVTec_LOCO"
         self.root = Path(root)
         self.category = category
 

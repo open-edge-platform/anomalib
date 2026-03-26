@@ -39,6 +39,7 @@ from anomalib.data.utils import (
     read_mask,
     validate_path,
 )
+from anomalib.utils.path import get_datasets_dir
 
 logger = logging.getLogger(__name__)
 
@@ -68,8 +69,8 @@ class MVTecLOCODataset(AnomalibDataset):
     classification, detection and segmentation tasks.
 
     Args:
-        root (Path | str): Path to root directory containing the dataset.
-            Defaults to ``"./datasets/MVTec_LOCO"``.
+        root (Path | str | None): Path to root directory containing the dataset.
+            Defaults to ``None``.
         category (str): Category name, must be one of ``CATEGORIES``.
             Defaults to ``"breakfast_box"``.
         augmentations (Transform, optional): Augmentations that should be applied to the input images.
@@ -114,12 +115,14 @@ class MVTecLOCODataset(AnomalibDataset):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/MVTec_LOCO",
+        root: Path | str | None = None,
         category: str = "breakfast_box",
         augmentations: Transform | None = None,
         split: str | Split | None = None,
     ) -> None:
         super().__init__(augmentations=augmentations)
+
+        root = root if root is not None else get_datasets_dir() / "MVTec_LOCO"
 
         self.root_category = Path(root) / category
         self.category = category

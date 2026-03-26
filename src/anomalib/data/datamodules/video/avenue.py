@@ -67,6 +67,7 @@ from anomalib.data.datamodules.base.video import AnomalibVideoDataModule
 from anomalib.data.datasets.base.video import VideoTargetFrame
 from anomalib.data.datasets.video.avenue import AvenueDataset
 from anomalib.data.utils import DownloadInfo, Split, ValSplitMode, download_and_extract
+from anomalib.utils.path import get_datasets_dir
 
 logger = logging.getLogger(__name__)
 
@@ -87,9 +88,9 @@ class Avenue(AnomalibVideoDataModule):
 
     Args:
         root (Path | str): Path to the root of the dataset.
-            Defaults to ``"./datasets/avenue"``.
+            Defaults to ``None``.
         gt_dir (Path | str): Path to the ground truth files.
-            Defaults to ``"./datasets/avenue/ground_truth_demo"``.
+            Defaults to ``None``.
         clip_length_in_frames (int): Number of video frames in each clip.
             Defaults to ``2``.
         frames_between_clips (int): Number of frames between consecutive clips.
@@ -139,8 +140,8 @@ class Avenue(AnomalibVideoDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/avenue",
-        gt_dir: Path | str = "./datasets/avenue/ground_truth_demo",
+        root: Path | str | None = None,
+        gt_dir: Path | str | None = None,
         clip_length_in_frames: int = 2,
         frames_between_clips: int = 1,
         target_frame: VideoTargetFrame | str = VideoTargetFrame.LAST,
@@ -168,6 +169,8 @@ class Avenue(AnomalibVideoDataModule):
             seed=seed,
         )
 
+        root = root if root is not None else get_datasets_dir() / "avenue"
+        gt_dir = gt_dir if gt_dir is not None else get_datasets_dir() / "avenue" / "ground_truth_demo"
         self.root = Path(root)
         self.gt_dir = Path(gt_dir)
         self.clip_length_in_frames = clip_length_in_frames

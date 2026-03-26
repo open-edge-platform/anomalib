@@ -41,6 +41,7 @@ from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datasets.base import AnomalibDataset
 from anomalib.data.utils import LabelName, Split, validate_path
+from anomalib.utils.path import get_datasets_dir
 
 IMG_EXTENSIONS = (".jpg", ".png", ".PNG", ".JPG")
 RESOLUTIONS = ("256", "512", "1024", "raw")
@@ -92,8 +93,8 @@ class RealIADDataset(AnomalibDataset):
     - JSON metadata for flexible dataset organization
 
     Args:
-        root (Path | str): Path to root directory containing the dataset.
-            Defaults to ``"./datasets/Real-IAD"``.
+        root (Path | str | None): Path to root directory containing the dataset.
+            Defaults to ``None``.
         category (str): Category name, must be one of ``CATEGORIES``.
             Defaults to ``"audiojack"``.
         resolution (str | int): Image resolution, must be one of ``RESOLUTIONS`` or their integer equivalents.
@@ -153,7 +154,7 @@ class RealIADDataset(AnomalibDataset):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/Real-IAD",
+        root: Path | str | None = None,
         category: str = "audiojack",
         resolution: str | int = 256,
         augmentations: Transform | None = None,
@@ -177,6 +178,8 @@ class RealIADDataset(AnomalibDataset):
                 - "realiad_jsons/realiad_jsons_fuiad_0.4/{category}.json" - FUIAD v0.4 metadata
         """
         super().__init__(augmentations=augmentations)
+
+        root = root if root is not None else get_datasets_dir() / "Real-IAD"
 
         if category not in CATEGORIES:
             msg = f"Category {category} not found in Real-IAD dataset. Available categories: {CATEGORIES}"

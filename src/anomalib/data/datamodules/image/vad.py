@@ -45,6 +45,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets import VADDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
+from anomalib.utils.path import get_datasets_dir
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +62,7 @@ class VAD(AnomalibDataModule):
 
     Args:
         root (Path | str): Path to the root of the dataset.
-            Defaults to ``"./datasets/VAD"``.
+            Defaults to ``None``.
         category (str): Category of the VAD dataset. Defaults to ``"vad"``.
         train_batch_size (int, optional): Training batch size.
             Defaults to ``32``.
@@ -117,7 +118,7 @@ class VAD(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/VAD",
+        root: Path | str | None = None,
         category: str = "vad",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
@@ -147,6 +148,7 @@ class VAD(AnomalibDataModule):
             seed=seed,
         )
 
+        root = root if root is not None else get_datasets_dir() / "VAD"
         self.root = Path(root)
         self.category = category
 

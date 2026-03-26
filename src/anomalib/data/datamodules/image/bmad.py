@@ -65,6 +65,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.bmad import BMADDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
+from anomalib.utils.path import get_datasets_dir
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +81,7 @@ class BMAD(AnomalibDataModule):
 
     Args:
         root (Path | str): Path to the root of the dataset.
-            Defaults to ``"./datasets/BMAD"``.
+            Defaults to ``None``.
         category (str): Category of the BMAD dataset
             (e.g. ``"Brain"``, ``"Liver"``, ``"Retina_OCT2017"``, ``"Retina_RESC"``,
             ``"Chest"``, or ``"Histopathology"``).
@@ -138,7 +139,7 @@ class BMAD(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/BMAD",
+        root: Path | str | None = None,
         category: str = "Brain",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
@@ -168,6 +169,7 @@ class BMAD(AnomalibDataModule):
             seed=seed,
         )
 
+        root = root if root is not None else get_datasets_dir() / "BMAD"
         self.root = Path(root)
         self.category = category
 
