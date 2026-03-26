@@ -62,6 +62,7 @@ jobs:
           push: "true"
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          use-cache: "false"
 
       - name: Resolve primary image tag for signing
         id: primary-tag
