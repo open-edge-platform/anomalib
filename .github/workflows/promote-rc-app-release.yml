@@ -158,11 +158,20 @@ jobs:
           set -euo pipefail
           URL_RELEASE_TAG="${RELEASE_TAG//\//%2F}"
           if gh api "repos/${{ github.repository }}/git/ref/tags/${URL_RELEASE_TAG}" --silent >/dev/null 2>&1; then
-            EXISTING_SHA=$(gh api "repos/${{ github.repository }}/git/ref/tags/${URL_RELEASE_TAG}" --jq '.object.sha')
-            if [[ "${EXISTING_SHA}" == "${RC_SHA}" ]]; then
+            # Resolve the tag to a commit SHA, handling annotated tags that point to tag objects
+            TAG_INFO=$(gh api "repos/${{ github.repository }}/git/ref/tags/${URL_RELEASE_TAG}" --jq '.object.sha + " " + .object.type')
+            RESOLVED_SHA=${TAG_INFO%% *}
+            RESOLVED_TYPE=${TAG_INFO##* }
+            # Dereference tag objects until we reach a commit
+            while [[ "${RESOLVED_TYPE}" == "tag" ]]; do
+              TAG_OBJECT_INFO=$(gh api "repos/${{ github.repository }}/git/tags/${RESOLVED_SHA}" --jq '.object.sha + " " + .object.type')
+              RESOLVED_SHA=${TAG_OBJECT_INFO%% *}
+              RESOLVED_TYPE=${TAG_OBJECT_INFO##* }
+            done
+            if [[ "${RESOLVED_SHA}" == "${RC_SHA}" ]]; then
               echo "Tag ${RELEASE_TAG} already exists at ${RC_SHA}, skipping creation"
             else
-              echo "::error::Tag ${RELEASE_TAG} already exists at ${EXISTING_SHA} but expected ${RC_SHA}"
+              echo "::error::Tag ${RELEASE_TAG} already exists at ${RESOLVED_SHA} but expected ${RC_SHA}"
               exit 1
             fi
           else
