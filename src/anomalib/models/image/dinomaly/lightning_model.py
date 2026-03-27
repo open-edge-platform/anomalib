@@ -40,6 +40,7 @@ See Also:
 """
 
 import logging
+import math
 from typing import Any
 
 import torch
@@ -113,6 +114,10 @@ class Dinomaly(AnomalibModule):
             for feature fusion. If None, uses [[0, 1, 2, 3], [4, 5, 6, 7]].
         remove_class_token (bool): Whether to remove class token from features
             before processing. Defaults to False.
+        use_context_recentering (bool): Whether to apply Context-Aware Recentering
+            from Dinomaly2. When enabled, the class token is subtracted from patch
+            features before reconstruction. Most beneficial in multi-class settings.
+            Incompatible with ``remove_class_token=True``. Defaults to False.
         pre_processor (PreProcessor | bool, optional): Pre-processor instance or
             flag to use default. Defaults to ``True``.
         post_processor (PostProcessor | bool, optional): Post-processor instance
@@ -157,6 +162,7 @@ class Dinomaly(AnomalibModule):
         fuse_layer_encoder: list[list[int]] | None = None,
         fuse_layer_decoder: list[list[int]] | None = None,
         remove_class_token: bool = False,
+        use_context_recentering: bool = False,
         pre_processor: PreProcessor | bool = True,
         post_processor: PostProcessor | bool = True,
         evaluator: Evaluator | bool = True,
@@ -177,6 +183,7 @@ class Dinomaly(AnomalibModule):
             fuse_layer_encoder=fuse_layer_encoder,
             fuse_layer_decoder=fuse_layer_decoder,
             remove_class_token=remove_class_token,
+            use_context_recentering=use_context_recentering,
         )
 
         # Set the trainable parameters for the model.
@@ -192,6 +199,59 @@ class Dinomaly(AnomalibModule):
 
         self.trainable_modules = torch.nn.ModuleList([self.model.bottleneck, self.model.decoder])
         self._initialize_trainable_modules(self.trainable_modules)
+
+    def on_train_start(self) -> None:
+        """Fix Rich progress bar epoch display when using step-based training.
+
+        Lightning internally sets ``max_epochs=-1`` when only ``max_steps`` is
+        provided. The Rich progress bar then displays "Epoch X/-2" because it
+        computes ``max_epochs - 1``. This hook calculates the estimated number
+        of epochs from ``max_steps`` and ``num_training_batches`` so the
+        progress bar shows "Epoch X/M", where ``M`` is the estimated last
+        epoch index (``estimated_epochs - 1``).
+
+        Note:
+            This relies on Lightning's ``RichProgressBar._get_train_description``
+            as implemented in Lightning 2.x. If the internals change in future
+            versions, this hook may need updating.
+        """
+        if self.trainer.max_epochs is not None and self.trainer.max_epochs < 0:
+            try:
+                from lightning.pytorch.callbacks.progress.rich_progress import RichProgressBar
+            except ImportError:
+                return
+
+            progress_bar = getattr(self.trainer, "progress_bar_callback", None)
+            if isinstance(progress_bar, RichProgressBar) and hasattr(
+                progress_bar,
+                "_get_train_description",
+            ):
+                num_batches = self.trainer.num_training_batches
+                max_steps = self.trainer.max_steps
+                if (
+                    max_steps > 0
+                    and isinstance(num_batches, (int, float))
+                    and num_batches > 0
+                    and math.isfinite(num_batches)
+                ):
+                    est_max_epochs = math.ceil(max_steps / num_batches)
+                else:
+                    est_max_epochs = None
+
+                val_desc = getattr(progress_bar, "validation_description", "Validation")
+
+                class _FixedRichProgressBar(RichProgressBar):
+                    """RichProgressBar subclass with corrected epoch display for step-based training."""
+
+                    def _get_train_description(self, current_epoch: int) -> str:  # noqa: PLR6301
+                        desc = f"Epoch {current_epoch}"
+                        if est_max_epochs is not None:
+                            desc += f"/{est_max_epochs - 1}"
+                        if len(val_desc) > len(desc):
+                            desc = f"{desc:{len(val_desc)}}"
+                        return desc
+
+                progress_bar.__class__ = _FixedRichProgressBar
 
     @classmethod
     def configure_pre_processor(
