@@ -31,29 +31,21 @@
 
 ---
 
-> 🌟 **Announcing v2.3.0 Release!** 🌟
+> 🌟 **Announcing v2.3.1 Patch Release!** 🌟
 >
-> We're thrilled to announce the release of Anomalib v2.3.0, featuring new models and many quality-of-life improvements! Some of the highlights are:
-> New models
+> This patch release removes previously deprecated API symbols and fixes bugs in Anomalib Studio.
 >
-> - **AnomalyDINO** : A new anomaly detection model leveraging DINOv2 features.
-> - **SuperSimpleNet** : Updated to the latest version with improved performance.
+> Deprecated API removals
 >
-> New features
->
-> - **PatchCore half-precision** : Support for FP16 training, reducing memory usage.
-> - **Barebones Engine mode** : A simplified engine mode for lightweight workflows.
-> - **Kaput dataset** : A new dataset for anomaly detection benchmarking.
-> - **XPU device support** : Intel XPU support in TorchInferencer for accelerated inference.
+> - **`MVTec`** → Use `MVTecAD` (datamodule) and `MVTecADDataset` (dataset) instead.
+> - **`BaseThreshold`** → Use `Threshold` instead.
+> - **`BaseVisualizer`** → Renamed to `Visualizer`.
+> - **`plot_figure`** → Use `plot_metric_curve` instead.
 >
 > Bug fixes
 >
-> - Fixed PatchCore GPU memory bottleneck (kNN) during inference.
-> - Fixed `F1AdaptiveThreshold` bug when no anomalous images are in the validation set.
-> - Fixed support for non-square input images in Dinomaly model.
-> - Fixed INT8_PTQ and INT8_ACQ export issues.
-> - Improved Windows path compatibility.
-> - Many more code and documentation updates.
+> - Fixed Windows long path issue in Anomalib Studio by switching to ShortUUID.
+> - Fixed source path overflow in Studio UI.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 
