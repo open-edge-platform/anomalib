@@ -45,6 +45,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.mpdd import MPDDDataset
 from anomalib.data.utils import Split, TestSplitMode, ValSplitMode
+from anomalib.utils.path import get_datasets_dir
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,7 @@ class MPDD(AnomalibDataModule):
 
     Args:
         root (Path | str): Path to the root of the dataset.
-            Defaults to ``"./datasets/MPDD"``.
+            Defaults to ``None``.
         category (str): Category of the MPDD dataset (e.g. ``"bracket_black"`` or
             ``"bracket_brown"``). Defaults to ``"bracket_black"``.
         train_batch_size (int, optional): Training batch size.
@@ -115,7 +116,7 @@ class MPDD(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/MPDD",
+        root: Path | str | None = None,
         category: str = "bracket_black",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
@@ -145,6 +146,7 @@ class MPDD(AnomalibDataModule):
             seed=seed,
         )
 
+        root = root if root is not None else get_datasets_dir() / "MPDD"
         self.root = Path(root)
         self.category = category
 

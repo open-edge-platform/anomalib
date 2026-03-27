@@ -56,6 +56,7 @@ from anomalib.data.datasets.base.video import VideoTargetFrame
 from anomalib.data.datasets.video.shanghaitech import ShanghaiTechDataset
 from anomalib.data.utils import DownloadInfo, Split, ValSplitMode, download_and_extract
 from anomalib.data.utils.video import convert_video
+from anomalib.utils.path import get_datasets_dir
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +72,7 @@ class ShanghaiTech(AnomalibVideoDataModule):
 
     Args:
         root (Path | str): Path to the root directory of the dataset.
-            Defaults to ``"./datasets/shanghaitech"``.
+            Defaults to ``None``.
         scene (int): Scene index in range [1, 13].
             Defaults to ``1``.
         clip_length_in_frames (int): Number of frames in each video clip.
@@ -107,7 +108,7 @@ class ShanghaiTech(AnomalibVideoDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/shanghaitech",
+        root: Path | str | None = None,
         scene: int = 1,
         clip_length_in_frames: int = 2,
         frames_between_clips: int = 1,
@@ -136,6 +137,7 @@ class ShanghaiTech(AnomalibVideoDataModule):
             seed=seed,
         )
 
+        root = root if root is not None else get_datasets_dir() / "shanghaitech"
         self.root = Path(root)
         self.scene = scene
 

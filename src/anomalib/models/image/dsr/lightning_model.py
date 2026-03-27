@@ -53,6 +53,7 @@ from anomalib.models.image.dsr.loss import DsrSecondStageLoss, DsrThirdStageLoss
 from anomalib.models.image.dsr.torch_model import DsrModel
 from anomalib.post_processing import PostProcessor
 from anomalib.pre_processing import PreProcessor
+from anomalib.utils.path import get_pretrained_weights_dir
 from anomalib.visualization import Visualizer
 
 __all__ = ["Dsr"]
@@ -139,7 +140,7 @@ class Dsr(AnomalibModule):
             >>> weights_path.name
             'vq_model_pretrained_128_4096.pckl'
         """
-        pretrained_models_dir = Path("./pre_trained/")
+        pretrained_models_dir = get_pretrained_weights_dir() / "dsr"
         if not (pretrained_models_dir / "vq_model_pretrained_128_4096.pckl").is_file():
             download_and_extract(pretrained_models_dir, WEIGHTS_DOWNLOAD_INFO)
         return pretrained_models_dir / "vq_model_pretrained_128_4096.pckl"

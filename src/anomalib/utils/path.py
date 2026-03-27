@@ -6,12 +6,18 @@
 This module provides utilities for managing paths and directories in anomaly
 detection projects. The key components include:
 
+    - Pre-trained weights cache directory management
     - Version directory creation and management
     - Symbolic link handling
     - Path resolution and validation
     - Output filename generation
 
 Examples:
+    Get the platform-appropriate cache directory for pre-trained weights:
+
+    >>> from anomalib.utils.path import get_pretrained_weights_dir
+    >>> weights_dir = get_pretrained_weights_dir()
+
     Test create_versioned_dir:
 
     >>> from anomalib.utils.path import create_versioned_dir
@@ -22,6 +28,7 @@ Examples:
     'v1'
 
 The module ensures consistent path handling by:
+    - Providing a centralized, cross-platform cache path for pre-trained weights
     - Creating incrementing version directories (v1, v2, etc.)
     - Maintaining a ``latest`` symbolic link
     - Handling both string and ``Path`` inputs
@@ -40,7 +47,59 @@ import sys
 from contextlib import suppress
 from pathlib import Path
 
+import platformdirs
+
 logger = logging.getLogger(__name__)
+
+
+def _get_cache_subdir(subdir: str) -> Path:
+    """Return a subdirectory under the platform-appropriate anomalib cache root.
+
+    Uses ``platformdirs`` to resolve the user cache directory, then appends
+    ``anomalib/<subdir>``. Both the root and subdirectory are created if they
+    do not already exist.
+
+    Args:
+        subdir (str): Name of the subdirectory under the anomalib cache root.
+
+    Returns:
+        Path: Absolute path to the requested cache subdirectory.
+    """
+    cache_dir = platformdirs.user_cache_path("anomalib", ensure_exists=True) / subdir
+    cache_dir.mkdir(exist_ok=True)
+    return cache_dir
+
+
+def get_pretrained_weights_dir() -> Path:
+    """Return the platform-appropriate cache directory for pre-trained model weights.
+
+    Returns:
+        Path: Path to the pre-trained weights cache directory.
+
+    Example:
+        >>> from anomalib.utils.path import get_pretrained_weights_dir
+        >>> get_pretrained_weights_dir().name
+        'pre_trained'
+        >>> get_pretrained_weights_dir()  # linux
+        PosixPath('/home/user/.cache/anomalib/pre_trained')
+    """
+    return _get_cache_subdir("pre_trained")
+
+
+def get_datasets_dir() -> Path:
+    """Return the platform-appropriate cache directory for anomalib datasets.
+
+    Returns:
+        Path: Path to the datasets cache directory.
+
+    Example:
+        >>> from anomalib.utils.path import get_datasets_dir
+        >>> get_datasets_dir().name
+        'datasets'
+        >>> get_datasets_dir()  # linux
+        PosixPath('/home/user/.cache/anomalib/datasets')
+    """
+    return _get_cache_subdir("datasets")
 
 
 def _highest_version_dir(parent: Path) -> str | None:

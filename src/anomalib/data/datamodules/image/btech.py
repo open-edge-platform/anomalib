@@ -49,6 +49,7 @@ from tqdm import tqdm
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.btech import BTechDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
+from anomalib.utils.path import get_datasets_dir
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,7 @@ class BTech(AnomalibDataModule):
 
     Args:
         root (Path | str): Path to the root of the dataset.
-            Defaults to ``"./datasets/BTech"``.
+            Defaults to ``None``.
         category (str): Category of the BTech dataset (e.g. ``"01"``, ``"02"``,
             or ``"03"``).
             Defaults to ``"01"``.
@@ -139,7 +140,7 @@ class BTech(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/BTech",
+        root: Path | str | None = None,
         category: str = "01",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
@@ -169,6 +170,7 @@ class BTech(AnomalibDataModule):
             seed=seed,
         )
 
+        root = root if root is not None else get_datasets_dir() / "BTech"
         self.root = Path(root)
         self.category = category
 

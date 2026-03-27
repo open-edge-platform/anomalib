@@ -54,6 +54,7 @@ dependencies = [
     "pandas>=1.1.0,<3.0.0",  # Temporary pin: pandas 3.0 breaks DirType enum comparisons in DataFrame.loc (issue #3303)
     "matplotlib>=3.4.3",
     "scikit-learn",
+    "platformdirs>=4.9.4",
 ]
 
 [project.optional-dependencies]

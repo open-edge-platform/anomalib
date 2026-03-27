@@ -53,6 +53,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datasets.base.video import AnomalibVideoDataset, VideoTargetFrame
 from anomalib.data.utils import Split, read_mask, validate_path
 from anomalib.data.utils.video import ClipsIndexer
+from anomalib.utils.path import get_datasets_dir
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -64,9 +65,9 @@ class AvenueDataset(AnomalibVideoDataset):
     Args:
         split (Split): Dataset split - usually ``Split.TRAIN`` or ``Split.TEST``
         root (Path | str, optional): Path to the root directory containing the
-            dataset. Defaults to ``"./datasets/avenue"``.
+            dataset. Defaults to ``None``.
         gt_dir (Path | str, optional): Path to the ground truth directory.
-            Defaults to ``"./datasets/avenue/ground_truth_demo"``.
+            Defaults to ``None``.
         clip_length_in_frames (int, optional): Number of frames in each video
             clip. Defaults to ``2``.
         frames_between_clips (int, optional): Number of frames between
@@ -94,8 +95,8 @@ class AvenueDataset(AnomalibVideoDataset):
     def __init__(
         self,
         split: Split,
-        root: Path | str = "./datasets/avenue",
-        gt_dir: Path | str = "./datasets/avenue/ground_truth_demo",
+        root: Path | str | None = None,
+        gt_dir: Path | str | None = None,
         clip_length_in_frames: int = 2,
         frames_between_clips: int = 1,
         augmentations: Transform | None = None,
@@ -108,6 +109,8 @@ class AvenueDataset(AnomalibVideoDataset):
             augmentations=augmentations,
         )
 
+        root = root if root is not None else get_datasets_dir() / "avenue"
+        gt_dir = gt_dir if gt_dir is not None else get_datasets_dir() / "avenue" / "ground_truth_demo"
         self.root = root if isinstance(root, Path) else Path(root)
         self.gt_dir = gt_dir if isinstance(gt_dir, Path) else Path(gt_dir)
         self.split = split

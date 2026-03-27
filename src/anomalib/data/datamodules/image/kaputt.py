@@ -63,6 +63,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.kaputt import KaputtDataset
 from anomalib.data.utils import Split, TestSplitMode, ValSplitMode
+from anomalib.utils.path import get_datasets_dir
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,7 @@ class Kaputt(AnomalibDataModule):
 
     Args:
         root (Path | str): Path to the root of the dataset.
-            Defaults to ``"./datasets/kaputt"``.
+            Defaults to ``None``.
         train_batch_size (int, optional): Training batch size.
             Defaults to ``32``.
         eval_batch_size (int, optional): Test batch size.
@@ -138,7 +139,7 @@ class Kaputt(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/kaputt",
+        root: Path | str | None = None,
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
         num_workers: int = 8,
@@ -169,6 +170,7 @@ class Kaputt(AnomalibDataModule):
             seed=seed,
         )
 
+        root = root if root is not None else get_datasets_dir() / "kaputt"
         self.root = Path(root)
         self.image_type = image_type
         self.use_reference = use_reference

@@ -31,14 +31,15 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datasets import AnomalibDataset
 from anomalib.data.errors import MisMatchError
 from anomalib.data.utils import Split, validate_path
+from anomalib.utils.path import get_datasets_dir
 
 
 class KolektorDataset(AnomalibDataset):
     """Kolektor dataset class.
 
     Args:
-        root (Path | str): Path to the root of the dataset.
-            Defaults to ``"./datasets/kolektor"``.
+        root (Path | str | None): Path to the root of the dataset.
+            Defaults to ``None``.
         transform (Transform | None, optional): Transforms that should be applied
             to the input images. Defaults to ``None``.
         split (str | Split | None, optional): Split of the dataset, usually
@@ -55,11 +56,13 @@ class KolektorDataset(AnomalibDataset):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/kolektor",
+        root: Path | str | None = None,
         augmentations: Transform | None = None,
         split: str | Split | None = None,
     ) -> None:
         super().__init__(augmentations=augmentations)
+
+        root = root if root is not None else get_datasets_dir() / "kolektor"
 
         self.root = root
         self.split = split

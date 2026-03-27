@@ -34,6 +34,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.depth.adam_3d import ADAM3DDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
+from anomalib.utils.path import get_datasets_dir
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ class ADAM3D(AnomalibDataModule):
 
     Args:
         root (Path | str): Path to the root of the dataset.
-            Defaults to ``"./datasets/ADAM3D"``.
+            Defaults to ``None``.
         category (str): Category of the 3D-ADAM dataset (e.g. ``"1m1"`` or
             ``"spiral_gear"``). Defaults to ``"1m1"``.
         train_batch_size (int, optional): Training batch size.
@@ -81,7 +82,7 @@ class ADAM3D(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/ADAM3D",
+        root: Path | str | None = None,
         category: str = "1m1",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
@@ -111,6 +112,7 @@ class ADAM3D(AnomalibDataModule):
             seed=seed,
         )
 
+        root = root if root is not None else get_datasets_dir() / "ADAM3D"
         self.root = Path(root)
         self.category = category
 

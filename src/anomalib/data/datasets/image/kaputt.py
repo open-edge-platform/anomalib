@@ -52,6 +52,7 @@ from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datasets.base import AnomalibDataset
 from anomalib.data.utils import LabelName, Split, validate_path
+from anomalib.utils.path import get_datasets_dir
 
 logger = logging.getLogger(__name__)
 
@@ -81,8 +82,8 @@ class KaputtDataset(AnomalibDataset):
     reference (defect-free) sets.
 
     Args:
-        root (Path | str): Path to root directory containing the dataset.
-            Defaults to ``"./datasets/kaputt"``.
+        root (Path | str | None): Path to root directory containing the dataset.
+            Defaults to ``None``.
         augmentations (Transform, optional): Augmentations that should be applied
             to the input images. Defaults to ``None``.
         split (str | Split | None, optional): Dataset split - ``Split.TRAIN``,
@@ -123,13 +124,15 @@ class KaputtDataset(AnomalibDataset):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/kaputt",
+        root: Path | str | None = None,
         augmentations: Transform | None = None,
         split: str | Split | None = None,
         image_type: str = "image",
         use_reference: bool = False,
     ) -> None:
         super().__init__(augmentations=augmentations)
+
+        root = root if root is not None else get_datasets_dir() / "kaputt"
 
         self.root = Path(root)
         self.split = split
