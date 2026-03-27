@@ -51,8 +51,7 @@
         "react-router-dom": "^6.30.3",
         "recharts": "^2.15.3",
         "spin-delay": "^2.0.1",
-        "static-path": "^0.0.4",
-        "uuid": "^11.1.0"
+        "static-path": "^0.0.4"
     },
     "devDependencies": {
         "@eslint/compat": "^1.2.8",
@@ -74,7 +73,6 @@
         "@types/node": "^24.0.15",
         "@types/react": "^19.1.10",
         "@types/react-dom": "^19.1.7",
-        "@types/uuid": "^10.0.0",
         "@typescript-eslint/eslint-plugin": "^8.31.1",
         "@vitejs/plugin-react": "^4.7.0",
         "babel-plugin-react-compiler": "^19.1.0-rc.3",

@@ -3,9 +3,7 @@
 import asyncio
 import os
 import pathlib
-from contextlib import redirect_stdout
 from typing import Any
-from uuid import UUID
 
 from anomalib.data import Folder
 from anomalib.data.utils import ValSplitMode
@@ -20,6 +18,7 @@ from lightning.pytorch.callbacks import EarlyStopping
 from loguru import logger
 from pydantic import ValidationError
 
+from core.logging.utils import CaptureOutput
 from pydantic_models import Job, JobStatus, JobType, Model
 from pydantic_models.job import TrainJobPayload
 from repositories.binary_repo import ModelBinaryRepository
@@ -28,6 +27,7 @@ from services.dataset_snapshot_service import DatasetSnapshotService
 from services.job_service import JobService
 from services.system_service import SystemService
 from utils.callbacks import AnomalibStudioProgressCallback, ProgressSyncParams
+from utils.short_uuid import ShortUUID
 
 
 class TrainingService:
@@ -79,7 +79,7 @@ class TrainingService:
         model_name = payload.model_name
         device_type = payload.device.type if payload.device else None
         device_index = payload.device.index if payload.device else None
-        snapshot_id = UUID(payload.dataset_snapshot_id) if payload.dataset_snapshot_id else None
+        snapshot_id = ShortUUID(payload.dataset_snapshot_id) if payload.dataset_snapshot_id else None
         max_epochs: int = payload.max_epochs if payload.max_epochs is not None else 200
 
         synchronization_task: asyncio.Task[None] | None = None
@@ -171,6 +171,7 @@ class TrainingService:
                 await DatasetSnapshotService.delete_snapshot_if_unused(snapshot_id=snapshot_id, project_id=project_id)
 
     @staticmethod
+    @CaptureOutput()
     def _train_model(
         model: Model,
         synchronization_parameters: ProgressSyncParams,
@@ -196,7 +197,6 @@ class TrainingService:
             Model: Trained model with updated export_path and is_ready=True
         """
         from core.logging import global_log_config  # noqa: PLC0415
-        from core.logging.handlers import LoggerStdoutWriter  # noqa: PLC0415
 
         device_type = device_type.lower() if device_type else None  # anomalib expects lowercase device strings
         if device_type and not SystemService.is_device_supported_for_training(device_type):
@@ -220,6 +220,8 @@ class TrainingService:
             name=name,
             normal_dir=normal_dir,
             val_split_mode=ValSplitMode.SYNTHETIC,
+            train_batch_size=4,
+            eval_batch_size=4,
         )
 
         # Initialize anomalib model and engine
@@ -258,10 +260,7 @@ class TrainingService:
 
         # Execute training and export
         export_format = ExportType.OPENVINO
-
-        # Capture pytorch stdout logs into logger
-        with redirect_stdout(LoggerStdoutWriter()):  # type: ignore[type-var]
-            engine.fit(model=anomalib_model, datamodule=datamodule)
+        engine.fit(model=anomalib_model, datamodule=datamodule)
 
         # Find and set threshold metric
         for callback in engine.trainer.callbacks:  # type: ignore[attr-defined]
@@ -335,7 +334,7 @@ class TrainingService:
     async def _sync_progress_with_db(
         cls,
         job_service: JobService,
-        job_id: UUID,
+        job_id: ShortUUID,
         synchronization_parameters: ProgressSyncParams,
     ) -> None:
         try:

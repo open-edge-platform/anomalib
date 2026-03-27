@@ -1,0 +1,81 @@
+name: Docker Build
+description: >
+  Build an Anomalib Studio Docker image for a given device target.
+  Handles runner cleanup, Buildx setup, and the build itself.
+  The caller is responsible for checkout, registry login, metadata/tagging,
+  and any post-build steps (image signing).
+
+inputs:
+  device:
+    description: "Build target device (cpu, xpu, or cuda)"
+    required: true
+  push:
+    description: "Push the image to the registry (true/false)"
+    required: false
+    default: "false"
+  tags:
+    description: "Newline-separated image tags (from docker/metadata-action)"
+    required: false
+    default: ""
+  labels:
+    description: "Newline-separated image labels (from docker/metadata-action)"
+    required: false
+    default: ""
+  cache-write:
+    description: >
+      Write build cache to the registry (true/false). Set to false for
+      fork PRs where GITHUB_TOKEN cannot write to the org's packages.
+    required: false
+    default: "true"
+  use-cache:
+    description: >
+      Enable build cache (true/false). Should be disabled for RC and release
+      builds to ensure reproducibility and prevent cache poisoning attacks.
+    required: false
+    default: "true"
+
+outputs:
+  digest:
+    description: "Image digest from docker/build-push-action"
+    value: ${{ steps.build.outputs.digest }}
+
+runs:
+  using: composite
+  steps:
+    - name: Cleanup runner
+      uses: open-edge-platform/geti-ci/actions/cleanup-runner@9b1ef60a8b2b802da428621e192c322960f4b3d5
+      with:
+        type: all
+
+    - name: Set up Docker engine
+      uses: docker/setup-docker-action@1a6edb0ba9ac496f6850236981f15d8f9a82254d # v5.0.0
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+    - name: Build Docker image
+      id: build
+      uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+      with:
+        context: .
+        file: application/docker/Dockerfile
+        target: anomalib-studio-${{ inputs.device }}
+        platforms: linux/amd64
+        push: ${{ inputs.push }}
+        tags: ${{ inputs.tags }}
+        labels: ${{ inputs.labels }}
+        # When not pushing, validate the build and populate the cache only.
+        outputs: ${{ inputs.push != 'true' && 'type=cacheonly' || '' }}
+        # Disable all caching (local and remote) when use-cache=false to
+        # ensure reproducible builds for RC/release without any cached layers.
+        no-cache: ${{ inputs.use-cache != 'true' }}
+        # Registry-based cache: each device variant gets its own cache
+        # image in GHCR, avoiding the 10 GB GHA cache limit that caused
+        # cache thrashing across cpu/xpu/cuda scopes (~18-20 GB total).
+        # The caller must log in to ghcr.io before invoking this action.
+        # Cache reads always work (public packages); writes require
+        # packages:write which fork PRs do not have.
+        # Cache is disabled for RC/release builds (use-cache=false)
+        # to prevent cache poisoning and ensure reproducible builds.
+        cache-from: ${{ inputs.use-cache == 'true' && format('type=registry,ref=ghcr.io/open-edge-platform/anomalib-studio-{0}:buildcache', inputs.device) || '' }}
+        cache-to: ${{ inputs.cache-write == 'true' && inputs.use-cache == 'true' && format('type=registry,ref=ghcr.io/open-edge-platform/anomalib-studio-{0}:buildcache,mode=max', inputs.device) || '' }}

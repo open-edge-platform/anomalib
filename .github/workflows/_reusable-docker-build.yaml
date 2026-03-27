@@ -53,25 +53,25 @@ jobs:
           persist-credentials: false
 
       - name: Initial cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@d30e32248aa6bd06adeda7129b50a38bdbceca12
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@cc6fbe840db6ebd16ebd18d409f475bff5a8c182
         with:
           type: "initial"
 
       - name: Pre-build cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@d30e32248aa6bd06adeda7129b50a38bdbceca12
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@cc6fbe840db6ebd16ebd18d409f475bff5a8c182
         with:
           type: "pre-build"
 
       # Install the latest Docker, since the version available by default on the runners may be outdated
       - name: Set up Docker
-        uses: docker/setup-docker-action@e43656e248c0bd0647d3f5c195d116aacf6fcaf4 #v4.7.0
+        uses: docker/setup-docker-action@1a6edb0ba9ac496f6850236981f15d8f9a82254d # v5.0.0
 
       - name: Set up Docker Compose
-        uses: docker/setup-compose-action@364cc21a5de5b1ee4a7f5f9d3fa374ce0ccde746 #v1.2.0
+        uses: docker/setup-compose-action@8cccb8c14b6500aaffebff1aa49c502c34d2e5e6 # v2.1.0
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
         with:
           tags: |
             type=sha
@@ -100,7 +100,7 @@ jobs:
           echo "Testing container with tag: $FIRST_TAG for device: $DEVICE"
 
           # Start the container in detached mode
-          CONTAINER_ID=$(docker run -d --rm -v ./data:/app/data -v ./logs:/app/logs -p 8000:8000 anomalib-studio-${DEVICE}:${FIRST_TAG})
+          CONTAINER_ID=$(docker run -d --rm -e HOST=0.0.0.0 -v ./data:/app/data -v ./logs:/app/logs -p 8000:8000 anomalib-studio-${DEVICE}:${FIRST_TAG})
           echo "Started container: $CONTAINER_ID"
 
           # Function to cleanup container on exit
@@ -169,7 +169,7 @@ jobs:
 
       - name: Upload image sizes
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: image-sizes-${{ matrix.device }}
           path: application/docker/image-sizes/${{ matrix.device }}.md
@@ -186,7 +186,7 @@ jobs:
     continue-on-error: true
     steps:
       - name: Download all image size artifacts
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           pattern: image-sizes-*
           merge-multiple: true

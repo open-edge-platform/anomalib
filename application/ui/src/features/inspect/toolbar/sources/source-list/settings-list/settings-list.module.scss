@@ -1,4 +1,9 @@
 .list {
     margin-left: var(--spectrum-global-dimension-font-size-200);
     list-style-type: disc;
+    min-width: 0;
+
+    li {
+        overflow-wrap: break-word;
+    }
 }
