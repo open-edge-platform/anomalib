@@ -222,3 +222,19 @@ jobs:
             --certificate-oidc-issuer='https://token.actions.githubusercontent.com'
           \`\`\`
           EOF
+
+  trigger-tauri-build:
+    needs: [validate, publish-rc]
+    permissions:
+      contents: read # Checkout code
+    strategy:
+      fail-fast: false
+      matrix:
+        accelerator: [cpu, xpu, cu124]
+    uses: ./.github/workflows/tauri-build.yaml
+    with:
+      rc_version: ${{ needs.validate.outputs.rc_version }}
+      accelerator: ${{ matrix.accelerator }}
+    secrets:
+      MSIX_SIGN_CERTIFICATE: ${{ secrets.MSIX_SIGN_CERTIFICATE }}
+      MSIX_SIGN_CERTIFICATE_PASSWORD: ${{ secrets.MSIX_SIGN_CERTIFICATE_PASSWORD }}
