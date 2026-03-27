@@ -191,6 +191,11 @@ jobs:
         with:
           image-uri: ${{ steps.meta.outputs.tags }}
 
+      - name: Trigger Tauri build
+        uses: ./.github/workflows/tauri-build.yaml
+        with:
+          rc_version: ${{ needs.validate.outputs.rc_version }}
+
       - name: Output summary
         env:
           RC_VERSION: ${{ needs.validate.outputs.rc_version }}
