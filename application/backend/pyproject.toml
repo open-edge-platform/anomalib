@@ -53,21 +53,21 @@ mqtt = [
 
 # Explicit versions are needed as we can't propagate extra dependencies to anomalib
 cpu = ["anomalib[cpu,openvino]"]
-cu124 = ["anomalib[cu124,openvino]"]
+cu130 = ["anomalib[cu130,openvino]"]
 xpu = ["anomalib[xpu,openvino] ; sys_platform == 'linux' or sys_platform == 'win32'"]
 
 [tool.uv]
 conflicts = [
     [
         { extra = "cpu" },
-        { extra = "cu124" },
+        { extra = "cu130" },
         { extra = "xpu" },
     ],
     # redeclare library conflicts to workaround bug with uv dependency resolution
     # For details, see: https://github.com/astral-sh/uv/issues/9942
     [
         { package = "anomalib", extra = "cpu" },
-        { package = "anomalib", extra = "cu124" },
+        { package = "anomalib", extra = "cu130" },
         { package = "anomalib", extra = "xpu" },
     ],
 ]
