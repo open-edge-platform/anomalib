@@ -18,7 +18,7 @@ import torch
 from torch import Tensor, nn
 from torchvision.transforms import v2
 
-from anomalib.data.utils.generators.perlin import generate_perlin_noise
+from anomalib.data.utils.generators.perlin import apply_perlin_threshold_rescale, generate_perlin_noise
 
 
 class DsrAnomalyGenerator(nn.Module):
@@ -76,10 +76,7 @@ class DsrAnomalyGenerator(nn.Module):
         # Generate perlin noise using the new function
         perlin_noise = generate_perlin_noise(height, width, scale=(perlin_scalex, perlin_scaley), device=device)
 
-        # Rescale with threshold at center if all values are below the threshold
-        if not (perlin_noise > threshold).any():
-            perlin_noise = (perlin_noise - perlin_noise.min()) / (perlin_noise.max() - perlin_noise.min())
-            perlin_noise = (perlin_noise * 2) - 1
+        perlin_noise = apply_perlin_threshold_rescale(perlin_noise, threshold=threshold, enabled=True)
 
         # Apply random rotation
         perlin_noise = perlin_noise.unsqueeze(0)  # Add channel dimension for transform
