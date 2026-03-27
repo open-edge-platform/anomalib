@@ -23,10 +23,11 @@ from packaging.version import Version
 AVAILABLE_TORCH_VERSIONS = {
     # NOTE: Minimum torch>=2.6.0 required due to Critical CVE-2025-32434
     #   (torch.load weights_only=True RCE, patched in 2.6.0)
-    "2.6.0": {"torchvision": "0.21.0", "cuda": ("11.8", "12.6", "13.0")},
+    "2.6.0": {"torchvision": "0.21.0", "cuda": ("11.8", "12.6")},
     "2.7.0": {"torchvision": "0.22.0", "cuda": ("11.8", "12.6")},
     "2.7.1": {"torchvision": "0.22.1", "cuda": ("11.8", "12.6")},
     "2.8.0": {"torchvision": "0.23.0", "cuda": ("12.6", "12.8")},
+    "2.9.0": {"torchvision": "0.24.0", "cuda": ("12.6", "12.8", "13.0")},
 }
 
 
