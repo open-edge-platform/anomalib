@@ -12,7 +12,7 @@ from pydantic_models.base import BaseIDNameModel, NoRequiredIDs, Pagination
 from utils.short_uuid import ShortUUID
 
 IP_CAMERA_USERNAME = "IP_CAMERA_USERNAME"
-IP_CAMERA_PASSWORD = "IP_CAMERA_PASSWORD"  # noqa: S105
+IP_CAMERA_PASSWORD = "IP_CAMERA_PASSWORD"  # noqa: S105  # nosec B105
 
 
 class SourceType(StrEnum):
