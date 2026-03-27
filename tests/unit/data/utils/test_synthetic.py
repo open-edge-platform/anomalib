@@ -41,6 +41,7 @@ def synthetic_dataset_from_samples(folder_dataset: FolderDataset) -> SyntheticAn
         augmentations=folder_dataset.augmentations,
         source_samples=folder_dataset.samples,
         dataset_name=folder_dataset.name,
+        blend_factor=(0.05, 0.15),
     )
 
 
@@ -66,6 +67,12 @@ class TestSyntheticAnomalyDataset:
         assert all(synthetic_dataset.samples == synthetic_dataset_cp.samples)
         del synthetic_dataset
         assert synthetic_dataset_cp.root.exists()
+
+    @staticmethod
+    def test_blend_factor_is_exposed(folder_dataset: FolderDataset) -> None:
+        """Test that blend factor can be configured and propagates from factory."""
+        synthetic_dataset = SyntheticAnomalyDataset.from_dataset(folder_dataset, blend_factor=0.2)
+        assert synthetic_dataset.blend_factor == 0.2
 
     @staticmethod
     def test_cleanup(folder_dataset: FolderDataset) -> None:

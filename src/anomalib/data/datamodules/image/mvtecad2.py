@@ -122,6 +122,7 @@ class MVTecAD2(AnomalibDataModule):
         augmentations: Transform | None = None,
         test_type: TestType | str = TestType.PUBLIC,
         seed: int | None = None,
+        synthetic_blend_factor: float | tuple[float, float] = (0.01, 0.2),
     ) -> None:
         """Initialize MVTec AD 2 datamodule."""
         super().__init__(
@@ -133,6 +134,7 @@ class MVTecAD2(AnomalibDataModule):
             test_augmentations=test_augmentations,
             augmentations=augmentations,
             seed=seed,
+            synthetic_blend_factor=synthetic_blend_factor,
         )
 
         self.root = Path(root)

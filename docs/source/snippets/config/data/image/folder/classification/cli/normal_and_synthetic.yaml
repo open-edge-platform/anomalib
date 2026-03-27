@@ -4,4 +4,5 @@ init_args:
   normal_dir: "good"
   normalization: imagenet
   test_split_mode: synthetic
+  synthetic_blend_factor: [0.01, 0.2]
   task: classification

@@ -50,6 +50,7 @@ def make_synthetic_dataset(
     image_dir: Path,
     mask_dir: Path,
     anomalous_ratio: float = 0.5,
+    blend_factor: float | tuple[float, float] = (0.01, 0.2),
 ) -> DataFrame:
     """Convert normal samples into a mixed set with synthetic anomalies.
 
@@ -64,6 +65,9 @@ def make_synthetic_dataset(
         mask_dir: Directory where ground truth anomaly masks will be saved.
         anomalous_ratio: Fraction of source samples to convert to anomalous
             samples. Defaults to ``0.5``.
+        blend_factor: Blend strength used by ``PerlinAnomalyGenerator`` to control
+            synthetic anomaly intensity. Can be fixed ``float`` or sampled range
+            ``(min, max)``. Defaults to ``(0.01, 0.2)``.
 
     Returns:
         DataFrame containing both normal and synthetic anomalous samples.
@@ -106,7 +110,7 @@ def make_synthetic_dataset(
     augmenter = PerlinAnomalyGenerator(
         anomaly_source_path="./datasets/dtd",
         probability=1.0,
-        blend_factor=(0.01, 0.2),
+        blend_factor=blend_factor,
     )
 
     def augment(sample: Series) -> Series:
@@ -172,10 +176,17 @@ class SyntheticAnomalyDataset(AnomalibDataset):
         100
     """
 
-    def __init__(self, augmentations: Transform | None, source_samples: DataFrame, dataset_name: str) -> None:
+    def __init__(
+        self,
+        augmentations: Transform | None,
+        source_samples: DataFrame,
+        dataset_name: str,
+        blend_factor: float | tuple[float, float] = (0.01, 0.2),
+    ) -> None:
         super().__init__(augmentations=augmentations)
 
         self.source_samples = source_samples
+        self.blend_factor = blend_factor
 
         # Files will be written to a temporary directory under the system temp dir
         root = ROOT / dataset_name
@@ -195,6 +206,7 @@ class SyntheticAnomalyDataset(AnomalibDataset):
             self.im_dir,
             self.mask_dir,
             0.5,
+            blend_factor=self.blend_factor,
         )
 
         self.samples.attrs["task"] = "segmentation"
@@ -203,12 +215,15 @@ class SyntheticAnomalyDataset(AnomalibDataset):
     def from_dataset(
         cls: type["SyntheticAnomalyDataset"],
         dataset: AnomalibDataset,
+        blend_factor: float | tuple[float, float] = (0.01, 0.2),
     ) -> "SyntheticAnomalyDataset":
         """Create synthetic dataset from existing dataset of normal images.
 
         Args:
             dataset: Dataset containing only normal images to convert into a
                 synthetic dataset with 50/50 normal/anomalous split.
+            blend_factor: Blend strength used by ``PerlinAnomalyGenerator`` to control
+                synthetic anomaly intensity.
 
         Returns:
             New synthetic anomaly dataset.
@@ -217,7 +232,12 @@ class SyntheticAnomalyDataset(AnomalibDataset):
             >>> normal_dataset = Dataset(...)
             >>> synthetic = SyntheticAnomalyDataset.from_dataset(normal_dataset)
         """
-        return cls(augmentations=dataset.augmentations, source_samples=dataset.samples, dataset_name=dataset.name)
+        return cls(
+            augmentations=dataset.augmentations,
+            source_samples=dataset.samples,
+            dataset_name=dataset.name,
+            blend_factor=blend_factor,
+        )
 
     def __copy__(self) -> "SyntheticAnomalyDataset":
         """Return shallow copy and prevent cleanup of original.
