@@ -33,7 +33,7 @@
 #   - Workflow name: release-lib.yaml
 #   - Environment name: production
 
-name: Release
+name: Release Library
 
 on:
   push:
@@ -42,7 +42,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release (e.g., v1.2.3)"
+        description: "Version to release (e.g., lib/v1.2.3)"
         required: true
         type: string
       dry_run:
@@ -69,19 +69,21 @@ jobs:
         env:
           INPUTS_VERSION: ${{ github.event_name == 'push' && github.ref_name || inputs.version }}
         run: |
-          if [[ ! "$INPUTS_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          VERSION="${INPUTS_VERSION#lib/}"
+
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "::error::Invalid version format: $INPUTS_VERSION"
             exit 1
           fi
 
-          TAG_VERSION="${INPUTS_VERSION#v}"
+          TAG_VERSION="${VERSION#v}"
           PKG_VERSION=$(python3 -c "import re, pathlib; m = re.search(r'__version__\s*=\s*[\"'"'"']([^\"'"'"']+)[\"'"'"']', pathlib.Path('src/anomalib/__init__.py').read_text()); print(m.group(1))")
           if [[ "$PKG_VERSION" != "$TAG_VERSION" ]]; then
             echo "::error::Tag version ($TAG_VERSION) does not match __version__ in src/anomalib/__init__.py ($PKG_VERSION)"
             exit 1
           fi
 
-          echo "version=$INPUTS_VERSION" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
   quality:
     needs: [version-check]
@@ -151,7 +153,7 @@ jobs:
       - uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
         with:
           tag_name: lib/${{ needs.version-check.outputs.version }}
-          name: Release Anomalib ${{ needs.version-check.outputs.version }}
+          name: Release Anomalib Library ${{ needs.version-check.outputs.version }}
           draft: false
           prerelease: false
           files: dist/*
@@ -164,7 +166,7 @@ jobs:
     steps:
       - name: Verify workflow status
         env:
-          RELEASE_VERSION: ${{ needs.version-check.outputs.version }}
+          RELEASE_VERSION: lib/${{ needs.version-check.outputs.version }}
           PUBLISH_STATUS: ${{ needs.publish.result }}
         run: |
           if [[ "$PUBLISH_STATUS" != "success" ]]; then

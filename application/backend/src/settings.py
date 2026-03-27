@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     static_files_dir: str | None = Field(default=None, alias="STATIC_FILES_DIR")
 
     # Server
-    host: str = Field(default="localhost", alias="HOST")  # nosec B104
+    host: str = Field(default="localhost", alias="HOST")
     port: int = Field(default=8000, alias="PORT")
 
     # CORS
