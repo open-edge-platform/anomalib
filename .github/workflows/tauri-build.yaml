@@ -46,6 +46,13 @@ on:
         description: "Backend accelerator to build (matrix: cpu, cu124, xpu)"
         required: true
         type: string
+    secrets:
+      MSIX_SIGN_CERTIFICATE:
+        description: "Base64-encoded Windows signing certificate used for MSIX signing"
+        required: false
+      MSIX_SIGN_CERTIFICATE_PASSWORD:
+        description: "Password for the Windows signing certificate"
+        required: false
   workflow_dispatch:
     inputs:
       accelerator:
