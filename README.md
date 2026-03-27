@@ -12,7 +12,7 @@
 [License](LICENSE)
 
 [![python](https://img.shields.io/badge/python-3.10%2B-green)]()
-[![pytorch](https://img.shields.io/badge/pytorch-2.0%2B-orange)]()
+[![pytorch](https://img.shields.io/badge/pytorch-2.6%2B-orange)]()
 [![lightning](https://img.shields.io/badge/lightning-2.2%2B-blue)]()
 [![openvino](https://img.shields.io/badge/openvino-2024.0%2B-purple)]()
 
@@ -31,24 +31,21 @@
 
 ---
 
-> 🌟 **Announcing v2.2.0 Release!** 🌟
+> 🌟 **Announcing v2.3.1 Patch Release!** 🌟
 >
-> We’re thrilled to announce the release of Anomalib v2.2.0, packed with new datasets, metrics, and performance improvements! Some of the highlights are:
-> New datasets
+> This patch release removes previously deprecated API symbols and fixes bugs in Anomalib Studio.
 >
-> - **3D-ADAM** : A comprehensive dataset for 3D anomaly detection in additive manufacturing.
-> - **BMAD** : Benchmarks for Medical Anomaly Detection, featuring six datasets across five medical domains
+> Deprecated API removals
 >
-> New metrics
+> - **`MVTec`** → Use `MVTecAD` (datamodule) and `MVTecADDataset` (dataset) instead.
+> - **`BaseThreshold`** → Use `Threshold` instead.
+> - **`BaseVisualizer`** → Renamed to `Visualizer`.
+> - **`plot_figure`** → Use `plot_metric_curve` instead.
 >
-> - **PGn and PBn (CVPR2025)** : Presorted good/bad metrics for more insightful performance evaluation.
-> - **Histogram visualization** of anomaly scores for better interpretability.
+> Bug fixes
 >
-> Other Improvements
->
-> - Faster coreset selection for PatchCore model, resulting in ~30% quicker training.
-> - Reduced memory usage for memory bank–based models like PatchCore, PaDiM, and DfKDE.
-> - Many more code and documentation updates.
+> - Fixed Windows long path issue in Anomalib Studio by switching to ShortUUID.
+> - Fixed source path overflow in Studio UI.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 
