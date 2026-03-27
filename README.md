@@ -97,8 +97,8 @@ uv pip install "anomalib[cpu]"
 # CUDA 12.6 support (Linux/Windows with NVIDIA GPU)
 uv pip install "anomalib[cu126]"
 
-# CUDA 12.4 support (Linux/Windows with NVIDIA GPU)
-uv pip install "anomalib[cu124]"
+# CUDA 13.0 support (Linux/Windows with NVIDIA GPU)
+uv pip install "anomalib[cu130]"
 
 # CUDA 11.8 support (Linux/Windows with NVIDIA GPU)
 uv pip install "anomalib[cu118]"
@@ -114,7 +114,7 @@ uv pip install "anomalib[xpu]"
 The same extras can be used with `pip`:
 
 ```bash
-pip install "anomalib[cu124]"
+pip install "anomalib[cu130]"
 ```
 
 </details>
@@ -125,8 +125,8 @@ pip install "anomalib[cu124]"
 Anomalib includes most dependencies by default. For specialized features, you may need additional optional dependencies. Remember to include your hardware-specific extra.
 
 ```bash
-# Example: Install with OpenVINO support and CUDA 12.4
-uv pip install "anomalib[openvino,cu124]"
+# Example: Install with OpenVINO support and CUDA 13.0
+uv pip install "anomalib[openvino,cu130]"
 
 # Example: Install all optional dependencies for a CPU-only setup
 uv pip install "anomalib[full,cpu]"
@@ -163,8 +163,8 @@ uv venv
 # Sync with the lockfile for a specific backend (e.g., CPU)
 uv sync --extra cpu
 
-# Or for a different backend like CUDA 12.4
-uv sync --extra cu124
+# Or for a different backend like CUDA 13.0
+uv sync --extra cu130
 
 # To set up a full development environment
 uv sync --extra dev --extra cpu
@@ -346,7 +346,7 @@ For more information on each, refer to the respective README files.
 
 ```bash
 cd application/backend
-uv sync --extra xpu # or uv sync --extra cu124 for CUDA 12.4, uv sync --extra cpu for CPU
+uv sync --extra xpu # or uv sync --extra cu130 for CUDA 13.0, uv sync --extra cpu for CPU
 ```
 
 ### Setup Frontend Dependencies

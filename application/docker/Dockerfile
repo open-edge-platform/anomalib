@@ -116,7 +116,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app/application/backend
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --extra cu124
+    uv sync --frozen --extra cu130
 
 #------------------------------------------
 # Anomalib Studio CUDA intermediate stage to cleanup CUDA non-distributable dependencies
