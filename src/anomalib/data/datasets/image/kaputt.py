@@ -83,6 +83,9 @@ class KaputtDataset(AnomalibDataset):
     Args:
         root (Path | str): Path to root directory containing the dataset.
             Defaults to ``"./datasets/kaputt"``.
+        category (str): Category of the dataset. Defaults to ``"book_other"``.
+            Kaputt uses `item_material` which is exposed as category to make the
+            API consistent with other datasets.
         augmentations (Transform, optional): Augmentations that should be applied
             to the input images. Defaults to ``None``.
         split (str | Split | None, optional): Dataset split - ``Split.TRAIN``,
@@ -124,6 +127,7 @@ class KaputtDataset(AnomalibDataset):
     def __init__(
         self,
         root: Path | str = "./datasets/kaputt",
+        category: str = "book_other",
         augmentations: Transform | None = None,
         split: str | Split | None = None,
         image_type: str = "image",
@@ -137,6 +141,7 @@ class KaputtDataset(AnomalibDataset):
         self.use_reference = use_reference
         self.samples = make_kaputt_dataset(
             self.root,
+            category=category,
             split=self.split,
             image_type=self.image_type,
             use_reference=self.use_reference,
@@ -145,6 +150,7 @@ class KaputtDataset(AnomalibDataset):
 
 def make_kaputt_dataset(
     root: str | Path,
+    category: str | None = None,
     split: str | Split | None = None,
     image_type: str = "image",
     use_reference: bool = False,
@@ -160,6 +166,7 @@ def make_kaputt_dataset(
 
     Args:
         root (Path | str): Path to dataset root directory.
+        category (str | None, optional): Category of the dataset. Defaults to ``None``.
         split (str | Split | None, optional): Dataset split (train, val, or test).
             Defaults to ``None`` which loads all splits.
         image_type (str): Type of images - "image" for full images or "crop"
@@ -223,6 +230,10 @@ def make_kaputt_dataset(
         samples["item_material"] = query_df["item_material"].fillna("")
         samples["defect_types"] = query_df["defect_types"].fillna("")
         samples["split"] = anomalib_name
+
+        # Filter samples by item material if category is provided
+        if category:
+            samples = samples[samples["item_material"] == category]
 
         # Label assignment
         samples.loc[query_df["defect"] == False, "label_index"] = LabelName.NORMAL  # noqa: E712
