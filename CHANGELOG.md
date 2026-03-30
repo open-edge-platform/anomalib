@@ -16,6 +16,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+## [v2.3.1] - 2026-03-27
+
+### Removed
+
+- ⚠️ **core**: Remove deprecated `MVTec` datamodule, `MVTecDataset`, `BaseThreshold`, `plot_figure`, and `BaseVisualizer` (see migration guide in release notes) by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3469
+
+### Changed
+
+- 🔧 **deps**: Update python:3.13-slim docker digest to 739e721 in https://github.com/open-edge-platform/anomalib/pull/3448
+- 🔧 **ci**: Do not use cache for daily builds by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/3467
+- 🔧 **docker**: Remove pip from the base image by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/3446
+- 🔧 **deps**: Lock file maintenance in https://github.com/open-edge-platform/anomalib/pull/3449
+- 📝 **docs**: Update docker README with setup, access, and troubleshooting steps by @arunimakanavu in https://github.com/open-edge-platform/anomalib/pull/3464
+
+### Fixed
+
+- 🐞 **application**: Fix Windows long path issue by switching to ShortUUID by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3470
+- 🐞 **application**: Fix source path overflow in UI by @ActiveChooN in https://github.com/open-edge-platform/anomalib/pull/3436
+
 ## [v2.3.0] - 2026-03-20
 
 ### Added

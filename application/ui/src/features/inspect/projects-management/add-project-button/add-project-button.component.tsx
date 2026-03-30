@@ -1,12 +1,13 @@
 /**
- * Copyright (C) 2025 Intel Corporation
+ * Copyright (C) 2025-2026 Intel Corporation
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { $api } from '@anomalib-studio/api';
 import { ActionButton, Text } from '@geti/ui';
 import { AddCircle } from '@geti/ui/icons';
-import { v4 as uuid } from 'uuid';
+
+import { generateShortUUID } from '../../../../utils/short-uuid';
 
 import styles from './add-project-button.module.scss';
 
@@ -23,7 +24,7 @@ export const AddProjectButton = ({ onSetProjectInEdition, projectsCount }: AddPr
     });
 
     const addProject = () => {
-        const newProjectId = uuid();
+        const newProjectId = generateShortUUID();
         const newProjectName = `Project #${projectsCount + 1}`;
 
         addProjectMutation.mutate({
