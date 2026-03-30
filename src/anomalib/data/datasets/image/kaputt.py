@@ -127,7 +127,7 @@ def _resolve_image_mode(
             DeprecationWarning,
             stacklevel=3,
         )
-        return ImageMode.REFERENCE_ONLY if reference_only else image_mode
+        return ImageMode.REFERENCE_ONLY if reference_only else ImageMode(image_mode)
     if use_reference is not None:
         warnings.warn(
             "use_reference is deprecated and will be removed in v2.6.0. "
@@ -226,8 +226,7 @@ class KaputtDataset(AnomalibDataset):
         super().__init__(augmentations=augmentations)
 
         self.root = Path(root)
-        if category is not None:
-            self.category = category
+        self.category: str | None = category
         self.split = split
         self.image_type = _resolve_image_type(image_type)
         self.image_mode = _resolve_image_mode(image_mode, use_reference, reference_only)
@@ -244,8 +243,11 @@ def make_kaputt_dataset(
     root: str | Path,
     category: str | None = None,
     split: str | Split | None = None,
-    image_type: ImageType = ImageType.IMAGE,
+    image_type: ImageType | str = ImageType.IMAGE,
     image_mode: ImageMode = ImageMode.QUERY_ONLY,
+    # Deprecated — will be removed in v2.6.0
+    use_reference: bool | None = None,
+    reference_only: bool | None = None,
 ) -> DataFrame:
     """Create Kaputt samples by parsing the Parquet metadata files.
 
@@ -262,10 +264,14 @@ def make_kaputt_dataset(
             ``item_material``). Defaults to ``None`` which loads all categories.
         split (str | Split | None, optional): Dataset split (train, val, or test).
             Defaults to ``None`` which loads all splits.
-        image_type (ImageType): Type of images to use.
+        image_type (ImageType | str): Type of images to use.
             Defaults to ``ImageType.IMAGE``.
         image_mode (ImageMode): Controls which image sources are used.
             Defaults to ``ImageMode.QUERY_ONLY``.
+        use_reference (bool | None): Deprecated. Use ``image_mode`` instead.
+            Will be removed in v2.6.0.
+        reference_only (bool | None): Deprecated. Use ``image_mode`` instead.
+            Will be removed in v2.6.0.
 
     Returns:
         DataFrame: Dataset samples with columns:
@@ -291,6 +297,8 @@ def make_kaputt_dataset(
         RuntimeError: If no valid images are found.
     """
     root = validate_path(root)
+    image_type = _resolve_image_type(image_type)
+    image_mode = _resolve_image_mode(image_mode, use_reference, reference_only)
 
     # Parquet files use "validation" while anomalib uses "val"
     parquet_splits = {"train": "train", "validation": "val", "test": "test"}
@@ -326,13 +334,20 @@ def make_kaputt_dataset(
             samples["item_identifier"] = query_df["item_identifier"] if "item_identifier" in query_df.columns else ""
             samples["item_material"] = query_df["item_material"].fillna("")
             samples["defect_types"] = query_df["defect_types"].fillna("")
+            samples["defect"] = query_df["defect"]
+            samples["query_mask"] = query_df["query_mask"]
             samples["split"] = anomalib_name
 
             if category:
                 samples = samples[samples["item_material"] == category]
 
-            samples.loc[query_df["defect"] == False, "label_index"] = LabelName.NORMAL  # noqa: E712
-            samples.loc[query_df["defect"] != False, "label_index"] = LabelName.ABNORMAL  # noqa: E712
+            if samples.empty:
+                msg = f"No samples found for category {category} in {query_parquet}"
+                logger.warning(msg)
+                continue
+
+            samples.loc[samples["defect"] == False, "label_index"] = LabelName.NORMAL  # noqa: E712
+            samples.loc[samples["defect"] != False, "label_index"] = LabelName.ABNORMAL  # noqa: E712
             samples["label_index"] = samples["label_index"].astype(int)
             samples.loc[samples["label_index"] == LabelName.NORMAL, "label"] = "normal"
             samples.loc[samples["label_index"] == LabelName.ABNORMAL, "label"] = "abnormal"
@@ -341,7 +356,9 @@ def make_kaputt_dataset(
             samples.loc[
                 samples["label_index"] == LabelName.ABNORMAL,
                 "mask_path",
-            ] = mask_prefix + query_df.loc[query_df["defect"] != False, "query_mask"]  # noqa: E712
+            ] = mask_prefix + samples.loc[samples["defect"] != False, "query_mask"]  # noqa: E712
+
+            samples = samples.drop(columns=["defect", "query_mask"])
 
             frames.append(samples)
 

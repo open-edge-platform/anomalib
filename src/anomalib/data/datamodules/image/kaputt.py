@@ -55,6 +55,7 @@ Reference:
 """
 
 import logging
+import warnings
 from pathlib import Path
 
 from torchvision.transforms.v2 import Transform
@@ -78,8 +79,10 @@ class Kaputt(AnomalibDataModule):
     Args:
         root (Path | str): Path to the root of the dataset.
             Defaults to ``"./datasets/kaputt"``.
-        category (str | None): Category of the dataset (maps to ``item_material``).
-            Defaults to ``None`` which loads all categories.
+        category (str): Category of the dataset (maps to ``item_material``).
+            Defaults to ``all``. ``all`` is a pseudo-category that loads all categories
+            and is kept for backward compatibility. This will be removed in v2.6.0.
+            The default category will then be changed to ``book_other``.
         train_batch_size (int, optional): Training batch size.
             Defaults to ``32``.
         eval_batch_size (int, optional): Test batch size.
@@ -149,7 +152,7 @@ class Kaputt(AnomalibDataModule):
     def __init__(
         self,
         root: Path | str = "./datasets/kaputt",
-        category: str | None = None,
+        category: str = "all",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
         num_workers: int = 8,
@@ -184,8 +187,13 @@ class Kaputt(AnomalibDataModule):
         )
 
         self.root = Path(root)
-        if category is not None:
-            self.category = category
+        self._category = category
+        if self._category == "all":
+            warnings.warn(
+                "category='all' is deprecated and will be removed in v2.6.0.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
         self.image_type = _resolve_image_type(image_type)
         self.image_mode = _resolve_image_mode(image_mode, use_reference, reference_only)
 
@@ -201,14 +209,14 @@ class Kaputt(AnomalibDataModule):
         self.train_data = KaputtDataset(
             split=Split.TRAIN,
             root=self.root,
-            category=self.category,
+            category=self.category if self.category != "all" else None,
             image_type=self.image_type,
             image_mode=self.image_mode,
         )
         self.test_data = KaputtDataset(
             split=Split.TEST,
             root=self.root,
-            category=self.category,
+            category=self.category if self.category != "all" else None,
             image_type=self.image_type,
             image_mode=ImageMode.QUERY_ONLY,
         )
@@ -218,7 +226,7 @@ class Kaputt(AnomalibDataModule):
             self.val_data = KaputtDataset(
                 split=Split.VAL,
                 root=self.root,
-                category=self.category,
+                category=self.category if self.category != "all" else None,
                 image_type=self.image_type,
                 image_mode=ImageMode.QUERY_ONLY,
             )
