@@ -318,19 +318,19 @@ def get_torch_install_args(requirement: str | Requirement) -> list[str]:
 
     Example:
         ```python
-        requirement = "torch>=2.6.0"
+        requirement = "torch>=2.9.0"
         get_torch_install_args(requirement)
         # Returns:
         [
             '--extra-index-url',
             'https://download.pytorch.org/whl/cu130',
-            'torch>=2.6.0',
-            'torchvision>=0.21.0'
+            'torch>=2.9.0',
+            'torchvision>=0.24.0'
         ]
         ```
 
     Test:
-        >>> args = get_torch_install_args("torch>=2.6.0")
+        >>> args = get_torch_install_args("torch>=2.9.0")
         >>> isinstance(args, list)
         True
         >>> all(isinstance(arg, str) for arg in args)
