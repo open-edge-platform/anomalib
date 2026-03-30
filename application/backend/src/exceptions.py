@@ -84,3 +84,23 @@ class ResourceNotFoundException(GetiBaseException):
             error_code=f"{resource_name}_not_found",
             http_status=http.HTTPStatus.NOT_FOUND,
         )
+
+
+class JobNotDeletableException(GetiBaseException):
+    """
+    Exception raised when attempting to delete a job that is not in a terminal state.
+
+    Args:
+        job_id: ID of the job that cannot be deleted
+        job_status: Current status of the job
+    """
+
+    def __init__(self, job_id: str | ShortUUID, job_status: str) -> None:
+        super().__init__(
+            message=(
+                f"Job `{job_id}` cannot be deleted because it is in status '{job_status}'. "
+                "Only failed or canceled jobs can be deleted."
+            ),
+            error_code="job_not_deletable",
+            http_status=http.HTTPStatus.CONFLICT,
+        )
