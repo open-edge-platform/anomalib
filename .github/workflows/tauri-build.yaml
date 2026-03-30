@@ -39,11 +39,11 @@ on:
   workflow_dispatch:
     inputs:
       accelerator:
-        description: "Backend accelerator to build (matrix: cpu, cu124, xpu)"
+        description: "Backend accelerator to build (matrix: cpu, cu130, xpu)"
         type: choice
         options:
           - cpu
-          - cu124
+          - cu130
           - xpu
         default: cpu
       debug_build:
@@ -65,7 +65,7 @@ jobs:
   #   strategy:
   #     fail-fast: false
   #     matrix:
-  #       accelerator: [cpu, cu124, xpu]
+  #       accelerator: [cpu, cu130, xpu]
 
   #   steps:
   #     - name: Runner cleanup
@@ -152,7 +152,7 @@ jobs:
       fail-fast: false
       matrix:
         # On workflow_dispatch use chosen accelerator; on push/PR build all.
-        accelerator: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', inputs.accelerator)) || fromJSON('["cpu", "cu124", "xpu"]') }}
+        accelerator: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', inputs.accelerator)) || fromJSON('["cpu", "cu130", "xpu"]') }}
     env:
       TAURI_PATH: application/binary/tauri
       TAURI_SRC_PATH: application/binary/tauri/src-tauri
