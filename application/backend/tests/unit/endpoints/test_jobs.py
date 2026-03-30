@@ -76,18 +76,9 @@ def test_get_job_logs_invalid_uuid(fxt_client, fxt_job_service):
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_delete_job_failed(fxt_client, fxt_job_service, fxt_job):
-    """DELETE /api/jobs/{job_id} returns 204 for a failed job."""
-    fxt_job_service.delete_job.return_value = None
-
-    response = fxt_client.delete(f"/api/jobs/{fxt_job.id}")
-
-    assert response.status_code == status.HTTP_204_NO_CONTENT
-    fxt_job_service.delete_job.assert_called_once_with(job_id=fxt_job.id)
-
-
-def test_delete_job_canceled(fxt_client, fxt_job_service, fxt_job):
-    """DELETE /api/jobs/{job_id} returns 204 for a canceled job."""
+@pytest.mark.parametrize("status_label", ["failed", "canceled"])
+def test_delete_job_terminal_status(fxt_client, fxt_job_service, fxt_job, status_label):
+    """DELETE /api/jobs/{job_id} returns 204 for failed and canceled jobs."""
     fxt_job_service.delete_job.return_value = None
 
     response = fxt_client.delete(f"/api/jobs/{fxt_job.id}")
