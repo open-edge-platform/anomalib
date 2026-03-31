@@ -57,7 +57,7 @@ class Draem(AnomalibModule):
     2. A discriminative network that learns to identify anomalous regions
 
     Args:
-        dtd_dir (Path | str | None): Directory path for the DTD dataset for anomaly deneration.
+        dtd_dir (Path | str | None): Directory path for the DTD dataset for anomaly generation.
             Defaults to ``./datasets/dtd``.
         enable_sspcab (bool, optional): Enable SSPCAB training.
             Defaults to ``False``.

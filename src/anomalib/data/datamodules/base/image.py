@@ -57,6 +57,24 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _is_legacy_default_root(root: str | Path, dataset_name: str) -> bool:
+    """Check whether `root` matches the legacy ``./datasets/<dataset_name>`` default.
+
+    The comparison is done on the normalized ``PurePosixPath`` representation so
+    that it works regardless of whether `root` was passed as a ``str`` or
+    ``Path``, with or without a trailing separator, and on both POSIX and
+    Windows.
+
+    Note: This is a temporary helper and will be removed in v2.6.0.
+    """
+    # Normalize: convert to Path, collapse redundant separators / dots, and
+    # convert to forward-slash representation for a canonical comparison.
+    normalized = Path(root).as_posix().rstrip("/")
+    canonical = f"./datasets/{dataset_name}"
+    # Also accept the variant without the leading "./"
+    return normalized in {canonical, canonical.lstrip("./")}
+
+
 def resolve_with_warning(root: str | Path | None, dataset_name: str) -> Path:
     """Warn change in default dataset location.
 
@@ -70,7 +88,7 @@ def resolve_with_warning(root: str | Path | None, dataset_name: str) -> Path:
         Path: Resolved path.
     """
     default_path = Path(root) if root is not None else get_datasets_dir() / dataset_name
-    if root == f"./datasets/{dataset_name}":
+    if root is not None and _is_legacy_default_root(root, dataset_name):
         msg = (
             f"Default path to local dataset {root} is deprecated and will be moved to "
             f"{get_datasets_dir() / dataset_name} in v2.6.0."

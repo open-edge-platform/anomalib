@@ -59,14 +59,27 @@ def _get_cache_subdir(subdir: str) -> Path:
     ``anomalib/<subdir>``. Both the root and subdirectory are created if they
     do not already exist.
 
+    The *subdir* argument is validated to prevent path traversal attacks:
+    it must be a simple relative path without ``..`` components, and it must
+    not be absolute.
+
     Args:
-        subdir (str): Name of the subdirectory under the anomalib cache root.
+        subdir (str): Relative path component(s) under the anomalib cache root
+            (e.g. ``"datasets"`` or ``"datasets/MVTecAD"``).
 
     Returns:
         Path: Absolute path to the requested cache subdirectory.
+
+    Raises:
+        ValueError: If *subdir* is empty, absolute, or contains ``..`` components.
     """
-    cache_dir = platformdirs.user_cache_path("anomalib", ensure_exists=True) / subdir
-    cache_dir.mkdir(exist_ok=True)
+    subdir_path = Path(subdir)
+    if not subdir or subdir_path.is_absolute() or ".." in subdir_path.parts:
+        msg = f"Invalid cache subdirectory name: {subdir!r}. Must be a relative path without '..' components."
+        raise ValueError(msg)
+
+    cache_dir = platformdirs.user_cache_path("anomalib", ensure_exists=True) / subdir_path
+    cache_dir.mkdir(parents=True, exist_ok=True)
     return cache_dir
 
 
