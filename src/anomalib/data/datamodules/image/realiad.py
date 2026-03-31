@@ -46,18 +46,17 @@ from textwrap import dedent
 
 from torchvision.transforms.v2 import Transform
 
-from anomalib.data.datamodules.base.image import AnomalibDataModule
+from anomalib.data.datamodules.base.image import AnomalibDataModule, resolve_with_warning
 from anomalib.data.datasets.image.realiad import CATEGORIES, RESOLUTIONS, RealIADDataset
 from anomalib.data.utils import Split, TestSplitMode, ValSplitMode
-from anomalib.utils.path import get_datasets_dir
 
 
 class RealIAD(AnomalibDataModule):
     """Real-IAD Datamodule.
 
     Args:
-        root (Path | str): Path to root directory containing the dataset.
-            Defaults to ``None``.
+        root (Path | str | None): Path to root directory containing the dataset.
+            Defaults to ``./datasets/Real-IAD``.
         category (str): Category of the Real-IAD dataset (e.g. ``"audiojack"`` or
             ``"button_battery"``). Defaults to ``"audiojack"``.
         resolution (str | int): Image resolution to use (e.g. ``"256"``, ``"512"``,
@@ -155,7 +154,7 @@ class RealIAD(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str | None = None,
+        root: Path | str | None = "./datasets/Real-IAD",
         category: str = "audiojack",
         resolution: str | int = 256,
         json_path: str | Path = "realiad_jsons/realiad_jsons/{category}.json",
@@ -183,7 +182,7 @@ class RealIAD(AnomalibDataModule):
             seed=seed,
         )
 
-        root = root if root is not None else get_datasets_dir() / "Real-IAD"
+        root = resolve_with_warning(root, "Real-IAD")
         self.root = Path(root)
         self.category = category
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Base Anomalib data module.
@@ -42,6 +42,7 @@ from anomalib.data.transforms.utils import extract_transforms_by_type
 from anomalib.data.utils import TestSplitMode, ValSplitMode, random_split, split_by_label
 from anomalib.data.utils.synthetic import SyntheticAnomalyDataset
 from anomalib.utils.attrs import get_nested_attr
+from anomalib.utils.path import get_datasets_dir
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -54,6 +55,28 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
+
+
+def resolve_with_warning(root: str | Path | None, dataset_name: str) -> Path:
+    """Warn change in default dataset location.
+
+    Note: This is a temporary function and will be removed in v2.6.0.
+
+    Args:
+        root: Root directory of the dataset.
+        dataset_name: Name of the dataset. This is only used when root is None.
+
+    Returns:
+        Path: Resolved path.
+    """
+    default_path = Path(root) if root is not None else get_datasets_dir() / dataset_name
+    if root == f"./datasets/{dataset_name}":
+        msg = (
+            f"Default path to local dataset {root} is deprecated and will be moved to "
+            f"{get_datasets_dir() / dataset_name} in v2.6.0."
+        )
+        logger.warning(msg)
+    return default_path
 
 
 class AnomalibDataModule(LightningDataModule, ABC):

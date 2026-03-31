@@ -50,10 +50,9 @@ from pathlib import Path
 
 from torchvision.transforms.v2 import Transform
 
-from anomalib.data.datamodules.base.image import AnomalibDataModule
+from anomalib.data.datamodules.base.image import AnomalibDataModule, resolve_with_warning
 from anomalib.data.datasets.image.mvtecad import MVTecADDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
-from anomalib.utils.path import get_datasets_dir
 
 logger = logging.getLogger(__name__)
 
@@ -70,8 +69,8 @@ class MVTecAD(AnomalibDataModule):
     """MVTec AD Datamodule.
 
     Args:
-        root (Path | str): Path to the root of the dataset.
-            Defaults to ``None``.
+        root (Path | str | None): Path to the root of the dataset.
+            Defaults to ``./datasets/MVTecAD``.
         category (str): Category of the MVTec AD dataset (e.g. ``"bottle"`` or
             ``"cable"``). Defaults to ``"bottle"``.
         train_batch_size (int, optional): Training batch size.
@@ -132,7 +131,7 @@ class MVTecAD(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str | None = None,
+        root: Path | str | None = "./datasets/MVTecAD",
         category: str = "bottle",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
@@ -162,7 +161,7 @@ class MVTecAD(AnomalibDataModule):
             seed=seed,
         )
 
-        root = root if root is not None else get_datasets_dir() / "MVTecAD"
+        root = resolve_with_warning(root, "MVTecAD")
         self.root = Path(root)
         self.category = category
 

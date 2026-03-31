@@ -25,10 +25,9 @@ from pathlib import Path
 
 from torchvision.transforms.v2 import Transform
 
-from anomalib.data.datamodules.base.image import AnomalibDataModule
+from anomalib.data.datamodules.base.image import AnomalibDataModule, resolve_with_warning
 from anomalib.data.datasets.image.kolektor import KolektorDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
-from anomalib.utils.path import get_datasets_dir
 
 logger = logging.getLogger(__name__)
 
@@ -44,8 +43,8 @@ class Kolektor(AnomalibDataModule):
     """Kolektor Surface-Defect DataModule.
 
     Args:
-        root (Path | str): Path to the root of the dataset.
-            Defaults to ``None``.
+        root (Path | str | None): Path to the root of the dataset.
+            Defaults to ``./datasets/kolektor``.
         train_batch_size (int, optional): Training batch size.
             Defaults to ``32``.
         eval_batch_size (int, optional): Test batch size.
@@ -91,7 +90,7 @@ class Kolektor(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str | None = None,
+        root: Path | str | None = "./datasets/kolektor",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
         num_workers: int = 8,
@@ -120,7 +119,7 @@ class Kolektor(AnomalibDataModule):
             seed=seed,
         )
 
-        root = root if root is not None else get_datasets_dir() / "kolektor"
+        root = resolve_with_warning(root, "kolektor")
         self.root = Path(root)
 
     def _setup(self, _stage: str | None = None) -> None:

@@ -14,11 +14,11 @@ from shutil import move
 
 from torchvision.transforms.v2 import Transform
 
+from anomalib.data.datamodules.base.image import resolve_with_warning
 from anomalib.data.datamodules.base.video import AnomalibVideoDataModule
 from anomalib.data.datasets.base.video import VideoTargetFrame
 from anomalib.data.datasets.video.ucsd_ped import UCSDpedDataset
 from anomalib.data.utils import DownloadInfo, Split, ValSplitMode, download_and_extract
-from anomalib.utils.path import get_datasets_dir
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +33,8 @@ class UCSDped(AnomalibVideoDataModule):
     """UCSD Pedestrian DataModule Class.
 
     Args:
-        root (Path | str): Path to the root directory where the dataset will be
-            downloaded and extracted. Defaults to ``None``.
+        root (Path | str | None): Path to the root directory where the dataset will be
+            downloaded and extracted. Defaults to ``./datasets/ucsd``.
         category (str): Dataset subcategory. Must be either ``"UCSDped1"`` or
             ``"UCSDped2"``. Defaults to ``"UCSDped2"``.
         clip_length_in_frames (int): Number of frames in each video clip.
@@ -71,7 +71,7 @@ class UCSDped(AnomalibVideoDataModule):
 
     def __init__(
         self,
-        root: Path | str | None = None,
+        root: Path | str | None = "./datasets/ucsd",
         category: str = "UCSDped2",
         clip_length_in_frames: int = 2,
         frames_between_clips: int = 10,
@@ -100,7 +100,7 @@ class UCSDped(AnomalibVideoDataModule):
             seed=seed,
         )
 
-        root = root if root is not None else get_datasets_dir() / "ucsd"
+        root = resolve_with_warning(root, "ucsd")
         self.root = Path(root)
         self.category = category
 

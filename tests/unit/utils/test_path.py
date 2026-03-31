@@ -1,12 +1,19 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Tests for anomalib.utils.path (create_versioned_dir, resolve_versioned_path)."""
+"""Tests for anomalib.utils.path."""
 
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
-from anomalib.utils.path import create_versioned_dir, resolve_versioned_path
+from anomalib.utils.path import (
+    _get_cache_subdir,
+    create_versioned_dir,
+    get_datasets_dir,
+    get_pretrained_weights_dir,
+    resolve_versioned_path,
+)
 
 
 class TestResolveVersionedPath:
@@ -98,3 +105,84 @@ class TestCreateVersionedDir:
         assert r1.name == "v0"
         assert r2.name == "v1"
         assert r1 != r2
+
+
+class TestGetCacheSubdir:
+    """Tests for _get_cache_subdir, get_pretrained_weights_dir, get_datasets_dir."""
+
+    @staticmethod
+    def _mock_cache(tmp_path: Path) -> Path:
+        """Create and return a fake cache root (simulates ensure_exists=True)."""
+        fake_cache = tmp_path / "cache"
+        fake_cache.mkdir()
+        return fake_cache
+
+    def test_get_cache_subdir_returns_path(self, tmp_path: Path) -> None:
+        """_get_cache_subdir returns a Path instance."""
+        fake_cache = self._mock_cache(tmp_path)
+        with patch("anomalib.utils.path.platformdirs.user_cache_path", return_value=fake_cache):
+            result = _get_cache_subdir("some_dir")
+        assert isinstance(result, Path)
+
+    def test_get_cache_subdir_ends_with_subdir(self, tmp_path: Path) -> None:
+        """Returned path ends with the requested subdirectory name."""
+        fake_cache = self._mock_cache(tmp_path)
+        with patch("anomalib.utils.path.platformdirs.user_cache_path", return_value=fake_cache):
+            result = _get_cache_subdir("my_subdir")
+        assert result.name == "my_subdir"
+
+    def test_get_cache_subdir_creates_directory(self, tmp_path: Path) -> None:
+        """The subdirectory is created on disk by the mkdir call."""
+        fake_cache = self._mock_cache(tmp_path)
+        subdir_path = fake_cache / "widgets"
+        assert not subdir_path.exists()
+        with patch("anomalib.utils.path.platformdirs.user_cache_path", return_value=fake_cache):
+            result = _get_cache_subdir("widgets")
+        assert result == subdir_path
+        assert result.is_dir()
+
+    def test_get_cache_subdir_idempotent(self, tmp_path: Path) -> None:
+        """Calling twice with the same subdir does not raise and returns the same path."""
+        fake_cache = self._mock_cache(tmp_path)
+        with patch("anomalib.utils.path.platformdirs.user_cache_path", return_value=fake_cache):
+            first = _get_cache_subdir("repeat")
+            second = _get_cache_subdir("repeat")
+        assert first == second
+        assert first.is_dir()
+
+    def test_get_pretrained_weights_dir_returns_path(self, tmp_path: Path) -> None:
+        """get_pretrained_weights_dir returns a Path ending with 'pre_trained'."""
+        fake_cache = self._mock_cache(tmp_path)
+        with patch("anomalib.utils.path.platformdirs.user_cache_path", return_value=fake_cache):
+            result = get_pretrained_weights_dir()
+        assert isinstance(result, Path)
+        assert result.name == "pre_trained"
+
+    def test_get_pretrained_weights_dir_exists(self, tmp_path: Path) -> None:
+        """Directory returned by get_pretrained_weights_dir exists on disk."""
+        fake_cache = self._mock_cache(tmp_path)
+        with patch("anomalib.utils.path.platformdirs.user_cache_path", return_value=fake_cache):
+            result = get_pretrained_weights_dir()
+        assert result.is_dir()
+
+    def test_get_datasets_dir_returns_path(self, tmp_path: Path) -> None:
+        """get_datasets_dir returns a Path ending with 'datasets'."""
+        fake_cache = self._mock_cache(tmp_path)
+        with patch("anomalib.utils.path.platformdirs.user_cache_path", return_value=fake_cache):
+            result = get_datasets_dir()
+        assert isinstance(result, Path)
+        assert result.name == "datasets"
+
+    def test_get_datasets_dir_exists(self, tmp_path: Path) -> None:
+        """Directory returned by get_datasets_dir exists on disk."""
+        fake_cache = self._mock_cache(tmp_path)
+        with patch("anomalib.utils.path.platformdirs.user_cache_path", return_value=fake_cache):
+            result = get_datasets_dir()
+        assert result.is_dir()
+
+    def test_ensure_exists_passed_to_platformdirs(self, tmp_path: Path) -> None:
+        """platformdirs.user_cache_path is called with ensure_exists=True."""
+        fake_cache = self._mock_cache(tmp_path)
+        with patch("anomalib.utils.path.platformdirs.user_cache_path", return_value=fake_cache) as mock_ucp:
+            _get_cache_subdir("test")
+        mock_ucp.assert_called_once_with("anomalib", ensure_exists=True)

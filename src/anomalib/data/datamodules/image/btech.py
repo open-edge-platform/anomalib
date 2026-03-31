@@ -46,10 +46,9 @@ import cv2
 from torchvision.transforms.v2 import Transform
 from tqdm import tqdm
 
-from anomalib.data.datamodules.base.image import AnomalibDataModule
+from anomalib.data.datamodules.base.image import AnomalibDataModule, resolve_with_warning
 from anomalib.data.datasets.image.btech import BTechDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
-from anomalib.utils.path import get_datasets_dir
 
 logger = logging.getLogger(__name__)
 
@@ -64,8 +63,8 @@ class BTech(AnomalibDataModule):
     """BTech Lightning Data Module.
 
     Args:
-        root (Path | str): Path to the root of the dataset.
-            Defaults to ``None``.
+        root (Path | str | None): Path to the root of the dataset.
+            Defaults to ``./datasets/BTech``.
         category (str): Category of the BTech dataset (e.g. ``"01"``, ``"02"``,
             or ``"03"``).
             Defaults to ``"01"``.
@@ -140,7 +139,7 @@ class BTech(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str | None = None,
+        root: Path | str | None = "./datasets/BTech",
         category: str = "01",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
@@ -170,7 +169,7 @@ class BTech(AnomalibDataModule):
             seed=seed,
         )
 
-        root = root if root is not None else get_datasets_dir() / "BTech"
+        root = resolve_with_warning(root, "BTech")
         self.root = Path(root)
         self.category = category
 
