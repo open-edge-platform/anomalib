@@ -136,6 +136,7 @@ class MVTecLOCO(AnomalibDataModule):
         test_split_ratio: float | None = None,
         val_split_ratio: float | None = None,
         seed: int | None = None,
+        synthetic_blend_factor: float | tuple[float, float] = (0.01, 0.2),
     ) -> None:
         super().__init__(
             train_batch_size=train_batch_size,
@@ -150,6 +151,7 @@ class MVTecLOCO(AnomalibDataModule):
             test_split_ratio=test_split_ratio,
             val_split_ratio=val_split_ratio,
             seed=seed,
+            synthetic_blend_factor=synthetic_blend_factor,
         )
 
         self.root = Path(root)

@@ -168,6 +168,7 @@ class RealIAD(AnomalibDataModule):
         test_split_mode: TestSplitMode | str = TestSplitMode.NONE,
         val_split_mode: ValSplitMode | str = ValSplitMode.SAME_AS_TEST,
         seed: int | None = None,
+        synthetic_blend_factor: float | tuple[float, float] = (0.01, 0.2),
     ) -> None:
         super().__init__(
             train_batch_size=train_batch_size,
@@ -180,6 +181,7 @@ class RealIAD(AnomalibDataModule):
             test_split_mode=test_split_mode,
             val_split_mode=val_split_mode,
             seed=seed,
+            synthetic_blend_factor=synthetic_blend_factor,
         )
 
         self.root = Path(root)
