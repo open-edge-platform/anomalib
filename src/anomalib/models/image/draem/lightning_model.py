@@ -24,6 +24,7 @@ from torchvision.transforms.v2 import Compose, Normalize, Resize
 
 from anomalib import LearningType
 from anomalib.data import Batch
+from anomalib.data.datamodules.base.image import resolve_with_warning
 from anomalib.data.transforms.utils import extract_transforms_by_type
 from anomalib.data.utils import DownloadInfo, download_and_extract
 from anomalib.data.utils.generators.perlin import PerlinAnomalyGenerator
@@ -56,8 +57,8 @@ class Draem(AnomalibModule):
     2. A discriminative network that learns to identify anomalous regions
 
     Args:
-        dtd_dir (Path | str): Directory path for the DTD dataset for anomaly deneration.
-            Defaults to ``"./datasets/dtd"``.
+        dtd_dir (Path | str | None): Directory path for the DTD dataset for anomaly deneration.
+            Defaults to ``./datasets/dtd``.
         enable_sspcab (bool, optional): Enable SSPCAB training.
             Defaults to ``False``.
         sspcab_lambda (float, optional): Weight factor for SSPCAB loss.
@@ -84,7 +85,7 @@ class Draem(AnomalibModule):
 
     def __init__(
         self,
-        dtd_dir: Path | str = "./datasets/dtd",
+        dtd_dir: Path | str | None = "./datasets/dtd",
         enable_sspcab: bool = False,
         sspcab_lambda: float = 0.1,
         beta: float | tuple[float, float] = (0.1, 1.0),
@@ -99,7 +100,7 @@ class Draem(AnomalibModule):
             evaluator=evaluator,
             visualizer=visualizer,
         )
-        dtd_dir = Path(dtd_dir)
+        dtd_dir = resolve_with_warning(dtd_dir, "dtd")
         if not dtd_dir.is_dir():
             download_and_extract(dtd_dir, DTD_DOWNLOAD_INFO)
         self.augmenter = PerlinAnomalyGenerator(anomaly_source_path=dtd_dir, blend_factor=beta)

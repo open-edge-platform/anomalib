@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """ShanghaiTech Campus Dataset.
@@ -82,7 +82,7 @@ class ShanghaiTechDataset(AnomalibVideoDataset):
 
     Args:
         split (Split): Dataset split - either ``Split.TRAIN`` or ``Split.TEST``
-        root (Path | str): Path to the root directory containing the dataset.
+        root (Path | str | None): Path to the root directory containing the dataset.
             Defaults to ``None``.
         scene (int): Index of the dataset scene (category) in range [1, 13].
             Defaults to ``1``.
