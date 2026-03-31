@@ -4,7 +4,6 @@ import asyncio
 import os
 import pathlib
 from typing import Any
-from uuid import UUID
 
 from anomalib.data import Folder
 from anomalib.data.utils import ValSplitMode
@@ -28,6 +27,7 @@ from services.dataset_snapshot_service import DatasetSnapshotService
 from services.job_service import JobService
 from services.system_service import SystemService
 from utils.callbacks import AnomalibStudioProgressCallback, ProgressSyncParams
+from utils.short_uuid import ShortUUID
 
 
 class TrainingService:
@@ -79,7 +79,7 @@ class TrainingService:
         model_name = payload.model_name
         device_type = payload.device.type if payload.device else None
         device_index = payload.device.index if payload.device else None
-        snapshot_id = UUID(payload.dataset_snapshot_id) if payload.dataset_snapshot_id else None
+        snapshot_id = ShortUUID(payload.dataset_snapshot_id) if payload.dataset_snapshot_id else None
         max_epochs: int = payload.max_epochs if payload.max_epochs is not None else 200
 
         synchronization_task: asyncio.Task[None] | None = None
@@ -334,7 +334,7 @@ class TrainingService:
     async def _sync_progress_with_db(
         cls,
         job_service: JobService,
-        job_id: UUID,
+        job_id: ShortUUID,
         synchronization_parameters: ProgressSyncParams,
     ) -> None:
         try:

@@ -1,5 +1,6 @@
+# Copyright (C) 2025-2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4
 
 import pytest
 from anomalib.deploy import CompressionType, ExportType
@@ -8,18 +9,19 @@ from pydantic_models import Model
 from pydantic_models.model import ExportParameters
 from services import ResourceNotFoundError
 from services.model_service import ModelService
+from utils.short_uuid import ShortUUID
 
 
 @pytest.fixture
 def mock_model():
     return Model(
-        id=uuid4(),
-        project_id=uuid4(),
+        id=ShortUUID.generate(),
+        project_id=ShortUUID.generate(),
         name="Padim",
         format=ExportType.OPENVINO,
         is_ready=True,
-        train_job_id=uuid4(),
-        dataset_snapshot_id=uuid4(),
+        train_job_id=ShortUUID.generate(),
+        dataset_snapshot_id=ShortUUID.generate(),
     )
 
 
@@ -94,7 +96,7 @@ async def test_export_model_not_found(mock_get_model_by_id, mock_model_service):
     export_params = ExportParameters(format=ExportType.OPENVINO)
 
     with pytest.raises(ResourceNotFoundError):
-        await mock_model_service.export_model(uuid4(), uuid4(), export_params)
+        await mock_model_service.export_model(ShortUUID.generate(), ShortUUID.generate(), export_params)
 
 
 @pytest.mark.asyncio

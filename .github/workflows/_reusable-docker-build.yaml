@@ -100,7 +100,7 @@ jobs:
           echo "Testing container with tag: $FIRST_TAG for device: $DEVICE"
 
           # Start the container in detached mode
-          CONTAINER_ID=$(docker run -d --rm -v ./data:/app/data -v ./logs:/app/logs -p 8000:8000 anomalib-studio-${DEVICE}:${FIRST_TAG})
+          CONTAINER_ID=$(docker run -d --rm -e HOST=0.0.0.0 -v ./data:/app/data -v ./logs:/app/logs -p 8000:8000 anomalib-studio-${DEVICE}:${FIRST_TAG})
           echo "Started container: $CONTAINER_ID"
 
           # Function to cleanup container on exit

@@ -1,7 +1,6 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
-import uuid
 from multiprocessing.synchronize import Condition
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -14,13 +13,14 @@ from repositories import PipelineRepository, SinkRepository, SourceRepository
 from services import ActivePipelineService
 from services.configuration_service import ConfigurationService, PipelineField
 from services.exceptions import ResourceNotFoundError, ResourceType
+from utils.short_uuid import ShortUUID
 
 
 @pytest.fixture
 def fxt_source(fxt_project):
     """Fixture for a test source."""
     return VideoFileSourceConfig(
-        id=uuid.uuid4(),
+        id=ShortUUID.generate(),
         project_id=fxt_project.id,
         source_type="video_file",
         name="Test Source",
@@ -32,7 +32,7 @@ def fxt_source(fxt_project):
 def fxt_sink(fxt_project):
     """Fixture for a test sink."""
     return FolderSinkConfig(
-        id=uuid.uuid4(),
+        id=ShortUUID.generate(),
         project_id=fxt_project.id,
         sink_type="folder",
         name="Test Sink",
@@ -213,7 +213,7 @@ class TestConfigurationService:
         # Mock the async method to return the pipeline via AsyncMock
         fxt_pipeline_repository.get_active_pipeline = AsyncMock(return_value=fxt_pipeline)
         notify_fn = MagicMock()
-        different_config_id = uuid.uuid4()
+        different_config_id = ShortUUID.generate()
 
         async def run_test():
             with patch("services.configuration_service.PipelineRepository") as mock_repo_class:
@@ -235,7 +235,7 @@ class TestConfigurationService:
         """Test config change notification when no active pipeline."""
         fxt_pipeline_repository.get_active_pipeline = AsyncMock(return_value=None)
         notify_fn = MagicMock()
-        config_id = uuid.uuid4()
+        config_id = ShortUUID.generate()
 
         async def run_test():
             with patch("services.configuration_service.PipelineRepository") as mock_repo_class:
@@ -321,7 +321,7 @@ class TestConfigurationService:
     def test_get_source_by_id_not_found(self, fxt_configuration_service, fxt_source_repository, fxt_project):
         """Test getting source by ID when not found."""
         fxt_source_repository.get_by_id.return_value = None
-        source_id = uuid.uuid4()
+        source_id = ShortUUID.generate()
 
         with patch("services.configuration_service.SourceRepository") as mock_repo_class:
             mock_repo_class.return_value = fxt_source_repository
@@ -366,7 +366,7 @@ class TestConfigurationService:
     def test_get_sink_by_id_not_found(self, fxt_configuration_service, fxt_sink_repository, fxt_project):
         """Test getting sink by ID when not found."""
         fxt_sink_repository.get_by_id.return_value = None
-        sink_id = uuid.uuid4()
+        sink_id = ShortUUID.generate()
 
         with patch("services.configuration_service.SinkRepository") as mock_repo_class:
             mock_repo_class.return_value = fxt_sink_repository
