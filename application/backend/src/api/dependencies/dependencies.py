@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 from functools import lru_cache
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import Depends, Form, HTTPException, Request, status
 
@@ -19,6 +18,7 @@ from services.metrics_service import MetricsService
 from services.model_service import ModelService
 from services.pipeline_metrics_service import PipelineMetricsService
 from services.system_service import SystemService
+from utils.short_uuid import ShortUUID
 from webrtc.manager import WebRTCManager
 
 
@@ -111,54 +111,50 @@ def is_valid_uuid(identifier: str) -> bool:
         True if valid UUID, False otherwise
     """
     try:
-        UUID(identifier)
+        ShortUUID(identifier)
     except ValueError:
         return False
     return True
 
 
-def get_uuid(identifier: str, name: str) -> UUID:
+def get_uuid(identifier: str, name: str) -> ShortUUID:
     """Initializes and validates a source ID"""
     if not is_valid_uuid(identifier):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid {name} ID")
-    return UUID(identifier)
+    return ShortUUID(identifier)
 
 
-async def get_source_id(source_id: str) -> UUID:
+async def get_source_id(source_id: str) -> ShortUUID:
     """Initializes and validates a source ID"""
-    if not is_valid_uuid(source_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid source ID")
-    return UUID(source_id)
+    return get_uuid(source_id, "source")
 
 
-async def get_sink_id(sink_id: str) -> UUID:
+async def get_sink_id(sink_id: str) -> ShortUUID:
     """Initializes and validates a sink ID"""
-    if not is_valid_uuid(sink_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid sink ID")
-    return UUID(sink_id)
+    return get_uuid(sink_id, "sink")
 
 
-async def get_project_id(project_id: str) -> UUID:
+async def get_project_id(project_id: str) -> ShortUUID:
     """Initializes and validates a project ID"""
     return get_uuid(project_id, "project")
 
 
-async def get_media_id(media_id: str) -> UUID:
+async def get_media_id(media_id: str) -> ShortUUID:
     """Initializes and validates a media ID"""
     return get_uuid(media_id, "media")
 
 
-async def get_model_id(model_id: str) -> UUID:
-    """Initializes and validates a media ID"""
+async def get_model_id(model_id: str) -> ShortUUID:
+    """Initializes and validates a model ID"""
     return get_uuid(model_id, "model")
 
 
-async def get_job_id(job_id: str) -> UUID:
+async def get_job_id(job_id: str) -> ShortUUID:
     """Initializes and validates a job ID"""
     return get_uuid(job_id, "job")
 
 
-async def get_snapshot_id(snapshot_id: str) -> UUID:
+async def get_snapshot_id(snapshot_id: str) -> ShortUUID:
     """Initializes and validates a Snapshot ID"""
     return get_uuid(snapshot_id, "snapshot")
 

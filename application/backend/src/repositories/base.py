@@ -3,7 +3,6 @@
 import abc
 from collections.abc import AsyncGenerator, Callable
 from typing import Any, TypeVar
-from uuid import UUID
 
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy.sql import expression
@@ -11,6 +10,7 @@ from sqlalchemy.sql.selectable import Select, and_
 
 from db.schema import Base
 from pydantic_models.base import BaseIDModel
+from utils.short_uuid import ShortUUID
 
 ModelType = TypeVar("ModelType", bound=BaseIDModel)
 SchemaType = TypeVar("SchemaType", bound=Base)
@@ -55,7 +55,7 @@ class BaseRepository[ModelType, SchemaType](metaclass=abc.ABCMeta):
 
         return query
 
-    async def get_by_id(self, obj_id: str | UUID) -> ModelType | None:
+    async def get_by_id(self, obj_id: str | ShortUUID) -> ModelType | None:
         return await self.get_one(extra_filters={"id": self._id_to_str(obj_id)})
 
     async def get_one(
@@ -145,7 +145,7 @@ class BaseRepository[ModelType, SchemaType](metaclass=abc.ABCMeta):
             raise ValueError(f"{item.__class__} with ID `{item.id}` doesn't exist")  # type: ignore[attr-defined]
         return updated
 
-    async def delete_by_id(self, obj_id: str | UUID) -> None:
+    async def delete_by_id(self, obj_id: str | ShortUUID) -> None:
         if not hasattr(self.schema, "id"):
             raise AttributeError(f"Delete by ID is not supported by schema: `{self.schema}`")
 
@@ -177,14 +177,12 @@ class BaseRepository[ModelType, SchemaType](metaclass=abc.ABCMeta):
             await self.db.commit()
 
     @staticmethod
-    def _id_to_str(obj_id: str | UUID) -> str:
-        if isinstance(obj_id, UUID):
-            return str(obj_id)
+    def _id_to_str(obj_id: str | ShortUUID) -> str:
         return obj_id
 
 
 class ProjectBaseRepository(BaseRepository[ModelType, SchemaType], metaclass=abc.ABCMeta):
-    def __init__(self, db: AsyncSession, project_id: str | UUID, schema: type[SchemaType]):
+    def __init__(self, db: AsyncSession, project_id: str | ShortUUID, schema: type[SchemaType]):
         super().__init__(db, schema)
         self.project_id = self._id_to_str(project_id)
 

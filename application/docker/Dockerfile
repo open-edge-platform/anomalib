@@ -4,7 +4,7 @@
 #------------------------------------------
 # Web UI Build Stage
 #------------------------------------------
-FROM node:24-alpine3.22@sha256:76db75ca7e7da9148ae42c92d9be12d12a8d7b03e171f18339355d8078d644a0 AS web-ui-base
+FROM node:24-alpine3.22@sha256:4f33c7804fa7775b87875f512e25e515692210bfdeafd715eb8bc441c364e2f6 AS web-ui-base
 
 WORKDIR /home/app/web_ui/
 
@@ -29,7 +29,7 @@ RUN npm run build
 #------------------------------------------
 # Anomalib Studio Base with UI built
 #------------------------------------------
-FROM python:3.13-slim@sha256:5a7bc62572092e849a3de833858cd2e5542fe24bc49e3fc54948c8b0d8ca4b29 AS anomalib-studio-base
+FROM python:3.13-slim@sha256:739e7213785e88c0f702dcdc12c0973afcbd606dbf021a589cab77d6b00b579d AS anomalib-studio-base
 COPY --from=docker.io/astral/uv:0.9.7@sha256:ba4857bf2a068e9bc0e64eed8563b065908a4cd6bfb66b531a9c424c8e25e142 /uv /uvx /bin/
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 ENV UV_PYTHON_DOWNLOADS=0
@@ -116,7 +116,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app/application/backend
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --extra cu124
+    uv sync --frozen --extra cu130
 
 #------------------------------------------
 # Anomalib Studio CUDA intermediate stage to cleanup CUDA non-distributable dependencies

@@ -3,7 +3,6 @@
 import asyncio
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
-from uuid import uuid4
 
 import pytest
 
@@ -11,6 +10,7 @@ from pydantic_models import JobStatus
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import TrainingService
 from utils.callbacks import ProgressSyncParams
+from utils.short_uuid import ShortUUID
 
 
 @pytest.fixture
@@ -106,7 +106,7 @@ def fxt_mock_dataset_snapshot_service():
     with patch("services.training_service.DatasetSnapshotService") as mock_service:
         # Setup default return values
         mock_snapshot = MagicMock()
-        mock_snapshot.id = uuid4()
+        mock_snapshot.id = ShortUUID.generate()
         mock_service.create_snapshot = AsyncMock(return_value=mock_snapshot)
         # Fix: get_or_create_snapshot needs to be awaited
         mock_service.get_or_create_snapshot = AsyncMock(return_value=mock_snapshot)

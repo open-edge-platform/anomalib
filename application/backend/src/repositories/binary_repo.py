@@ -14,12 +14,11 @@ from typing import TYPE_CHECKING
 from settings import get_settings
 
 if TYPE_CHECKING:
-    from uuid import UUID
-
     from anomalib.deploy import ExportType
 
     from pydantic_models.model import ExportParameters
     from settings import Settings
+    from utils.short_uuid import ShortUUID
 
 settings: Settings = get_settings()
 
@@ -33,7 +32,7 @@ class FileType(StrEnum):
 
 
 class BinaryRepository(metaclass=abc.ABCMeta):
-    def __init__(self, project_id: str | UUID, file_type: FileType):
+    def __init__(self, project_id: str | ShortUUID, file_type: FileType):
         self.project_id = str(project_id)
         self.file_type = file_type
 
@@ -132,13 +131,13 @@ class BinaryRepository(metaclass=abc.ABCMeta):
 
 
 class DatasetSnapshotBinaryRepository(BinaryRepository):
-    def __init__(self, project_id: str | UUID):
+    def __init__(self, project_id: str | ShortUUID):
         super().__init__(project_id=project_id, file_type=FileType.SNAPSHOTS)
 
     def get_full_path(self, filename: str) -> str:
         return os.path.join(self.project_folder_path, filename)
 
-    def get_snapshot_path(self, snapshot_id: str | UUID) -> str:
+    def get_snapshot_path(self, snapshot_id: str | ShortUUID) -> str:
         """
         Get the full path for a dataset snapshot.
 
@@ -152,7 +151,7 @@ class DatasetSnapshotBinaryRepository(BinaryRepository):
 
 
 class ImageBinaryRepository(BinaryRepository):
-    def __init__(self, project_id: str | UUID):
+    def __init__(self, project_id: str | ShortUUID):
         super().__init__(project_id=project_id, file_type=FileType.IMAGES)
 
     def get_full_path(self, filename: str) -> str:
@@ -167,7 +166,7 @@ class VideoBinaryRepository(BinaryRepository):
     absolute path on the filesystem.
     """
 
-    def __init__(self, project_id: str | UUID):
+    def __init__(self, project_id: str | ShortUUID):
         super().__init__(project_id=project_id, file_type=FileType.VIDEOS)
 
     def get_full_path(self, filename: str) -> str:
@@ -175,7 +174,7 @@ class VideoBinaryRepository(BinaryRepository):
 
 
 class ModelBinaryRepository(BinaryRepository):
-    def __init__(self, project_id: str | UUID, model_id: str | UUID):
+    def __init__(self, project_id: str | ShortUUID, model_id: str | ShortUUID):
         super().__init__(project_id=project_id, file_type=FileType.MODELS)
         self._model_id = str(model_id)
 
@@ -221,7 +220,7 @@ class ModelBinaryRepository(BinaryRepository):
 
 
 class ModelExportBinaryRepository(BinaryRepository):
-    def __init__(self, project_id: str | UUID, model_id: str | UUID):
+    def __init__(self, project_id: str | ShortUUID, model_id: str | ShortUUID):
         super().__init__(project_id=project_id, file_type=FileType.MODEL_EXPORTS)
         self._model_id = str(model_id)
 
