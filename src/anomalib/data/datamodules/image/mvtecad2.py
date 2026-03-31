@@ -122,6 +122,10 @@ class MVTecAD2(AnomalibDataModule):
         augmentations: Transform | None = None,
         test_type: TestType | str = TestType.PUBLIC,
         seed: int | None = None,
+        synthetic_blend_factor: float | tuple[float, float] = (0.01, 0.2),
+        synthetic_generator_type: str = "perlin",
+        synthetic_probability: float = 1.0,
+        synthetic_mask_threshold: float = 1e-3,
     ) -> None:
         """Initialize MVTec AD 2 datamodule."""
         super().__init__(
@@ -133,6 +137,10 @@ class MVTecAD2(AnomalibDataModule):
             test_augmentations=test_augmentations,
             augmentations=augmentations,
             seed=seed,
+            synthetic_blend_factor=synthetic_blend_factor,
+            synthetic_generator_type=synthetic_generator_type,
+            synthetic_probability=synthetic_probability,
+            synthetic_mask_threshold=synthetic_mask_threshold,
         )
 
         self.root = Path(root)
