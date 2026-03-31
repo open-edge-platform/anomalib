@@ -11,8 +11,8 @@ model:
     num_scales: 2
     patch_size: 5
     crop_size:
-      - 672
-      - 672
+      - 252
+      - 252
     lr: 0.0002
     weight_decay: 0.00001
 
