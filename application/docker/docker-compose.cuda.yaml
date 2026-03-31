@@ -5,6 +5,7 @@ x-proxy-env: &proxy-env
   http_proxy: ${http_proxy}
   https_proxy: ${https_proxy}
   no_proxy: ${no_proxy}
+  HOST: ${HOST:-localhost}
 
 x-proxies: &proxies
   args: *proxy-env
