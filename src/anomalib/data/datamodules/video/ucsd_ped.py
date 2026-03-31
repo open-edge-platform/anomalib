@@ -34,7 +34,7 @@ class UCSDped(AnomalibVideoDataModule):
 
     Args:
         root (Path | str | None): Path to the root directory where the dataset will be
-            downloaded and extracted. Defaults to ``./datasets/ucsd``.
+            downloaded and extracted. Defaults to ``"./datasets/ucsd"``.
         category (str): Dataset subcategory. Must be either ``"UCSDped1"`` or
             ``"UCSDped2"``. Defaults to ``"UCSDped2"``.
         clip_length_in_frames (int): Number of frames in each video clip.

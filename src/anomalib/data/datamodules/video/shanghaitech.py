@@ -72,7 +72,7 @@ class ShanghaiTech(AnomalibVideoDataModule):
 
     Args:
         root (Path | str | None): Path to the root directory of the dataset.
-            Defaults to ``./datasets/shanghaitech``.
+            Defaults to ``"./datasets/shanghaitech"``.
         scene (int): Scene index in range [1, 13].
             Defaults to ``1``.
         clip_length_in_frames (int): Number of frames in each video clip.

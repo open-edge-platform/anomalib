@@ -60,7 +60,7 @@ class MVTecLOCO(AnomalibDataModule):
 
     Args:
         root (Path | str | None): Path to the root of the dataset.
-            Defaults to ``./datasets/MVTec_LOCO``.
+            Defaults to ``"./datasets/MVTec_LOCO"``.
         category (str): Category of the MVTec LOCO dataset (e.g. ``"breakfast_box"`` or
             ``"juice_bottle"``). Defaults to ``"breakfast_box"``.
         train_batch_size (int, optional): Training batch size.

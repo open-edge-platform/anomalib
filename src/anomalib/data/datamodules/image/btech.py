@@ -64,7 +64,7 @@ class BTech(AnomalibDataModule):
 
     Args:
         root (Path | str | None): Path to the root of the dataset.
-            Defaults to ``./datasets/BTech``.
+            Defaults to ``"./datasets/BTech"``.
         category (str): Category of the BTech dataset (e.g. ``"01"``, ``"02"``,
             or ``"03"``).
             Defaults to ``"01"``.

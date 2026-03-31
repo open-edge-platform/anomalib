@@ -50,7 +50,7 @@ class ADAM3D(AnomalibDataModule):
 
     Args:
         root (Path | str | None): Path to the root of the dataset.
-            Defaults to ``./datasets/ADAM3D``.
+            Defaults to ``"./datasets/ADAM3D"``.
         category (str): Category of the 3D-ADAM dataset (e.g. ``"1m1"`` or
             ``"spiral_gear"``). Defaults to ``"1m1"``.
         train_batch_size (int, optional): Training batch size.

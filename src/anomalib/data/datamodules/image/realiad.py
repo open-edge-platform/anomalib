@@ -56,7 +56,7 @@ class RealIAD(AnomalibDataModule):
 
     Args:
         root (Path | str | None): Path to root directory containing the dataset.
-            Defaults to ``./datasets/Real-IAD``.
+            Defaults to ``"./datasets/Real-IAD"``.
         category (str): Category of the Real-IAD dataset (e.g. ``"audiojack"`` or
             ``"button_battery"``). Defaults to ``"audiojack"``.
         resolution (str | int): Image resolution to use (e.g. ``"256"``, ``"512"``,

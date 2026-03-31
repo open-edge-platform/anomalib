@@ -70,7 +70,7 @@ class MVTecAD(AnomalibDataModule):
 
     Args:
         root (Path | str | None): Path to the root of the dataset.
-            Defaults to ``./datasets/MVTecAD``.
+            Defaults to ``"./datasets/MVTecAD"``.
         category (str): Category of the MVTec AD dataset (e.g. ``"bottle"`` or
             ``"cable"``). Defaults to ``"bottle"``.
         train_batch_size (int, optional): Training batch size.

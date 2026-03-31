@@ -80,7 +80,7 @@ class BMAD(AnomalibDataModule):
 
     Args:
         root (Path | str | None): Path to the root of the dataset.
-            Defaults to ``./datasets/BMAD``.
+            Defaults to ``"./datasets/BMAD"``.
         category (str): Category of the BMAD dataset
             (e.g. ``"Brain"``, ``"Liver"``, ``"Retina_OCT2017"``, ``"Retina_RESC"``,
             ``"Chest"``, or ``"Histopathology"``).

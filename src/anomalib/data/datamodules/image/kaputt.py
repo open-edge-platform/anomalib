@@ -72,7 +72,7 @@ class Kaputt(AnomalibDataModule):
 
     Args:
         root (Path | str | None): Path to the root of the dataset.
-            Defaults to ``./datasets/kaputt``.
+            Defaults to ``"./datasets/kaputt"``.
         train_batch_size (int, optional): Training batch size.
             Defaults to ``32``.
         eval_batch_size (int, optional): Test batch size.

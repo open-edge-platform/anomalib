@@ -61,7 +61,7 @@ class VAD(AnomalibDataModule):
 
     Args:
         root (Path | str | None): Path to the root of the dataset.
-            Defaults to ``./datasets/VAD``.
+            Defaults to ``"./datasets/VAD"``.
         category (str): Category of the VAD dataset. Defaults to ``"vad"``.
         train_batch_size (int, optional): Training batch size.
             Defaults to ``32``.

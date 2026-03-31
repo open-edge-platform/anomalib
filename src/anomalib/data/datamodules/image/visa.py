@@ -70,7 +70,7 @@ class Visa(AnomalibDataModule):
 
     Args:
         root (Path | str | None): Path to the root of the dataset.
-            Defaults to ``./datasets/visa``.
+            Defaults to ``"./datasets/visa"``.
         category (str): Category of the VisA dataset (e.g. ``"candle"``).
             Defaults to ``"capsules"``.
         train_batch_size (int, optional): Training batch size.

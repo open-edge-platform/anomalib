@@ -54,7 +54,7 @@ class MPDD(AnomalibDataModule):
 
     Args:
         root (Path | str | None): Path to the root of the dataset.
-            Defaults to ``./datasets/MPDD``.
+            Defaults to ``"./datasets/MPDD"``.
         category (str): Category of the MPDD dataset (e.g. ``"bracket_black"`` or
             ``"bracket_brown"``). Defaults to ``"bracket_black"``.
         train_batch_size (int, optional): Training batch size.

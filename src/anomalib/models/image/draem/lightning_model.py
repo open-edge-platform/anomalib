@@ -57,7 +57,7 @@ class Draem(AnomalibModule):
 
     Args:
         dtd_dir (Path | str): Directory path for the DTD dataset for anomaly deneration.
-            Defaults to ``./datasets/dtd``.
+            Defaults to ``"./datasets/dtd"``.
         enable_sspcab (bool, optional): Enable SSPCAB training.
             Defaults to ``False``.
         sspcab_lambda (float, optional): Weight factor for SSPCAB loss.

@@ -55,7 +55,7 @@ class MVTec3D(AnomalibDataModule):
 
     Args:
         root (Path | str | None): Path to the root of the dataset.
-            Defaults to ``./datasets/MVTec3D``.
+            Defaults to ``"./datasets/MVTec3D"``.
         category (str): Category of the MVTec3D dataset (e.g. ``"bottle"`` or
             ``"cable"``). Defaults to ``"bagel"``.
         train_batch_size (int, optional): Training batch size.

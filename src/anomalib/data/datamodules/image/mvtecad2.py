@@ -58,7 +58,7 @@ class MVTecAD2(AnomalibDataModule):
 
     Args:
         root (str | Path | None): Path to the dataset root directory.
-            Defaults to ``./datasets/MVTec_AD_2``.
+            Defaults to ``"./datasets/MVTec_AD_2"``.
         category (str): Name of the MVTec AD 2 category to load.
             Defaults to ``"sheet_metal"``.
         train_batch_size (int, optional): Training batch size.

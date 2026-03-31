@@ -88,9 +88,9 @@ class Avenue(AnomalibVideoDataModule):
 
     Args:
         root (Path | str | None): Path to the root of the dataset.
-            Defaults to ``./datasets/avenue``.
+            Defaults to ``"./datasets/avenue"``.
         gt_dir (Path | str | None): Path to the ground truth files.
-            Defaults to ``./datasets/avenue/ground_truth_demo``.
+            Defaults to ``"./datasets/avenue/ground_truth_demo"``.
         clip_length_in_frames (int): Number of video frames in each clip.
             Defaults to ``2``.
         frames_between_clips (int): Number of frames between consecutive clips.
