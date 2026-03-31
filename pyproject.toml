@@ -117,13 +117,10 @@ cu126 = [
     "torch>=2.6.0,<=2.8.0",
     "torchvision>=0.21.0",
 ]
-cu124 = [
-    "torch>=2.6.0,<=2.7.1", # CUDA 12.4 support dropped in torch 2.8+
-    "torchvision>=0.21.0,<=0.22.1",
-]
 cu130 = [
-    "torch>=2.6.0", # Note: onnx export fails with torch>=2.9.0 and cuda 13 isn't supported by <=2.8.0
-    "torchvision>=0.21.0",
+    "torch>=2.9.0",
+    "torchcodec>=0.9.0",
+    "torchvision>=0.24.0",
 ]
 rocm = [
     "torch>=2.6.0,<=2.8.0",
@@ -167,7 +164,6 @@ conflicts = [
         { extra = "cpu" },
         { extra = "cu118" },
         { extra = "cu126" },
-        { extra = "cu124" },
         { extra = "cu130" },
         { extra = "rocm" },
         { extra = "xpu" },
@@ -191,11 +187,6 @@ url = "https://download.pytorch.org/whl/cu126"
 explicit = true
 
 [[tool.uv.index]]
-name = "pytorch-cu124"
-url = "https://download.pytorch.org/whl/cu124"
-explicit = true
-
-[[tool.uv.index]]
 name = "pytorch-cu130"
 url = "https://download.pytorch.org/whl/cu130"
 explicit = true
@@ -216,7 +207,6 @@ torch = [
     { index = "pytorch-cpu", extra = "cpu" },
     { index = "pytorch-cu118", extra = "cu118" },
     { index = "pytorch-cu126", extra = "cu126" },
-    { index = "pytorch-cu124", extra = "cu124" },
     { index = "pytorch-cu130", extra = "cu130" },
     { index = "pytorch-rocm61", extra = "rocm" },
     { index = "pytorch-xpu", extra = "xpu" },
@@ -225,7 +215,6 @@ torchvision = [
     { index = "pytorch-cpu", extra = "cpu" },
     { index = "pytorch-cu118", extra = "cu118" },
     { index = "pytorch-cu126", extra = "cu126" },
-    { index = "pytorch-cu124", extra = "cu124" },
     { index = "pytorch-cu130", extra = "cu130" },
     { index = "pytorch-rocm61", extra = "rocm" },
     { index = "pytorch-xpu", extra = "xpu" },

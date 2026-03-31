@@ -4,7 +4,7 @@
 #------------------------------------------
 # Web UI Build Stage
 #------------------------------------------
-FROM node:24-alpine3.22@sha256:76db75ca7e7da9148ae42c92d9be12d12a8d7b03e171f18339355d8078d644a0 AS web-ui-base
+FROM node:24-alpine3.22@sha256:4f33c7804fa7775b87875f512e25e515692210bfdeafd715eb8bc441c364e2f6 AS web-ui-base
 
 WORKDIR /home/app/web_ui/
 
@@ -116,7 +116,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app/application/backend
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --extra cu124
+    uv sync --frozen --extra cu130
 
 #------------------------------------------
 # Anomalib Studio CUDA intermediate stage to cleanup CUDA non-distributable dependencies

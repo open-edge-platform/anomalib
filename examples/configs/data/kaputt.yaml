@@ -1,6 +1,7 @@
 class_path: anomalib.data.Kaputt
 init_args:
   root: ./datasets/kaputt
+  category: book_other
   train_batch_size: 32
   eval_batch_size: 32
   num_workers: 8

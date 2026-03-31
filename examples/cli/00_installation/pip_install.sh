@@ -10,8 +10,8 @@ pip install anomalib
 # For example, for CPU:
 pip install "anomalib[cpu]"
 
-# Or for CUDA 12.4:
-pip install "anomalib[cu124]"
+# Or for CUDA 13.0:
+pip install "anomalib[cu130]"
 
 # For a full installation with all optional dependencies on CPU:
 pip install "anomalib[full,cpu]"
