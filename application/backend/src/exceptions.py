@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import http
 
+from pydantic_models.job import JobStatus
 from utils.short_uuid import ShortUUID
 
 
@@ -96,11 +97,14 @@ class JobNotDeletableException(GetiBaseException):
     """
 
     def __init__(self, job_id: str | ShortUUID, job_status: str) -> None:
+        if job_status in {JobStatus.PENDING, JobStatus.RUNNING}:
+            hint = "Cancel the job first before deleting it."
+        elif job_status == JobStatus.COMPLETED:
+            hint = "Completed jobs cannot be deleted while the associated model exists."
+        else:
+            hint = "Only failed or canceled jobs can be deleted."
         super().__init__(
-            message=(
-                f"Job `{job_id}` cannot be deleted because it is in status '{job_status}'. "
-                "Only failed or canceled jobs can be deleted."
-            ),
+            message=f"Job `{job_id}` cannot be deleted because it is in status '{job_status}'. {hint}",
             error_code="job_not_deletable",
             http_status=http.HTTPStatus.CONFLICT,
         )
