@@ -86,7 +86,7 @@ class ADAM3DDataset(AnomalibDepthDataset):
     ) -> None:
         super().__init__(augmentations=augmentations)
 
-        root = root if root is not None else get_datasets_dir() / "Adam3D"
+        root = root if root is not None else get_datasets_dir() / "ADAM3D"
 
         self.root_category = Path(root) / Path(category)
         self.split = split
