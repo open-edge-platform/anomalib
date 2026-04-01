@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- 🚀 **model**: Add Patchflow model for normalizing-flow-based anomaly detection with support for both `tf_efficientnet_b5` (timm CNN) and `dinov2_vit_base_14` (DINOv2 ViT) backbones
+- ✅ **tests**: Add pytest coverage for Patchflow torch model, lightning module, loss, and anomaly map with both `tf_efficientnet_b5` and `dinov2_vit_base_14` backbones
+- 📄 **config**: Add example configs for Patchflow with `tf_efficientnet_b5` and `dinov2_vit_base_14` backbones
+- 🚀 **model**: Enable Patchcore Training Half Precision by @alexriedel1 in https://github.com/open-edge-platform/anomalib/pull/3047
+
 ### Removed
 
 ### Changed
