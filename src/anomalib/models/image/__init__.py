@@ -36,6 +36,7 @@ Available Models:
     - :class:`Fastflow`: Fast Flow
     - :class:`Fre`: Feature Reconstruction Error
     - :class:`Ganomaly`: Generative Adversarial Networks
+    - :class:`L2BT`: Learning to Be a Transformer to Pinpoint Anomalies
     - :class:`Padim`: Patch Distribution Modeling
     - :class:`Patchcore`: Patch Core
     - :class:`ReverseDistillation`: Reverse Knowledge Distillation
@@ -60,6 +61,7 @@ from .efficient_ad import EfficientAd
 from .fastflow import Fastflow
 from .fre import Fre
 from .ganomaly import Ganomaly
+from .l2bt import L2BT
 from .padim import Padim
 from .patchcore import Patchcore
 from .reverse_distillation import ReverseDistillation
@@ -84,6 +86,7 @@ __all__ = [
     "Fastflow",
     "Fre",
     "Ganomaly",
+    "L2BT",
     "Padim",
     "Patchcore",
     "ReverseDistillation",
