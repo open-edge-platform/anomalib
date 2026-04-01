@@ -31,6 +31,9 @@ All subsequent commands should be run from this directory.
 
 Choose the build that matches your hardware. The `AI_DEVICE` environment variable tells the build which inference backend to target.
 
+> [!NOTE]
+> The `HOST` defaults to `0.0.0.0`, which binds the service to all network interfaces inside the container and allows external access when the relevant ports are exposed/published (for example via Docker Compose).
+
 ### CPU Build
 
 Use this if you don't have a GPU or want a hardware-agnostic setup. This is the default and works on any machine with Docker installed.
