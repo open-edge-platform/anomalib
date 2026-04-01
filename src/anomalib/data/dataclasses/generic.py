@@ -33,11 +33,12 @@ Example:
     ... )
 """
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterator
 from dataclasses import asdict, dataclass, fields, is_dataclass, replace
 from types import NoneType
-from typing import Any, ClassVar, Generic, TypeVar, get_args, get_type_hints
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeVar, get_args, get_type_hints
 
 import numpy as np
 import torch
@@ -45,6 +46,9 @@ from torch import tensor
 from torch.utils.data import default_collate
 from torchvision.transforms.v2.functional import resize
 from torchvision.tv_tensors import Image, Mask, Video
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
 
 ImageT = TypeVar("ImageT", Image, Video, np.ndarray)
 T = TypeVar("T", torch.Tensor, np.ndarray)
@@ -782,7 +786,7 @@ class BatchIterateMixin(Generic[ItemT]):
             raise AttributeError(msg) from e
 
     @classmethod
-    def collate(cls: type["BatchIterateMixin"], items: list[ItemT]) -> "BatchIterateMixin":
+    def collate(cls: type[BatchIterateMixin], items: list[ItemT]) -> BatchIterateMixin:
         """Convert a list of DatasetItem objects to a Batch object.
 
         Args:

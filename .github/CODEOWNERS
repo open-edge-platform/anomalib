@@ -48,9 +48,9 @@
 /src/anomalib/visualization                                 @samet-akcay @ashwinvaidya17
 
 
-# Geti Inspect
-/application/ui                                             @MarkRedeman
-/application/backend                                        @maxxgx
+# Anomalib Studio
+/application/ui                                             @MarkRedeman @maxxgx @ActiveChooN
+/application/backend                                        @maxxgx @rajeshgangireddy @MarkRedeman
 
 # Tests
 /tests/                                                     @samet-akcay @ashwinvaidya17 @rajeshgangireddy

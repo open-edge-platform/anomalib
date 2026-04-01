@@ -1,0 +1,131 @@
+.container {
+    height: 100%;
+    overflow-y: auto;
+}
+
+.backButton {
+    align-self: flex-start;
+    margin-bottom: var(--spectrum-global-dimension-size-100);
+    display: flex;
+    align-items: center;
+    gap: var(--spectrum-global-dimension-size-50);
+    padding-left: var(--spectrum-global-dimension-size-100);
+
+    &:hover {
+        background-color: var(--spectrum-global-color-gray-300);
+    }
+}
+
+.modelHeader {
+    padding: var(--spectrum-global-dimension-size-200);
+    background-color: var(--spectrum-global-color-gray-200);
+    border-radius: var(--spectrum-global-dimension-size-50);
+}
+
+.modelName {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--spectrum-global-color-gray-900);
+}
+
+.badge {
+    line-height: calc(var(--spectrum-global-dimension-size-175));
+    padding-inline: var(--spectrum-global-dimension-static-size-75);
+    display: inline-flex;
+    align-items: center;
+    padding: var(--spectrum-global-dimension-static-size-25) var(--spectrum-global-dimension-static-size-75);
+    gap: var(--spectrum-global-dimension-static-size-25);
+
+    svg {
+        padding-inline-start: var(--spectrum-global-dimension-size-25) !important;
+        padding-inline-end: var(--spectrum-global-dimension-size-25) !important;
+    }
+}
+
+.badge[class*='spectrum-Badge--info'] {
+    gap: var(--spectrum-global-dimension-static-size-50);
+    padding: var(--spectrum-global-dimension-static-size-50) var(--spectrum-global-dimension-static-size-75);
+    background-color: var(--spectrum-accent-background-color-default) !important;
+    color: var(--spectrum-global-color-gray-50) !important;
+}
+
+.infoGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spectrum-global-dimension-size-150);
+}
+
+.infoItem {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spectrum-global-dimension-size-50);
+}
+
+.infoLabel {
+    font-size: 0.75rem;
+    color: var(--spectrum-global-color-gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.infoValue {
+    font-size: 0.875rem;
+    color: var(--spectrum-global-color-gray-800);
+}
+
+.exportSection {
+    padding: var(--spectrum-global-dimension-size-200);
+    background-color: var(--spectrum-global-color-gray-200);
+    border-radius: var(--spectrum-global-dimension-size-50);
+}
+
+.sectionTitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--spectrum-global-color-gray-900);
+}
+
+.label {
+    font-size: 0.85rem;
+    color: var(--spectrum-global-color-gray-700);
+}
+
+.formatGroup {
+    display: flex;
+    gap: var(--spectrum-global-dimension-size-100);
+}
+
+.formatOption {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    height: var(--spectrum-global-dimension-size-700);
+    padding: var(--spectrum-global-dimension-size-100);
+    background-color: var(--spectrum-global-color-gray-300);
+    border: 2px solid transparent;
+    border-radius: var(--spectrum-global-dimension-size-50);
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease;
+
+    &:hover {
+        background-color: var(--spectrum-global-color-gray-400);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--spectrum-global-color-blue-500);
+        outline-offset: 2px;
+    }
+}
+
+.formatOptionSelected {
+    border-color: var(--spectrum-global-color-blue-500);
+    background-color: var(--spectrum-global-color-gray-300);
+}
+
+.formatIcon {
+    width: var(--spectrum-global-dimension-size-500);
+    height: var(--spectrum-global-dimension-size-500);
+}

@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """MVTec AD Data Module.
@@ -53,7 +53,6 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.mvtecad import MVTecADDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
-from anomalib.utils import deprecate
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +79,7 @@ class MVTecAD(AnomalibDataModule):
             Defaults to ``32``.
         num_workers (int, optional): Number of workers.
             Defaults to ``8``.
-        train_augmentations (Transform | None): Augmentations to apply dto the training images
+        train_augmentations (Transform | None): Augmentations to apply to the training images
             Defaults to ``None``.
         val_augmentations (Transform | None): Augmentations to apply to the validation images.
             Defaults to ``None``.
@@ -217,15 +216,3 @@ class MVTecAD(AnomalibDataModule):
             logger.info("Found the dataset.")
         else:
             download_and_extract(self.root, DOWNLOAD_INFO)
-
-
-@deprecate(since="2.1.0", remove="2.3.0", use="MVTecAD")
-class MVTec(MVTecAD):
-    """MVTec datamodule class (Deprecated).
-
-    This class is deprecated and will be removed in a future version.
-    Please use MVTecAD instead.
-    """
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)

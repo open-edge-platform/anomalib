@@ -8,7 +8,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
-from pkg_resources import Requirement
+from packaging.requirements import Requirement
 from pytest_mock import MockerFixture
 
 from anomalib.cli.utils.installation import (
@@ -47,8 +47,8 @@ def test_get_requirements(mocker: MockerFixture) -> None:
 def test_parse_requirements() -> None:
     """Test that parse_requirements returns the expected tuple of requirements."""
     requirements = [
-        Requirement.parse("torch==2.0.0"),
-        Requirement.parse("onnx>=1.8.1"),
+        Requirement("torch==2.0.0"),
+        Requirement("onnx>=1.8.1"),
     ]
     torch_req, other_reqs = parse_requirements(requirements)
     assert isinstance(torch_req, str)
@@ -57,14 +57,14 @@ def test_parse_requirements() -> None:
     assert other_reqs == ["onnx>=1.8.1"]
 
     requirements = [
-        Requirement.parse("torch<=2.0.1, >=1.8.1"),
+        Requirement("torch<=2.0.1, >=1.8.1"),
     ]
     torch_req, other_reqs = parse_requirements(requirements)
     assert torch_req == "torch<=2.0.1,>=1.8.1"
     assert other_reqs == []
 
     requirements = [
-        Requirement.parse("onnx>=1.8.1"),
+        Requirement("onnx>=1.8.1"),
     ]
     with pytest.raises(ValueError, match=r"Could not find torch requirement."):
         parse_requirements(requirements)
@@ -94,10 +94,11 @@ def test_get_cuda_version_with_nvcc(mocker: MockerFixture) -> None:
 
 def test_update_cuda_version_with_available_torch_cuda_build() -> None:
     """Test that update_cuda_version_with_available_torch_cuda_build returns the expected CUDA version."""
-    assert update_cuda_version_with_available_torch_cuda_build("11.1", "2.0.1") == "11.7"
-    assert update_cuda_version_with_available_torch_cuda_build("11.7", "2.0.1") == "11.7"
-    assert update_cuda_version_with_available_torch_cuda_build("11.8", "2.0.1") == "11.8"
-    assert update_cuda_version_with_available_torch_cuda_build("12.1", "2.1.1") == "12.1"
+    assert update_cuda_version_with_available_torch_cuda_build("11.1", "2.6.0") == "11.8"
+    assert update_cuda_version_with_available_torch_cuda_build("11.8", "2.6.0") == "11.8"
+    assert update_cuda_version_with_available_torch_cuda_build("12.6", "2.7.0") == "12.6"
+    assert update_cuda_version_with_available_torch_cuda_build("11.8", "2.8.0") == "12.6"
+    assert update_cuda_version_with_available_torch_cuda_build("13.0", "2.9.0") == "13.0"
 
 
 def test_get_cuda_suffix() -> None:
@@ -111,8 +112,8 @@ def test_get_hardware_suffix(mocker: MockerFixture) -> None:
     mocker.patch("anomalib.cli.utils.installation.get_cuda_version", return_value="11.2")
     assert get_hardware_suffix() == "cu112"
 
-    mocker.patch("anomalib.cli.utils.installation.get_cuda_version", return_value="12.1")
-    assert get_hardware_suffix(with_available_torch_build=True, torch_version="2.0.1") == "cu118"
+    mocker.patch("anomalib.cli.utils.installation.get_cuda_version", return_value="12.6")
+    assert get_hardware_suffix(with_available_torch_build=True, torch_version="2.7.0") == "cu126"
 
     with pytest.raises(ValueError, match=r"``torch_version`` must be provided"):
         get_hardware_suffix(with_available_torch_build=True)
@@ -123,35 +124,36 @@ def test_get_hardware_suffix(mocker: MockerFixture) -> None:
 
 def test_get_torch_install_args(mocker: MockerFixture) -> None:
     """Test that get_torch_install_args returns the expected install arguments."""
-    requirement = Requirement.parse("torch>=2.1.1")
+    requirement = Requirement("torch>=2.7.0")
     mocker.patch("anomalib.cli.utils.installation.platform.system", return_value="Linux")
     mocker.patch("anomalib.cli.utils.installation.get_hardware_suffix", return_value="cpu")
     install_args = get_torch_install_args(requirement)
     expected_args = [
         "--extra-index-url",
         "https://download.pytorch.org/whl/cpu",
-        "torch>=2.1.1",
-        "torchvision>=0.16.1",
+        "torch>=2.7.0",
+        "torchvision>=0.22.0",
     ]
     for arg in expected_args:
         assert arg in install_args
 
-    requirement = Requirement.parse("torch>=1.13.0,<=2.0.1")
-    mocker.patch("anomalib.cli.utils.installation.get_hardware_suffix", return_value="cu111")
+    requirement = Requirement("torch>=2.9.0")
+    mocker.patch("anomalib.cli.utils.installation.get_hardware_suffix", return_value="cu130")
     install_args = get_torch_install_args(requirement)
     expected_args = [
         "--extra-index-url",
-        "https://download.pytorch.org/whl/cu111",
+        "https://download.pytorch.org/whl/cu130",
     ]
     for arg in expected_args:
         assert arg in install_args
 
-    requirement = Requirement.parse("torch==2.0.1")
+    requirement = Requirement("torch==2.8.0")
+    mocker.patch("anomalib.cli.utils.installation.get_hardware_suffix", return_value="cu126")
     expected_args = [
         "--extra-index-url",
-        "https://download.pytorch.org/whl/cu111",
-        "torch==2.0.1",
-        "torchvision==0.15.2",
+        "https://download.pytorch.org/whl/cu126",
+        "torch==2.8.0",
+        "torchvision==0.23.0",
     ]
     install_args = get_torch_install_args(requirement)
     for arg in expected_args:
@@ -161,9 +163,9 @@ def test_get_torch_install_args(mocker: MockerFixture) -> None:
     assert install_args == ["torch"]
 
     mocker.patch("anomalib.cli.utils.installation.platform.system", return_value="Darwin")
-    requirement = Requirement.parse("torch==2.0.1")
+    requirement = Requirement("torch==2.8.0")
     install_args = get_torch_install_args(requirement)
-    assert install_args == ["torch==2.0.1"]
+    assert install_args == ["torch==2.8.0"]
 
     mocker.patch("anomalib.cli.utils.installation.platform.system", return_value="Unknown")
     with pytest.raises(RuntimeError, match=r"Unsupported OS: Unknown"):

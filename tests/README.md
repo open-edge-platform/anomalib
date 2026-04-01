@@ -10,7 +10,7 @@ Before running the tests, make sure you have the following prerequisites
 installed:
 
 - Python 3.8 or newer
-- `pre-commit`
+- `prek`
 - `pytest`
 - `pytest-cov`
 - `pytest-sugar`
@@ -93,7 +93,7 @@ This will provide instructions on how to check test coverage with `pytest-cov.`
 ensuring compatibility. In Anomalib, `tox` is used to automate multiple tests.
 Here's a brief explanation of each:
 
-- `pre-commit`: These tests are run before each commit is made to the
+- `prek`: These tests are run before each commit is made to the
   repository. They're used to catch issues early and prevent problematic code
   from being committed to the repository. They can include things like style
   checks, unit tests, and static analysis.
@@ -118,7 +118,7 @@ environment. Here are some examples:
 To run the pre-commit tests
 
 ```bash
-tox -e pre-commit
+tox -e prek
 ```
 
 To run the unit and integration tests

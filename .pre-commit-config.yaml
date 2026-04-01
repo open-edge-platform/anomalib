@@ -1,6 +1,9 @@
 default_language_version:
   node: 24.2.0
 
+# We use a different CI setup for Anomalib Studio
+exclude: ^application/
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
@@ -11,6 +14,7 @@ repos:
         exclude: "docs/source/examples"
       - id: check-yaml
       - id: check-added-large-files
+        exclude: '(^|/).*\.lock$' # Exclude lock files (uv.lock, package-lock.json, etc.)
       - id: debug-statements
       - id: detect-private-key
 
@@ -66,12 +70,13 @@ repos:
       - id: nbqa-ruff
         # Ignore unsorted imports. This is because jupyter notebooks can import
         # packages in a different order than the rest of the codebase.
-        args: ["--ignore=D100,D407,I001,E402"]
+        args: ["--ignore=D100,D407,I001,E402,B018"]
 
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
+        exclude: ^app/ui/
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.45.0

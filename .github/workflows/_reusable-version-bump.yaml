@@ -106,14 +106,14 @@ jobs:
       version-changed: ${{ steps.bump.outputs.version_changed }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
           token: ${{ secrets.github-token }}
           persist-credentials: true
 
       - name: Set up Python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
           python-version: ${{ inputs.python-version }}
           cache: pip
@@ -173,19 +173,22 @@ jobs:
 
       - name: Create Pull Request
         if: steps.check-bump.outputs.version_needs_bump == 'true' && inputs.create-pr && !inputs.dry-run
-        uses: peter-evans/create-pull-request@98357b18bf14b5342f975ff684046ec3b2a07725 # v8.0.0
+        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8.1.0
+        env:
+          CURRENT_VERSION: ${{ steps.current-version.outputs.current_version }}
+          NEW_VERSION: ${{ steps.bump.outputs.new_version }}
         with:
           token: ${{ secrets.github-token }}
-          commit-message: "chore(release): bump version to ${{ steps.bump.outputs.new_version }}"
-          title: "chore(release): bump version to ${{ steps.bump.outputs.new_version }}"
+          commit-message: "chore(release): bump version to ${{ env.NEW_VERSION }}"
+          title: "chore(release): bump version to ${{ env.NEW_VERSION }}"
           body: |
             ## 🚀 Automated Version Bump
 
             This PR was created automatically by the version bump workflow.
 
             ### Changes
-            - **Previous version:** ${{ steps.current-version.outputs.current_version }}
-            - **New version:** ${{ steps.bump.outputs.new_version }}
+            - **Previous version:** ${{ env.CURRENT_VERSION }}
+            - **New version:** ${{ env.NEW_VERSION }}
 
             ### What's included
             - Version bump in `pyproject.toml`
@@ -200,12 +203,14 @@ jobs:
 
             ---
             *This PR was generated automatically based on conventional commit history.*
-          branch: "chore/release-bump-${{ steps.bump.outputs.new_version }}"
+          branch: "chore/release-bump-${{ env.NEW_VERSION }}"
           base: ${{ inputs.target-branch }}
           delete-branch: true
 
       - name: No version bump needed
         if: steps.check-bump.outputs.version_needs_bump == 'false'
+        env:
+          CURRENT_VERSION: ${{ steps.current-version.outputs.current_version }}
         run: |
           echo "No version bump needed - no feat/fix commits found since last release"
-          echo "Current version remains: ${{ steps.current-version.outputs.current_version }}"
+          echo "Current version remains: $CURRENT_VERSION"

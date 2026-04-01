@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Implements custom trainer for Anomalib.
@@ -44,7 +44,7 @@ from anomalib.callbacks.timer import TimerCallback
 from anomalib.data import AnomalibDataModule, AnomalibDataset, PredictDataset
 from anomalib.deploy import CompressionType, ExportType
 from anomalib.models import AnomalibModule
-from anomalib.utils.path import create_versioned_dir
+from anomalib.utils.path import create_versioned_dir, resolve_versioned_path
 
 logger = logging.getLogger(__name__)
 
@@ -291,7 +291,9 @@ class Engine:
         # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
         # 2. Update the default root directory
         root_dir = Path(self._cache.args["default_root_dir"]) / model.name / dataset_name / category
-        self._cache.args["default_root_dir"] = create_versioned_dir(root_dir) if versioned_dir else root_dir / "latest"
+        self._cache.args["default_root_dir"] = (
+            create_versioned_dir(root_dir) if versioned_dir else resolve_versioned_path(root_dir / "latest")
+        )
 
     def _setup_trainer(self, model: AnomalibModule) -> None:
         """Instantiate the trainer based on the model parameters."""
@@ -310,9 +312,10 @@ class Engine:
         """Set up callbacks for the trainer."""
         callbacks: list[Callback] = []
 
-        # Add ModelCheckpoint if it is not in the callbacks list.
+        # Add ModelCheckpoint if it is not in the callbacks list and barebones is not enabled.
         has_checkpoint_callback = any(isinstance(c, ModelCheckpoint) for c in self._cache.args["callbacks"])
-        if has_checkpoint_callback is False:
+        is_barebones = self._cache.args.get("barebones", False)
+        if has_checkpoint_callback is False and not is_barebones:
             callbacks.append(
                 ModelCheckpoint(
                     dirpath=self._cache.args["default_root_dir"] / "weights" / "lightning",
@@ -557,7 +560,21 @@ class Engine:
         if self._should_run_validation(model or self.model, ckpt_path):
             logger.info("Running validation before testing to collect normalization metrics and/or thresholds.")
             self.trainer.validate(model, dataloaders, None, verbose=False, datamodule=datamodule)
-        return self.trainer.test(model, dataloaders, ckpt_path, verbose, datamodule, weights_only=False)
+
+        results = self.trainer.test(model, dataloaders, ckpt_path, verbose, datamodule, weights_only=False)
+
+        # In barebones mode, PyTorch Lightning may return empty results dict despite having logged metrics.
+        # Inject logged_metrics into results to ensure metrics are available in the return value.
+        if (
+            self.trainer.barebones
+            and results
+            and isinstance(results, list)
+            and not results[0]
+            and self.trainer.logged_metrics
+        ):
+            results[0] = {k: v.item() if hasattr(v, "item") else v for k, v in self.trainer.logged_metrics.items()}
+
+        return results
 
     def predict(
         self,

@@ -8,8 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- 🚀 **model**: Enable Patchcore Training Half Precision by @alexriedel1 in https://github.com/open-edge-platform/anomalib/pull/3047
-
 ### Removed
 
 ### Changed
@@ -17,6 +15,69 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Deprecated
 
 ### Fixed
+
+## [v2.3.1] - 2026-03-27
+
+### Removed
+
+- ⚠️ **core**: Remove deprecated `MVTec` datamodule, `MVTecDataset`, `BaseThreshold`, `plot_figure`, and `BaseVisualizer` (see migration guide in release notes) by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3469
+
+### Changed
+
+- 🔧 **deps**: Update python:3.13-slim docker digest to 739e721 in https://github.com/open-edge-platform/anomalib/pull/3448
+- 🔧 **ci**: Do not use cache for daily builds by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/3467
+- 🔧 **docker**: Remove pip from the base image by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/3446
+- 🔧 **deps**: Lock file maintenance in https://github.com/open-edge-platform/anomalib/pull/3449
+- 📝 **docs**: Update docker README with setup, access, and troubleshooting steps by @arunimakanavu in https://github.com/open-edge-platform/anomalib/pull/3464
+
+### Fixed
+
+- 🐞 **application**: Fix Windows long path issue by switching to ShortUUID by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3470
+- 🐞 **application**: Fix source path overflow in UI by @ActiveChooN in https://github.com/open-edge-platform/anomalib/pull/3436
+
+## [v2.3.0] - 2026-03-20
+
+### Added
+
+- 🚀 **model**: Introduces AnomalyDINO model by @rajeshgangireddy, @alfieroddanintel in https://github.com/open-edge-platform/anomalib/pull/3193
+- 🚀 **model**: Updated SuperSimpleNet to latest version by @blaz-r in https://github.com/open-edge-platform/anomalib/pull/3036
+- 🚀 **model**: Enable Patchcore Training Half Precision by @alexriedel1 in https://github.com/open-edge-platform/anomalib/pull/3047, https://github.com/open-edge-platform/anomalib/pull/3055
+- 🚀 **engine**: Support barebones mode for Engine by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3189
+- 🚀 **data**: Add Kaput dataset by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3330
+- 🚀 **postprocess**: Cleanup MEBin post-processor by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3321
+- 🚀 **postprocess**: Add MEBin post-processing method by @StarPlatinum7 in https://github.com/open-edge-platform/anomalib/pull/3116
+- 🚀 **application**: Add Anomalib Studio Beta by @ActiveChooN, @AlexanderBarabanov, @ashwinvaidya17, @camiloHimura, @dwesolow, @MarkRedeman, @maxxgx, @mramotowski in https://github.com/open-edge-platform/anomalib/pull/3158
+
+### Fixed
+
+- 🐛 **model**: Patchcore: Solves GPU memory bottleneck (kNN) during inference by @kaninaba94 in https://github.com/open-edge-platform/anomalib/pull/3415
+- 🐞 **metrics**: Fix the bug in `F1AdaptiveThreshold` which occurs only when there are no anomalous images in a validation set by @tanemaki in https://github.com/open-edge-platform/anomalib/pull/2437
+- 🐞 **metrics**: Support thresholds as arguments by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3394
+- 🐞 **metric**: f1max when labels are passed by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3397
+- 🐞 **model**: Support non-square input images in Dinomaly Model by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3245
+- 🐞 **model**: Fix AnomalyDINO aspect-ratio preserving resize preprocessing by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3241
+- 🐞 **model**: Cast CFA memory bank to float32 after KMeans clustering by @casperthuis in https://github.com/open-edge-platform/anomalib/pull/3365
+- 🐞 **export**: Fix export to INT8_PTQ and INT8_ACQ by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3155
+- 🐞 **export**: Handle rare cases during INT8_ACQ export by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3208
+- 🐞 **models**: Resolve OpenVINO export and hardcoded Cuda for a few models by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3315
+- 🐞 **inference**: Add support for XPU devices in TorchInferencer by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3339
+- 🐞 **accelerator**: Adding name method in XPUAccelerator by @waschsalz in https://github.com/open-edge-platform/anomalib/pull/3108
+- 🐞 **utils**: Improve path handling for Windows compatibility by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3353
+- 🐞 **data**: Fixed comparison of file extensions for Folder dataset by @abc-125 in https://github.com/open-edge-platform/anomalib/pull/3059
+- 🐞 **dataset**: Update outdated MVTec AD dataset download URL by @rapsealk in https://github.com/open-edge-platform/anomalib/pull/3138
+- 🐞 **data**: Align REAL-IAD dataset categories with HuggingFace structure by @wirthual in https://github.com/open-edge-platform/anomalib/pull/3139
+- 🐞 **stream**: Streaming and pre-trained model path issues by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3422
+- 🐞 **metrics**: Disable MPS for torch metrics by @maxxgx in https://github.com/open-edge-platform/anomalib/pull/3019
+- 🐞 **dependencies**: Update Lightning, torch+xpu, and add requests by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3180
+- 🐞 **config**: Add openvino to mypy skip-imports overrides by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3447
+
+### Changed
+
+- 🔧 **metric**: Speedup AUPRO by @alfieroddanintel in https://github.com/open-edge-platform/anomalib/pull/3115
+- 🔧 **deps**: Update PyTorch and torchvision versions to >=2.6.0 for security compliance by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3377
+- 🔧 **deps**: Update cu121 with cu126 to resolve security issues by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3371
+- 🔧 **docker**: Remove non-distributable Nvidia components in CUDA based image by @ivanzati in https://github.com/open-edge-platform/anomalib/pull/3378
+- 🔧 **pyproject**: Pin pandas <3.0.0 to prevent enum comparison issues by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3356
 
 ## [v2.2.0] - 2025-10-08
 
@@ -77,7 +138,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 📚 Add log for Tiled Ensemble PR by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/2683
 - 📚 Adding Zizmor and minor refactor by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/2685
 - 📚 Add `issue-management` workflow by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2746
-- 🚀 Add Tabular datamodule by @manuelkonrad in https://github.com/openvinotoolkit/anomalib/pull/2713
+- 🚀 Add Tabular datamodule by @manuelkonrad in https://github.com/open-edge-platform/anomalib/pull/2713
 - 🚀 Implement type-safe deprecation decorator with version support by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2771
 - 🚀 Add conventional commit enforcement and automation by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2773
 - 🚀 Enable Visualization for NumPy Input/Output by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2764

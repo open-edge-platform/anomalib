@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Anomalib Datasets.
@@ -57,8 +57,8 @@ from .datamodules.image import (
     Datumaro,
     Folder,
     ImageDataFormat,
+    Kaputt,
     Kolektor,
-    MVTec,
     MVTecAD,
     MVTecAD2,
     MVTecLOCO,
@@ -76,6 +76,7 @@ from .datasets.image import (
     BTechDataset,
     DatumaroDataset,
     FolderDataset,
+    KaputtDataset,
     KolektorDataset,
     MPDDDataset,
     MVTecADDataset,
@@ -183,9 +184,9 @@ __all__ = [
     "BTech",
     "Datumaro",
     "Folder",
+    "Kaputt",
     "Kolektor",
     "MPDD",
-    "MVTec",  # Include MVTec for backward compatibility
     "MVTecAD",
     "MVTecAD2",
     "MVTecLOCO",
@@ -203,6 +204,7 @@ __all__ = [
     "BTechDataset",
     "DatumaroDataset",
     "FolderDataset",
+    "KaputtDataset",
     "KolektorDataset",
     "MPDDDataset",
     "ADAM3DDataset",

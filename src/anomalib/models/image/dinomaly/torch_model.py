@@ -12,7 +12,6 @@ See Also:
         Dinomaly Lightning model.
 """
 
-import math
 from functools import partial
 
 import torch
@@ -205,8 +204,9 @@ class DinomalyModel(nn.Module):
                 - en: List of fused encoder features reshaped to spatial dimensions
                 - de: List of fused decoder features reshaped to spatial dimensions
         """
+        h_patches = x.shape[2] // self.encoder.patch_size
+        w_patches = x.shape[3] // self.encoder.patch_size
         x = self.encoder.prepare_tokens(x)
-
         encoder_features = []
         decoder_features = []
 
@@ -218,7 +218,6 @@ class DinomalyModel(nn.Module):
                 continue
             if i in self.target_layers:
                 encoder_features.append(x)
-        side = int(math.sqrt(encoder_features[0].shape[1] - 1 - self.encoder.num_register_tokens))
 
         if self.remove_class_token:
             encoder_features = [e[:, 1 + self.encoder.num_register_tokens :, :] for e in encoder_features]
@@ -239,8 +238,8 @@ class DinomalyModel(nn.Module):
         de = [self._fuse_feature([decoder_features[idx] for idx in idxs]) for idxs in self.fuse_layer_decoder]
 
         # Process features for spatial output
-        en = self._process_features_for_spatial_output(en, side)
-        de = self._process_features_for_spatial_output(de, side)
+        en = self._process_features_for_spatial_output(en, h_patches, w_patches)
+        de = self._process_features_for_spatial_output(de, h_patches, w_patches)
         return en, de
 
     def forward(self, batch: torch.Tensor, global_step: int | None = None) -> torch.Tensor | InferenceBatch:
@@ -264,7 +263,7 @@ class DinomalyModel(nn.Module):
 
         """
         en, de = self.get_encoder_decoder_outputs(batch)
-        image_size = batch.shape[2]
+        image_size = (batch.shape[2], batch.shape[3])
 
         if self.training:
             if global_step is None:
@@ -378,13 +377,15 @@ class DinomalyModel(nn.Module):
     def _process_features_for_spatial_output(
         self,
         features: list[torch.Tensor],
-        side: int,
+        h_patches: int,
+        w_patches: int,
     ) -> list[torch.Tensor]:
         """Process features for spatial output by removing tokens and reshaping.
 
         Args:
             features: List of feature tensors
-            side: Side length for spatial reshaping
+            h_patches: Number of patches in height dimension
+            w_patches: Number of patches in width dimension
 
         Returns:
             List of processed feature tensors with spatial dimensions
@@ -395,7 +396,7 @@ class DinomalyModel(nn.Module):
 
         # Reshape to spatial dimensions
         batch_size = features[0].shape[0]
-        return [f.permute(0, 2, 1).reshape([batch_size, -1, side, side]).contiguous() for f in features]
+        return [f.permute(0, 2, 1).reshape([batch_size, -1, h_patches, w_patches]).contiguous() for f in features]
 
 
 class DecoderViTBlock(nn.Module):

@@ -69,7 +69,7 @@ class VAD(AnomalibDataModule):
             Defaults to ``32``.
         num_workers (int, optional): Number of workers.
             Defaults to ``8``.
-        train_augmentations (Transform | None): Augmentations to apply dto the training images
+        train_augmentations (Transform | None): Augmentations to apply to the training images
             Defaults to ``None``.
         val_augmentations (Transform | None): Augmentations to apply to the validation images.
             Defaults to ``None``.

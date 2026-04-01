@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Anomalib library for research and benchmarking.
@@ -34,7 +34,7 @@ Note:
 
 from enum import Enum
 
-__version__ = "2.3.0dev"
+__version__ = "2.4.0.dev0"
 
 
 class LearningType(str, Enum):

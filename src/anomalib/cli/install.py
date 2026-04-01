@@ -9,7 +9,7 @@ It supports installing different dependency sets based on the user's needs.
 
 import logging
 
-from pkg_resources import Requirement
+from packaging.requirements import Requirement
 from rich.console import Console
 from rich.logging import RichHandler
 
@@ -62,7 +62,7 @@ def anomalib_install(option: str = "full", verbose: bool = False) -> int:
     elif option in requirements_dict:
         requirements.extend(requirements_dict[option])
     elif option is not None:
-        requirements.append(Requirement.parse(option))
+        requirements.append(Requirement(option))
 
     # Parse requirements into torch and other requirements.
     # This is done to parse the correct version of torch (cpu/cuda).

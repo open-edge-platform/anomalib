@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Dataset that generates synthetic anomalies.
@@ -27,7 +27,7 @@ import math
 import shutil
 from copy import deepcopy
 from pathlib import Path
-from tempfile import mkdtemp
+from tempfile import gettempdir, mkdtemp
 
 import cv2
 import pandas as pd
@@ -41,7 +41,8 @@ from anomalib.data.utils.generators.perlin import PerlinAnomalyGenerator
 logger = logging.getLogger(__name__)
 
 
-ROOT = "./.tmp/synthetic_anomaly"
+# Use system temp dir to avoid "Access denied" when CWD is write-restricted (e.g. packaged apps on Windows)
+ROOT = Path(gettempdir()) / "anomalib" / "synthetic_anomaly"
 
 
 def make_synthetic_dataset(
@@ -176,8 +177,8 @@ class SyntheticAnomalyDataset(AnomalibDataset):
 
         self.source_samples = source_samples
 
-        # Files will be written to a temporary directory in the workdir
-        root = Path(ROOT) / dataset_name
+        # Files will be written to a temporary directory under the system temp dir
+        root = ROOT / dataset_name
         root.mkdir(parents=True, exist_ok=True)
 
         self.root = Path(mkdtemp(dir=root))

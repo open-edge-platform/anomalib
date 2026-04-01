@@ -32,7 +32,7 @@ dependencies = [
     # CLI requirements
     "omegaconf>=2.1.1",
     "rich>=13.5.2",
-    "jsonargparse[signatures]>=4.27.7",
+    "jsonargparse[signatures]>=4.27.7,<4.47.0",
     "docstring_parser",     # CLI help-formatter
     "rich_argparse",        # CLI help-formatter
     # Torch and Lightning dependencies
@@ -51,7 +51,7 @@ dependencies = [
     "imagecodecs",
     "kornia>=0.6.6",
     # Data science and analysis
-    "pandas>=1.1.0",
+    "pandas>=1.1.0,<3.0.0",  # Temporary pin: pandas 3.0 breaks DirType enum comparisons in DataFrame.loc (issue #3303)
     "matplotlib>=3.4.3",
     "scikit-learn",
 ]
@@ -75,6 +75,9 @@ loggers = [
     "mlflow >=1.0.0",
 ]
 notebooks = ["gitpython", "ipykernel", "ipywidgets", "notebook"]
+# dataset specific dependencies
+datasets = ["pyarrow"]
+# documentation dependencies
 docs = [
     "myst-parser[linkify]",
     "nbsphinx",
@@ -85,8 +88,9 @@ docs = [
     "sphinx-copybutton",
     "sphinx_design",
 ]
+# testing dependencies
 test = [
-    "pre-commit",
+    "prek",
     "pytest",
     "pytest-cov",
     "pytest-xdist",
@@ -99,37 +103,36 @@ test = [
     "commitizen",
 ]
 # PyTorch dependency groups
+# NOTE: Minimum torch>=2.6.0 required due to Critical CVE-2025-32434
+#   (torch.load weights_only=True RCE, patched in 2.6.0)
 cpu = [
-    "torch>=2.4.0,<=2.8.0",
-    "torchvision>=0.19.0",
+    "torch>=2.6.0,<=2.8.0",
+    "torchvision>=0.21.0",
 ]
 cu118 = [
-    "torch>=2.4.0,<=2.8.0",
-    "torchvision>=0.19.0",
+    "torch>=2.6.0,<=2.7.1", # CUDA 11.8 support dropped in torch 2.8+
+    "torchvision>=0.21.0,<=0.22.1",
 ]
-cu121 = [
-    "torch>=2.4.0,<=2.8.0",
-    "torchvision>=0.19.0",
-]
-cu124 = [
-    "torch>=2.4.0,<=2.8.0",
-    "torchvision>=0.19.0",
+cu126 = [
+    "torch>=2.6.0,<=2.8.0",
+    "torchvision>=0.21.0",
 ]
 cu130 = [
-    "torch>=2.4.0", # Note: onnx export fails with torch>=2.9.0 and cuda 13 isn't supported by <=2.8.0
-    "torchvision>=0.19.0",
+    "torch>=2.9.0",
+    "torchcodec>=0.9.0",
+    "torchvision>=0.24.0",
 ]
 rocm = [
-    "torch>=2.4.0,<=2.8.0",
-    "torchvision>=0.19.0",
+    "torch>=2.6.0,<=2.8.0",
+    "torchvision>=0.21.0",
     "pytorch-triton-rocm ; sys_platform == 'linux'",
 ]
 xpu = [
-    "torch>=2.4.0", # Note : Last tested with torch+xpu (2.9.1)
-    "torchvision>=0.19.0",
+    "torch>=2.6.0", # Note : Last tested with torch+xpu (2.9.1)
+    "torchvision>=0.21.0",
     "pytorch-triton-xpu ; sys_platform == 'linux' or sys_platform == 'win32'",
 ]
-full = ["anomalib[clip,openvino,loggers,notebooks,vlm,video]"]
+full = ["anomalib[clip,datasets,openvino,loggers,notebooks,vlm,video]"]
 dev = ["anomalib[full,docs,test]"]
 
 [project.scripts]
@@ -160,8 +163,7 @@ conflicts = [
     [
         { extra = "cpu" },
         { extra = "cu118" },
-        { extra = "cu121" },
-        { extra = "cu124" },
+        { extra = "cu126" },
         { extra = "cu130" },
         { extra = "rocm" },
         { extra = "xpu" },
@@ -180,13 +182,8 @@ url = "https://download.pytorch.org/whl/cu118"
 explicit = true
 
 [[tool.uv.index]]
-name = "pytorch-cu121"
-url = "https://download.pytorch.org/whl/cu121"
-explicit = true
-
-[[tool.uv.index]]
-name = "pytorch-cu124"
-url = "https://download.pytorch.org/whl/cu124"
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
 explicit = true
 
 [[tool.uv.index]]
@@ -209,8 +206,7 @@ explicit = true
 torch = [
     { index = "pytorch-cpu", extra = "cpu" },
     { index = "pytorch-cu118", extra = "cu118" },
-    { index = "pytorch-cu121", extra = "cu121" },
-    { index = "pytorch-cu124", extra = "cu124" },
+    { index = "pytorch-cu126", extra = "cu126" },
     { index = "pytorch-cu130", extra = "cu130" },
     { index = "pytorch-rocm61", extra = "rocm" },
     { index = "pytorch-xpu", extra = "xpu" },
@@ -218,8 +214,7 @@ torch = [
 torchvision = [
     { index = "pytorch-cpu", extra = "cpu" },
     { index = "pytorch-cu118", extra = "cu118" },
-    { index = "pytorch-cu121", extra = "cu121" },
-    { index = "pytorch-cu124", extra = "cu124" },
+    { index = "pytorch-cu126", extra = "cu126" },
     { index = "pytorch-cu130", extra = "cu130" },
     { index = "pytorch-rocm61", extra = "rocm" },
     { index = "pytorch-xpu", extra = "xpu" },
@@ -239,7 +234,7 @@ pytorch-triton-xpu = [
 preview = true
 
 # Enable rules
-select = [
+lint.select = [
     "F",    # Pyflakes (`F`)
     "E",    # pycodestyle error (`E`)
     "W",    # pycodestyle warning (`W`)
@@ -290,7 +285,7 @@ select = [
     # "LOG",  # flake8-logging (`LOG`) - ERROR: Unknown rule selector: `LOG`
 ]
 
-ignore = [
+lint.ignore = [
     # pydocstyle
     "D107", # Missing docstring in __init__
 
@@ -343,8 +338,8 @@ ignore = [
 ]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.
-fixable = ["ALL"]
-unfixable = []
+lint.fixable = ["ALL"]
+lint.unfixable = []
 
 # Exclude a variety of commonly ignored directories.
 exclude = [
@@ -374,7 +369,7 @@ exclude = [
 line-length = 120
 
 # Allow unused variables when underscore-prefixed.
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 # Assume Python 3.10.
 target-version = "py310"
@@ -382,21 +377,21 @@ target-version = "py310"
 # Allow imports relative to the "src" and "tests" directories.
 src = ["src", "tests"]
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 # Unlike Flake8, default to a complexity level of 10.
 max-complexity = 15
 
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "google"
 
-[tool.ruff.flake8-copyright]
+[tool.ruff.lint.flake8-copyright]
 notice-rgx = """
 # Copyright \\(C\\) (\\d{4}(-\\d{4})?) Intel Corporation
 # SPDX-License-Identifier: Apache-2\\.0
 """
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "examples/notebooks/**/*" = ["CPY001"]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -407,7 +402,7 @@ show_error_codes = true
 
 
 [[tool.mypy.overrides]]
-module = ["torch.*", "wandb.*"]
+module = ["torch.*", "wandb.*", "openvino.*"]
 follow_imports = "skip"
 follow_imports_for_stubs = true
 

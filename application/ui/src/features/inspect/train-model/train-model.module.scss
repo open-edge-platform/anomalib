@@ -1,0 +1,126 @@
+/// train model dialog
+.radioGroup {
+    & label {
+        margin: 0;
+
+        & span[class*='spectrum-Radio-label'] {
+            min-width: 0;
+        }
+    }
+}
+
+.deviceSection {
+    gap: var(--spectrum-global-dimension-size-150);
+}
+
+.deviceGroup {
+    & label {
+        margin: 0;
+    }
+}
+
+.deviceOption {
+    padding: var(--spectrum-global-dimension-size-200);
+    border-radius: var(--spectrum-alias-border-radius-small);
+    background-color: var(--spectrum-global-color-gray-75);
+    transition:
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;
+
+    &:hover {
+        background-color: var(--spectrum-global-color-gray-100);
+        box-shadow: 0 0 0 var(--spectrum-global-dimension-size-25) var(--spectrum-global-color-gray-200);
+    }
+}
+
+.deviceDescription {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+}
+
+/// model list box
+.attributeRatingTitle {
+    font-weight: 400;
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+}
+
+.attributeRatingValue {
+    font-weight: 500;
+    color: var(--spectrum-global-color-gray-800);
+    font-size: var(--spectrum-global-dimension-font-size-100);
+}
+
+.modelCard {
+    display: flex;
+    height: 100%;
+    padding: var(--spectrum-global-dimension-size-200);
+    border: var(--spectrum-global-dimension-size-25) solid transparent;
+    border-radius: var(--spectrum-alias-border-radius-regular);
+    background-color: var(--spectrum-global-color-gray-75);
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease;
+
+    &:hover {
+        background-color: var(--spectrum-global-color-gray-100);
+    }
+}
+
+.modelCardSelected {
+    border-color: var(--energy-blue);
+    background-color: var(--mixed-gray-75-and-energy-blue);
+}
+
+.modelName {
+    font-weight: 600;
+    font-size: var(--spectrum-global-dimension-font-size-200);
+}
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    height: var(--spectrum-global-dimension-size-250);
+    padding: var(--spectrum-global-dimension-size-25) var(--spectrum-global-dimension-size-100);
+    border-radius: var(--spectrum-alias-border-radius-small);
+}
+
+.tagRecommended {
+    background-color: var(--energy-blue);
+}
+
+.tagRecommended .tagText {
+    color: var(--spectrum-global-color-gray-900);
+}
+
+.tagInfo {
+    background-color: var(--spectrum-global-color-gray-300);
+}
+
+.tagInfo .tagText {
+    color: var(--spectrum-global-color-gray-800);
+}
+
+.tagText {
+    font-size: var(--spectrum-global-dimension-font-size-50);
+    font-weight: 500;
+}
+
+.modelLicense {
+    color: var(--spectrum-global-color-gray-600);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+}
+
+.docsLink {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spectrum-global-dimension-size-50);
+    color: var(--spectrum-global-color-blue-500);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
