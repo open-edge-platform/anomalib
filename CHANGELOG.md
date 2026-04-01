@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- 🚀 **model**: Add L2BT anomaly detection model by Sharon-9 in https://github.com/open-edge-platform/anomalib/pull/3410
+- 🚀 **model**: Add L2BT anomaly detection model by @Sharon-9 in https://github.com/open-edge-platform/anomalib/pull/3410
 
 ### Removed
 
