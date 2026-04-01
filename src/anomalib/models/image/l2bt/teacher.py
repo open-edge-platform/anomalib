@@ -39,14 +39,3 @@ class FeatureExtractor(torch.nn.Module):
         """
         middle_patch, last_patch = self.fe.get_intermediate_layers(x, self.layers)
         return middle_patch, last_patch
-
-    def forward_last(self, x: torch.Tensor) -> torch.Tensor:
-        """Return the final normalized patch tokens from the teacher.
-
-        Args:
-            x: Input image batch.
-
-        Returns:
-            Final patch-token features reshaped to ``(num_patches, embed_dim)``.
-        """
-        return self.fe.forward_features(x)["x_norm_patchtokens"].view(-1, self.embed_dim)

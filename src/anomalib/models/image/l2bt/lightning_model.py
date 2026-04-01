@@ -6,15 +6,26 @@
 from __future__ import annotations
 
 from itertools import chain
+from typing import TYPE_CHECKING, Any
 
 import torch
-from torchvision.transforms.v2 import Resize
+from torchvision.transforms import InterpolationMode
+from torchvision.transforms.v2 import Compose, Normalize, Resize
 
 from anomalib import LearningType
-from anomalib.models import AnomalibModule
+from anomalib.data.transforms import SquarePad
+from anomalib.models.components import AnomalibModule
 from anomalib.pre_processing import PreProcessor
 
 from .torch_model import L2BTModel
+
+if TYPE_CHECKING:
+    from lightning.pytorch.utilities.types import STEP_OUTPUT
+
+    from anomalib.data import Batch
+    from anomalib.metrics import Evaluator
+    from anomalib.post_processing import PostProcessor
+    from anomalib.visualization import Visualizer
 
 
 class L2BT(AnomalibModule):
@@ -23,7 +34,6 @@ class L2BT(AnomalibModule):
     def __init__(
         self,
         lr: float = 1e-4,
-        image_size: int = 1036,
         layers: tuple[int, int] = (7, 11),
         blur_w_l: int = 5,
         blur_w_u: int = 7,
@@ -32,25 +42,39 @@ class L2BT(AnomalibModule):
         blur_repeats_l: int = 5,
         blur_repeats_u: int = 3,
         topk_ratio: float = 0.001,
+        pre_processor: PreProcessor | bool = True,
+        post_processor: PostProcessor | bool = True,
+        evaluator: Evaluator | bool = True,
+        visualizer: Visualizer | bool = True,
     ) -> None:
         """Initialize the L2BT lightning module.
 
         Args:
-            lr: Learning rate for student optimization.
-            image_size: Input image size used by the pre-processor.
-            layers: Teacher transformer layers used for feature extraction.
-            blur_w_l: Lower blur kernel width.
-            blur_w_u: Upper blur kernel width.
-            blur_pad_l: Lower blur padding.
-            blur_pad_u: Upper blur padding.
-            blur_repeats_l: Number of repetitions for the lower blur kernel.
-            blur_repeats_u: Number of repetitions for the upper blur kernel.
-            topk_ratio: Fraction of highest anomaly-map values used for image scoring.
+            lr (float): Learning rate for student optimization.
+            layers (tuple[int, int]): Teacher transformer layers used for feature extraction.
+            blur_w_l (int): Lower blur kernel width.
+            blur_w_u (int): Upper blur kernel width.
+            blur_pad_l (int): Lower blur padding.
+            blur_pad_u (int): Upper blur padding.
+            blur_repeats_l (int): Number of repetitions for the lower blur kernel.
+            blur_repeats_u (int): Number of repetitions for the upper blur kernel.
+            topk_ratio (float): Fraction of highest anomaly-map values used for image scoring.
+            pre_processor (PreProcessor | bool, optional): Pre-processor instance or
+                flag to use default. Defaults to ``True``.
+            post_processor (PostProcessor | bool, optional): Post-processor instance
+                or flag to use default. Defaults to ``True``.
+            evaluator (Evaluator | bool, optional): Evaluator instance or flag to
+                use default. Defaults to ``True``.
+            visualizer (Visualizer | bool, optional): Visualizer instance or flag to
+                use default. Defaults to ``True``.
         """
-        pre_processor = PreProcessor(transform=Resize((image_size, image_size)))
-        super().__init__(pre_processor=pre_processor)
+        super().__init__(
+            pre_processor=pre_processor,
+            post_processor=post_processor,
+            evaluator=evaluator,
+            visualizer=visualizer,
+        )
 
-        self.save_hyperparameters(ignore=["pre_processor"])
         self.lr = lr
         self.model = L2BTModel(
             layers=layers,
@@ -68,48 +92,54 @@ class L2BT(AnomalibModule):
         """Return the learning type of the model."""
         return LearningType.ONE_CLASS
 
+    @staticmethod
+    def configure_pre_processor(image_size: tuple[int, int] | None = None) -> PreProcessor:
+        """Configure the default pre-processor for L2BT.
+
+        The original L2BT pipeline applies: SquarePad (edge replication) →
+        Resize (bicubic) → ImageNet normalization.
+
+        Args:
+            image_size (tuple[int, int] | None, optional): Target image size.
+                Defaults to ``(224, 224)``.
+
+        Returns:
+            PreProcessor: Configured pre-processor with the L2BT transform pipeline.
+        """
+        image_size = image_size or (224, 224)
+        return PreProcessor(
+            transform=Compose([
+                SquarePad(),
+                Resize(image_size, interpolation=InterpolationMode.BICUBIC, antialias=True),
+                Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ]),
+        )
+
     @property
-    def trainer_arguments(self) -> dict[str, int | float | str | bool]:
+    def trainer_arguments(self) -> dict[str, Any]:
         """Return trainer arguments for the model."""
         return {}
 
-    @staticmethod
-    def _get_images(batch: object) -> torch.Tensor:
-        """Extract the image tensor from a batch."""
-        if hasattr(batch, "image"):
-            return batch.image  # type: ignore[attr-defined]
-        if isinstance(batch, dict):
-            if "image" in batch:
-                return batch["image"]
-            if "img" in batch:
-                return batch["img"]
-        msg = "Could not find image tensor in batch (expected .image or ['image'] or ['img'])."
-        raise KeyError(msg)
+    def training_step(self, batch: Batch, *args, **kwargs) -> STEP_OUTPUT:
+        """Compute the training loss for a batch.
 
-    def training_step(self, batch: object, _batch_idx: int, *_args: object, **_kwargs: object) -> torch.Tensor:
-        """Compute the training loss for a batch."""
-        images = self._get_images(batch)
-        out = self.model(images)
+        Args:
+            batch (Batch): Input batch containing images and metadata.
+            args: Additional positional arguments (unused).
+            kwargs: Additional keyword arguments (unused).
+
+        Returns:
+            STEP_OUTPUT: Dictionary containing the training loss.
+        """
+        del args, kwargs  # These variables are not used.
+
+        out = self.model(batch.image)
 
         loss = out["loss"]
-        self.log("train_loss", loss, prog_bar=True, on_step=True, on_epoch=True, batch_size=images.shape[0])
-        self.log(
-            "train_loss_middle",
-            out["loss_middle"],
-            prog_bar=False,
-            on_step=True,
-            on_epoch=True,
-            batch_size=images.shape[0],
-        )
-        self.log(
-            "train_loss_last",
-            out["loss_last"],
-            prog_bar=False,
-            on_step=True,
-            on_epoch=True,
-            batch_size=images.shape[0],
-        )
-        return loss
+        self.log("train_loss", loss.item(), on_step=True, on_epoch=True, prog_bar=True)
+        self.log("train_loss_middle", out["loss_middle"].item(), on_step=True, on_epoch=True, prog_bar=False)
+        self.log("train_loss_last", out["loss_last"].item(), on_step=True, on_epoch=True, prog_bar=False)
+        return {"loss": loss}
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
         """Configure the optimizer used during training."""
@@ -118,46 +148,18 @@ class L2BT(AnomalibModule):
             lr=self.lr,
         )
 
-    @staticmethod
-    def _update_batch(batch: object, pred_score: torch.Tensor, anomaly_map: torch.Tensor) -> object:
-        """Attach predictions to the original batch so anomalib post-processing can modify them."""
-        if hasattr(batch, "update") and callable(batch.update):
-            batch.update(pred_score=pred_score, anomaly_map=anomaly_map)  # type: ignore[attr-defined]
-            return batch
+    def validation_step(self, batch: Batch, *args, **kwargs) -> STEP_OUTPUT:
+        """Run a validation step.
 
-        if isinstance(batch, dict):
-            batch["pred_score"] = pred_score
-            batch["anomaly_map"] = anomaly_map
-            return batch
+        Args:
+            batch (Batch): Input batch containing images and metadata.
+            args: Additional positional arguments (unused).
+            kwargs: Additional keyword arguments (unused).
 
-        try:
-            batch.pred_score = pred_score  # type: ignore[attr-defined]
-            batch.anomaly_map = anomaly_map  # type: ignore[attr-defined]
-        except AttributeError as exc:
-            msg = (
-                f"Unsupported batch type for inference output update: {type(batch)}. "
-                "Expected a batch with .update(...), a dict, or writable attributes."
-            )
-            raise TypeError(msg) from exc
-        else:
-            return batch
+        Returns:
+            STEP_OUTPUT: Updated batch with predictions.
+        """
+        del args, kwargs  # These variables are not used.
 
-    def _forward_inference(self, batch: object) -> object:
-        """Run inference and attach predictions to the batch."""
-        images = self._get_images(batch)
-        out = self.model(images)
-        return self._update_batch(batch=batch, pred_score=out.pred_score, anomaly_map=out.anomaly_map)
-
-    def validation_step(self, batch: object, _batch_idx: int, *_args: object, **_kwargs: object) -> object:
-        """Run a validation step."""
-        return self._forward_inference(batch)
-
-    def test_step(self, batch: object, batch_idx: int, *_args: object, **_kwargs: object) -> object:
-        """Run a test step."""
-        del batch_idx
-        return self._forward_inference(batch)
-
-    def predict_step(self, batch: object, batch_idx: int, dataloader_idx: int = 0) -> object:
-        """Run a prediction step."""
-        del batch_idx, dataloader_idx
-        return self._forward_inference(batch)
+        predictions = self.model(batch.image)
+        return batch.update(**predictions._asdict())
