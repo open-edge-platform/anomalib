@@ -32,7 +32,7 @@ All subsequent commands should be run from this directory.
 Choose the build that matches your hardware. The `AI_DEVICE` environment variable tells the build which inference backend to target.
 
 > [!NOTE]
-> The `HOST` defaults to `0.0.0.0` and thus can be omitted.
+> The `HOST` defaults to `0.0.0.0` so it is accessible outside the container.
 
 ### CPU Build
 
@@ -40,7 +40,7 @@ Use this if you don't have a GPU or want a hardware-agnostic setup. This is the 
 
 ```bash
 docker compose build
-HOST=0.0.0.0 docker compose up
+docker compose up
 ```
 
 ### XPU Build
@@ -49,7 +49,7 @@ Use this for Intel discrete or integrated GPUs. Requires Intel GPU drivers and t
 
 ```bash
 AI_DEVICE=xpu docker compose build
-HOST=0.0.0.0 AI_DEVICE=xpu docker compose up
+AI_DEVICE=xpu docker compose up
 ```
 
 ### CUDA Build
@@ -58,7 +58,7 @@ Use this for NVIDIA GPUs. Uses a separate Compose file configured for the CUDA r
 
 ```bash
 AI_DEVICE=gpu docker compose -f docker-compose.cuda.yaml build
-HOST=0.0.0.0 AI_DEVICE=gpu docker compose -f docker-compose.cuda.yaml up
+AI_DEVICE=gpu docker compose -f docker-compose.cuda.yaml up
 ```
 
 ---
@@ -71,7 +71,7 @@ Once the containers are running, open your browser and navigate to:
 http://localhost:8000
 ```
 
-Allow a few seconds for all services to initialize before the UI becomes available. To run the containers in the background without occupying the terminal, append `-d` to the `docker compose up` command. The `HOST=0.0.0.0` variable ensures the application binds to all network interfaces, making it accessible from outside the container.
+Allow a few seconds for all services to initialize before the UI becomes available. To run the containers in the background without occupying the terminal, append `-d` to the `docker compose up` command.
 
 ---
 
