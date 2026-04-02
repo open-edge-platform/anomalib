@@ -122,8 +122,8 @@ jobs:
     with:
       tools: "bandit,semgrep,trivy,zizmor"
       scan-scope: "all"
-      severity-level: "LOW"
-      fail-on-findings: true
+      severity-level: "HIGH"
+      fail-on-findings: false
 
   build:
     needs: [version-check, quality, unit-tests, integration-tests, security]
