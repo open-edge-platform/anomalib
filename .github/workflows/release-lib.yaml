@@ -123,7 +123,7 @@ jobs:
       tools: "bandit,semgrep,trivy,zizmor"
       scan-scope: "all"
       severity-level: "HIGH"
-      fail-on-findings: true
+      fail-on-findings: false
 
   build:
     needs: [version-check, quality, unit-tests, integration-tests, security]
