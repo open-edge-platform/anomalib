@@ -1,0 +1,88 @@
+name: NPM Audit Fix
+
+on:
+  schedule:
+    - cron: "0 3 2,16 * *"
+  workflow_dispatch:
+    inputs:
+      force_fix:
+        description: "Run npm audit fix --force (includes breaking changes)"
+        required: false
+        default: false
+        type: boolean
+permissions: {} # No permissions by default on workflow level
+
+jobs:
+  npm-audit-fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # to checkout code
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          lfs: true
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version-file: application/ui/.nvmrc
+
+      - name: Install dependencies
+        working-directory: application/ui
+        run: npm ci
+
+      - name: Display audit report
+        working-directory: application/ui
+        continue-on-error: true
+        run: |
+          npm audit || true
+
+      - name: Run npm audit fix (safe mode)
+        if: ${{ github.event_name == 'schedule' || github.event.inputs.force_fix != 'true' }}
+        working-directory: application/ui
+        continue-on-error: true
+        run: npm audit fix --package-lock-only || echo "Some issues could not be auto-fixed"
+
+      - name: Run npm audit fix (force mode)
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force_fix == 'true' }}
+        working-directory: application/ui
+        continue-on-error: true
+        run: npm audit fix --force || true
+
+      - name: Check for changes
+        id: check-changes
+        working-directory: application/ui
+        run: |
+          if git diff --quiet package-lock.json package.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      # GitHub App token is required to trigger other workflows (GITHUB_TOKEN cannot trigger workflows)
+      - name: Get token
+        if: steps.check-changes.outputs.changed == 'true'
+        id: get-github-app-token
+        uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
+        with:
+          app-id: ${{ secrets.RENOVATE_APP_ID }}
+          private-key: ${{ secrets.RENOVATE_APP_PEM }}
+
+      - name: Create PR if lockfile changed
+        if: steps.check-changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8.1.0
+        with:
+          token: ${{ steps.get-github-app-token.outputs.token }}
+          author: oep-renovate[bot] <212772560+oep-renovate[bot]@users.noreply.github.com>
+          committer: oep-renovate[bot] <212772560+oep-renovate[bot]@users.noreply.github.com>
+          commit-message: "fix(deps): npm audit fixes [security]"
+          title: "fix(deps): npm audit fixes [security]"
+          body: |
+            This PR was automatically created to update NPM dependencies with:
+            ${{ github.event.inputs.force_fix == 'true' && '`npm audit fix --force`' || '`npm audit fix --package-lock-only`' }}
+          branch: "npm-audit-fix-${{ github.run_id }}"
+          base: main
+          delete-branch: true
