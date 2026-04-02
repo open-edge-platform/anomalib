@@ -121,10 +121,10 @@
             "ajv": "8.18.0"
         },
         "recharts": {
-            "lodash": "4.17.23"
+            "lodash": "4.18.1"
         },
         "@mswjs/source": {
-            "lodash": "4.17.23"
+            "lodash": "4.18.1"
         },
         "openapi-typescript": {
             "minimatch": "5.1.7"
