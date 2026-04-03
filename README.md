@@ -31,21 +31,18 @@
 
 ---
 
-> 🌟 **Announcing v2.3.1 Patch Release!** 🌟
+> 🌟 **Announcing v2.3.2 Patch Release!** 🌟
 >
-> This patch release removes previously deprecated API symbols and fixes bugs in Anomalib Studio.
+> This patch release adds a new example notebook and includes bug fixes.
 >
-> Deprecated API removals
+> What's changed
 >
-> - **`MVTec`** → Use `MVTecAD` (datamodule) and `MVTecADDataset` (dataset) instead.
-> - **`BaseThreshold`** → Use `Threshold` instead.
-> - **`BaseVisualizer`** → Renamed to `Visualizer`.
-> - **`plot_figure`** → Use `plot_metric_curve` instead.
+> - Added Kaputt example notebook.
 >
 > Bug fixes
 >
-> - Fixed Windows long path issue in Anomalib Studio by switching to ShortUUID.
-> - Fixed source path overflow in Studio UI.
+> - Fixed Descriptor model to use pooled features in multi-scale fusion.
+> - Removed cu124 dependency.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 
