@@ -77,7 +77,11 @@ jobs:
           fi
 
           TAG_VERSION="${VERSION#v}"
-          PKG_VERSION=$(sed -n 's/^__version__ *= *"\(.*\)"/\1/p' src/anomalib/__init__.py)
+          PKG_VERSION=$(sed -n "s/^[[:space:]]*__version__[[:space:]]*=[[:space:]]*[\"']\([^\"']*\)[\"']/\1/p" src/anomalib/__init__.py)
+          if [[ -z "$PKG_VERSION" ]]; then
+            echo "::error::Could not extract __version__ from src/anomalib/__init__.py"
+            exit 1
+          fi
           if [[ "$PKG_VERSION" != "$TAG_VERSION" ]]; then
             echo "::error::Tag version ($TAG_VERSION) does not match __version__ in src/anomalib/__init__.py ($PKG_VERSION)"
             exit 1
