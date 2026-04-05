@@ -7,7 +7,7 @@ import pytest
 from jsonargparse import Namespace
 from omegaconf import OmegaConf
 
-from anomalib.models import EfficientAd, Padim, Patchcore, UnknownModelError, get_model
+from anomalib.models import EfficientAd, GeneralAD, Padim, Patchcore, UnknownModelError, get_model
 
 
 class TestGetModel:
@@ -27,6 +27,11 @@ class TestGetModel:
         assert isinstance(model, EfficientAd)
         model = get_model("efficientad")
         assert isinstance(model, EfficientAd)
+
+        model = get_model("GeneralAD", pre_trained=False)
+        assert isinstance(model, GeneralAD)
+        model = get_model("general_ad", pre_trained=False)
+        assert isinstance(model, GeneralAD)
 
     @staticmethod
     def test_get_model_by_name_with_init_args() -> None:
