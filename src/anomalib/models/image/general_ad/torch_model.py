@@ -71,71 +71,6 @@ def _forward_attention_with_map(attn_obj: nn.Module):
 
     return wrapped
 
-
-class ResNetFeatureExtractor(nn.Module):
-    """Extract patch features from CNN backbones."""
-
-    def __init__(
-        self,
-        backbone: str,
-        layers: Sequence[int],
-        pool_size: int,
-        image_size: tuple[int, int],
-        pre_trained: bool = True,
-    ) -> None:
-        super().__init__()
-        if image_size[0] != image_size[1]:
-            msg = "GeneralAD currently expects square inputs for CNN backbones."
-            raise ValueError(msg)
-
-        self.layers = list(layers)
-        self.pool_size = pool_size
-        self.image_size = image_size[0]
-        self.pretrained_model = timm.create_model(backbone, pretrained=pre_trained, num_classes=0)
-        for parameter in self.pretrained_model.parameters():
-            parameter.requires_grad = False
-
-        feature_layer_size = {1: 256, 2: 512, 3: 1024, 4: 2048}
-        self.embed_dim = sum(feature_layer_size[layer_idx] for layer_idx in self.layers)
-        patch_dim = math.ceil(self.image_size / 2 ** (self.layers[0] + 1))
-        self.num_patches = patch_dim**2
-        self.patch_size = pool_size
-
-    def forward(self, images: torch.Tensor) -> torch.Tensor:
-        x = self.pretrained_model.conv1(images)
-        x = self.pretrained_model.bn1(x)
-        x = self.pretrained_model.act1(x)
-        x = self.pretrained_model.maxpool(x)
-
-        outputs: list[torch.Tensor] = []
-        layers = [
-            self.pretrained_model.layer1,
-            self.pretrained_model.layer2,
-            self.pretrained_model.layer3,
-            self.pretrained_model.layer4,
-        ]
-
-        patch_dim = 0
-        for idx, layer in enumerate(layers, start=1):
-            x = layer(x)
-            if idx == self.layers[0]:
-                patch_dim = x.shape[-1]
-            if idx in self.layers:
-                if x.shape[-1] != patch_dim:
-                    x = F.interpolate(x, size=(patch_dim, patch_dim), mode="bilinear", align_corners=False)
-
-                padding = (self.pool_size - 1) // 2
-                unfolded = F.unfold(x, kernel_size=self.pool_size, stride=1, padding=padding)
-                unfolded = unfolded.reshape(*x.shape[:2], self.pool_size, self.pool_size, -1)
-                unfolded = unfolded.permute(0, 4, 1, 2, 3)
-                pooled = F.adaptive_avg_pool2d(unfolded, (1, 1))
-                outputs.append(pooled.view(pooled.size(0), pooled.size(1), -1))
-            if idx == max(self.layers):
-                break
-
-        return torch.cat(outputs, dim=-1)
-
-
 class ViTFeatureExtractor(nn.Module):
     """Extract patch features and class-attention maps from ViT backbones."""
 
@@ -305,7 +240,6 @@ class GeneralADModel(nn.Module):
         dsc_layers: int = 1,
         dsc_heads: int = 12,
         dsc_dropout: float = 0.0,
-        pool_size: int = 3,
         image_size: tuple[int, int] = (256, 256),
         num_fake_patches: int = 64,
         fake_feature_type: FakeFeatureType = "copy_out_and_attn",
@@ -327,18 +261,21 @@ class GeneralADModel(nn.Module):
             self.feature_extractor = EVAFeatureExtractor(backbone, self.layers, image_size, pre_trained=pre_trained)
             self.attn_output = False
         else:
-            self.feature_extractor = ResNetFeatureExtractor(
-                backbone,
-                self.layers,
-                pool_size=pool_size,
-                image_size=image_size,
-                pre_trained=pre_trained,
+            msg = (
+                f"Unsupported backbone '{backbone}'. GeneralAD currently supports "
+                "transformer backbones starting with 'vit' or 'eva'."
             )
-            self.attn_output = False
+            raise ValueError(msg)
 
         self.patch_size = self.feature_extractor.patch_size
         self.num_patches = self.feature_extractor.num_patches
         self.patches_per_side = int(math.sqrt(self.num_patches))
+        if top_k == 0:
+            msg = "top_k must be -1 or a positive integer."
+            raise ValueError(msg)
+        if num_fake_patches == 0:
+            msg = "num_fake_patches must be -1 or a positive integer."
+            raise ValueError(msg)
         self.top_k = self.num_patches if top_k < 0 or top_k > self.num_patches else top_k
         self.num_fake_patches = (
             self.num_patches
@@ -357,10 +294,11 @@ class GeneralADModel(nn.Module):
 
     def extract_features(self, images: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor | None]:
         """Extract patch features and optional class-attention maps."""
-        if self.attn_output:
-            features, attn_map = self.feature_extractor(images, output_attn=True)
-            return features, attn_map
-        return self.feature_extractor(images), None
+        with torch.no_grad():
+            if self.attn_output:
+                features, attn_map = self.feature_extractor(images, output_attn=True)
+                return features, attn_map
+            return self.feature_extractor(images), None
 
     def score_features(self, features: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Convert patch logits to image and pixel anomaly scores."""

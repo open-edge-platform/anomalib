@@ -40,7 +40,6 @@ class GeneralAD(AnomalibModule):
         dsc_layers: Number of attention blocks in the discriminator.
         dsc_heads: Number of attention heads in the discriminator.
         dsc_dropout: Dropout rate in the discriminator.
-        pool_size: Patch pooling size for CNN backbones.
         image_size: Input image size after preprocessing.
         num_fake_patches: Maximum number of perturbed patches per image.
         fake_feature_type: Strategy for generating pseudo anomalies.
@@ -65,7 +64,6 @@ class GeneralAD(AnomalibModule):
         dsc_layers: int = 1,
         dsc_heads: int = 12,
         dsc_dropout: float = 0.0,
-        pool_size: int = 3,
         image_size: tuple[int, int] | int = (256, 256),
         num_fake_patches: int = 64,
         fake_feature_type: FakeFeatureType = "copy_out_and_attn",
@@ -99,7 +97,6 @@ class GeneralAD(AnomalibModule):
             dsc_layers=dsc_layers,
             dsc_heads=dsc_heads,
             dsc_dropout=dsc_dropout,
-            pool_size=pool_size,
             image_size=image_size,
             num_fake_patches=num_fake_patches,
             fake_feature_type=fake_feature_type,
