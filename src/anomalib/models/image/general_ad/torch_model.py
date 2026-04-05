@@ -1,0 +1,514 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""PyTorch model for the GeneralAD algorithm.
+
+GeneralAD learns a patch-wise discriminator on top of frozen features extracted
+from a pretrained backbone. During training it creates pseudo-anomalous patch
+features using noise injection and patch shuffling/copying. During inference the
+discriminator scores each patch and the highest patch scores are aggregated into
+an image-level anomaly score.
+"""
+
+from __future__ import annotations
+
+import math
+from collections.abc import Sequence
+from typing import Literal
+
+import timm
+import torch
+from torch import nn
+from torch.nn import functional as F  # noqa: N812
+
+from anomalib.data import InferenceBatch
+
+FakeFeatureType = Literal[
+    "random",
+    "attn",
+    "copy_out",
+    "shuffle",
+    "randshuffle",
+    "copy_out_and_random",
+    "copy_out_and_attn",
+    "shuffle_and_random",
+    "shuffle_and_attn",
+    "randshuffle_and_random",
+    "randshuffle_and_attn",
+]
+
+
+def _forward_attention_with_map(attn_obj: nn.Module):
+    """Wrap timm attention forward to expose the attention map."""
+
+    def wrapped(
+        x: torch.Tensor,
+        attn_mask: torch.Tensor | None = None,
+        is_causal: bool = False,
+        **kwargs,
+    ) -> torch.Tensor:
+        del attn_mask, is_causal, kwargs
+        batch_size, num_tokens, channels = x.shape
+        qkv = attn_obj.qkv(x).reshape(
+            batch_size,
+            num_tokens,
+            3,
+            attn_obj.num_heads,
+            channels // attn_obj.num_heads,
+        )
+        qkv = qkv.permute(2, 0, 3, 1, 4)
+        q, k, v = qkv.unbind(0)
+
+        attn = (q @ k.transpose(-2, -1)) * attn_obj.scale
+        attn = attn.softmax(dim=-1)
+        attn = attn_obj.attn_drop(attn)
+        attn_obj.attn_map = attn
+
+        x = (attn @ v).transpose(1, 2).reshape(batch_size, num_tokens, channels)
+        x = attn_obj.proj(x)
+        x = attn_obj.proj_drop(x)
+        return x
+
+    return wrapped
+
+
+class ResNetFeatureExtractor(nn.Module):
+    """Extract patch features from CNN backbones."""
+
+    def __init__(
+        self,
+        backbone: str,
+        layers: Sequence[int],
+        pool_size: int,
+        image_size: tuple[int, int],
+        pre_trained: bool = True,
+    ) -> None:
+        super().__init__()
+        if image_size[0] != image_size[1]:
+            msg = "GeneralAD currently expects square inputs for CNN backbones."
+            raise ValueError(msg)
+
+        self.layers = list(layers)
+        self.pool_size = pool_size
+        self.image_size = image_size[0]
+        self.pretrained_model = timm.create_model(backbone, pretrained=pre_trained, num_classes=0)
+        for parameter in self.pretrained_model.parameters():
+            parameter.requires_grad = False
+
+        feature_layer_size = {1: 256, 2: 512, 3: 1024, 4: 2048}
+        self.embed_dim = sum(feature_layer_size[layer_idx] for layer_idx in self.layers)
+        patch_dim = math.ceil(self.image_size / 2 ** (self.layers[0] + 1))
+        self.num_patches = patch_dim**2
+        self.patch_size = pool_size
+
+    def forward(self, images: torch.Tensor) -> torch.Tensor:
+        x = self.pretrained_model.conv1(images)
+        x = self.pretrained_model.bn1(x)
+        x = self.pretrained_model.act1(x)
+        x = self.pretrained_model.maxpool(x)
+
+        outputs: list[torch.Tensor] = []
+        layers = [
+            self.pretrained_model.layer1,
+            self.pretrained_model.layer2,
+            self.pretrained_model.layer3,
+            self.pretrained_model.layer4,
+        ]
+
+        patch_dim = 0
+        for idx, layer in enumerate(layers, start=1):
+            x = layer(x)
+            if idx == self.layers[0]:
+                patch_dim = x.shape[-1]
+            if idx in self.layers:
+                if x.shape[-1] != patch_dim:
+                    x = F.interpolate(x, size=(patch_dim, patch_dim), mode="bilinear", align_corners=False)
+
+                padding = (self.pool_size - 1) // 2
+                unfolded = F.unfold(x, kernel_size=self.pool_size, stride=1, padding=padding)
+                unfolded = unfolded.reshape(*x.shape[:2], self.pool_size, self.pool_size, -1)
+                unfolded = unfolded.permute(0, 4, 1, 2, 3)
+                pooled = F.adaptive_avg_pool2d(unfolded, (1, 1))
+                outputs.append(pooled.view(pooled.size(0), pooled.size(1), -1))
+            if idx == max(self.layers):
+                break
+
+        return torch.cat(outputs, dim=-1)
+
+
+class ViTFeatureExtractor(nn.Module):
+    """Extract patch features and class-attention maps from ViT backbones."""
+
+    def __init__(
+        self,
+        backbone: str,
+        layers: Sequence[int],
+        image_size: tuple[int, int],
+        pre_trained: bool = True,
+    ) -> None:
+        super().__init__()
+        if image_size[0] != image_size[1]:
+            msg = "GeneralAD currently expects square inputs for transformer backbones."
+            raise ValueError(msg)
+
+        if backbone.endswith("_ibot"):
+            msg = (
+                "iBOT checkpoints require external weights download and are not "
+                "supported by this anomalib integration."
+            )
+            raise ValueError(msg)
+
+        self.layers = list(layers)
+        self.pretrained_model = timm.create_model(
+            backbone,
+            pretrained=pre_trained,
+            num_classes=0,
+            img_size=image_size[0],
+        )
+        for parameter in self.pretrained_model.parameters():
+            parameter.requires_grad = False
+
+        self.embed_dim = len(self.layers) * self.pretrained_model.embed_dim
+        self.patch_size = int(self.pretrained_model.patch_embed.patch_size[0])
+        self.num_patches = (image_size[0] // self.patch_size) ** 2
+        self.start_index = getattr(self.pretrained_model, "num_prefix_tokens", 1)
+
+        block = self.pretrained_model.blocks[self.layers[-1] - 1]
+        block.attn.forward = _forward_attention_with_map(block.attn)
+
+    def forward(self, images: torch.Tensor, output_attn: bool = False) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
+        x = self.pretrained_model.patch_embed(images)
+        x = self.pretrained_model._pos_embed(x)
+        x = self.pretrained_model.patch_drop(x)
+        x = self.pretrained_model.norm_pre(x)
+
+        outputs: list[torch.Tensor] = []
+        for idx, layer in enumerate(self.pretrained_model.blocks, start=1):
+            x = layer(x)
+            if idx in self.layers:
+                outputs.append(self.pretrained_model.norm(x[:, self.start_index :, :]))
+            if idx == max(self.layers):
+                break
+
+        features = torch.cat(outputs, dim=-1)
+        if not output_attn:
+            return features
+
+        attn_map = self.pretrained_model.blocks[self.layers[-1] - 1].attn.attn_map
+        attn_map_cls = attn_map[:, :, 0, self.start_index :]
+        return features, attn_map_cls
+
+
+class EVAFeatureExtractor(nn.Module):
+    """Extract patch features from EVA-style transformer backbones."""
+
+    def __init__(
+        self,
+        backbone: str,
+        layers: Sequence[int],
+        image_size: tuple[int, int],
+        pre_trained: bool = True,
+    ) -> None:
+        super().__init__()
+        if image_size[0] != image_size[1]:
+            msg = "GeneralAD currently expects square inputs for EVA backbones."
+            raise ValueError(msg)
+
+        self.layers = list(layers)
+        self.pretrained_model = timm.create_model(
+            backbone,
+            pretrained=pre_trained,
+            num_classes=0,
+            img_size=image_size[0],
+        )
+        for parameter in self.pretrained_model.parameters():
+            parameter.requires_grad = False
+
+        self.embed_dim = len(self.layers) * self.pretrained_model.embed_dim
+        self.patch_size = int(self.pretrained_model.patch_embed.patch_size[0])
+        self.num_patches = (image_size[0] // self.patch_size) ** 2
+
+    def forward(self, images: torch.Tensor) -> torch.Tensor:
+        x = self.pretrained_model.patch_embed(images)
+        x, rot_pos_embed = self.pretrained_model._pos_embed(x)
+
+        outputs: list[torch.Tensor] = []
+        for idx, layer in enumerate(self.pretrained_model.blocks, start=1):
+            x = layer(x, rope=rot_pos_embed)
+            if idx in self.layers:
+                outputs.append(self.pretrained_model.norm(x[:, 1:, :]))
+            if idx == max(self.layers):
+                break
+
+        return torch.cat(outputs, dim=-1)
+
+
+class AttentionBlock(nn.Module):
+    """Transformer block used in the patch discriminator."""
+
+    def __init__(self, embed_dim: int, hidden_dim: int, num_heads: int, dropout: float = 0.0) -> None:
+        super().__init__()
+        self.layer_norm = nn.LayerNorm(embed_dim)
+        self.attn = nn.MultiheadAttention(embed_dim, num_heads, dropout=dropout, batch_first=True)
+        self.linear = nn.Sequential(
+            nn.Linear(embed_dim, hidden_dim),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(hidden_dim, embed_dim),
+        )
+        self.dropout1 = nn.Dropout(dropout)
+        self.dropout2 = nn.Dropout(dropout)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        attn_output, _ = self.attn(x, x, x)
+        x = self.layer_norm(x + self.dropout1(attn_output))
+        return x + self.dropout2(self.linear(x))
+
+
+class PatchDiscriminator(nn.Module):
+    """Attention-based patch discriminator."""
+
+    def __init__(
+        self,
+        embed_dim: int,
+        hidden_dim: int,
+        num_patches: int,
+        num_layers: int = 1,
+        num_heads: int = 12,
+        dropout_rate: float = 0.0,
+    ) -> None:
+        super().__init__()
+        self.transformer_encoder = nn.Sequential(
+            *[
+                AttentionBlock(embed_dim, hidden_dim, num_heads, dropout=dropout_rate)
+                for _ in range(num_layers)
+            ],
+        )
+        self.output_layer = nn.Linear(embed_dim, 1, bias=False)
+        self.positional_encodings = nn.Parameter(torch.randn(num_patches, embed_dim))
+
+    def forward(self, features: torch.Tensor) -> torch.Tensor:
+        features = features + self.positional_encodings.unsqueeze(0)
+        features = self.transformer_encoder(features)
+        return self.output_layer(features).squeeze(-1)
+
+
+class GeneralADModel(nn.Module):
+    """Core GeneralAD model."""
+
+    def __init__(
+        self,
+        backbone: str = "vit_tiny_patch16_224",
+        layers: Sequence[int] = (9, 10, 11, 12),
+        hidden_dim: int = 1024,
+        noise_std: float = 0.015,
+        dsc_layers: int = 1,
+        dsc_heads: int = 12,
+        dsc_dropout: float = 0.0,
+        pool_size: int = 3,
+        image_size: tuple[int, int] = (256, 256),
+        num_fake_patches: int = 64,
+        fake_feature_type: FakeFeatureType = "copy_out_and_attn",
+        top_k: int = -1,
+        pre_trained: bool = True,
+    ) -> None:
+        super().__init__()
+
+        self.backbone = backbone
+        self.layers = tuple(layers)
+        self.noise_std = noise_std
+        self.fake_feature_type = fake_feature_type
+        self.image_size = image_size
+
+        if backbone.startswith("vit"):
+            self.feature_extractor = ViTFeatureExtractor(backbone, self.layers, image_size, pre_trained=pre_trained)
+            self.attn_output = True
+        elif backbone.startswith("eva"):
+            self.feature_extractor = EVAFeatureExtractor(backbone, self.layers, image_size, pre_trained=pre_trained)
+            self.attn_output = False
+        else:
+            self.feature_extractor = ResNetFeatureExtractor(
+                backbone,
+                self.layers,
+                pool_size=pool_size,
+                image_size=image_size,
+                pre_trained=pre_trained,
+            )
+            self.attn_output = False
+
+        self.patch_size = self.feature_extractor.patch_size
+        self.num_patches = self.feature_extractor.num_patches
+        self.patches_per_side = int(math.sqrt(self.num_patches))
+        self.top_k = self.num_patches if top_k < 0 or top_k > self.num_patches else top_k
+        self.num_fake_patches = (
+            self.num_patches
+            if num_fake_patches < 0 or num_fake_patches > self.num_patches
+            else num_fake_patches
+        )
+
+        self.discriminator = PatchDiscriminator(
+            embed_dim=self.feature_extractor.embed_dim,
+            hidden_dim=hidden_dim,
+            num_patches=self.num_patches,
+            num_layers=dsc_layers,
+            num_heads=dsc_heads,
+            dropout_rate=dsc_dropout,
+        )
+
+    def extract_features(self, images: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor | None]:
+        """Extract patch features and optional class-attention maps."""
+        if self.attn_output:
+            features, attn_map = self.feature_extractor(images, output_attn=True)
+            return features, attn_map
+        return self.feature_extractor(images), None
+
+    def score_features(self, features: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Convert patch logits to image and pixel anomaly scores."""
+        patch_scores = self.discriminator(features)
+        topk_values, _ = torch.topk(patch_scores, self.top_k, dim=1)
+        image_scores = torch.mean(topk_values, dim=1)
+        anomaly_map = patch_scores.reshape(-1, 1, self.patches_per_side, self.patches_per_side)
+        anomaly_map = F.interpolate(anomaly_map, size=self.image_size, mode="bilinear", align_corners=False)
+        return image_scores, anomaly_map
+
+    def forward(self, images: torch.Tensor) -> InferenceBatch:
+        """Predict anomaly scores and maps."""
+        features, _ = self.extract_features(images)
+        pred_score, anomaly_map = self.score_features(features)
+        return InferenceBatch(pred_score=pred_score, anomaly_map=anomaly_map)
+
+    def compute_loss(self, images: torch.Tensor) -> torch.Tensor:
+        """Compute the GeneralAD self-supervised training loss."""
+        features, attn_map = self.extract_features(images)
+        loss = torch.tensor(0.0, device=images.device)
+
+        scores_true = self.discriminator(features).flatten()
+        masks_true = torch.zeros_like(scores_true)
+        loss = loss + F.binary_cross_entropy_with_logits(scores_true, masks_true)
+
+        fake_features, masks_fake = self._add_noise_all(features)
+        scores_fake = self.discriminator(fake_features).flatten()
+        loss = loss + F.binary_cross_entropy_with_logits(scores_fake, masks_fake.flatten())
+
+        if self.fake_feature_type in {"random", "copy_out_and_random", "shuffle_and_random", "randshuffle_and_random"}:
+            random_features, masks_random = self._add_random_noise(features)
+            scores_random = self.discriminator(random_features).flatten()
+            loss = loss + self._masked_bce(scores_random, masks_random)
+        elif self.fake_feature_type in {"attn", "copy_out_and_attn", "shuffle_and_attn", "randshuffle_and_attn"}:
+            if attn_map is None:
+                msg = f"Fake feature type '{self.fake_feature_type}' requires a transformer backbone with attention maps."
+                raise ValueError(msg)
+            attn_features, masks_attn = self._add_attn_noise(features, attn_map)
+            scores_attn = self.discriminator(attn_features).flatten()
+            loss = loss + self._masked_bce(scores_attn, masks_attn)
+
+        if self.fake_feature_type in {"copy_out", "copy_out_and_random", "copy_out_and_attn"}:
+            if attn_map is None:
+                msg = f"Fake feature type '{self.fake_feature_type}' requires a transformer backbone with attention maps."
+                raise ValueError(msg)
+            copy_features, masks_copy = self._add_attn_copy_out(features, attn_map)
+            scores_copy = self.discriminator(copy_features).flatten()
+            loss = loss + self._masked_bce(scores_copy, masks_copy)
+        elif self.fake_feature_type in {"shuffle", "shuffle_and_random", "shuffle_and_attn"}:
+            if attn_map is None:
+                msg = f"Fake feature type '{self.fake_feature_type}' requires a transformer backbone with attention maps."
+                raise ValueError(msg)
+            shuffle_features, masks_shuffle = self._add_attn_shuffle(features, attn_map)
+            scores_shuffle = self.discriminator(shuffle_features).flatten()
+            loss = loss + self._masked_bce(scores_shuffle, masks_shuffle)
+        elif self.fake_feature_type in {"randshuffle", "randshuffle_and_random", "randshuffle_and_attn"}:
+            randshuffle_features, masks_randshuffle = self._add_random_shuffle(features)
+            scores_randshuffle = self.discriminator(randshuffle_features).flatten()
+            loss = loss + self._masked_bce(scores_randshuffle, masks_randshuffle)
+
+        return loss
+
+    @staticmethod
+    def _masked_bce(scores: torch.Tensor, masks: torch.Tensor) -> torch.Tensor:
+        """Compute BCE on normal and anomalous patches separately."""
+        masks = masks.flatten()
+        loss = torch.tensor(0.0, device=scores.device)
+        if (~masks).any():
+            loss = loss + F.binary_cross_entropy_with_logits(scores[~masks], masks[~masks].float())
+        if masks.any():
+            loss = loss + F.binary_cross_entropy_with_logits(scores[masks], masks[masks].float())
+        return loss
+
+    def _sample_patch_count(self, max_patches: int) -> int:
+        return int(torch.randint(1, max_patches + 1, (1,), device=self.discriminator.positional_encodings.device).item())
+
+    def _add_random_noise(self, features: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        fake_features = features.clone()
+        noise = torch.normal(0.0, self.noise_std, features.shape, device=features.device)
+        batch_size, num_patches, _ = features.shape
+        masks = torch.zeros((batch_size, num_patches), dtype=torch.bool, device=features.device)
+
+        for batch_idx in range(batch_size):
+            num_fake = self._sample_patch_count(num_patches)
+            indices = torch.randperm(num_patches, device=features.device)[:num_fake]
+            masks[batch_idx, indices] = True
+            fake_features[batch_idx, indices, :] += noise[batch_idx, indices, :]
+        return fake_features, masks
+
+    def _add_attn_noise(self, features: torch.Tensor, attn_map: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        fake_features = features.clone()
+        noise = torch.normal(0.0, self.noise_std, features.shape, device=features.device)
+        batch_size, num_heads, num_patches = attn_map.shape
+        masks = torch.zeros((batch_size, num_patches), dtype=torch.bool, device=features.device)
+
+        for batch_idx in range(batch_size):
+            head = int(torch.randint(0, num_heads, (1,), device=features.device).item())
+            num_fake = self._sample_patch_count(num_patches)
+            indices = torch.topk(attn_map[batch_idx, head, :], num_fake).indices
+            masks[batch_idx, indices] = True
+            fake_features[batch_idx, indices, :] += noise[batch_idx, indices, :]
+        return fake_features, masks
+
+    def _add_attn_copy_out(self, features: torch.Tensor, attn_map: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        fake_features = features.clone()
+        batch_size, num_heads, num_patches = attn_map.shape
+        masks = torch.zeros((batch_size, num_patches), dtype=torch.bool, device=features.device)
+
+        for batch_idx in range(batch_size):
+            head = int(torch.randint(0, num_heads, (1,), device=features.device).item())
+            num_fake = self._sample_patch_count(self.num_fake_patches)
+            indices = torch.topk(attn_map[batch_idx, head, :], num_fake).indices
+            random_indices = torch.randperm(num_patches, device=features.device)[:num_fake]
+            masks[batch_idx, indices] = True
+            fake_features[batch_idx, indices, :] = features[batch_idx, random_indices, :]
+        return fake_features, masks
+
+    def _add_attn_shuffle(self, features: torch.Tensor, attn_map: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        fake_features = features.clone()
+        batch_size, num_heads, _ = attn_map.shape
+        masks = torch.zeros((batch_size, self.num_patches), dtype=torch.bool, device=features.device)
+
+        for batch_idx in range(batch_size):
+            head = int(torch.randint(0, num_heads, (1,), device=features.device).item())
+            num_fake = self._sample_patch_count(self.num_fake_patches)
+            indices = torch.topk(attn_map[batch_idx, head, :], num_fake).indices
+            masks[batch_idx, indices] = True
+            shuffled = fake_features[batch_idx, indices].clone()
+            shuffled = shuffled[torch.randperm(num_fake, device=features.device)]
+            fake_features[batch_idx, indices, :] = shuffled
+        return fake_features, masks
+
+    def _add_random_shuffle(self, features: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        fake_features = features.clone()
+        batch_size, num_patches, _ = features.shape
+        masks = torch.zeros((batch_size, num_patches), dtype=torch.bool, device=features.device)
+
+        for batch_idx in range(batch_size):
+            num_fake = self._sample_patch_count(self.num_fake_patches)
+            indices = torch.randperm(num_patches, device=features.device)[:num_fake]
+            masks[batch_idx, indices] = True
+            shuffled = fake_features[batch_idx, indices].clone()
+            shuffled = shuffled[torch.randperm(num_fake, device=features.device)]
+            fake_features[batch_idx, indices, :] = shuffled
+        return fake_features, masks
+
+    def _add_noise_all(self, features: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        noise = torch.normal(0.0, self.noise_std, features.shape, device=features.device)
+        fake_features = features + noise
+        masks = torch.ones(features.shape[:2], dtype=features.dtype, device=features.device)
+        return fake_features, masks
