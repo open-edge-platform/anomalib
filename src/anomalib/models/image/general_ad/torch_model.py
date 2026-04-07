@@ -112,6 +112,7 @@ class ViTFeatureExtractor(nn.Module):
         )
         for parameter in self.pretrained_model.parameters():
             parameter.requires_grad = False
+        self.pretrained_model.eval()
 
         self.embed_dim = len(self.layers) * self.pretrained_model.embed_dim
         self.patch_size = int(self.pretrained_model.patch_embed.patch_size[0])
@@ -181,6 +182,7 @@ class EVAFeatureExtractor(nn.Module):
         )
         for parameter in self.pretrained_model.parameters():
             parameter.requires_grad = False
+        self.pretrained_model.eval()
 
         self.embed_dim = len(self.layers) * self.pretrained_model.embed_dim
         self.patch_size = int(self.pretrained_model.patch_embed.patch_size[0])
