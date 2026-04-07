@@ -5,22 +5,26 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from lightning.pytorch.utilities.types import STEP_OUTPUT
 from torch import optim
 from torchvision.transforms.v2 import Compose, InterpolationMode, Normalize, Resize
 
 from anomalib import LearningType
-from anomalib.data import Batch
-from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule
-from anomalib.post_processing import PostProcessor
 from anomalib.pre_processing import PreProcessor
-from anomalib.visualization import Visualizer
 
 from .torch_model import FakeFeatureType, GeneralADModel
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from lightning.pytorch.utilities.types import STEP_OUTPUT
+
+    from anomalib.data import Batch
+    from anomalib.metrics import Evaluator
+    from anomalib.post_processing import PostProcessor
+    from anomalib.visualization import Visualizer
 
 __all__ = ["GeneralAD"]
 
