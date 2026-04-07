@@ -8,11 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- 🚀 **model**: Add Patchflow model for normalizing-flow-based anomaly detection with support for both `tf_efficientnet_b5` (timm CNN) and `dinov2_vit_base_14` (DINOv2 ViT) backbones
-- ✅ **tests**: Add pytest coverage for Patchflow torch model, lightning module, loss, and anomaly map with both `tf_efficientnet_b5` and `dinov2_vit_base_14` backbones
-- 📄 **config**: Add example configs for Patchflow with `tf_efficientnet_b5` and `dinov2_vit_base_14` backbones
-- 🚀 **model**: Enable Patchcore Training Half Precision by @alexriedel1 in https://github.com/open-edge-platform/anomalib/pull/3047
-
 ### Removed
 
 ### Changed
@@ -20,6 +15,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Deprecated
 
 ### Fixed
+
+## [v2.3.2] - 2026-04-02
+
+### Changed
+
+- 📝 **docs**: Add Kaputt dataset example notebook and extend datamodule API to support paper's four training settings by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3484
+
+### Fixed
+
+- 🐞 **model**: Fix CFA `Descriptor` multi-scale fusion to interpolate pooled features instead of raw backbone features by @wsora in https://github.com/open-edge-platform/anomalib/pull/3474
+- 🐞 **deps**: Remove deprecated CUDA 12.4 (`cu124`) dependency option to resolve Trivy security scan issues by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3476
 
 ## [v2.3.1] - 2026-03-27
 
