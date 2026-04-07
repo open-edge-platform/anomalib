@@ -35,6 +35,7 @@ from typing import Any
 import torch
 from lightning.pytorch.utilities.types import STEP_OUTPUT
 from torch import optim
+from torchvision.transforms.v2 import Compose, Normalize, Resize
 
 from anomalib import LearningType
 from anomalib.data import Batch
@@ -175,6 +176,28 @@ class Patchflow(AnomalibModule):
             params=self.model.parameters(),
             lr=self.lr,
             weight_decay=self.weight_decay,
+        )
+
+    @staticmethod
+    def configure_pre_processor(image_size: tuple[int, int] | None = None) -> PreProcessor:
+        """Configure the default pre-processor for PatchFlow.
+
+        Matches the official repo transforms (Resize + ImageNet Normalize).
+        https://github.com/BOX-LEO/PatchFlow/blob/main/data.py
+
+        Args:
+            image_size: Target image size. Defaults to ``(768, 768)``
+                per the paper (Section 4.3).
+
+        Returns:
+            PreProcessor with the configured transforms.
+        """
+        image_size = image_size or (768, 768)
+        return PreProcessor(
+            transform=Compose([
+                Resize(image_size, antialias=True),
+                Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ]),
         )
 
     @property

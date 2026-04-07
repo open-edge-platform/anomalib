@@ -1,5 +1,5 @@
 # PatchFlow with DINOv2 ViT backbone.
-# For EfficientNet backbone, see patchflow_efficientnet.yaml.
+# For EfficientNet backbone, see patchflow/efficientnet.yaml.
 model:
   class_path: anomalib.models.Patchflow
   init_args:

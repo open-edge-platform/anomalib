@@ -100,11 +100,8 @@ class PatchflowModel(nn.Module):
                 self.feature_extractor = DinoV2Loader.from_name(backbone)
             else:
                 # Create DINOv2 backbone architecture without loading pretrained weights.
-                # Parse backbone name (e.g. "dinov2_vit_base_14") into components.
-                parts = backbone.split("_")
-                prefix, arch, ps = parts[0], parts[-2], int(parts[-1])
-                model_type = "dinov2_reg" if prefix == "dinov2reg" else prefix
                 dino_loader = DinoV2Loader()
+                model_type, arch, ps = dino_loader._parse_name(backbone)  # noqa: SLF001
                 self.feature_extractor = dino_loader.create_model(model_type, arch, ps)
             # Ensure internal size is divisible by DINOv2 patch size
             dino_patch = self.feature_extractor.patch_size
@@ -270,14 +267,14 @@ class PatchflowModel(nn.Module):
         # 6. Compute pred_score from cropped region before padding
         pred_score = torch.amax(anomaly_map, dim=(-2, -1))
 
-        # 7. pad anomaly map back to input_size if cropped
-        if self.crop_size is not None:
-            _, _, h_in, w_in = input_tensor.shape
-            ch, cw = self.crop_size
-            pad_top = (h_in - ch) // 2
-            pad_bottom = h_in - ch - pad_top
-            pad_left = (w_in - cw) // 2
-            pad_right = w_in - cw - pad_left
+        # 7. Pad anomaly map back to input_size if it is spatially smaller
+        _, _, h_in, w_in = input_tensor.shape
+        _, _, h_am, w_am = anomaly_map.shape
+        if (h_am, w_am) != (h_in, w_in):
+            pad_top = (h_in - h_am) // 2
+            pad_bottom = h_in - h_am - pad_top
+            pad_left = (w_in - w_am) // 2
+            pad_right = w_in - w_am - pad_left
             anomaly_map = F.pad(anomaly_map, (pad_left, pad_right, pad_top, pad_bottom), mode="constant", value=-1)
 
         return InferenceBatch(pred_score=pred_score, anomaly_map=anomaly_map)

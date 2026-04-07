@@ -13,7 +13,7 @@ from anomalib.models.image.patchflow.torch_model import PatchflowModel
 def model() -> PatchflowModel:
     """Create a PatchflowModel with DINOv2 backbone and small settings for fast testing."""
     return PatchflowModel(
-        input_size=(672, 672),
+        input_size=(112, 112),
         backbone="dinov2_vit_base_14",
         pre_trained=False,
         flow_steps=1,
@@ -21,20 +21,20 @@ def model() -> PatchflowModel:
         num_scales=2,
         patch_size=5,
         flow_hidden_dim=64,
-        crop_size=(672, 672),
+        crop_size=(112, 112),
     )
 
 
 @pytest.fixture(scope="module")
 def input_tensor() -> torch.Tensor:
     """Create a random input tensor."""
-    return torch.randn(2, 3, 672, 672)
+    return torch.randn(2, 3, 112, 112)
 
 
 def test_initialization(model: PatchflowModel) -> None:
     """Test that the model initialises without errors."""
     assert isinstance(model, PatchflowModel)
-    assert model.input_size == (672, 672)
+    assert model.input_size == (112, 112)
     assert model.is_dinov2 is True
 
 
@@ -58,8 +58,8 @@ def test_forward_eval(model: PatchflowModel, input_tensor: torch.Tensor) -> None
     assert hasattr(output, "pred_score")
 
     assert output.anomaly_map.shape[0] == 2
-    assert output.anomaly_map.shape[2] == 672
-    assert output.anomaly_map.shape[3] == 672
+    assert output.anomaly_map.shape[2] == 112
+    assert output.anomaly_map.shape[3] == 112
 
     assert output.pred_score.shape[0] == 2
 
