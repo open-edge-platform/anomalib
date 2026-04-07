@@ -13,8 +13,7 @@ an image-level anomaly score.
 from __future__ import annotations
 
 import math
-from collections.abc import Sequence
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import timm
 import torch
@@ -22,6 +21,9 @@ from torch import nn
 from torch.nn import functional as F  # noqa: N812
 
 from anomalib.data import InferenceBatch
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
 
 FakeFeatureType = Literal[
     "random",
@@ -38,7 +40,7 @@ FakeFeatureType = Literal[
 ]
 
 
-def _forward_attention_with_map(attn_obj: nn.Module):
+def _forward_attention_with_map(attn_obj: nn.Module) -> Callable[..., torch.Tensor]:
     """Wrap timm attention forward to expose the attention map."""
 
     def wrapped(
@@ -65,11 +67,10 @@ def _forward_attention_with_map(attn_obj: nn.Module):
         attn_obj.attn_map = attn
 
         x = (attn @ v).transpose(1, 2).reshape(batch_size, num_tokens, channels)
-        x = attn_obj.proj(x)
-        x = attn_obj.proj_drop(x)
-        return x
+        return attn_obj.proj_drop(attn_obj.proj(x))
 
     return wrapped
+
 
 class ViTFeatureExtractor(nn.Module):
     """Extract patch features and class-attention maps from ViT backbones."""
@@ -111,9 +112,14 @@ class ViTFeatureExtractor(nn.Module):
         block = self.pretrained_model.blocks[self.layers[-1] - 1]
         block.attn.forward = _forward_attention_with_map(block.attn)
 
-    def forward(self, images: torch.Tensor, output_attn: bool = False) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
+    def forward(
+        self,
+        images: torch.Tensor,
+        output_attn: bool = False,
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
+        """Extract transformer patch features and optional class attention."""
         x = self.pretrained_model.patch_embed(images)
-        x = self.pretrained_model._pos_embed(x)
+        x = self.pretrained_model._pos_embed(x)  # noqa: SLF001
         x = self.pretrained_model.patch_drop(x)
         x = self.pretrained_model.norm_pre(x)
 
@@ -164,8 +170,9 @@ class EVAFeatureExtractor(nn.Module):
         self.num_patches = (image_size[0] // self.patch_size) ** 2
 
     def forward(self, images: torch.Tensor) -> torch.Tensor:
+        """Extract transformer patch features for EVA backbones."""
         x = self.pretrained_model.patch_embed(images)
-        x, rot_pos_embed = self.pretrained_model._pos_embed(x)
+        x, rot_pos_embed = self.pretrained_model._pos_embed(x)  # noqa: SLF001
 
         outputs: list[torch.Tensor] = []
         for idx, layer in enumerate(self.pretrained_model.blocks, start=1):
@@ -195,6 +202,7 @@ class AttentionBlock(nn.Module):
         self.dropout2 = nn.Dropout(dropout)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Apply self-attention and MLP updates to discriminator features."""
         attn_output, _ = self.attn(x, x, x)
         x = self.layer_norm(x + self.dropout1(attn_output))
         return x + self.dropout2(self.linear(x))
@@ -223,6 +231,7 @@ class PatchDiscriminator(nn.Module):
         self.positional_encodings = nn.Parameter(torch.randn(num_patches, embed_dim))
 
     def forward(self, features: torch.Tensor) -> torch.Tensor:
+        """Score each image patch with the discriminator."""
         features = features + self.positional_encodings.unsqueeze(0)
         features = self.transformer_encoder(features)
         return self.output_layer(features).squeeze(-1)
@@ -334,7 +343,10 @@ class GeneralADModel(nn.Module):
             loss = loss + self._masked_bce(scores_random, masks_random)
         elif self.fake_feature_type in {"attn", "copy_out_and_attn", "shuffle_and_attn", "randshuffle_and_attn"}:
             if attn_map is None:
-                msg = f"Fake feature type '{self.fake_feature_type}' requires a transformer backbone with attention maps."
+                msg = (
+                    f"Fake feature type '{self.fake_feature_type}' requires "
+                    "a transformer backbone with attention maps."
+                )
                 raise ValueError(msg)
             attn_features, masks_attn = self._add_attn_noise(features, attn_map)
             scores_attn = self.discriminator(attn_features).flatten()
@@ -342,14 +354,20 @@ class GeneralADModel(nn.Module):
 
         if self.fake_feature_type in {"copy_out", "copy_out_and_random", "copy_out_and_attn"}:
             if attn_map is None:
-                msg = f"Fake feature type '{self.fake_feature_type}' requires a transformer backbone with attention maps."
+                msg = (
+                    f"Fake feature type '{self.fake_feature_type}' requires "
+                    "a transformer backbone with attention maps."
+                )
                 raise ValueError(msg)
             copy_features, masks_copy = self._add_attn_copy_out(features, attn_map)
             scores_copy = self.discriminator(copy_features).flatten()
             loss = loss + self._masked_bce(scores_copy, masks_copy)
         elif self.fake_feature_type in {"shuffle", "shuffle_and_random", "shuffle_and_attn"}:
             if attn_map is None:
-                msg = f"Fake feature type '{self.fake_feature_type}' requires a transformer backbone with attention maps."
+                msg = (
+                    f"Fake feature type '{self.fake_feature_type}' requires "
+                    "a transformer backbone with attention maps."
+                )
                 raise ValueError(msg)
             shuffle_features, masks_shuffle = self._add_attn_shuffle(features, attn_map)
             scores_shuffle = self.discriminator(shuffle_features).flatten()
@@ -373,7 +391,14 @@ class GeneralADModel(nn.Module):
         return loss
 
     def _sample_patch_count(self, max_patches: int) -> int:
-        return int(torch.randint(1, max_patches + 1, (1,), device=self.discriminator.positional_encodings.device).item())
+        return int(
+            torch.randint(
+                1,
+                max_patches + 1,
+                (1,),
+                device=self.discriminator.positional_encodings.device,
+            ).item(),
+        )
 
     def _add_random_noise(self, features: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         fake_features = features.clone()
