@@ -267,17 +267,17 @@ class GeneralADModel(nn.Module):
 
     def __init__(
         self,
-        backbone: str = "vit_tiny_patch16_224",
-        layers: Sequence[int] = (9, 10, 11, 12),
-        hidden_dim: int = 1024,
-        noise_std: float = 0.015,
+        backbone: str = "vit_large_patch14_dinov2.lvd142m",
+        layers: Sequence[int] = (24,),
+        hidden_dim: int = 2048,
+        noise_std: float = 0.25,
         dsc_layers: int = 1,
-        dsc_heads: int = 12,
-        dsc_dropout: float = 0.0,
-        image_size: tuple[int, int] = (256, 256),
-        num_fake_patches: int = 64,
-        fake_feature_type: FakeFeatureType = "copy_out_and_attn",
-        top_k: int = -1,
+        dsc_heads: int = 4,
+        dsc_dropout: float = 0.1,
+        image_size: tuple[int, int] = (518, 518),
+        num_fake_patches: int = -1,
+        fake_feature_type: FakeFeatureType = "random",
+        top_k: int = 10,
         pre_trained: bool = True,
     ) -> None:
         super().__init__()

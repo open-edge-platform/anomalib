@@ -9,6 +9,15 @@ from omegaconf import OmegaConf
 
 from anomalib.models import EfficientAd, GeneralAD, Padim, Patchcore, UnknownModelError, get_model
 
+SMALL_GENERAL_AD_ARGS = {
+    "backbone": "vit_tiny_patch16_224",
+    "layers": (9, 10, 11, 12),
+    "hidden_dim": 1024,
+    "image_size": (256, 256),
+    "dsc_heads": 12,
+    "dsc_dropout": 0.0,
+}
+
 
 class TestGetModel:
     """Test the `get_model` method."""
@@ -28,9 +37,9 @@ class TestGetModel:
         model = get_model("efficientad")
         assert isinstance(model, EfficientAd)
 
-        model = get_model("GeneralAD", pre_trained=False)
+        model = get_model("GeneralAD", pre_trained=False, **SMALL_GENERAL_AD_ARGS)
         assert isinstance(model, GeneralAD)
-        model = get_model("general_ad", pre_trained=False)
+        model = get_model("general_ad", pre_trained=False, **SMALL_GENERAL_AD_ARGS)
         assert isinstance(model, GeneralAD)
 
     @staticmethod
