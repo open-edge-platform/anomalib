@@ -51,12 +51,12 @@ from shutil import move
 
 from torchvision.transforms.v2 import Transform
 
-from anomalib.data.datamodules.base.image import resolve_with_warning
 from anomalib.data.datamodules.base.video import AnomalibVideoDataModule
 from anomalib.data.datasets.base.video import VideoTargetFrame
 from anomalib.data.datasets.video.shanghaitech import ShanghaiTechDataset
 from anomalib.data.utils import DownloadInfo, Split, ValSplitMode, download_and_extract
 from anomalib.data.utils.video import convert_video
+from anomalib.utils.path import resolve_with_warning
 
 logger = logging.getLogger(__name__)
 

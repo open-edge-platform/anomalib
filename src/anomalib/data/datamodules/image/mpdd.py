@@ -42,9 +42,10 @@ from textwrap import dedent
 
 from torchvision.transforms.v2 import Transform
 
-from anomalib.data.datamodules.base.image import AnomalibDataModule, resolve_with_warning
+from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.mpdd import MPDDDataset
 from anomalib.data.utils import Split, TestSplitMode, ValSplitMode
+from anomalib.utils.path import resolve_with_warning
 
 logger = logging.getLogger(__name__)
 

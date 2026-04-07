@@ -7,6 +7,8 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from anomalib.utils.path import (
     _get_cache_subdir,
     create_versioned_dir,
@@ -186,3 +188,33 @@ class TestGetCacheSubdir:
         with patch("anomalib.utils.path.platformdirs.user_cache_path", return_value=fake_cache) as mock_ucp:
             _get_cache_subdir("test")
         mock_ucp.assert_called_once_with("anomalib", ensure_exists=True)
+
+    @staticmethod
+    def test_rejects_empty_string() -> None:
+        """Empty string is rejected with ValueError."""
+        with pytest.raises(ValueError, match="Invalid cache subdirectory name"):
+            _get_cache_subdir("")
+
+    @staticmethod
+    def test_rejects_absolute_path() -> None:
+        """Absolute path is rejected with ValueError."""
+        with pytest.raises(ValueError, match="Invalid cache subdirectory name"):
+            _get_cache_subdir("/etc/passwd")
+
+    @staticmethod
+    def test_rejects_dotdot_traversal() -> None:
+        """Path containing '..' components is rejected with ValueError."""
+        with pytest.raises(ValueError, match="Invalid cache subdirectory name"):
+            _get_cache_subdir("../x")
+
+    @staticmethod
+    def test_rejects_dotdot_in_middle() -> None:
+        """Path with '..' buried in the middle is rejected with ValueError."""
+        with pytest.raises(ValueError, match="Invalid cache subdirectory name"):
+            _get_cache_subdir("a/../b")
+
+    @staticmethod
+    def test_rejects_bare_dotdot() -> None:
+        """Bare '..' is rejected with ValueError."""
+        with pytest.raises(ValueError, match="Invalid cache subdirectory name"):
+            _get_cache_subdir("..")

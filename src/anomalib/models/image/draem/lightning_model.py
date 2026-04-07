@@ -24,7 +24,6 @@ from torchvision.transforms.v2 import Compose, Normalize, Resize
 
 from anomalib import LearningType
 from anomalib.data import Batch
-from anomalib.data.datamodules.base.image import resolve_with_warning
 from anomalib.data.transforms.utils import extract_transforms_by_type
 from anomalib.data.utils import DownloadInfo, download_and_extract
 from anomalib.data.utils.generators.perlin import PerlinAnomalyGenerator
@@ -32,6 +31,7 @@ from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule
 from anomalib.post_processing import PostProcessor
 from anomalib.pre_processing import PreProcessor
+from anomalib.utils.path import resolve_with_warning
 from anomalib.visualization import Visualizer
 
 from .loss import DraemLoss

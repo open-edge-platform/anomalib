@@ -60,7 +60,7 @@ from pathlib import Path
 
 from torchvision.transforms.v2 import Transform
 
-from anomalib.data.datamodules.base.image import AnomalibDataModule, resolve_with_warning
+from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.kaputt import (
     ImageMode,
     ImageType,
@@ -69,6 +69,7 @@ from anomalib.data.datasets.image.kaputt import (
     _resolve_image_type,
 )
 from anomalib.data.utils import Split, TestSplitMode, ValSplitMode
+from anomalib.utils.path import resolve_with_warning
 
 logger = logging.getLogger(__name__)
 

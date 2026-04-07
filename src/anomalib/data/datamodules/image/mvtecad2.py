@@ -37,10 +37,11 @@ from lightning.pytorch.utilities.types import EVAL_DATALOADERS
 from torch.utils.data import DataLoader
 from torchvision.transforms.v2 import Transform
 
-from anomalib.data.datamodules.base.image import AnomalibDataModule, resolve_with_warning
+from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image import MVTecAD2Dataset
 from anomalib.data.datasets.image.mvtecad2 import TestType
 from anomalib.data.utils import DownloadInfo, Split, download_and_extract
+from anomalib.utils.path import resolve_with_warning
 
 logger = logging.getLogger(__name__)
 

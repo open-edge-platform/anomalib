@@ -42,9 +42,10 @@ from pathlib import Path
 
 from torchvision.transforms.v2 import Transform
 
-from anomalib.data.datamodules.base.image import AnomalibDataModule, resolve_with_warning
+from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets import VADDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
+from anomalib.utils.path import resolve_with_warning
 
 logger = logging.getLogger(__name__)
 
