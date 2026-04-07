@@ -39,6 +39,15 @@ FakeFeatureType = Literal[
     "randshuffle_and_attn",
 ]
 
+ATTENTION_REQUIRED_FAKE_FEATURE_TYPES = {
+    "attn",
+    "copy_out",
+    "shuffle",
+    "copy_out_and_attn",
+    "shuffle_and_attn",
+    "randshuffle_and_attn",
+}
+
 
 def _forward_attention_with_map(attn_obj: nn.Module) -> Callable[..., torch.Tensor]:
     """Wrap timm attention forward to expose the attention map."""
@@ -94,7 +103,7 @@ class ViTFeatureExtractor(nn.Module):
             )
             raise ValueError(msg)
 
-        self.layers = list(layers)
+        self.layers = sorted(set(layers))
         self.pretrained_model = timm.create_model(
             backbone,
             pretrained=pre_trained,
@@ -108,8 +117,16 @@ class ViTFeatureExtractor(nn.Module):
         self.patch_size = int(self.pretrained_model.patch_embed.patch_size[0])
         self.num_patches = (image_size[0] // self.patch_size) ** 2
         self.start_index = getattr(self.pretrained_model, "num_prefix_tokens", 1)
+        self.attn_layer = max(self.layers)
 
-        block = self.pretrained_model.blocks[self.layers[-1] - 1]
+        if self.layers[0] < 1 or self.attn_layer > len(self.pretrained_model.blocks):
+            msg = (
+                f"Invalid layer indices {self.layers} for backbone '{backbone}'. "
+                f"Valid transformer block indices are between 1 and {len(self.pretrained_model.blocks)}."
+            )
+            raise ValueError(msg)
+
+        block = self.pretrained_model.blocks[self.attn_layer - 1]
         block.attn.forward = _forward_attention_with_map(block.attn)
 
     def forward(
@@ -128,14 +145,14 @@ class ViTFeatureExtractor(nn.Module):
             x = layer(x)
             if idx in self.layers:
                 outputs.append(self.pretrained_model.norm(x[:, self.start_index :, :]))
-            if idx == max(self.layers):
+            if idx == self.attn_layer:
                 break
 
         features = torch.cat(outputs, dim=-1)
         if not output_attn:
             return features
 
-        attn_map = self.pretrained_model.blocks[self.layers[-1] - 1].attn.attn_map
+        attn_map = self.pretrained_model.blocks[self.attn_layer - 1].attn.attn_map
         attn_map_cls = attn_map[:, :, 0, self.start_index :]
         return features, attn_map_cls
 
@@ -155,7 +172,7 @@ class EVAFeatureExtractor(nn.Module):
             msg = "GeneralAD currently expects square inputs for EVA backbones."
             raise ValueError(msg)
 
-        self.layers = list(layers)
+        self.layers = sorted(set(layers))
         self.pretrained_model = timm.create_model(
             backbone,
             pretrained=pre_trained,
@@ -168,6 +185,14 @@ class EVAFeatureExtractor(nn.Module):
         self.embed_dim = len(self.layers) * self.pretrained_model.embed_dim
         self.patch_size = int(self.pretrained_model.patch_embed.patch_size[0])
         self.num_patches = (image_size[0] // self.patch_size) ** 2
+        self.last_layer = max(self.layers)
+
+        if self.layers[0] < 1 or self.last_layer > len(self.pretrained_model.blocks):
+            msg = (
+                f"Invalid layer indices {self.layers} for backbone '{backbone}'. "
+                f"Valid transformer block indices are between 1 and {len(self.pretrained_model.blocks)}."
+            )
+            raise ValueError(msg)
 
     def forward(self, images: torch.Tensor) -> torch.Tensor:
         """Extract transformer patch features for EVA backbones."""
@@ -179,7 +204,7 @@ class EVAFeatureExtractor(nn.Module):
             x = layer(x, rope=rot_pos_embed)
             if idx in self.layers:
                 outputs.append(self.pretrained_model.norm(x[:, 1:, :]))
-            if idx == max(self.layers):
+            if idx == self.last_layer:
                 break
 
         return torch.cat(outputs, dim=-1)
@@ -258,10 +283,17 @@ class GeneralADModel(nn.Module):
         super().__init__()
 
         self.backbone = backbone
-        self.layers = tuple(layers)
+        self.layers = tuple(sorted(set(layers)))
         self.noise_std = noise_std
         self.fake_feature_type = fake_feature_type
         self.image_size = image_size
+
+        if backbone.startswith("eva") and fake_feature_type in ATTENTION_REQUIRED_FAKE_FEATURE_TYPES:
+            msg = (
+                f"fake_feature_type='{fake_feature_type}' requires class-attention maps, "
+                "but EVA backbones do not expose attention maps in this integration."
+            )
+            raise ValueError(msg)
 
         if backbone.startswith("vit"):
             self.feature_extractor = ViTFeatureExtractor(backbone, self.layers, image_size, pre_trained=pre_trained)
@@ -279,10 +311,10 @@ class GeneralADModel(nn.Module):
         self.patch_size = self.feature_extractor.patch_size
         self.num_patches = self.feature_extractor.num_patches
         self.patches_per_side = int(math.sqrt(self.num_patches))
-        if top_k == 0:
+        if top_k < -1 or top_k == 0:
             msg = "top_k must be -1 or a positive integer."
             raise ValueError(msg)
-        if num_fake_patches == 0:
+        if num_fake_patches < -1 or num_fake_patches == 0:
             msg = "num_fake_patches must be -1 or a positive integer."
             raise ValueError(msg)
         self.top_k = self.num_patches if top_k < 0 or top_k > self.num_patches else top_k
