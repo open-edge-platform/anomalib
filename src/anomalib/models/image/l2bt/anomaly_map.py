@@ -11,7 +11,26 @@ from torch.nn import functional
 
 
 class L2BTAnomalyMapGenerator(nn.Module):
-    """Generate anomaly maps and image-level scores from L2BT features."""
+    """Generate anomaly maps and image-level scores from L2BT features.
+
+    Args:
+        patch_size (int): Patch size used to derive the spatial patch grid from the
+            input image.
+        blur_w_l (int, optional): Kernel size for the first blur stage. Defaults
+            to ``5``.
+        blur_w_u (int, optional): Kernel size for the second blur stage. Defaults
+            to ``7``.
+        blur_pad_l (int, optional): Padding for the first blur stage. Must preserve
+            spatial size. Defaults to ``2``.
+        blur_pad_u (int, optional): Padding for the second blur stage. Must preserve
+            spatial size. Defaults to ``3``.
+        blur_repeats_l (int, optional): Number of times to apply the first blur
+            stage. Defaults to ``5``.
+        blur_repeats_u (int, optional): Number of times to apply the second blur
+            stage. Defaults to ``3``.
+        topk_ratio (float, optional): Fraction of anomaly map values used to
+            compute the image-level score. Defaults to ``0.001``.
+    """
 
     def __init__(
         self,
@@ -25,6 +44,10 @@ class L2BTAnomalyMapGenerator(nn.Module):
         topk_ratio: float = 0.001,
     ) -> None:
         super().__init__()
+
+        self._validate_blur_params(blur_w_l, blur_pad_l, "blur_w_l", "blur_pad_l")
+        self._validate_blur_params(blur_w_u, blur_pad_u, "blur_w_u", "blur_pad_u")
+
         self.patch_size = int(patch_size)
 
         self.blur_pad_l = blur_pad_l
@@ -39,8 +62,12 @@ class L2BTAnomalyMapGenerator(nn.Module):
         self.register_buffer("weight_u", weight_u)
 
     def _blur(self, anomaly_map: torch.Tensor) -> torch.Tensor:
-        weight_l = self.weight_l.to(device=anomaly_map.device, dtype=anomaly_map.dtype)
-        weight_u = self.weight_u.to(device=anomaly_map.device, dtype=anomaly_map.dtype)
+        weight_l = self.weight_l
+        weight_u = self.weight_u
+        if weight_l.dtype != anomaly_map.dtype:
+            weight_l = weight_l.to(dtype=anomaly_map.dtype)
+        if weight_u.dtype != anomaly_map.dtype:
+            weight_u = weight_u.to(dtype=anomaly_map.dtype)
         for _ in range(self.blur_repeats_l):
             anomaly_map = functional.conv2d(anomaly_map, padding=self.blur_pad_l, weight=weight_l)
         for _ in range(self.blur_repeats_u):
@@ -108,3 +135,14 @@ class L2BTAnomalyMapGenerator(nn.Module):
 
         pred_score = self._score_topk_mean(anomaly_map)
         return anomaly_map, pred_score
+
+    @staticmethod
+    def _validate_blur_params(kernel_size: int, padding: int, weight_name: str, padding_name: str) -> None:
+        expected_padding = kernel_size // 2
+        if kernel_size % 2 == 0 or padding != expected_padding:
+            msg = (
+                f"{weight_name} and {padding_name} must preserve spatial size. "
+                f"Expected an odd {weight_name} with {padding_name}={expected_padding}, "
+                f"but got {weight_name}={kernel_size}, {padding_name}={padding}."
+            )
+            raise ValueError(msg)
