@@ -86,12 +86,12 @@ jobs:
           python-version: ${{ inputs.python-version }}
       - name: Build package
         run: |
-          python -m pip install --upgrade pip build
+          python -m pip install --upgrade pip build==1.4.2
           python -m build
       - name: Verify package
         if: inputs.verify-package
         run: |
-          pip install twine
+          pip install twine==6.2.0
           twine check dist/*
       - name: Set artifact name
         id: set-artifact-name
