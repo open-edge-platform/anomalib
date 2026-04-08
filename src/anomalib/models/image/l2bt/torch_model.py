@@ -131,10 +131,6 @@ class L2BTModel(nn.Module):
             "loss": loss,
             "loss_middle": loss_middle,
             "loss_last": loss_last,
-            "middle_patch": middle_patch,
-            "last_patch": last_patch,
-            "predicted_middle_patch": predicted_middle_patch,
-            "predicted_last_patch": predicted_last_patch,
         }
 
     def forward(self, images: torch.Tensor) -> dict[str, torch.Tensor] | InferenceBatch:
