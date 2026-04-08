@@ -136,6 +136,66 @@ Model parameters can be configured using:
 examples/configs/model/l2bt.yaml
 ```
 
+## Benchmark
+
+All results gathered with seed `42` and `max_epochs=50`.
+
+> **Note:** The original paper uses high-resolution images (1036×1036) with `lr=0.001`, whereas anomalib
+> defaults to 224×224 with `lr=1e-4`. These differences explain the gap between reproduced and
+> paper-reported metrics (paper: MVTec AD I-AUROC 0.988, VisA I-AUROC 0.964).
+
+## [MVTec AD Dataset](https://www.mvtec.com/company/research/datasets/mvtec-ad)
+
+### Image-Level AUC
+
+|      |  Avg  | Bottle | Cable | Capsule | Carpet | Grid  | HazelNut | Leather | Metal Nut | Pill  | Screw | Tile  | ToothBrush | Transistor | Wood  | Zipper |
+| ---- | :---: | :----: | :---: | :-----: | :----: | :---: | :------: | :-----: | :-------: | :---: | :---: | :---: | :--------: | :--------: | :---: | :----: |
+| L2BT | 0.977 | 1.000  | 0.958 |  0.934  | 1.000  | 0.999 |  1.000   |  1.000  |   1.000   | 0.969 | 0.864 | 1.000 |   0.969    |   0.974    | 0.990 | 0.996  |
+
+### Image F1 Score
+
+|      |  Avg  | Bottle | Cable | Capsule | Carpet | Grid  | HazelNut | Leather | Metal Nut | Pill  | Screw | Tile  | ToothBrush | Transistor | Wood  | Zipper |
+| ---- | :---: | :----: | :---: | :-----: | :----: | :---: | :------: | :-----: | :-------: | :---: | :---: | :---: | :--------: | :--------: | :---: | :----: |
+| L2BT | 0.963 | 0.992  | 0.921 |  0.942  | 0.994  | 0.983 |  0.993   |  0.995  |   0.995   | 0.975 | 0.887 | 0.994 |   0.951    |   0.871    | 0.966 | 0.983  |
+
+### Pixel-Level AUC
+
+|      |  Avg  | Bottle | Cable | Capsule | Carpet | Grid  | HazelNut | Leather | Metal Nut | Pill  | Screw | Tile  | ToothBrush | Transistor | Wood  | Zipper |
+| ---- | :---: | :----: | :---: | :-----: | :----: | :---: | :------: | :-----: | :-------: | :---: | :---: | :---: | :--------: | :--------: | :---: | :----: |
+| L2BT | 0.973 | 0.987  | 0.955 |  0.983  | 0.991  | 0.986 |  0.994   |  0.988  |   0.974   | 0.975 | 0.971 | 0.948 |   0.988    |   0.945    | 0.933 | 0.973  |
+
+### Pixel F1 Score
+
+|      |  Avg  | Bottle | Cable | Capsule | Carpet | Grid  | HazelNut | Leather | Metal Nut | Pill  | Screw | Tile  | ToothBrush | Transistor | Wood  | Zipper |
+| ---- | :---: | :----: | :---: | :-----: | :----: | :---: | :------: | :-----: | :-------: | :---: | :---: | :---: | :--------: | :--------: | :---: | :----: |
+| L2BT | 0.562 | 0.754  | 0.606 |  0.479  | 0.590  | 0.362 |  0.724   |  0.352  |   0.807   | 0.617 | 0.340 | 0.597 |   0.551    |   0.559    | 0.587 | 0.514  |
+
+## [VisA Dataset](https://github.com/amazon-science/spot-diff)
+
+### Image-Level AUC
+
+|      |  Avg  | Candle | Capsules | Cashew | Chewinggum | Fryum | Macaroni1 | Macaroni2 | PCB1  | PCB2  | PCB3  | PCB4  | Pipe Fryum |
+| ---- | :---: | :----: | :------: | :----: | :--------: | :---: | :-------: | :-------: | :---: | :---: | :---: | :---: | :--------: |
+| L2BT | 0.911 | 0.932  |  0.891   | 0.955  |   0.987    | 0.946 |   0.890   |   0.772   | 0.917 | 0.863 | 0.825 | 0.959 |   0.994    |
+
+### Image F1 Score
+
+|      |  Avg  | Candle | Capsules | Cashew | Chewinggum | Fryum | Macaroni1 | Macaroni2 | PCB1  | PCB2  | PCB3  | PCB4  | Pipe Fryum |
+| ---- | :---: | :----: | :------: | :----: | :--------: | :---: | :-------: | :-------: | :---: | :---: | :---: | :---: | :--------: |
+| L2BT | 0.859 | 0.863  |  0.844   | 0.939  |   0.959    | 0.911 |   0.806   |   0.705   | 0.848 | 0.809 | 0.741 | 0.902 |   0.985    |
+
+### Pixel-Level AUC
+
+|      |  Avg  | Candle | Capsules | Cashew | Chewinggum | Fryum | Macaroni1 | Macaroni2 | PCB1  | PCB2  | PCB3  | PCB4  | Pipe Fryum |
+| ---- | :---: | :----: | :------: | :----: | :--------: | :---: | :-------: | :-------: | :---: | :---: | :---: | :---: | :--------: |
+| L2BT | 0.977 | 0.991  |  0.973   | 0.995  |   0.991    | 0.969 |   0.930   |   0.964   | 0.996 | 0.970 | 0.970 | 0.980 |   0.991    |
+
+### Pixel F1 Score
+
+|      |  Avg  | Candle | Capsules | Cashew | Chewinggum | Fryum | Macaroni1 | Macaroni2 | PCB1  | PCB2  | PCB3  | PCB4  | Pipe Fryum |
+| ---- | :---: | :----: | :------: | :----: | :--------: | :---: | :-------: | :-------: | :---: | :---: | :---: | :---: | :--------: |
+| L2BT | 0.386 | 0.308  |  0.335   | 0.648  |   0.573    | 0.456 |   0.175   |   0.116   | 0.628 | 0.197 | 0.281 | 0.363 |   0.545    |
+
 ## :envelope: Contacts
 
 For questions regarding the original method, please contact:
