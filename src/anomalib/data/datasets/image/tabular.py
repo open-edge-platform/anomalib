@@ -237,10 +237,10 @@ def make_tabular_dataset(
     ]:
         samples["label"] = samples.apply(
             lambda x: DirType.NORMAL
-            if (x["label_index"] == LabelName.NORMAL) and (x["split"] == Split.TRAIN)
+            if (x["label_index"] == LabelName.NORMAL) and (x["split"] == Split.TRAIN.value)
             else (
                 DirType.NORMAL_TEST
-                if x["label_index"] == LabelName.NORMAL and x["split"] == Split.TEST
+                if x["label_index"] == LabelName.NORMAL and x["split"] == Split.TEST.value
                 else (DirType.ABNORMAL if x["label_index"] == LabelName.ABNORMAL else None)
             ),
             axis=1,
@@ -277,7 +277,7 @@ def make_tabular_dataset(
     samples = samples.astype({"image_path": "str", "mask_path": "str", "label": "str"})
 
     # Check if anomalous samples are in training set
-    if ((samples.label_index == LabelName.ABNORMAL) & (samples.split == Split.TRAIN)).any():
+    if ((samples.label_index == LabelName.ABNORMAL) & (samples.split == Split.TRAIN.value)).any():
         msg = "Training set must not contain anomalous samples."
         raise MisMatchError(msg)
 
@@ -291,7 +291,8 @@ def make_tabular_dataset(
 
     # Get the dataframe for the split.
     if split:
-        samples = samples[samples.split == split]
+        split_value = split.value if isinstance(split, Split) else split
+        samples = samples[samples.split == split_value]
         samples = samples.reset_index(drop=True)
 
     return samples
