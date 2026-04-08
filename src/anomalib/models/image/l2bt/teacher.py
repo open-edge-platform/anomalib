@@ -17,9 +17,18 @@ class FeatureExtractor(torch.nn.Module):
         """Initialize the teacher feature extractor.
 
         Args:
-            layers: Indices of the transformer layers to extract.
+            layers: Indices of exactly two transformer layers to extract.
+                Must have length 2 because ``forward`` unpacks the result
+                into ``(middle_patch, last_patch)``.
+
+        Raises:
+            ValueError: If ``layers`` does not contain exactly 2 indices.
         """
         super().__init__()
+
+        if len(layers) != 2:
+            msg = f"FeatureExtractor requires exactly 2 layer indices (middle, last), got {len(layers)}: {list(layers)}"
+            raise ValueError(msg)
 
         loader = DinoV2Loader()
         self.fe = loader.load("dinov2reg_base_14")

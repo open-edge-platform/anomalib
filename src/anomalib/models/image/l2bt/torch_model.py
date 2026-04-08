@@ -32,7 +32,9 @@ class L2BTModel(nn.Module):
         """Initialize the L2BT model.
 
         Args:
-            layers: Teacher transformer layers used for feature extraction.
+            layers: Indices of exactly two transformer layers to extract.
+                Must have length 2 because the model unpacks teacher output
+                into ``(middle_patch, last_patch)`` for the two student MLPs.
             blur_w_l: Lower blur kernel width.
             blur_w_u: Upper blur kernel width.
             blur_pad_l: Lower blur padding.
@@ -40,8 +42,15 @@ class L2BTModel(nn.Module):
             blur_repeats_l: Number of repetitions for the lower blur kernel.
             blur_repeats_u: Number of repetitions for the upper blur kernel.
             topk_ratio: Fraction of highest anomaly-map values used for image scoring.
+
+        Raises:
+            ValueError: If ``layers`` does not contain exactly 2 indices.
         """
         super().__init__()
+
+        if len(layers) != 2:
+            msg = f"L2BT requires exactly 2 layer indices (middle, last), got {len(layers)}: {list(layers)}"
+            raise ValueError(msg)
 
         self.layers = list(layers)
         self.cos_sim = nn.CosineSimilarity(dim=-1, eps=1e-6)
