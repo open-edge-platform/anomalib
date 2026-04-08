@@ -109,7 +109,9 @@ class PatchflowModel(nn.Module):
                 (self._internal_size[0] // dino_patch) * dino_patch,
                 (self._internal_size[1] // dino_patch) * dino_patch,
             )
-            if crop_size is not None:
+            # Enable cropping when crop_size was set, or when input_size
+            # is not divisible by the DINOv2 patch size.
+            if crop_size is not None or self._internal_size != input_size:
                 self.crop_size = self._internal_size
             # Use early, middle, and late intermediate layers
             num_blocks = len(self.feature_extractor.blocks)
@@ -135,7 +137,11 @@ class PatchflowModel(nn.Module):
             dino_patch = self.feature_extractor.patch_size
             self.fused_spatial_size = (self._internal_size[0] // dino_patch, self._internal_size[1] // dino_patch)
         else:
-            self.fused_spatial_size = (self._internal_size[0] // 8, self._internal_size[1] // 8)
+            finest_stride = min(self.feature_extractor.feature_info.reduction())
+            self.fused_spatial_size = (
+                self._internal_size[0] // finest_stride,
+                self._internal_size[1] // finest_stride,
+            )
 
         # --- Feature adaptor (1x1 conv) ---
         self.feature_adaptor = nn.Conv2d(total_channels, flow_feature_dim, kernel_size=1)
@@ -267,14 +273,26 @@ class PatchflowModel(nn.Module):
         # 6. Compute pred_score from cropped region before padding
         pred_score = torch.amax(anomaly_map, dim=(-2, -1))
 
-        # 7. Pad anomaly map back to input_size if it is spatially smaller
+        # 7. Pad or crop anomaly map to match input_size
         _, _, h_in, w_in = input_tensor.shape
         _, _, h_am, w_am = anomaly_map.shape
         if (h_am, w_am) != (h_in, w_in):
-            pad_top = (h_in - h_am) // 2
-            pad_bottom = h_in - h_am - pad_top
-            pad_left = (w_in - w_am) // 2
-            pad_right = w_in - w_am - pad_left
-            anomaly_map = F.pad(anomaly_map, (pad_left, pad_right, pad_top, pad_bottom), mode="constant", value=-1)
+            if h_am <= h_in and w_am <= w_in:
+                # Pad smaller anomaly map to input size
+                pad_top = (h_in - h_am) // 2
+                pad_bottom = h_in - h_am - pad_top
+                pad_left = (w_in - w_am) // 2
+                pad_right = w_in - w_am - pad_left
+                anomaly_map = F.pad(
+                    anomaly_map,
+                    (pad_left, pad_right, pad_top, pad_bottom),
+                    mode="constant",
+                    value=-1,
+                )
+            else:
+                # Center-crop larger anomaly map to input size
+                crop_top = (h_am - h_in) // 2
+                crop_left = (w_am - w_in) // 2
+                anomaly_map = anomaly_map[:, :, crop_top : crop_top + h_in, crop_left : crop_left + w_in]
 
         return InferenceBatch(pred_score=pred_score, anomaly_map=anomaly_map)

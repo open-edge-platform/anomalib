@@ -16,7 +16,7 @@ from anomalib.models.image.patchflow import Patchflow
 def model() -> Patchflow:
     """Create a Patchflow lightning module with DINOv2 backbone and small settings."""
     return Patchflow(
-        backbone="dinov2_vit_base_14",
+        backbone="dinov2_vit_small_14",
         pre_trained=False,
         flow_steps=1,
         flow_feature_dim=64,

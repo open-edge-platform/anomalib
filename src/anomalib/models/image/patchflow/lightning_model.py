@@ -185,6 +185,12 @@ class Patchflow(AnomalibModule):
         Matches the official repo transforms (Resize + ImageNet Normalize).
         https://github.com/BOX-LEO/PatchFlow/blob/main/data.py
 
+        Note:
+            The default ``(768, 768)`` is not divisible by the DINOv2 ViT
+            patch size (14).  When a DINOv2 backbone is used, the torch model
+            automatically center-crops the input to the nearest
+            patch-aligned size, so no manual ``crop_size`` is required.
+
         Args:
             image_size: Target image size. Defaults to ``(768, 768)``
                 per the paper (Section 4.3).

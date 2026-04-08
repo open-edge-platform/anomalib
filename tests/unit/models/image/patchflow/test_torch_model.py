@@ -14,7 +14,7 @@ def model() -> PatchflowModel:
     """Create a PatchflowModel with small settings for fast testing."""
     return PatchflowModel(
         input_size=(224, 224),
-        backbone="tf_efficientnet_b5",
+        backbone="resnet18",
         pre_trained=False,
         flow_steps=1,
         flow_feature_dim=64,
