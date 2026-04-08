@@ -36,6 +36,23 @@ on:
     paths:
       - "application/**"
       - ".github/workflows/tauri-build.yaml"
+  workflow_call:
+    inputs:
+      rc_version:
+        description: "Release candidate version used in MSIX filename"
+        required: true
+        type: string
+      accelerator:
+        description: "Backend accelerator to build (matrix: cpu, cu124, xpu)"
+        required: true
+        type: string
+    secrets:
+      MSIX_SIGN_CERTIFICATE:
+        description: "Base64-encoded Windows signing certificate used for MSIX signing"
+        required: false
+      MSIX_SIGN_CERTIFICATE_PASSWORD:
+        description: "Password for the Windows signing certificate"
+        required: false
   workflow_dispatch:
     inputs:
       accelerator:
@@ -140,7 +157,7 @@ jobs:
   build-windows:
     name: Build Windows MSIX
     # Only run in the source repo where MSIX signing secrets are configured.
-    # Skipped on forks; run manually via workflow_dispatch from the repo.
+    # Skipped on forks; run manually via workflow_dispatch from the repo or called via workflow_call.
     if: |
       github.repository == 'open-edge-platform/anomalib' &&
       (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
@@ -171,14 +188,20 @@ jobs:
         env:
           ACCELERATOR: ${{ matrix.accelerator }}
           DEBUG_BUILD: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_build || false }}
+          RC_VERSION: ${{ github.event_name == 'workflow_call' && inputs.rc_version || '' }}
         run: |
           $runNum = if ($env:GITHUB_RUN_NUMBER) { $env:GITHUB_RUN_NUMBER } else { "0" }
           $targetDir = if ($env:DEBUG_BUILD -eq "true") { "debug" } else { "release" }
           $uiBuildPath = "$env:TAURI_SRC_PATH\target\$targetDir"
           $msixBundlePath = "$uiBuildPath\bundle\msix"
           $suffix = if ($env:DEBUG_BUILD -eq "true") { "-debug" } else { "" }
-          # File name uses GitHub run number; MSIX package version is defined in AppxManifest.xml.
-          $msixFileName = "anomalib-studio-$($env:ACCELERATOR)-build-$runNum$suffix.msix"
+
+          if ($env:GITHUB_EVENT_NAME -eq "workflow_call" -and $env:RC_VERSION) {
+            $msixFileName = "anomalib-studio-$($env:ACCELERATOR)-$($env:RC_VERSION)$suffix.msix"
+          } else {
+            $msixFileName = "anomalib-studio-$($env:ACCELERATOR)-build-$runNum$suffix.msix"
+          }
+
           $msixFilePath = "$msixBundlePath\$msixFileName"
 
           $sdkBin = "${env:ProgramFiles(x86)}\Windows Kits\10\bin"
