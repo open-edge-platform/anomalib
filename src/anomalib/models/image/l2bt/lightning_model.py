@@ -136,9 +136,9 @@ class L2BT(AnomalibModule):
         out = self.model(batch.image)
 
         loss = out["loss"]
-        self.log("train_loss", loss.item(), on_step=True, on_epoch=True, prog_bar=True)
-        self.log("train_loss_middle", out["loss_middle"].item(), on_step=True, on_epoch=True, prog_bar=False)
-        self.log("train_loss_last", out["loss_last"].item(), on_step=True, on_epoch=True, prog_bar=False)
+        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
+        self.log("train_loss_middle", out["loss_middle"], on_step=True, on_epoch=True, prog_bar=False)
+        self.log("train_loss_last", out["loss_last"], on_step=True, on_epoch=True, prog_bar=False)
         return {"loss": loss}
 
     def configure_optimizers(self) -> torch.optim.Optimizer:

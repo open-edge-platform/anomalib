@@ -27,8 +27,8 @@ class DummyTeacher(nn.Module):
         """Return mock teacher features."""
         batch_size = x.shape[0]
         n_patches = (x.shape[-1] // self.patch_size) ** 2
-        middle_patch = torch.randn(batch_size, n_patches, self.embed_dim)
-        last_patch = torch.randn(batch_size, n_patches, self.embed_dim)
+        middle_patch = torch.randn(batch_size, n_patches, self.embed_dim, device=x.device, dtype=x.dtype)
+        last_patch = torch.randn(batch_size, n_patches, self.embed_dim, device=x.device, dtype=x.dtype)
         return middle_patch, last_patch
 
 

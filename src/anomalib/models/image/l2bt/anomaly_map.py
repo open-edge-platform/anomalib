@@ -39,10 +39,12 @@ class L2BTAnomalyMapGenerator(nn.Module):
         self.register_buffer("weight_u", weight_u)
 
     def _blur(self, anomaly_map: torch.Tensor) -> torch.Tensor:
+        weight_l = self.weight_l.to(device=anomaly_map.device, dtype=anomaly_map.dtype)
+        weight_u = self.weight_u.to(device=anomaly_map.device, dtype=anomaly_map.dtype)
         for _ in range(self.blur_repeats_l):
-            anomaly_map = functional.conv2d(anomaly_map, padding=self.blur_pad_l, weight=self.weight_l)
+            anomaly_map = functional.conv2d(anomaly_map, padding=self.blur_pad_l, weight=weight_l)
         for _ in range(self.blur_repeats_u):
-            anomaly_map = functional.conv2d(anomaly_map, padding=self.blur_pad_u, weight=self.weight_u)
+            anomaly_map = functional.conv2d(anomaly_map, padding=self.blur_pad_u, weight=weight_u)
         return anomaly_map
 
     def _score_topk_mean(self, anomaly_map: torch.Tensor) -> torch.Tensor:
