@@ -23,7 +23,7 @@ from torch.nn import functional as F  # noqa: N812
 from anomalib.data import InferenceBatch
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Sequence
 
 FakeFeatureType = Literal[
     "random",
@@ -49,36 +49,33 @@ ATTENTION_REQUIRED_FAKE_FEATURE_TYPES = {
 }
 
 
-def _forward_attention_with_map(attn_obj: nn.Module) -> Callable[..., torch.Tensor]:
-    """Wrap timm attention forward to expose the attention map."""
+def _forward_attention_with_map(
+    attn_obj: nn.Module,
+    x: torch.Tensor,
+    attn_mask: torch.Tensor | None = None,
+    is_causal: bool = False,
+    **kwargs,
+) -> torch.Tensor:
+    """Run timm attention while exposing the attention map."""
+    del attn_mask, is_causal, kwargs
+    batch_size, num_tokens, channels = x.shape
+    qkv = attn_obj.qkv(x).reshape(
+        batch_size,
+        num_tokens,
+        3,
+        attn_obj.num_heads,
+        channels // attn_obj.num_heads,
+    )
+    qkv = qkv.permute(2, 0, 3, 1, 4)
+    q, k, v = qkv.unbind(0)
 
-    def wrapped(
-        x: torch.Tensor,
-        attn_mask: torch.Tensor | None = None,
-        is_causal: bool = False,
-        **kwargs,
-    ) -> torch.Tensor:
-        del attn_mask, is_causal, kwargs
-        batch_size, num_tokens, channels = x.shape
-        qkv = attn_obj.qkv(x).reshape(
-            batch_size,
-            num_tokens,
-            3,
-            attn_obj.num_heads,
-            channels // attn_obj.num_heads,
-        )
-        qkv = qkv.permute(2, 0, 3, 1, 4)
-        q, k, v = qkv.unbind(0)
+    attn = (q @ k.transpose(-2, -1)) * attn_obj.scale
+    attn = attn.softmax(dim=-1)
+    attn = attn_obj.attn_drop(attn)
+    attn_obj.attn_map = attn
 
-        attn = (q @ k.transpose(-2, -1)) * attn_obj.scale
-        attn = attn.softmax(dim=-1)
-        attn = attn_obj.attn_drop(attn)
-        attn_obj.attn_map = attn
-
-        x = (attn @ v).transpose(1, 2).reshape(batch_size, num_tokens, channels)
-        return attn_obj.proj_drop(attn_obj.proj(x))
-
-    return wrapped
+    x = (attn @ v).transpose(1, 2).reshape(batch_size, num_tokens, channels)
+    return attn_obj.proj_drop(attn_obj.proj(x))
 
 
 class ViTFeatureExtractor(nn.Module):
@@ -127,7 +124,7 @@ class ViTFeatureExtractor(nn.Module):
             raise ValueError(msg)
 
         block = self.pretrained_model.blocks[self.attn_layer - 1]
-        block.attn.forward = _forward_attention_with_map(block.attn)
+        block.attn.forward = _forward_attention_with_map.__get__(block.attn, type(block.attn))
 
     def forward(
         self,
