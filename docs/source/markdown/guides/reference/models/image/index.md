@@ -110,6 +110,13 @@ PaDiM: A Patch Distribution Modeling Framework for Anomaly Detection and Localiz
 Towards Total Recall in Industrial Anomaly Detection
 :::
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` PatchFlow
+:link: ./patchflow
+:link-type: doc
+
+PatchFlow: Leveraging a Flow-Based Model with Patch Features
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` Reverse Distillation
 :link: ./reverse_distillation
 :link-type: doc
@@ -179,6 +186,7 @@ WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation
 ./ganomaly
 ./padim
 ./patchcore
+./patchflow
 ./reverse_distillation
 ./stfpm
 ./supersimplenet

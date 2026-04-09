@@ -35,6 +35,7 @@ Image Models:
     - GANomaly (:class:`anomalib.models.image.Ganomaly`)
     - PaDiM (:class:`anomalib.models.image.Padim`)
     - PatchCore (:class:`anomalib.models.image.Patchcore`)
+    - PatchFlow (:class:`anomalib.models.image.Patchflow`)
     - Reverse Distillation (:class:`anomalib.models.image.ReverseDistillation`)
     - STFPM (:class:`anomalib.models.image.Stfpm`)
     - SuperSimpleNet (:class:`anomalib.models.image.Supersimplenet`)
@@ -73,6 +74,7 @@ from .image import (
     Ganomaly,
     Padim,
     Patchcore,
+    Patchflow,
     ReverseDistillation,
     Stfpm,
     Supersimplenet,
@@ -114,6 +116,7 @@ __all__ = [
     "Ganomaly",
     "Padim",
     "Patchcore",
+    "Patchflow",
     "ReverseDistillation",
     "Stfpm",
     "Supersimplenet",

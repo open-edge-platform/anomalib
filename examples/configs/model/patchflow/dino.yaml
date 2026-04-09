@@ -1,0 +1,26 @@
+# PatchFlow with DINOv2 ViT backbone.
+# For EfficientNet backbone, see patchflow/efficientnet.yaml.
+model:
+  class_path: anomalib.models.Patchflow
+  init_args:
+    backbone: dinov2_vit_base_14 # DINOv2 ViT backbone
+    pre_trained: true
+    flow_steps: 2
+    flow_feature_dim: 128
+    flow_hidden_dim: 64
+    num_scales: 2
+    patch_size: 5
+    crop_size:
+      - 252
+      - 252
+    lr: 0.0002
+    weight_decay: 0.00001
+
+trainer:
+  max_epochs: 200
+  callbacks:
+    - class_path: lightning.pytorch.callbacks.EarlyStopping
+      init_args:
+        patience: 10
+        monitor: image_AUROC
+        mode: max
