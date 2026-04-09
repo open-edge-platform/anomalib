@@ -235,7 +235,7 @@ class BenchmarkJob(Job):
         batch_size = getattr(dataloader, "batch_size", None)
         return {"num_images": num_images, "batch_size": batch_size}
 
-    def _benchmark_inference_throughput(
+    def _benchmark_inference_throughput(  # noqa: C901
         self,
         warmup_runs: int,
         runs: int,
@@ -257,105 +257,91 @@ class BenchmarkJob(Job):
         try:
             import torch
             from torch.utils.data import DataLoader
-        except Exception:  # noqa: BLE001 - torch should exist, but keep this robust
-            return {}
 
-        try:
             dataloaders = self.datamodule.test_dataloader()
-        except Exception:  # noqa: BLE001 - best-effort only
-            return {}
+            dataloader = dataloaders[0] if isinstance(dataloaders, (list, tuple)) else dataloaders
+            if not hasattr(dataloader, "dataset"):
+                return {}
 
-        dataloader = dataloaders[0] if isinstance(dataloaders, (list, tuple)) else dataloaders
-        if not hasattr(dataloader, "dataset"):
-            return {}
+            if batch_size is not None and getattr(dataloader, "batch_size", None) != batch_size:
+                # Re-create a DataLoader with a different batch size while preserving common settings.
+                # This intentionally does not try to preserve complex samplers.
+                kwargs: dict[str, Any] = {
+                    "dataset": dataloader.dataset,
+                    "batch_size": batch_size,
+                    "shuffle": False,
+                    "num_workers": getattr(dataloader, "num_workers", 0),
+                    "pin_memory": getattr(dataloader, "pin_memory", False),
+                    "drop_last": getattr(dataloader, "drop_last", False),
+                    "collate_fn": getattr(dataloader, "collate_fn", None),
+                }
+                for key in ("timeout", "worker_init_fn", "prefetch_factor", "persistent_workers"):
+                    if hasattr(dataloader, key):
+                        kwargs[key] = getattr(dataloader, key)
+                dataloader = DataLoader(**kwargs)
 
-        if batch_size is not None and getattr(dataloader, "batch_size", None) != batch_size:
-            # Re-create a DataLoader with a different batch size while preserving common settings.
-            # This intentionally does not try to preserve complex samplers.
-            kwargs: dict[str, Any] = {
-                "dataset": dataloader.dataset,
-                "batch_size": batch_size,
-                "shuffle": False,
-                "num_workers": getattr(dataloader, "num_workers", 0),
-                "pin_memory": getattr(dataloader, "pin_memory", False),
-                "drop_last": getattr(dataloader, "drop_last", False),
-                "collate_fn": getattr(dataloader, "collate_fn", None),
+            device = getattr(self.model, "device", None)
+            if device is None:
+                try:
+                    device = next(self.model.parameters()).device
+                except Exception:  # noqa: BLE001
+                    device = torch.device("cpu")
+
+            core_model = getattr(self.model, "model", None)
+            if core_model is None:
+                return {}
+            core_model.eval()
+
+            def _get_images(batch: Any) -> Any:  # noqa: ANN401
+                if hasattr(batch, "image"):
+                    return batch.image
+                if isinstance(batch, dict) and "image" in batch:
+                    return batch["image"]
+                return None
+
+            def _batch_stream() -> Any:  # noqa: ANN401
+                while True:
+                    yield from dataloader
+
+            batch_iter = _batch_stream()
+            total_measured_images = 0
+
+            def _run(num_iters: int, count_images: bool) -> None:
+                nonlocal total_measured_images
+                for _ in range(num_iters):
+                    batch = next(batch_iter)
+                    images = _get_images(batch)
+                    if images is None:
+                        return
+                    images = images.to(device)
+                    _ = core_model(images)
+                    if count_images:
+                        total_measured_images += int(images.shape[0])
+
+            with torch.inference_mode():
+                _run(max(0, warmup_runs), count_images=False)
+                if device.type == "cuda":
+                    torch.cuda.synchronize(device)
+                start = time.perf_counter()
+                _run(max(1, runs), count_images=True)
+                if device.type == "cuda":
+                    torch.cuda.synchronize(device)
+                total_measured_seconds = time.perf_counter() - start
+
+            if total_measured_images <= 0 or total_measured_seconds <= 0:
+                return {}
+
+            return {
+                "inference_warmup_runs": warmup_runs,
+                "inference_runs": runs,
+                "inference_batch_size": getattr(dataloader, "batch_size", None),
+                "inference_num_images": total_measured_images,
+                "inference_duration": total_measured_seconds,
+                "inference_throughput_fps": total_measured_images / total_measured_seconds,
+                "inference_seconds_per_image": total_measured_seconds / total_measured_images,
             }
-            for key in ("timeout", "worker_init_fn", "prefetch_factor", "persistent_workers"):
-                if hasattr(dataloader, key):
-                    kwargs[key] = getattr(dataloader, key)
-            dataloader = DataLoader(**kwargs)
-
-        device = getattr(self.model, "device", None)
-        if device is None:
-            try:
-                device = next(self.model.parameters()).device
-            except Exception:  # noqa: BLE001
-                device = torch.device("cpu")
-
-        core_model = getattr(self.model, "model", None)
-        if core_model is None:
+        except Exception:  # noqa: BLE001
             return {}
-        core_model.eval()
-
-        total_measured_images = 0
-        total_measured_seconds = 0.0
-
-        def _get_images(batch: Any) -> Any:  # noqa: ANN401
-            if hasattr(batch, "image"):
-                return batch.image
-            if isinstance(batch, dict) and "image" in batch:
-                return batch["image"]
-            return None
-
-        it = iter(dataloader)
-        with torch.inference_mode():
-            # Warmup
-            for _ in range(max(0, warmup_runs)):
-                try:
-                    batch = next(it)
-                except StopIteration:
-                    it = iter(dataloader)
-                    batch = next(it)
-                images = _get_images(batch)
-                if images is None:
-                    return {}
-                images = images.to(device)
-                _ = core_model(images)
-
-            # Measured runs
-            if device.type == "cuda":
-                torch.cuda.synchronize(device)
-            start = time.perf_counter()
-            for _ in range(max(1, runs)):
-                try:
-                    batch = next(it)
-                except StopIteration:
-                    it = iter(dataloader)
-                    batch = next(it)
-                images = _get_images(batch)
-                if images is None:
-                    return {}
-                images = images.to(device)
-                _ = core_model(images)
-                total_measured_images += int(images.shape[0])
-            if device.type == "cuda":
-                torch.cuda.synchronize(device)
-            end = time.perf_counter()
-            total_measured_seconds = end - start
-
-        if total_measured_images <= 0 or total_measured_seconds <= 0:
-            return {}
-
-        return {
-            "inference_warmup_runs": warmup_runs,
-            "inference_runs": runs,
-            "inference_batch_size": getattr(dataloader, "batch_size", None),
-            "inference_num_images": total_measured_images,
-            "inference_duration": total_measured_seconds,
-            "inference_throughput_fps": total_measured_images / total_measured_seconds,
-            "inference_seconds_per_image": total_measured_seconds / total_measured_images,
-        }
 
     @staticmethod
     def collect(results: list[dict[str, Any]]) -> pd.DataFrame:
