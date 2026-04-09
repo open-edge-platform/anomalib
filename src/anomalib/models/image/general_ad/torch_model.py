@@ -98,8 +98,7 @@ class ViTFeatureExtractor(nn.Module):
 
         if backbone.endswith("_ibot"):
             msg = (
-                "iBOT checkpoints require external weights download and are not "
-                "supported by this anomalib integration."
+                "iBOT checkpoints require external weights download and are not supported by this anomalib integration."
             )
             raise ValueError(msg)
 
@@ -249,10 +248,7 @@ class PatchDiscriminator(nn.Module):
     ) -> None:
         super().__init__()
         self.transformer_encoder = nn.Sequential(
-            *[
-                AttentionBlock(embed_dim, hidden_dim, num_heads, dropout=dropout_rate)
-                for _ in range(num_layers)
-            ],
+            *[AttentionBlock(embed_dim, hidden_dim, num_heads, dropout=dropout_rate) for _ in range(num_layers)],
         )
         self.output_layer = nn.Linear(embed_dim, 1, bias=False)
         self.positional_encodings = nn.Parameter(torch.randn(num_patches, embed_dim))
@@ -321,9 +317,7 @@ class GeneralADModel(nn.Module):
             raise ValueError(msg)
         self.top_k = self.num_patches if top_k < 0 or top_k > self.num_patches else top_k
         self.num_fake_patches = (
-            self.num_patches
-            if num_fake_patches < 0 or num_fake_patches > self.num_patches
-            else num_fake_patches
+            self.num_patches if num_fake_patches < 0 or num_fake_patches > self.num_patches else num_fake_patches
         )
 
         self.discriminator = PatchDiscriminator(
@@ -378,8 +372,7 @@ class GeneralADModel(nn.Module):
         elif self.fake_feature_type in {"attn", "copy_out_and_attn", "shuffle_and_attn", "randshuffle_and_attn"}:
             if attn_map is None:
                 msg = (
-                    f"Fake feature type '{self.fake_feature_type}' requires "
-                    "a transformer backbone with attention maps."
+                    f"Fake feature type '{self.fake_feature_type}' requires a transformer backbone with attention maps."
                 )
                 raise ValueError(msg)
             attn_features, masks_attn = self._add_attn_noise(features, attn_map)
@@ -389,8 +382,7 @@ class GeneralADModel(nn.Module):
         if self.fake_feature_type in {"copy_out", "copy_out_and_random", "copy_out_and_attn"}:
             if attn_map is None:
                 msg = (
-                    f"Fake feature type '{self.fake_feature_type}' requires "
-                    "a transformer backbone with attention maps."
+                    f"Fake feature type '{self.fake_feature_type}' requires a transformer backbone with attention maps."
                 )
                 raise ValueError(msg)
             copy_features, masks_copy = self._add_attn_copy_out(features, attn_map)
@@ -399,8 +391,7 @@ class GeneralADModel(nn.Module):
         elif self.fake_feature_type in {"shuffle", "shuffle_and_random", "shuffle_and_attn"}:
             if attn_map is None:
                 msg = (
-                    f"Fake feature type '{self.fake_feature_type}' requires "
-                    "a transformer backbone with attention maps."
+                    f"Fake feature type '{self.fake_feature_type}' requires a transformer backbone with attention maps."
                 )
                 raise ValueError(msg)
             shuffle_features, masks_shuffle = self._add_attn_shuffle(features, attn_map)
