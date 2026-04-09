@@ -130,6 +130,32 @@ class BenchmarkJob(Job):
                 - Model configuration
                 - Performance metrics from testing
         """
+        # Config knobs for optional inference micro-benchmarking.
+        # Note: `flat_cfg` is produced by flattening the `benchmark:` config section,
+        # so users typically specify `inference.*` under `benchmark:`.
+        inference_bench_enabled = bool(
+            self.flat_cfg.get(
+                "benchmark.inference.enabled",
+                self.flat_cfg.get("inference.enabled", False),
+            ),
+        )
+        inference_warmup_runs = int(
+            self.flat_cfg.get(
+                "benchmark.inference.warmup_runs",
+                self.flat_cfg.get("inference.warmup_runs", 10),
+            ),
+        )
+        inference_runs = int(
+            self.flat_cfg.get(
+                "benchmark.inference.runs",
+                self.flat_cfg.get("inference.runs", 50),
+            ),
+        )
+        inference_batch_size = self.flat_cfg.get(
+            "benchmark.inference.batch_size",
+            self.flat_cfg.get("inference.batch_size", None),
+        )
+
         job_start_time = time.time()
         devices: str | list[int] = "auto"
         if task_id is not None:
@@ -144,6 +170,17 @@ class BenchmarkJob(Job):
             )
             fit_start_time = time.time()
             engine.fit(self.model, self.datamodule)
+
+            # Optional micro-benchmark: torch-only forward-pass throughput.
+            # This runs on the same device as the trained model and does not affect metrics.
+            inference_bench: dict[str, Any] = {}
+            if inference_bench_enabled:
+                inference_bench = self._benchmark_inference_throughput(
+                    warmup_runs=inference_warmup_runs,
+                    runs=inference_runs,
+                    batch_size=inference_batch_size,
+                )
+
             test_start_time = time.time()
             test_results = engine.test(self.model, self.datamodule)
         job_end_time = time.time()
@@ -152,16 +189,173 @@ class BenchmarkJob(Job):
             "fit_duration": test_start_time - fit_start_time,
             "test_duration": job_end_time - test_start_time,
         }
-        # TODO(ashwinvaidya17): Restore throughput
+
+        # Restore throughput in benchmark outputs.
         # https://github.com/open-edge-platform/anomalib/issues/2054
+        test_loader_info = self._get_test_loader_info()
+        throughput: dict[str, Any] = {}
+        if test_loader_info["num_images"] is not None and durations["test_duration"] > 0:
+            throughput = {
+                "test_num_images": test_loader_info["num_images"],
+                "test_batch_size": test_loader_info["batch_size"],
+                "test_throughput_fps": test_loader_info["num_images"] / durations["test_duration"],
+            }
+
         output = {
             "accelerator": self.accelerator,
             **durations,
+            **throughput,
+            **inference_bench,
             **self.flat_cfg,
             **test_results[0],
         }
         logger.info(f"Completed with result {output}")
         return output
+
+    def _get_test_loader_info(self) -> dict[str, int | None]:
+        """Best-effort test loader metadata.
+
+        Returns:
+            dict[str, int | None]: Keys:
+                - num_images: Total number of images in the test dataset, if available.
+                - batch_size: Batch size of the test dataloader, if available.
+        """
+        try:
+            dataloaders = self.datamodule.test_dataloader()
+        except Exception:  # noqa: BLE001 - best-effort only
+            return {"num_images": None, "batch_size": None}
+
+        dataloader = dataloaders[0] if isinstance(dataloaders, (list, tuple)) else dataloaders
+        num_images: int | None
+        batch_size: int | None
+        try:
+            num_images = len(dataloader.dataset)  # type: ignore[attr-defined]
+        except Exception:  # noqa: BLE001 - best-effort only
+            num_images = None
+        batch_size = getattr(dataloader, "batch_size", None)
+        return {"num_images": num_images, "batch_size": batch_size}
+
+    def _benchmark_inference_throughput(
+        self,
+        warmup_runs: int,
+        runs: int,
+        batch_size: int | None,
+    ) -> dict[str, Any]:
+        """Benchmark torch forward-pass throughput on the test dataloader.
+
+        This measures the runtime of the model's underlying torch module
+        (`AnomalibModule.model`) on batches from the test dataloader.
+
+        Args:
+            warmup_runs: Number of warmup iterations.
+            runs: Number of measured iterations.
+            batch_size: Optional override for dataloader batch size.
+
+        Returns:
+            dict[str, Any]: Benchmark metrics. Returns an empty dict if unavailable.
+        """
+        try:
+            import torch
+            from torch.utils.data import DataLoader
+        except Exception:  # noqa: BLE001 - torch should exist, but keep this robust
+            return {}
+
+        try:
+            dataloaders = self.datamodule.test_dataloader()
+        except Exception:  # noqa: BLE001 - best-effort only
+            return {}
+
+        dataloader = dataloaders[0] if isinstance(dataloaders, (list, tuple)) else dataloaders
+        if not hasattr(dataloader, "dataset"):
+            return {}
+
+        if batch_size is not None and getattr(dataloader, "batch_size", None) != batch_size:
+            # Re-create a DataLoader with a different batch size while preserving common settings.
+            # This intentionally does not try to preserve complex samplers.
+            kwargs: dict[str, Any] = {
+                "dataset": dataloader.dataset,
+                "batch_size": batch_size,
+                "shuffle": False,
+                "num_workers": getattr(dataloader, "num_workers", 0),
+                "pin_memory": getattr(dataloader, "pin_memory", False),
+                "drop_last": getattr(dataloader, "drop_last", False),
+                "collate_fn": getattr(dataloader, "collate_fn", None),
+            }
+            for key in ("timeout", "worker_init_fn", "prefetch_factor", "persistent_workers"):
+                if hasattr(dataloader, key):
+                    kwargs[key] = getattr(dataloader, key)
+            dataloader = DataLoader(**kwargs)
+
+        device = getattr(self.model, "device", None)
+        if device is None:
+            try:
+                device = next(self.model.parameters()).device
+            except Exception:  # noqa: BLE001
+                device = torch.device("cpu")
+
+        core_model = getattr(self.model, "model", None)
+        if core_model is None:
+            return {}
+        core_model.eval()
+
+        total_measured_images = 0
+        total_measured_seconds = 0.0
+
+        def _get_images(batch: Any) -> Any:  # noqa: ANN401
+            if hasattr(batch, "image"):
+                return batch.image
+            if isinstance(batch, dict) and "image" in batch:
+                return batch["image"]
+            return None
+
+        it = iter(dataloader)
+        with torch.inference_mode():
+            # Warmup
+            for _ in range(max(0, warmup_runs)):
+                try:
+                    batch = next(it)
+                except StopIteration:
+                    it = iter(dataloader)
+                    batch = next(it)
+                images = _get_images(batch)
+                if images is None:
+                    return {}
+                images = images.to(device)
+                _ = core_model(images)
+
+            # Measured runs
+            if device.type == "cuda":
+                torch.cuda.synchronize(device)
+            start = time.perf_counter()
+            for _ in range(max(1, runs)):
+                try:
+                    batch = next(it)
+                except StopIteration:
+                    it = iter(dataloader)
+                    batch = next(it)
+                images = _get_images(batch)
+                if images is None:
+                    return {}
+                images = images.to(device)
+                _ = core_model(images)
+                total_measured_images += int(images.shape[0])
+            if device.type == "cuda":
+                torch.cuda.synchronize(device)
+            end = time.perf_counter()
+            total_measured_seconds = end - start
+
+        if total_measured_images <= 0 or total_measured_seconds <= 0:
+            return {}
+
+        return {
+            "inference_warmup_runs": warmup_runs,
+            "inference_runs": runs,
+            "inference_batch_size": getattr(dataloader, "batch_size", None),
+            "inference_num_images": total_measured_images,
+            "inference_duration": total_measured_seconds,
+            "inference_throughput_fps": total_measured_images / total_measured_seconds,
+            "inference_seconds_per_image": total_measured_seconds / total_measured_images,
+        }
 
     @staticmethod
     def collect(results: list[dict[str, Any]]) -> pd.DataFrame:
