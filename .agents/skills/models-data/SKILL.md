@@ -1,5 +1,5 @@
 ---
-name: anomalib-models-data
+name: models-data
 description: Reviews anomalib model, data, callback, metric, and CLI integration conventions
 ---
 

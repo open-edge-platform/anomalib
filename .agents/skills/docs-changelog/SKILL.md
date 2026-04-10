@@ -1,5 +1,5 @@
 ---
-name: anomalib-docs-changelog
+name: docs-changelog
 description: Reviews anomalib docstrings, documentation updates, and changelog expectations
 ---
 
