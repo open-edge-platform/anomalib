@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """ShanghaiTech Campus Dataset.
@@ -74,6 +74,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datasets.base.video import AnomalibVideoDataset, VideoTargetFrame
 from anomalib.data.utils import Split, read_image, validate_path
 from anomalib.data.utils.video import ClipsIndexer
+from anomalib.utils.path import get_datasets_dir
 
 
 class ShanghaiTechDataset(AnomalibVideoDataset):
@@ -81,8 +82,8 @@ class ShanghaiTechDataset(AnomalibVideoDataset):
 
     Args:
         split (Split): Dataset split - either ``Split.TRAIN`` or ``Split.TEST``
-        root (Path | str): Path to the root directory containing the dataset.
-            Defaults to ``"./datasets/shanghaitech"``.
+        root (Path | str | None): Path to the root directory containing the dataset.
+            Defaults to ``None``.
         scene (int): Index of the dataset scene (category) in range [1, 13].
             Defaults to ``1``.
         clip_length_in_frames (int, optional): Number of frames in each video
@@ -107,7 +108,7 @@ class ShanghaiTechDataset(AnomalibVideoDataset):
     def __init__(
         self,
         split: Split,
-        root: Path | str = "./datasets/shanghaitech",
+        root: Path | str | None = None,
         scene: int = 1,
         clip_length_in_frames: int = 2,
         frames_between_clips: int = 1,
@@ -121,6 +122,7 @@ class ShanghaiTechDataset(AnomalibVideoDataset):
             augmentations=augmentations,
         )
 
+        root = root if root is not None else get_datasets_dir() / "shanghaitech"
         self.root = Path(root)
         self.scene = scene
         self.split = split
