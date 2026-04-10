@@ -14,9 +14,11 @@ import io
 import logging
 import os
 import re
+import ssl
 import sys
 import tarfile
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from tarfile import TarFile, TarInfo
@@ -26,6 +28,36 @@ from zipfile import ZipFile
 from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
+
+
+@contextmanager
+def _ssl_context() -> Generator[None, None, None]:
+    """Context manager that optionally disables SSL certificate verification.
+
+    When the environment variable ``ANOMALIB_NO_VERIFY_SSL`` is set to ``1`` or
+    ``true`` (case-insensitive), an unverified SSL context is installed for the
+    duration of the block.  The previous default context is restored on exit.
+
+    This is useful behind corporate proxies that perform TLS interception whose
+    CA certificate is not in the system trust store.
+
+    Yields:
+        ``None`` - side-effect only (installs/restores ``ssl`` default context).
+    """
+    skip = os.getenv("ANOMALIB_NO_VERIFY_SSL", "").lower() in {"1", "true"}
+    if skip:
+        logger.warning(
+            "SSL certificate verification is disabled via ANOMALIB_NO_VERIFY_SSL. "
+            "Consider adding the proxy CA to your trust store instead.",
+        )
+        prev_context = ssl._create_default_https_context  # noqa: SLF001
+        ssl._create_default_https_context = ssl._create_unverified_context  # noqa: SLF001, S323
+        try:
+            yield
+        finally:
+            ssl._create_default_https_context = prev_context  # noqa: SLF001
+    else:
+        yield
 
 
 @dataclass
@@ -307,14 +339,27 @@ def download_and_extract(root: Path, info: DownloadInfo) -> None:
     else:
         logger.info("Downloading the %s dataset.", info.name)
         # audit url. allowing only http:// or https://
-        if info.url.startswith("http://") or info.url.startswith("https://"):
-            with DownloadProgressBar(unit="B", unit_scale=True, miniters=1, desc=info.name) as progress_bar:
-                # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected # noqa: ERA001, E501
-                urlretrieve(  # noqa: S310  # nosec B310
-                    url=f"{info.url}",
-                    filename=downloaded_file_path,
-                    reporthook=progress_bar.update_to,
+        if info.url.startswith(("http://", "https://")):
+            try:
+                with (
+                    _ssl_context(),
+                    DownloadProgressBar(unit="B", unit_scale=True, miniters=1, desc=info.name) as progress_bar,
+                ):
+                    # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected  # noqa: ERA001
+                    urlretrieve(  # noqa: S310  # nosec B310
+                        url=f"{info.url}",
+                        filename=downloaded_file_path,
+                        reporthook=progress_bar.update_to,
+                    )
+            except ssl.SSLCertVerificationError as err:
+                msg = (
+                    f"SSL certificate verification failed while downloading {info.name}: {err}\n"
+                    "If you are behind a corporate proxy, you can either:\n"
+                    "  1. Add the proxy CA certificate to your system trust store, or\n"
+                    "  2. Set the SSL_CERT_FILE environment variable to point to your CA bundle, or\n"
+                    "  3. Set ANOMALIB_NO_VERIFY_SSL=1 to skip verification (not recommended)."
                 )
+                raise RuntimeError(msg) from err
             logger.info("Checking the hash of the downloaded file.")
             check_hash(downloaded_file_path, info.hashsum)
         else:
