@@ -17,7 +17,7 @@ This skill focuses on:
 - updating README/docs sample-result references
 - rejecting broken or misleading outputs
 
-It does not own benchmark table maintenance. Use `benchmark-and-doc-refresh` for that.
+It does not own benchmark table maintenance. Use `benchmark-and-docs-refresh` for that.
 
 ## Request changes when
 

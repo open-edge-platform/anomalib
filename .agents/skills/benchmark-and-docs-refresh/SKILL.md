@@ -1,5 +1,5 @@
 ---
-name: benchmark-and-doc-refresh
+name: benchmark-and-docs-refresh
 description: Run or continue model benchmarks, collect measured results, and refresh README/docs benchmark sections from generated artifacts. Use when benchmark tables in model docs need to be created, updated, or corrected.
 ---
 
