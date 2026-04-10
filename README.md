@@ -39,7 +39,7 @@
 >
 > - Moved pre-trained model downloads to platform-specific cache directories.
 > - Added deprecation warnings for legacy local `./datasets/<dataset>` roots ahead of the v2.6.0 cache-directory migration.
-> - Updated security-sensitive dependencies including `mlflow` and `vite`.
+> - Updated security-sensitive dependencies including `mlflow`.
 >
 > Bug fixes
 >
