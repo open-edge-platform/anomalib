@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """MPDD Data Module.
@@ -45,6 +45,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.mpdd import MPDDDataset
 from anomalib.data.utils import Split, TestSplitMode, ValSplitMode
+from anomalib.utils.path import resolve_with_warning
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ class MPDD(AnomalibDataModule):
     """MPDD Datamodule.
 
     Args:
-        root (Path | str): Path to the root of the dataset.
+        root (Path | str | None): Path to the root of the dataset.
             Defaults to ``"./datasets/MPDD"``.
         category (str): Category of the MPDD dataset (e.g. ``"bracket_black"`` or
             ``"bracket_brown"``). Defaults to ``"bracket_black"``.
@@ -115,7 +116,7 @@ class MPDD(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/MPDD",
+        root: Path | str | None = "./datasets/MPDD",
         category: str = "bracket_black",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
@@ -145,6 +146,7 @@ class MPDD(AnomalibDataModule):
             seed=seed,
         )
 
+        root = resolve_with_warning(root, "MPDD")
         self.root = Path(root)
         self.category = category
 
