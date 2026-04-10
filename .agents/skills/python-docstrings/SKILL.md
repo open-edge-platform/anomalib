@@ -79,6 +79,7 @@ class MyClass:
     Args:
         param1 (int): Description of param1.
         param2 (str): Description of param2.
+
     Example:
         >>> my_class = MyClass(param1=1, param2="test")
         >>> my_class.param1
