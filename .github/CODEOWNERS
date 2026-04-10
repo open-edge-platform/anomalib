@@ -51,6 +51,9 @@
 # Anomalib Studio
 /application/ui                                             @MarkRedeman @maxxgx @ActiveChooN
 /application/backend                                        @maxxgx @rajeshgangireddy @MarkRedeman
+/application/backend/uv.lock                                @maxxgx @rajeshgangireddy @MarkRedeman @sys-geti
+/application/docker/Dockerfile                              @maxxgx @rajeshgangireddy @MarkRedeman @sys-geti
+/application/binary/tauri/src-tauri/Cargo.lock              @MarkRedeman @maxxgx @ActiveChooN @sys-geti
 
 # Tests
 /tests/                                                     @samet-akcay @ashwinvaidya17 @rajeshgangireddy
@@ -62,6 +65,7 @@
 /setup.py                                                   @samet-akcay @ashwinvaidya17 @rajeshgangireddy
 /third-party-programs.txt                                   @samet-akcay @ashwinvaidya17 @rajeshgangireddy
 /tox.ini                                                    @samet-akcay @ashwinvaidya17 @rajeshgangireddy
+/uv.lock                                                    @samet-akcay @ashwinvaidya17 @rajeshgangireddy @sys-geti
 
 # Tools
 /tools/experimental                                         @ashwinvaidya17
