@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Real-IAD Data Module.
@@ -49,13 +49,14 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.realiad import CATEGORIES, RESOLUTIONS, RealIADDataset
 from anomalib.data.utils import Split, TestSplitMode, ValSplitMode
+from anomalib.utils.path import resolve_with_warning
 
 
 class RealIAD(AnomalibDataModule):
     """Real-IAD Datamodule.
 
     Args:
-        root (Path | str): Path to root directory containing the dataset.
+        root (Path | str | None): Path to root directory containing the dataset.
             Defaults to ``"./datasets/Real-IAD"``.
         category (str): Category of the Real-IAD dataset (e.g. ``"audiojack"`` or
             ``"button_battery"``). Defaults to ``"audiojack"``.
@@ -154,7 +155,7 @@ class RealIAD(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/Real-IAD",
+        root: Path | str | None = "./datasets/Real-IAD",
         category: str = "audiojack",
         resolution: str | int = 256,
         json_path: str | Path = "realiad_jsons/realiad_jsons/{category}.json",
@@ -182,6 +183,7 @@ class RealIAD(AnomalibDataModule):
             seed=seed,
         )
 
+        root = resolve_with_warning(root, "Real-IAD")
         self.root = Path(root)
         self.category = category
 

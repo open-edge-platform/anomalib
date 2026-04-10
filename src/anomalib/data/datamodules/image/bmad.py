@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """BMAD Data Module.
@@ -65,6 +65,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.bmad import BMADDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
+from anomalib.utils.path import resolve_with_warning
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +80,7 @@ class BMAD(AnomalibDataModule):
     """BMAD Datamodule.
 
     Args:
-        root (Path | str): Path to the root of the dataset.
+        root (Path | str | None): Path to the root of the dataset.
             Defaults to ``"./datasets/BMAD"``.
         category (str): Category of the BMAD dataset
             (e.g. ``"Brain"``, ``"Liver"``, ``"Retina_OCT2017"``, ``"Retina_RESC"``,
@@ -138,7 +139,7 @@ class BMAD(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/BMAD",
+        root: Path | str | None = "./datasets/BMAD",
         category: str = "Brain",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
@@ -168,6 +169,7 @@ class BMAD(AnomalibDataModule):
             seed=seed,
         )
 
+        root = resolve_with_warning(root, "BMAD")
         self.root = Path(root)
         self.category = category
 

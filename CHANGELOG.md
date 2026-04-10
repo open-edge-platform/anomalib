@@ -16,6 +16,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+## [v2.3.3] - 2026-04-10
+
+### Changed
+
+- 🔧 **path**: Move pre-trained model downloads to platform-specific cache directories and add deprecation warnings for legacy local `./datasets/<dataset>` roots by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3461
+- 🔧 **deps**: Update `mlflow` to v3.11.1 for security hardening by @oep-renovate[bot] in https://github.com/open-edge-platform/anomalib/pull/3517
+- 🤖 **agents**: Add skills and copilot instructions by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3524
+
+### Fixed
+
+- 🐞 **data**: Use enum `.value` for pandas >= 3.0 DataFrame compatibility by @Lidang-Jiang in https://github.com/open-edge-platform/anomalib/pull/3512
+
 ## [v2.3.2] - 2026-04-02
 
 ### Changed
