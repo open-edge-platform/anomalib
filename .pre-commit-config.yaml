@@ -70,7 +70,7 @@ repos:
       - id: nbqa-ruff
         # Ignore unsorted imports. This is because jupyter notebooks can import
         # packages in a different order than the rest of the codebase.
-        args: ["--ignore=D100,D407,I001,E402"]
+        args: ["--ignore=D100,D407,I001,E402,B018"]
 
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v4.0.0-alpha.8
@@ -82,6 +82,12 @@ repos:
     rev: v0.45.0
     hooks:
       - id: markdownlint
+
+  # gitleaks detects secrets (API keys, tokens, credentials) in code.
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
 
   # zizmor detects security issues in GitHub Actions workflows.
   - repo: https://github.com/woodruffw/zizmor-pre-commit

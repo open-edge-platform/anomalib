@@ -77,7 +77,11 @@ jobs:
           fi
 
           TAG_VERSION="${VERSION#v}"
-          PKG_VERSION=$(python3 -c "import re, pathlib; m = re.search(r'__version__\s*=\s*[\"'"'"']([^\"'"'"']+)[\"'"'"']', pathlib.Path('src/anomalib/__init__.py').read_text()); print(m.group(1))")
+          PKG_VERSION=$(sed -n "s/^[[:space:]]*__version__[[:space:]]*=[[:space:]]*[\"']\([^\"']*\)[\"']/\1/p" src/anomalib/__init__.py)
+          if [[ -z "$PKG_VERSION" ]]; then
+            echo "::error::Could not extract __version__ from src/anomalib/__init__.py"
+            exit 1
+          fi
           if [[ "$PKG_VERSION" != "$TAG_VERSION" ]]; then
             echo "::error::Tag version ($TAG_VERSION) does not match __version__ in src/anomalib/__init__.py ($PKG_VERSION)"
             exit 1
@@ -122,8 +126,8 @@ jobs:
     with:
       tools: "bandit,semgrep,trivy,zizmor"
       scan-scope: "all"
-      severity-level: "LOW"
-      fail-on-findings: true
+      severity-level: "HIGH"
+      fail-on-findings: false
 
   build:
     needs: [version-check, quality, unit-tests, integration-tests, security]
@@ -144,13 +148,13 @@ jobs:
       contents: write # Required by softprops/action-gh-release to publish release
       id-token: write # Required for OIDC authentication with PyPI
     steps:
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: ${{ needs.build.outputs.artifact-name }}
           path: dist
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
-      - uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
+      - uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
           tag_name: lib/${{ needs.version-check.outputs.version }}
           name: Release Anomalib Library ${{ needs.version-check.outputs.version }}

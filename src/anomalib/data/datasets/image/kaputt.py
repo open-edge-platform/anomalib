@@ -43,6 +43,8 @@ Dataset URL:
 """
 
 import logging
+import warnings
+from enum import Enum
 from pathlib import Path
 
 import pandas as pd
@@ -52,6 +54,7 @@ from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datasets.base import AnomalibDataset
 from anomalib.data.utils import LabelName, Split, validate_path
+from anomalib.utils.path import get_datasets_dir
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +73,93 @@ CATEGORIES = (
 )
 
 
+class ImageType(str, Enum):
+    """Type of images to use from the Kaputt dataset.
+
+    Attributes:
+        IMAGE: Use full images.
+        CROP: Use cropped item regions.
+    """
+
+    IMAGE = "image"
+    CROP = "crop"
+
+
+class ImageMode(str, Enum):
+    """Controls which image sources are used for training.
+
+    Attributes:
+        QUERY_ONLY: Use only query images (default). Query images may
+            include both normal and defective samples.
+        QUERY_AND_REFERENCE: Use both query and reference images.
+            Reference images are always labeled as normal.
+        REFERENCE_ONLY: Use only reference (defect-free) images.
+            Useful for building a memory bank from reference images only
+            (e.g., PatchCore reference-only setting from the Kaputt paper).
+    """
+
+    QUERY_ONLY = "query_only"
+    QUERY_AND_REFERENCE = "query_and_reference"
+    REFERENCE_ONLY = "reference_only"
+
+
+def _resolve_image_mode(
+    image_mode: ImageMode,
+    use_reference: bool | None,
+    reference_only: bool | None,
+) -> ImageMode:
+    """Map deprecated use_reference/reference_only booleans to ImageMode.
+
+    When neither deprecated param is provided, returns ``image_mode`` as-is.
+    Emits a ``DeprecationWarning`` when a deprecated param is used.
+
+    Args:
+        image_mode (ImageMode): The new-style enum parameter.
+        use_reference (bool | None): Deprecated boolean flag.
+        reference_only (bool | None): Deprecated boolean flag.
+
+    Returns:
+        ImageMode: Resolved image mode.
+    """
+    if reference_only is not None:
+        warnings.warn(
+            "reference_only is deprecated and will be removed in v2.6.0. "
+            "Use image_mode=ImageMode.REFERENCE_ONLY instead.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return ImageMode.REFERENCE_ONLY if reference_only else ImageMode(image_mode)
+    if use_reference is not None:
+        warnings.warn(
+            "use_reference is deprecated and will be removed in v2.6.0. "
+            "Use image_mode=ImageMode.QUERY_AND_REFERENCE instead.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return ImageMode.QUERY_AND_REFERENCE if use_reference else ImageMode.QUERY_ONLY
+    return ImageMode(image_mode)
+
+
+def _resolve_image_type(image_type: ImageType | str) -> ImageType:
+    """Convert a string ``image_type`` to :class:`ImageType`, warning on raw strings.
+
+    Args:
+        image_type (ImageType | str): Image type as enum or raw string.
+
+    Returns:
+        ImageType: Resolved image type.
+    """
+    if isinstance(image_type, ImageType):
+        return image_type
+    warnings.warn(
+        f"Passing image_type as a string ('{image_type}') is deprecated and "
+        "will be removed in v2.6.0. Use ImageType.IMAGE or ImageType.CROP instead.",
+        DeprecationWarning,
+        stacklevel=3,
+    )
+    return ImageType(image_type)
+
+
 class KaputtDataset(AnomalibDataset):
     """Kaputt dataset class.
 
@@ -81,17 +171,18 @@ class KaputtDataset(AnomalibDataset):
     reference (defect-free) sets.
 
     Args:
-        root (Path | str): Path to root directory containing the dataset.
-            Defaults to ``"./datasets/kaputt"``.
+        root (Path | str | None): Path to root directory containing the dataset.
+            Defaults to ``None``.
+        category (str | None): Category of the dataset (maps to ``item_material``).
+            Defaults to ``None`` which loads all categories.
         augmentations (Transform, optional): Augmentations that should be applied
             to the input images. Defaults to ``None``.
         split (str | Split | None, optional): Dataset split - ``Split.TRAIN``,
             ``Split.VAL``, or ``Split.TEST``. Defaults to ``None``.
-        image_type (str): Type of images to use - "image" for full images or
-            "crop" for cropped item regions. Defaults to ``"image"``.
-        use_reference (bool): If True, include reference (defect-free) images
-            in addition to query images. Reference images are always labeled
-            as normal. Defaults to ``False``.
+        image_type (ImageType | str): Type of images to use.
+            Defaults to ``ImageType.IMAGE``.
+        image_mode (ImageMode): Controls which image sources are used.
+            Defaults to ``ImageMode.QUERY_ONLY``.
 
     Example:
         >>> from pathlib import Path
@@ -123,31 +214,43 @@ class KaputtDataset(AnomalibDataset):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/kaputt",
+        root: Path | str | None = None,
+        category: str | None = None,
         augmentations: Transform | None = None,
         split: str | Split | None = None,
-        image_type: str = "image",
-        use_reference: bool = False,
+        image_type: ImageType | str = ImageType.IMAGE,
+        image_mode: ImageMode = ImageMode.QUERY_ONLY,
+        # Deprecated — will be removed in v2.6.0
+        use_reference: bool | None = None,
+        reference_only: bool | None = None,
     ) -> None:
         super().__init__(augmentations=augmentations)
 
+        root = root if root is not None else get_datasets_dir() / "kaputt"
+
         self.root = Path(root)
+        self.category: str | None = category
         self.split = split
-        self.image_type = image_type
-        self.use_reference = use_reference
+        self.image_type = _resolve_image_type(image_type)
+        self.image_mode = _resolve_image_mode(image_mode, use_reference, reference_only)
         self.samples = make_kaputt_dataset(
             self.root,
+            category=self.category,
             split=self.split,
             image_type=self.image_type,
-            use_reference=self.use_reference,
+            image_mode=self.image_mode,
         )
 
 
 def make_kaputt_dataset(
     root: str | Path,
+    category: str | None = None,
     split: str | Split | None = None,
-    image_type: str = "image",
-    use_reference: bool = False,
+    image_type: ImageType | str = ImageType.IMAGE,
+    image_mode: ImageMode = ImageMode.QUERY_ONLY,
+    # Deprecated — will be removed in v2.6.0
+    use_reference: bool | None = None,
+    reference_only: bool | None = None,
 ) -> DataFrame:
     """Create Kaputt samples by parsing the Parquet metadata files.
 
@@ -160,12 +263,18 @@ def make_kaputt_dataset(
 
     Args:
         root (Path | str): Path to dataset root directory.
+        category (str | None): Category of the dataset (maps to
+            ``item_material``). Defaults to ``None`` which loads all categories.
         split (str | Split | None, optional): Dataset split (train, val, or test).
             Defaults to ``None`` which loads all splits.
-        image_type (str): Type of images - "image" for full images or "crop"
-            for cropped regions. Defaults to ``"image"``.
-        use_reference (bool): If True, include reference images which are
-            always normal. Defaults to ``False``.
+        image_type (ImageType | str): Type of images to use.
+            Defaults to ``ImageType.IMAGE``.
+        image_mode (ImageMode): Controls which image sources are used.
+            Defaults to ``ImageMode.QUERY_ONLY``.
+        use_reference (bool | None): Deprecated. Use ``image_mode`` instead.
+            Will be removed in v2.6.0.
+        reference_only (bool | None): Deprecated. Use ``image_mode`` instead.
+            Will be removed in v2.6.0.
 
     Returns:
         DataFrame: Dataset samples with columns:
@@ -175,6 +284,7 @@ def make_kaputt_dataset(
             - mask_path: Path to mask file (for abnormal images)
             - label_index: Numeric label (0=normal, 1=abnormal)
             - capture_id: Unique capture identifier
+            - item_identifier: Item identifier linking query to reference images
             - defect_types: List of defect types (for abnormal images)
             - item_material: Material category
 
@@ -190,11 +300,15 @@ def make_kaputt_dataset(
         RuntimeError: If no valid images are found.
     """
     root = validate_path(root)
+    image_type = _resolve_image_type(image_type)
+    image_mode = _resolve_image_mode(image_mode, use_reference, reference_only)
 
     # Parquet files use "validation" while anomalib uses "val"
     parquet_splits = {"train": "train", "validation": "val", "test": "test"}
 
     frames: list[DataFrame] = []
+    include_query = image_mode != ImageMode.REFERENCE_ONLY
+    include_reference = image_mode != ImageMode.QUERY_ONLY
 
     if not module_available("pyarrow"):
         msg = (
@@ -205,52 +319,64 @@ def make_kaputt_dataset(
 
     for parquet_name, anomalib_name in parquet_splits.items():
         # --- Query samples ---
-        query_parquet = root / "datasets" / f"query-{parquet_name}.parquet"
-        if not query_parquet.exists():
-            msg = f"Query parquet file not found: {query_parquet}"
-            raise FileNotFoundError(msg)
+        if include_query:
+            query_parquet = root / "datasets" / f"query-{parquet_name}.parquet"
+            if not query_parquet.exists():
+                msg = f"Query parquet file not found: {query_parquet}"
+                raise FileNotFoundError(msg)
 
-        query_df = pd.read_parquet(query_parquet)
+            query_df = pd.read_parquet(query_parquet)
 
-        # Build image paths: root / "query-{image_type}" / <relative path from parquet>
-        image_col = f"query_{image_type}"  # "query_image" or "query_crop"
-        root_prefix = str(root / f"query-{image_type}") + "/"
-        mask_prefix = str(root / "query-mask") + "/"
+            image_col = f"query_{image_type.value}"  # "query_image" or "query_crop"
+            root_prefix = str(root / f"query-{image_type.value}") + "/"
+            mask_prefix = str(root / "query-mask") + "/"
 
-        samples = DataFrame()
-        samples["image_path"] = root_prefix + query_df[image_col]
-        samples["capture_id"] = query_df["capture_id"]
-        samples["item_material"] = query_df["item_material"].fillna("")
-        samples["defect_types"] = query_df["defect_types"].fillna("")
-        samples["split"] = anomalib_name
+            samples = DataFrame()
+            samples["image_path"] = root_prefix + query_df[image_col]
+            samples["capture_id"] = query_df["capture_id"]
+            samples["item_identifier"] = query_df["item_identifier"] if "item_identifier" in query_df.columns else ""
+            samples["item_material"] = query_df["item_material"].fillna("")
+            samples["defect_types"] = query_df["defect_types"].fillna("")
+            samples["defect"] = query_df["defect"]
+            samples["query_mask"] = query_df["query_mask"]
+            samples["split"] = anomalib_name
 
-        # Label assignment
-        samples.loc[query_df["defect"] == False, "label_index"] = LabelName.NORMAL  # noqa: E712
-        samples.loc[query_df["defect"] != False, "label_index"] = LabelName.ABNORMAL  # noqa: E712
-        samples["label_index"] = samples["label_index"].astype(int)
-        samples.loc[samples["label_index"] == LabelName.NORMAL, "label"] = "normal"
-        samples.loc[samples["label_index"] == LabelName.ABNORMAL, "label"] = "abnormal"
+            if category:
+                samples = samples[samples["item_material"] == category]
 
-        # Mask paths: only for defective images
-        samples["mask_path"] = ""
-        samples.loc[
-            samples["label_index"] == LabelName.ABNORMAL,
-            "mask_path",
-        ] = mask_prefix + query_df.loc[query_df["defect"] != False, "query_mask"]  # noqa: E712
+            if samples.empty:
+                msg = f"No samples found for category {category} in {query_parquet}"
+                logger.warning(msg)
+                continue
 
-        frames.append(samples)
+            samples.loc[samples["defect"] == False, "label_index"] = LabelName.NORMAL  # noqa: E712
+            samples.loc[samples["defect"] != False, "label_index"] = LabelName.ABNORMAL  # noqa: E712
+            samples["label_index"] = samples["label_index"].astype(int)
+            samples.loc[samples["label_index"] == LabelName.NORMAL, "label"] = "normal"
+            samples.loc[samples["label_index"] == LabelName.ABNORMAL, "label"] = "abnormal"
+
+            samples["mask_path"] = ""
+            samples.loc[
+                samples["label_index"] == LabelName.ABNORMAL,
+                "mask_path",
+            ] = mask_prefix + samples.loc[samples["defect"] != False, "query_mask"]  # noqa: E712
+
+            samples = samples.drop(columns=["defect", "query_mask"])
+
+            frames.append(samples)
 
         # --- Reference samples (always normal) ---
-        if use_reference:
+        if include_reference:
             ref_parquet = root / "datasets" / f"reference-{parquet_name}.parquet"
             if ref_parquet.exists():
                 ref_df = pd.read_parquet(ref_parquet)
-                ref_image_col = f"reference_{image_type}"
-                ref_prefix = str(root / f"reference-{image_type}") + "/"
+                ref_image_col = f"reference_{image_type.value}"
+                ref_prefix = str(root / f"reference-{image_type.value}") + "/"
 
                 ref_samples = DataFrame()
                 ref_samples["image_path"] = ref_prefix + ref_df[ref_image_col]
                 ref_samples["capture_id"] = ref_df["item_identifier"]
+                ref_samples["item_identifier"] = ref_df["item_identifier"]
                 ref_samples["item_material"] = ""
                 ref_samples["defect_types"] = ""
                 ref_samples["split"] = anomalib_name

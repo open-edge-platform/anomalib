@@ -400,7 +400,7 @@ class Descriptor(nn.Module):
                 else torch.cat(
                     (
                         patch_features,
-                        F.interpolate(feature, patch_features.size(2), mode="bilinear"),
+                        F.interpolate(pooled_features, patch_features.size(2), mode="bilinear"),
                     ),
                     dim=1,
                 )
