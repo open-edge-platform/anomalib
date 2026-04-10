@@ -3,10 +3,6 @@ name: anomalib-docs-changelog
 description: Reviews anomalib docstrings, documentation updates, and changelog expectations
 ---
 
-<!--
-Copyright (C) 2026 Intel Corporation
-SPDX-License-Identifier: Apache-2.0
--->
 
 # Anomalib Documentation and Changelog Review
 
