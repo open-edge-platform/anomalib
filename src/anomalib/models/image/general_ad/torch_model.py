@@ -124,7 +124,10 @@ class ViTFeatureExtractor(nn.Module):
             raise ValueError(msg)
 
         block = self.pretrained_model.blocks[self.attn_layer - 1]
-        block.attn.forward = _forward_attention_with_map.__get__(block.attn, type(block.attn))
+        # Register the helper on the attention class as well as the instance so
+        # checkpoints that pickle the bound method can be restored later.
+        setattr(type(block.attn), "_forward_attention_with_map", _forward_attention_with_map)
+        block.attn.forward = block.attn._forward_attention_with_map.__get__(block.attn, type(block.attn))
 
     def forward(
         self,

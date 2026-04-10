@@ -11,6 +11,7 @@ from torch import optim
 from torchvision.transforms.v2 import Compose, InterpolationMode, Normalize, Resize
 
 from anomalib import LearningType
+from anomalib.metrics import AUROC, Evaluator, F1Score
 from anomalib.models.components import AnomalibModule
 from anomalib.pre_processing import PreProcessor
 
@@ -22,7 +23,6 @@ if TYPE_CHECKING:
     from lightning.pytorch.utilities.types import STEP_OUTPUT
 
     from anomalib.data import Batch
-    from anomalib.metrics import Evaluator
     from anomalib.post_processing import PostProcessor
     from anomalib.visualization import Visualizer
 
@@ -137,6 +137,24 @@ class GeneralAD(AnomalibModule):
         del args, kwargs
         predictions = self.model(batch.image)
         return batch.update(**predictions._asdict())
+
+    @staticmethod
+    def configure_evaluator() -> Evaluator:
+        """Configure validation and test metrics for checkpoint selection.
+
+        Upstream GeneralAD selects the best checkpoint using image-level AUROC on
+        the validation loop. In our MVTec reproduction, validation is configured
+        as ``SAME_AS_TEST`` to mirror the upstream behavior, so monitoring
+        ``image_AUROC`` here reproduces the same selection rule.
+        """
+        val_image_auroc = AUROC(fields=["pred_score", "gt_label"], prefix="image_")
+        test_image_auroc = AUROC(fields=["pred_score", "gt_label"], prefix="image_")
+        image_f1score = F1Score(fields=["pred_label", "gt_label"], prefix="image_")
+        pixel_auroc = AUROC(fields=["anomaly_map", "gt_mask"], prefix="pixel_", strict=False)
+        pixel_f1score = F1Score(fields=["pred_mask", "gt_mask"], prefix="pixel_", strict=False)
+        val_metrics = [val_image_auroc]
+        test_metrics = [test_image_auroc, image_f1score, pixel_auroc, pixel_f1score]
+        return Evaluator(val_metrics=val_metrics, test_metrics=test_metrics)
 
     @property
     def trainer_arguments(self) -> dict[str, Any]:
