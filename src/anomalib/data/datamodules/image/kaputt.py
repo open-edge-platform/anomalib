@@ -69,6 +69,7 @@ from anomalib.data.datasets.image.kaputt import (
     _resolve_image_type,
 )
 from anomalib.data.utils import Split, TestSplitMode, ValSplitMode
+from anomalib.utils.path import resolve_with_warning
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +78,7 @@ class Kaputt(AnomalibDataModule):
     """Kaputt Datamodule.
 
     Args:
-        root (Path | str): Path to the root of the dataset.
+        root (Path | str | None): Path to the root of the dataset.
             Defaults to ``"./datasets/kaputt"``.
         category (str): Category of the dataset (maps to ``item_material``).
             Defaults to ``all``. ``all`` is a pseudo-category that loads all categories
@@ -151,7 +152,7 @@ class Kaputt(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/kaputt",
+        root: Path | str | None = "./datasets/kaputt",
         category: str = "all",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
@@ -186,6 +187,7 @@ class Kaputt(AnomalibDataModule):
             seed=seed,
         )
 
+        root = resolve_with_warning(root, "kaputt")
         self.root = Path(root)
         self._category = category
         if self._category == "all":

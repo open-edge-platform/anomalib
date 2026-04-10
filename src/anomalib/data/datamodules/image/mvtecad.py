@@ -53,6 +53,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.mvtecad import MVTecADDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
+from anomalib.utils.path import resolve_with_warning
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +70,7 @@ class MVTecAD(AnomalibDataModule):
     """MVTec AD Datamodule.
 
     Args:
-        root (Path | str): Path to the root of the dataset.
+        root (Path | str | None): Path to the root of the dataset.
             Defaults to ``"./datasets/MVTecAD"``.
         category (str): Category of the MVTec AD dataset (e.g. ``"bottle"`` or
             ``"cable"``). Defaults to ``"bottle"``.
@@ -131,7 +132,7 @@ class MVTecAD(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/MVTecAD",
+        root: Path | str | None = "./datasets/MVTecAD",
         category: str = "bottle",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
@@ -161,6 +162,7 @@ class MVTecAD(AnomalibDataModule):
             seed=seed,
         )
 
+        root = resolve_with_warning(root, "MVTecAD")
         self.root = Path(root)
         self.category = category
 

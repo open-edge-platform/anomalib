@@ -54,6 +54,7 @@ dependencies = [
     "pandas>=1.1.0",
     "matplotlib>=3.4.3",
     "scikit-learn",
+    "platformdirs>=4.9.4",
 ]
 
 [project.optional-dependencies]
