@@ -3,7 +3,6 @@ name: docs-changelog
 description: Reviews anomalib docstrings, documentation updates, and changelog expectations
 ---
 
-
 # Anomalib Documentation and Changelog Review
 
 Use this skill when reviewing docstrings, user docs, examples, READMEs, and release-note impact.

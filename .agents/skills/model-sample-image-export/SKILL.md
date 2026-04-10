@@ -33,8 +33,7 @@ Only use sample images from:
 - completed trained checkpoints
 - completed benchmark runs with valid prediction outputs
 - finished model outputs that can be traced back to a real run artifact
-- if trained checkpoint is available or completed benchmark is available, schedule a few runs to train the model to
-  generate more sample images
+- if no suitable completed checkpoint, benchmark output, or other traceable run artifact exists, schedule a few runs to generate trustworthy sample images
 
 Do not use:
 
