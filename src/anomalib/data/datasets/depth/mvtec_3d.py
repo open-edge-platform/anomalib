@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """MVTec 3D-AD Datamodule.
@@ -29,6 +29,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datasets.base.depth import AnomalibDepthDataset
 from anomalib.data.errors import MisMatchError
 from anomalib.data.utils import LabelName, Split, validate_path
+from anomalib.utils.path import get_datasets_dir
 
 IMG_EXTENSIONS = [".png", ".PNG", ".tiff"]
 CATEGORIES = (
@@ -49,8 +50,8 @@ class MVTec3DDataset(AnomalibDepthDataset):
     """MVTec 3D dataset class.
 
     Args:
-        root (Path | str): Path to the root of the dataset.
-            Defaults to ``"./datasets/MVTec3D"``.
+        root (Path | str | None): Path to the root of the dataset.
+            Defaults to ``None``.
         category (str): Category name, e.g. ``"bagel"``.
             Defaults to ``"bagel"``.
         augmentations (Transform, optional): Augmentations that should be applied to the input images.
@@ -69,12 +70,14 @@ class MVTec3DDataset(AnomalibDepthDataset):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/MVTec3D",
+        root: Path | str | None = None,
         category: str = "bagel",
         augmentations: Transform | None = None,
         split: str | Split | None = None,
     ) -> None:
         super().__init__(augmentations=augmentations)
+
+        root = root if root is not None else get_datasets_dir() / "MVTec3D"
 
         self.root_category = Path(root) / Path(category)
         self.split = split
