@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """MVTec LOCO Data Module.
@@ -51,6 +51,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.mvtec_loco import MVTecLOCODataset
 from anomalib.data.utils import Split, TestSplitMode, ValSplitMode
+from anomalib.utils.path import resolve_with_warning
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +60,7 @@ class MVTecLOCO(AnomalibDataModule):
     """MVTec LOCO Datamodule.
 
     Args:
-        root (Path | str): Path to the root of the dataset.
+        root (Path | str | None): Path to the root of the dataset.
             Defaults to ``"./datasets/MVTec_LOCO"``.
         category (str): Category of the MVTec LOCO dataset (e.g. ``"breakfast_box"`` or
             ``"juice_bottle"``). Defaults to ``"breakfast_box"``.
@@ -122,7 +123,7 @@ class MVTecLOCO(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/MVTec_LOCO",
+        root: Path | str | None = "./datasets/MVTec_LOCO",
         category: str = "breakfast_box",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
@@ -152,6 +153,7 @@ class MVTecLOCO(AnomalibDataModule):
             seed=seed,
         )
 
+        root = resolve_with_warning(root, "MVTec_LOCO")
         self.root = Path(root)
         self.category = category
 

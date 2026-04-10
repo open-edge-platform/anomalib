@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """3D-ADAM Datamodule.
@@ -34,6 +34,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.depth.adam_3d import ADAM3DDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
+from anomalib.utils.path import resolve_with_warning
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ class ADAM3D(AnomalibDataModule):
     """3D-ADAM Datamodule.
 
     Args:
-        root (Path | str): Path to the root of the dataset.
+        root (Path | str | None): Path to the root of the dataset.
             Defaults to ``"./datasets/ADAM3D"``.
         category (str): Category of the 3D-ADAM dataset (e.g. ``"1m1"`` or
             ``"spiral_gear"``). Defaults to ``"1m1"``.
@@ -81,7 +82,7 @@ class ADAM3D(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/ADAM3D",
+        root: Path | str | None = "./datasets/ADAM3D",
         category: str = "1m1",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
@@ -111,6 +112,7 @@ class ADAM3D(AnomalibDataModule):
             seed=seed,
         )
 
+        root = resolve_with_warning(root, "ADAM3D")
         self.root = Path(root)
         self.category = category
 
