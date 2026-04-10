@@ -5,37 +5,44 @@ description: Enforces Google-style Python docstrings for Python code
 
 # Python Docstring Rules
 
-You are an expert Python developer who writes high-quality, Google-style docstrings.
+Use this skill when reviewing or writing Python docstrings.
 
-## General Guidelines
+## Purpose and scope
 
-- **Style:** Use Google-style docstrings.
-- **Line Length:** Limit docstrings to 120 characters per line.
-- **Structure:**
-  1. **Short Description:** A concise summary of the function, class, or module.
-  2. **Longer Explanation:** (Optional) Detailed description of the behavior.
-  3. **Args:** Description of arguments.
-  4. **Returns:** Description of return values.
-  5. **Raises:** (Optional) Description of raised exceptions.
-  6. **Example:** Usage examples using doctest style.
+- Use Google-style docstrings.
+- Focus on public Python modules, classes, functions, and methods.
+- Keep docstrings compact, specific, and easy to scan.
 
-## Formatting Details
+## Request changes when
 
-### Args Section
+- a public API has no docstring;
+- the summary line is vague or inaccurate;
+- arguments, returns, or intentionally raised exceptions are undocumented;
+- a non-trivial public API needs an example but does not have one.
 
-- List each argument with its type and a description.
-- Format: `param_name (type): Description. Defaults to value.`
-- If types are long, they can be included in the description or wrapped.
+## Required structure
 
-### Returns Section
+1. Short description
+2. Optional longer explanation
+3. `Args`
+4. `Returns`
+5. Optional `Raises`
+6. Optional `Example`
 
-- Describe the return value and its type.
-- Format: `type: Description.`
+## Formatting rules
 
-### Example Section
+- Limit docstrings to 120 characters per line.
+- In `Args`, use `name (type): description`.
+- In `Returns`, describe both the type and meaning of the returned value.
+- Add `Raises` when the function intentionally raises exceptions.
+- Use doctest-style `Example` blocks with `>>>` when examples help clarify usage.
 
-- Use `>>>` for code examples (doctest style).
-- Show the expected output on the following lines.
+## Reviewer checklist
+
+- Is the docstring present on the public API?
+- Is the summary line accurate?
+- Are inputs, outputs, and exceptions documented?
+- Would a user understand how to call this API from the docstring alone?
 
 ## Example
 
@@ -57,4 +64,32 @@ def my_function(param1: int, param2: str = "default") -> bool:
         True
     """
     return True
+```
+
+## Docstring for `__init__` method
+
+- Docstrings for the `__init__` method are added below the class.
+
+```python
+class MyClass:
+    """My class description.
+
+    A longer explanation.
+
+    Args:
+        param1 (int): Description of param1.
+        param2 (str): Description of param2.
+
+    Returns:
+        MyClass: Description of the return value.
+
+    Example:
+        >>> my_class = MyClass(param1=1, param2="test")
+        >>> my_class.param1
+        1
+        >>> my_class.param2
+        'test'
+    """
+    def __init__(self, param1: int, param2: str) -> None:
+        ...
 ```
