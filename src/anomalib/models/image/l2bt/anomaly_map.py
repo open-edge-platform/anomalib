@@ -1,0 +1,148 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Anomaly map and score generation for L2BT."""
+
+from __future__ import annotations
+
+import torch
+from torch import nn
+from torch.nn import functional
+
+
+class L2BTAnomalyMapGenerator(nn.Module):
+    """Generate anomaly maps and image-level scores from L2BT features.
+
+    Args:
+        patch_size (int): Patch size used to derive the spatial patch grid from the
+            input image.
+        blur_w_l (int, optional): Kernel size for the first blur stage. Defaults
+            to ``5``.
+        blur_w_u (int, optional): Kernel size for the second blur stage. Defaults
+            to ``7``.
+        blur_pad_l (int, optional): Padding for the first blur stage. Must preserve
+            spatial size. Defaults to ``2``.
+        blur_pad_u (int, optional): Padding for the second blur stage. Must preserve
+            spatial size. Defaults to ``3``.
+        blur_repeats_l (int, optional): Number of times to apply the first blur
+            stage. Defaults to ``5``.
+        blur_repeats_u (int, optional): Number of times to apply the second blur
+            stage. Defaults to ``3``.
+        topk_ratio (float, optional): Fraction of anomaly map values used to
+            compute the image-level score. Defaults to ``0.001``.
+    """
+
+    def __init__(
+        self,
+        patch_size: int,
+        blur_w_l: int = 5,
+        blur_w_u: int = 7,
+        blur_pad_l: int = 2,
+        blur_pad_u: int = 3,
+        blur_repeats_l: int = 5,
+        blur_repeats_u: int = 3,
+        topk_ratio: float = 0.001,
+    ) -> None:
+        super().__init__()
+
+        self._validate_blur_params(blur_w_l, blur_pad_l, "blur_w_l", "blur_pad_l")
+        self._validate_blur_params(blur_w_u, blur_pad_u, "blur_w_u", "blur_pad_u")
+
+        self.patch_size = int(patch_size)
+
+        self.blur_pad_l = blur_pad_l
+        self.blur_pad_u = blur_pad_u
+        self.blur_repeats_l = blur_repeats_l
+        self.blur_repeats_u = blur_repeats_u
+        self.topk_ratio = float(topk_ratio)
+
+        weight_l = torch.ones(1, 1, blur_w_l, blur_w_l) / (blur_w_l**2)
+        weight_u = torch.ones(1, 1, blur_w_u, blur_w_u) / (blur_w_u**2)
+        self.register_buffer("weight_l", weight_l)
+        self.register_buffer("weight_u", weight_u)
+
+    def _blur(self, anomaly_map: torch.Tensor) -> torch.Tensor:
+        weight_l = self.weight_l
+        weight_u = self.weight_u
+        if weight_l.dtype != anomaly_map.dtype:
+            weight_l = weight_l.to(dtype=anomaly_map.dtype)
+        if weight_u.dtype != anomaly_map.dtype:
+            weight_u = weight_u.to(dtype=anomaly_map.dtype)
+        for _ in range(self.blur_repeats_l):
+            anomaly_map = functional.conv2d(anomaly_map, padding=self.blur_pad_l, weight=weight_l)
+        for _ in range(self.blur_repeats_u):
+            anomaly_map = functional.conv2d(anomaly_map, padding=self.blur_pad_u, weight=weight_u)
+        return anomaly_map
+
+    def _score_topk_mean(self, anomaly_map: torch.Tensor) -> torch.Tensor:
+        b, _, h, w = anomaly_map.shape
+        n = h * w
+        k = max(1, int(n * self.topk_ratio))
+        flat = anomaly_map.view(b, -1)
+        topk_vals = torch.topk(flat, k=k, dim=1).values
+        return topk_vals.mean(dim=1)
+
+    def forward(
+        self,
+        middle_patch: torch.Tensor,
+        last_patch: torch.Tensor,
+        predicted_middle_patch: torch.Tensor,
+        predicted_last_patch: torch.Tensor,
+        output_size: tuple[int, int],
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Return anomaly map and image-level anomaly score.
+
+        Args:
+            middle_patch: Teacher features from the intermediate transformer layer.
+            last_patch: Teacher features from the final transformer layer.
+            predicted_middle_patch: Student prediction of the intermediate teacher features.
+            predicted_last_patch: Student prediction of the final teacher features.
+            output_size: Spatial size ``(H, W)`` of the input image.
+
+        Returns:
+            anomaly_map: Anomaly map of shape ``(B, 1, H, W)``.
+            pred_score: Image-level anomaly scores of shape ``(B,)``.
+        """
+        b = middle_patch.shape[0]
+        h, w = output_size
+        h_p, w_p = h // self.patch_size, w // self.patch_size
+
+        middle_anom = (
+            (functional.normalize(predicted_middle_patch, dim=-1) - functional.normalize(middle_patch, dim=-1))
+            .pow(2)
+            .sum(-1)
+            .sqrt()
+        )
+        last_anom = (
+            (functional.normalize(predicted_last_patch, dim=-1) - functional.normalize(last_patch, dim=-1))
+            .pow(2)
+            .sum(-1)
+            .sqrt()
+        )
+
+        combined = middle_anom * last_anom
+        if combined.numel() != b * h_p * w_p:
+            msg = (
+                "Patch grid reshape mismatch. "
+                f"combined.numel()={combined.numel()}, expected {b * h_p * w_p} "
+                f"from output_size={(h, w)} and patch_size={self.patch_size}."
+            )
+            raise RuntimeError(msg)
+
+        anomaly_map = combined.view(b, 1, h_p, w_p)
+        anomaly_map = functional.interpolate(anomaly_map, size=(h, w), mode="bilinear", align_corners=False)
+        anomaly_map = self._blur(anomaly_map)
+
+        pred_score = self._score_topk_mean(anomaly_map)
+        return anomaly_map, pred_score
+
+    @staticmethod
+    def _validate_blur_params(kernel_size: int, padding: int, weight_name: str, padding_name: str) -> None:
+        expected_padding = kernel_size // 2
+        if kernel_size % 2 == 0 or padding != expected_padding:
+            msg = (
+                f"{weight_name} and {padding_name} must preserve spatial size. "
+                f"Expected an odd {weight_name} with {padding_name}={expected_padding}, "
+                f"but got {weight_name}={kernel_size}, {padding_name}={padding}."
+            )
+            raise ValueError(msg)

@@ -33,6 +33,7 @@ Image Models:
     - FastFlow (:class:`anomalib.models.image.Fastflow`)
     - FRE (:class:`anomalib.models.image.Fre`)
     - GANomaly (:class:`anomalib.models.image.Ganomaly`)
+    - L2BT (:class:`anomalib.models.image.L2BT`)
     - PaDiM (:class:`anomalib.models.image.Padim`)
     - PatchCore (:class:`anomalib.models.image.Patchcore`)
     - Reverse Distillation (:class:`anomalib.models.image.ReverseDistillation`)
@@ -58,6 +59,7 @@ from anomalib.models.components import AnomalibModule
 from anomalib.utils.path import convert_snake_to_pascal_case, convert_to_snake_case, convert_to_title_case
 
 from .image import (
+    L2BT,
     AnomalyDINO,
     Cfa,
     Cflow,
@@ -112,6 +114,7 @@ __all__ = [
     "Fre",
     "Fuvas",
     "Ganomaly",
+    "L2BT",
     "Padim",
     "Patchcore",
     "ReverseDistillation",
