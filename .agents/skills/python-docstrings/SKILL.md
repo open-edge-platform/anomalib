@@ -80,8 +80,6 @@ class MyClass:
         param1 (int): Description of param1.
         param2 (str): Description of param2.
 
-    Returns:
-        MyClass: Description of the return value.
 
     Example:
         >>> my_class = MyClass(param1=1, param2="test")
