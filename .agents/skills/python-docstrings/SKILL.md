@@ -68,7 +68,7 @@ def my_function(param1: int, param2: str = "default") -> bool:
 
 ## Docstring for `__init__` method
 
-- Docstrings for the `__init__` method are added below the class.
+- Document constructor arguments in the class docstring rather than in a separate `__init__` docstring.
 
 ```python
 class MyClass:
@@ -79,8 +79,6 @@ class MyClass:
     Args:
         param1 (int): Description of param1.
         param2 (str): Description of param2.
-
-
     Example:
         >>> my_class = MyClass(param1=1, param2="test")
         >>> my_class.param1

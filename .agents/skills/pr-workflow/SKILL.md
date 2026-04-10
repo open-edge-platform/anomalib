@@ -1,5 +1,5 @@
 ---
-name: anomalib-pr-workflow
+name: pr-workflow
 description: Reviews anomalib contributor workflow, PR title, branch naming, and quality gate expectations
 ---
 
