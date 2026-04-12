@@ -29,7 +29,7 @@ RUN npm run build
 #------------------------------------------
 # Anomalib Studio Base with UI built
 #------------------------------------------
-FROM python:3.13-slim@sha256:739e7213785e88c0f702dcdc12c0973afcbd606dbf021a589cab77d6b00b579d AS anomalib-studio-base
+FROM python:3.13-slim@sha256:d168b8d9eb761f4d3fe305ebd04aeb7e7f2de0297cec5fb2f8f6403244621664 AS anomalib-studio-base
 COPY --from=docker.io/astral/uv:0.9.7@sha256:ba4857bf2a068e9bc0e64eed8563b065908a4cd6bfb66b531a9c424c8e25e142 /uv /uvx /bin/
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 ENV UV_PYTHON_DOWNLOADS=0
