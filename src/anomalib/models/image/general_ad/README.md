@@ -15,7 +15,7 @@ and evaluated with anomalib's built-in metrics and post-processing pipeline.
 
 ## Architecture
 
-![GeneralAD Architecture](/docs/source/images/general_ad/architecture.jpg "GeneralAD Architecture")
+![GeneralAD Architecture](../../../../../docs/source/images/general_ad/architecture.jpg "GeneralAD Architecture")
 
 ## Usage
 
