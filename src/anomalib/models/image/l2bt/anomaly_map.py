@@ -105,9 +105,26 @@ class L2BTAnomalyMapGenerator(nn.Module):
             anomaly_map: Anomaly map of shape ``(B, 1, H, W)``.
             pred_score: Image-level anomaly scores of shape ``(B,)``.
         """
-        b = middle_patch.shape[0]
+        b, n_tokens = middle_patch.shape[0], middle_patch.shape[1]
         h, w = output_size
+
+        if h % self.patch_size != 0 or w % self.patch_size != 0:
+            msg = (
+                f"output_size ({h}, {w}) must be divisible by patch_size "
+                f"{self.patch_size}. Got remainders "
+                f"({h % self.patch_size}, {w % self.patch_size})."
+            )
+            raise ValueError(msg)
+
         h_p, w_p = h // self.patch_size, w // self.patch_size
+
+        if n_tokens != h_p * w_p:
+            msg = (
+                f"Token count mismatch: middle_patch has {n_tokens} tokens but "
+                f"output_size ({h}, {w}) with patch_size {self.patch_size} "
+                f"implies a {h_p}x{w_p} = {h_p * w_p} patch grid."
+            )
+            raise ValueError(msg)
 
         middle_anom = (
             (functional.normalize(predicted_middle_patch, dim=-1) - functional.normalize(middle_patch, dim=-1))
@@ -123,14 +140,6 @@ class L2BTAnomalyMapGenerator(nn.Module):
         )
 
         combined = middle_anom * last_anom
-        if combined.numel() != b * h_p * w_p:
-            msg = (
-                "Patch grid reshape mismatch. "
-                f"combined.numel()={combined.numel()}, expected {b * h_p * w_p} "
-                f"from output_size={(h, w)} and patch_size={self.patch_size}."
-            )
-            raise RuntimeError(msg)
-
         anomaly_map = combined.view(b, 1, h_p, w_p)
         anomaly_map = functional.interpolate(anomaly_map, size=(h, w), mode="bilinear", align_corners=False)
         anomaly_map = self._blur(anomaly_map)
