@@ -48,6 +48,8 @@ class L2BTAnomalyMapGenerator(nn.Module):
         self._validate_blur_params(blur_w_l, blur_pad_l, "blur_w_l", "blur_pad_l")
         self._validate_blur_params(blur_w_u, blur_pad_u, "blur_w_u", "blur_pad_u")
 
+        self._validate_topk_ratio(topk_ratio)
+
         self.patch_size = int(patch_size)
 
         self.blur_pad_l = blur_pad_l
@@ -145,4 +147,10 @@ class L2BTAnomalyMapGenerator(nn.Module):
                 f"Expected an odd {weight_name} with {padding_name}={expected_padding}, "
                 f"but got {weight_name}={kernel_size}, {padding_name}={padding}."
             )
+            raise ValueError(msg)
+
+    @staticmethod
+    def _validate_topk_ratio(topk_ratio: float) -> None:
+        if not 0 < topk_ratio <= 1:
+            msg = f"topk_ratio must satisfy 0 < topk_ratio <= 1, got {topk_ratio}."
             raise ValueError(msg)

@@ -65,8 +65,8 @@ class SquarePad(Transform):
     def transform(self, inpt: torch.Tensor, params: dict[str, Any]) -> torch.Tensor:
         """Wrapper for ``_transform``.
 
-        Ensures compatibility with Torchvision 2.6+, where ``_transform`` was
-        renamed to ``transform``.
+        Ensures compatibility with newer Torchvision versions where
+        ``_transform`` was renamed to ``transform``.
 
         Args:
             inpt (torch.Tensor): Input tensor to pad.
