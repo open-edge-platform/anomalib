@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from itertools import chain
 from typing import TYPE_CHECKING, Any
 
@@ -33,7 +34,7 @@ class L2BT(AnomalibModule):
     def __init__(
         self,
         lr: float = 1e-4,
-        layers: tuple[int, int] = (7, 11),
+        layers: Sequence[int] = (7, 11),
         blur_w_l: int = 5,
         blur_w_u: int = 7,
         blur_pad_l: int = 2,
@@ -50,7 +51,8 @@ class L2BT(AnomalibModule):
 
         Args:
             lr (float): Learning rate for student optimization.
-            layers (tuple[int, int]): Teacher transformer layers used for feature extraction.
+            layers (Sequence[int]): Teacher transformer layers used for feature extraction.
+                Accepts any sequence (list or tuple) of exactly two indices.
             blur_w_l (int): Lower blur kernel width.
             blur_w_u (int): Upper blur kernel width.
             blur_pad_l (int): Lower blur padding.

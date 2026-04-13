@@ -20,7 +20,7 @@ class DummyTeacher(nn.Module):
         """Initialize the dummy teacher."""
         super().__init__()
         del layers
-        self.embed_dim = 768
+        self.embed_dim = 64
         self.patch_size = 14
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:

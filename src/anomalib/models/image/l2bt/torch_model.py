@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import torch
 from torch import nn
 
@@ -20,7 +22,7 @@ class L2BTModel(nn.Module):
 
     def __init__(
         self,
-        layers: tuple[int, int] = (7, 11),
+        layers: Sequence[int] = (7, 11),
         blur_w_l: int = 5,
         blur_w_u: int = 7,
         blur_pad_l: int = 2,
@@ -32,7 +34,8 @@ class L2BTModel(nn.Module):
         """Initialize the L2BT model.
 
         Args:
-            layers: Indices of exactly two transformer layers to extract.
+            layers: Indices of exactly two transformer layers to extract (as any
+                sequence of ints, e.g. a list or tuple).
                 Must have length 2 because the model unpacks teacher output
                 into ``(middle_patch, last_patch)`` for the two student MLPs.
             blur_w_l: Lower blur kernel width.
