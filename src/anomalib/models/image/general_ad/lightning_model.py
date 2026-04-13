@@ -83,7 +83,7 @@ class GeneralAD(AnomalibModule):
             visualizer=visualizer,
         )
 
-        image_size = tuple(self.input_size) if self.input_size is not None else (518, 518)
+        image_size = (self.input_size[0], self.input_size[1]) if self.input_size is not None else (518, 518)
 
         self.lr = lr
         self.lr_decay_factor = lr_decay_factor
