@@ -374,3 +374,43 @@ def visualize_image_item(
             output_images.append(base_image)
 
     return create_image_grid(output_images, nrow=len(output_images)) if output_images else None
+def add_bounding_boxes_to_image(
+    image: np.ndarray,
+    anomaly_map: np.ndarray,
+    threshold: float = 0.5,
+    box_color: tuple = (255, 0, 0),
+    box_thickness: int = 2,
+) -> np.ndarray:
+    """Draw bounding boxes around detected anomaly regions.
+
+    Args:
+        image: Original input image as numpy array.
+        anomaly_map: Anomaly heatmap from model output.
+        threshold: Score threshold to consider a region anomalous.
+        box_color: BGR color tuple for bounding boxes.
+        box_thickness: Thickness of bounding box lines.
+
+    Returns:
+        Image with bounding boxes drawn around anomalous regions.
+    """
+    import cv2
+
+    # Normalize anomaly map to 0-1
+    norm_map = (anomaly_map - anomaly_map.min()) / (anomaly_map.max() - anomaly_map.min() + 1e-8)
+
+    # Threshold to get binary mask
+    binary_mask = (norm_map > threshold).astype(np.uint8) * 255
+
+    # Find contours
+    contours, _ = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Draw boxes on image copy
+    result = image.copy()
+    for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        if w > 5 and h > 5:  # filter tiny noise boxes
+            cv2.rectangle(result, (x, y), (x + w, y + h), box_color, box_thickness)
+            cv2.putText(result, "DEFECT", (x, y - 5),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, box_color, box_thickness)
+
+    return result
