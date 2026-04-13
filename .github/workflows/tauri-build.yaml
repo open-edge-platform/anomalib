@@ -27,12 +27,12 @@ name: Tauri Build
 
 on:
   push:
-    branches: ["main", "feature/**"]
+    branches: ["main", "feature/**", "release/**"]
     paths:
       - "application/**"
       - ".github/workflows/tauri-build.yaml"
   pull_request:
-    branches: ["main", "feature/**"]
+    branches: ["main", "feature/**", "release/**"]
     paths:
       - "application/**"
       - ".github/workflows/tauri-build.yaml"
