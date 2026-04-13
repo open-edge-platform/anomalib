@@ -44,7 +44,6 @@ class GeneralAD(AnomalibModule):
         dsc_layers: Number of attention blocks in the discriminator.
         dsc_heads: Number of attention heads in the discriminator.
         dsc_dropout: Dropout rate in the discriminator.
-        image_size: Input image size after preprocessing.
         num_fake_patches: Maximum number of perturbed patches per image.
         fake_feature_type: Strategy for generating pseudo anomalies.
         top_k: Number of highest patch scores to average for image scoring.
@@ -68,7 +67,6 @@ class GeneralAD(AnomalibModule):
         dsc_layers: int = 1,
         dsc_heads: int = 4,
         dsc_dropout: float = 0.1,
-        image_size: tuple[int, int] | int = (518, 518),
         num_fake_patches: int = -1,
         fake_feature_type: FakeFeatureType = "random",
         top_k: int = 10,
@@ -85,8 +83,7 @@ class GeneralAD(AnomalibModule):
             visualizer=visualizer,
         )
 
-        if isinstance(image_size, int):
-            image_size = (image_size, image_size)
+        image_size = tuple(self.input_size) if self.input_size is not None else (518, 518)
 
         self.lr = lr
         self.lr_decay_factor = lr_decay_factor
