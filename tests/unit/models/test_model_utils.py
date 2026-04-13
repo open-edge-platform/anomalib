@@ -13,7 +13,6 @@ SMALL_GENERAL_AD_ARGS = {
     "backbone": "vit_tiny_patch16_224",
     "layers": (9, 10, 11, 12),
     "hidden_dim": 1024,
-    "image_size": (256, 256),
     "dsc_heads": 12,
     "dsc_dropout": 0.0,
 }

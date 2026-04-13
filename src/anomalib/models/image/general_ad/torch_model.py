@@ -13,6 +13,7 @@ an image-level anomaly score.
 from __future__ import annotations
 
 import math
+import types
 from typing import TYPE_CHECKING, Literal
 
 import timm
@@ -49,33 +50,43 @@ ATTENTION_REQUIRED_FAKE_FEATURE_TYPES = {
 }
 
 
-def _forward_attention_with_map(
-    attn_obj: nn.Module,
-    x: torch.Tensor,
-    attn_mask: torch.Tensor | None = None,
-    is_causal: bool = False,
-    **kwargs,
-) -> torch.Tensor:
-    """Run timm attention while exposing the attention map."""
-    del attn_mask, is_causal, kwargs
-    batch_size, num_tokens, channels = x.shape
-    qkv = attn_obj.qkv(x).reshape(
-        batch_size,
-        num_tokens,
-        3,
-        attn_obj.num_heads,
-        channels // attn_obj.num_heads,
-    )
-    qkv = qkv.permute(2, 0, 3, 1, 4)
-    q, k, v = qkv.unbind(0)
+def _make_attn_forward_with_map(attn_module: nn.Module) -> types.MethodType:
+    """Create an instance-bound forward that captures the attention map.
 
-    attn = (q @ k.transpose(-2, -1)) * attn_obj.scale
-    attn = attn.softmax(dim=-1)
-    attn = attn_obj.attn_drop(attn)
-    attn_obj.attn_map = attn
+    Returns a ``types.MethodType`` bound to *attn_module* so **only this
+    instance** is affected.  The shared timm ``Attention`` class is never
+    mutated, which avoids polluting other ViT instances in the same process.
+    """
 
-    x = (attn @ v).transpose(1, 2).reshape(batch_size, num_tokens, channels)
-    return attn_obj.proj_drop(attn_obj.proj(x))
+    def _forward(
+        attn_obj: nn.Module,
+        x: torch.Tensor,
+        attn_mask: torch.Tensor | None = None,
+        is_causal: bool = False,
+        **kwargs,
+    ) -> torch.Tensor:
+        """Run timm attention while exposing the attention map on the instance."""
+        del attn_mask, is_causal, kwargs
+        batch_size, num_tokens, channels = x.shape
+        qkv = attn_obj.qkv(x).reshape(
+            batch_size,
+            num_tokens,
+            3,
+            attn_obj.num_heads,
+            channels // attn_obj.num_heads,
+        )
+        qkv = qkv.permute(2, 0, 3, 1, 4)
+        q, k, v = qkv.unbind(0)
+
+        attn = (q @ k.transpose(-2, -1)) * attn_obj.scale
+        attn = attn.softmax(dim=-1)
+        attn = attn_obj.attn_drop(attn)
+        attn_obj.attn_map = attn
+
+        x = (attn @ v).transpose(1, 2).reshape(batch_size, num_tokens, channels)
+        return attn_obj.proj_drop(attn_obj.proj(x))
+
+    return types.MethodType(_forward, attn_module)
 
 
 class ViTFeatureExtractor(nn.Module):
@@ -124,10 +135,7 @@ class ViTFeatureExtractor(nn.Module):
             raise ValueError(msg)
 
         block = self.pretrained_model.blocks[self.attn_layer - 1]
-        # Register the helper on the attention class as well as the instance so
-        # checkpoints that pickle the bound method can be restored later.
-        type(block.attn)._forward_attention_with_map = _forward_attention_with_map  # noqa: SLF001
-        block.attn.forward = block.attn._forward_attention_with_map  # noqa: SLF001
+        block.attn.forward = _make_attn_forward_with_map(block.attn)
 
     def forward(
         self,

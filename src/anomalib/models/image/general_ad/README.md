@@ -52,17 +52,6 @@ model = GeneralAD(
 )
 ```
 
-Or use the runner script with `--no-post-process`:
-
-```bash
-python tools/run_general_ad_anomalib.py \
-    --category toothbrush \
-    --mvtec-root /path/to/mvtecad \
-    --output-dir results/general_ad/toothbrush \
-    --drop-last \
-    --no-post-process
-```
-
 ### Other alignment details
 
 - The upstream train loader uses `drop_last=True`. Pass `--drop-last` to match.
