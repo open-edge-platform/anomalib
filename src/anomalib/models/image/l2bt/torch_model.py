@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 import torch
 from torch import nn
@@ -15,6 +15,9 @@ from anomalib.data import InferenceBatch
 from .anomaly_map import L2BTAnomalyMapGenerator
 from .students import FeatureProjectionMLP
 from .teacher import FeatureExtractor
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class L2BTModel(nn.Module):

@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from itertools import chain
 from typing import TYPE_CHECKING, Any
 
@@ -20,6 +19,8 @@ from anomalib.pre_processing import PreProcessor
 from .torch_model import L2BTModel
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from lightning.pytorch.utilities.types import STEP_OUTPUT
 
     from anomalib.data import Batch
