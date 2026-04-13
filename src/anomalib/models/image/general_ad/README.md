@@ -1,12 +1,25 @@
-# GeneralAD
+# GeneralAD: Anomaly Detection Across Domains by Attending to Distorted Features
 
-GeneralAD is a discriminative anomaly detection method introduced in
-"GeneralAD: Anomaly Detection Across Domains by Attending to Distorted Features".
+This is the implementation of the [GeneralAD](https://arxiv.org/abs/2407.12427) paper.
+
+Model Type: Segmentation
+
+## Description
+
+GeneralAD is a discriminative anomaly detection method that operates across semantic, near-distribution, and industrial settings with minimal per-task adjustments. It leverages the patch-based structure of Vision Transformer hidden states and introduces a self-supervised anomaly generation module that constructs pseudo-anomalous samples by applying noise injection, shuffling, and copying operations to patch features. An attention-based discriminator is trained to score every patch in the image, enabling both accurate image-level anomaly identification and interpretable anomaly map generation.
 
 This anomalib integration ports the core method from the original
 [GeneralAD repository](https://github.com/LucStrater/GeneralAD) into anomalib's
 standard model interface so it can be trained with `Engine`, used from the CLI,
 and evaluated with anomalib's built-in metrics and post-processing pipeline.
+
+## Architecture
+
+![GeneralAD Architecture](/docs/source/images/general_ad/architecture.jpg "GeneralAD Architecture")
+
+## Usage
+
+`anomalib train --model GeneralAD --data MVTecAD --data.category <category>`
 
 ## Upstream comparison
 
