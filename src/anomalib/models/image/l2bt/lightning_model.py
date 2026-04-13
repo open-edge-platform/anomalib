@@ -9,8 +9,7 @@ from itertools import chain
 from typing import TYPE_CHECKING, Any
 
 import torch
-from torchvision.transforms import InterpolationMode
-from torchvision.transforms.v2 import Compose, Normalize, Resize
+from torchvision.transforms.v2 import Compose, InterpolationMode, Normalize, Resize
 
 from anomalib import LearningType
 from anomalib.data.transforms import SquarePad
