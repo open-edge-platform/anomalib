@@ -168,7 +168,7 @@ jobs:
       fail-fast: false
       matrix:
         # On workflow_dispatch use chosen accelerator; on push/PR build all.
-        accelerator: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', inputs.accelerator)) || fromJSON('["cpu", "cu124", "xpu"]') }}
+        accelerator: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', inputs.accelerator)) || (github.event_name == 'workflow_call' && [inputs.accelerator]) || fromJSON('["cpu", "cu124", "xpu"]') }}
     env:
       TAURI_PATH: application/binary/tauri
       TAURI_SRC_PATH: application/binary/tauri/src-tauri
