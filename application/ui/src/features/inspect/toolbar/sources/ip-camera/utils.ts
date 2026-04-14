@@ -2,7 +2,7 @@ import { IPCameraSourceConfig } from '../util';
 
 export const getIpCameraInitialConfig = (projectId: string): IPCameraSourceConfig => ({
     id: '',
-    name: '',
+    name: 'IP camera source',
     project_id: projectId,
     source_type: 'ip_camera',
     stream_url: '',
