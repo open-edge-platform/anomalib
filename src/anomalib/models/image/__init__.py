@@ -36,6 +36,7 @@ Available Models:
     - :class:`Fastflow`: Fast Flow
     - :class:`Fre`: Feature Reconstruction Error
     - :class:`Ganomaly`: Generative Adversarial Networks
+    - :class:`GeneralAD`: Attending to Distorted Features
     - :class:`Padim`: Patch Distribution Modeling
     - :class:`Patchcore`: Patch Core
     - :class:`Patchflow`: Patch Flow
@@ -61,6 +62,7 @@ from .efficient_ad import EfficientAd
 from .fastflow import Fastflow
 from .fre import Fre
 from .ganomaly import Ganomaly
+from .general_ad import GeneralAD
 from .padim import Padim
 from .patchcore import Patchcore
 from .patchflow import Patchflow
@@ -86,6 +88,7 @@ __all__ = [
     "Fastflow",
     "Fre",
     "Ganomaly",
+    "GeneralAD",
     "Padim",
     "Patchcore",
     "Patchflow",
