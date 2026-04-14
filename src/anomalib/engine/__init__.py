@@ -26,8 +26,23 @@ Example:
 
 """
 
-from .accelerator import XPUAccelerator
-from .engine import Engine
-from .strategy import SingleXPUStrategy
+import importlib
 
 __all__ = ["Engine", "SingleXPUStrategy", "XPUAccelerator"]
+
+_LAZY_IMPORTS: dict[str, tuple[str, str]] = {
+    "Engine": (".engine", "Engine"),
+    "XPUAccelerator": (".accelerator", "XPUAccelerator"),
+    "SingleXPUStrategy": (".strategy", "SingleXPUStrategy"),
+}
+
+
+def __getattr__(name: str) -> object:
+    if name in _LAZY_IMPORTS:
+        module_path, attr_name = _LAZY_IMPORTS[name]
+        mod = importlib.import_module(module_path, __name__)
+        obj = getattr(mod, attr_name)
+        globals()[name] = obj
+        return obj
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)
