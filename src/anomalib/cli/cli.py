@@ -15,31 +15,25 @@ from types import MethodType
 from typing import Any
 
 from jsonargparse import ActionConfigFile, ArgumentParser, Namespace
-from jsonargparse._actions import _ActionSubCommands
 from rich import traceback
 
+try:
+    from jsonargparse._actions import _ActionSubCommands
+except ImportError:
+    from jsonargparse._subcommands import ActionSubCommands as _ActionSubCommands
+
 from anomalib import __version__
-from anomalib.cli.pipelines import PIPELINE_REGISTRY, pipeline_subcommands, run_pipeline
 from anomalib.cli.utils.help_formatter import CustomHelpFormatter, get_short_docstring
-from anomalib.cli.utils.openvino import add_openvino_export_arguments
-from anomalib.loggers import configure_logger
 
 traceback.install()
 logger = logging.getLogger("anomalib.cli")
 
-_LIGHTNING_AVAILABLE = True
-try:
-    from lightning.pytorch import Trainer
-    from torch.utils.data import DataLoader, Dataset
 
-    from anomalib.data import AnomalibDataModule
-    from anomalib.engine import Engine
-    from anomalib.models import AnomalibModule
-    from anomalib.utils.config import update_config
+def _check_lightning_available() -> bool:
+    """Check if Lightning and its dependencies are available without importing them."""
+    from lightning_utilities.core.imports import module_available
 
-except ImportError as error:
-    _LIGHTNING_AVAILABLE = False
-    logger.warning(f"Import failed: {error}. Please install the required dependencies.")
+    return module_available("lightning.pytorch") and module_available("torch")
 
 
 class AnomalibCLI:
@@ -69,18 +63,37 @@ class AnomalibCLI:
         provided via both files and command line arguments simultaneously.
     """
 
+    _TRAINER_SUBCOMMAND_DESCRIPTIONS: dict[str, str] = {
+        "fit": "Runs the full optimization routine.",
+        "validate": "Perform one evaluation epoch over the validation set.",
+        "test": "Perform one evaluation epoch over the test set.",
+    }
+
     def __init__(self, args: Sequence[str] | None = None, run: bool = True) -> None:
+        self._lightning_available = _check_lightning_available()
+        self._selected_subcommand = self._sniff_subcommand(args)
         self.parser = self.init_parser()
         self.subcommand_parsers: dict[str, ArgumentParser] = {}
         self.subcommand_method_arguments: dict[str, list[str]] = {}
         self.add_subcommands()
         self.config = self.parser.parse_args(args=args)
         self.subcommand = self.config["subcommand"]
-        if _LIGHTNING_AVAILABLE:
+        if self._lightning_available:
             self.before_instantiate_classes()
             self.instantiate_classes()
         if run:
             self._run_subcommand()
+
+    @staticmethod
+    def _sniff_subcommand(args: Sequence[str] | None) -> str | None:
+        """Peek at args to identify the subcommand without full parsing."""
+        import sys
+
+        tokens = list(args) if args is not None else sys.argv[1:]
+        for token in tokens:
+            if not token.startswith("-"):
+                return token
+        return None
 
     @staticmethod
     def init_parser(**kwargs) -> ArgumentParser:
@@ -120,41 +133,44 @@ class AnomalibCLI:
         # Extra subcommand: install
         self._set_install_subcommand(parser_subcommands)
 
-        if not _LIGHTNING_AVAILABLE:
-            # If environment is not configured to use pl, do not add a subcommand for Engine.
+        if not self._lightning_available:
             return
 
-        # Add Trainer subcommands
+        selected = self._selected_subcommand
+
+        # Add Trainer subcommands (fit, validate, test)
         for subcommand in self.subcommands():
             sub_parser = self.init_parser(**kwargs)
-
-            fn = getattr(Trainer, subcommand)
-            # extract the first line description in the docstring for the subcommand help message
-            description = get_short_docstring(fn)
-            subparser_kwargs = kwargs.get(subcommand, {})
-            subparser_kwargs.setdefault("description", description)
-
+            description = self._TRAINER_SUBCOMMAND_DESCRIPTIONS.get(subcommand, "")
             self.subcommand_parsers[subcommand] = sub_parser
             parser_subcommands.add_subcommand(subcommand, sub_parser, help=description)
-            self.add_trainer_arguments(sub_parser, subcommand)
+            if selected == subcommand:
+                self.add_trainer_arguments(sub_parser, subcommand)
 
-        # Add anomalib subcommands
+        # Add anomalib subcommands (train, predict, export)
         for subcommand in self.anomalib_subcommands():
             sub_parser = self.init_parser(**kwargs)
-
             self.subcommand_parsers[subcommand] = sub_parser
             parser_subcommands.add_subcommand(
                 subcommand,
                 sub_parser,
                 help=self.anomalib_subcommands()[subcommand]["description"],
             )
-            # add arguments to subcommand
-            getattr(self, f"add_{subcommand}_arguments")(sub_parser)
+            if selected == subcommand:
+                getattr(self, f"add_{subcommand}_arguments")(sub_parser)
 
         # Add pipeline subcommands
-        if PIPELINE_REGISTRY is not None:
-            for subcommand, value in pipeline_subcommands().items():
-                sub_parser = PIPELINE_REGISTRY[subcommand].get_parser()
+        from anomalib.cli.pipelines import pipeline_subcommands
+
+        pipeline_cmds = pipeline_subcommands()
+        if pipeline_cmds:
+            from anomalib.cli.pipelines import PIPELINE_REGISTRY
+
+            for subcommand, value in pipeline_cmds.items():
+                if selected == subcommand and PIPELINE_REGISTRY is not None:
+                    sub_parser = PIPELINE_REGISTRY[subcommand].get_parser()
+                else:
+                    sub_parser = self.init_parser(**kwargs)
                 self.subcommand_parsers[subcommand] = sub_parser
                 parser_subcommands.add_subcommand(subcommand, sub_parser, help=value["description"])
 
@@ -179,6 +195,11 @@ class AnomalibCLI:
 
     def add_trainer_arguments(self, parser: ArgumentParser, subcommand: str) -> None:
         """Add train arguments to the parser."""
+        from lightning.pytorch import Trainer
+
+        from anomalib.data import AnomalibDataModule
+        from anomalib.models import AnomalibModule
+
         self._add_default_arguments_to_parser(parser)
         self._add_trainer_arguments_to_parser(parser, add_optimizer=True, add_scheduler=True)
         parser.add_subclass_arguments(
@@ -199,6 +220,10 @@ class AnomalibCLI:
 
     def add_train_arguments(self, parser: ArgumentParser) -> None:
         """Add train arguments to the parser."""
+        from anomalib.data import AnomalibDataModule
+        from anomalib.engine import Engine
+        from anomalib.models import AnomalibModule
+
         self._add_default_arguments_to_parser(parser)
         self._add_trainer_arguments_to_parser(parser, add_optimizer=True, add_scheduler=True)
         parser.add_subclass_arguments(
@@ -218,6 +243,12 @@ class AnomalibCLI:
 
     def add_predict_arguments(self, parser: ArgumentParser) -> None:
         """Add predict arguments to the parser."""
+        from torch.utils.data import DataLoader, Dataset
+
+        from anomalib.data import AnomalibDataModule
+        from anomalib.engine import Engine
+        from anomalib.models import AnomalibModule
+
         self._add_default_arguments_to_parser(parser)
         self._add_trainer_arguments_to_parser(parser)
         parser.add_subclass_arguments(
@@ -241,6 +272,11 @@ class AnomalibCLI:
 
     def add_export_arguments(self, parser: ArgumentParser) -> None:
         """Add export arguments to the parser."""
+        from anomalib.cli.utils.openvino import add_openvino_export_arguments
+        from anomalib.data import AnomalibDataModule
+        from anomalib.engine import Engine
+        from anomalib.models import AnomalibModule
+
         self._add_default_arguments_to_parser(parser)
         self._add_trainer_arguments_to_parser(parser)
         parser.add_subclass_arguments(
@@ -288,6 +324,8 @@ class AnomalibCLI:
 
     def before_instantiate_classes(self) -> None:
         """Modify the configuration to properly instantiate classes and sets up tiler."""
+        from anomalib.utils.config import update_config
+
         subcommand = self.config["subcommand"]
         if subcommand in {*self.subcommands(), "train", "predict"}:
             self.config[subcommand] = update_config(self.config[subcommand])
@@ -299,6 +337,8 @@ class AnomalibCLI:
         But for subcommands we do not want to instantiate any trainer specific classes such as datamodule, model, etc
         This is because the subcommand is responsible for instantiating and executing code based on the passed config
         """
+        from torch.utils.data import DataLoader, Dataset
+
         if self.config["subcommand"] in {*self.subcommands(), "predict"}:  # trainer commands
             # since all classes are instantiated, the LightningCLI also creates an unused ``Trainer`` object.
             # the minor change here is that engine is instantiated instead of trainer
@@ -334,6 +374,7 @@ class AnomalibCLI:
         from lightning.pytorch.cli import SaveConfigCallback
 
         from anomalib.callbacks import get_callbacks
+        from anomalib.engine import Engine
 
         engine_args: dict[str, Any] = {}
         trainer_config = {**self._get(self.config_init, "trainer", default={}), **engine_args}
@@ -368,11 +409,14 @@ class AnomalibCLI:
             fn = getattr(self.engine, self.subcommand)
             fn_kwargs = self._prepare_subcommand_kwargs(self.subcommand)
             fn(**fn_kwargs)
-        elif PIPELINE_REGISTRY is not None and self.subcommand in pipeline_subcommands():
-            run_pipeline(self.config)
         else:
-            self.config_init = self.parser.instantiate_classes(self.config)
-            getattr(self, f"{self.subcommand}")()
+            from anomalib.cli.pipelines import PIPELINE_REGISTRY, pipeline_subcommands, run_pipeline
+
+            if PIPELINE_REGISTRY is not None and self.subcommand in pipeline_subcommands():
+                run_pipeline(self.config)
+            else:
+                self.config_init = self.parser.instantiate_classes(self.config)
+                getattr(self, f"{self.subcommand}")()
 
     @property
     def fit(self) -> Callable:
@@ -411,6 +455,8 @@ class AnomalibCLI:
         add_scheduler: bool = False,
     ) -> None:
         """Add trainer arguments to the parser."""
+        from lightning.pytorch import Trainer
+
         parser.add_class_arguments(Trainer, "trainer", fail_untyped=False, instantiate=False, sub_configs=True)
 
         if add_optimizer:
@@ -451,6 +497,10 @@ class AnomalibCLI:
 
     def _prepare_subcommand_kwargs(self, subcommand: str) -> dict[str, Any]:
         """Prepares the keyword arguments to pass to the subcommand to run."""
+        from torch.utils.data import DataLoader
+
+        from anomalib.data import AnomalibDataModule
+
         fn_kwargs = {
             k: v for k, v in self.config_init[subcommand].items() if k in self.subcommand_method_arguments[subcommand]
         }
@@ -488,6 +538,8 @@ class AnomalibCLI:
 
 def main() -> None:
     """Trainer via Anomalib CLI."""
+    from anomalib.loggers import configure_logger
+
     configure_logger()
     AnomalibCLI()
 

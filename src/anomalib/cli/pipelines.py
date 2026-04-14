@@ -7,22 +7,44 @@ This module provides functionality for managing and running Anomalib pipelines t
 the CLI. It includes support for benchmarking and other pipeline operations.
 """
 
-import logging
+from __future__ import annotations
 
-from jsonargparse import Namespace
+import logging
+from typing import TYPE_CHECKING
+
 from lightning_utilities.core.imports import module_available
 
-from anomalib.cli.utils.help_formatter import get_short_docstring
+if TYPE_CHECKING:
+    from jsonargparse import Namespace
+
+    from anomalib.pipelines.components.base import Pipeline
 
 logger = logging.getLogger(__name__)
 
-if module_available("anomalib.pipelines"):
-    from anomalib.pipelines import Benchmark
-    from anomalib.pipelines.components.base import Pipeline
+_PIPELINE_REGISTRY: dict[str, type[Pipeline]] | None | str = "uninitialized"
 
-    PIPELINE_REGISTRY: dict[str, type[Pipeline]] | None = {"benchmark": Benchmark}
-else:
-    PIPELINE_REGISTRY = None
+_PIPELINE_DESCRIPTIONS: dict[str, str] = {
+    "benchmark": "Benchmarking pipeline for evaluating anomaly detection models.",
+}
+
+
+def _ensure_registry() -> dict[str, type[Pipeline]] | None:
+    global _PIPELINE_REGISTRY  # noqa: PLW0603
+    if _PIPELINE_REGISTRY == "uninitialized":
+        if module_available("anomalib.pipelines"):
+            from anomalib.pipelines import Benchmark
+
+            _PIPELINE_REGISTRY = {"benchmark": Benchmark}
+        else:
+            _PIPELINE_REGISTRY = None
+    return _PIPELINE_REGISTRY  # type: ignore[return-value]
+
+
+def __getattr__(name: str) -> object:
+    if name == "PIPELINE_REGISTRY":
+        return _ensure_registry()
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)
 
 
 def pipeline_subcommands() -> dict[str, dict[str, str]]:
@@ -41,9 +63,9 @@ def pipeline_subcommands() -> dict[str, dict[str, str]]:
             }
         }
     """
-    if PIPELINE_REGISTRY is not None:
-        return {name: {"description": get_short_docstring(pipeline)} for name, pipeline in PIPELINE_REGISTRY.items()}
-    return {}
+    if not module_available("anomalib.pipelines"):
+        return {}
+    return {name: {"description": desc} for name, desc in _PIPELINE_DESCRIPTIONS.items()}
 
 
 def run_pipeline(args: Namespace) -> None:
@@ -60,10 +82,11 @@ def run_pipeline(args: Namespace) -> None:
         This feature is experimental and may change or be removed in future versions.
     """
     logger.warning("This feature is experimental. It may change or be removed in the future.")
-    if PIPELINE_REGISTRY is not None:
+    registry = _ensure_registry()
+    if registry is not None:
         subcommand = args.subcommand
         config = args[subcommand]
-        PIPELINE_REGISTRY[subcommand]().run(config)
+        registry[subcommand]().run(config)
     else:
         msg = "Pipeline is not available"
         raise ValueError(msg)

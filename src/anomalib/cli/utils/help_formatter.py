@@ -26,19 +26,27 @@ REQUIRED_ARGUMENTS = {
     "export": {"model", "model.help", "export_type", "ckpt_path", "config"},
 }
 
-try:
-    from anomalib.engine import Engine
+_DOCSTRING_USAGE: dict | None = None
 
-    DOCSTRING_USAGE = {
-        "train": Engine.train,
-        "fit": Engine.fit,
-        "validate": Engine.validate,
-        "test": Engine.test,
-        "predict": Engine.predict,
-        "export": Engine.export,
-    }
-except ImportError:
-    print("To use other subcommand using `anomalib install`")
+
+def _get_docstring_usage() -> dict:
+    """Lazily build the DOCSTRING_USAGE mapping from Engine methods."""
+    global _DOCSTRING_USAGE  # noqa: PLW0603
+    if _DOCSTRING_USAGE is None:
+        try:
+            from anomalib.engine import Engine
+
+            _DOCSTRING_USAGE = {
+                "train": Engine.train,
+                "fit": Engine.fit,
+                "validate": Engine.validate,
+                "test": Engine.test,
+                "predict": Engine.predict,
+                "export": Engine.export,
+            }
+        except ImportError:
+            _DOCSTRING_USAGE = {}
+    return _DOCSTRING_USAGE
 
 
 def get_short_docstring(component: type) -> str:
@@ -257,10 +265,11 @@ def render_guide(subcommand: str | None = None) -> list[Panel | Markdown]:
         - For valid subcommands, adds CLI usage from docstrings and verbose usage info
         - Usage is formatted in a Panel with "Quick-Start" title
     """
-    if subcommand is None or subcommand not in DOCSTRING_USAGE:
+    docstring_usage = _get_docstring_usage()
+    if subcommand is None or subcommand not in docstring_usage:
         return []
     contents = [get_intro()]
-    target_command = DOCSTRING_USAGE[subcommand]
+    target_command = docstring_usage[subcommand]
     cli_usage = get_cli_usage_docstring(target_command)
     if cli_usage is not None:
         cli_usage += f"\n{get_verbose_usage(subcommand)}"
