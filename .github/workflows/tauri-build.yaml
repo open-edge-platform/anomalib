@@ -27,12 +27,12 @@ name: Tauri Build
 
 on:
   push:
-    branches: ["main", "feature/**"]
+    branches: ["main", "feature/**", "release/**"]
     paths:
       - "application/**"
       - ".github/workflows/tauri-build.yaml"
   pull_request:
-    branches: ["main", "feature/**"]
+    branches: ["main", "feature/**", "release/**"]
     paths:
       - "application/**"
       - ".github/workflows/tauri-build.yaml"
@@ -112,9 +112,10 @@ jobs:
   #       working-directory: application/backend
   #       run: |
   #         uv sync --no-dev --extra ${{ matrix.accelerator }}
+  #         uv pip install pyinstaller==6.19.0
   #         source .venv/bin/activate
   #         cd ../binary/sidecar
-  #         uv run --active --with pyinstaller pyinstaller anomalib_studio.spec
+  #         uv run --active pyinstaller anomalib_studio.spec
   #         # Rename binary with target triple
   #         TARGET_TRIPLE=$(rustc -Vv | grep host | cut -f2 -d' ')
   #         mv dist/anomalib-studio-backend/anomalib-studio-backend "dist/anomalib-studio-backend/anomalib-studio-backend-${TARGET_TRIPLE}"
@@ -240,9 +241,10 @@ jobs:
           MATRIX_ACCELERATOR: ${{ matrix.accelerator }}
         run: |
           uv sync --no-dev --extra $env:MATRIX_ACCELERATOR
+          uv pip install pyinstaller==6.19.0
           .\.venv\Scripts\Activate.ps1
           Push-Location ..\binary\sidecar
-          uv run --active --with pyinstaller pyinstaller anomalib_studio.spec
+          uv run --active pyinstaller anomalib_studio.spec
           Pop-Location
 
       - name: Install Tauri dependencies
@@ -364,9 +366,10 @@ jobs:
   #       working-directory: application/backend
   #       run: |
   #         uv sync --no-dev
+  #         uv pip install pyinstaller==6.19.0
   #         source .venv/bin/activate
   #         cd ../binary/sidecar
-  #         uv run --active --with pyinstaller pyinstaller anomalib_studio.spec
+  #         uv run --active pyinstaller anomalib_studio.spec
   #         # Rename binary with target triple
   #         TARGET_TRIPLE=$(rustc -Vv | grep host | cut -f2 -d' ')
   #         mv dist/anomalib-studio-backend/anomalib-studio-backend "dist/anomalib-studio-backend/anomalib-studio-backend-${TARGET_TRIPLE}"
