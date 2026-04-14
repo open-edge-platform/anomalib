@@ -312,6 +312,18 @@ class CustomHelpFormatter(RichHelpFormatter, DefaultHelpFormatter):
     verbosity_level = verbosity_dict["verbosity"]
     subcommand = verbosity_dict["subcommand"]
 
+    def _format_usage(self, usage, actions, *args, **kwargs) -> str:
+        """Normalize *actions* to a list before formatting.
+
+        ``rich-argparse >= 1.7`` may pass ``actions=()`` (a tuple) internally,
+        but ``jsonargparse``'s ``filter_non_parsing_actions`` only handles
+        ``list`` and ``dict``.  Converting to a list here keeps both libraries
+        compatible.
+        """
+        if isinstance(actions, tuple):
+            actions = list(actions)
+        return super()._format_usage(usage, actions, *args, **kwargs)
+
     def add_usage(self, usage: str | None, actions: list, *args, **kwargs) -> None:
         """Add usage information to the formatter.
 

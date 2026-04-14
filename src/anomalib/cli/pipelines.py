@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from lightning_utilities.core.imports import module_available
+import importlib.util
 
 if TYPE_CHECKING:
     from jsonargparse import Namespace
@@ -31,7 +31,7 @@ _PIPELINE_DESCRIPTIONS: dict[str, str] = {
 def _ensure_registry() -> dict[str, type[Pipeline]] | None:
     global _PIPELINE_REGISTRY  # noqa: PLW0603
     if _PIPELINE_REGISTRY == "uninitialized":
-        if module_available("anomalib.pipelines"):
+        if importlib.util.find_spec("anomalib.pipelines") is not None:
             from anomalib.pipelines import Benchmark
 
             _PIPELINE_REGISTRY = {"benchmark": Benchmark}
@@ -63,7 +63,7 @@ def pipeline_subcommands() -> dict[str, dict[str, str]]:
             }
         }
     """
-    if not module_available("anomalib.pipelines"):
+    if importlib.util.find_spec("anomalib.pipelines") is None:
         return {}
     return {name: {"description": desc} for name, desc in _PIPELINE_DESCRIPTIONS.items()}
 

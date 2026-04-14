@@ -30,10 +30,10 @@ logger = logging.getLogger("anomalib.cli")
 
 
 def _check_lightning_available() -> bool:
-    """Check if Lightning and its dependencies are available without importing them."""
-    from lightning_utilities.core.imports import module_available
+    """Check if Lightning and its dependencies are installed (without importing them)."""
+    import importlib.util
 
-    return module_available("lightning.pytorch") and module_available("torch")
+    return importlib.util.find_spec("lightning") is not None and importlib.util.find_spec("torch") is not None
 
 
 class AnomalibCLI:
@@ -164,11 +164,14 @@ class AnomalibCLI:
 
         pipeline_cmds = pipeline_subcommands()
         if pipeline_cmds:
-            from anomalib.cli.pipelines import PIPELINE_REGISTRY
-
             for subcommand, value in pipeline_cmds.items():
-                if selected == subcommand and PIPELINE_REGISTRY is not None:
-                    sub_parser = PIPELINE_REGISTRY[subcommand].get_parser()
+                if selected == subcommand:
+                    from anomalib.cli.pipelines import PIPELINE_REGISTRY
+
+                    if PIPELINE_REGISTRY is not None:
+                        sub_parser = PIPELINE_REGISTRY[subcommand].get_parser()
+                    else:
+                        sub_parser = self.init_parser(**kwargs)
                 else:
                     sub_parser = self.init_parser(**kwargs)
                 self.subcommand_parsers[subcommand] = sub_parser
