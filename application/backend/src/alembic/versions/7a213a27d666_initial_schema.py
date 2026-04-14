@@ -61,7 +61,7 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("name", "project_id"),
+        sa.UniqueConstraint("id", "project_id"),
     )
 
     # Create sinks table
@@ -78,7 +78,7 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("name", "project_id"),
+        sa.UniqueConstraint("id", "project_id"),
     )
 
     # Create media table

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { $api } from '@anomalib-studio/api';
 import { ActionButton, Flex, Item, Key, Loading, Picker, TextField } from '@geti/ui';
@@ -25,10 +25,10 @@ export const UsbCameraFields = ({ defaultState }: UsbCameraFieldsProps) => {
         refetch,
     } = $api.useQuery('get', '/api/system/devices/camera');
 
-    const devices = (cameraDevices ?? []).map((device) => ({
-        id: device.index,
-        name: device.name,
-    }));
+    const devices = useMemo(
+        () => (cameraDevices ?? []).map((device) => ({ id: device.index, name: device.name })),
+        [cameraDevices],
+    );
 
     useEffect(() => {
         if (!isSystemName.current || devices.length === 0) return;
