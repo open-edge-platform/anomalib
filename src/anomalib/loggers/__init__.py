@@ -31,22 +31,22 @@ from rich.logging import RichHandler
 
 __all__ = ["configure_logger"]
 
-try:
-    from .comet import AnomalibCometLogger  # noqa: F401
-    from .mlflow import AnomalibMLFlowLogger  # noqa: F401
-    from .tensorboard import AnomalibTensorBoardLogger  # noqa: F401
-    from .wandb import AnomalibWandbLogger  # noqa: F401
+_LOGGER_NAMES = {
+    "AnomalibCometLogger": ".comet",
+    "AnomalibMLFlowLogger": ".mlflow",
+    "AnomalibTensorBoardLogger": ".tensorboard",
+    "AnomalibWandbLogger": ".wandb",
+}
 
-    __all__.extend(
-        [
-            "AnomalibCometLogger",
-            "AnomalibTensorBoardLogger",
-            "AnomalibWandbLogger",
-            "AnomalibMLFlowLogger",
-        ],
-    )
-except ImportError:
-    print("To use any logger install it using `anomalib install -v`")
+
+def __getattr__(name: str) -> object:
+    if name in _LOGGER_NAMES:
+        import importlib
+
+        module = importlib.import_module(_LOGGER_NAMES[name], __name__)
+        return getattr(module, name)
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)
 
 
 def configure_logger(level: int | str = logging.INFO) -> None:
