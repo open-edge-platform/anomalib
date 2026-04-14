@@ -39,15 +39,27 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 import pandas as pd
+import torch
 from lightning import seed_everything
 from rich.console import Console
 from rich.table import Table
 
 from anomalib.data import AnomalibDataModule
+from anomalib.deploy import ExportType, OpenVINOInferencer, TorchInferencer
 from anomalib.engine import Engine
 from anomalib.models import AnomalibModule
 from anomalib.pipelines.components import Job
+from anomalib.pipelines.benchmark.utils import (
+    extract_images_from_batch,
+    get_device_from_model,
+    get_test_dataloader,
+)
 from anomalib.utils.logging import hide_output
+
+try:
+    from torch.utils.flop_counter import FlopTensorDispatchMode
+except ImportError:
+    FlopTensorDispatchMode = None  # type: ignore[assignment, misc]
 
 logger = logging.getLogger(__name__)
 
@@ -135,25 +147,21 @@ class BenchmarkJob(Job):
         # so users typically specify `inference.*` under `benchmark:`.
         inference_bench_enabled = bool(
             self.flat_cfg.get(
-                "benchmark.inference.enabled",
-                self.flat_cfg.get("inference.enabled", False),
+                "inference.enabled", False
             ),
         )
         inference_warmup_runs = int(
             self.flat_cfg.get(
-                "benchmark.inference.warmup_runs",
-                self.flat_cfg.get("inference.warmup_runs", 10),
+                "inference.warmup_runs", 10
             ),
         )
         inference_runs = int(
             self.flat_cfg.get(
-                "benchmark.inference.runs",
-                self.flat_cfg.get("inference.runs", 50),
+                "inference.runs", 50
             ),
         )
         inference_batch_size = self.flat_cfg.get(
-            "benchmark.inference.batch_size",
-            self.flat_cfg.get("inference.batch_size", None),
+            "inference.batch_size", None
         )
 
         job_start_time = time.time()
@@ -171,23 +179,25 @@ class BenchmarkJob(Job):
             fit_start_time = time.time()
             engine.fit(self.model, self.datamodule)
 
-            # Optional micro-benchmark: torch-only forward-pass throughput.
-            # This runs on the same device as the trained model and does not affect metrics.
+            # Optional micro-benchmark: inferencer throughput.
             inference_bench: dict[str, Any] = {}
             if inference_bench_enabled:
                 inference_bench = self._benchmark_inference_throughput(
+                    engine=engine,
                     warmup_runs=inference_warmup_runs,
                     runs=inference_runs,
                     batch_size=inference_batch_size,
+                    temp_dir=Path(temp_dir),
                 )
 
             test_start_time = time.time()
             test_results = engine.test(self.model, self.datamodule)
+            test_end_time = time.time()
         job_end_time = time.time()
         durations = {
             "job_duration": job_end_time - job_start_time,
             "fit_duration": test_start_time - fit_start_time,
-            "test_duration": job_end_time - test_start_time,
+            "test_duration": test_end_time - test_start_time,
         }
 
         # Restore throughput in benchmark outputs.
@@ -235,113 +245,144 @@ class BenchmarkJob(Job):
         batch_size = getattr(dataloader, "batch_size", None)
         return {"num_images": num_images, "batch_size": batch_size}
 
+    def _yield_batches(self, dataloader: Any) -> Any:  # noqa: ANN401
+        """Yield batches from the dataloader infinitely."""
+        while True:
+            yield from dataloader
+
+    def _benchmark_inferencer(
+        self,
+        inferencer: Any,  # noqa: ANN401
+        dataloader: Any,  # noqa: ANN401
+        device: torch.device,
+        warmup_runs: int,
+        runs: int,
+        count_flops: bool = False,
+    ) -> dict[str, Any]:
+        """Benchmark an inferencer implementation."""
+        batch_iter = self._yield_batches(dataloader)
+        
+        def _get_next_images() -> tuple[Any, int]:  # noqa: ANN401
+            batch = next(batch_iter)
+            images = extract_images_from_batch(batch)
+            if images is None:
+                return None, 0
+            return images, int(images.shape[0])
+
+        with torch.inference_mode():
+            for _ in range(max(0, warmup_runs)):
+                images, _ = _get_next_images()
+                if images is None:
+                    break
+                inferencer.predict(images)
+            
+            if device.type == "cuda":
+                torch.cuda.synchronize(device)
+            elif device.type == "mps":
+                torch.mps.synchronize()
+
+            flops_per_run: float | None = None
+            if count_flops:
+                try:
+                    images, _ = _get_next_images()
+                    if FlopTensorDispatchMode is not None and images is not None and hasattr(inferencer, "model"):
+                        with FlopTensorDispatchMode(inferencer.model) as flop_counter:
+                            inferencer.predict(images)
+                        counts = flop_counter.flop_counts.get("Global", {})
+                        flops_per_run = sum(counts.values()) if counts else None
+                except Exception:  # noqa: BLE001
+                    pass
+
+        total_images = 0
+        with torch.inference_mode():
+            start_time = time.perf_counter()
+            for _ in range(max(1, runs)):
+                images, num_images = _get_next_images()
+                if images is None:
+                    break
+                inferencer.predict(images)
+                total_images += num_images
+
+            if device.type == "cuda":
+                torch.cuda.synchronize(device)
+            elif device.type == "mps":
+                torch.mps.synchronize()
+            
+            duration = time.perf_counter() - start_time
+            
+        return {
+            "duration": duration,
+            "num_images": total_images,
+            "flops_per_run": flops_per_run,
+        }
+
     def _benchmark_inference_throughput(  # noqa: C901
         self,
+        engine: Engine,
         warmup_runs: int,
         runs: int,
         batch_size: int | None,
+        temp_dir: Path,
     ) -> dict[str, Any]:
-        """Benchmark torch forward-pass throughput on the test dataloader.
-
-        This measures the runtime of the model's underlying torch module
-        (`AnomalibModule.model`) on batches from the test dataloader.
-
-        Args:
-            warmup_runs: Number of warmup iterations.
-            runs: Number of measured iterations.
-            batch_size: Optional override for dataloader batch size.
-
-        Returns:
-            dict[str, Any]: Benchmark metrics. Returns an empty dict if unavailable.
-        """
+        """Benchmark Torch and OpenVINO end-to-end throughput."""
+        metrics: dict[str, Any] = {}
         try:
-            import torch
-            from torch.utils.data import DataLoader
-
-            dataloaders = self.datamodule.test_dataloader()
-            dataloader = dataloaders[0] if isinstance(dataloaders, (list, tuple)) else dataloaders
-            if not hasattr(dataloader, "dataset"):
+            dataloader = get_test_dataloader(self.datamodule, batch_size)
+            if dataloader is None:
                 return {}
 
-            if batch_size is not None and getattr(dataloader, "batch_size", None) != batch_size:
-                # Re-create a DataLoader with a different batch size while preserving common settings.
-                # This intentionally does not try to preserve complex samplers.
-                kwargs: dict[str, Any] = {
-                    "dataset": dataloader.dataset,
-                    "batch_size": batch_size,
-                    "shuffle": False,
-                    "num_workers": getattr(dataloader, "num_workers", 0),
-                    "pin_memory": getattr(dataloader, "pin_memory", False),
-                    "drop_last": getattr(dataloader, "drop_last", False),
-                    "collate_fn": getattr(dataloader, "collate_fn", None),
-                }
-                for key in ("timeout", "worker_init_fn", "prefetch_factor", "persistent_workers"):
-                    if hasattr(dataloader, key):
-                        kwargs[key] = getattr(dataloader, key)
-                dataloader = DataLoader(**kwargs)
+            device = get_device_from_model(self.model)
 
-            device = getattr(self.model, "device", None)
-            if device is None:
-                try:
-                    device = next(self.model.parameters()).device
-                except Exception:  # noqa: BLE001
-                    device = torch.device("cpu")
+            # Torch Benchmark
+            try:
+                logger.info("Exporting to Torch format for throughput benchmarking.")
+                torch_model_path = engine.export(
+                    model=self.model,
+                    export_type=ExportType.TORCH,
+                    export_root=temp_dir / "export",
+                    model_file_name="benchmark_torch",
+                )
+                if torch_model_path is not None:
+                    inferencer = TorchInferencer(path=torch_model_path, device=device.type)
+                    res = self._benchmark_inferencer(
+                        inferencer, dataloader, device, warmup_runs, runs, count_flops=True
+                    )
+                    if res["num_images"] > 0:
+                        metrics["torch_num_images"] = res["num_images"]
+                        metrics["torch_duration"] = res["duration"]
+                        metrics["torch_throughput_fps"] = res["num_images"] / res["duration"]
+                        if res["flops_per_run"]:
+                            metrics["torch_flops"] = res["flops_per_run"]
+            except Exception as ex:  # noqa: BLE001
+                logger.warning(f"Failed to benchmark Torch model throughput: {ex}")
 
-            core_model = getattr(self.model, "model", None)
-            if core_model is None:
-                return {}
-            core_model.eval()
+            # OpenVINO Benchmark
+            try:
+                logger.info("Exporting to OpenVINO format for throughput benchmarking.")
+                ov_model_path = engine.export(
+                    model=self.model,
+                    export_type=ExportType.OPENVINO,
+                    export_root=temp_dir / "export",
+                    model_file_name="benchmark_ov",
+                    datamodule=self.datamodule,
+                )
+                if ov_model_path is not None:
+                    ov_device = "GPU" if device.type == "cuda" else "CPU"
+                    inferencer = OpenVINOInferencer(path=ov_model_path, device=ov_device)
+                    res = self._benchmark_inferencer(
+                        inferencer, dataloader, device, warmup_runs, runs, count_flops=False
+                    )
+                    if res["num_images"] > 0:
+                        metrics["openvino_num_images"] = res["num_images"]
+                        metrics["openvino_duration"] = res["duration"]
+                        metrics["openvino_throughput_fps"] = res["num_images"] / res["duration"]
+            except Exception as ex:  # noqa: BLE001
+                logger.warning(f"Failed to benchmark OpenVINO model throughput: {ex}")
 
-            def _get_images(batch: Any) -> Any:  # noqa: ANN401
-                if hasattr(batch, "image"):
-                    return batch.image
-                if isinstance(batch, dict) and "image" in batch:
-                    return batch["image"]
-                return None
-
-            def _batch_stream() -> Any:  # noqa: ANN401
-                while True:
-                    yield from dataloader
-
-            batch_iter = _batch_stream()
-            total_measured_images = 0
-
-            def _run(num_iters: int, count_images: bool) -> None:
-                nonlocal total_measured_images
-                for _ in range(num_iters):
-                    batch = next(batch_iter)
-                    images = _get_images(batch)
-                    if images is None:
-                        return
-                    images = images.to(device)
-                    _ = core_model(images)
-                    if count_images:
-                        total_measured_images += int(images.shape[0])
-
-            with torch.inference_mode():
-                _run(max(0, warmup_runs), count_images=False)
-                if device.type == "cuda":
-                    torch.cuda.synchronize(device)
-                start = time.perf_counter()
-                _run(max(1, runs), count_images=True)
-                if device.type == "cuda":
-                    torch.cuda.synchronize(device)
-                total_measured_seconds = time.perf_counter() - start
-
-            if total_measured_images <= 0 or total_measured_seconds <= 0:
-                return {}
-
-            return {
-                "inference_warmup_runs": warmup_runs,
-                "inference_runs": runs,
-                "inference_batch_size": getattr(dataloader, "batch_size", None),
-                "inference_num_images": total_measured_images,
-                "inference_duration": total_measured_seconds,
-                "inference_throughput_fps": total_measured_images / total_measured_seconds,
-                "inference_seconds_per_image": total_measured_seconds / total_measured_images,
-            }
-        except Exception:  # noqa: BLE001
-            return {}
+        except Exception as ex:  # noqa: BLE001
+            logger.warning(f"Inference throughput benchmarking failed: {ex}")
+            
+        return metrics
 
     @staticmethod
     def collect(results: list[dict[str, Any]]) -> pd.DataFrame:
@@ -355,6 +396,9 @@ class BenchmarkJob(Job):
             pd.DataFrame: DataFrame containing aggregated results with each row
                 representing a benchmark run.
         """
+        if not results:
+            return pd.DataFrame()
+
         output: dict[str, Any] = {}
         for key in results[0]:
             output[key] = []
