@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Anomalib Image Models.
@@ -36,6 +36,7 @@ Available Models:
     - :class:`Fastflow`: Fast Flow
     - :class:`Fre`: Feature Reconstruction Error
     - :class:`Ganomaly`: Generative Adversarial Networks
+    - :class:`GeneralAD`: Attending to Distorted Features
     - :class:`L2BT`: Learning to Be a Transformer to Pinpoint Anomalies
     - :class:`Padim`: Patch Distribution Modeling
     - :class:`Patchcore`: Patch Core
@@ -61,6 +62,7 @@ from .efficient_ad import EfficientAd
 from .fastflow import Fastflow
 from .fre import Fre
 from .ganomaly import Ganomaly
+from .general_ad import GeneralAD
 from .l2bt import L2BT
 from .padim import Padim
 from .patchcore import Patchcore
@@ -86,6 +88,7 @@ __all__ = [
     "Fastflow",
     "Fre",
     "Ganomaly",
+    "GeneralAD",
     "L2BT",
     "Padim",
     "Patchcore",
