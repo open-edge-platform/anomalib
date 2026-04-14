@@ -64,3 +64,12 @@ async def cancel_job(
 ) -> JobCancelled:
     """Endpoint to cancel a job by its ID"""
     return await job_service.cancel_job(job_id=job_id)
+
+
+@job_router.delete("/{job_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_job(
+    job_id: Annotated[ShortUUID, Depends(get_job_id)],
+    job_service: Annotated[JobService, Depends(get_job_service)],
+) -> None:
+    """Delete a failed or canceled job by its ID."""
+    await job_service.delete_job(job_id=job_id)

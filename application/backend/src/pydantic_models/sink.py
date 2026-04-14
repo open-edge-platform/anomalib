@@ -11,7 +11,7 @@ from pydantic_models.base import BaseIDNameModel, NoRequiredIDs, Pagination
 from utils.short_uuid import ShortUUID
 
 MQTT_USERNAME = "MQTT_USERNAME"
-MQTT_PASSWORD = "MQTT_PASSWORD"  # noqa: S105
+MQTT_PASSWORD = "MQTT_PASSWORD"  # noqa: S105  # nosec B105
 
 
 class SinkType(StrEnum):

@@ -27,12 +27,12 @@ name: Tauri Build
 
 on:
   push:
-    branches: ["main", "feature/**"]
+    branches: ["main", "feature/**", "release/**"]
     paths:
       - "application/**"
       - ".github/workflows/tauri-build.yaml"
   pull_request:
-    branches: ["main", "feature/**"]
+    branches: ["main", "feature/**", "release/**"]
     paths:
       - "application/**"
       - ".github/workflows/tauri-build.yaml"
@@ -56,11 +56,11 @@ on:
   workflow_dispatch:
     inputs:
       accelerator:
-        description: "Backend accelerator to build (matrix: cpu, cu124, xpu)"
+        description: "Backend accelerator to build (matrix: cpu, cu130, xpu)"
         type: choice
         options:
           - cpu
-          - cu124
+          - cu130
           - xpu
         default: cpu
       debug_build:
@@ -82,7 +82,7 @@ jobs:
   #   strategy:
   #     fail-fast: false
   #     matrix:
-  #       accelerator: [cpu, cu124, xpu]
+  #       accelerator: [cpu, cu130, xpu]
 
   #   steps:
   #     - name: Runner cleanup
@@ -129,9 +129,10 @@ jobs:
   #       working-directory: application/backend
   #       run: |
   #         uv sync --no-dev --extra ${{ matrix.accelerator }}
+  #         uv pip install pyinstaller==6.19.0
   #         source .venv/bin/activate
   #         cd ../binary/sidecar
-  #         uv run --active --with pyinstaller pyinstaller anomalib_studio.spec
+  #         uv run --active pyinstaller anomalib_studio.spec
   #         # Rename binary with target triple
   #         TARGET_TRIPLE=$(rustc -Vv | grep host | cut -f2 -d' ')
   #         mv dist/anomalib-studio-backend/anomalib-studio-backend "dist/anomalib-studio-backend/anomalib-studio-backend-${TARGET_TRIPLE}"
@@ -161,6 +162,7 @@ jobs:
       github.repository == 'open-edge-platform/anomalib' &&
       (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: windows-latest
+    environment: windows-msix-signing
     timeout-minutes: 90
     permissions:
       contents: read
@@ -221,17 +223,17 @@ jobs:
           python-version: "3.13"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
         with:
           version: "latest"
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9 # stable
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
         with:
           toolchain: stable
 
       - name: Cache Rust dependencies
-        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: |
             ~/.cargo/bin/
@@ -258,11 +260,14 @@ jobs:
 
       - name: Build Python sidecar (Windows ${{ matrix.accelerator }})
         working-directory: application/backend
+        env:
+          MATRIX_ACCELERATOR: ${{ matrix.accelerator }}
         run: |
-          uv sync --no-dev --extra ${{ matrix.accelerator }}
+          uv sync --no-dev --extra $env:MATRIX_ACCELERATOR
+          uv pip install pyinstaller==6.19.0
           .\.venv\Scripts\Activate.ps1
           Push-Location ..\binary\sidecar
-          uv run --active --with pyinstaller pyinstaller anomalib_studio.spec
+          uv run --active pyinstaller anomalib_studio.spec
           Pop-Location
 
       - name: Install Tauri dependencies
@@ -384,9 +389,10 @@ jobs:
   #       working-directory: application/backend
   #       run: |
   #         uv sync --no-dev
+  #         uv pip install pyinstaller==6.19.0
   #         source .venv/bin/activate
   #         cd ../binary/sidecar
-  #         uv run --active --with pyinstaller pyinstaller anomalib_studio.spec
+  #         uv run --active pyinstaller anomalib_studio.spec
   #         # Rename binary with target triple
   #         TARGET_TRIPLE=$(rustc -Vv | grep host | cut -f2 -d' ')
   #         mv dist/anomalib-studio-backend/anomalib-studio-backend "dist/anomalib-studio-backend/anomalib-studio-backend-${TARGET_TRIPLE}"

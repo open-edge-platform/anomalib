@@ -6,12 +6,18 @@
 This module provides utilities for managing paths and directories in anomaly
 detection projects. The key components include:
 
+    - Pre-trained weights cache directory management
     - Version directory creation and management
     - Symbolic link handling
     - Path resolution and validation
     - Output filename generation
 
 Examples:
+    Get the platform-appropriate cache directory for pre-trained weights:
+
+    >>> from anomalib.utils.path import get_pretrained_weights_dir
+    >>> weights_dir = get_pretrained_weights_dir()
+
     Test create_versioned_dir:
 
     >>> from anomalib.utils.path import create_versioned_dir
@@ -22,6 +28,7 @@ Examples:
     'v1'
 
 The module ensures consistent path handling by:
+    - Providing a centralized, cross-platform cache path for pre-trained weights
     - Creating incrementing version directories (v1, v2, etc.)
     - Maintaining a ``latest`` symbolic link
     - Handling both string and ``Path`` inputs
@@ -40,7 +47,112 @@ import sys
 from contextlib import suppress
 from pathlib import Path
 
+import platformdirs
+
 logger = logging.getLogger(__name__)
+
+
+def _get_cache_subdir(subdir: str) -> Path:
+    """Return a subdirectory under the platform-appropriate anomalib cache root.
+
+    Uses ``platformdirs`` to resolve the user cache directory, then appends
+    ``anomalib/<subdir>``. Both the root and subdirectory are created if they
+    do not already exist.
+
+    The *subdir* argument is validated to prevent path traversal attacks:
+    it must be a simple relative path without ``..`` components, and it must
+    not be absolute.
+
+    Args:
+        subdir (str): Relative path component(s) under the anomalib cache root
+            (e.g. ``"datasets"`` or ``"datasets/MVTecAD"``).
+
+    Returns:
+        Path: Absolute path to the requested cache subdirectory.
+
+    Raises:
+        ValueError: If *subdir* is empty, absolute, or contains ``..`` components.
+    """
+    subdir_path = Path(subdir)
+    if not subdir or subdir_path.is_absolute() or ".." in subdir_path.parts:
+        msg = f"Invalid cache subdirectory name: {subdir!r}. Must be a relative path without '..' components."
+        raise ValueError(msg)
+
+    cache_dir = platformdirs.user_cache_path("anomalib", ensure_exists=True) / subdir_path
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    return cache_dir
+
+
+def get_pretrained_weights_dir() -> Path:
+    """Return the platform-appropriate cache directory for pre-trained model weights.
+
+    Returns:
+        Path: Path to the pre-trained weights cache directory.
+
+    Example:
+        >>> from anomalib.utils.path import get_pretrained_weights_dir
+        >>> get_pretrained_weights_dir().name
+        'pre_trained'
+        >>> get_pretrained_weights_dir()  # linux
+        PosixPath('/home/user/.cache/anomalib/pre_trained')
+    """
+    return _get_cache_subdir("pre_trained")
+
+
+def get_datasets_dir() -> Path:
+    """Return the platform-appropriate cache directory for anomalib datasets.
+
+    Returns:
+        Path: Path to the datasets cache directory.
+
+    Example:
+        >>> from anomalib.utils.path import get_datasets_dir
+        >>> get_datasets_dir().name
+        'datasets'
+        >>> get_datasets_dir()  # linux
+        PosixPath('/home/user/.cache/anomalib/datasets')
+    """
+    return _get_cache_subdir("datasets")
+
+
+def _is_legacy_default_root(root: str | Path, dataset_name: str) -> bool:
+    """Check whether `root` matches the legacy ``./datasets/<dataset_name>`` default.
+
+    The comparison is done on the normalized ``PurePosixPath`` representation so
+    that it works regardless of whether `root` was passed as a ``str`` or
+    ``Path``, with or without a trailing separator, and on both POSIX and
+    Windows.
+
+    Note: This is a temporary helper and will be removed in v2.6.0.
+    """
+    # Normalize: convert to Path, collapse redundant separators / dots, and
+    # convert to forward-slash representation for a canonical comparison.
+    normalized = Path(root).as_posix().rstrip("/")
+    canonical = f"./datasets/{dataset_name}"
+    # Also accept the variant without the leading "./"
+    return normalized in {canonical, canonical.lstrip("./")}
+
+
+def resolve_with_warning(root: str | Path | None, dataset_name: str) -> Path:
+    """Warn change in default dataset location.
+
+    Note: This is a temporary function and will be removed in v2.6.0.
+
+    Args:
+        root: Root directory of the dataset.
+        dataset_name: Name of the dataset. This is only used when root is None.
+
+    Returns:
+        Path: Resolved path.
+    """
+    default_path = Path(root) if root is not None else get_datasets_dir() / dataset_name
+    if root is not None and _is_legacy_default_root(root, dataset_name):
+        msg = (
+            f"Default path to local dataset {root} is deprecated and will be moved to "
+            f"{get_datasets_dir() / dataset_name} in v2.6.0."
+        )
+        logger.warning(msg)
+    return default_path
 
 
 def _highest_version_dir(parent: Path) -> str | None:
@@ -146,7 +258,7 @@ def _make_latest_windows(latest: Path, target: Path) -> None:
     except (OSError, NotImplementedError):
         # Try using Windows mklink command via subprocess
         try:
-            import subprocess
+            import subprocess  # nosec B404
 
             # Note: Using subprocess with mklink is safe here as we control
             # the command and arguments. This is a standard Windows command.
@@ -156,9 +268,13 @@ def _make_latest_windows(latest: Path, target: Path) -> None:
                 )
                 msg = f"Unsafe path detected: {tmp} -> {target}"
                 raise ValueError(msg)
-            result = subprocess.run(  # noqa: S603
-                [  # noqa: S607
-                    "cmd",
+            cmd_exe = shutil.which("cmd.exe")
+            if not cmd_exe:
+                msg = "Cannot locate cmd.exe on PATH"
+                raise OSError(msg)  # noqa: TRY301
+            result = subprocess.run(  # noqa: S603  # nosec B603
+                [
+                    cmd_exe,
                     "/c",
                     "mklink",
                     "/J",
