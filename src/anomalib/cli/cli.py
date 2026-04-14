@@ -23,7 +23,7 @@ except ImportError:
     from jsonargparse._subcommands import ActionSubCommands as _ActionSubCommands
 
 from anomalib import __version__
-from anomalib.cli.utils.help_formatter import CustomHelpFormatter, get_short_docstring
+from anomalib.cli.utils.help_formatter import CustomHelpFormatter
 
 traceback.install()
 logger = logging.getLogger("anomalib.cli")
@@ -84,13 +84,23 @@ class AnomalibCLI:
         if run:
             self._run_subcommand()
 
+    # Flags whose next token is a value, not a subcommand.
+    _OPTIONS_WITH_VALUE = frozenset({"-c", "--config"})
+
     @staticmethod
     def _sniff_subcommand(args: Sequence[str] | None) -> str | None:
         """Peek at args to identify the subcommand without full parsing."""
         import sys
 
         tokens = list(args) if args is not None else sys.argv[1:]
+        skip_next = False
         for token in tokens:
+            if skip_next:
+                skip_next = False
+                continue
+            if token in AnomalibCLI._OPTIONS_WITH_VALUE:
+                skip_next = True
+                continue
             if not token.startswith("-"):
                 return token
         return None

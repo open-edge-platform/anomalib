@@ -29,7 +29,13 @@ import logging
 
 from rich.logging import RichHandler
 
-__all__ = ["configure_logger"]
+__all__ = [
+    "configure_logger",
+    "AnomalibCometLogger",
+    "AnomalibMLFlowLogger",
+    "AnomalibTensorBoardLogger",
+    "AnomalibWandbLogger",
+]
 
 _LOGGER_NAMES = {
     "AnomalibCometLogger": ".comet",
@@ -44,7 +50,9 @@ def __getattr__(name: str) -> object:
         import importlib
 
         module = importlib.import_module(_LOGGER_NAMES[name], __name__)
-        return getattr(module, name)
+        obj = getattr(module, name)
+        globals()[name] = obj
+        return obj
     msg = f"module {__name__!r} has no attribute {name!r}"
     raise AttributeError(msg)
 

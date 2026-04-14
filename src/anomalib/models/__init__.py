@@ -48,10 +48,17 @@ Video Models:
     - FUVAS (:class:`anomalib.models.video.Fuvas`)
 """
 
+from __future__ import annotations
+
 import logging
 from importlib import import_module
+from typing import TYPE_CHECKING
 
 from anomalib.models.components import AnomalibModule
+
+if TYPE_CHECKING:
+    from jsonargparse import Namespace
+    from omegaconf import DictConfig
 
 _MODEL_CLASS_MAP: dict[str, str] = {
     "AnomalyDINO": ".image.anomaly_dino",
@@ -154,9 +161,10 @@ def list_models(case: str = "snake") -> set[str]:
 
     Args:
         case (str): The format to return model names in. Options are:
-            - "snake_case": Returns names in snake_case format (e.g. "efficient_ad")
-            - "original": Returns the original PascalCase class names (e.g. "EfficientAd")
-            Defaults to "snake_case".
+            - "snake": Returns names in snake_case format (e.g. "efficient_ad")
+            - "pascal": Returns the original PascalCase class names (e.g. "EfficientAd")
+            - "title": Returns names in Title Case format (e.g. "Efficient Ad")
+            Defaults to "snake".
 
     Returns:
         set[str]: Set of available model names in the specified format.
@@ -255,7 +263,7 @@ def _get_model_class_by_name(name: str) -> type[AnomalibModule]:
     return model_class
 
 
-def get_model(model, *args, **kwdargs) -> AnomalibModule:
+def get_model(model: DictConfig | str | dict | Namespace, *args, **kwdargs) -> AnomalibModule:
     """Get an anomaly detection model instance.
 
     This function instantiates an anomaly detection model based on the provided

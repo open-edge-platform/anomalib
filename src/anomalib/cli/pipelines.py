@@ -21,7 +21,9 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_PIPELINE_REGISTRY: dict[str, type[Pipeline]] | None | str = "uninitialized"
+_UNINITIALIZED = object()
+
+_PIPELINE_REGISTRY: dict[str, type[Pipeline]] | None | object = _UNINITIALIZED
 
 _PIPELINE_DESCRIPTIONS: dict[str, str] = {
     "benchmark": "Benchmarking pipeline for evaluating anomaly detection models.",
@@ -30,7 +32,7 @@ _PIPELINE_DESCRIPTIONS: dict[str, str] = {
 
 def _ensure_registry() -> dict[str, type[Pipeline]] | None:
     global _PIPELINE_REGISTRY  # noqa: PLW0603
-    if _PIPELINE_REGISTRY == "uninitialized":
+    if _PIPELINE_REGISTRY is _UNINITIALIZED:
         if importlib.util.find_spec("anomalib.pipelines") is not None:
             from anomalib.pipelines import Benchmark
 
