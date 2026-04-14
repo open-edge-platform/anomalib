@@ -146,7 +146,8 @@ class ExportableCenterCrop(Transform):
     def transform(self, inpt: torch.Tensor, params: dict[str, Any]) -> torch.Tensor:
         """Wrapper for self._transform.
 
-        This is to ensure compatibility with Torchvision 2.6+, where the `_transform` method was renamed to `transform`.
+        This is to ensure compatibility with newer Torchvision versions where the `_transform` method was renamed
+        to `transform`.
 
         Args:
             inpt (torch.Tensor): Input tensor to transform
