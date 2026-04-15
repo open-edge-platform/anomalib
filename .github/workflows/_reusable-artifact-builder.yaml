@@ -84,6 +84,18 @@ jobs:
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
           python-version: ${{ inputs.python-version }}
+      # Cache poisoning mitigation: fork PRs blocked, same-repo PRs allowed; event+branch isolation
+      # No cache for build/ or dist/ - Python packaging regenerates them from scratch each time
+      - name: Cache pip dependencies
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+        with:
+          path: |
+            ~/.cache/pip
+            .venv
+          key: ${{ runner.os }}-pip-${{ github.event_name }}-${{ github.ref_name }}-${{ hashFiles('**/pyproject.toml') }}-${{ hashFiles('**/uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ github.event_name }}-${{ github.ref_name }}-
       - name: Build package
         run: |
           python -m pip install --upgrade pip==26.0.1 build==1.4.2
@@ -101,24 +113,3 @@ jobs:
           name: ${{ steps.set-artifact-name.outputs.name }}
           path: dist/
           retention-days: 5
-      # Cache poisoning mitigation: fork PRs blocked, same-repo PRs allowed; event+branch isolation
-      - name: Cache pip dependencies
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
-        with:
-          path: |
-            ~/.cache/pip
-            .venv
-          key: ${{ runner.os }}-pip-${{ github.event_name }}-${{ github.ref_name }}-${{ hashFiles('**/pyproject.toml') }}-${{ hashFiles('**/uv.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-${{ github.event_name }}-${{ github.ref_name }}-
-      # Cache poisoning mitigation: fork PRs blocked, same-repo PRs allowed; event+branch isolation prevents poisoned build artifacts from affecting releases
-      - name: Cache build artifacts
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
-        with:
-          path: |
-            dist/
-            *.egg-info/
-            build/
-          key: ${{ runner.os }}-build-${{ github.event_name }}-${{ github.ref_name }}-${{ hashFiles('**/pyproject.toml') }}
