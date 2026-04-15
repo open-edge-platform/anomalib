@@ -62,7 +62,7 @@ These files already exist and AGENTS.md must stay consistent with them:
 | `.agents/skills/testing/SKILL.md`                    | Unit, integration, regression test expectations            |
 | `.agents/skills/pr-workflow/SKILL.md`                | PR title, branch naming, quality gates                     |
 | `.agents/skills/third-party-code/SKILL.md`           | Third-party attribution and licensing                      |
-| `.agents/skills/model-doc-sync/SKILL.md`             | Model README ↔ docs page sync                             |
+| `.agents/skills/model-doc-sync/SKILL.md`             | Model README ↔ docs page sync                              |
 | `.agents/skills/model-sample-image-export/SKILL.md`  | Sample image export for model docs                         |
 | `.agents/skills/benchmark-and-docs-refresh/SKILL.md` | Benchmark execution and docs refresh                       |
 
