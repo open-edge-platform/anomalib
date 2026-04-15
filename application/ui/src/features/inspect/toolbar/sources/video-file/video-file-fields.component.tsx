@@ -112,7 +112,7 @@ export const VideoFileFields = ({ defaultState }: VideoFileFieldsProps) => {
             <TextField isHidden label='project_id' name='project_id' defaultValue={defaultState.project_id} />
             <TextField isHidden label='video_path' name='video_path' value={videoPath} />
 
-            <TextField width='100%' label='Name' name='name' defaultValue={defaultState.name} />
+            <TextField isRequired width='100%' label='Name' name='name' defaultValue={defaultState.name} />
 
             <Flex direction='row' gap='size-200' alignItems='end'>
                 <Picker

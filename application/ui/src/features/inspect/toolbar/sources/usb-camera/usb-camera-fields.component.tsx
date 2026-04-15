@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import { $api } from '@anomalib-studio/api';
 import { ActionButton, Flex, Item, Key, Loading, Picker, TextField } from '@geti/ui';
@@ -14,8 +14,14 @@ type UsbCameraFieldsProps = {
     defaultState: UsbCameraSourceConfig;
 };
 
+const findDeviceName = (devices: { id: number; name: string }[], deviceId: number): string | undefined =>
+    devices.find(({ id }) => id === deviceId)?.name;
+
 export const UsbCameraFields = ({ defaultState }: UsbCameraFieldsProps) => {
-    const [name, setName] = useState(defaultState.name);
+    const [userOverrideName, setUserOverrideName] = useState<string | null>(
+        isEmpty(defaultState.name) ? null : defaultState.name
+    );
+
     const isSystemName = useRef(isEmpty(defaultState.name));
 
     const {
@@ -27,27 +33,20 @@ export const UsbCameraFields = ({ defaultState }: UsbCameraFieldsProps) => {
 
     const devices = useMemo(
         () => (cameraDevices ?? []).map((device) => ({ id: device.index, name: device.name })),
-        [cameraDevices],
+        [cameraDevices]
     );
-
-    useEffect(() => {
-        if (!isSystemName.current || devices.length === 0) return;
-        const device = devices.find(({ id }) => id === defaultState.device_id);
-        if (device) {
-            setName(device.name);
-        }
-    }, [devices, defaultState.device_id]);
+    const name = userOverrideName ?? findDeviceName(devices, defaultState.device_id) ?? '';
 
     const handleNameChange = (value: string) => {
-        setName(value);
+        setUserOverrideName(value);
         isSystemName.current = false;
     };
 
     const handleSelectionChange = (key: Key | null) => {
-        const device = devices.find(({ id }) => id === Number(key));
+        const deviceName = findDeviceName(devices, Number(key));
 
-        if (device && isSystemName.current) {
-            setName(device.name);
+        if (deviceName && isSystemName.current) {
+            setUserOverrideName(deviceName);
         }
     };
 
@@ -56,7 +55,14 @@ export const UsbCameraFields = ({ defaultState }: UsbCameraFieldsProps) => {
             <TextField isHidden label='id' name='id' defaultValue={defaultState?.id} />
             <TextField isHidden label='project_id' name='project_id' defaultValue={defaultState.project_id} />
             <TextField isHidden label='name' name='name' value={name} />
-            <TextField width='100%' label='Name' name='name_display' value={name} onChange={handleNameChange} />
+            <TextField
+                isRequired
+                width='100%'
+                label='Name'
+                name='name_display'
+                value={name}
+                onChange={handleNameChange}
+            />
 
             <Flex alignItems='end' gap='size-200'>
                 <Picker

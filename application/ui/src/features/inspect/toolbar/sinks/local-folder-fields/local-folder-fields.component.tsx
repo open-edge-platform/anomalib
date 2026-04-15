@@ -81,7 +81,7 @@ export const LocalFolderFields = ({ defaultState }: LocalFolderFieldsProps) => {
             {/* Hidden field to store the full folder path for form submission */}
             <TextField isHidden label='folder_path' name='folder_path' value={`${folderPrefix}${folderSuffix}`} />
 
-            <TextField label='Name' name='name' defaultValue={defaultState.name} />
+            <TextField isRequiredlabel='Name' name='name' defaultValue={defaultState.name} />
 
             <View>
                 <span id={folderPathLabelId} className={styles.folderPathLabel}>
