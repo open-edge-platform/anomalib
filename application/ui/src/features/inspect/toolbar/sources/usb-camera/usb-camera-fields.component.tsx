@@ -43,6 +43,10 @@ export const UsbCameraFields = ({ defaultState }: UsbCameraFieldsProps) => {
     };
 
     const handleSelectionChange = (key: Key | null) => {
+        if (key === null) {
+            return;
+        }
+
         const deviceName = findDeviceName(devices, Number(key));
 
         if (deviceName && isSystemName.current) {
