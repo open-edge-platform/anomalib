@@ -111,20 +111,20 @@ Add the `More Info Requested` label.
 
 Based on the component detected in Step 3, assign the issue to the appropriate owner using this mapping derived from CODEOWNERS:
 
-| Component / Area                   | Assignees                                   |
-| ---------------------------------- | ------------------------------------------- |
-| Models                             | `ashwinvaidya17`, `rajeshgangireddy`        |
-| Data, Metrics, Pre/Post-Processing | `ashwinvaidya17`, `rajeshgangireddy`        |
-| Engine, CLI, Callbacks, Pipelines  | `ashwinvaidya17`                            |
-| Docs, Visualization, Notebooks     | `ashwinvaidya17`, `rajeshgangireddy`        |
-| Deploy, Inference                  | `ashwinvaidya17`, `rajeshgangireddy`        |
-| CI/CD, GitHub Actions              | `ashwinvaidya17`                            |
-| Anomalib Studio (UI)               | `ActiveChooN`, `MarkRedeman`, `maxxgx`      |
-| Anomalib Studio (Backend)          | `maxxgx`, `rajeshgangireddy`, `MarkRedeman` |
-| Tests                              | `ashwinvaidya17`, `rajeshgangireddy`        |
-| General / Unclear                  | `ashwinvaidya17`                            |
+| Component / Area                   | Assignees                                                  |
+| ---------------------------------- | ---------------------------------------------------------- |
+| Models                             | `ashwinvaidya17`, `samet-akcay`, `rajeshgangireddy`        |
+| Data, Metrics, Pre/Post-Processing | `ashwinvaidya17`, `rajeshgangireddy`                       |
+| Engine, CLI, Callbacks, Pipelines  | `ashwinvaidya17`                                           |
+| Docs, Visualization, Notebooks     | `ashwinvaidya17`, `samet-akcay`, `rajeshgangireddy`        |
+| Deploy, Inference                  | `ashwinvaidya17`, `rajeshgangireddy`                       |
+| CI/CD, GitHub Actions              | `ashwinvaidya17`                                           |
+| Anomalib Studio (UI)               | `ActiveChooN`, `MarkRedeman`, `maxxgx`                     |
+| Anomalib Studio (Backend)          | `maxxgx`, `rajeshgangireddy`, `MarkRedeman`                |
+| Tests                              | `ashwinvaidya17`, `rajeshgangireddy`                       |
+| General / Unclear                  | `ashwinvaidya17`, `samet-akcay`, `rajeshgangireddy`        |
 
-Assign the **first** person listed for the matching component. If the component is unclear, assign to `ashwinvaidya17` as the default triager.
+Assign the **first** person listed for the matching component. If the component is unclear, assign to `ashwinvaidya17`, the first listed default triager.
 
 ## Output Rules
 
