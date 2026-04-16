@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 # Modified
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Custom Torchvision transforms for Anomalib.
@@ -22,6 +22,7 @@ Example:
     torch.Size([3, 224, 224])
 """
 
+from collections.abc import Sequence
 from typing import Any
 
 import torch
@@ -114,7 +115,7 @@ class ExportableCenterCrop(Transform):
     """Transform that applies center-cropping with ONNX export support.
 
     Args:
-        size (int | tuple[int, int]): Desired output size. If int, creates a
+        size (int | Sequence[int]): Desired output size. If int, creates a
             square crop of size ``(size, size)``. If tuple, creates a
             rectangular crop of size ``(height, width)``.
 
@@ -126,9 +127,9 @@ class ExportableCenterCrop(Transform):
         torch.Size([3, 224, 224])
     """
 
-    def __init__(self, size: int | tuple[int, int]) -> None:
+    def __init__(self, size: int | Sequence[int]) -> None:
         super().__init__()
-        self.size = list(size) if isinstance(size, tuple) else [size, size]
+        self.size = list(size) if isinstance(size, Sequence) else [size, size]
 
     def _transform(self, inpt: torch.Tensor, params: dict[str, Any]) -> torch.Tensor:
         """Apply the center crop transform.

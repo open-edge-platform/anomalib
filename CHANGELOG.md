@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- 🐞 **export**: Fix duplicated size parameter in `ExportableCenterCrop` by checking `Sequence` instead of `tuple` by @CarlosNacher in https://github.com/open-edge-platform/anomalib/pull/2203
+
 ## [v2.3.3] - 2026-04-10
 
 ### Changed
