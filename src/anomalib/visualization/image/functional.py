@@ -37,10 +37,11 @@ from typing import Any, Literal
 
 import numpy as np
 import torch
-import torch.nn.functional as F  # noqa: N812
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
-from torchvision.transforms.functional import to_pil_image
+import cv2
 
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
+import torch.nn.functional as F
+from torchvision.transforms.functional import to_pil_image
 logger = logging.getLogger(__name__)
 
 
