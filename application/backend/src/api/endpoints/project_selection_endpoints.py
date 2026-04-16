@@ -6,10 +6,11 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 
 from api.dependencies import get_project_selection_service
+from api.endpoints import API_PREFIX
 from pydantic_models import LastUsedProjectUpdate, StartupProjectSelection
 from services import ProjectSelectionService, ResourceNotFoundError
 
-router = APIRouter(prefix="/api/projects", tags=["Project"])
+router = APIRouter(prefix=f"{API_PREFIX}/projects", tags=["Project"])
 
 
 @router.get("/startup-selection")
