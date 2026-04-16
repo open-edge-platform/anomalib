@@ -44,6 +44,8 @@ export const useStartupProjectSelection = () =>
 
 export const usePersistLastUsedProject = (projectId: string) => {
     useEffect(() => {
-        void persistLastUsedProject(projectId).catch(() => undefined);
+        void persistLastUsedProject(projectId).catch((error) => {
+            console.error('Failed to persist last used project:', error);
+        });
     }, [projectId]);
 };

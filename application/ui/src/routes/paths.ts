@@ -11,4 +11,3 @@ export const paths = {
     project,
     welcome,
 };
-

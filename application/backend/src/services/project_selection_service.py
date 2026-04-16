@@ -1,10 +1,10 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from uuid import UUID
 
 from db import get_async_db_session_ctx
 from pydantic_models import StartupProjectSelection, StartupProjectSelectionSource
+from pydantic_models.base import ShortUUID
 from repositories import AppStateRepository, PipelineRepository, ProjectRepository
 from services.exceptions import ResourceNotFoundError, ResourceType
 
@@ -52,7 +52,7 @@ class ProjectSelectionService:
             return StartupProjectSelection(source=StartupProjectSelectionSource.NONE)
 
     @staticmethod
-    async def set_last_used_project(project_id: UUID) -> None:
+    async def set_last_used_project(project_id: ShortUUID) -> None:
         async with get_async_db_session_ctx() as session:
             project_repo = ProjectRepository(session)
             if await project_repo.get_by_id(project_id) is None:

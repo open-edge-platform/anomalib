@@ -2,9 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import StrEnum
-from uuid import UUID
 
 from pydantic import BaseModel
+
+from pydantic_models.base import ShortUUID
 
 
 class StartupProjectSelectionSource(StrEnum):
@@ -20,4 +21,4 @@ class StartupProjectSelection(BaseModel):
 
 
 class LastUsedProjectUpdate(BaseModel):
-    project_id: UUID
+    project_id: ShortUUID
