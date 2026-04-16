@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 # Modified
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Custom Torchvision transforms for Anomalib.
@@ -115,7 +115,7 @@ class ExportableCenterCrop(Transform):
     """Transform that applies center-cropping with ONNX export support.
 
     Args:
-        size (int | tuple[int, int]): Desired output size. If int, creates a
+        size (int | Sequence[int]): Desired output size. If int, creates a
             square crop of size ``(size, size)``. If tuple, creates a
             rectangular crop of size ``(height, width)``.
 
