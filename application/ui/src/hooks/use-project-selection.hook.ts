@@ -13,8 +13,8 @@ export interface StartupProjectSelection {
 
 const PROJECT_STARTUP_SELECTION_QUERY_KEY = ['get', '/api/projects/startup-selection'] as const;
 
-const fetchStartupProjectSelection = async (): Promise<StartupProjectSelection> => {
-    const response = await fetch(getApiUrl('/api/projects/startup-selection'));
+const fetchStartupProjectSelection = async ({ signal }: { signal: AbortSignal }): Promise<StartupProjectSelection> => {
+    const response = await fetch(getApiUrl('/api/projects/startup-selection'), { signal });
     if (!response.ok) {
         throw new Error(`Failed to resolve startup project: ${response.status}`);
     }

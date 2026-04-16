@@ -12,4 +12,3 @@ export const paths = {
     welcome,
 };
 
-export const getInspectProjectPath = (projectId: string): string => `${paths.project({ projectId })}?mode=Dataset`;

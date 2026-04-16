@@ -8,7 +8,7 @@ import { ErrorPage } from './../components/error-page/error-page';
 import { Inspect } from './inspect/inspect';
 import { Layout } from './layout';
 import { OpenApi } from './openapi/openapi';
-import { getInspectProjectPath, paths } from './paths';
+import { paths } from './paths';
 import { Welcome } from './welcome';
 
 const Redirect = () => {
@@ -18,7 +18,7 @@ const Redirect = () => {
         return <Navigate to={paths.welcome({})} replace />;
     }
 
-    return <Navigate to={getInspectProjectPath(data.project_id)} replace />;
+    return <Navigate to={`${paths.project({ projectId: data.project_id })}?mode=Dataset`} replace />;
 };
 
 export const router = createBrowserRouter([
