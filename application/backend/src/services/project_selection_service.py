@@ -9,6 +9,45 @@ from services.exceptions import ResourceNotFoundError, ResourceType
 from utils.short_uuid import ShortUUID
 
 
+async def _resolve_last_used(
+    app_state_repo: AppStateRepository,
+    project_repo: ProjectRepository,
+) -> StartupProjectSelection | None:
+    last_used_project_id = await app_state_repo.get_last_used_project_id()
+    if last_used_project_id is None:
+        return None
+
+    last_used_project = await project_repo.get_by_id(last_used_project_id)
+    if last_used_project is not None:
+        return StartupProjectSelection(
+            project_id=last_used_project.id,
+            source=StartupProjectSelectionSource.LAST_USED,
+        )
+
+    await app_state_repo.clear_last_used_project_id()
+    return None
+
+
+async def _resolve_active_pipeline(pipeline_repo: PipelineRepository) -> StartupProjectSelection | None:
+    active_pipeline = await pipeline_repo.get_active_pipeline()
+    if active_pipeline is None:
+        return None
+    return StartupProjectSelection(
+        project_id=active_pipeline.project_id,
+        source=StartupProjectSelectionSource.ACTIVE_PIPELINE,
+    )
+
+
+async def _resolve_first_project(project_repo: ProjectRepository) -> StartupProjectSelection | None:
+    first_project = await project_repo.get_first_project()
+    if first_project is None:
+        return None
+    return StartupProjectSelection(
+        project_id=first_project.id,
+        source=StartupProjectSelectionSource.FIRST_PROJECT,
+    )
+
+
 class ProjectSelectionService:
     @staticmethod
     async def get_startup_project_selection() -> StartupProjectSelection:
@@ -24,32 +63,18 @@ class ProjectSelectionService:
             project_repo = ProjectRepository(session)
             pipeline_repo = PipelineRepository(session)
 
-            last_used_project_id = await app_state_repo.get_last_used_project_id()
-            if last_used_project_id is not None:
-                last_used_project = await project_repo.get_by_id(last_used_project_id)
-                if last_used_project is not None:
-                    return StartupProjectSelection(
-                        project_id=last_used_project.id,
-                        source=StartupProjectSelectionSource.LAST_USED,
-                    )
+            selection = await _resolve_last_used(app_state_repo, project_repo)
 
-                await app_state_repo.clear_last_used_project_id()
+            if selection is None:
+                selection = await _resolve_active_pipeline(pipeline_repo)
 
-            active_pipeline = await pipeline_repo.get_active_pipeline()
-            if active_pipeline is not None:
-                return StartupProjectSelection(
-                    project_id=active_pipeline.project_id,
-                    source=StartupProjectSelectionSource.ACTIVE_PIPELINE,
-                )
+            if selection is None:
+                selection = await _resolve_first_project(project_repo)
 
-            first_project = await project_repo.get_first_project()
-            if first_project is not None:
-                return StartupProjectSelection(
-                    project_id=first_project.id,
-                    source=StartupProjectSelectionSource.FIRST_PROJECT,
-                )
+            if selection is None:
+                selection = StartupProjectSelection(source=StartupProjectSelectionSource.NONE)
 
-            return StartupProjectSelection(source=StartupProjectSelectionSource.NONE)
+            return selection
 
     @staticmethod
     async def set_last_used_project(project_id: ShortUUID) -> None:
