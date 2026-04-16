@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from unittest.mock import AsyncMock, MagicMock
-from uuid import uuid4
 
 import pytest
 from fastapi import status
@@ -12,6 +11,7 @@ from main import app
 from pydantic_models import StartupProjectSelection, StartupProjectSelectionSource
 from services import ProjectSelectionService, ResourceNotFoundError
 from services.exceptions import ResourceType
+from utils.short_uuid import ShortUUID
 
 
 @pytest.fixture
@@ -40,7 +40,7 @@ def test_get_startup_project_selection(fxt_client, fxt_project_selection_service
 
 
 def test_update_last_used_project(fxt_client, fxt_project_selection_service):
-    project_id = uuid4()
+    project_id = ShortUUID.generate()
 
     response = fxt_client.put("/api/projects/last-used", json={"project_id": str(project_id)})
 
@@ -49,7 +49,7 @@ def test_update_last_used_project(fxt_client, fxt_project_selection_service):
 
 
 def test_update_last_used_project_not_found(fxt_client, fxt_project_selection_service):
-    project_id = uuid4()
+    project_id = ShortUUID.generate()
     fxt_project_selection_service.set_last_used_project.side_effect = ResourceNotFoundError(
         resource_type=ResourceType.PROJECT,
         resource_id=str(project_id),

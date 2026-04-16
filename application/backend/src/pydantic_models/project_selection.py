@@ -5,7 +5,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel
 
-from pydantic_models.base import ShortUUID
+from utils.short_uuid import ShortUUID
 
 
 class StartupProjectSelectionSource(StrEnum):
@@ -16,7 +16,7 @@ class StartupProjectSelectionSource(StrEnum):
 
 
 class StartupProjectSelection(BaseModel):
-    project_id: UUID | None = None
+    project_id: ShortUUID | None = None
     source: StartupProjectSelectionSource
 
 

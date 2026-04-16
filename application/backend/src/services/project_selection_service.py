@@ -4,9 +4,9 @@
 
 from db import get_async_db_session_ctx
 from pydantic_models import StartupProjectSelection, StartupProjectSelectionSource
-from pydantic_models.base import ShortUUID
 from repositories import AppStateRepository, PipelineRepository, ProjectRepository
 from services.exceptions import ResourceNotFoundError, ResourceType
+from utils.short_uuid import ShortUUID
 
 
 class ProjectSelectionService:
