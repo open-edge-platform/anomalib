@@ -156,7 +156,7 @@ def list_models(case: str = "snake") -> set[str]:
         >>> print(sorted(list(models)))  # doctest: +NORMALIZE_WHITESPACE
         ['ai_vad', 'anomaly_d_i_n_o', 'cfa', 'cflow', 'csflow', 'dfkde', 'dfm',
          'dinomaly', 'draem', 'dsr', 'efficient_ad', 'fastflow', 'fre', 'fuvas',
-         'ganomaly', 'general_a_d', 'padim', 'patchcore',
+         'ganomaly', 'general_a_d', 'padim', 'patchcore', 'patchflow',
          'reverse_distillation', 'stfpm', 'supersimplenet', 'uflow', 'uni_net',
          'vlm_ad', 'win_clip']
 
@@ -165,15 +165,16 @@ def list_models(case: str = "snake") -> set[str]:
         >>> print(sorted(list(models)))  # doctest: +NORMALIZE_WHITESPACE
         ['AiVad', 'AnomalyDINO', 'Cfa', 'Cflow', 'Csflow', 'Dfkde', 'Dfm',
          'Dinomaly', 'Draem', 'Dsr', 'EfficientAd', 'Fastflow', 'Fre', 'Fuvas',
-         'Ganomaly', 'GeneralAD', 'Padim', 'Patchcore', 'ReverseDistillation',
-         'Stfpm', 'Supersimplenet', 'Uflow', 'UniNet', 'VlmAd', 'WinClip']
+         'Ganomaly', 'GeneralAD', 'Padim', 'Patchcore', 'Patchflow',
+         'ReverseDistillation', 'Stfpm', 'Supersimplenet', 'Uflow', 'UniNet',
+         'VlmAd', 'WinClip']
 
         >>> # Get models in title case format
         >>> models = list_models(case="title")
         >>> print(sorted(list(models)))  # doctest: +NORMALIZE_WHITESPACE
         ['Ai Vad', 'Anomaly Dino', 'Cfa', 'Cflow', 'Csflow', 'Dfkde', 'Dfm',
          'Dinomaly', 'Draem', 'Dsr', 'Efficient Ad', 'Fastflow', 'Fre', 'Fuvas',
-         'Ganomaly', 'General Ad', 'Padim', 'Patchcore',
+         'Ganomaly', 'General Ad', 'Padim', 'Patchcore', 'Patchflow',
          'Reverse Distillation', 'Stfpm', 'Supersimplenet', 'Uflow', 'Uni Net',
          'Vlm Ad', 'Win Clip']
 
