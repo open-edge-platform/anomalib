@@ -96,6 +96,13 @@ FRE: A Fast Method For Anomaly Detection And Segmentation
 GANomaly: Semi-Supervised Anomaly Detection via Adversarial Training
 :::
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` L2BT
+:link: ./l2bt
+:link-type: doc
+
+Learning to Be a Transformer to Pinpoint Anomalies
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` PaDiM
 :link: ./padim
 :link-type: doc
@@ -184,6 +191,7 @@ WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation
 ./fastflow
 ./fre
 ./ganomaly
+./l2bt
 ./padim
 ./patchcore
 ./patchflow
