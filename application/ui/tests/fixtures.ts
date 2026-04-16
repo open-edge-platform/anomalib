@@ -31,7 +31,7 @@ const test = testBase.extend<Fixtures>({
                 });
             }),
             http.put('/api/projects/last-used', ({ response }) => {
-                return response(204).json({ project_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' });
+                return response(204);
             }),
             http.get('/api/projects/{project_id}', ({ response }) => {
                 return response(200).json({
