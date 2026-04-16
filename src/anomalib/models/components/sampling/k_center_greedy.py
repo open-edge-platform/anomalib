@@ -118,11 +118,13 @@ class KCenterGreedy:
             self.features = self.embedding.reshape(self.embedding.shape[0], -1)
             self.reset_distances()
 
-        # random starting point
+        # random starting point — include it in the coreset so it is not
+        # merely a "virtual center" that influences distances but is absent
+        # from the final memory bank (see gh-3459).
         idx = torch.randint(high=self.n_observations, size=(1,), device=self.features.device).squeeze()
 
-        selected_coreset_idxs: list[int] = []
-        for _ in tqdm(range(self.coreset_size), desc="Selecting Coreset Indices."):
+        selected_coreset_idxs: list[int] = [int(idx.item())]
+        for _ in tqdm(range(self.coreset_size - 1), desc="Selecting Coreset Indices."):
             self.update_distances(cluster_center=idx)
             idx = self.get_new_idx()
             self.min_distances.scatter_(0, idx.unsqueeze(0).unsqueeze(1), 0.0)
