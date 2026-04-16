@@ -12,7 +12,6 @@ This module provides utilities for:
 import hashlib
 import io
 import logging
-import os
 import re
 import sys
 import tarfile
@@ -337,8 +336,4 @@ def is_within_directory(directory: Path, target: Path) -> bool:
     abs_directory = directory.resolve()
     abs_target = target.resolve()
 
-    # TODO(djdameln): Replace with pathlib is_relative_to after switching to
-    # Python 3.10
-    # CVS-122655
-    prefix = os.path.commonprefix([abs_directory, abs_target])
-    return prefix == str(abs_directory)
+    return abs_target.is_relative_to(abs_directory)

@@ -6,7 +6,7 @@ import { MqttSinkConfig, SinkOutputFormats } from '../utils';
 
 export const getMqttInitialConfig = (project_id: string): MqttSinkConfig => ({
     id: generateShortUUID(),
-    name: '',
+    name: 'MQTT sink',
     project_id,
     topic: '',
     sink_type: 'mqtt',
