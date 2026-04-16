@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Kolektor Surface-Defect Data Module.
@@ -28,6 +28,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.kolektor import KolektorDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
+from anomalib.utils.path import resolve_with_warning
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ class Kolektor(AnomalibDataModule):
     """Kolektor Surface-Defect DataModule.
 
     Args:
-        root (Path | str): Path to the root of the dataset.
+        root (Path | str | None): Path to the root of the dataset.
             Defaults to ``"./datasets/kolektor"``.
         train_batch_size (int, optional): Training batch size.
             Defaults to ``32``.
@@ -90,7 +91,7 @@ class Kolektor(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/kolektor",
+        root: Path | str | None = "./datasets/kolektor",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
         num_workers: int = 8,
@@ -119,6 +120,7 @@ class Kolektor(AnomalibDataModule):
             seed=seed,
         )
 
+        root = resolve_with_warning(root, "kolektor")
         self.root = Path(root)
 
     def _setup(self, _stage: str | None = None) -> None:
