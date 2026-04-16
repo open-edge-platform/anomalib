@@ -40,6 +40,7 @@ Available Models:
     - :class:`L2BT`: Learning to Be a Transformer to Pinpoint Anomalies
     - :class:`Padim`: Patch Distribution Modeling
     - :class:`Patchcore`: Patch Core
+    - :class:`Patchflow`: Patch Flow
     - :class:`ReverseDistillation`: Reverse Knowledge Distillation
     - :class:`Stfpm`: Student-Teacher Feature Pyramid Matching
     - :class:`SuperSimpleNet`: SuperSimpleNet
@@ -66,6 +67,7 @@ from .general_ad import GeneralAD
 from .l2bt import L2BT
 from .padim import Padim
 from .patchcore import Patchcore
+from .patchflow import Patchflow
 from .reverse_distillation import ReverseDistillation
 from .stfpm import Stfpm
 from .supersimplenet import Supersimplenet
@@ -92,6 +94,7 @@ __all__ = [
     "L2BT",
     "Padim",
     "Patchcore",
+    "Patchflow",
     "ReverseDistillation",
     "Stfpm",
     "Supersimplenet",
