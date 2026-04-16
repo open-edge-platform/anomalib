@@ -1,8 +1,28 @@
-"""Path Utils."""
-
-# Copyright (C) 2022-2024 Intel Corporation
+# Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+"""Path utilities for handling file paths in anomalib.
+
+This module provides utilities for:
+
+- Validating and resolving file paths
+- Checking path length and character restrictions
+- Converting between path types
+- Handling file extensions
+- Managing directory types for anomaly detection
+
+Example:
+    >>> from anomalib.data.utils.path import validate_path
+    >>> path = validate_path("./datasets/MVTecAD/bottle/train/good/000.png")
+    >>> print(path)
+    PosixPath('/abs/path/to/anomalib/datasets/MVTecAD/bottle/train/good/000.png')
+
+    >>> from anomalib.data.utils.path import DirType
+    >>> print(DirType.NORMAL)
+    normal
+"""
+
+import logging
 import os
 import re
 from enum import Enum
@@ -10,9 +30,21 @@ from pathlib import Path
 
 from torchvision.datasets.folder import IMG_EXTENSIONS
 
+logger = logging.getLogger(__name__)
+
 
 class DirType(str, Enum):
-    """Dir type names."""
+    """Directory type names for organizing anomaly detection datasets.
+
+    Attributes:
+        NORMAL: Directory containing normal/good samples for training
+        ABNORMAL: Directory containing anomalous/defective samples
+        NORMAL_TEST: Directory containing normal test samples
+        NORMAL_DEPTH: Directory containing depth maps for normal samples
+        ABNORMAL_DEPTH: Directory containing depth maps for abnormal samples
+        NORMAL_TEST_DEPTH: Directory containing depth maps for normal test samples
+        MASK: Directory containing ground truth segmentation masks
+    """
 
     NORMAL = "normal"
     ABNORMAL = "abnormal"
@@ -24,13 +56,18 @@ class DirType(str, Enum):
 
 
 def _check_and_convert_path(path: str | Path) -> Path:
-    """Check an input path, and convert to Pathlib object.
+    """Check and convert input path to pathlib object.
 
     Args:
-        path (str | Path): Input path.
+        path: Input path as string or Path object
 
     Returns:
-        Path: Output path converted to pathlib object.
+        Path object of the input path
+
+    Example:
+        >>> path = _check_and_convert_path("./datasets/example.png")
+        >>> isinstance(path, Path)
+        True
     """
     if not isinstance(path, Path):
         path = Path(path)
@@ -42,20 +79,32 @@ def _prepare_files_labels(
     path_type: str,
     extensions: tuple[str, ...] | None = None,
 ) -> tuple[list, list]:
-    """Return a list of filenames and list corresponding labels.
+    """Get lists of filenames and corresponding labels from a directory.
 
     Args:
-        path (str | Path): Path to the directory containing images.
-        path_type (str): Type of images in the provided path ("normal", "abnormal", "normal_test")
-        extensions (tuple[str, ...] | None, optional): Type of the image extensions to read from the
-            directory.
+        path: Path to directory containing images
+        path_type: Type of images ("normal", "abnormal", "normal_test")
+        extensions: Allowed file extensions. Defaults to ``IMG_EXTENSIONS``
 
     Returns:
-        List, List: Filenames of the images provided in the paths, labels of the images provided in the paths
+        Tuple containing:
+            - List of image filenames
+            - List of corresponding labels
+
+    Raises:
+        RuntimeError: If no valid images found or extensions don't start with dot
+
+    Example:
+        >>> files, labels = _prepare_files_labels("./normal", "normal", (".png",))
+        >>> len(files) == len(labels)
+        True
     """
     path = _check_and_convert_path(path)
     if extensions is None:
         extensions = IMG_EXTENSIONS
+
+    # convert extensions to lowercase for case-insensitive matching
+    extensions = tuple(ext.lower() for ext in extensions)
 
     if isinstance(extensions, str):
         extensions = (extensions,)
@@ -64,11 +113,12 @@ def _prepare_files_labels(
         msg = f"All extensions {extensions} must start with the dot"
         raise RuntimeError(msg)
 
-    filenames = [
-        f
-        for f in path.glob("**/*")
-        if f.suffix in extensions and not f.is_dir() and not any(part.startswith(".") for part in f.parts)
-    ]
+    filenames = [f for f in path.glob("**/*") if f.suffix.lower() in extensions and not f.is_dir()]
+    # list of files that are in hidden directories or are hidden files themselves
+    hidden_files = [f for f in filenames if any(part.startswith(".") for part in f.parts)]
+    if hidden_files:
+        logger.warning(f"{len(hidden_files)} hidden files found in {path}. Please make sure this is intended.")
+
     if not filenames:
         msg = f"Found 0 {path_type} images in {path} with extensions {extensions}"
         raise RuntimeError(msg)
@@ -79,14 +129,19 @@ def _prepare_files_labels(
 
 
 def resolve_path(folder: str | Path, root: str | Path | None = None) -> Path:
-    """Combine root and folder and returns the absolute path.
-
-    This allows users to pass either a root directory and relative paths, or absolute paths to each of the
-    image sources. This function makes sure that the samples dataframe always contains absolute paths.
+    """Combine root and folder paths into absolute path.
 
     Args:
-        folder (str | Path | None): Folder location containing image or mask data.
-        root (str | Path | None): Root directory for the dataset.
+        folder: Folder location containing image or mask data
+        root: Optional root directory for the dataset
+
+    Returns:
+        Absolute path combining root and folder
+
+    Example:
+        >>> path = resolve_path("subdir", "/root")
+        >>> path.is_absolute()
+        True
     """
     folder = Path(folder)
     if folder.is_absolute():
@@ -102,85 +157,70 @@ def resolve_path(folder: str | Path, root: str | Path | None = None) -> Path:
 
 
 def is_path_too_long(path: str | Path, max_length: int = 512) -> bool:
-    r"""Check if the path contains too long input.
+    """Check if path exceeds maximum allowed length.
 
     Args:
-        path (str | Path): Path to check.
-        max_length (int): Maximum length a path can be before it is considered too long.
-            Defaults to ``512``.
+        path: Path to check
+        max_length: Maximum allowed path length. Defaults to ``512``
 
     Returns:
-        bool: True if the path contains too long input, False otherwise.
+        ``True`` if path is too long, ``False`` otherwise
 
-    Examples:
-        >>> contains_too_long_input("./datasets/MVTec/bottle/train/good/000.png")
+    Example:
+        >>> is_path_too_long("short_path.txt")
         False
-
-        >>> contains_too_long_input("./datasets/MVTec/bottle/train/good/000.png" + "a" * 4096)
+        >>> is_path_too_long("a" * 1000)
         True
     """
     return len(str(path)) > max_length
 
 
 def contains_non_printable_characters(path: str | Path) -> bool:
-    r"""Check if the path contains non-printable characters.
+    r"""Check if path contains non-printable characters.
 
     Args:
-        path (str | Path): Path to check.
+        path: Path to check
 
     Returns:
-        bool: True if the path contains non-printable characters, False otherwise.
+        ``True`` if path contains non-printable chars, ``False`` otherwise
 
-    Examples:
-        >>> contains_non_printable_characters("./datasets/MVTec/bottle/train/good/000.png")
+    Example:
+        >>> contains_non_printable_characters("normal.txt")
         False
-
-        >>> contains_non_printable_characters("./datasets/MVTec/bottle/train/good/000.png\0")
+        >>> contains_non_printable_characters("test\x00.txt")
         True
     """
     printable_pattern = re.compile(r"^[\x20-\x7E]+$")
     return not printable_pattern.match(str(path))
 
 
-def validate_path(path: str | Path, base_dir: str | Path | None = None, should_exist: bool = True) -> Path:
-    """Validate the path.
+def validate_path(
+    path: str | Path,
+    base_dir: str | Path | None = None,
+    should_exist: bool = True,
+    extensions: tuple[str, ...] | None = None,
+) -> Path:
+    """Validate path for existence, permissions and extension.
 
     Args:
-        path (str | Path): Path to validate.
-        base_dir (str | Path): Base directory to restrict file access.
-        should_exist (bool): If True, do not raise an exception if the path does not exist.
+        path: Path to validate
+        base_dir: Base directory to restrict file access
+        should_exist: If ``True``, verify path exists
+        extensions: Allowed file extensions
 
     Returns:
-        Path: Validated path.
+        Validated Path object
 
-    Examples:
-        >>> validate_path("./datasets/MVTec/bottle/train/good/000.png")
-        PosixPath('/abs/path/to/anomalib/datasets/MVTec/bottle/train/good/000.png')
+    Raises:
+        TypeError: If path is invalid type
+        ValueError: If path is too long or has invalid characters/extension
+        FileNotFoundError: If path doesn't exist when required
+        PermissionError: If path lacks required permissions
 
-        >>> validate_path("./datasets/MVTec/bottle/train/good/000.png", base_dir="./datasets/MVTec")
-        PosixPath('/abs/path/to/anomalib/datasets/MVTec/bottle/train/good/000.png')
-
-        >>> validate_path("/path/to/unexisting/file")
-        Traceback (most recent call last):
-        File "<string>", line 1, in <module>
-        File "<string>", line 18, in validate_path
-        FileNotFoundError: Path does not exist: /path/to/unexisting/file
-
-        Accessing a file without read permission should raise PermissionError:
-
-        .. note::
-
-            Note that, we are using ``/usr/local/bin`` directory as an example here.
-            If this directory does not exist on your system, this will raise
-            ``FileNotFoundError`` instead of ``PermissionError``. You could change
-            the directory to any directory that you do not have read permission.
-
-        >>> validate_path("/bin/bash", base_dir="/bin/")
-        Traceback (most recent call last):
-        File "<string>", line 1, in <module>
-        File "<string>", line 18, in validate_path
-        PermissionError: Read permission denied for the file: /usr/local/bin
-
+    Example:
+        >>> path = validate_path("./datasets/image.png", extensions=(".png",))
+        >>> path.suffix
+        '.png'
     """
     # Check if the path is of an appropriate type
     if not isinstance(path, str | Path):
@@ -213,6 +253,11 @@ def validate_path(path: str | Path, base_dir: str | Path | None = None, should_e
             msg = f"Read or execute permissions denied for the path: {path}"
             raise PermissionError(msg)
 
+    # Check if the path has one of the accepted extensions
+    if extensions is not None and path.suffix not in extensions:
+        msg = f"Path extension is not accepted. Accepted: {extensions}. Path: {path}"
+        raise ValueError(msg)
+
     return path
 
 
@@ -221,14 +266,19 @@ def validate_and_resolve_path(
     root: str | Path | None = None,
     base_dir: str | Path | None = None,
 ) -> Path:
-    """Validate and resolve the path.
+    """Validate and resolve path by combining validation and resolution.
 
     Args:
-        folder (str | Path): Folder location containing image or mask data.
-        root (str | Path | None): Root directory for the dataset.
-        base_dir (str | Path | None): Base directory to restrict file access.
+        folder: Folder location containing image or mask data
+        root: Root directory for the dataset
+        base_dir: Base directory to restrict file access
 
     Returns:
-        Path: Validated and resolved path.
+        Validated and resolved absolute Path
+
+    Example:
+        >>> path = validate_and_resolve_path("subdir", "/root")
+        >>> path.is_absolute()
+        True
     """
     return validate_path(resolve_path(folder, root), base_dir)

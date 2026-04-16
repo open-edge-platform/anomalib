@@ -1,4 +1,5 @@
-# REMARK: CODE WAS TAKEN FROM https://github.com/eliahuhorwitz/3D-ADS/blob/main/utils/au_pro_util.py
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 
 """Utils for testing AUPRO metric.
 
@@ -8,6 +9,8 @@ Utility functions that compute a PRO curve and its definite integral, given
 pairs of anomaly and ground truth maps.
 The PRO curve can also be integrated up to a constant integration limit.
 """
+
+# Original code was taken from https://github.com/eliahuhorwitz/3D-ADS/blob/main/utils/au_pro_util.py
 
 import logging
 from bisect import bisect

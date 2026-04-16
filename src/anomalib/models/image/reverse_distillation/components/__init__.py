@@ -1,20 +1,29 @@
-"""PyTorch modules for Reverse Distillation."""
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 
-# Copyright (C) 2022-2024 Intel Corporation
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions
-# and limitations under the License.
+"""PyTorch modules for the Reverse Distillation model implementation.
+
+This module contains the core components used in the Reverse Distillation model
+architecture, including the bottleneck layer and decoder network.
+
+The components work together to learn a compact representation of normal images
+through distillation and reconstruction:
+
+- Bottleneck layer: Compresses features into a lower dimensional space
+
+Example:
+    >>> from anomalib.models.image.reverse_distillation.components import (
+    ...     get_bottleneck_layer,
+    ...     get_decoder
+    ... )
+    >>> bottleneck = get_bottleneck_layer()
+    >>> decoder = get_decoder()
+
+See Also:
+    - :func:`anomalib.models.image.reverse_distillation.components.bottleneck`:
+        Bottleneck layer implementation
+"""
 
 from .bottleneck import get_bottleneck_layer
-from .de_resnet import get_decoder
 
-__all__ = ["get_bottleneck_layer", "get_decoder"]
+__all__ = ["get_bottleneck_layer"]

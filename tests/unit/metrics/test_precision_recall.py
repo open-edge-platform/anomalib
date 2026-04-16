@@ -1,7 +1,7 @@
-"""Tests custom precision recall metric."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tests custom precision recall metric."""
 
 import torch
 

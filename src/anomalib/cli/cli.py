@@ -1,7 +1,11 @@
-"""Anomalib CLI."""
-
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Anomalib Command Line Interface.
+
+This module provides the `AnomalibCLI` class for configuring and running Anomalib from the command line.
+The CLI supports configuration via both command line arguments and configuration files (.yaml or .json).
+"""
 
 import logging
 from collections.abc import Callable, Sequence
@@ -14,7 +18,7 @@ from jsonargparse import ActionConfigFile, ArgumentParser, Namespace
 from jsonargparse._actions import _ActionSubCommands
 from rich import traceback
 
-from anomalib import TaskType, __version__
+from anomalib import __version__
 from anomalib.cli.pipelines import PIPELINE_REGISTRY, pipeline_subcommands, run_pipeline
 from anomalib.cli.utils.help_formatter import CustomHelpFormatter, get_short_docstring
 from anomalib.cli.utils.openvino import add_openvino_export_arguments
@@ -30,25 +34,39 @@ try:
 
     from anomalib.data import AnomalibDataModule
     from anomalib.engine import Engine
-    from anomalib.metrics.threshold import BaseThreshold
-    from anomalib.models import AnomalyModule
+    from anomalib.models import AnomalibModule
     from anomalib.utils.config import update_config
 
-except ImportError:
+except ImportError as error:
     _LIGHTNING_AVAILABLE = False
+    logger.warning(f"Import failed: {error}. Please install the required dependencies.")
 
 
 class AnomalibCLI:
-    """Implementation of a fully configurable CLI tool for anomalib.
+    """Implementation of a fully configurable CLI tool for Anomalib.
 
-    The advantage of this tool is its flexibility to configure the pipeline
-    from both the CLI and a configuration file (.yaml or .json). It is even
-    possible to use both the CLI and a configuration file simultaneously.
-    For more details, the reader could refer to PyTorch Lightning CLI
-    documentation.
+    This class provides a flexible command-line interface that can be configured through
+    both CLI arguments and configuration files. It supports various subcommands for
+    training, testing, and exporting models.
 
-    ``save_config_kwargs`` is set to ``overwrite=True`` so that the
-    ``SaveConfigCallback`` overwrites the config if it already exists.
+    Args:
+        args (Sequence[str] | None): Command line arguments. Defaults to None.
+        run (bool): Whether to run the subcommand immediately. Defaults to True.
+
+    Examples:
+        Run from command line:
+
+        >>> import sys
+        >>> sys.argv = ["anomalib", "train", "--model", "Padim", "--data", "MVTecAD"]
+
+        Run programmatically:
+
+        >>> from anomalib.cli import AnomalibCLI
+        >>> cli = AnomalibCLI(["train", "--model", "Padim", "--data", "MVTecAD"], run=False)
+
+    Note:
+        The CLI supports both YAML and JSON configuration files. Configuration can be
+        provided via both files and command line arguments simultaneously.
     """
 
     def __init__(self, args: Sequence[str] | None = None, run: bool = True) -> None:
@@ -64,7 +82,8 @@ class AnomalibCLI:
         if run:
             self._run_subcommand()
 
-    def init_parser(self, **kwargs) -> ArgumentParser:
+    @staticmethod
+    def init_parser(**kwargs) -> ArgumentParser:
         """Method that instantiates the argument parser."""
         kwargs.setdefault("dump_header", [f"anomalib=={__version__}"])
         parser = ArgumentParser(formatter_class=CustomHelpFormatter, **kwargs)
@@ -80,9 +99,9 @@ class AnomalibCLI:
     def subcommands() -> dict[str, set[str]]:
         """Skip predict subcommand as it is added later."""
         return {
-            "fit": {"model", "train_dataloaders", "val_dataloaders", "datamodule"},
-            "validate": {"model", "dataloaders", "datamodule"},
-            "test": {"model", "dataloaders", "datamodule"},
+            "fit": {"model", "train_dataloaders", "val_dataloaders", "datamodule", "weights_only"},
+            "validate": {"model", "dataloaders", "datamodule", "weights_only"},
+            "test": {"model", "dataloaders", "datamodule", "weights_only"},
         }
 
     @staticmethod
@@ -139,23 +158,15 @@ class AnomalibCLI:
                 self.subcommand_parsers[subcommand] = sub_parser
                 parser_subcommands.add_subcommand(subcommand, sub_parser, help=value["description"])
 
-    def add_arguments_to_parser(self, parser: ArgumentParser) -> None:
+    @staticmethod
+    def add_arguments_to_parser(parser: ArgumentParser) -> None:
         """Extend trainer's arguments to add engine arguments.
 
         .. note::
             Since ``Engine`` parameters are manually added, any change to the
             ``Engine`` class should be reflected manually.
         """
-        from anomalib.callbacks.normalization import get_normalization_callback
-
-        parser.add_function_arguments(get_normalization_callback, "normalization")
-        parser.add_argument("--task", type=TaskType | str, default=TaskType.SEGMENTATION)
-        parser.add_argument("--metrics.image", type=list[str] | str | None, default=["F1Score", "AUROC"])
-        parser.add_argument("--metrics.pixel", type=list[str] | str | None, default=None, required=False)
-        parser.add_argument("--metrics.threshold", type=BaseThreshold | str, default="F1AdaptiveThreshold")
         parser.add_argument("--logging.log_graph", type=bool, help="Log the model to the logger", default=False)
-        if hasattr(parser, "subcommand") and parser.subcommand not in ("export", "predict"):
-            parser.link_arguments("task", "data.init_args.task")
         parser.add_argument(
             "--default_root_dir",
             type=Path,
@@ -171,7 +182,7 @@ class AnomalibCLI:
         self._add_default_arguments_to_parser(parser)
         self._add_trainer_arguments_to_parser(parser, add_optimizer=True, add_scheduler=True)
         parser.add_subclass_arguments(
-            AnomalyModule,
+            AnomalibModule,
             "model",
             fail_untyped=False,
             required=True,
@@ -191,7 +202,7 @@ class AnomalibCLI:
         self._add_default_arguments_to_parser(parser)
         self._add_trainer_arguments_to_parser(parser, add_optimizer=True, add_scheduler=True)
         parser.add_subclass_arguments(
-            AnomalyModule,
+            AnomalibModule,
             "model",
             fail_untyped=False,
             required=True,
@@ -210,7 +221,7 @@ class AnomalibCLI:
         self._add_default_arguments_to_parser(parser)
         self._add_trainer_arguments_to_parser(parser)
         parser.add_subclass_arguments(
-            AnomalyModule,
+            AnomalibModule,
             "model",
             fail_untyped=False,
             required=True,
@@ -233,7 +244,7 @@ class AnomalibCLI:
         self._add_default_arguments_to_parser(parser)
         self._add_trainer_arguments_to_parser(parser)
         parser.add_subclass_arguments(
-            AnomalyModule,
+            AnomalibModule,
             "model",
             fail_untyped=False,
             required=True,
@@ -246,7 +257,7 @@ class AnomalibCLI:
         added = parser.add_method_arguments(
             Engine,
             "export",
-            skip={"ov_args", "model", "datamodule"},
+            skip={"ov_kwargs", "model", "datamodule"},
         )
         self.subcommand_method_arguments["export"] = added
         add_openvino_export_arguments(parser)
@@ -278,7 +289,7 @@ class AnomalibCLI:
     def before_instantiate_classes(self) -> None:
         """Modify the configuration to properly instantiate classes and sets up tiler."""
         subcommand = self.config["subcommand"]
-        if subcommand in (*self.subcommands(), "train", "predict"):
+        if subcommand in {*self.subcommands(), "train", "predict"}:
             self.config[subcommand] = update_config(self.config[subcommand])
 
     def instantiate_classes(self) -> None:
@@ -288,20 +299,20 @@ class AnomalibCLI:
         But for subcommands we do not want to instantiate any trainer specific classes such as datamodule, model, etc
         This is because the subcommand is responsible for instantiating and executing code based on the passed config
         """
-        if self.config["subcommand"] in (*self.subcommands(), "predict"):  # trainer commands
+        if self.config["subcommand"] in {*self.subcommands(), "predict"}:  # trainer commands
             # since all classes are instantiated, the LightningCLI also creates an unused ``Trainer`` object.
             # the minor change here is that engine is instantiated instead of trainer
             self.config_init = self.parser.instantiate_classes(self.config)
             self.datamodule = self._get(self.config_init, "data")
             if isinstance(self.datamodule, Dataset):
-                self.datamodule = DataLoader(self.datamodule)
+                self.datamodule = DataLoader(self.datamodule, collate_fn=self.datamodule.collate_fn, pin_memory=True)
             self.model = self._get(self.config_init, "model")
             self._configure_optimizers_method_to_model()
             self.instantiate_engine()
         else:
             self.config_init = self.parser.instantiate_classes(self.config)
             subcommand = self.config["subcommand"]
-            if subcommand in ("train", "export"):
+            if subcommand in {"train", "export"}:
                 self.instantiate_engine()
             if "model" in self.config_init[subcommand]:
                 self.model = self._get(self.config_init, "model")
@@ -324,13 +335,7 @@ class AnomalibCLI:
 
         from anomalib.callbacks import get_callbacks
 
-        engine_args = {
-            "normalization": self._get(self.config_init, "normalization.normalization_method"),
-            "threshold": self._get(self.config_init, "metrics.threshold"),
-            "task": self._get(self.config_init, "task"),
-            "image_metrics": self._get(self.config_init, "metrics.image"),
-            "pixel_metrics": self._get(self.config_init, "metrics.pixel"),
-        }
+        engine_args: dict[str, Any] = {}
         trainer_config = {**self._get(self.config_init, "trainer", default={}), **engine_args}
         key = "callbacks"
         if key in trainer_config:
@@ -338,7 +343,7 @@ class AnomalibCLI:
                 trainer_config[key] = []
             elif not isinstance(trainer_config[key], list):
                 trainer_config[key] = [trainer_config[key]]
-            if not trainer_config.get("fast_dev_run", False):
+            if not trainer_config.get("fast_dev_run"):
                 config_callback = SaveConfigCallback(
                     self._parser(self.subcommand),
                     self.config.get(str(self.subcommand), self.config),
@@ -359,7 +364,7 @@ class AnomalibCLI:
 
             install_kwargs = self.config.get("install", {})
             anomalib_install(**install_kwargs)
-        elif self.config["subcommand"] in (*self.subcommands(), "train", "export", "predict"):
+        elif self.config["subcommand"] in {*self.subcommands(), "train", "export", "predict"}:
             fn = getattr(self.engine, self.subcommand)
             fn_kwargs = self._prepare_subcommand_kwargs(self.subcommand)
             fn(**fn_kwargs)
@@ -399,8 +404,8 @@ class AnomalibCLI:
         """Export the model using engine's export method."""
         return self.engine.export
 
+    @staticmethod
     def _add_trainer_arguments_to_parser(
-        self,
         parser: ArgumentParser,
         add_optimizer: bool = False,
         add_scheduler: bool = False,
@@ -427,7 +432,8 @@ class AnomalibCLI:
                 **scheduler_kwargs,
             )
 
-    def _add_default_arguments_to_parser(self, parser: ArgumentParser) -> None:
+    @staticmethod
+    def _add_default_arguments_to_parser(parser: ArgumentParser) -> None:
         """Adds default arguments to the parser."""
         parser.add_argument(
             "--seed_everything",

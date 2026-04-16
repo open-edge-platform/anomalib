@@ -1,0 +1,80 @@
+name: Daily Docker Publish
+
+on:
+  schedule:
+    - cron: "0 2 * * *" # Nightly at 2 AM UTC
+  workflow_dispatch: # Allow manual runs
+
+permissions: {} # No permissions by default on workflow level
+
+concurrency:
+  group: docker-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish (${{ matrix.device }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Checkout code
+      packages: write # Push images to GHCR
+      id-token: write # Cosign keyless signing (OIDC)
+
+    strategy:
+      fail-fast: false
+      matrix:
+        device: [cpu, xpu, cuda]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Read version
+        id: version
+        run: |
+          VERSION="$(tr -d '[:space:]' < application/VERSION)"
+          SHORT_SHA="$(echo "$GITHUB_SHA" | head -c 8)"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "short-sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
+        with:
+          images: ghcr.io/open-edge-platform/anomalib-studio-${{ matrix.device }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.version }}-dev-${{ steps.version.outputs.short-sha }}
+            type=raw,value=${{ github.ref_name }}
+
+      - name: Build and push Docker image
+        uses: ./.github/actions/docker-build
+        with:
+          device: ${{ matrix.device }}
+          push: "true"
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          use-cache: "false"
+
+      - name: Resolve primary image tag for signing
+        id: primary-tag
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          # Use the first tag as the signing reference.
+          # The sign-image action resolves the digest from this tag via crane.
+          TAG="$(echo "$TAGS" | head -n1)"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Sign Docker image
+        uses: open-edge-platform/geti-ci/actions/sign-image@e80098b3d180db37914f11ff6021f9fa34d0bb9f
+        with:
+          image-uri: ${{ steps.primary-tag.outputs.tag }}

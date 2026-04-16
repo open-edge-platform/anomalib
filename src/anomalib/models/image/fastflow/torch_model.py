@@ -1,13 +1,13 @@
-"""FastFlow Torch Model Implementation."""
-
 # Original Code
 # Copyright (c) 2022 @gathierry
 # https://github.com/gathierry/FastFlow/.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Modified
-# Copyright (C) 2022-2024 Intel Corporation
+# Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""FastFlow Torch Model Implementation."""
 
 from collections.abc import Callable
 
@@ -18,6 +18,7 @@ from timm.models.cait import Cait
 from timm.models.vision_transformer import VisionTransformer
 from torch import nn
 
+from anomalib.data import InferenceBatch
 from anomalib.models.components.flow import AllInOneBlock
 
 from .anomaly_map import AnomalyMapGenerator
@@ -43,7 +44,8 @@ def subnet_conv_func(kernel_size: int, hidden_ratio: float) -> Callable:
         # NOTE: setting padding="same" in nn.Conv2d breaks the onnx export so manual padding required.
         # TODO(ashwinvaidya17): Use padding="same" in nn.Conv2d once PyTorch v2.1 is released
         # CVS-122671
-        padding = 2 * (kernel_size // 2 - ((1 + kernel_size) % 2), kernel_size // 2)
+        padding_dims = (kernel_size // 2 - ((1 + kernel_size) % 2), kernel_size // 2)
+        padding = (*padding_dims, *padding_dims)
         return nn.Sequential(
             nn.ZeroPad2d(padding),
             nn.Conv2d(in_channels, hidden_channels, kernel_size),
@@ -124,11 +126,11 @@ class FastflowModel(nn.Module):
 
         self.input_size = input_size
 
-        if backbone in ("cait_m48_448", "deit_base_distilled_patch16_384"):
+        if backbone in {"cait_m48_448", "deit_base_distilled_patch16_384"}:
             self.feature_extractor = timm.create_model(backbone, pretrained=pre_trained)
             channels = [768]
             scales = [16]
-        elif backbone in ("resnet18", "wide_resnet50_2"):
+        elif backbone in {"resnet18", "wide_resnet50_2"}:
             self.feature_extractor = timm.create_model(
                 backbone,
                 pretrained=pre_trained,
@@ -170,7 +172,7 @@ class FastflowModel(nn.Module):
             )
         self.anomaly_map_generator = AnomalyMapGenerator(input_size=input_size)
 
-    def forward(self, input_tensor: torch.Tensor) -> torch.Tensor | list[torch.Tensor] | tuple[list[torch.Tensor]]:
+    def forward(self, input_tensor: torch.Tensor) -> tuple[list[torch.Tensor], list[torch.Tensor]] | InferenceBatch:
         """Forward-Pass the input to the FastFlow Model.
 
         Args:
@@ -181,8 +183,6 @@ class FastflowModel(nn.Module):
                 (hidden_variables, log-of-the-jacobian-determinants).
                 During the validation/test, return the anomaly map.
         """
-        return_val: torch.Tensor | list[torch.Tensor] | tuple[list[torch.Tensor]]
-
         self.feature_extractor.eval()
         if isinstance(self.feature_extractor, VisionTransformer):
             features = self._get_vit_features(input_tensor)
@@ -201,12 +201,12 @@ class FastflowModel(nn.Module):
             hidden_variables.append(hidden_variable)
             log_jacobians.append(log_jacobian)
 
-        return_val = (hidden_variables, log_jacobians)
+        if self.training:
+            return hidden_variables, log_jacobians
 
-        if not self.training:
-            return_val = self.anomaly_map_generator(hidden_variables)
-
-        return return_val
+        anomaly_map = self.anomaly_map_generator(hidden_variables)
+        pred_score = torch.amax(anomaly_map, dim=(-2, -1))
+        return InferenceBatch(pred_score=pred_score, anomaly_map=anomaly_map)
 
     def _get_cnn_features(self, input_tensor: torch.Tensor) -> list[torch.Tensor]:
         """Get CNN-based features.

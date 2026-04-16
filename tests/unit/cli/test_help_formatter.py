@@ -1,7 +1,8 @@
-"""Tests for Custom Help Formatter."""
-
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Tests for Custom Help Formatter."""
+
 import sys
 from unittest.mock import patch
 
@@ -86,7 +87,8 @@ class TestCustomHelpFormatter:
     """Test Custom Help Formatter."""
 
     @pytest.fixture()
-    def mock_parser(self) -> ArgumentParser:
+    @staticmethod
+    def mock_parser() -> ArgumentParser:
         """Mock ArgumentParser."""
         parser = ArgumentParser(formatter_class=CustomHelpFormatter)
         parser.formatter_class.subcommand = "fit"
@@ -103,7 +105,8 @@ class TestCustomHelpFormatter:
         )
         return parser
 
-    def test_verbose_0(self, capfd: "pytest.CaptureFixture", mock_parser: ArgumentParser) -> None:
+    @staticmethod
+    def test_verbose_0(capfd: "pytest.CaptureFixture", mock_parser: ArgumentParser) -> None:
         """Test verbose level 0."""
         argv = ["anomalib", "fit", "-h"]
         assert mock_parser.formatter_class == CustomHelpFormatter
@@ -114,7 +117,8 @@ class TestCustomHelpFormatter:
         assert "Quick-Start" in out
         assert "Arguments" not in out
 
-    def test_verbose_1(self, capfd: "pytest.CaptureFixture", mock_parser: ArgumentParser) -> None:
+    @staticmethod
+    def test_verbose_1(capfd: "pytest.CaptureFixture", mock_parser: ArgumentParser) -> None:
         """Test verbose level 1."""
         argv = ["anomalib", "fit", "-h", "-v"]
         assert mock_parser.formatter_class == CustomHelpFormatter
@@ -125,7 +129,8 @@ class TestCustomHelpFormatter:
         assert "Quick-Start" in out
         assert "Arguments" in out
 
-    def test_verbose_2(self, capfd: "pytest.CaptureFixture", mock_parser: ArgumentParser) -> None:
+    @staticmethod
+    def test_verbose_2(capfd: "pytest.CaptureFixture", mock_parser: ArgumentParser) -> None:
         """Test verbose level 2."""
         argv = ["anomalib", "fit", "-h", "-vv"]
         assert mock_parser.formatter_class == CustomHelpFormatter

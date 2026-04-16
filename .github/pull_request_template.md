@@ -7,19 +7,25 @@
 
 Select what type of change your PR is:
 
-- [ ] 🐞 Bug fix (non-breaking change which fixes an issue)
-- [ ] 🔨 Refactor (non-breaking change which refactors the code base)
 - [ ] 🚀 New feature (non-breaking change which adds functionality)
-- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ] 🐞 Bug fix (non-breaking change which fixes an issue)
+- [ ] 🔄 Refactor (non-breaking change which refactors the code base)
+- [ ] ⚡ Performance improvements
+- [ ] 🎨 Style changes (code style/formatting)
+- [ ] 🧪 Tests (adding/modifying tests)
 - [ ] 📚 Documentation update
+- [ ] 📦 Build system changes
+- [ ] 🚧 CI/CD configuration
+- [ ] 🔧 Chore (general maintenance)
 - [ ] 🔒 Security update
+- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
 
 ## ✅ Checklist
 
 Before you submit your pull request, please make sure you have completed the following steps:
 
-- [ ] 📋 I have summarized my changes in the [CHANGELOG](https://github.com/openvinotoolkit/anomalib/blob/main/CHANGELOG.md) and followed the guidelines for my type of change (skip for minor changes, documentation updates, and test enhancements).
 - [ ] 📚 I have made the necessary updates to the documentation (if applicable).
 - [ ] 🧪 I have written tests that support my changes and prove that my fix is effective or my feature works (if applicable).
+- [ ] 🏷️ My PR title follows conventional commit format.
 
-For more information about code review checklists, see the [Code Review Checklist](https://github.com/openvinotoolkit/anomalib/blob/main/docs/source/markdown/guides/developer/code_review_checklist.md).
+For more information about code review checklists, see the [Code Review Checklist](https://github.com/open-edge-platform/anomalib/blob/main/docs/source/markdown/guides/developer/contributing.md).

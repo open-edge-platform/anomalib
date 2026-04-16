@@ -1,7 +1,7 @@
-"""Test Gradio inference entrypoint script."""
-
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test Gradio inference entrypoint script."""
 
 import sys
 from collections.abc import Callable
@@ -24,7 +24,8 @@ class TestGradioInferenceEntrypoint:
     """
 
     @pytest.fixture()
-    def get_functions(self) -> tuple[Callable, Callable]:
+    @staticmethod
+    def get_functions() -> tuple[Callable, Callable]:
         """Get functions from Gradio_inference.py."""
         if find_spec("gradio_inference") is not None:
             from tools.inference.gradio_inference import get_inferencer, get_parser
@@ -33,63 +34,54 @@ class TestGradioInferenceEntrypoint:
             raise ImportError(msg)
         return get_parser, get_inferencer
 
+    @staticmethod
     def test_torch_inference(
-        self,
         get_functions: tuple[Callable, Callable],
         ckpt_path: Callable[[str], Path],
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test gradio_inference.py."""
-        _ckpt_path = ckpt_path("Padim")
+        # Set TRUST_REMOTE_CODE environment variable for the test
+        monkeypatch.setenv("TRUST_REMOTE_CODE", "1")
+
+        checkpoint_path = ckpt_path("Padim")
         parser, inferencer = get_functions
-        model = Padim.load_from_checkpoint(_ckpt_path)
+        model = Padim.load_from_checkpoint(checkpoint_path)
 
         # export torch model
         model.to_torch(
-            export_root=_ckpt_path.parent.parent.parent,
-            task=TaskType.SEGMENTATION,
+            export_root=checkpoint_path.parent.parent.parent,
         )
 
         arguments = parser().parse_args(
             [
                 "--weights",
-                str(_ckpt_path.parent.parent) + "/torch/model.pt",
+                str(checkpoint_path.parent.parent) + "/torch/model.pt",
             ],
         )
-        assert isinstance(inferencer(arguments.weights, arguments.metadata), TorchInferencer)
+        assert isinstance(inferencer(arguments.weights), TorchInferencer)
 
+    @staticmethod
     def test_openvino_inference(
-        self,
         get_functions: tuple[Callable, Callable],
         ckpt_path: Callable[[str], Path],
     ) -> None:
         """Test gradio_inference.py."""
-        _ckpt_path = ckpt_path("Padim")
+        checkpoint_path = ckpt_path("Padim")
         parser, inferencer = get_functions
-        model = Padim.load_from_checkpoint(_ckpt_path)
+        model = Padim.load_from_checkpoint(checkpoint_path)
 
         # export OpenVINO model
         model.to_openvino(
-            export_root=_ckpt_path.parent.parent.parent,
-            ov_args={},
+            export_root=checkpoint_path.parent.parent.parent,
+            ov_kwargs={},
             task=TaskType.SEGMENTATION,
         )
 
         arguments = parser().parse_args(
             [
                 "--weights",
-                str(_ckpt_path.parent.parent) + "/openvino/model.bin",
-                "--metadata",
-                str(_ckpt_path.parent.parent) + "/openvino/metadata.json",
+                str(checkpoint_path.parent.parent) + "/openvino/model.bin",
             ],
         )
-        assert isinstance(inferencer(arguments.weights, arguments.metadata), OpenVINOInferencer)
-
-        # test error is raised when metadata is not provided to openvino model
-        arguments = parser().parse_args(
-            [
-                "--weights",
-                str(_ckpt_path) + "/openvino/model.bin",
-            ],
-        )
-        with pytest.raises(ValueError):  # noqa: PT011
-            inferencer(arguments.weights, arguments.metadata)
+        assert isinstance(inferencer(arguments.weights), OpenVINOInferencer)

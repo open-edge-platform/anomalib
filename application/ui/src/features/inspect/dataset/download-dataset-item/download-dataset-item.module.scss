@@ -1,0 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+div:has(> .downloadButton) {
+    padding: var(--spectrum-global-dimension-size-10);
+}

@@ -1,11 +1,11 @@
-"""Test F1Max metric."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+"""Test F1Max metric."""
+
 import torch
 
-from anomalib.metrics.f1_max import F1Max
+from anomalib.metrics.f1_score import _F1Max as F1Max
 
 
 def test_f1_max_logits() -> None:
@@ -49,3 +49,28 @@ def test_f1_max_raw() -> None:
     metric.update(preds, labels)
     assert metric.compute() == torch.tensor(1.0)
     assert metric.threshold == -0.1
+
+
+def test_f1_max_bool_preds() -> None:
+    """Checks if F1Max handles boolean predictions.
+
+    Test when pred_label (bool) is used instead of pred_score (float).
+    This case occurs when PostProcessor thresholds predictions before F1Max.
+    """
+    metric = F1Max()
+
+    preds = torch.tensor([False, True, True, True])
+    labels = torch.tensor([0, 1, 1, 1])
+
+    metric.update(preds, labels)
+    f1_score = metric.compute()
+    assert f1_score == 1.0
+    assert metric.threshold == 1.0
+
+    metric.reset()
+    preds = torch.tensor([False, False, True, True])
+    labels = torch.tensor([0, 1, 1, 1])
+    metric.update(preds, labels)
+    f1_score = metric.compute()
+    assert f1_score.round(decimals=4) == torch.tensor(0.8571)
+    assert metric.threshold == 0.0

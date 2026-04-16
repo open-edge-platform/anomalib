@@ -1,0 +1,15 @@
+.panelButtons {
+    padding-block-start: 0;
+}
+
+.dialog {
+    & div[class*='spectrum-Dialog-grid'] {
+        --spectrum-dialog-padding-x: 0px;
+        --spectrum-dialog-padding-y: var(--spectrum-global-dimension-size-250);
+    }
+}
+
+.projectList {
+    list-style: none;
+    padding-inline-start: 0;
+}

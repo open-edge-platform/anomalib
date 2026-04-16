@@ -1,7 +1,7 @@
-"""Test OpenVINO inference entrypoint script."""
-
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test OpenVINO inference entrypoint script."""
 
 import sys
 from collections.abc import Callable
@@ -20,7 +20,8 @@ class TestOpenVINOInferenceEntrypoint:
     """This tests whether the entrypoints run without errors without quantitative measure of the outputs."""
 
     @pytest.fixture(scope="module")
-    def get_functions(self) -> tuple[Callable, Callable]:
+    @staticmethod
+    def get_functions() -> tuple[Callable, Callable]:
         """Get functions from openvino_inference.py."""
         if find_spec("openvino_inference") is not None:
             from tools.inference.openvino_inference import get_parser, infer
@@ -29,34 +30,32 @@ class TestOpenVINOInferenceEntrypoint:
             raise ImportError(msg)
         return get_parser, infer
 
+    @staticmethod
     def test_openvino_inference(
-        self,
         get_functions: tuple[Callable, Callable],
         ckpt_path: Callable[[str], Path],
         get_dummy_inference_image: str,
     ) -> None:
         """Test openvino_inference.py."""
         get_parser, infer = get_functions
-        _ckpt_path = ckpt_path("Padim")
-        model = Padim.load_from_checkpoint(_ckpt_path)
+        checkpoint_path = ckpt_path("Padim")
+        model = Padim.load_from_checkpoint(checkpoint_path)
 
         # export OpenVINO model
         model.to_openvino(
-            export_root=_ckpt_path.parent.parent.parent,
-            ov_args={},
+            export_root=checkpoint_path.parent.parent.parent,
+            ov_kwargs={},
             task=TaskType.SEGMENTATION,
         )
 
         arguments = get_parser().parse_args(
             [
                 "--weights",
-                str(_ckpt_path.parent.parent) + "/openvino/model.bin",
-                "--metadata",
-                str(_ckpt_path.parent.parent) + "/openvino/metadata.json",
+                str(checkpoint_path.parent.parent) + "/openvino/model.bin",
                 "--input",
                 get_dummy_inference_image,
                 "--output",
-                str(_ckpt_path.parent.parent) + "/output.png",
+                str(checkpoint_path.parent.parent) + "/output.png",
             ],
         )
         infer(arguments)

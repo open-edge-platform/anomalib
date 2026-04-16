@@ -1,0 +1,34 @@
+name: "📚 Documentation Issue"
+description: Report an issue or suggest an improvement for the documentation
+title: "📚 <title>"
+labels: ["documentation", "triage"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the documentation issue
+      description: A clear and concise description of what is wrong or missing in the documentation.
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: URL of the documentation page
+      description: Please provide the URL of the page where you found the issue.
+    validations:
+      required: false
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement
+      description: How do you think the documentation could be improved?
+    validations:
+      required: true
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/open-edge-platform/anomalib/blob/main/CODE_OF_CONDUCT.md)
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

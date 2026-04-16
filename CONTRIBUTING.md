@@ -12,21 +12,21 @@ We want to make it as simple and straightforward as possible to contribute to th
 
 ## Bug Report
 
-We use GitHub issues to track the bugs. Report a bug by using our Bug Report Template in [Issues](https://github.com/openvinotoolkit/anomalib/issues/new?assignees=&labels=&projects=&template=bug_report.yaml&title=%5BBug%5D%3A+).
+We use GitHub issues to track the bugs. Report a bug by using our Bug Report Template in [Issues](https://github.com/open-edge-platform/anomalib/issues/new?assignees=&labels=&projects=&template=bug_report.yaml&title=%5BBug%5D%3A+).
 
 ## Discussion
 
-We enabled [GitHub Discussions](https://github.com/openvinotoolkit/anomalib/discussions/) in anomalib to welcome the community to ask questions and/or propose ideas/solutions. This will not only provide a medium to the community to discuss about anomalib but also help us de-clutter [Issues](https://github.com/openvinotoolkit/anomalib/issues/new?assignees=&labels=&template=bug_report.md).
+We enabled [GitHub Discussions](https://github.com/open-edge-platform/anomalib/discussions/) in anomalib to welcome the community to ask questions and/or propose ideas/solutions. This will not only provide a medium to the community to discuss about anomalib but also help us de-clutter [Issues](https://github.com/open-edge-platform/anomalib/issues/new?assignees=&labels=&template=bug_report.md).
 
 ## Feature Request
 
-We utilize GitHub issues to track the feature requests as well. If you are certain regarding the feature you are interested and have a solid proposal, you could then create the feature request by using our [Feature Request Template](https://github.com/openvinotoolkit/anomalib/issues/new?assignees=&labels=&template=feature_request.md) in Issues. If it's still in an idea phase, you could then discuss that with the community in our [Discussion](https://github.com/openvinotoolkit/anomalib/discussions/categories/ideas).
+We utilize GitHub issues to track the feature requests as well. If you are certain regarding the feature you are interested and have a solid proposal, you could then create the feature request by using our [Feature Request Template](https://github.com/open-edge-platform/anomalib/issues/new?assignees=&labels=&template=feature_request.md) in Issues. If it's still in an idea phase, you could then discuss that with the community in our [Discussion](https://github.com/open-edge-platform/anomalib/discussions/categories/ideas).
 
 ## Development & PRs
 
 We actively welcome your pull requests:
 
-###  Getting Started
+### Getting Started
 
 #### 1. Fork and Clone the Repository
 
@@ -69,15 +69,15 @@ Set up your development environment to start contributing. This involves install
 3. Install and configure pre-commit hooks:
 
    ```bash
-   pre-commit install
+   prek install
    ```
 
 Pre-commit hooks help ensure code quality and consistency. After each commit,
-`pre-commit` will automatically run the configured checks for the changed file.
+`prek` will automatically run the configured checks for the changed file.
 If you would like to manually run the checks for all files, use:
 
 ```bash
-pre-commit run --all-files
+prek run --all-files
 ```
 
 To bypass pre-commit hooks temporarily (e.g., for a work-in-progress commit),
@@ -102,7 +102,7 @@ However, make sure to address any pre-commit issues before finalizing your pull 
 4. **Pass Tests and Quality Checks:** Ensure the test suite passes and that your code meets quality standards by running:
 
    ```bash
-   pre-commit run --all-files
+   prek run --all-files
    pytest tests/
    ```
 
@@ -110,13 +110,197 @@ However, make sure to address any pre-commit issues before finalizing your pull 
 
 6. **Check Licensing:** Ensure you own the code or have rights to use it, adhering to appropriate licensing.
 
-7. **Sign Your Commits:** Use signed commits to certify that you have the right to submit the code under the project's license:
+7. **Follow Conventional Commits for PR Titles:** We use [Commitizen](https://commitizen-tools.github.io/commitizen/) to enforce conventional commit format for PR titles and branch names. Since we squash merge PRs, individual commit messages can be in any format during development, but your **PR title must follow conventional commit format**.
 
-   ```bash
-   git commit -S -m "Your detailed commit message"
+   <details>
+   <summary>PR Title Format (Required)</summary>
+
+   Your **PR title** must follow conventional commit format. Individual commit messages during development can be any format (e.g., "wip", "fix typo"), but the PR title becomes the squash commit message.
+
+   Each PR title consists of a **header**, and optionally a **body** and **footer**:
+
+   ```text
+   <type>(<scope>): <description>
+
+   [optional body]
+
+   [optional footer]
    ```
 
-   For more on signing commits, see [GitHub's guide on signing commits](https://docs.github.com/en/github/authenticating-to-github/managing-commit-signature-verification/signing-commits).
+   **Types:**
+   - `feat`: A new feature
+   - `fix`: A bug fix
+   - `docs`: Documentation changes
+   - `style`: Code style changes
+   - `refactor`: Code refactoring
+   - `perf`: Performance improvements
+   - `test`: Adding or modifying tests
+   - `build`: Build system changes
+   - `ci`: CI configuration changes
+   - `chore`: General maintenance
+
+   **Scopes:**
+   - `data`: Data loading, processing, or augmentation
+   - `model`: Model architecture or implementation
+   - `metric`: Evaluation metrics
+   - `utils`: Utility functions
+   - `cli`: Command-line interface
+   - `docs`: Documentation
+   - `ci`: CI/CD configuration
+   - `engine`: Training/inference engine
+   - `visualization`: Visualization tools
+   - `benchmarking`: Benchmarking tools
+   - `logger`: Logging functionality
+   - `openvino`: OpenVINO integration
+   - `notebooks`: Jupyter notebooks
+
+   **Rules:**
+   - The type and scope are case-sensitive
+   - The type must be lowercase
+   - The description should be in present tense
+   - The description should not end with a period
+   - The description should not be in sentence-case, start-case, pascal-case, or upper-case
+
+   **PR Title Examples:**
+
+   ```text
+   feat(model): add transformer architecture for anomaly detection
+   ```
+
+   ```text
+   fix(data): handle corrupted image files during training
+   ```
+
+   ```text
+   docs: update installation instructions for Windows
+   ```
+
+   ```text
+   chore(ci): migrate from commit message validation to PR title validation
+   ```
+
+   **Note:** The PR description can contain additional details, but the title must be concise and follow the format above.
+
+   **Optional Emojis:**
+   You can optionally add emojis at the beginning of your PR title for better visual distinction:
+
+   ```text
+   🚀 feat(model): add transformer architecture for anomaly detection
+   🐞 fix(data): handle corrupted image files during training
+   📚 docs: update installation instructions for Windows
+   🔧 chore(ci): migrate from commit message validation to PR title validation
+   ```
+
+   **Suggested Emoji Mapping (Optional):**
+   - 🚀 for `feat` (new features)
+   - 🐞 for `fix` (bug fixes)
+   - 📚 for `docs` (documentation)
+   - 🎨 for `style` (code style/formatting)
+   - 🔄 for `refactor` (code refactoring)
+   - ⚡ for `perf` (performance improvements)
+   - 🧪 for `test` (adding/modifying tests)
+   - 📦 for `build` (build system changes)
+   - 🔧 for `chore` (general maintenance)
+   - 🚧 for `ci` (CI/CD configuration)
+
+   **Note:** Emojis are completely optional. PR titles without emojis are equally valid.
+
+   </details>
+
+   <details>
+   <summary>Branch Naming</summary>
+
+   Branch names must follow the format:
+
+   ```text
+   <type>/<scope>/<description>
+   ```
+
+   **Examples:**
+   - `feat/model/add-transformer`
+   - `fix/data/load-image-bug`
+   - `docs/readme/update-installation`
+   - `refactor/utils/optimize-performance`
+
+   The type and scope should match the ones used in commit messages.
+   </details>
+
+   <details>
+   <summary>Development Workflow</summary>
+
+   **During Development:**
+   Individual commits can use any format for convenience:
+
+   ```bash
+   git add <files>
+   git commit -m "wip: working on transformer model"
+   git commit -m "fix typo"
+   git commit -m "address review comments"
+   ```
+
+   **Creating the PR:**
+   Ensure your PR title follows conventional commit format. The PR title becomes the final commit message when merged.
+
+   **Optional - Using Commitizen for PR titles:**
+   You can use Commitizen to help format your PR titles:
+
+   ```bash
+   # Check if a message follows conventional format
+   echo "feat(model): add transformer architecture" | cz check --commit-msg-file -
+   ```
+
+   To check if your commits follow the conventional format:
+
+   ```bash
+   cz check
+   ```
+
+   To bump the version based on commit history:
+
+   ```bash
+   cz bump
+   ```
+
+   </details>
+
+<details>
+<summary>Suppressing False Positives</summary>
+
+If necessary, to suppress _false_ positives, add inline comment with specific syntax.
+Please also add a comment explaining _why_ you decided to disable a rule or provide a risk-acceptance reason.
+
+#### Bandit
+
+Findings can be ignored inline with `# nosec BXXX` comments.
+
+```python
+import subprocess # nosec B404 # this is actually fine
+```
+
+[Details](https://bandit.readthedocs.io/en/latest/config.html#exclusions) in Bandit docs.
+
+#### Zizmor
+
+Findings can be ignored inline with `# zizmor: ignore[rulename]` comments.
+
+```yaml
+uses: actions/checkout@v3 # zizmor: ignore[artipacked] this is actually fine
+```
+
+[Details](https://woodruffw.github.io/zizmor/usage/#with-comments) in Zizmor docs.
+
+#### Semgrep
+
+Findings can be ignored inline with `# nosemgrep: rule-id` comments.
+
+```python
+    # nosemgrep: python.lang.security.audit.dangerous-system-call.dangerous-system-call # this is actually fine
+    r = os.system(' '.join(command))
+```
+
+[Details](https://semgrep.dev/docs/ignoring-files-folders-code) in Semgrep docs.
+
+</details>
 
 ### Submitting Pull Requests
 

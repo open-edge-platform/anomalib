@@ -1,14 +1,38 @@
-"""Container to hold manual threshold values for image and pixel metrics."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+"""Manual threshold metric for anomaly detection.
+
+This module provides the ``ManualThreshold`` class which allows setting a fixed
+threshold value for converting anomaly scores to binary predictions.
+
+The threshold value is manually specified and remains constant regardless of the
+input data.
+
+Example:
+    >>> from anomalib.metrics import ManualThreshold
+    >>> import torch
+    >>> # Create sample data
+    >>> labels = torch.tensor([0, 0, 1, 1])  # Binary labels
+    >>> scores = torch.tensor([0.1, 0.3, 0.7, 0.9])  # Anomaly scores
+    >>> # Initialize with fixed threshold
+    >>> threshold = ManualThreshold(default_value=0.5)
+    >>> # Threshold remains constant
+    >>> threshold(scores, labels)
+    tensor(0.5000)
+
+Note:
+    Unlike adaptive thresholds, this metric does not optimize the threshold value
+    based on the data. The threshold remains fixed at the manually specified
+    value.
+"""
+
 import torch
 
-from .base import BaseThreshold
+from .base import Threshold
 
 
-class ManualThreshold(BaseThreshold):
+class ManualThreshold(Threshold):
     """Initialize Manual Threshold.
 
     Args:
@@ -56,7 +80,8 @@ class ManualThreshold(BaseThreshold):
         """
         return self.value
 
-    def update(self, *args, **kwargs) -> None:
+    @staticmethod
+    def update(*args, **kwargs) -> None:
         """Do nothing.
 
         Args:

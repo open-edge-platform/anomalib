@@ -1,11 +1,11 @@
+# Copyright (C) 2022-2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Anomalib Torch Inferencer Script.
 
 This script performs torch inference by reading model weights
 from command line, and show the visualization results.
 """
-
-# Copyright (C) 2022-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from argparse import ArgumentParser, Namespace
@@ -15,8 +15,8 @@ import torch
 
 from anomalib.data.utils import generate_output_image_filename, get_image_filenames, read_image
 from anomalib.data.utils.image import save_image, show_image
-from anomalib.deploy import TorchInferencer
-from anomalib.utils.visualization import ImageVisualizer
+from anomalib.deploy.inferencers.torch_inferencer import TorchInferencer
+from anomalib.utils.visualization import ImageResult, ImageVisualizer
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +36,8 @@ def get_parser() -> ArgumentParser:
         type=str,
         required=False,
         default="auto",
-        help="Device to use for inference. Defaults to auto.",
-        choices=["auto", "cpu", "gpu", "cuda"],  # cuda and gpu are the same but provided for convenience
+        help="Device to use for inference. Options: auto (cuda>xpu>cpu), cpu, cuda, xpu.",
+        choices=["auto", "cpu", "cuda", "xpu"],
     )
     parser.add_argument(
         "--task",
@@ -83,7 +83,9 @@ def infer(args: Namespace) -> None:
     for filename in filenames:
         image = read_image(filename, as_tensor=True)
         predictions = inferencer.predict(image=image)
-        output = visualizer.visualize_image(predictions)
+
+        image_result = ImageResult.from_dataset_item(predictions.items[0])
+        output = visualizer.visualize_image(image_result)
 
         if args.output is None and args.show is False:
             msg = "Neither output path is provided nor show flag is set. Inferencer will run but return nothing."

@@ -1,0 +1,12 @@
+class_path: anomalib.data.MPDD
+init_args:
+  root: "./datasets/MPDD"
+  category: "bracket_black"
+  train_batch_size: 32
+  eval_batch_size: 32
+  num_workers: 8
+  train_augmentations: null
+  val_augmentations: null
+  test_augmentations: null
+  augmentations: null
+  seed: null

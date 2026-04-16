@@ -14,4 +14,3 @@ benchmark:
         grid:
           - bottle
           - capsule
-      image_size: [256, 256]

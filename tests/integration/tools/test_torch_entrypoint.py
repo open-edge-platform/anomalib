@@ -1,7 +1,7 @@
-"""Test torch inference entrypoint script."""
-
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Test torch inference entrypoint script."""
 
 import sys
 from collections.abc import Callable
@@ -10,7 +10,6 @@ from pathlib import Path
 
 import pytest
 
-from anomalib import TaskType
 from anomalib.models import Padim
 
 sys.path.append("tools/inference")
@@ -20,7 +19,8 @@ class TestTorchInferenceEntrypoint:
     """This tests whether the entrypoints run without errors without quantitative measure of the outputs."""
 
     @pytest.fixture()
-    def get_functions(self) -> tuple[Callable, Callable]:
+    @staticmethod
+    def get_functions() -> tuple[Callable, Callable]:
         """Get functions from torch_inference.py."""
         if find_spec("torch_inference") is not None:
             from tools.inference.torch_inference import get_parser, infer
@@ -29,25 +29,28 @@ class TestTorchInferenceEntrypoint:
             raise ImportError(msg)
         return get_parser, infer
 
+    @staticmethod
     def test_torch_inference(
-        self,
         get_functions: tuple[Callable, Callable],
         project_path: Path,
         ckpt_path: Callable[[str], Path],
         get_dummy_inference_image: str,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test torch_inference.py."""
-        _ckpt_path = ckpt_path("Padim")
+        # Set TRUST_REMOTE_CODE environment variable for the test
+        monkeypatch.setenv("TRUST_REMOTE_CODE", "1")
+
+        checkpoint_path = ckpt_path("Padim")
         get_parser, infer = get_functions
-        model = Padim.load_from_checkpoint(_ckpt_path)
+        model = Padim.load_from_checkpoint(checkpoint_path)
         model.to_torch(
-            export_root=_ckpt_path.parent.parent.parent,
-            task=TaskType.SEGMENTATION,
+            export_root=checkpoint_path.parent.parent.parent,
         )
         arguments = get_parser().parse_args(
             [
                 "--weights",
-                str(_ckpt_path.parent.parent) + "/torch/model.pt",
+                str(checkpoint_path.parent.parent) + "/torch/model.pt",
                 "--input",
                 get_dummy_inference_image,
                 "--output",

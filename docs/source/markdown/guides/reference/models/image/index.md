@@ -4,6 +4,13 @@
 :margin: 1 1 0 0
 :gutter: 1
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` AnomalyDINO
+:link: ./anomaly_dino
+:link-type: doc
+
+Boosting Patch-based Few-shot Anomaly Detection with DINOv2
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` CFA
 :link: ./cfa
 :link-type: doc
@@ -39,6 +46,14 @@ Deep Feature Kernel Density Estimation
 Probabilistic Modeling of Deep Features for Out-of-Distribution and Adversarial Detection
 :::
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` Dinomaly
+:link: ./dinomaly
+:link-type: doc
+
+Dinomaly: The Less Is More Philosophy in Unsupervised Anomaly Detection
+
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` DRAEM
 :link: ./draem
 :link-type: doc
@@ -65,6 +80,13 @@ EfficientAD: Accurate Visual Anomaly Detection at Millisecond-Level Latencies
 :link-type: doc
 
 FastFlow: Unsupervised Anomaly Detection and Localization via 2D Normalizing Flows
+:::
+
+:::{grid-item-card} {material-regular}`model_training;1.5em` FRE
+:link: ./fre
+:link-type: doc
+
+FRE: A Fast Method For Anomaly Detection And Segmentation
 :::
 
 :::{grid-item-card} {material-regular}`model_training;1.5em` GANomaly
@@ -95,13 +117,6 @@ Towards Total Recall in Industrial Anomaly Detection
 Anomaly Detection via Reverse Distillation from One-Class Embedding.
 :::
 
-:::{grid-item-card} {material-regular}`model_training;1.5em` R-KDE
-:link: ./rkde
-:link-type: doc
-
-Region-Based Kernel Density Estimation (RKDE)
-:::
-
 :::{grid-item-card} {material-regular}`model_training;1.5em` STFPM
 :link: ./stfpm
 :link-type: doc
@@ -109,11 +124,32 @@ Region-Based Kernel Density Estimation (RKDE)
 Student-Teacher Feature Pyramid Matching for Unsupervised Anomaly Detection
 :::
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` SuperSimpleNet
+:link: ./supersimplenet
+:link-type: doc
+
+SuperSimpleNet: A Unified Surface Defect Detection Model for all Supervision Regimes
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` U-Flow
 :link: ./uflow
 :link-type: doc
 
 U-Flow: A U-shaped Normalizing Flow for Anomaly Detection with Unsupervised Threshold
+:::
+
+:::{grid-item-card} {material-regular}`model_training;1.5em` UniNet
+:link: ./uninet
+:link-type: doc
+
+UniNet: A Contrastive Learning-guided Unified Framework with Feature Selection for Anomaly Detection
+:::
+
+:::{grid-item-card} {material-regular}`model_training;1.5em` VLM-AD
+:link: ./vlm_ad
+:link-type: doc
+
+VLM-AD: Vision-Language Model for Anomaly Detection
 :::
 
 :::{grid-item-card} {material-regular}`model_training;1.5em` WinCLIP
@@ -128,21 +164,26 @@ WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation
 :caption: Data
 :hidden:
 
+./anomaly_dino
 ./cfa
 ./cflow
 ./csflow
 ./dfkde
 ./dfm
+./dinomaly
 ./draem
 ./dsr
 ./efficient_ad
 ./fastflow
+./fre
 ./ganomaly
 ./padim
 ./patchcore
 ./reverse_distillation
-./rkde
 ./stfpm
+./supersimplenet
 ./uflow
+./uninet
+./vlm_ad
 ./winclip
 ```

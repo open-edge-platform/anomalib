@@ -1,0 +1,15 @@
+model:
+  class_path: anomalib.models.UniNet
+  init_args:
+    student_backbone: wide_resnet50_2
+    teacher_backbone: wide_resnet50_2
+    temperature: 0.1
+
+trainer:
+  max_epochs: 100
+  callbacks:
+    - class_path: lightning.pytorch.callbacks.EarlyStopping
+      init_args:
+        patience: 20
+        monitor: image_AUROC
+        mode: max

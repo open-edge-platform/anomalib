@@ -1,0 +1,44 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Anomalib Studio",
+  "version": "0.1.0",
+  "identifier": "com.anomalib.studio",
+  "build": {
+    "beforeDevCommand": "node ./scripts/prepare-tauri-dev.mjs && cd ../../ui && npm start",
+    "devUrl": "http://localhost:3000",
+    "beforeBuildCommand": "node ./scripts/prepare-tauri-dev.mjs --copy && cd ../../ui && npm ci && npm run build",
+    "frontendDist": "../../../ui/dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Anomalib Studio",
+        "width": 1000,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: http://localhost:8000; connect-src 'self' ipc: http://ipc.localhost http://localhost:8000 http://localhost:3000 ws://localhost:3000; font-src 'self' data:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app"],
+    "externalBin": ["sidecar/anomalib-studio-backend"],
+    "icon": ["icons/icon.ico", "icons/icon.png"],
+    "linux": {
+      "deb": {
+        "postInstallScript": "install_scripts/debian_postinstall.sh",
+        "postRemoveScript": "install_scripts/debian_postrm.sh",
+        "depends": [
+          "gstreamer1.0-plugins-base",
+          "gstreamer1.0-plugins-good",
+          "gstreamer1.0-plugins-bad",
+          "gstreamer1.0-nice"
+        ]
+      }
+    }
+  }
+}

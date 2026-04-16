@@ -4,84 +4,64 @@ This section will walk you through the steps to train a model and use it to dete
 
 ## {octicon}`package` Installation
 
-Installation is simple and can be done in two ways. The first is through PyPI, and the second is through a local installation. PyPI installation is recommended if you want to use the library without making any changes to the source code. If you want to make changes to the library, then a local installation is recommended.
+Anomalib can be installed from PyPI. We recommend using a virtual environment and a modern package installer like `uv` or `pip`.
 
-:::::{dropdown} Installing the Installer
-:open:
+### Quick Install
 
-Anomalib comes with a CLI installer that can be used to install the full package.
-The installer can be installed using the following commands:
+For a standard installation, you can use `uv` or `pip`. This will install the latest version of Anomalib with its core dependencies. PyTorch will be installed based on its default behavior, which usually works for CPU and standard CUDA setups.
 
-::::{tab-set}
+```bash
+# With uv
+uv pip install anomalib
 
-:::{tab-item} API
-:sync: label-1
-
-```{literalinclude} ../../snippets/install/pypi.txt
-:language: bash
+# Or with pip
+pip install anomalib
 ```
 
-:::
+For more control over the installation, such as specifying the PyTorch backend or installing extra dependencies, see the advanced options below.
 
-:::{tab-item} Source
-:sync: label-2
+:::::{dropdown} Advanced: Install with Hardware-Specific Extras
 
-```{literalinclude} ../../snippets/install/source.txt
+To ensure compatibility with your hardware, you can specify a backend during installation. This is the recommended approach for production environments and for hardware other than CPU or standard CUDA.
+
+**Using `uv`:**
+
+```{literalinclude} /examples/cli/00_installation/uv_install.sh
 :language: bash
+:lines: 12-32
 ```
 
-:::
-::::
-The main reason why PyPI and source installer does not install the full package
-is to keep the installation wheel small. The CLI installer also automates the
-installation such as finding the torch version with the right CUDA/CUDNN version.
+**Using `pip`:**
 
-The next section demonstrates how to install the full package using the CLI installer.
-:::::
-
-:::::{dropdown} Installing the Full Package
-After installing anomalib, you can install the full package using the following commands:
-
-```{literalinclude} ../../snippets/install/anomalib_help.txt
+```{literalinclude} /examples/cli/00_installation/pip_install.sh
 :language: bash
+:lines: 9-17
 ```
 
-As can be seen above, the only available sub-command is `install` at the moment.
-The `install` sub-command has options to install either the full package or the
-specific components of the package.
-
-```{literalinclude} ../../snippets/install/anomalib_install_help.txt
-:language: bash
-```
-
-By default the `install` sub-command installs the full package. If you want to
-install only the specific components of the package, you can use the `--option` flag.
-
-```{literalinclude} ../../snippets/install/anomalib_install.txt
-:language: bash
-```
-
-After following these steps, your environment will be ready to use anomalib!
 :::::
 
 ## {octicon}`mortar-board` Training
 
-Anomalib supports both API and CLI-based training. The API is more flexible and allows for more customization, while the CLI training utilizes command line interfaces, and might be easier for those who would like to use anomalib off-the-shelf.
+Anomalib supports both API and CLI-based training. The API is more flexible
+and allows for more customization, while the CLI training utilizes command line
+interfaces, and might be easier for those who would like to use anomalib off-the-shelf.
 
 ::::{tab-set}
 
 :::{tab-item} API
 
-```{literalinclude} ../../snippets/train/api/default.txt
+```{literalinclude} ../../../../examples/api/01_getting_started/basic_training.py
 :language: python
+:lines: 10-53
 ```
 
 :::
 
 :::{tab-item} CLI
 
-```{literalinclude} ../../snippets/train/cli/default.txt
+```{literalinclude} ../../../../examples/cli/01_getting_started/basic_training.sh
 :language: bash
+:lines: 10-33
 ```
 
 :::
@@ -100,8 +80,9 @@ Anomalib includes multiple inferencing scripts, including Torch, Lightning, Grad
 :::{tab-item} API
 :sync: label-1
 
-```{literalinclude} ../../snippets/inference/api/lightning.txt
+```{literalinclude} ../../../../examples/api/01_getting_started/basic_inference.py
 :language: python
+:lines: 10-40
 ```
 
 :::
@@ -109,7 +90,7 @@ Anomalib includes multiple inferencing scripts, including Torch, Lightning, Grad
 :::{tab-item} CLI
 :sync: label-2
 
-```{literalinclude} ../../snippets/inference/cli/lightning.txt
+```{literalinclude} ../../../../examples/cli/01_getting_started/basic_inference.sh
 :language: bash
 ```
 
@@ -125,8 +106,9 @@ Anomalib includes multiple inferencing scripts, including Torch, Lightning, Grad
 :::{tab-item} API
 :sync: label-1
 
-```{code-block} python
-Python code here.
+```{literalinclude} ../../../../examples/api/01_getting_started/basic_torch_inference.py
+:language: python
+:lines: 10-11
 ```
 
 :::
@@ -135,7 +117,7 @@ Python code here.
 :sync: label-2
 
 ```{code-block} bash
-CLI command here.
+
 ```
 
 :::
@@ -150,8 +132,9 @@ CLI command here.
 :::{tab-item} API
 :sync: label-1
 
-```{code-block} python
-Python code here.
+```{literalinclude} ../../../../examples/api/01_getting_started/basic_openvino_inference.py
+:language: python
+:lines: 10-28
 ```
 
 :::
@@ -160,7 +143,7 @@ Python code here.
 :sync: label-2
 
 ```{code-block} bash
-CLI command here.
+
 ```
 
 :::
@@ -176,7 +159,7 @@ CLI command here.
 :sync: label-1
 
 ```{code-block} python
-Python code here.
+
 ```
 
 :::
@@ -185,7 +168,7 @@ Python code here.
 :sync: label-2
 
 ```{code-block} bash
-CLI command here.
+
 ```
 
 :::
@@ -201,7 +184,7 @@ Anomalib supports hyper-parameter optimization using [wandb](https://wandb.ai/) 
 
 :::{tab-item} CLI
 
-```{literalinclude} ../../snippets/pipelines/hpo/cli.txt
+```{literalinclude} /snippets/pipelines/hpo/cli.txt
 :language: bash
 ```
 
@@ -209,7 +192,7 @@ Anomalib supports hyper-parameter optimization using [wandb](https://wandb.ai/) 
 
 :::{tab-item} API
 
-```{literalinclude} ../../snippets/pipelines/hpo/api.txt
+```{literalinclude} /snippets/pipelines/hpo/api.txt
 :language: bash
 ```
 
@@ -228,12 +211,12 @@ Anomalib is integrated with various libraries for experiment tracking such as co
 To run a training experiment with experiment tracking, you will need the following configuration file:
 
 ```{code-block} yaml
-# Place the experiment management config here.
+
 ```
 
 By using the configuration file above, you can run the experiment with the following command:
 
-```{literalinclude} ../../snippets/logging/cli.txt
+```{literalinclude} /snippets/logging/cli.txt
 :language: bash
 ```
 
@@ -241,7 +224,7 @@ By using the configuration file above, you can run the experiment with the follo
 
 :::{tab-item} API
 
-```{literalinclude} ../../snippets/logging/api.txt
+```{literalinclude} /snippets/logging/api.txt
 :language: bash
 ```
 
@@ -253,7 +236,7 @@ By using the configuration file above, you can run the experiment with the follo
 
 Anomalib provides a benchmarking tool to evaluate the performance of the anomaly detection models on a given dataset. The benchmarking tool can be used to evaluate the performance of the models on a given dataset, or to compare the performance of multiple models on a given dataset.
 
-Each model in anomalib is benchmarked on a set of datasets, and the results are available in `src/anomalib/models/<model_name>README.md`. For example, the MVTec AD results for the Patchcore model are available in the corresponding [README.md](https://github.com/openvinotoolkit/anomalib/tree/main/src/anomalib/models/image/patchcore#mvtec-ad-dataset) file.
+Each model in anomalib is benchmarked on a set of datasets, and the results are available in `src/anomalib/models/<model_name>README.md`. For example, the MVTecAD AD results for the Patchcore model are available in the corresponding [README.md](https://github.com/open-edge-platform/anomalib/tree/main/src/anomalib/models/image/patchcore#mvtec-ad-dataset) file.
 
 ::::{tab-set}
 
@@ -270,7 +253,7 @@ anomalib benchmark --config tools/benchmarking/benchmark_params.yaml
 :::{tab-item} API
 
 ```{code-block} python
-# To be enabled in v1.1
+
 ```
 
 :::

@@ -1,5 +1,3 @@
-"""PyTorch model for the DSR model implementation."""
-
 # Original Code
 # Copyright (c) 2022 VitjanZ
 # https://github.com/VitjanZ/DSR_anomaly_detection.
@@ -9,12 +7,42 @@
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+"""PyTorch model for the DSR model implementation.
+
+This module implements the PyTorch model for Deep Spatial Reconstruction (DSR).
+DSR is an anomaly detection model that uses a discrete latent model, image
+reconstruction network, subspace restriction modules, anomaly detection module
+and upsampling module to detect anomalies in images.
+
+The model works by:
+1. Encoding input images into quantized feature maps
+2. Reconstructing images using a general appearance decoder
+3. Detecting anomalies by comparing reconstructed and original images
+
+Example:
+    >>> from anomalib.models.image.dsr.torch_model import DsrModel
+    >>> model = DsrModel()
+    >>> input_tensor = torch.randn(32, 3, 256, 256)
+    >>> output = model(input_tensor)
+    >>> output["anomaly_map"].shape
+    torch.Size([32, 256, 256])
+
+Notes:
+    The model implementation is based on the original DSR paper and code.
+    Original code: https://github.com/VitjanZ/DSR_anomaly_detection
+
+References:
+    - Original paper: https://arxiv.org/abs/2012.12436
+"""
+
 from collections.abc import Callable
 from pathlib import Path
 
 import torch
 import torch.nn.functional as F  # noqa: N812
 from torch import nn
+
+from anomalib.data import InferenceBatch
 
 
 class DsrModel(nn.Module):
@@ -24,12 +52,24 @@ class DsrModel(nn.Module):
     subspace restriction modules, anomaly detection module and upsampling module.
 
     Args:
-        embedding_dim (int): Dimension of codebook embeddings.
-        num_embeddings (int): Number of embeddings.
-        latent_anomaly_strength (float): Strength of the generated anomalies in the latent space.
+        embedding_dim (int): Dimension of codebook embeddings. Defaults to
+            ``128``.
+        num_embeddings (int): Number of embeddings in codebook. Defaults to
+            ``4096``.
+        latent_anomaly_strength (float): Strength of the generated anomalies in
+            latent space. Defaults to ``0.2``.
         num_hiddens (int): Number of output channels in residual layers.
-        num_residual_layers (int): Number of residual layers.
-        num_residual_hiddens (int): Number of intermediate channels.
+            Defaults to ``128``.
+        num_residual_layers (int): Number of residual layers. Defaults to ``2``.
+        num_residual_hiddens (int): Number of intermediate channels in residual
+            layers. Defaults to ``64``.
+
+    Example:
+        >>> model = DsrModel()
+        >>> input_tensor = torch.randn(32, 3, 256, 256)
+        >>> output = model(input_tensor)
+        >>> output["anomaly_map"].shape
+        torch.Size([32, 256, 256])
     """
 
     def __init__(
@@ -81,39 +121,62 @@ class DsrModel(nn.Module):
             parameters.requires_grad = False
 
     def load_pretrained_discrete_model_weights(self, ckpt: Path, device: torch.device | str | None = None) -> None:
-        """Load pre-trained model weights."""
-        self.discrete_latent_model.load_state_dict(torch.load(ckpt, map_location=device))
+        """Load pre-trained model weights from checkpoint file.
+
+        Args:
+            ckpt (Path): Path to checkpoint file containing model weights.
+            device (torch.device | str | None, optional): Device to load weights
+                to. Defaults to ``None``.
+        """
+        self.discrete_latent_model.load_state_dict(torch.load(ckpt, map_location=device, weights_only=True))
 
     def forward(
         self,
         batch: torch.Tensor,
         anomaly_map_to_generate: torch.Tensor | None = None,
-    ) -> dict[str, torch.Tensor]:
-        """Compute the anomaly mask from an input image.
+    ) -> dict[str, torch.Tensor] | InferenceBatch:
+        """Forward pass through the model.
 
         Args:
-            batch (torch.Tensor): Batch of input images.
-            anomaly_map_to_generate (torch.Tensor | None): anomaly map to use to generate quantized defects.
-            If not training phase 2, should be None.
+            batch (torch.Tensor): Input batch of images.
+            anomaly_map_to_generate (torch.Tensor | None, optional): Anomaly map
+                to use for generating quantized defects. Should be ``None`` if
+                not in training phase 2. Defaults to ``None``.
 
         Returns:
-            dict[str, torch.Tensor]:
-            If testing:
-                - "anomaly_map": Upsampled anomaly map
-                - "pred_score": Image score
-            If training phase 2:
-                - "recon_feat_hi": Reconstructed non-quantized hi features of defect (F~_hi)
-                - "recon_feat_lo": Reconstructed non-quantized lo features of defect (F~_lo)
-                - "embedding_bot": Quantized features of non defective img (Q_hi)
-                - "embedding_top": Quantized features of non defective img (Q_lo)
-                - "obj_spec_image": Object-specific-decoded image (I_spc)
-                - "anomaly_map": Predicted segmentation mask (M)
-                - "true_mask": Resized ground-truth anomaly map (M_gt)
-            If training phase 3:
-                - "anomaly_map": Reconstructed anomaly map
-        """
-        outputs: dict[str, torch.Tensor]
+            dict[str, torch.Tensor] | InferenceBatch: Output depends on mode:
 
+            If testing:
+                - ``anomaly_map``: Upsampled anomaly map
+                - ``pred_score``: Image anomaly score
+
+            If training phase 2:
+                - ``recon_feat_hi``: Reconstructed non-quantized hi features
+                  (F~_hi)
+                - ``recon_feat_lo``: Reconstructed non-quantized lo features
+                  (F~_lo)
+                - ``embedding_bot``: Quantized features of non defective img
+                  (Q_hi)
+                - ``embedding_top``: Quantized features of non defective img
+                  (Q_lo)
+                - ``obj_spec_image``: Object-specific-decoded image (I_spc)
+                - ``anomaly_map``: Predicted segmentation mask (M)
+                - ``true_mask``: Resized ground-truth anomaly map (M_gt)
+
+            If training phase 3:
+                - ``anomaly_map``: Reconstructed anomaly map
+
+        Raises:
+            RuntimeError: If ``anomaly_map_to_generate`` is provided when not in
+                training mode.
+
+        Example:
+            >>> model = DsrModel()
+            >>> input_tensor = torch.randn(32, 3, 256, 256)
+            >>> output = model(input_tensor)
+            >>> output["anomaly_map"].shape
+            torch.Size([32, 256, 256])
+        """
         # Generate latent embeddings decoded image via general object decoder
         if anomaly_map_to_generate is None:
             # either evaluating or training phase 3
@@ -127,7 +190,8 @@ class DsrModel(nn.Module):
                 embedder_bot = self.discrete_latent_model.vq_vae_bot
                 embedder_top = self.discrete_latent_model.vq_vae_top
 
-                # Copy embeddings in order to input them to the subspace restriction module
+                # Copy embeddings in order to input them to the subspace
+                # restriction module
                 anomaly_embedding_bot_copy = embd_bot.clone()
                 anomaly_embedding_top_copy = embd_top.clone()
 
@@ -138,7 +202,8 @@ class DsrModel(nn.Module):
                 # Upscale top (lo) embedding
                 up_quantized_recon_t = self.discrete_latent_model.upsample_t(recon_embd_top)
 
-                # Concat embeddings and reconstruct image (object specific decoder)
+                # Concat embeddings and reconstruct image (object specific
+                # decoder)
                 quant_join = torch.cat((up_quantized_recon_t, recon_embd_bot), dim=1)
                 obj_spec_image = self.image_reconstruction_network(quant_join)
 
@@ -152,37 +217,33 @@ class DsrModel(nn.Module):
 
             # if training phase 3, return upsampled softmax mask
             if self.training:
-                outputs = {"anomaly_map": out_mask_sm_up}
+                return {"anomaly_map": out_mask_sm_up}
             # if testing, extract image score
-            else:
-                out_mask_averaged = torch.nn.functional.avg_pool2d(
-                    out_mask_sm[:, 1:, :, :],
-                    21,
-                    stride=1,
-                    padding=21 // 2,
-                ).detach()
-                image_score = torch.amax(out_mask_averaged, dim=(2, 3)).squeeze()
+            out_mask_averaged = torch.nn.functional.avg_pool2d(
+                out_mask_sm[:, 1:, :, :],
+                21,
+                stride=1,
+                padding=21 // 2,
+            ).detach()
+            image_score = torch.amax(out_mask_averaged, dim=(2, 3)).squeeze(dim=1)
 
-                # prevent crash when image_score is a single value (batch size of 1)
-                if image_score.size() == torch.Size([]):
-                    image_score = image_score.unsqueeze(0)
+            anomaly_map = out_mask_sm_up[:, 1, :, :]
 
-                out_mask_cv = out_mask_sm_up[:, 1, :, :]
+            return InferenceBatch(pred_score=image_score, anomaly_map=anomaly_map)
 
-                outputs = {"anomaly_map": out_mask_cv, "pred_score": image_score}
-
-        elif anomaly_map_to_generate is not None and self.training:
+        if anomaly_map_to_generate is not None and self.training:
             # we are in phase two
 
             # Generate anomaly strength factors
             anom_str_lo = (
                 torch.rand(batch.shape[0]) * (1.0 - self.latent_anomaly_strength) + self.latent_anomaly_strength
-            ).cuda()
+            ).to(batch.device)
             anom_str_hi = (
                 torch.rand(batch.shape[0]) * (1.0 - self.latent_anomaly_strength) + self.latent_anomaly_strength
-            ).cuda()
+            ).to(batch.device)
 
-            # Generate image through general object decoder, and defective & non defective quantized feature maps.
+            # Generate image through general object decoder, and defective & non
+            # defective quantized feature maps.
             with torch.no_grad():
                 latent_model_outputs = self.discrete_latent_model(
                     batch,
@@ -197,7 +258,8 @@ class DsrModel(nn.Module):
             embd_top_def = latent_model_outputs["anomaly_embedding_lo"]
             embd_bot_def = latent_model_outputs["anomaly_embedding_hi"]
 
-            # Restore the features to normality with the Subspace restriction modules
+            # Restore the features to normality with the Subspace restriction
+            # modules
             recon_feat_hi, recon_embeddings_hi = self.subspace_restriction_module_hi(
                 embd_bot_def,
                 self.discrete_latent_model.vq_vae_bot,
@@ -218,7 +280,7 @@ class DsrModel(nn.Module):
             out_mask_sm = torch.softmax(out_mask, dim=1)
 
             # Outputs
-            outputs = {
+            return {
                 "recon_feat_hi": recon_feat_hi,
                 "recon_feat_lo": recon_feat_lo,
                 "embedding_bot": embd_bot,
@@ -227,11 +289,8 @@ class DsrModel(nn.Module):
                 "anomaly_map": out_mask_sm,
                 "true_anomaly_map": true_anomaly_map,
             }
-        else:
-            msg = "There should not be an anomaly map to generate when not training"
-            raise RuntimeError(msg)
-
-        return outputs
+        msg = "There should not be an anomaly map to generate when not training"
+        raise RuntimeError(msg)
 
 
 class SubspaceRestrictionModule(nn.Module):
@@ -707,7 +766,7 @@ class UnetDecoder(nn.Module):
         self.fin_out = nn.Sequential(nn.Conv2d(base_width, out_channels, kernel_size=3, padding=1))
 
     def forward(self, b1: torch.Tensor, b2: torch.Tensor, b3: torch.Tensor, b4: torch.Tensor) -> torch.Tensor:
-        """Decodes latent represnetations into an image.
+        """Decodes latent representations into an image.
 
         Args:
             b1 (torch.Tensor): First (top level) quantized feature map.
@@ -843,7 +902,7 @@ class VectorQuantizer(nn.Module):
 
         # necessary to correctly load the checkpoint file
         self.register_buffer("_ema_cluster_size", torch.zeros(num_embeddings))
-        self._ema_w = nn.Parameter(torch.Tensor(num_embeddings, self._embedding_dim))
+        self._ema_w = nn.Parameter(torch.zeros(num_embeddings, self._embedding_dim))
         self._ema_w.data.normal_()
 
     @property
@@ -1093,8 +1152,8 @@ class DiscreteLatentModel(nn.Module):
         """Return ``self._vq_vae_bot``."""
         return self._vq_vae_bot
 
+    @staticmethod
     def generate_fake_anomalies_joined(
-        self,
         features: torch.Tensor,
         embeddings: torch.Tensor,
         memory_torch_original: torch.Tensor,
@@ -1140,7 +1199,7 @@ class DiscreteLatentModel(nn.Module):
         random_embeddings = random_embeddings.reshape(
             (random_embeddings.shape[0], embeddings.shape[2], embeddings.shape[3], random_embeddings.shape[2]),
         )
-        random_embeddings_tensor = random_embeddings.permute(0, 3, 1, 2).cuda()
+        random_embeddings_tensor = random_embeddings.permute(0, 3, 1, 2).to(embeddings.device)
 
         down_ratio_y = int(mask.shape[2] / embeddings.shape[2])
         down_ratio_x = int(mask.shape[3] / embeddings.shape[3])
@@ -1233,8 +1292,8 @@ class DiscreteLatentModel(nn.Module):
             )
 
             # get anomaly embeddings
-            use_both = torch.randint(0, 2, (batch.shape[0], 1, 1, 1)).cuda().float()
-            use_lo = torch.randint(0, 2, (batch.shape[0], 1, 1, 1)).cuda().float()
+            use_both = torch.randint(0, 2, (batch.shape[0], 1, 1, 1)).to(batch.device).float()
+            use_lo = torch.randint(0, 2, (batch.shape[0], 1, 1, 1)).to(batch.device).float()
             use_hi = 1 - use_lo
 
             anomaly_embedding_hi_usebot = self.generate_fake_anomalies_joined(

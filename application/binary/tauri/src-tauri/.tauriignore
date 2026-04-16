@@ -1,0 +1,10 @@
+data/
+logs/
+target/
+node_modules/
+dist/
+build/
+__pycache__/
+*.pyc
+.pytest_cache/
+openvino_cache/

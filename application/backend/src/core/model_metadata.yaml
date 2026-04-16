@@ -1,0 +1,282 @@
+# Model metadata for the trainable models endpoint.
+# Only models with supported: true will be returned by the API.
+#
+# Model families:
+#   - memory_bank: Memory bank / patch embedding models
+#   - distribution: Distribution map / density estimation
+#   - reconstruction: Reconstruction error based
+#   - student_teacher: Knowledge distillation approaches
+#   - gan_based: GAN-based detection
+#   - transformer: Vision transformer based
+#   - foundation: Foundation / Vision-Language models
+#   - other: Other approaches
+#
+# Metrics scale (1=low, 2=medium, 3=high):
+#   - training: Training speed (3=fastest)
+#   - inference: Inference speed (3=fastest, based on PyTorch FPS benchmark)
+#
+# Parameters: Number of model parameters in millions (M)
+#
+# Benchmark source: Aggregated average across 3 devices (RTX 3090, ARL-iGPU, BMG-B580)
+#                   MVTec Transistor dataset, 20 epochs
+#                   Inference FPS from PyTorch benchmark
+
+# =============================================================================
+# Recommended Models
+# =============================================================================
+
+- id: patchcore
+  name: PatchCore
+  description: Uses a memory bank of patch features extracted from a pretrained CNN backbone to detect anomalies via nearest-neighbor comparison.
+  family: [memory_bank]
+  recommended: true
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/patchcore.html
+  parameters: 24.9
+  supported: true
+
+- id: fre
+  name: FRE
+  description: Feature Reconstruction Error uses tied autoencoder to reconstruct pretrained CNN features - anomalies detected via reconstruction error.
+  family: [reconstruction]
+  recommended: true
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/fre.html
+  parameters: 23
+  supported: true
+
+- id: dinomaly
+  name: Dinomaly
+  description: Vision Transformer-based model using pretrained DINOv2 encoder-decoder architecture for feature reconstruction-based anomaly detection.
+  family: [reconstruction, student_teacher]
+  recommended: true
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/dinomaly.html
+  parameters: 147
+  supported: true
+
+# =============================================================================
+# Memory Bank
+# =============================================================================
+
+- id: cfa
+  name: CFA
+  description: Coupled-hypersphere-based Feature Adaptation learns discriminative features by adapting them to coupled hyperspheres for target-oriented anomaly localization.
+  family: [memory_bank]
+  recommended: false
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/cfa.html
+  parameters: 31.3
+  supported: true
+
+- id: dfm
+  name: DFM
+  description: Deep Feature Modeling extracts features from pretrained CNN backbone and fits PCA transformation with Gaussian model to detect anomalies.
+  family: [memory_bank]
+  recommended: false
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/dfm.html
+  parameters: 8.5
+  supported: true
+
+- id: dfkde
+  name: DFKDE
+  description: Deep Feature Kernel Density Estimation extracts features from pretrained CNN and fits kernel density estimation to model normal distribution.
+  family: [memory_bank, distribution]
+  recommended: false
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/dfkde.html
+  parameters: 11.2
+  supported: false
+
+
+- id: padim
+  name: PaDiM
+  description: Models patch distributions using multivariate Gaussians from multi-layer pretrained CNN features for anomaly detection and localization.
+  family: [distribution, memory_bank]
+  recommended: false
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/padim.html
+  parameters: 2.8
+  supported: true
+
+# =============================================================================
+# Distribution Map / Normalizing Flow
+# =============================================================================
+
+- id: fastflow
+  name: FastFlow
+  description: Fast flow-based model using 2D normalizing flows to transform pretrained CNN feature distributions for unsupervised anomaly detection.
+  family: [distribution]
+  recommended: false
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/fastflow.html
+  parameters: 7.7
+  supported: true
+
+- id: cflow
+  name: CFlow
+  description: Real-time unsupervised anomaly detection via conditional normalizing flows with positional encoding for spatial feature modeling.
+  family: [distribution]
+  recommended: false
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/cflow.html
+  parameters: 236
+  supported: false
+
+- id: csflow
+  name: CS-Flow
+  description: Cross-Scale-Flows uses normalizing flows across multiple scales to model normal image distribution for defect detection.
+  family: [distribution]
+  recommended: false
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/csflow.html
+  parameters: 305
+  supported: false
+
+- id: uflow
+  name: U-Flow
+  description: U-shaped normalizing flow combining multi-scale feature extraction with fully invertible architecture for anomaly detection and unsupervised threshold estimation.
+  family: [distribution]
+  recommended: false
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/uflow.html
+  parameters: 422
+  supported: false
+
+# =============================================================================
+# Student-Teacher
+# =============================================================================
+
+- id: efficientad
+  name: EfficientAd
+  description: Student-teacher architecture with pretrained EfficientNet backbone achieving state-of-the-art performance with millisecond-level inference times.
+  family: [student_teacher]
+  recommended: false
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/efficient_ad.html
+  parameters: 8.1
+  supported: false
+
+- id: reverse_distillation
+  name: Reverse Distillation
+  description: Pretrained encoder with bottleneck compression and decoder reconstruction - detects anomalies via feature reconstruction error.
+  family: [student_teacher]
+  recommended: false
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/reverse_distillation.html
+  parameters: 89
+  supported: true
+
+- id: stfpm
+  name: STFPM
+  description: Student-Teacher Feature Pyramid Matching - student network learns to match pretrained teacher features, detecting anomalies via feature discrepancy.
+  family: [student_teacher]
+  recommended: false
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/stfpm.html
+  parameters: 5.6
+  supported: false
+
+- id: uninet
+  name: UniNet
+  description: A unified teacher-student contrastive learning framework with attention bottlenecks for multi-class anomaly detection.
+  family: [student_teacher]
+  recommended: false
+  license: Apache-2.0
+  parameters: null
+  supported: false
+
+# =============================================================================
+# Reconstruction-based
+# =============================================================================
+
+- id: draem
+  name: DRAEM
+  description: Discriminatively trained reconstruction embedding for surface anomaly detection using reconstruction and discriminative networks.
+  family: [reconstruction]
+  recommended: false
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/draem.html
+  parameters: null
+  supported: false
+
+- id: dsr
+  name: DSR
+  description: Dual Subspace Re-Projection uses quantized codebook representations with subspace restriction modules for surface anomaly detection.
+  family: [reconstruction]
+  recommended: false
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/dsr.html
+  parameters: null
+  supported: false
+
+- id: supersimplenet
+  name: SuperSimpleNet
+  description: Discriminative model combining feature adaptation and synthetic feature-level anomaly generation for fast surface defect segmentation.
+  family: [reconstruction, other]
+  recommended: false
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/supersimplenet.html
+  parameters: 33.7
+  supported: true
+
+# =============================================================================
+# GAN-based
+# =============================================================================
+
+- id: ganomaly
+  name: GANomaly
+  description: Semi-supervised anomaly detection via adversarial training with encoder-decoder-encoder architecture and latent space comparison.
+  family: [gan_based]
+  recommended: false
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/ganomaly.html
+  parameters: 188
+  supported: false
+
+# =============================================================================
+# Unsupported Models - Foundation / Vision-Language (Zero-shot)
+# =============================================================================
+
+- id: winclip
+  name: WinCLIP
+  description: Uses CLIP model to extract image embeddings and compare with pre-defined prompts for zero-shot anomaly detection.
+  family: [foundation]
+  recommended: false
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/winclip.html
+  parameters: null
+  supported: false
+
+- id: vlm_ad
+  name: VLM-AD
+  description: Leverages large vision-language models and prompting to detect anomalies by comparing with reference normal images.
+  family: [foundation]
+  recommended: false
+  license: Apache-2.0
+  docs_url: https://anomalib.readthedocs.io/en/stable/markdown/guides/reference/models/image/vlm_ad.html
+  parameters: null
+  supported: false
+
+# =============================================================================
+# Unsupported Models - Video
+# =============================================================================
+
+- id: ai_vad
+  name: AI-VAD
+  description: Video anomaly detection model (video models not yet supported).
+  family: [other]
+  recommended: false
+  license: Apache-2.0
+  parameters: null
+  supported: false
+
+- id: fuvas
+  name: FUVAS
+  description: Video anomaly segmentation model (video models not yet supported).
+  family: [other]
+  recommended: false
+  license: Apache-2.0
+  parameters: null
+  supported: false

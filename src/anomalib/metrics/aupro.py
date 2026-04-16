@@ -1,7 +1,55 @@
-"""Implementation of AUPRO score based on TorchMetrics."""
-
-# Copyright (C) 2022-2024 Intel Corporation
+# Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Area Under Per-Region Overlap (AUPRO) metric.
+
+This module provides the ``AUPRO`` class which computes the area under the
+per-region overlap curve for evaluating anomaly segmentation performance.
+
+The AUPRO score measures how well predicted anomaly maps overlap with ground truth
+anomaly regions. It is computed by:
+
+1. Performing connected component analysis on ground truth masks
+2. Computing per-region ROC curves for each component
+3. Averaging the curves and computing area under the curve up to a FPR limit
+
+Example:
+    >>> from anomalib.metrics import AUPRO
+    >>> import torch
+    >>> # Create sample data
+    >>> labels = torch.randint(0, 2, (1, 10, 5))  # Binary segmentation masks
+    >>> scores = torch.rand_like(labels)  # Anomaly segmentation maps
+    >>> # Initialize and compute AUPRO
+    >>> metric = AUPRO(fpr_limit=0.3)
+    >>> aupro_score = metric(scores, labels)
+    >>> aupro_score
+    tensor(0.4321)
+
+The metric can also be updated incrementally with batches:
+
+    >>> for batch_scores, batch_labels in dataloader:
+    ...     metric.update(batch_scores, batch_labels)
+    >>> final_score = metric.compute()
+
+Args:
+    dist_sync_on_step (bool): Synchronize metric state across processes at each
+        ``forward()`` before returning the value at the step.
+        Defaults to ``False``.
+    process_group (Any | None): Specify the process group on which
+        synchronization is called. Defaults to ``None`` (entire world).
+    dist_sync_fn (Callable | None): Callback that performs the allgather
+        operation on the metric state. When ``None``, DDP will be used.
+        Defaults to ``None``.
+    fpr_limit (float): Limit for the false positive rate.
+        Defaults to ``0.3``.
+    num_thresholds (int | None): Number of thresholds to use for computing the
+        ROC curve. When ``None``, uses thresholds from torchmetrics.
+        Defaults to ``None``.
+
+Note:
+    The AUPRO score ranges from 0 to 1, with 1 indicating perfect overlap between
+    predictions and ground truth regions.
+"""
 
 from collections.abc import Callable
 from typing import Any
@@ -9,44 +57,51 @@ from typing import Any
 import torch
 from matplotlib.figure import Figure
 from torchmetrics import Metric
-from torchmetrics.functional.classification import binary_roc
 from torchmetrics.utilities.compute import auc
 from torchmetrics.utilities.data import dim_zero_cat
 
 from anomalib.metrics.pro import connected_components_cpu, connected_components_gpu
+from anomalib.utils import deprecate
 
-from .binning import thresholds_between_0_and_1, thresholds_between_min_and_max
-from .plotting_utils import plot_figure
+from .base import AnomalibMetric
+from .utils import plot_metric_curve
 
 
-class AUPRO(Metric):
+@deprecate(
+    args={"num_thresholds": None},
+    since="2.1.0",
+    remove="2.6.0",
+    reason="New AUPRO computation does not require number of thresholds",
+)
+class _AUPRO(Metric):
     """Area under per region overlap (AUPRO) Metric.
 
     Args:
-        dist_sync_on_step (bool): Synchronize metric state across processes at each ``forward()``
-            before returning the value at the step. Default: ``False``
-        process_group (Optional[Any]): Specify the process group on which synchronization is called.
-            Default: ``None`` (which selects the entire world)
-        dist_sync_fn (Optional[Callable]): Callback that performs the allgather operation on the metric state.
-            When ``None``, DDP will be used to perform the allgather.
-            Default: ``None``
-        fpr_limit (float): Limit for the false positive rate. Defaults to ``0.3``.
-        num_thresholds (int): Number of thresholds to use for computing the roc curve. Defaults to ``None``.
-            If ``None``, the roc curve is computed with the thresholds returned by
-            ``torchmetrics.functional.classification.thresholds``.
+        dist_sync_on_step (bool): Synchronize metric state across processes at
+            each ``forward()`` before returning the value at the step.
+            Defaults to ``False``.
+        process_group (Any | None): Specify the process group on which
+            synchronization is called. Defaults to ``None`` (entire world).
+        dist_sync_fn (Callable | None): Callback that performs the allgather
+            operation on the metric state. When ``None``, DDP will be used.
+            Defaults to ``None``.
+        fpr_limit (float): Limit for the false positive rate.
+            Defaults to ``0.3``.
+        num_thresholds (int | None): Present for backward compatibility with the
+            old implementation, but ignored in this fast version.
 
     Examples:
         >>> import torch
         >>> from anomalib.metrics import AUPRO
-        ...
-        >>> labels = torch.randint(low=0, high=2, size=(1, 10, 5), dtype=torch.float32)
+        >>> # Create sample data
+        >>> labels = torch.randint(0, 2, (1, 10, 5), dtype=torch.float32)
         >>> preds = torch.rand_like(labels)
-        ...
+        >>> # Initialize and compute
         >>> aupro = AUPRO(fpr_limit=0.3)
         >>> aupro(preds, labels)
         tensor(0.4321)
 
-        Increasing the fpr_limit will increase the AUPRO value:
+        Increasing the ``fpr_limit`` will increase the AUPRO value:
 
         >>> aupro = AUPRO(fpr_limit=0.7)
         >>> aupro(preds, labels)
@@ -58,12 +113,6 @@ class AUPRO(Metric):
     full_state_update: bool = False
     preds: list[torch.Tensor]
     target: list[torch.Tensor]
-    # When not None, the computation is performed in constant-memory by computing the roc curve
-    # for fixed thresholds buckets/thresholds.
-    # Warning: The thresholds are evenly distributed between the min and max predictions
-    # if all predictions are inside [0, 1]. Otherwise, the thresholds are evenly distributed between 0 and 1.
-    # This warning can be removed when https://github.com/Lightning-AI/torchmetrics/issues/1526 is fixed
-    # and the roc curve is computed with deactivated formatting
     num_thresholds: int | None
 
     def __init__(
@@ -83,6 +132,8 @@ class AUPRO(Metric):
         self.add_state("preds", default=[], dist_reduce_fx="cat")
         self.add_state("target", default=[], dist_reduce_fx="cat")
         self.register_buffer("fpr_limit", torch.tensor(fpr_limit))
+
+        # Kept for API compatibility; ignored by the fast implementation.
         self.num_thresholds = num_thresholds
 
     def update(self, preds: torch.Tensor, target: torch.Tensor) -> None:
@@ -99,19 +150,19 @@ class AUPRO(Metric):
         """Perform the Connected Component Analysis on the self.target tensor.
 
         Raises:
-            ValueError: ValueError is raised if self.target doesn't conform with requirements imposed by kornia for
-                        connected component analysis.
+            ValueError: ValueError is raised if self.target doesn't conform with
+                requirements imposed by kornia for connected component analysis.
 
         Returns:
             Tensor: Components labeled from 0 to N.
         """
-        target = dim_zero_cat(self.target)
+        target = dim_zero_cat(self.target)  # (B, ..., H, W)
 
         # check and prepare target for labeling via kornia
         if target.min() < 0 or target.max() > 1:
             msg = (
-                "kornia.contrib.connected_components expects input to lie in the interval [0, 1], "
-                f"but found interval was [{target.min()}, {target.max()}]."
+                "kornia.contrib.connected_components expects input to lie in the "
+                f"interval [0, 1], but found [{target.min()}, {target.max()}]."
             )
             raise ValueError(
                 msg,
@@ -120,120 +171,169 @@ class AUPRO(Metric):
         target = target.type(torch.float)  # kornia expects FloatTensor
         return connected_components_gpu(target) if target.is_cuda else connected_components_cpu(target)
 
+    @staticmethod
+    def _make_global_region_labels(cca: torch.Tensor) -> torch.Tensor:
+        """Offset connected component labels across batch to make them unique.
+
+        Args:
+            cca (torch.Tensor): (B, H, W) integer labels, starting at 0 for each image.
+
+        Returns:
+            torch.Tensor: (B, H, W) labels where:
+                - 0 is still background
+                - positive labels are unique across the batch
+        """
+        # We iterate over batch dimension only; typically small.
+        batch_size = cca.size(0)
+        cca_off = cca.clone()
+        current_offset = 0
+
+        for b in range(batch_size):
+            img_labels = cca_off[b]
+            unique = img_labels.unique()
+            unique_fg = unique[unique != 0]
+            num_regions = int(unique_fg.numel())
+            if num_regions == 0:
+                continue
+
+            # shift all foreground labels in this image by current_offset
+            fg_mask = img_labels > 0
+            img_labels[fg_mask] = img_labels[fg_mask] + current_offset
+
+            cca_off[b] = img_labels
+            current_offset += num_regions
+
+        return cca_off
+
+    @deprecate(
+        args={"target": None},
+        since="2.1.0",
+        remove="2.6.0",
+        reason="Compute PRO computes overlap with connected components not target.",
+    )
     def compute_pro(
         self,
         cca: torch.Tensor,
-        target: torch.Tensor,
         preds: torch.Tensor,
+        target: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        """Compute the pro/fpr value-pairs until the fpr specified by self.fpr_limit.
+        """Compute the PRO curve (FPR vs. averaged per-region TPR/overlap).
 
-        It leverages the fact that the overlap corresponds to the tpr, and thus computes the overall
-        PRO curve by aggregating per-region tpr/fpr values produced by ROC-construction.
+        This implementation is inspired by the MvTec implementation found at
+        https://www.mvtec.com/company/research/datasets/mvtec-ad
+
+        Args:
+            cca (torch.Tensor):
+                Connected-component labels of shape (B, H, W). Must contain integers
+                ≥ 0, where 0 denotes background and >0 denote region IDs.
+            preds (torch.Tensor):
+                Prediction scores of shape (B, H, W). Higher values indicate more
+                anomalous.
+            target (torch.Tensor | None):
+                Unused; accepted only for API compatibility.
 
         Returns:
-            tuple[torch.Tensor, torch.Tensor]: tuple containing final fpr and tpr values.
+            tuple[torch.Tensor, torch.Tensor]:
+                (fpr, pro), both 1-D tensors sorted by increasing FPR and clipped
+                at ``self.fpr_limit``.
         """
-        if self.num_thresholds is not None:
-            # binary_roc is applying a sigmoid on the predictions before computing the roc curve
-            # when some predictions are out of [0, 1], the binning between min and max predictions
-            # cannot be applied in that case. This can be removed when
-            #  https://github.com/Lightning-AI/torchmetrics/issues/1526 is fixed and
-            #  the roc curve is computed with deactivated formatting.
+        del target
+        device = preds.device
 
-            if torch.all((preds >= 0) * (preds <= 1)):
-                thresholds = thresholds_between_min_and_max(preds, self.num_thresholds, self.device)
+        # flatten (already on correct device)
+        labels = cca.reshape(-1).long()
+        preds_flat = preds.reshape(-1).float()
+
+        # background = FPR contribution
+        background = labels == 0
+        fp_change = background.float()
+        num_bg = fp_change.sum()
+
+        if num_bg == 0:
+            f = float(self.fpr_limit)
+            return (
+                torch.tensor([0.0, f], device=device),
+                torch.tensor([0.0, 0.0], device=device),
+            )
+
+        max_label = int(labels.max())
+        if max_label == 0:
+            f = float(self.fpr_limit)
+            return (
+                torch.tensor([0.0, f], device=device),
+                torch.tensor([0.0, 0.0], device=device),
+            )
+
+        region_sizes = torch.bincount(labels, minlength=max_label + 1).float()
+        num_regions = (region_sizes[1:] > 0).sum()
+
+        if num_regions == 0:
+            f = float(self.fpr_limit)
+            return (
+                torch.tensor([0.0, f], device=device),
+                torch.tensor([0.0, 0.0], device=device),
+            )
+
+        fg_mask = labels > 0
+
+        pro_change = torch.zeros_like(preds_flat)
+        pro_change[fg_mask] = 1.0 / region_sizes[labels[fg_mask]]
+
+        # global sort
+        idx = torch.argsort(preds_flat, descending=True)
+        fp_sorted = fp_change[idx]
+        pro_sorted = pro_change[idx]
+        preds_sorted = preds_flat[idx]
+
+        # cumulative sums
+        fpr = torch.cumsum(fp_sorted, 0) / num_bg
+        pro = torch.cumsum(pro_sorted, 0) / num_regions
+        fpr.clamp_(max=1.0)
+        pro.clamp_(max=1.0)
+
+        # remove duplicate thresholds
+        keep = torch.ones_like(preds_sorted, dtype=torch.bool)
+        keep[:-1] = preds_sorted[:-1] != preds_sorted[1:]
+        fpr = fpr[keep]
+        pro = pro[keep]
+
+        # prepend zero
+        fpr = torch.cat([torch.tensor([0.0], device=device), fpr])
+        pro = torch.cat([torch.tensor([0.0], device=device), pro])
+
+        # FPR limit clipping
+        f_lim = float(self.fpr_limit)
+        mask = fpr <= f_lim
+
+        if mask.any():
+            i = mask.nonzero(as_tuple=True)[0][-1].item()
+
+            if fpr[i] < f_lim and i + 1 < fpr.numel():
+                f1, f2 = fpr[i], fpr[i + 1]
+                p1, p2 = pro[i], pro[i + 1]
+                p_lim = p1 + (p2 - p1) * (f_lim - f1) / (f2 - f1)
+
+                fpr = torch.cat([fpr[: i + 1], torch.tensor([f_lim], device=device)])
+                pro = torch.cat([pro[: i + 1], torch.tensor([p_lim], device=device)])
             else:
-                thresholds = thresholds_between_0_and_1(self.num_thresholds, self.device)
-
+                fpr = fpr[: i + 1]
+                pro = pro[: i + 1]
         else:
-            thresholds = None
+            fpr = torch.tensor([0.0, f_lim], device=device)
+            pro = torch.tensor([0.0, 0.0], device=device)
 
-        # compute the global fpr-size
-        fpr: torch.Tensor = binary_roc(
-            preds=preds,
-            target=target,
-            thresholds=thresholds,
-        )[0]  # only need fpr
-        output_size = torch.where(fpr <= self.fpr_limit)[0].size(0)
-
-        # compute the PRO curve by aggregating per-region tpr/fpr curves/values.
-        tpr = torch.zeros(output_size, device=preds.device, dtype=torch.float)
-        fpr = torch.zeros(output_size, device=preds.device, dtype=torch.float)
-        new_idx = torch.arange(0, output_size, device=preds.device, dtype=torch.float)
-
-        # Loop over the labels, computing per-region tpr/fpr curves, and aggregating them.
-        # Note that, since the groundtruth is different for every all to `roc`, we also get
-        # different/unique tpr/fpr curves (i.e. len(_fpr_idx) is different for every call).
-        # We therefore need to resample per-region curves to a fixed sampling ratio (defined above).
-        labels = cca.unique()[1:]  # 0 is background
-        background = cca == 0
-        _fpr: torch.Tensor
-        _tpr: torch.Tensor
-        for label in labels:
-            interp: bool = False
-            new_idx[-1] = output_size - 1
-            mask = cca == label
-            # Need to calculate label-wise roc on union of background & mask, as otherwise we wrongly consider other
-            # label in labels as FPs. We also don't need to return the thresholds
-            _fpr, _tpr = binary_roc(
-                preds=preds[background | mask],
-                target=mask[background | mask],
-                thresholds=thresholds,
-            )[:-1]
-
-            # catch edge-case where ROC only has fpr vals > self.fpr_limit
-            if _fpr[_fpr <= self.fpr_limit].max() == 0:
-                _fpr_limit = _fpr[_fpr > self.fpr_limit].min()
-            else:
-                _fpr_limit = self.fpr_limit
-
-            _fpr_idx = torch.where(_fpr <= _fpr_limit)[0]
-            # if computed roc curve is not specified sufficiently close to self.fpr_limit,
-            # we include the closest higher tpr/fpr pair and linearly interpolate the tpr/fpr point at self.fpr_limit
-            if not torch.allclose(_fpr[_fpr_idx].max(), self.fpr_limit):
-                _tmp_idx = torch.searchsorted(_fpr, self.fpr_limit)
-                _fpr_idx = torch.cat([_fpr_idx, _tmp_idx.unsqueeze_(0)])
-                _slope = 1 - ((_fpr[_tmp_idx] - self.fpr_limit) / (_fpr[_tmp_idx] - _fpr[_tmp_idx - 1]))
-                interp = True
-
-            _fpr = _fpr[_fpr_idx]
-            _tpr = _tpr[_fpr_idx]
-
-            _fpr_idx = _fpr_idx.float()
-            _fpr_idx /= _fpr_idx.max()
-            _fpr_idx *= new_idx.max()
-
-            if interp:
-                # last point will be sampled at self.fpr_limit
-                new_idx[-1] = _fpr_idx[-2] + ((_fpr_idx[-1] - _fpr_idx[-2]) * _slope)
-
-            _tpr = self.interp1d(_fpr_idx, _tpr, new_idx)
-            _fpr = self.interp1d(_fpr_idx, _fpr, new_idx)
-            tpr += _tpr
-            fpr += _fpr
-
-        # Actually perform the averaging
-        tpr /= labels.size(0)
-        fpr /= labels.size(0)
-        return fpr, tpr
+        return fpr, pro
 
     def _compute(self) -> tuple[torch.Tensor, torch.Tensor]:
-        """Compute the PRO curve.
-
-        Perform the Connected Component Analysis first then compute the PRO curve.
-
-        Returns:
-            tuple[torch.Tensor, torch.Tensor]: tuple containing final fpr and tpr values.
-        """
-        cca = self.perform_cca().flatten()
-        target = dim_zero_cat(self.target).flatten()
-        preds = dim_zero_cat(self.preds).flatten()
-
-        return self.compute_pro(cca=cca, target=target, preds=preds)
+        """Compute the PRO curve (FPR vs PRO) for all stored predictions."""
+        cca = self.perform_cca()  # (B, H, W)
+        preds = dim_zero_cat(self.preds)  # (B, 1, H, W) or (B, H, W)
+        if preds.dim() > 3 and preds.size(1) == 1:
+            preds = preds.squeeze(1)
+        return self.compute_pro(cca=cca, preds=preds)
 
     def compute(self) -> torch.Tensor:
-        """Fist compute PRO curve, then compute and scale area under the curve.
+        """First compute PRO curve, then compute and scale area under the curve.
 
         Returns:
             Tensor: Value of the AUPRO metric
@@ -247,21 +347,22 @@ class AUPRO(Metric):
         """Generate a figure containing the PRO curve and the AUPRO.
 
         Returns:
-            tuple[Figure, str]: Tuple containing both the figure and the figure title to be used for logging
+            tuple[Figure, str]: Tuple containing both the figure and the figure
+                title to be used for logging
         """
         fpr, tpr = self._compute()
         aupro = self.compute()
 
-        xlim = (0.0, self.fpr_limit.detach_().cpu().numpy())
+        xlim = (0.0, float(self.fpr_limit.detach().cpu().item()))
         ylim = (0.0, 1.0)
         xlabel = "Global FPR"
         ylabel = "Averaged Per-Region TPR"
         loc = "lower right"
         title = "PRO"
 
-        fig, _axis = plot_figure(fpr, tpr, aupro, xlim, ylim, xlabel, ylabel, loc, title)
+        fig, _axis = plot_metric_curve(fpr, tpr, aupro, xlim, ylim, xlabel, ylabel, loc, title, metric_name="AUPRO")
 
-        return fig, "PRO"
+        return fig, title
 
     @staticmethod
     def interp1d(old_x: torch.Tensor, old_y: torch.Tensor, new_x: torch.Tensor) -> torch.Tensor:
@@ -286,8 +387,12 @@ class AUPRO(Metric):
         # to preserve order, but we actually want the preceeding index.
         idx -= 1
         # we clamp the index, because the number of intervals = old_x.size(0) -1,
-        # and the left neighbour should hence be at most number of intervals -1, i.e. old_x.size(0) - 2
+        # and the left neighbour should hence be at most number of intervals -1,
         idx = torch.clamp(idx, 0, old_x.size(0) - 2)
 
         # perform actual linear interpolation
         return old_y[idx] + slope[idx] * (new_x - old_x[idx])
+
+
+class AUPRO(AnomalibMetric, _AUPRO):  # type: ignore[misc]
+    """Wrapper to add AnomalibMetric functionality to AUPRO metric."""

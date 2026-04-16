@@ -1,0 +1,115 @@
+# Artifact Builder Workflow
+#
+# This reusable workflow handles Python package building and artifact creation,
+# providing a standardized build process with verification and caching.
+#
+# Key Features:
+# - Python package building
+# - Package verification
+# - Build artifact caching
+# - Configurable Python versions
+# - Artifact retention management
+#
+# Process Stages:
+# 1. Environment Setup:
+#    - Python environment configuration
+#    - Dependency installation
+#    - Cache initialization
+#
+# 2. Build Process:
+#    - Package building
+#    - Distribution creation
+#    - Build verification
+#
+# 3. Artifact Management:
+#    - Artifact naming
+#    - Upload and caching
+#    - Retention configuration
+#
+# Required Inputs:
+# - python-version: Python version for building (default: "3.10")
+# - verify-package: Enable package verification (default: true)
+#
+# Outputs:
+# - artifact-name: Name of the uploaded artifact
+#
+# Example Usage:
+# 1. Basic Build:
+#    jobs:
+#      build:
+#        uses: ./.github/workflows/_reusable-artifact-builder.yaml
+#        with:
+#          python-version: "3.11"
+#
+# 2. Build with Verification:
+#    jobs:
+#      build:
+#        uses: ./.github/workflows/_reusable-artifact-builder.yaml
+#        with:
+#          python-version: "3.10"
+#          verify-package: true
+#
+# Note: Requires proper Python project structure and build configuration
+
+name: Reusable Artifact Builder
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: "Python version for building"
+        type: string
+        default: "3.10"
+      verify-package:
+        description: "Run package verification"
+        type: boolean
+        default: true
+    outputs:
+      artifact-name:
+        description: "Name of the uploaded artifact"
+        value: ${{ jobs.build.outputs.artifact-name }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      artifact-name: ${{ steps.set-artifact-name.outputs.name }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: ${{ inputs.python-version }}
+      # Cache poisoning mitigation: fork PRs blocked, same-repo PRs allowed; event+branch isolation
+      # No cache for build/ or dist/ - Python packaging regenerates them from scratch each time
+      - name: Cache pip dependencies
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+        with:
+          path: |
+            ~/.cache/pip
+            .venv
+          key: ${{ runner.os }}-pip-${{ github.event_name }}-${{ github.ref_name }}-${{ hashFiles('**/pyproject.toml') }}-${{ hashFiles('**/uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ github.event_name }}-${{ github.ref_name }}-
+      - name: Build package
+        run: |
+          python -m pip install --upgrade pip==26.0.1 build==1.4.2
+          python -m build
+      - name: Verify package
+        if: inputs.verify-package
+        run: |
+          python -m pip install twine==6.2.0
+          twine check dist/*
+      - name: Set artifact name
+        id: set-artifact-name
+        run: echo "name=dist-$(date +%s)" >> $GITHUB_OUTPUT
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+        with:
+          name: ${{ steps.set-artifact-name.outputs.name }}
+          path: dist/
+          retention-days: 5
