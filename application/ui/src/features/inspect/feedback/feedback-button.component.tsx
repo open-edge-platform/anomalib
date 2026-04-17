@@ -4,7 +4,6 @@
 import { useState } from 'react';
 
 import { fetchClient } from '@anomalib-studio/api';
-import { isTauri } from '@tauri-apps/api/core';
 import {
     ActionButton,
     Button,
@@ -25,6 +24,7 @@ import {
 } from '@geti/ui';
 import { CheckmarkCircleOutline, DownloadIcon, ExternalLinkIcon, HelpIcon } from '@geti/ui/icons';
 import { useMutation } from '@tanstack/react-query';
+import { isTauri } from '@tauri-apps/api/core';
 
 import { downloadBlob } from '../utils';
 
