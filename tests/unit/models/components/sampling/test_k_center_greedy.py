@@ -5,6 +5,7 @@
 
 from unittest.mock import patch
 
+import pytest
 import torch
 
 from anomalib.models.components.sampling.k_center_greedy import KCenterGreedy
@@ -84,17 +85,13 @@ class TestKCenterGreedy:
         assert all(0 <= i < n for i in idxs)
 
     @staticmethod
-    def test_coreset_size_zero() -> None:
-        """Edge case: ``int(n * ratio) == 0`` must return an empty coreset.
+    def test_coreset_size_zero_raises() -> None:
+        """Construction must raise ValueError when sampling_ratio yields coreset_size <= 0.
 
         A very small ``sampling_ratio`` combined with a small embedding set
-        can yield ``coreset_size == 0``. Before the guard, the greedy loop
-        ``range(coreset_size - 1)`` became ``range(-1)`` and the seed index
-        alone was returned -- the caller asked for zero elements but got one.
+        can yield ``coreset_size == 0``. The class should fail loudly at
+        construction time rather than silently returning an empty or incorrect
+        coreset later.
         """
-        embedding = torch.randn(10, 4)
-        sampler = KCenterGreedy(embedding=embedding, sampling_ratio=0.01)
-        assert sampler.coreset_size == 0
-
-        idxs = sampler.select_coreset_idxs()
-        assert idxs == []
+        with pytest.raises(ValueError, match="coreset_size must be a positive integer"):
+            KCenterGreedy(torch.randn(10, 4), sampling_ratio=0.01)

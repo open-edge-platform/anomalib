@@ -46,7 +46,15 @@ class KCenterGreedy:
 
     def __init__(self, embedding: torch.Tensor, sampling_ratio: float) -> None:
         self.embedding = embedding
-        self.coreset_size = int(embedding.shape[0] * sampling_ratio)
+        n = embedding.shape[0]
+        coreset_size = int(n * sampling_ratio)
+        if coreset_size <= 0:
+            msg = (
+                f"coreset_size must be a positive integer, got {coreset_size}. "
+                f"Check sampling_ratio ({sampling_ratio}) and embedding size ({n})."
+            )
+            raise ValueError(msg)
+        self.coreset_size = coreset_size
         self.model = SparseRandomProjection(eps=0.9)
 
         self.features: torch.Tensor
@@ -117,13 +125,6 @@ class KCenterGreedy:
         else:
             self.features = self.embedding.reshape(self.embedding.shape[0], -1)
             self.reset_distances()
-
-        # Degenerate case: a caller that asked for zero samples should get an
-        # empty coreset, not the seed index. ``range(coreset_size - 1)`` would
-        # become ``range(-1)`` and silently skip the loop, leaving the seed
-        # behind and violating the size contract.
-        if self.coreset_size == 0:
-            return []
 
         # random starting point — include it in the coreset so it is not
         # merely a "virtual center" that influences distances but is absent
