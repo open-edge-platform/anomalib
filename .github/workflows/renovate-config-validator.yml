@@ -25,6 +25,8 @@ on:
   pull_request:
     paths:
       - ".github/renovate.json5"
+      - ".github/workflows/renovate.yml"
+      - ".github/workflows/renovate-config-validator.yml"
 
 permissions:
   contents: read
