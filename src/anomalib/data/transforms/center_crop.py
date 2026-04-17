@@ -129,20 +129,13 @@ class ExportableCenterCrop(Transform):
 
     def __init__(self, size: int | Sequence[int]) -> None:
         super().__init__()
-        # ``str`` and ``bytes`` are ``Sequence`` instances in Python, so a plain
-        # ``isinstance(size, Sequence)`` check would split e.g. ``"224"`` into
-        # the 3-element list ``["2", "2", "4"]`` and then fail deep inside
-        # ``_center_crop_parse_output_size`` with an opaque error. Exclude
-        # string-like sequences and route ``int`` / numeric strings through
-        # the ``[size, size]`` branch to mirror the torchvision ``CenterCrop``
-        # contract.
-        if isinstance(size, int):
-            self.size = [size, size]
-        elif isinstance(size, Sequence) and not isinstance(size, (str, bytes, bytearray)):
-            self.size = list(size)
-        else:
-            msg = f"size must be int or Sequence[int], got {type(size).__name__}"
-            raise TypeError(msg)
+        # Match the declared ``int | Sequence[int]`` typing: route ``int``
+        # through ``[size, size]`` (mirroring torchvision ``CenterCrop``) and
+        # copy any other sequence as-is. The previous ``isinstance(size, tuple)``
+        # check misclassified plain ``list`` inputs, and broadening it to
+        # ``Sequence`` without a narrower ``int`` guard silently split ``str``
+        # inputs like ``"224"`` into ``["2", "2", "4"]``.
+        self.size = [size, size] if isinstance(size, int) else list(size)
 
     def _transform(self, inpt: torch.Tensor, params: dict[str, Any]) -> torch.Tensor:
         """Apply the center crop transform.
