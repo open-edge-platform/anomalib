@@ -3,6 +3,7 @@
 
 """Tests for ``ExportableCenterCrop`` size handling."""
 
+import pytest
 import torch
 
 from anomalib.data.transforms.center_crop import ExportableCenterCrop
@@ -21,6 +22,15 @@ class TestExportableCenterCropSize:
         """A list/tuple of ints must be preserved as a list."""
         assert ExportableCenterCrop(size=(224, 256)).size == [224, 256]
         assert ExportableCenterCrop(size=[320, 320]).size == [320, 320]
+
+    @staticmethod
+    def test_str_size_is_rejected() -> None:
+        """A str must not silently split into characters (regression for #3547).
+
+        ``_setup_size`` from torchvision raises ``ValueError`` for str input.
+        """
+        with pytest.raises(ValueError, match="Please provide only two dimensions"):
+            ExportableCenterCrop(size="224")
 
     @staticmethod
     def test_transform_still_works_for_int_size() -> None:
