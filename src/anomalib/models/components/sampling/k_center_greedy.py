@@ -118,6 +118,13 @@ class KCenterGreedy:
             self.features = self.embedding.reshape(self.embedding.shape[0], -1)
             self.reset_distances()
 
+        # Degenerate case: a caller that asked for zero samples should get an
+        # empty coreset, not the seed index. ``range(coreset_size - 1)`` would
+        # become ``range(-1)`` and silently skip the loop, leaving the seed
+        # behind and violating the size contract.
+        if self.coreset_size == 0:
+            return []
+
         # random starting point — include it in the coreset so it is not
         # merely a "virtual center" that influences distances but is absent
         # from the final memory bank (see gh-3459).
