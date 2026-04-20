@@ -16,6 +16,14 @@ class DeviceType(StrEnum):
     NPU = auto()
 
 
+class DeploymentType(StrEnum):
+    """Enumeration of supported Anomalib Studio deployment types."""
+
+    WIN_APP = auto()
+    DOCKER = auto()
+    DEV = auto()
+
+
 class DeviceInfo(BaseModel):
     """Device information schema"""
 
@@ -55,6 +63,7 @@ class SystemInfo(BaseModel):
     os_version: str
     platform: str
     app_version: str
+    deployment_type: DeploymentType
     libraries: LibraryVersions
     devices: list[DeviceInfo]
 
@@ -65,6 +74,7 @@ class SystemInfo(BaseModel):
                 "os_version": "5.15.0-generic",
                 "platform": "Linux-5.15.0-generic-x86_64-with-glibc2.35",
                 "app_version": "0.1.0",
+                "deployment_type": "docker",
                 "libraries": {
                     "anomalib": "2.0.0",
                     "python": "3.11.0",
@@ -100,3 +110,28 @@ class SystemInfo(BaseModel):
             },
         },
     }
+
+
+class LicenseReference(BaseModel):
+    """License reference displayed in the Studio acceptance dialog."""
+
+    name: str = Field(..., description="Display name of the license entry")
+    url: str = Field(..., description="URL pointing to the full license text")
+    required_for: str = Field(..., description="Deployment or model requiring this license")
+
+
+class LicenseStatus(BaseModel):
+    """Current license acceptance status for the running application version."""
+
+    accepted: bool = Field(..., description="Whether the user accepted licenses for the running app version")
+    accepted_version: str | None = Field(None, description="Last accepted application version")
+    app_version: str = Field(..., description="Current application version")
+    deployment_type: DeploymentType = Field(..., description="Current Studio deployment type")
+    licenses: list[LicenseReference] = Field(..., description="Licenses the user must review and accept")
+
+
+class LicenseAcceptanceResponse(BaseModel):
+    """Response returned after accepting licenses."""
+
+    accepted: bool = Field(..., description="Whether acceptance was stored successfully")
+    accepted_version: str = Field(..., description="Application version recorded for acceptance")

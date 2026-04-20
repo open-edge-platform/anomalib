@@ -3,9 +3,28 @@ import '@testing-library/jest-dom';
 import fetchPolyfill, { Request as RequestPolyfill } from 'node-fetch';
 import { afterAll, afterEach, beforeAll } from 'vitest';
 
-import { server } from './msw-node-setup';
-
 process.env.PUBLIC_API_BASE_URL = 'http://localhost:8000';
+
+const storage = {
+    getItem: () => null,
+    setItem: () => undefined,
+    removeItem: () => undefined,
+    clear: () => undefined,
+    key: () => null,
+    length: 0,
+};
+
+Object.defineProperty(globalThis, 'localStorage', {
+    value: storage,
+    configurable: true,
+});
+
+Object.defineProperty(globalThis, 'sessionStorage', {
+    value: storage,
+    configurable: true,
+});
+
+const { server } = await import('./msw-node-setup');
 
 beforeAll(() => {
     server.listen({ onUnhandledRequest: 'bypass' });

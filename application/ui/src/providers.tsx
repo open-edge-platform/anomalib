@@ -10,6 +10,7 @@ import { MemoryRouter as Router } from 'react-router-dom';
 import { StreamConnectionProvider } from './components/stream/stream-connection-provider';
 import { ZoomProvider } from './components/zoom/zoom';
 import { StatusBarProvider } from './features/inspect/footer/status-bar/status-bar-context';
+import { LicenseGate } from './features/license/license-gate.component';
 import { queryClient } from './query-client/query-client';
 import { router } from './routes/router';
 
@@ -21,7 +22,9 @@ export const Providers = () => {
                     <ZoomProvider>
                         <NuqsAdapter>
                             <StatusBarProvider>
-                                <RouterProvider router={router} />
+                                <LicenseGate>
+                                    <RouterProvider router={router} />
+                                </LicenseGate>
                             </StatusBarProvider>
                         </NuqsAdapter>
                     </ZoomProvider>

@@ -10,12 +10,20 @@ from .pipeline import Pipeline, PipelineStatus
 from .project import Project, ProjectList, ProjectUpdate
 from .sink import DisconnectedSinkConfig, OutputFormat, Sink, SinkType
 from .source import DisconnectedSourceConfig, Source, SourceType
-from .system import LibraryVersions, SystemInfo
+from .system import (
+    DeploymentType,
+    LibraryVersions,
+    LicenseAcceptanceResponse,
+    LicenseReference,
+    LicenseStatus,
+    SystemInfo,
+)
 from .trainable_model import ModelFamily, TrainableModel, TrainableModelList
 from .video import Video, VideoExtension, VideoList
 
 __all__ = [
     "DatasetSnapshot",
+    "DeploymentType",
     "DisconnectedSinkConfig",
     "DisconnectedSourceConfig",
     "ImageExtension",
@@ -26,6 +34,9 @@ __all__ = [
     "JobType",
     "LatencyMetrics",
     "LibraryVersions",
+    "LicenseAcceptanceResponse",
+    "LicenseReference",
+    "LicenseStatus",
     "Media",
     "MediaList",
     "Model",

@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 import platform
 import re
+import sys
 from functools import lru_cache
 from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
 
 import cv2
 import openvino as ov
@@ -11,8 +13,21 @@ import psutil
 import torch
 from cv2_enumerate_cameras import enumerate_cameras
 from loguru import logger
+from sqlalchemy import desc, select
 
-from pydantic_models.system import CameraInfo, DeviceInfo, DeviceType, LibraryVersions, SystemInfo
+from db import get_async_db_session_ctx
+from db.schema import LicenseAcceptanceDB
+from pydantic_models.system import (
+    CameraInfo,
+    DeploymentType,
+    DeviceInfo,
+    DeviceType,
+    LibraryVersions,
+    LicenseAcceptanceResponse,
+    LicenseReference,
+    LicenseStatus,
+    SystemInfo,
+)
 from settings import get_settings
 
 DEVICE_PATTERN = re.compile(r"^(cpu|xpu|cuda)(-(\d+))?$")
@@ -22,6 +37,29 @@ CV2_BACKENDS = {
     "Linux": cv2.CAP_V4L2,
     "Darwin": cv2.CAP_AVFOUNDATION,
 }
+APACHE_LICENSE_URL = "https://www.apache.org/licenses/LICENSE-2.0"
+INTEL_SIMPLIFIED_LICENSE_URL = "https://www.intel.com/content/www/us/en/content-details/749362/intel-simplified-software-license-version-october-2022.html"
+ANOMALIB_LICENSE_BLOB_ROOT = "https://github.com/open-edge-platform/anomalib/blob/main/src/anomalib/models"
+MODEL_LICENSES: tuple[tuple[str, str, str], ...] = (
+    ("DRAEM", "MIT License", f"{ANOMALIB_LICENSE_BLOB_ROOT}/image/draem/LICENSE"),
+    ("DSR", "Apache 2.0 License", f"{ANOMALIB_LICENSE_BLOB_ROOT}/image/dsr/LICENSE"),
+    (
+        "Reverse Distillation",
+        "MIT License",
+        f"{ANOMALIB_LICENSE_BLOB_ROOT}/image/reverse_distillation/LICENSE",
+    ),
+    (
+        "AI-VAD (CLIP)",
+        "MIT License",
+        f"{ANOMALIB_LICENSE_BLOB_ROOT}/video/ai_vad/clip/LICENSE",
+    ),
+    (
+        "SuperSimpleNet",
+        "MIT License",
+        f"{ANOMALIB_LICENSE_BLOB_ROOT}/image/supersimplenet/LICENSE",
+    ),
+    ("UniNet", "MIT License", f"{ANOMALIB_LICENSE_BLOB_ROOT}/image/uninet/LICENSE"),
+)
 
 
 class SystemService:
@@ -29,6 +67,77 @@ class SystemService:
 
     def __init__(self) -> None:
         self.process = psutil.Process()
+
+    @staticmethod
+    def get_deployment_type() -> DeploymentType:
+        """Infer the current deployment type from runtime settings and platform."""
+        settings = get_settings()
+
+        if getattr(sys, "frozen", False) and (os_name := platform.system()) == "Windows":
+            logger.debug(f"Detected frozen Windows application deployment: {os_name}")
+            return DeploymentType.WIN_APP
+        if settings.static_files_dir:
+            static_dir = Path(settings.static_files_dir)
+            if static_dir.is_dir() and (static_dir / "index.html").exists():
+                return DeploymentType.DOCKER
+        return DeploymentType.DEV
+
+    @classmethod
+    def get_required_licenses(cls) -> list[LicenseReference]:
+        """Return licenses that must be accepted for the current deployment."""
+        deployment_type = cls.get_deployment_type()
+        primary_license = LicenseReference(
+            name=(
+                "Intel Simplified Software License"
+                if deployment_type == DeploymentType.WIN_APP
+                else "Apache 2.0 License"
+            ),
+            url=(INTEL_SIMPLIFIED_LICENSE_URL if deployment_type == DeploymentType.WIN_APP else APACHE_LICENSE_URL),
+            required_for=(
+                "Windows application"
+                if deployment_type == DeploymentType.WIN_APP
+                else "Docker and development deployments"
+            ),
+        )
+        model_licenses = [
+            LicenseReference(name=name, url=url, required_for=required_for)
+            for required_for, name, url in MODEL_LICENSES
+        ]
+        return [primary_license, *model_licenses]
+
+    @staticmethod
+    async def _get_latest_license_acceptance() -> LicenseAcceptanceDB | None:
+        async with get_async_db_session_ctx() as session:
+            result = await session.execute(select(LicenseAcceptanceDB).order_by(desc(LicenseAcceptanceDB.id)).limit(1))
+            return result.scalar_one_or_none()
+
+    async def get_license_status(self) -> LicenseStatus:
+        """Return whether licenses were accepted for the running application version."""
+        settings = get_settings()
+        acceptance = await self._get_latest_license_acceptance()
+        accepted_version = acceptance.accepted_version if acceptance is not None else None
+        return LicenseStatus(
+            accepted=accepted_version == settings.version,
+            accepted_version=accepted_version,
+            app_version=settings.version,
+            deployment_type=self.get_deployment_type(),
+            licenses=self.get_required_licenses(),
+        )
+
+    async def accept_licenses(self) -> LicenseAcceptanceResponse:
+        """Persist license acceptance for the running application version."""
+        settings = get_settings()
+        async with get_async_db_session_ctx() as session:
+            result = await session.execute(select(LicenseAcceptanceDB).order_by(desc(LicenseAcceptanceDB.id)).limit(1))
+            acceptance = result.scalar_one_or_none()
+            if acceptance is None:
+                acceptance = LicenseAcceptanceDB(accepted_version=settings.version)
+                session.add(acceptance)
+            else:
+                acceptance.accepted_version = settings.version
+            await session.commit()
+
+        return LicenseAcceptanceResponse(accepted=True, accepted_version=settings.version)
 
     def get_memory_usage(self) -> tuple[float, float]:
         """
@@ -314,6 +423,7 @@ class SystemService:
             os_version=platform.release(),
             platform=platform.platform(),
             app_version=get_settings().version,
+            deployment_type=self.get_deployment_type(),
             libraries=self.get_library_versions(),
             devices=self.get_training_devices(),
         )
