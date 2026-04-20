@@ -7,7 +7,7 @@ import pytest
 from openvino.properties.device import Type as OVDeviceType
 
 from pydantic_models.system import DeploymentType
-from services.system_service import SystemService
+from services.system_service import INTEL_SIMPLIFIED_LICENSE_URL, SystemService
 
 
 class TestSystemService:
@@ -311,7 +311,7 @@ class TestSystemService:
             licenses = fxt_system_service.get_required_licenses()
 
         assert licenses[0].name == "Intel Simplified Software License"
-        assert "intel.com" in licenses[0].url
+        assert licenses[0].url == INTEL_SIMPLIFIED_LICENSE_URL
 
     def test_get_required_licenses_uses_apache_for_non_windows(self, fxt_system_service: SystemService):
         with patch.object(SystemService, "get_deployment_type", return_value=DeploymentType.DOCKER):
