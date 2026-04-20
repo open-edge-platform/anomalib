@@ -49,6 +49,7 @@ from omegaconf import DictConfig, ListConfig, OmegaConf
 from .checkpoint import ModelCheckpoint
 from .graph import GraphLogger
 from .model_loader import LoadModelCallback
+from .rich_progress_bar import MaxStepsProgressCallback
 from .tiler_configuration import TilerConfigurationCallback
 from .timer import TimerCallback
 
@@ -56,6 +57,7 @@ __all__ = [
     "ModelCheckpoint",
     "GraphLogger",
     "LoadModelCallback",
+    "MaxStepsProgressCallback",
     "TilerConfigurationCallback",
     "TimerCallback",
 ]

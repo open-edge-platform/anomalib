@@ -40,7 +40,6 @@ See Also:
 """
 
 import logging
-import math
 from typing import Any
 
 import torch
@@ -199,59 +198,6 @@ class Dinomaly(AnomalibModule):
 
         self.trainable_modules = torch.nn.ModuleList([self.model.bottleneck, self.model.decoder])
         self._initialize_trainable_modules(self.trainable_modules)
-
-    def on_train_start(self) -> None:
-        """Fix Rich progress bar epoch display when using step-based training.
-
-        Lightning internally sets ``max_epochs=-1`` when only ``max_steps`` is
-        provided. The Rich progress bar then displays "Epoch X/-2" because it
-        computes ``max_epochs - 1``. This hook calculates the estimated number
-        of epochs from ``max_steps`` and ``num_training_batches`` so the
-        progress bar shows "Epoch X/M", where ``M`` is the estimated last
-        epoch index (``estimated_epochs - 1``).
-
-        Note:
-            This relies on Lightning's ``RichProgressBar._get_train_description``
-            as implemented in Lightning 2.x. If the internals change in future
-            versions, this hook may need updating.
-        """
-        if self.trainer.max_epochs is not None and self.trainer.max_epochs < 0:
-            try:
-                from lightning.pytorch.callbacks.progress.rich_progress import RichProgressBar
-            except ImportError:
-                return
-
-            progress_bar = getattr(self.trainer, "progress_bar_callback", None)
-            if isinstance(progress_bar, RichProgressBar) and hasattr(
-                progress_bar,
-                "_get_train_description",
-            ):
-                num_batches = self.trainer.num_training_batches
-                max_steps = self.trainer.max_steps
-                if (
-                    max_steps > 0
-                    and isinstance(num_batches, (int, float))
-                    and num_batches > 0
-                    and math.isfinite(num_batches)
-                ):
-                    est_max_epochs = math.ceil(max_steps / num_batches)
-                else:
-                    est_max_epochs = None
-
-                val_desc = getattr(progress_bar, "validation_description", "Validation")
-
-                class _FixedRichProgressBar(RichProgressBar):
-                    """RichProgressBar subclass with corrected epoch display for step-based training."""
-
-                    def _get_train_description(self, current_epoch: int) -> str:  # noqa: PLR6301
-                        desc = f"Epoch {current_epoch}"
-                        if est_max_epochs is not None:
-                            desc += f"/{est_max_epochs - 1}"
-                        if len(val_desc) > len(desc):
-                            desc = f"{desc:{len(val_desc)}}"
-                        return desc
-
-                progress_bar.__class__ = _FixedRichProgressBar
 
     @classmethod
     def configure_pre_processor(
