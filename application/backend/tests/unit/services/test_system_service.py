@@ -282,6 +282,7 @@ class TestSystemService:
             patch("services.system_service.get_settings") as mock_settings,
         ):
             mock_settings.return_value.version = "1.2.3"
+            mock_settings.return_value.static_files_dir = None
 
             status = await fxt_system_service.get_license_status()
 
@@ -300,6 +301,7 @@ class TestSystemService:
             patch("services.system_service.get_settings") as mock_settings,
         ):
             mock_settings.return_value.version = "1.2.3"
+            mock_settings.return_value.static_files_dir = None
 
             status = await fxt_system_service.get_license_status()
 

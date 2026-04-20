@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode, useState } from 'react';
+import { ReactNode } from 'react';
 
 import { AlertDialog, DialogContainer, Flex, IntelBrandedLoading, Link, Text } from '@geti/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -49,7 +49,6 @@ const acceptLicenses = async (): Promise<void> => {
 };
 
 export const LicenseGate = ({ children }: LicenseGateProps) => {
-    const [isOpen, setIsOpen] = useState(true);
     const queryClient = useQueryClient();
 
     const {
@@ -65,7 +64,6 @@ export const LicenseGate = ({ children }: LicenseGateProps) => {
         mutationFn: acceptLicenses,
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: ['license-status'] });
-            setIsOpen(false);
         },
     });
 
@@ -81,7 +79,7 @@ export const LicenseGate = ({ children }: LicenseGateProps) => {
         );
     }
 
-    const shouldBlock = isOpen && !licenseStatus.accepted;
+    const shouldBlock = !licenseStatus.accepted;
 
     return (
         <>
@@ -91,6 +89,7 @@ export const LicenseGate = ({ children }: LicenseGateProps) => {
                     <AlertDialog
                         variant='confirmation'
                         title={`Review licenses for Anomalib Studio ${licenseStatus.app_version}`}
+                        cancelLabel={undefined}
                         primaryActionLabel={acceptMutation.isPending ? 'Accepting...' : 'Accept and continue'}
                         isPrimaryActionDisabled={acceptMutation.isPending}
                         onPrimaryAction={() => acceptMutation.mutate()}
