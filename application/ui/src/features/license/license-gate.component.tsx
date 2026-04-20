@@ -3,7 +3,7 @@
 
 import { ReactNode, useState } from 'react';
 
-import { IntelBrandedLoading, AlertDialog, DialogContainer, Flex, Link, Text } from '@geti/ui';
+import { AlertDialog, DialogContainer, Flex, IntelBrandedLoading, Link, Text } from '@geti/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { getApiUrl } from '../../api/client';
@@ -86,7 +86,6 @@ export const LicenseGate = ({ children }: LicenseGateProps) => {
                 {shouldBlock ? (
                     <AlertDialog
                         variant='confirmation'
-                        cancelLabel='Close'
                         title={`Review licenses for Anomalib Studio ${licenseStatus.app_version}`}
                         primaryActionLabel={acceptMutation.isPending ? 'Accepting...' : 'Accept and continue'}
                         isPrimaryActionDisabled={acceptMutation.isPending}
