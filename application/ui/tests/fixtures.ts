@@ -1,6 +1,6 @@
 import { createNetworkFixture, NetworkFixture } from '@msw/playwright';
-import { HttpResponse, http as rawHttp } from 'msw';
 import { expect, test as testBase } from '@playwright/test';
+import { HttpResponse, http as rawHttp } from 'msw';
 
 import { getOpenApiHttp, handlers } from '../src/api/utils';
 

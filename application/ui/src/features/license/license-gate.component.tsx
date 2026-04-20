@@ -52,7 +52,11 @@ export const LicenseGate = ({ children }: LicenseGateProps) => {
     const [isOpen, setIsOpen] = useState(true);
     const queryClient = useQueryClient();
 
-    const { data: licenseStatus, isPending, isError } = useQuery({
+    const {
+        data: licenseStatus,
+        isPending,
+        isError,
+    } = useQuery({
         queryKey: ['license-status'],
         queryFn: fetchLicenseStatus,
         retry: false,
@@ -94,13 +98,17 @@ export const LicenseGate = ({ children }: LicenseGateProps) => {
                         <Flex direction='column' gap='size-200'>
                             <Text>
                                 Please review and accept the licenses required for this{' '}
-                                {DeploymentLabel[licenseStatus.deployment_type]}. The dialog reappears whenever the Studio
-                                version changes.
+                                {DeploymentLabel[licenseStatus.deployment_type]}. The dialog reappears whenever the
+                                Studio version changes.
                             </Text>
 
                             <Flex direction='column' gap='size-150'>
                                 {licenseStatus.licenses.map((license) => (
-                                    <Flex key={`${license.required_for}-${license.name}`} direction='column' gap='size-50'>
+                                    <Flex
+                                        key={`${license.required_for}-${license.name}`}
+                                        direction='column'
+                                        gap='size-50'
+                                    >
                                         <Text>{license.required_for}</Text>
                                         <Link href={license.url} target='_blank' rel='noreferrer'>
                                             {license.name}

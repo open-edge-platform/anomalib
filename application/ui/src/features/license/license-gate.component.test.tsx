@@ -1,10 +1,10 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { ThemeProvider } from '@geti/ui/theme';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ThemeProvider } from '@geti/ui/theme';
 
 import { LicenseGate } from './license-gate.component';
 
