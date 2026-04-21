@@ -46,7 +46,15 @@ class KCenterGreedy:
 
     def __init__(self, embedding: torch.Tensor, sampling_ratio: float) -> None:
         self.embedding = embedding
-        self.coreset_size = int(embedding.shape[0] * sampling_ratio)
+        n = embedding.shape[0]
+        coreset_size = int(n * sampling_ratio)
+        if coreset_size <= 0:
+            msg = (
+                f"coreset_size must be a positive integer, got {coreset_size}. "
+                f"Check sampling_ratio ({sampling_ratio}) and embedding size ({n})."
+            )
+            raise ValueError(msg)
+        self.coreset_size = coreset_size
         self.model = SparseRandomProjection(eps=0.9)
 
         self.features: torch.Tensor
