@@ -1,4 +1,4 @@
-// Copyright (C) 2024-2026 Intel Corporation
+// Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { useEffect } from 'react';
@@ -12,8 +12,7 @@ export interface StartupProjectSelection {
     source: StartupProjectSelectionSource;
 }
 
-export const useStartupProjectSelection = () =>
-    $api.useSuspenseQuery('get', '/api/projects/startup-selection');
+export const useStartupProjectSelection = () => $api.useSuspenseQuery('get', '/api/projects/startup-selection');
 
 export const usePersistLastUsedProject = (projectId: string) => {
     const mutation = $api.useMutation('put', '/api/projects/last-used');
@@ -29,7 +28,7 @@ export const usePersistLastUsedProject = (projectId: string) => {
                 onError: (error) => {
                     console.error('Failed to persist last used project:', error);
                 },
-            },
+            }
         );
     }, [mutation, projectId]);
 };
