@@ -1,8 +1,9 @@
+// Copyright (C) 2024-2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { useEffect } from 'react';
 
-import { useSuspenseQuery } from '@tanstack/react-query';
-
-import { getApiUrl } from '../api/client';
+import { $api } from '../api/client';
 
 type StartupProjectSelectionSource = 'last_used' | 'active_pipeline' | 'first_project' | 'none';
 
@@ -11,41 +12,24 @@ export interface StartupProjectSelection {
     source: StartupProjectSelectionSource;
 }
 
-const PROJECT_STARTUP_SELECTION_QUERY_KEY = ['get', '/api/projects/startup-selection'] as const;
-
-const fetchStartupProjectSelection = async ({ signal }: { signal: AbortSignal }): Promise<StartupProjectSelection> => {
-    const response = await fetch(getApiUrl('/api/projects/startup-selection'), { signal });
-    if (!response.ok) {
-        throw new Error(`Failed to resolve startup project: ${response.status}`);
-    }
-
-    return response.json() as Promise<StartupProjectSelection>;
-};
-
-const persistLastUsedProject = async (projectId: string): Promise<void> => {
-    const response = await fetch(getApiUrl('/api/projects/last-used'), {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ project_id: projectId }),
-    });
-
-    if (!response.ok) {
-        throw new Error(`Failed to persist last used project: ${response.status}`);
-    }
-};
-
 export const useStartupProjectSelection = () =>
-    useSuspenseQuery({
-        queryKey: PROJECT_STARTUP_SELECTION_QUERY_KEY,
-        queryFn: fetchStartupProjectSelection,
-    });
+    $api.useSuspenseQuery('get', '/api/projects/startup-selection');
 
 export const usePersistLastUsedProject = (projectId: string) => {
+    const mutation = $api.useMutation('put', '/api/projects/last-used');
+
     useEffect(() => {
-        void persistLastUsedProject(projectId).catch((error) => {
-            console.error('Failed to persist last used project:', error);
-        });
-    }, [projectId]);
+        mutation.mutate(
+            {
+                body: {
+                    project_id: projectId,
+                },
+            },
+            {
+                onError: (error) => {
+                    console.error('Failed to persist last used project:', error);
+                },
+            },
+        );
+    }, [mutation, projectId]);
 };

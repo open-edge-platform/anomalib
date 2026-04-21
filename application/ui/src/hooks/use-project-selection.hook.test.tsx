@@ -1,3 +1,5 @@
+// Copyright (C) 2020-2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 import { Suspense, type ReactNode } from 'react';
 
 import { renderHook, waitFor } from '@testing-library/react';
