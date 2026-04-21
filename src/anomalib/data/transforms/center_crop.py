@@ -27,6 +27,7 @@ from typing import Any
 
 import torch
 from torch.nn.functional import pad
+from torchvision.transforms.transforms import _setup_size
 from torchvision.transforms.v2 import Transform
 from torchvision.transforms.v2.functional._geometry import (
     _center_crop_compute_padding,
@@ -129,7 +130,10 @@ class ExportableCenterCrop(Transform):
 
     def __init__(self, size: int | Sequence[int]) -> None:
         super().__init__()
-        self.size = list(size) if isinstance(size, Sequence) else [size, size]
+        # Delegate to torchvision's _setup_size for parity with upstream CenterCrop:
+        # normalises int → [size, size], validates len==2 for sequences, rejects str.
+        # list() converts the returned tuple to a list for downstream compatibility.
+        self.size = list(_setup_size(size, error_msg="Please provide only two dimensions (h, w) for size."))
 
     def _transform(self, inpt: torch.Tensor, params: dict[str, Any]) -> torch.Tensor:
         """Apply the center crop transform.
