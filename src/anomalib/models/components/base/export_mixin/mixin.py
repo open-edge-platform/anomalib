@@ -57,7 +57,6 @@ from .utils import (
     get_dynamic_shapes_from_axes,
     get_onnx_dynamo_flag,
     raise_missing_onnxscript_error,
-    validate_dynamic_axes,
     validate_input_names,
     warn_legacy_onnx_exporter_deprecation,
 )
@@ -129,7 +128,7 @@ class ExportMixin:
         export_root: Path | str,
         model_file_name: str = "model",
         input_size: tuple[int, int] | None = None,
-        **kwargs: object,
+        **kwargs: dict[str, Any],
     ) -> Path:
         """Export model to ONNX format.
 
@@ -186,14 +185,14 @@ class ExportMixin:
         dynamo = get_onnx_dynamo_flag(kwargs)
 
         if dynamo:
-            dynamic_axes = validate_dynamic_axes(kwargs.pop("dynamic_axes", default_dynamic_axes))
+            dynamic_axes = kwargs.pop("dynamic_axes", default_dynamic_axes)
             dynamic_shapes = kwargs.pop(
                 "dynamic_shapes",
                 get_dynamic_shapes_from_axes(dynamic_axes, input_names, output_names),
             )
         else:
             warn_legacy_onnx_exporter_deprecation()
-            dynamic_axes = validate_dynamic_axes(kwargs.pop("dynamic_axes", default_dynamic_axes))
+            dynamic_axes = kwargs.pop("dynamic_axes", default_dynamic_axes)
             kwargs.pop("dynamic_shapes", None)
             dynamic_shapes = None
 

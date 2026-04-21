@@ -84,37 +84,6 @@ def validate_input_names(input_names: object) -> list[str]:
     raise TypeError(msg)
 
 
-def validate_dynamic_axes(dynamic_axes: object) -> dict[str, dict[int, str]]:
-    """Validate ONNX dynamic axes mapping.
-
-    Args:
-        dynamic_axes (object): Candidate dynamic axes value.
-
-    Returns:
-        dict[str, dict[int, str]]: Validated dynamic axes mapping.
-
-    Raises:
-        TypeError: If dynamic axes do not match expected structure.
-    """
-    if not isinstance(dynamic_axes, dict):
-        msg = "dynamic_axes must be a dictionary of axis mappings"
-        raise TypeError(msg)
-
-    validated_axes: dict[str, dict[int, str]] = {}
-    for name, axes in dynamic_axes.items():
-        if not isinstance(name, str) or not isinstance(axes, dict):
-            msg = "dynamic_axes must map strings to dictionaries"
-            raise TypeError(msg)
-        validated_axis_map: dict[int, str] = {}
-        for axis, axis_name in axes.items():
-            if not isinstance(axis, int) or not isinstance(axis_name, str):
-                msg = "dynamic_axes axis mappings must use int keys and string values"
-                raise TypeError(msg)
-            validated_axis_map[axis] = axis_name
-        validated_axes[name] = validated_axis_map
-    return validated_axes
-
-
 def raise_missing_onnxscript_error() -> None:
     """Raise actionable error for missing ``onnxscript`` dependency.
 
