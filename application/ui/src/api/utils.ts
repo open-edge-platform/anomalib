@@ -1,4 +1,4 @@
-import { fromOpenApi } from '@mswjs/source/open-api';
+import { fromOpenApi } from '@msw/source/open-api';
 import { createOpenApiHttp, OpenApiHttpHandlers } from 'openapi-msw';
 
 import { paths } from './openapi-spec';
