@@ -1,7 +1,10 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_all, collect_data_files
-import platform
 import glob
+import os
+import platform
+import shutil
+
+from PyInstaller.utils.hooks import collect_all, collect_data_files
 datas = [
     ('../../backend/src/alembic', 'alembic'),  # Alembic migration scripts
     ('../../backend/src/alembic.ini', '.'),  # Alembic configuration
@@ -89,8 +92,6 @@ a = Analysis(
 # Filter out problematic TBB binaries from Analysis (macOS only)
 # These have malformed Mach-O headers and cause install_name_tool/codesign failures
 # Keep libtbb.12.dylib (core library needed by OpenVINO), but exclude optional bind/malloc libs
-import platform
-import os
 if platform.system() == "Darwin":
     # Exclude only the problematic TBB bind and malloc libraries, keep the core libtbb
     problematic_tbb_libs = ['libtbbbind', 'libtbbmalloc']
@@ -137,3 +138,11 @@ coll = COLLECT(
     upx_exclude=[],
     name="anomalib-studio-backend",
 )
+
+# Remove redundant triton backends (nvidia, amd) from XPU distribution
+dist_root = os.path.join('dist', 'anomalib-studio-backend', '_internal')
+triton_backends_to_remove = ['nvidia', 'amd']
+for backend in triton_backends_to_remove:
+    backend_folder = os.path.join(dist_root, 'triton', 'backends', backend)
+    if os.path.isdir(backend_folder):
+        shutil.rmtree(backend_folder)
