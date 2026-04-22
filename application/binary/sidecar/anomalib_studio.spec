@@ -2,7 +2,6 @@
 import glob
 import os
 import platform
-import shutil
 
 from PyInstaller.utils.hooks import collect_all, collect_data_files
 datas = [
@@ -105,6 +104,16 @@ if platform.system() == "Darwin":
     # Filter from datas (symlinks/data files can end up here too)
     a.datas = [d for d in a.datas if not is_problematic_tbb(d[0])]
 
+# Filter out redundant triton backends (nvidia, amd) not needed for XPU distribution
+_excluded_triton_backends = ('triton/backends/nvidia', 'triton/backends/amd')
+
+def _is_excluded_triton_backend(name):
+    normalized = name.replace('\\', '/')
+    return any(backend in normalized for backend in _excluded_triton_backends)
+
+a.binaries = [b for b in a.binaries if not _is_excluded_triton_backend(b[0])]
+a.datas = [d for d in a.datas if not _is_excluded_triton_backend(d[0])]
+
 pyz = PYZ(a.pure)
 
 exe = EXE(
@@ -138,11 +147,3 @@ coll = COLLECT(
     upx_exclude=[],
     name="anomalib-studio-backend",
 )
-
-# Remove redundant triton backends (nvidia, amd) from XPU distribution
-dist_root = os.path.join('dist', 'anomalib-studio-backend', '_internal')
-triton_backends_to_remove = ['nvidia', 'amd']
-for backend in triton_backends_to_remove:
-    backend_folder = os.path.join(dist_root, 'triton', 'backends', backend)
-    if os.path.isdir(backend_folder):
-        shutil.rmtree(backend_folder)
