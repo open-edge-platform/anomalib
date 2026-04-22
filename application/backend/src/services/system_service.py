@@ -61,21 +61,15 @@ class SystemService:
         return DeploymentType.DEV
 
     @classmethod
-    def get_required_licenses(cls) -> list[LicenseReference]:
-        """Return licenses that must be accepted for the current deployment.
-
-        Only the Windows application deployment requires license acceptance.
-        Docker and development deployments return an empty list.
-        """
+    def get_required_license(cls) -> LicenseReference | None:
+        """Return the license that must be accepted for the current deployment."""
         if cls.get_deployment_type() != DeploymentType.WIN_APP:
-            return []
-        return [
-            LicenseReference(
-                name="Intel Simplified Software License",
-                url=INTEL_SIMPLIFIED_LICENSE_URL,
-                required_for="Windows application",
-            ),
-        ]
+            return None
+        return LicenseReference(
+            name="Intel Simplified Software License",
+            url=INTEL_SIMPLIFIED_LICENSE_URL,
+            required_for="Windows application",
+        )
 
     @staticmethod
     async def _get_latest_license_acceptance() -> LicenseAcceptanceDB | None:
@@ -91,35 +85,30 @@ class SystemService:
         if deployment_type != DeploymentType.WIN_APP:
             return LicenseStatus(
                 accepted=True,
-                accepted_version=None,
                 app_version=settings.version,
                 deployment_type=deployment_type,
-                licenses=[],
+                license=None,
             )
 
         acceptance = await self._get_latest_license_acceptance()
         return LicenseStatus(
             accepted=acceptance is not None,
-            accepted_version=acceptance.accepted_version if acceptance is not None else None,
             app_version=settings.version,
             deployment_type=deployment_type,
-            licenses=self.get_required_licenses(),
+            license=self.get_required_license(),
         )
 
     async def accept_licenses(self) -> LicenseAcceptanceResponse:
-        """Persist license acceptance for the running application version."""
-        settings = get_settings()
+        """Persist license acceptance."""
         async with get_async_db_session_ctx() as session:
             result = await session.execute(select(LicenseAcceptanceDB).order_by(desc(LicenseAcceptanceDB.id)).limit(1))
             acceptance = result.scalar_one_or_none()
             if acceptance is None:
-                acceptance = LicenseAcceptanceDB(accepted_version=settings.version)
+                acceptance = LicenseAcceptanceDB()
                 session.add(acceptance)
-            else:
-                acceptance.accepted_version = settings.version
-            await session.commit()
+                await session.commit()
 
-        return LicenseAcceptanceResponse(accepted=True, accepted_version=settings.version)
+        return LicenseAcceptanceResponse(accepted=True)
 
     def get_memory_usage(self) -> tuple[float, float]:
         """

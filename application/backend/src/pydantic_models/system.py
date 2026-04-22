@@ -124,14 +124,12 @@ class LicenseStatus(BaseModel):
     """Current license acceptance status for the running application version."""
 
     accepted: bool = Field(..., description="Whether the user accepted licenses for the running app version")
-    accepted_version: str | None = Field(None, description="Last accepted application version")
     app_version: str = Field(..., description="Current application version")
     deployment_type: DeploymentType = Field(..., description="Current Studio deployment type")
-    licenses: list[LicenseReference] = Field(..., description="Licenses the user must review and accept")
+    license: LicenseReference | None = Field(None, description="License the user must review and accept")
 
 
 class LicenseAcceptanceResponse(BaseModel):
     """Response returned after accepting licenses."""
 
     accepted: bool = Field(..., description="Whether acceptance was stored successfully")
-    accepted_version: str = Field(..., description="Application version recorded for acceptance")

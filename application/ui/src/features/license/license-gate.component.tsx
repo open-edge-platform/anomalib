@@ -10,14 +10,13 @@ import { getApiUrl } from '../../api/client';
 
 type LicenseStatus = {
     accepted: boolean;
-    accepted_version: string | null;
     app_version: string;
     deployment_type: 'win_app' | 'docker' | 'dev';
-    licenses: Array<{
+    license: {
         name: string;
         url: string;
         required_for: string;
-    }>;
+    } | null;
 };
 
 interface LicenseGateProps {
@@ -92,11 +91,11 @@ export const LicenseGate = ({ children }: LicenseGateProps) => {
                             <Text>
                                 By continuing you agree to the{' '}
                                 <Link
-                                    href={licenseStatus.licenses[0]?.url ?? '#'}
+                                    href={licenseStatus.license?.url ?? '#'}
                                     target='_blank'
                                     rel='noreferrer'
                                 >
-                                    {licenseStatus.licenses[0]?.name ?? 'license terms'}
+                                    {licenseStatus.license?.name ?? 'license terms'}
                                 </Link>
                                 .
                             </Text>

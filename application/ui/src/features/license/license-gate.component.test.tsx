@@ -36,16 +36,13 @@ describe('LicenseGate', () => {
                 return new Response(
                     JSON.stringify({
                         accepted,
-                        accepted_version: accepted ? '1.2.3' : null,
                         app_version: '1.2.3',
                         deployment_type: 'win_app',
-                        licenses: [
-                            {
-                                name: 'Intel Simplified Software License',
-                                url: 'https://www.intel.com/content/www/us/en/content-details/749362/intel-simplified-software-license-version-october-2022.html',
-                                required_for: 'Windows application',
-                            },
-                        ],
+                        license: {
+                            name: 'Intel Simplified Software License',
+                            url: 'https://www.intel.com/content/www/us/en/content-details/749362/intel-simplified-software-license-version-october-2022.html',
+                            required_for: 'Windows application',
+                        },
                     }),
                     { status: 200, headers: { 'Content-Type': 'application/json' } }
                 );
@@ -53,7 +50,7 @@ describe('LicenseGate', () => {
 
             if (url.endsWith('/api/system/license:accept') && method === 'POST') {
                 accepted = true;
-                return new Response(JSON.stringify({ accepted: true, accepted_version: '1.2.3' }), {
+                return new Response(JSON.stringify({ accepted: true }), {
                     status: 200,
                     headers: { 'Content-Type': 'application/json' },
                 });
@@ -86,10 +83,9 @@ describe('LicenseGate', () => {
                 return new Response(
                     JSON.stringify({
                         accepted: true,
-                        accepted_version: null,
                         app_version: '1.2.3',
                         deployment_type: 'docker',
-                        licenses: [],
+                        license: null,
                     }),
                     { status: 200, headers: { 'Content-Type': 'application/json' } }
                 );
@@ -118,16 +114,13 @@ describe('LicenseGate', () => {
                 return new Response(
                     JSON.stringify({
                         accepted: false,
-                        accepted_version: null,
                         app_version: '1.2.3',
                         deployment_type: 'win_app',
-                        licenses: [
-                            {
-                                name: 'Intel Simplified Software License',
-                                url: 'https://www.intel.com/content/www/us/en/content-details/749362/intel-simplified-software-license-version-october-2022.html',
-                                required_for: 'Windows application',
-                            },
-                        ],
+                        license: {
+                            name: 'Intel Simplified Software License',
+                            url: 'https://www.intel.com/content/www/us/en/content-details/749362/intel-simplified-software-license-version-october-2022.html',
+                            required_for: 'Windows application',
+                        },
                     }),
                     { status: 200, headers: { 'Content-Type': 'application/json' } }
                 );
@@ -135,7 +128,7 @@ describe('LicenseGate', () => {
 
             if (url.endsWith('/api/system/license:accept') && method === 'POST') {
                 acceptRequests += 1;
-                return new Response(JSON.stringify({ accepted: true, accepted_version: '1.2.3' }), {
+                return new Response(JSON.stringify({ accepted: true }), {
                     status: 200,
                     headers: { 'Content-Type': 'application/json' },
                 });

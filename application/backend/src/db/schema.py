@@ -121,13 +121,7 @@ class LicenseAcceptanceDB(Base):
     __tablename__ = "license_acceptance"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    accepted_version: Mapped[str] = mapped_column(String(64), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        server_default=func.current_timestamp(),
-        onupdate=func.current_timestamp(),
-    )
 
 
 class SinkDB(Base):

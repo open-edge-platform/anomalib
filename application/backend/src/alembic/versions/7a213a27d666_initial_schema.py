@@ -24,9 +24,7 @@ def upgrade() -> None:
     op.create_table(
         "license_acceptance",
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
-        sa.Column("accepted_version", sa.String(length=64), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
 
