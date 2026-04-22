@@ -41,7 +41,7 @@ THIRD_PARTY_NOTICES_URL = "https://github.com/open-edge-platform/anomalib/blob/m
 
 
 class SystemService:
-    """Service for system information, device discovery, and license management."""
+    """Service to get system information"""
 
     def __init__(self) -> None:
         self.process = psutil.Process()

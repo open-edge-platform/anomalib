@@ -17,24 +17,24 @@ class DeviceType(StrEnum):
 
 
 class DeviceInfo(BaseModel):
-    """Compute device information."""
+    """Device information schema"""
 
     type: DeviceType = Field(..., description="Device type (cpu, xpu, cuda, mps, npu)")
     name: str = Field(..., description="Device name")
-    memory: int | None = Field(None, description="Total memory in bytes (null for CPU/NPU)")
+    memory: int | None = Field(None, description="Total memory available to the device, in bytes (null for CPU/NPU)")
     index: int | None = Field(None, description="Device index among those of the same type (null for CPU/NPU)")
-    openvino_name: str | None = Field(None, description="OpenVINO device identifier (inference only)")
+    openvino_name: str | None = Field(None, description="Name of the OpenVINO device (inference only)")
 
 
 class CameraInfo(BaseModel):
-    """Camera device information."""
+    """Camera information schema"""
 
     index: int = Field(..., description="Camera device index")
     name: str = Field(..., description="Camera device name")
 
 
 class LibraryVersions(BaseModel):
-    """Installed library versions for diagnostics."""
+    """Version information for libraries."""
 
     anomalib: str | None = None
     python: str
