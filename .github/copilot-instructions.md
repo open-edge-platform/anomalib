@@ -222,6 +222,25 @@ class MyModel:
 
 ---
 
+## Priority 8 — Studio Backend REST API Design
+
+> Skill reference: `.agents/skills/fastapi-rest-api-design/SKILL.md`
+
+Apply this priority primarily to `application/backend/` FastAPI endpoint and service changes.
+
+**Flag if a PR:**
+
+- Uses action-style endpoint paths instead of resource-oriented routes.
+- Misuses HTTP methods (`PUT` vs `PATCH`, state-changing `GET`, etc.) or returns inconsistent status codes.
+- Adds/changes endpoints without clear Pydantic request/response models.
+- Leaks domain/infrastructure details into route handlers instead of using service/dependency boundaries.
+- Returns inconsistent error payloads or maps domain failures to incorrect HTTP errors.
+- Omits authentication/authorization checks on sensitive routes.
+- Adds high-volume list endpoints without pagination/filtering/sorting considerations.
+- Introduces breaking API changes without explicit versioning strategy.
+
+---
+
 ## Do Not Flag
 
 - **Formatting** — Ruff and pre-commit handle this.
@@ -287,3 +306,4 @@ For the full detailed policy on each topic, consult:
 | Third-party code attribution               | `.agents/skills/third-party-code/SKILL.md`           |
 | Benchmark refresh                          | `.agents/skills/benchmark-and-docs-refresh/SKILL.md` |
 | Sample image export                        | `.agents/skills/model-sample-image-export/SKILL.md`  |
+| FastAPI REST API design (Studio backend)   | `.agents/skills/fastapi-rest-api-design/SKILL.md`    |
