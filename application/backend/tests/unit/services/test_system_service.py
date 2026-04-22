@@ -6,8 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from openvino.properties.device import Type as OVDeviceType
 
-from pydantic_models.system import DeploymentType
-from services.system_service import INTEL_SIMPLIFIED_LICENSE_URL, SystemService
+from services.system_service import INTEL_SIMPLIFIED_LICENSE_URL, THIRD_PARTY_NOTICES_URL, SystemService
 
 
 class TestSystemService:
@@ -276,10 +275,10 @@ class TestSystemService:
             assert camera_devices[0].index == 1400
 
     @pytest.mark.asyncio
-    async def test_get_license_status_not_accepted_for_current_version(self, fxt_system_service: SystemService):
+    async def test_get_license_status_not_accepted_for_desktop(self, fxt_system_service: SystemService):
         with (
             patch.object(SystemService, "_get_latest_license_acceptance", new=AsyncMock(return_value=None)),
-            patch.object(SystemService, "get_deployment_type", return_value=DeploymentType.WIN_APP),
+            patch.object(SystemService, "is_desktop_deployment", return_value=True),
             patch("services.system_service.get_settings") as mock_settings,
         ):
             mock_settings.return_value.version = "1.2.3"
@@ -297,7 +296,7 @@ class TestSystemService:
 
         with (
             patch.object(SystemService, "_get_latest_license_acceptance", new=AsyncMock(return_value=acceptance)),
-            patch.object(SystemService, "get_deployment_type", return_value=DeploymentType.WIN_APP),
+            patch.object(SystemService, "is_desktop_deployment", return_value=True),
             patch("services.system_service.get_settings") as mock_settings,
         ):
             mock_settings.return_value.version = "1.2.3"
@@ -308,9 +307,9 @@ class TestSystemService:
             assert status.accepted is True
 
     @pytest.mark.asyncio
-    async def test_get_license_status_always_accepted_for_non_win_app(self, fxt_system_service: SystemService):
+    async def test_get_license_status_always_accepted_for_non_desktop(self, fxt_system_service: SystemService):
         with (
-            patch.object(SystemService, "get_deployment_type", return_value=DeploymentType.DOCKER),
+            patch.object(SystemService, "is_desktop_deployment", return_value=False),
             patch("services.system_service.get_settings") as mock_settings,
         ):
             mock_settings.return_value.version = "1.2.3"
@@ -320,16 +319,18 @@ class TestSystemService:
             assert status.accepted is True
             assert status.license is None
 
-    def test_get_required_license_returns_intel_license_for_win_app(self, fxt_system_service: SystemService):
-        with patch.object(SystemService, "get_deployment_type", return_value=DeploymentType.WIN_APP):
-            license = fxt_system_service.get_required_license()
+    def test_get_license_info_returns_info_for_desktop(self, fxt_system_service: SystemService):
+        with patch.object(SystemService, "is_desktop_deployment", return_value=True):
+            info = fxt_system_service.get_license_info()
 
-        assert license is not None
-        assert license.name == "Intel Simplified Software License"
-        assert license.url == INTEL_SIMPLIFIED_LICENSE_URL
+        assert info is not None
+        assert info.distribution_license_name == "Intel Simplified Software License"
+        assert info.distribution_license_url == INTEL_SIMPLIFIED_LICENSE_URL
+        assert info.source_license_name == "Apache 2.0 License"
+        assert info.third_party_notices_url == THIRD_PARTY_NOTICES_URL
 
-    def test_get_required_license_returns_none_for_non_windows(self, fxt_system_service: SystemService):
-        with patch.object(SystemService, "get_deployment_type", return_value=DeploymentType.DOCKER):
-            license = fxt_system_service.get_required_license()
+    def test_get_license_info_returns_none_for_non_desktop(self, fxt_system_service: SystemService):
+        with patch.object(SystemService, "is_desktop_deployment", return_value=False):
+            info = fxt_system_service.get_license_info()
 
-        assert license is None
+        assert info is None

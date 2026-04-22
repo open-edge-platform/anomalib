@@ -49,7 +49,7 @@ const test = testBase.extend<Fixtures>({
                 return HttpResponse.json({
                     accepted: true,
                     app_version: '1.0.0',
-                    deployment_type: 'dev',
+                    is_desktop: false,
                     license: null,
                 });
             }),

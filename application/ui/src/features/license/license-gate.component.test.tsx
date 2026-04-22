@@ -8,6 +8,14 @@ import userEvent from '@testing-library/user-event';
 
 import { LicenseGate } from './license-gate.component';
 
+const MOCK_LICENSE_INFO = {
+    distribution_license_name: 'Intel Simplified Software License',
+    distribution_license_url: 'https://www.intel.com/issl',
+    source_license_name: 'Apache 2.0 License',
+    source_license_url: 'https://www.apache.org/licenses/LICENSE-2.0',
+    third_party_notices_url: 'https://github.com/open-edge-platform/anomalib/blob/main/third-party-programs.txt',
+};
+
 const renderGate = () => {
     return render(
         <QueryClientProvider client={new QueryClient()}>
@@ -25,7 +33,7 @@ describe('LicenseGate', () => {
         vi.restoreAllMocks();
     });
 
-    it('blocks the app until licenses are accepted on win_app deployment', async () => {
+    it('blocks the app until license is accepted on desktop deployment', async () => {
         let accepted = false;
 
         vi.spyOn(global, 'fetch').mockImplementation(async (input, init) => {
@@ -37,12 +45,8 @@ describe('LicenseGate', () => {
                     JSON.stringify({
                         accepted,
                         app_version: '1.2.3',
-                        deployment_type: 'win_app',
-                        license: {
-                            name: 'Intel Simplified Software License',
-                            url: 'https://www.intel.com/content/www/us/en/content-details/749362/intel-simplified-software-license-version-october-2022.html',
-                            required_for: 'Windows application',
-                        },
+                        is_desktop: true,
+                        license: MOCK_LICENSE_INFO,
                     }),
                     { status: 200, headers: { 'Content-Type': 'application/json' } }
                 );
@@ -74,7 +78,7 @@ describe('LicenseGate', () => {
         });
     });
 
-    it('does not show dialog for non-win_app deployments', async () => {
+    it('does not show dialog for non-desktop deployments', async () => {
         vi.spyOn(global, 'fetch').mockImplementation(async (input, init) => {
             const url = String(input);
             const method = init?.method ?? 'GET';
@@ -84,7 +88,7 @@ describe('LicenseGate', () => {
                     JSON.stringify({
                         accepted: true,
                         app_version: '1.2.3',
-                        deployment_type: 'docker',
+                        is_desktop: false,
                         license: null,
                     }),
                     { status: 200, headers: { 'Content-Type': 'application/json' } }
@@ -115,12 +119,8 @@ describe('LicenseGate', () => {
                     JSON.stringify({
                         accepted: false,
                         app_version: '1.2.3',
-                        deployment_type: 'win_app',
-                        license: {
-                            name: 'Intel Simplified Software License',
-                            url: 'https://www.intel.com/content/www/us/en/content-details/749362/intel-simplified-software-license-version-october-2022.html',
-                            required_for: 'Windows application',
-                        },
+                        is_desktop: true,
+                        license: MOCK_LICENSE_INFO,
                     }),
                     { status: 200, headers: { 'Content-Type': 'application/json' } }
                 );

@@ -8,15 +8,19 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { getApiUrl } from '../../api/client';
 
+type LicenseInfo = {
+    distribution_license_name: string;
+    distribution_license_url: string;
+    source_license_name: string;
+    source_license_url: string;
+    third_party_notices_url: string;
+};
+
 type LicenseStatus = {
     accepted: boolean;
     app_version: string;
-    deployment_type: 'win_app' | 'docker' | 'dev';
-    license: {
-        name: string;
-        url: string;
-        required_for: string;
-    } | null;
+    is_desktop: boolean;
+    license: LicenseInfo | null;
 };
 
 interface LicenseGateProps {
@@ -88,17 +92,42 @@ export const LicenseGate = ({ children }: LicenseGateProps) => {
                         onPrimaryAction={() => acceptMutation.mutate()}
                     >
                         <Flex direction='column' gap='size-200'>
-                            <Text>
-                                By continuing you agree to the{' '}
-                                <Link
-                                    href={licenseStatus.license?.url ?? '#'}
-                                    target='_blank'
-                                    rel='noreferrer'
-                                >
-                                    {licenseStatus.license?.name ?? 'license terms'}
-                                </Link>
-                                .
-                            </Text>
+                            {licenseStatus.license ? (
+                                <>
+                                    <Text>
+                                        This application is distributed under the{' '}
+                                        <Link
+                                            href={licenseStatus.license.distribution_license_url}
+                                            target='_blank'
+                                            rel='noreferrer'
+                                        >
+                                            {licenseStatus.license.distribution_license_name}
+                                        </Link>
+                                        .
+                                    </Text>
+                                    <Text>
+                                        The source code is licensed under the{' '}
+                                        <Link
+                                            href={licenseStatus.license.source_license_url}
+                                            target='_blank'
+                                            rel='noreferrer'
+                                        >
+                                            {licenseStatus.license.source_license_name}
+                                        </Link>
+                                        . Some components are distributed under their own license terms. See the{' '}
+                                        <Link
+                                            href={licenseStatus.license.third_party_notices_url}
+                                            target='_blank'
+                                            rel='noreferrer'
+                                        >
+                                            Third Party Programs
+                                        </Link>{' '}
+                                        file for details.
+                                    </Text>
+                                </>
+                            ) : (
+                                <Text>Please accept the license terms to continue.</Text>
+                            )}
 
                             {acceptMutation.isError ? (
                                 <Text>Failed to store license acceptance. Try again.</Text>

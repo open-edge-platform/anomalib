@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 
 class DeviceType(StrEnum):
-    """Enumeration of device types"""
+    """Supported compute device types."""
 
     CPU = auto()
     XPU = auto()
@@ -16,33 +16,25 @@ class DeviceType(StrEnum):
     NPU = auto()
 
 
-class DeploymentType(StrEnum):
-    """Enumeration of supported Anomalib Studio deployment types."""
-
-    WIN_APP = auto()
-    DOCKER = auto()
-    DEV = auto()
-
-
 class DeviceInfo(BaseModel):
-    """Device information schema"""
+    """Compute device information."""
 
     type: DeviceType = Field(..., description="Device type (cpu, xpu, cuda, mps, npu)")
     name: str = Field(..., description="Device name")
-    memory: int | None = Field(None, description="Total memory available to the device, in bytes (null for CPU/NPU)")
+    memory: int | None = Field(None, description="Total memory in bytes (null for CPU/NPU)")
     index: int | None = Field(None, description="Device index among those of the same type (null for CPU/NPU)")
-    openvino_name: str | None = Field(None, description="Name of the OpenVINO device (inference only)")
+    openvino_name: str | None = Field(None, description="OpenVINO device identifier (inference only)")
 
 
 class CameraInfo(BaseModel):
-    """Camera information schema"""
+    """Camera device information."""
 
     index: int = Field(..., description="Camera device index")
     name: str = Field(..., description="Camera device name")
 
 
 class LibraryVersions(BaseModel):
-    """Version information for libraries."""
+    """Installed library versions for diagnostics."""
 
     anomalib: str | None = None
     python: str
@@ -63,7 +55,7 @@ class SystemInfo(BaseModel):
     os_version: str
     platform: str
     app_version: str
-    deployment_type: DeploymentType
+    is_desktop: bool = Field(..., description="True when running as a packaged desktop (Tauri) application")
     libraries: LibraryVersions
     devices: list[DeviceInfo]
 
@@ -74,7 +66,7 @@ class SystemInfo(BaseModel):
                 "os_version": "5.15.0-generic",
                 "platform": "Linux-5.15.0-generic-x86_64-with-glibc2.35",
                 "app_version": "0.1.0",
-                "deployment_type": "docker",
+                "is_desktop": False,
                 "libraries": {
                     "anomalib": "2.0.0",
                     "python": "3.11.0",
@@ -112,24 +104,35 @@ class SystemInfo(BaseModel):
     }
 
 
-class LicenseReference(BaseModel):
-    """License reference displayed in the Studio acceptance dialog."""
+class LicenseInfo(BaseModel):
+    """License details shown in the desktop acceptance dialog.
 
-    name: str = Field(..., description="Display name of the license entry")
-    url: str = Field(..., description="URL pointing to the full license text")
-    required_for: str = Field(..., description="Deployment or model requiring this license")
+    The desktop application is distributed under ISSL while the source
+    code remains Apache-2.0.  Some bundled components carry their own
+    open-source licenses listed in the third-party notices file.
+    """
+
+    distribution_license_name: str = Field(..., description="Name of the distribution license (ISSL)")
+    distribution_license_url: str = Field(..., description="URL to the full distribution license text")
+    source_license_name: str = Field(..., description="Name of the source code license (Apache-2.0)")
+    source_license_url: str = Field(..., description="URL to the full source code license text")
+    third_party_notices_url: str = Field(..., description="URL to third-party program notices")
 
 
 class LicenseStatus(BaseModel):
-    """Current license acceptance status for the running application version."""
+    """License acceptance status returned by ``GET /api/system/license``.
 
-    accepted: bool = Field(..., description="Whether the user accepted licenses for the running app version")
+    Desktop builds must show the license dialog on first launch.  All
+    other deployments are pre-accepted and ``license`` is ``None``.
+    """
+
+    accepted: bool = Field(..., description="Whether the license has been accepted")
     app_version: str = Field(..., description="Current application version")
-    deployment_type: DeploymentType = Field(..., description="Current Studio deployment type")
-    license: LicenseReference | None = Field(None, description="License the user must review and accept")
+    is_desktop: bool = Field(..., description="True when running as a packaged desktop application")
+    license: LicenseInfo | None = Field(None, description="License details (present only for desktop builds)")
 
 
 class LicenseAcceptanceResponse(BaseModel):
-    """Response returned after accepting licenses."""
+    """Response returned by ``POST /api/system/license:accept``."""
 
     accepted: bool = Field(..., description="Whether acceptance was stored successfully")

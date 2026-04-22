@@ -5,7 +5,6 @@ import re
 import sys
 from functools import lru_cache
 from importlib.metadata import PackageNotFoundError, version
-from pathlib import Path
 
 import cv2
 import openvino as ov
@@ -19,12 +18,11 @@ from db import get_async_db_session_ctx
 from db.schema import LicenseAcceptanceDB
 from pydantic_models.system import (
     CameraInfo,
-    DeploymentType,
     DeviceInfo,
     DeviceType,
     LibraryVersions,
     LicenseAcceptanceResponse,
-    LicenseReference,
+    LicenseInfo,
     LicenseStatus,
     SystemInfo,
 )
@@ -38,37 +36,42 @@ CV2_BACKENDS = {
     "Darwin": cv2.CAP_AVFOUNDATION,
 }
 INTEL_SIMPLIFIED_LICENSE_URL = "https://www.intel.com/content/www/us/en/content-details/749362/intel-simplified-software-license-version-october-2022.html"
+APACHE_LICENSE_URL = "https://www.apache.org/licenses/LICENSE-2.0"
+THIRD_PARTY_NOTICES_URL = "https://github.com/open-edge-platform/anomalib/blob/main/third-party-programs.txt"
 
 
 class SystemService:
-    """Service to get system information"""
+    """Service for system information, device discovery, and license management."""
 
     def __init__(self) -> None:
         self.process = psutil.Process()
 
     @staticmethod
-    def get_deployment_type() -> DeploymentType:
-        """Infer the current deployment type from runtime settings and platform."""
-        settings = get_settings()
+    def is_desktop_deployment() -> bool:
+        """Check whether the application is running as a frozen desktop (Tauri) build.
 
-        if getattr(sys, "frozen", False) and (os_name := platform.system()) == "Windows":
-            logger.debug(f"Detected frozen Windows application deployment: {os_name}")
-            return DeploymentType.WIN_APP
-        if settings.static_files_dir:
-            static_dir = Path(settings.static_files_dir)
-            if static_dir.is_dir() and (static_dir / "index.html").exists():
-                return DeploymentType.DOCKER
-        return DeploymentType.DEV
+        Returns:
+            ``True`` when the interpreter is bundled via PyInstaller/cx_Freeze
+            (i.e. ``sys.frozen`` is set), ``False`` otherwise.
+        """
+        return getattr(sys, "frozen", False)
 
     @classmethod
-    def get_required_license(cls) -> LicenseReference | None:
-        """Return the license that must be accepted for the current deployment."""
-        if cls.get_deployment_type() != DeploymentType.WIN_APP:
+    def get_license_info(cls) -> LicenseInfo | None:
+        """Return license metadata shown in the acceptance dialog.
+
+        Returns:
+            A :class:`LicenseInfo` instance for desktop builds, or ``None``
+            when the application is not a desktop distribution.
+        """
+        if not cls.is_desktop_deployment():
             return None
-        return LicenseReference(
-            name="Intel Simplified Software License",
-            url=INTEL_SIMPLIFIED_LICENSE_URL,
-            required_for="Windows application",
+        return LicenseInfo(
+            distribution_license_name="Intel Simplified Software License",
+            distribution_license_url=INTEL_SIMPLIFIED_LICENSE_URL,
+            source_license_name="Apache 2.0 License",
+            source_license_url=APACHE_LICENSE_URL,
+            third_party_notices_url=THIRD_PARTY_NOTICES_URL,
         )
 
     @staticmethod
@@ -78,15 +81,21 @@ class SystemService:
             return result.scalar_one_or_none()
 
     async def get_license_status(self) -> LicenseStatus:
-        """Return whether licenses were accepted for the running application version."""
-        settings = get_settings()
-        deployment_type = self.get_deployment_type()
+        """Return whether the end-user has accepted the license terms.
 
-        if deployment_type != DeploymentType.WIN_APP:
+        Non-desktop deployments are auto-accepted. Desktop builds check for
+        an existing acceptance record in the database.
+
+        Returns:
+            A :class:`LicenseStatus` with acceptance state and license metadata.
+        """
+        settings = get_settings()
+
+        if not self.is_desktop_deployment():
             return LicenseStatus(
                 accepted=True,
                 app_version=settings.version,
-                deployment_type=deployment_type,
+                is_desktop=False,
                 license=None,
             )
 
@@ -94,12 +103,16 @@ class SystemService:
         return LicenseStatus(
             accepted=acceptance is not None,
             app_version=settings.version,
-            deployment_type=deployment_type,
-            license=self.get_required_license(),
+            is_desktop=True,
+            license=self.get_license_info(),
         )
 
     async def accept_licenses(self) -> LicenseAcceptanceResponse:
-        """Persist license acceptance."""
+        """Persist license acceptance (idempotent — inserts only if no record exists).
+
+        Returns:
+            A :class:`LicenseAcceptanceResponse` confirming acceptance.
+        """
         async with get_async_db_session_ctx() as session:
             result = await session.execute(select(LicenseAcceptanceDB).order_by(desc(LicenseAcceptanceDB.id)).limit(1))
             acceptance = result.scalar_one_or_none()
@@ -394,7 +407,7 @@ class SystemService:
             os_version=platform.release(),
             platform=platform.platform(),
             app_version=get_settings().version,
-            deployment_type=self.get_deployment_type(),
+            is_desktop=self.is_desktop_deployment(),
             libraries=self.get_library_versions(),
             devices=self.get_training_devices(),
         )
