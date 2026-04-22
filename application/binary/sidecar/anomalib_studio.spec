@@ -1,8 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
 import glob
 import os
-import platform
 
+from PyInstaller import compat
 from PyInstaller.utils.hooks import collect_all, collect_data_files
 datas = [
     ('../../backend/src/alembic', 'alembic'),  # Alembic migration scripts
@@ -12,9 +12,9 @@ datas = [
 
 # Add all binaries
 ## Linux/macOS/Windows
-if platform.system() == "Linux":
+if compat.is_linux:
     binaries = [(so, '.') for so in glob.glob('../../backend/.venv/lib/**/*.so.*', recursive=True)]
-elif platform.system() == "Darwin":
+elif compat.is_darwin:
     binaries = [(so, '.') for so in glob.glob('../../backend/.venv/lib/**/*.dylib', recursive=True)]
 else:
     # Windows: uv venv uses Scripts/ and may have DLLs in site-packages; add if needed
@@ -59,8 +59,7 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 runtime_hooks = ["hooks/setup.py"]
 
-system = platform.system()
-if system == "Windows":
+if compat.is_win:
     runtime_hooks += ["hooks/windows/uwp.py", "hooks/windows/proxy.py"]
 
 a = Analysis(
@@ -91,7 +90,7 @@ a = Analysis(
 # Filter out problematic TBB binaries from Analysis (macOS only)
 # These have malformed Mach-O headers and cause install_name_tool/codesign failures
 # Keep libtbb.12.dylib (core library needed by OpenVINO), but exclude optional bind/malloc libs
-if platform.system() == "Darwin":
+if compat.is_darwin:
     # Exclude only the problematic TBB bind and malloc libraries, keep the core libtbb
     problematic_tbb_libs = ['libtbbbind', 'libtbbmalloc']
     
