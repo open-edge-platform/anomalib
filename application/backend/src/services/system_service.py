@@ -37,29 +37,7 @@ CV2_BACKENDS = {
     "Linux": cv2.CAP_V4L2,
     "Darwin": cv2.CAP_AVFOUNDATION,
 }
-APACHE_LICENSE_URL = "https://www.apache.org/licenses/LICENSE-2.0"
 INTEL_SIMPLIFIED_LICENSE_URL = "https://www.intel.com/content/www/us/en/content-details/749362/intel-simplified-software-license-version-october-2022.html"
-ANOMALIB_LICENSE_BLOB_ROOT = "https://github.com/open-edge-platform/anomalib/blob/main/src/anomalib/models"
-MODEL_LICENSES: tuple[tuple[str, str, str], ...] = (
-    ("DRAEM", "MIT License", f"{ANOMALIB_LICENSE_BLOB_ROOT}/image/draem/LICENSE"),
-    ("DSR", "Apache 2.0 License", f"{ANOMALIB_LICENSE_BLOB_ROOT}/image/dsr/LICENSE"),
-    (
-        "Reverse Distillation",
-        "MIT License",
-        f"{ANOMALIB_LICENSE_BLOB_ROOT}/image/reverse_distillation/LICENSE",
-    ),
-    (
-        "AI-VAD (CLIP)",
-        "MIT License",
-        f"{ANOMALIB_LICENSE_BLOB_ROOT}/video/ai_vad/clip/LICENSE",
-    ),
-    (
-        "SuperSimpleNet",
-        "MIT License",
-        f"{ANOMALIB_LICENSE_BLOB_ROOT}/image/supersimplenet/LICENSE",
-    ),
-    ("UniNet", "MIT License", f"{ANOMALIB_LICENSE_BLOB_ROOT}/image/uninet/LICENSE"),
-)
 
 
 class SystemService:
@@ -84,26 +62,20 @@ class SystemService:
 
     @classmethod
     def get_required_licenses(cls) -> list[LicenseReference]:
-        """Return licenses that must be accepted for the current deployment."""
-        deployment_type = cls.get_deployment_type()
-        primary_license = LicenseReference(
-            name=(
-                "Intel Simplified Software License"
-                if deployment_type == DeploymentType.WIN_APP
-                else "Apache 2.0 License"
+        """Return licenses that must be accepted for the current deployment.
+
+        Only the Windows application deployment requires license acceptance.
+        Docker and development deployments return an empty list.
+        """
+        if cls.get_deployment_type() != DeploymentType.WIN_APP:
+            return []
+        return [
+            LicenseReference(
+                name="Intel Simplified Software License",
+                url=INTEL_SIMPLIFIED_LICENSE_URL,
+                required_for="Windows application",
             ),
-            url=(INTEL_SIMPLIFIED_LICENSE_URL if deployment_type == DeploymentType.WIN_APP else APACHE_LICENSE_URL),
-            required_for=(
-                "Windows application"
-                if deployment_type == DeploymentType.WIN_APP
-                else "Docker and development deployments"
-            ),
-        )
-        model_licenses = [
-            LicenseReference(name=name, url=url, required_for=required_for)
-            for required_for, name, url in MODEL_LICENSES
         ]
-        return [primary_license, *model_licenses]
 
     @staticmethod
     async def _get_latest_license_acceptance() -> LicenseAcceptanceDB | None:
@@ -114,13 +86,23 @@ class SystemService:
     async def get_license_status(self) -> LicenseStatus:
         """Return whether licenses were accepted for the running application version."""
         settings = get_settings()
+        deployment_type = self.get_deployment_type()
+
+        if deployment_type != DeploymentType.WIN_APP:
+            return LicenseStatus(
+                accepted=True,
+                accepted_version=None,
+                app_version=settings.version,
+                deployment_type=deployment_type,
+                licenses=[],
+            )
+
         acceptance = await self._get_latest_license_acceptance()
-        accepted_version = acceptance.accepted_version if acceptance is not None else None
         return LicenseStatus(
-            accepted=accepted_version == settings.version,
-            accepted_version=accepted_version,
+            accepted=acceptance is not None,
+            accepted_version=acceptance.accepted_version if acceptance is not None else None,
             app_version=settings.version,
-            deployment_type=self.get_deployment_type(),
+            deployment_type=deployment_type,
             licenses=self.get_required_licenses(),
         )
 

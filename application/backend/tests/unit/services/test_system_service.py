@@ -279,6 +279,7 @@ class TestSystemService:
     async def test_get_license_status_not_accepted_for_current_version(self, fxt_system_service: SystemService):
         with (
             patch.object(SystemService, "_get_latest_license_acceptance", new=AsyncMock(return_value=None)),
+            patch.object(SystemService, "get_deployment_type", return_value=DeploymentType.WIN_APP),
             patch("services.system_service.get_settings") as mock_settings,
         ):
             mock_settings.return_value.version = "1.2.3"
@@ -289,7 +290,7 @@ class TestSystemService:
             assert status.accepted is False
             assert status.accepted_version is None
             assert status.app_version == "1.2.3"
-            assert len(status.licenses) >= 2
+            assert len(status.licenses) == 1
 
     @pytest.mark.asyncio
     async def test_get_license_status_requires_reaccept_on_version_change(self, fxt_system_service: SystemService):
@@ -298,6 +299,7 @@ class TestSystemService:
 
         with (
             patch.object(SystemService, "_get_latest_license_acceptance", new=AsyncMock(return_value=acceptance)),
+            patch.object(SystemService, "get_deployment_type", return_value=DeploymentType.WIN_APP),
             patch("services.system_service.get_settings") as mock_settings,
         ):
             mock_settings.return_value.version = "1.2.3"
@@ -305,34 +307,32 @@ class TestSystemService:
 
             status = await fxt_system_service.get_license_status()
 
-            assert status.accepted is False
+            assert status.accepted is True
             assert status.accepted_version == "1.2.2"
+
+    @pytest.mark.asyncio
+    async def test_get_license_status_always_accepted_for_non_win_app(self, fxt_system_service: SystemService):
+        with (
+            patch.object(SystemService, "get_deployment_type", return_value=DeploymentType.DOCKER),
+            patch("services.system_service.get_settings") as mock_settings,
+        ):
+            mock_settings.return_value.version = "1.2.3"
+
+            status = await fxt_system_service.get_license_status()
+
+            assert status.accepted is True
+            assert status.licenses == []
 
     def test_get_required_licenses_uses_windows_license_for_win_app(self, fxt_system_service: SystemService):
         with patch.object(SystemService, "get_deployment_type", return_value=DeploymentType.WIN_APP):
             licenses = fxt_system_service.get_required_licenses()
 
+        assert len(licenses) == 1
         assert licenses[0].name == "Intel Simplified Software License"
         assert licenses[0].url == INTEL_SIMPLIFIED_LICENSE_URL
 
-    def test_get_required_licenses_uses_apache_for_non_windows(self, fxt_system_service: SystemService):
+    def test_get_required_licenses_empty_for_non_windows(self, fxt_system_service: SystemService):
         with patch.object(SystemService, "get_deployment_type", return_value=DeploymentType.DOCKER):
             licenses = fxt_system_service.get_required_licenses()
 
-        assert licenses[0].name == "Apache 2.0 License"
-        assert licenses[0].url == "https://www.apache.org/licenses/LICENSE-2.0"
-
-    def test_get_required_licenses_uses_actual_model_license_names(self, fxt_system_service: SystemService):
-        with patch.object(SystemService, "get_deployment_type", return_value=DeploymentType.DOCKER):
-            licenses = fxt_system_service.get_required_licenses()
-
-        model_licenses = {license.required_for: license.name for license in licenses[1:]}
-
-        assert model_licenses == {
-            "DRAEM": "MIT License",
-            "DSR": "Apache 2.0 License",
-            "Reverse Distillation": "MIT License",
-            "AI-VAD (CLIP)": "MIT License",
-            "SuperSimpleNet": "MIT License",
-            "UniNet": "MIT License",
-        }
+        assert licenses == []

@@ -20,12 +20,12 @@ def fxt_system_service() -> MagicMock:
             accepted=False,
             accepted_version=None,
             app_version="1.2.3",
-            deployment_type=DeploymentType.DOCKER,
+            deployment_type=DeploymentType.WIN_APP,
             licenses=[
                 LicenseReference(
-                    name="Apache 2.0 License",
-                    url="https://www.apache.org/licenses/LICENSE-2.0",
-                    required_for="Docker and development deployments",
+                    name="Intel Simplified Software License",
+                    url="https://www.intel.com/content/www/us/en/content-details/749362/intel-simplified-software-license-version-october-2022.html",
+                    required_for="Windows application",
                 ),
             ],
         ),

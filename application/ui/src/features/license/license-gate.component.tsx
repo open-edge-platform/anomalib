@@ -24,12 +24,6 @@ interface LicenseGateProps {
     children: ReactNode;
 }
 
-const DeploymentLabel: Record<LicenseStatus['deployment_type'], string> = {
-    win_app: 'Windows application',
-    docker: 'Docker deployment',
-    dev: 'development deployment',
-};
-
 const fetchLicenseStatus = async (): Promise<LicenseStatus> => {
     const response = await fetch(getApiUrl('/api/system/license'));
 
@@ -88,7 +82,7 @@ export const LicenseGate = ({ children }: LicenseGateProps) => {
                 {shouldBlock ? (
                     <AlertDialog
                         variant='confirmation'
-                        title={`Review licenses for Anomalib Studio ${licenseStatus.app_version}`}
+                        title={`License Agreement — Anomalib Studio ${licenseStatus.app_version}`}
                         cancelLabel={undefined}
                         primaryActionLabel={acceptMutation.isPending ? 'Accepting...' : 'Accept and continue'}
                         isPrimaryActionDisabled={acceptMutation.isPending}
@@ -96,29 +90,16 @@ export const LicenseGate = ({ children }: LicenseGateProps) => {
                     >
                         <Flex direction='column' gap='size-200'>
                             <Text>
-                                Please review and accept the licenses required for this{' '}
-                                {DeploymentLabel[licenseStatus.deployment_type]}. The dialog reappears whenever the
-                                Studio version changes.
+                                By continuing you agree to the{' '}
+                                <Link
+                                    href={licenseStatus.licenses[0]?.url ?? '#'}
+                                    target='_blank'
+                                    rel='noreferrer'
+                                >
+                                    {licenseStatus.licenses[0]?.name ?? 'license terms'}
+                                </Link>
+                                .
                             </Text>
-
-                            <Flex direction='column' gap='size-150'>
-                                {licenseStatus.licenses.map((license) => (
-                                    <Flex
-                                        key={`${license.required_for}-${license.name}`}
-                                        direction='column'
-                                        gap='size-50'
-                                    >
-                                        <Text>{license.required_for}</Text>
-                                        <Link href={license.url} target='_blank' rel='noreferrer'>
-                                            {license.name}
-                                        </Link>
-                                    </Flex>
-                                ))}
-                            </Flex>
-
-                            {licenseStatus.accepted_version ? (
-                                <Text>Previously accepted version: {licenseStatus.accepted_version}</Text>
-                            ) : null}
 
                             {acceptMutation.isError ? (
                                 <Text>Failed to store license acceptance. Try again.</Text>

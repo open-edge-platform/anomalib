@@ -25,7 +25,7 @@ describe('LicenseGate', () => {
         vi.restoreAllMocks();
     });
 
-    it('blocks the app until licenses are accepted', async () => {
+    it('blocks the app until licenses are accepted on win_app deployment', async () => {
         let accepted = false;
 
         vi.spyOn(global, 'fetch').mockImplementation(async (input, init) => {
@@ -38,12 +38,12 @@ describe('LicenseGate', () => {
                         accepted,
                         accepted_version: accepted ? '1.2.3' : null,
                         app_version: '1.2.3',
-                        deployment_type: 'docker',
+                        deployment_type: 'win_app',
                         licenses: [
                             {
-                                name: 'Apache 2.0 License',
-                                url: 'https://www.apache.org/licenses/LICENSE-2.0',
-                                required_for: 'Docker and development deployments',
+                                name: 'Intel Simplified Software License',
+                                url: 'https://www.intel.com/content/www/us/en/content-details/749362/intel-simplified-software-license-version-october-2022.html',
+                                required_for: 'Windows application',
                             },
                         ],
                     }),
@@ -64,13 +64,47 @@ describe('LicenseGate', () => {
 
         renderGate();
 
-        expect(await screen.findByText('Review licenses for Anomalib Studio 1.2.3')).toBeInTheDocument();
+        expect(
+            await screen.findByText('License Agreement — Anomalib Studio 1.2.3')
+        ).toBeInTheDocument();
 
         await userEvent.click(screen.getByRole('button', { name: 'Accept and continue' }));
 
         await waitFor(() => {
-            expect(screen.queryByText('Review licenses for Anomalib Studio 1.2.3')).not.toBeInTheDocument();
+            expect(
+                screen.queryByText('License Agreement — Anomalib Studio 1.2.3')
+            ).not.toBeInTheDocument();
         });
+    });
+
+    it('does not show dialog for non-win_app deployments', async () => {
+        vi.spyOn(global, 'fetch').mockImplementation(async (input, init) => {
+            const url = String(input);
+            const method = init?.method ?? 'GET';
+
+            if (url.endsWith('/api/system/license') && method === 'GET') {
+                return new Response(
+                    JSON.stringify({
+                        accepted: true,
+                        accepted_version: null,
+                        app_version: '1.2.3',
+                        deployment_type: 'docker',
+                        licenses: [],
+                    }),
+                    { status: 200, headers: { 'Content-Type': 'application/json' } }
+                );
+            }
+
+            return new Response(null, { status: 404 });
+        });
+
+        renderGate();
+
+        await waitFor(() => {
+            expect(screen.getByText('Studio content')).toBeInTheDocument();
+        });
+
+        expect(screen.queryByText('License Agreement')).not.toBeInTheDocument();
     });
 
     it('keeps blocking when accept succeeds but refetched status is still not accepted', async () => {
@@ -86,12 +120,12 @@ describe('LicenseGate', () => {
                         accepted: false,
                         accepted_version: null,
                         app_version: '1.2.3',
-                        deployment_type: 'docker',
+                        deployment_type: 'win_app',
                         licenses: [
                             {
-                                name: 'Apache 2.0 License',
-                                url: 'https://www.apache.org/licenses/LICENSE-2.0',
-                                required_for: 'Docker and development deployments',
+                                name: 'Intel Simplified Software License',
+                                url: 'https://www.intel.com/content/www/us/en/content-details/749362/intel-simplified-software-license-version-october-2022.html',
+                                required_for: 'Windows application',
                             },
                         ],
                     }),
@@ -112,7 +146,9 @@ describe('LicenseGate', () => {
 
         renderGate();
 
-        expect(await screen.findByText('Review licenses for Anomalib Studio 1.2.3')).toBeInTheDocument();
+        expect(
+            await screen.findByText('License Agreement — Anomalib Studio 1.2.3')
+        ).toBeInTheDocument();
 
         await userEvent.click(screen.getByRole('button', { name: 'Accept and continue' }));
 
@@ -120,6 +156,8 @@ describe('LicenseGate', () => {
             expect(acceptRequests).toBe(1);
         });
 
-        expect(screen.getByText('Review licenses for Anomalib Studio 1.2.3')).toBeInTheDocument();
+        expect(
+            screen.getByText('License Agreement — Anomalib Studio 1.2.3')
+        ).toBeInTheDocument();
     });
 });
