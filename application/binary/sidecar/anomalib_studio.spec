@@ -3,7 +3,7 @@ import glob
 import os
 
 from PyInstaller import compat
-from PyInstaller.utils.hooks import collect_all, collect_data_files
+from PyInstaller.utils.hooks import collect_all
 datas = [
     ('../../backend/src/alembic', 'alembic'),  # Alembic migration scripts
     ('../../backend/src/alembic.ini', '.'),  # Alembic configuration
