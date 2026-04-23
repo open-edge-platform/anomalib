@@ -1,0 +1,4 @@
+model:
+  class_path: anomalib.models.AnomalyVFM
+  init_args:
+    model_name: radio
