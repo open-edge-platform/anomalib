@@ -1,12 +1,10 @@
-This notice file is licensed under Apache-2.0.
+Copyright (c) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
 
-Files in this folder that were created by Intel are licensed under Apache-2.0,
-unless stated otherwise in the corresponding source file.
+Some files in this folder are based on the original AnomalyVFM implementation by Matic Fučka
 
-Files or portions of files in this folder that are derived from the original
-AnomalyVFM implementation by Matic Fučka are subject to the following upstream
-MIT license notice:
--------------------
+Original license:
+-----------------
 
     MIT License
 
