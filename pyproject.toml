@@ -107,7 +107,7 @@ test = [
 # NOTE: Minimum torch>=2.6.0 required due to Critical CVE-2025-32434
 #   (torch.load weights_only=True RCE, patched in 2.6.0)
 cpu = [
-    "torch>=2.6.0,<=2.8.0",
+    "torch>=2.6.0",
     "torchvision>=0.21.0",
 ]
 cu118 = [
@@ -115,7 +115,7 @@ cu118 = [
     "torchvision>=0.21.0,<=0.22.1",
 ]
 cu126 = [
-    "torch>=2.6.0,<=2.8.0",
+    "torch>=2.6.0",
     "torchvision>=0.21.0",
 ]
 cu130 = [
@@ -124,7 +124,7 @@ cu130 = [
     "torchvision>=0.24.0",
 ]
 rocm = [
-    "torch>=2.6.0,<=2.8.0",
+    "torch>=2.6.0",
     "torchvision>=0.21.0",
     "pytorch-triton-rocm ; sys_platform == 'linux'",
 ]

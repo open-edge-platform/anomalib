@@ -14,8 +14,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Deprecated
 
+- ⚠️ **export**: Deprecate the legacy ONNX exporter path (`dynamo=False`) ahead of anomalib 2.7.0, where the minimum required PyTorch version will increase to 2.10
+
 ### Fixed
 
+- 🐞 **export**: Add `dynamic_shapes` support for torch dynamo ONNX/OpenVINO export while keeping the legacy exporter path available during the 2.7.0 transition
 - 🐞 **export**: Fix duplicated size parameter in `ExportableCenterCrop` by checking `Sequence` instead of `tuple` by @CarlosNacher in https://github.com/open-edge-platform/anomalib/pull/2203
 
 ## [v2.3.3] - 2026-04-10
