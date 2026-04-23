@@ -223,18 +223,32 @@ jobs:
           \`\`\`
           EOF
 
-  trigger-tauri-build:
-    needs: [validate, publish-rc]
+  build-windows:
+    name: Build Windows MSIX for RC
+    needs: validate
+    # Only run in the source repo where MSIX signing secrets are configured.
+    # Skipped on forks.
+    if: |
+      github.repository == 'open-edge-platform/anomalib'
+    runs-on: windows-latest
+    timeout-minutes: 90
     permissions:
-      contents: read # Checkout code
+      contents: read
     strategy:
       fail-fast: false
       matrix:
-        accelerator: [cpu, xpu, cu124]
-    uses: ./.github/workflows/tauri-build.yaml
-    with:
-      rc_version: ${{ needs.validate.outputs.rc_version }}
-      accelerator: ${{ matrix.accelerator }}
-    secrets:
-      MSIX_SIGN_CERTIFICATE: ${{ secrets.MSIX_SIGN_CERTIFICATE }}
-      MSIX_SIGN_CERTIFICATE_PASSWORD: ${{ secrets.MSIX_SIGN_CERTIFICATE_PASSWORD }}
+        accelerator: [cpu, cu124, xpu]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Build Windows MSIX
+        uses: ./.github/actions/windows-build
+        with:
+          accelerator: ${{ matrix.accelerator }}
+          rc_version: ${{ needs.validate.outputs.rc_version }}
+          MSIX_SIGN_CERTIFICATE: ${{ secrets.MSIX_SIGN_CERTIFICATE }}
+          MSIX_SIGN_CERTIFICATE_PASSWORD: ${{ secrets.MSIX_SIGN_CERTIFICATE_PASSWORD }}
