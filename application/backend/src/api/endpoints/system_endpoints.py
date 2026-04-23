@@ -14,7 +14,7 @@ from fastapi.responses import StreamingResponse
 
 from api.dependencies.dependencies import get_system_service
 from api.endpoints import API_PREFIX
-from pydantic_models import SystemInfo
+from pydantic_models import LicenseAcceptanceResponse, LicenseStatus, SystemInfo
 from pydantic_models.system import CameraInfo, DeviceInfo
 from services.system_service import SystemService
 from settings import get_settings
@@ -37,6 +37,22 @@ async def get_system_info(
         and devices info.
     """
     return system_service.get_system_info()
+
+
+@system_router.get("/license")
+async def get_license_status(
+    system_service: Annotated[SystemService, Depends(get_system_service)],
+) -> LicenseStatus:
+    """Get license acceptance status for the current application version."""
+    return await system_service.get_license_status()
+
+
+@system_router.post("/license:accept")
+async def accept_license(
+    system_service: Annotated[SystemService, Depends(get_system_service)],
+) -> LicenseAcceptanceResponse:
+    """Accept licenses required for the current application version."""
+    return await system_service.accept_licenses()
 
 
 @system_router.get("/devices/inference")

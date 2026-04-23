@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 
 class DeviceType(StrEnum):
-    """Enumeration of device types"""
+    """Supported compute device types."""
 
     CPU = auto()
     XPU = auto()
@@ -55,6 +55,7 @@ class SystemInfo(BaseModel):
     os_version: str
     platform: str
     app_version: str
+    is_desktop: bool = Field(..., description="True when running as a packaged desktop (Tauri) application")
     libraries: LibraryVersions
     devices: list[DeviceInfo]
 
@@ -65,6 +66,7 @@ class SystemInfo(BaseModel):
                 "os_version": "5.15.0-generic",
                 "platform": "Linux-5.15.0-generic-x86_64-with-glibc2.35",
                 "app_version": "0.1.0",
+                "is_desktop": False,
                 "libraries": {
                     "anomalib": "2.0.0",
                     "python": "3.11.0",
@@ -100,3 +102,37 @@ class SystemInfo(BaseModel):
             },
         },
     }
+
+
+class LicenseInfo(BaseModel):
+    """License details shown in the desktop acceptance dialog.
+
+    The desktop application is distributed under ISSL while the source
+    code remains Apache-2.0.  Some bundled components carry their own
+    open-source licenses listed in the third-party notices file.
+    """
+
+    distribution_license_name: str = Field(..., description="Name of the distribution license (ISSL)")
+    distribution_license_url: str = Field(..., description="URL to the full distribution license text")
+    source_license_name: str = Field(..., description="Name of the source code license (Apache-2.0)")
+    source_license_url: str = Field(..., description="URL to the full source code license text")
+    third_party_notices_url: str = Field(..., description="URL to third-party program notices")
+
+
+class LicenseStatus(BaseModel):
+    """License acceptance status returned by ``GET /api/system/license``.
+
+    Desktop builds must show the license dialog on first launch.  All
+    other deployments are pre-accepted and ``license`` is ``None``.
+    """
+
+    accepted: bool = Field(..., description="Whether the license has been accepted")
+    app_version: str = Field(..., description="Current application version")
+    is_desktop: bool = Field(..., description="True when running as a packaged desktop application")
+    license: LicenseInfo | None = Field(None, description="License details (present only for desktop builds)")
+
+
+class LicenseAcceptanceResponse(BaseModel):
+    """Response returned by ``POST /api/system/license:accept``."""
+
+    accepted: bool = Field(..., description="Whether acceptance was stored successfully")

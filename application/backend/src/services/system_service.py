@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import platform
 import re
+import sys
 from functools import lru_cache
 from importlib.metadata import PackageNotFoundError, version
 
@@ -11,8 +12,20 @@ import psutil
 import torch
 from cv2_enumerate_cameras import enumerate_cameras
 from loguru import logger
+from sqlalchemy import desc, select
 
-from pydantic_models.system import CameraInfo, DeviceInfo, DeviceType, LibraryVersions, SystemInfo
+from db import get_async_db_session_ctx
+from db.schema import LicenseAcceptanceDB
+from pydantic_models.system import (
+    CameraInfo,
+    DeviceInfo,
+    DeviceType,
+    LibraryVersions,
+    LicenseAcceptanceResponse,
+    LicenseInfo,
+    LicenseStatus,
+    SystemInfo,
+)
 from settings import get_settings
 
 DEVICE_PATTERN = re.compile(r"^(cpu|xpu|cuda)(-(\d+))?$")
@@ -22,6 +35,9 @@ CV2_BACKENDS = {
     "Linux": cv2.CAP_V4L2,
     "Darwin": cv2.CAP_AVFOUNDATION,
 }
+INTEL_SIMPLIFIED_LICENSE_URL = "https://www.intel.com/content/www/us/en/content-details/749362/intel-simplified-software-license-version-october-2022.html"
+APACHE_LICENSE_URL = "https://www.apache.org/licenses/LICENSE-2.0"
+THIRD_PARTY_NOTICES_URL = "https://github.com/open-edge-platform/anomalib/blob/main/third-party-programs.txt"
 
 
 class SystemService:
@@ -29,6 +45,83 @@ class SystemService:
 
     def __init__(self) -> None:
         self.process = psutil.Process()
+
+    @staticmethod
+    def is_desktop_deployment() -> bool:
+        """Check whether the application is running as a frozen desktop (Tauri) build.
+
+        Returns:
+            ``True`` when the interpreter is bundled via PyInstaller/cx_Freeze
+            (i.e. ``sys.frozen`` is set), ``False`` otherwise.
+        """
+        return getattr(sys, "frozen", False)
+
+    @classmethod
+    def get_license_info(cls) -> LicenseInfo | None:
+        """Return license metadata shown in the acceptance dialog.
+
+        Returns:
+            A :class:`LicenseInfo` instance for desktop builds, or ``None``
+            when the application is not a desktop distribution.
+        """
+        if not cls.is_desktop_deployment():
+            return None
+        return LicenseInfo(
+            distribution_license_name="Intel Simplified Software License",
+            distribution_license_url=INTEL_SIMPLIFIED_LICENSE_URL,
+            source_license_name="Apache 2.0 License",
+            source_license_url=APACHE_LICENSE_URL,
+            third_party_notices_url=THIRD_PARTY_NOTICES_URL,
+        )
+
+    @staticmethod
+    async def _get_latest_license_acceptance() -> LicenseAcceptanceDB | None:
+        async with get_async_db_session_ctx() as session:
+            result = await session.execute(select(LicenseAcceptanceDB).order_by(desc(LicenseAcceptanceDB.id)).limit(1))
+            return result.scalar_one_or_none()
+
+    async def get_license_status(self) -> LicenseStatus:
+        """Return whether the end-user has accepted the license terms.
+
+        Non-desktop deployments are auto-accepted. Desktop builds check for
+        an existing acceptance record in the database.
+
+        Returns:
+            A :class:`LicenseStatus` with acceptance state and license metadata.
+        """
+        settings = get_settings()
+
+        if not self.is_desktop_deployment():
+            return LicenseStatus(
+                accepted=True,
+                app_version=settings.version,
+                is_desktop=False,
+                license=None,
+            )
+
+        acceptance = await self._get_latest_license_acceptance()
+        return LicenseStatus(
+            accepted=acceptance is not None,
+            app_version=settings.version,
+            is_desktop=True,
+            license=self.get_license_info(),
+        )
+
+    async def accept_licenses(self) -> LicenseAcceptanceResponse:
+        """Persist license acceptance (idempotent — inserts only if no record exists).
+
+        Returns:
+            A :class:`LicenseAcceptanceResponse` confirming acceptance.
+        """
+        async with get_async_db_session_ctx() as session:
+            result = await session.execute(select(LicenseAcceptanceDB).order_by(desc(LicenseAcceptanceDB.id)).limit(1))
+            acceptance = result.scalar_one_or_none()
+            if acceptance is None:
+                acceptance = LicenseAcceptanceDB()
+                session.add(acceptance)
+                await session.commit()
+
+        return LicenseAcceptanceResponse(accepted=True)
 
     def get_memory_usage(self) -> tuple[float, float]:
         """
@@ -314,6 +407,7 @@ class SystemService:
             os_version=platform.release(),
             platform=platform.platform(),
             app_version=get_settings().version,
+            is_desktop=self.is_desktop_deployment(),
             libraries=self.get_library_versions(),
             devices=self.get_training_devices(),
         )

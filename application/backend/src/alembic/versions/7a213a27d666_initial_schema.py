@@ -21,6 +21,13 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     """Upgrade schema - create all tables matching schema.py."""
+    op.create_table(
+        "license_acceptance",
+        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+    )
+
     # Create projects table first (referenced by other tables)
     op.create_table(
         "projects",
@@ -160,3 +167,4 @@ def downgrade() -> None:
     op.drop_table("sources")
     op.drop_table("jobs")
     op.drop_table("projects")
+    op.drop_table("license_acceptance")

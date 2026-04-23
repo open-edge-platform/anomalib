@@ -1,5 +1,6 @@
 import { createNetworkFixture, NetworkFixture } from '@msw/playwright';
 import { expect, test as testBase } from '@playwright/test';
+import { HttpResponse, http as rawHttp } from 'msw';
 
 import { getOpenApiHttp, handlers } from '../src/api/utils';
 
@@ -43,6 +44,17 @@ const test = testBase.extend<Fixtures>({
                 return response(200).json([
                     { type: 'cpu', name: 'CPU', memory: null, index: null, openvino_name: 'CPU' },
                 ]);
+            }),
+            rawHttp.get('/api/system/license', () => {
+                return HttpResponse.json({
+                    accepted: true,
+                    app_version: '1.0.0',
+                    is_desktop: false,
+                    license: null,
+                });
+            }),
+            rawHttp.post('/api/system/license:accept', () => {
+                return HttpResponse.json({ accepted: true });
             }),
             http.get('/api/projects/{project_id}/models', ({ response }) => {
                 return response(200).json({ models: [] });
