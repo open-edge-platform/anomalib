@@ -7,7 +7,8 @@ Lightning internally sets ``max_epochs=-1`` when only ``max_steps`` is provided.
 The Rich progress bar then displays "Epoch X/-2" because it computes
 ``max_epochs - 1``. This callback estimates the total number of epochs from
 ``max_steps`` and ``num_training_batches`` so the progress bar shows a
-meaningful "Epoch X/M" instead.
+meaningful "Epoch X/N" instead, where *N* is the last epoch index
+(``estimated_epochs - 1``, zero-based).
 
 Example:
     Add the callback when training with ``max_steps``::
@@ -51,9 +52,12 @@ class MaxStepsProgressCallback(Callback):
             return
 
         try:
-            from lightning.pytorch.callbacks.progress.rich_progress import RichProgressBar
+            from lightning.pytorch.callbacks import RichProgressBar
         except ImportError:
-            return
+            try:
+                from lightning.pytorch.callbacks.progress.rich_progress import RichProgressBar
+            except ImportError:
+                return
 
         progress_bar = getattr(trainer, "progress_bar_callback", None)
         if not isinstance(progress_bar, RichProgressBar) or not hasattr(

@@ -11,6 +11,7 @@ The module exports the following callbacks:
 - :class:`ModelCheckpoint`: Save model checkpoints during training
 - :class:`GraphLogger`: Log model computation graphs
 - :class:`LoadModelCallback`: Load pre-trained model weights
+- :class:`MaxStepsProgressCallback`: Fix epoch display for step-based training
 - :class:`TilerConfigurationCallback`: Configure image tiling settings
 - :class:`TimerCallback`: Track training/inference timing
 
@@ -33,6 +34,7 @@ See Also:
     - :mod:`anomalib.callbacks.checkpoint`: Model checkpoint callback
     - :mod:`anomalib.callbacks.graph`: Graph logging callback
     - :mod:`anomalib.callbacks.model_loader`: Model loading callback
+    - :mod:`anomalib.callbacks.rich_progress_bar`: Max-steps progress callback
     - :mod:`anomalib.callbacks.tiler_configuration`: Tiler configuration callback
     - :mod:`anomalib.callbacks.timer`: Timer callback
 """
