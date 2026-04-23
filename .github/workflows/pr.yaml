@@ -59,7 +59,7 @@ name: PR Checks
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    branches: ["main", "feature/**"]
+    branches: ["main", "feature/**", "release/**"]
   merge_group:
     branches: [main]
 
@@ -121,7 +121,7 @@ jobs:
     with:
       tools: "semgrep,bandit,zizmor" # Security tools to run
       scan-scope: "changed" # Only scan changed files
-      severity-level: "MEDIUM" # Minimum severity to report
+      severity-level: "LOW" # Minimum severity to report
       confidence-level: "HIGH" # High confidence to report
       fail-on-findings: true # explicitly set
 
@@ -141,7 +141,7 @@ jobs:
 
       - name: Check paths
         id: check-paths
-        uses: open-edge-platform/geti-ci/actions/check-paths@cc6fbe840db6ebd16ebd18d409f475bff5a8c182
+        uses: open-edge-platform/geti-ci/actions/check-paths@e80098b3d180db37914f11ff6021f9fa34d0bb9f
         with:
           files_yaml: |
             test:

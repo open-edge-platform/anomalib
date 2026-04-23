@@ -8,7 +8,7 @@ import pytest
 from freezegun import freeze_time
 from sqlalchemy.exc import IntegrityError
 
-from exceptions import DuplicateJobException, ResourceNotFoundException
+from exceptions import DuplicateJobException, JobNotDeletableException, ResourceNotFoundException
 from pydantic_models import JobStatus, JobType
 from repositories import JobRepository
 from services import JobService
@@ -272,3 +272,45 @@ class TestJobService:
 
             assert len(result) == 2
             assert result == log_lines
+
+    @pytest.mark.parametrize("terminal_status", [JobStatus.FAILED, JobStatus.CANCELED])
+    def test_delete_job_terminal_status(self, fxt_job_repository, fxt_job, terminal_status):
+        """Test deleting a job that is in a terminal (failed or canceled) state."""
+        terminal_job = fxt_job.model_copy(update={"status": terminal_status})
+        fxt_job_repository.get_by_id.return_value = terminal_job
+
+        with patch("services.job_service.JobRepository") as mock_repo_class:
+            mock_repo_class.return_value = fxt_job_repository
+
+            asyncio.run(JobService.delete_job(fxt_job.id))
+
+        fxt_job_repository.get_by_id.assert_called_once_with(fxt_job.id)
+        fxt_job_repository.delete_by_id.assert_called_once_with(fxt_job.id)
+
+    @pytest.mark.parametrize("non_terminal_status", [JobStatus.PENDING, JobStatus.RUNNING, JobStatus.COMPLETED])
+    def test_delete_job_non_terminal_status_raises(self, fxt_job_repository, fxt_job, non_terminal_status):
+        """Test that deleting a job in a non-terminal state raises JobNotDeletableException."""
+        non_terminal_job = fxt_job.model_copy(update={"status": non_terminal_status})
+        fxt_job_repository.get_by_id.return_value = non_terminal_job
+
+        with patch("services.job_service.JobRepository") as mock_repo_class:
+            mock_repo_class.return_value = fxt_job_repository
+
+            with pytest.raises(JobNotDeletableException) as exc_info:
+                asyncio.run(JobService.delete_job(fxt_job.id))
+
+        assert "job_not_deletable" in exc_info.value.error_code
+        fxt_job_repository.delete_by_id.assert_not_called()
+
+    def test_delete_job_not_found_raises(self, fxt_job_repository, fxt_job):
+        """Test that deleting a non-existent job raises ResourceNotFoundException."""
+        fxt_job_repository.get_by_id.return_value = None
+
+        with patch("services.job_service.JobRepository") as mock_repo_class:
+            mock_repo_class.return_value = fxt_job_repository
+
+            with pytest.raises(ResourceNotFoundException) as exc_info:
+                asyncio.run(JobService.delete_job(fxt_job.id))
+
+        assert "job_not_found" in exc_info.value.error_code
+        fxt_job_repository.delete_by_id.assert_not_called()

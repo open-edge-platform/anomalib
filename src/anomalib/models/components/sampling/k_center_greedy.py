@@ -46,7 +46,15 @@ class KCenterGreedy:
 
     def __init__(self, embedding: torch.Tensor, sampling_ratio: float) -> None:
         self.embedding = embedding
-        self.coreset_size = int(embedding.shape[0] * sampling_ratio)
+        n = embedding.shape[0]
+        coreset_size = int(n * sampling_ratio)
+        if coreset_size <= 0:
+            msg = (
+                f"coreset_size must be a positive integer, got {coreset_size}. "
+                f"Check sampling_ratio ({sampling_ratio}) and embedding size ({n})."
+            )
+            raise ValueError(msg)
+        self.coreset_size = coreset_size
         self.model = SparseRandomProjection(eps=0.9)
 
         self.features: torch.Tensor
@@ -118,11 +126,13 @@ class KCenterGreedy:
             self.features = self.embedding.reshape(self.embedding.shape[0], -1)
             self.reset_distances()
 
-        # random starting point
+        # random starting point — include it in the coreset so it is not
+        # merely a "virtual center" that influences distances but is absent
+        # from the final memory bank (see gh-3459).
         idx = torch.randint(high=self.n_observations, size=(1,), device=self.features.device).squeeze()
 
-        selected_coreset_idxs: list[int] = []
-        for _ in tqdm(range(self.coreset_size), desc="Selecting Coreset Indices."):
+        selected_coreset_idxs: list[int] = [int(idx.item())]
+        for _ in tqdm(range(self.coreset_size - 1), desc="Selecting Coreset Indices."):
             self.update_distances(cluster_center=idx)
             idx = self.get_new_idx()
             self.min_distances.scatter_(0, idx.unsqueeze(0).unsqueeze(1), 0.0)

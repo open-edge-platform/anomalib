@@ -31,21 +31,19 @@
 
 ---
 
-> 🌟 **Announcing v2.3.1 Patch Release!** 🌟
+> 🌟 **Announcing v2.3.3 Patch Release!** 🌟
 >
-> This patch release removes previously deprecated API symbols and fixes bugs in Anomalib Studio.
+> This patch release changes data and model download locations, adds pandas 3.0 compatibility fixes, and includes security-focused dependency updates.
 >
-> Deprecated API removals
+> What's changed
 >
-> - **`MVTec`** → Use `MVTecAD` (datamodule) and `MVTecADDataset` (dataset) instead.
-> - **`BaseThreshold`** → Use `Threshold` instead.
-> - **`BaseVisualizer`** → Renamed to `Visualizer`.
-> - **`plot_figure`** → Use `plot_metric_curve` instead.
+> - Moved pre-trained model downloads to platform-specific cache directories.
+> - Added deprecation warnings for legacy local `./datasets/<dataset>` roots ahead of the v2.6.0 cache-directory migration.
+> - Updated security-sensitive dependencies including `mlflow`.
 >
 > Bug fixes
 >
-> - Fixed Windows long path issue in Anomalib Studio by switching to ShortUUID.
-> - Fixed source path overflow in Studio UI.
+> - Fixed enum-based DataFrame comparisons for pandas >= 3.0 compatibility.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 

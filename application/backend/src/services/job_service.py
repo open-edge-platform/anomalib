@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from sse_starlette import ServerSentEvent
 
 from db import get_async_db_session_ctx
-from exceptions import DuplicateJobException, ResourceNotFoundException
+from exceptions import DuplicateJobException, JobNotDeletableException, ResourceNotFoundException
 from pydantic_models import Job, JobList, JobType
 from pydantic_models.base import Pagination
 from pydantic_models.job import JobCancelled, JobStatus, JobSubmitted, TrainJobPayload
@@ -180,6 +180,18 @@ class JobService:
 
             await repo.update(job, {"status": JobStatus.CANCELED})
             return JobCancelled(job_id=job.id)
+
+    @classmethod
+    async def delete_job(cls, job_id: ShortUUID | str) -> None:
+        """Delete a failed or canceled job by its ID."""
+        async with get_async_db_session_ctx() as session:
+            repo = JobRepository(session)
+            job = await repo.get_by_id(job_id)
+            if job is None:
+                raise ResourceNotFoundException(resource_id=job_id, resource_name="job")
+            if job.status not in {JobStatus.FAILED, JobStatus.CANCELED}:
+                raise JobNotDeletableException(job_id=job_id, job_status=job.status)
+            await repo.delete_by_id(job_id)
 
     @classmethod
     async def delete_project_jobs_db(cls, session: AsyncSession, project_id: ShortUUID, commit: bool = False) -> None:

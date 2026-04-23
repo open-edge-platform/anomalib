@@ -163,7 +163,7 @@ jobs:
           persist-credentials: false
 
       - name: Log in to Container Registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -187,7 +187,7 @@ jobs:
           use-cache: "false" # Disable cache for RC builds (security and reproducibility)
 
       - name: Sign Docker image
-        uses: open-edge-platform/geti-ci/actions/sign-image@9b1ef60a8b2b802da428621e192c322960f4b3d5
+        uses: open-edge-platform/geti-ci/actions/sign-image@e80098b3d180db37914f11ff6021f9fa34d0bb9f
         with:
           image-uri: ${{ steps.meta.outputs.tags }}
 
