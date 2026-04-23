@@ -115,7 +115,7 @@ jobs:
   #         uv pip install pyinstaller==6.19.0
   #         source .venv/bin/activate
   #         cd ../binary/sidecar
-  #         uv run --active pyinstaller anomalib_studio.spec
+  #         uv run --active pyinstaller --clean --noconfirm anomalib_studio.spec
   #         # Rename binary with target triple
   #         TARGET_TRIPLE=$(rustc -Vv | grep host | cut -f2 -d' ')
   #         mv dist/anomalib-studio-backend/anomalib-studio-backend "dist/anomalib-studio-backend/anomalib-studio-backend-${TARGET_TRIPLE}"
@@ -249,7 +249,7 @@ jobs:
           uv pip install pyinstaller==6.19.0
           .\.venv\Scripts\Activate.ps1
           Push-Location ..\binary\sidecar
-          uv run --active pyinstaller anomalib_studio.spec
+          uv run --active pyinstaller --clean --noconfirm anomalib_studio.spec
           Pop-Location
 
       - name: Install Tauri dependencies
@@ -374,7 +374,7 @@ jobs:
   #         uv pip install pyinstaller==6.19.0
   #         source .venv/bin/activate
   #         cd ../binary/sidecar
-  #         uv run --active pyinstaller anomalib_studio.spec
+  #         uv run --active pyinstaller --clean --noconfirm anomalib_studio.spec
   #         # Rename binary with target triple
   #         TARGET_TRIPLE=$(rustc -Vv | grep host | cut -f2 -d' ')
   #         mv dist/anomalib-studio-backend/anomalib-studio-backend "dist/anomalib-studio-backend/anomalib-studio-backend-${TARGET_TRIPLE}"

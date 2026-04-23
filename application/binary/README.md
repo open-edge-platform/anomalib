@@ -21,7 +21,7 @@ cd application/backend
 uv sync --no-dev --extra cpu
 source .venv/bin/activate
 cd ../binary/sidecar
-uv run --active --with pyinstaller pyinstaller anomalib_studio.spec
+uv run --active --with pyinstaller pyinstaller --clean --noconfirm anomalib_studio.spec
 ```
 
 ### Windows (PowerShell)
@@ -31,7 +31,7 @@ cd application\backend
 uv sync --no-dev --extra cpu
 .\.venv\Scripts\Activate.ps1
 cd ..\binary\sidecar
-uv run --active --with pyinstaller pyinstaller anomalib_studio.spec
+uv run --active --with pyinstaller pyinstaller --clean --noconfirm anomalib_studio.spec
 ```
 
 ## Building the Tauri application
