@@ -38,6 +38,7 @@ runs:
         TAURI_SRC_PATH: application/binary/tauri/src-tauri
         SIDECAR_PATH: application/binary/sidecar
         BACKEND_PATH: application/backend
+      shell: powershell
       run: |
         $runNum = if ($env:GITHUB_RUN_NUMBER) { $env:GITHUB_RUN_NUMBER } else { "0" }
         $targetDir = if ($env:DEBUG_BUILD -eq "true") { "debug" } else { "release" }
@@ -117,10 +118,12 @@ runs:
         }
 
     - name: Configure Git long paths
+      shell: powershell
       run: git config --system core.longpaths true
 
     - name: Build Python sidecar (Windows ${{ inputs.accelerator }})
       working-directory: application/backend
+      shell: powershell
       run: |
         uv sync --no-dev --extra ${{ inputs.accelerator }}
         .\.venv\Scripts\Activate.ps1
@@ -130,6 +133,7 @@ runs:
 
     - name: Install Tauri dependencies
       working-directory: application/binary/tauri
+      shell: powershell
       run: npm ci
 
     - name: Build Tauri app
@@ -142,12 +146,14 @@ runs:
       # rebuilds and "file in use" errors on Windows during dev. We inject
       # the resource mapping only for production builds via --config.
       # See application/binary/README.md for local build commands.
+      shell: powershell
       run: |
         $opts = @("-v", "--config", '{"bundle":{"resources":{"sidecar/_internal/":"_internal/"}}}')
         if ($env:DEBUG_BUILD -eq "true") { $opts += "--debug" }
         & npx tauri build $opts
 
     - name: Create MSIX package
+      shell: powershell
       run: |
         if (Test-Path $env:MSIX_BUNDLE_PATH) {
           Remove-Item $env:MSIX_BUNDLE_PATH -Recurse -Force
@@ -181,6 +187,7 @@ runs:
       env:
         MSIX_SIGN_CERTIFICATE: ${{ inputs.MSIX_SIGN_CERTIFICATE }}
         MSIX_SIGN_CERTIFICATE_PASSWORD: ${{ inputs.MSIX_SIGN_CERTIFICATE_PASSWORD }}
+      shell: powershell
       run: |
         $bytes = [System.Convert]::FromBase64String($env:MSIX_SIGN_CERTIFICATE)
         $securePassword = ConvertTo-SecureString $env:MSIX_SIGN_CERTIFICATE_PASSWORD -AsPlainText -Force
