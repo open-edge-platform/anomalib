@@ -82,12 +82,12 @@ def test_get_cuda_version_with_version_file(mocker: MockerFixture, tmp_path: Pat
 
 def test_get_cuda_version_with_nvcc(mocker: MockerFixture) -> None:
     """Test that get_cuda_version returns the expected CUDA version when nvcc is available."""
-    mock_run = mocker.patch("anomalib.cli.utils.installation.Path.exists", return_value=False)
-    mock_run = mocker.patch("os.popen")
-    mock_run.return_value.read.return_value = "Build cuda_11.2.r11.2/compiler.00000_0"
+    mocker.patch("anomalib.cli.utils.installation.Path.exists", return_value=False)
+    mock_run = mocker.patch("anomalib.cli.utils.installation.subprocess.run")
+    mock_run.return_value.stdout = "Build cuda_11.2.r11.2/compiler.00000_0"
     assert get_cuda_version() == "11.2"
 
-    mock_run = mocker.patch("os.popen")
+    mock_run = mocker.patch("anomalib.cli.utils.installation.subprocess.run")
     mock_run.side_effect = FileNotFoundError
     assert get_cuda_version() is None
 
