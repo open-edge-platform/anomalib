@@ -15,7 +15,7 @@ jobs:
       contents: read
     timeout-minutes: 5
     outputs:
-      rc_version: "${{ steps.validate.outputs.rc_version }}"
+      rc_version: ${{ steps.validate.outputs.rc_version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -231,13 +231,14 @@ jobs:
     if: |
       github.repository == 'open-edge-platform/anomalib'
     runs-on: windows-latest
+    environment: windows-msix-signing
     timeout-minutes: 90
     permissions:
       contents: read
     strategy:
       fail-fast: false
       matrix:
-        accelerator: [cpu, cu124, xpu]
+        accelerator: [cpu, cu130, xpu]
 
     steps:
       - name: Checkout repository
