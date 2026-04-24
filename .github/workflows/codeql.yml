@@ -7,7 +7,7 @@ on:
   push:
     branches: ["main", "feature/**", "release/**"]
   pull_request:
-    branches: ["main", "feature/**"]
+    branches: ["main", "feature/**", "release/**"]
   schedule:
     - cron: "0 0 * * *"
 
