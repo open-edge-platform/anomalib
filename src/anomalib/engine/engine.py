@@ -40,6 +40,7 @@ from torchmetrics import Metric
 
 from anomalib import LearningType
 from anomalib.callbacks.checkpoint import ModelCheckpoint
+from anomalib.callbacks.rich_progress_bar import MaxStepsProgressCallback
 from anomalib.callbacks.timer import TimerCallback
 from anomalib.data import AnomalibDataModule, AnomalibDataset, PredictDataset
 from anomalib.deploy import CompressionType, ExportType
@@ -325,6 +326,7 @@ class Engine:
             )
 
         callbacks.append(TimerCallback())
+        callbacks.append(MaxStepsProgressCallback())
 
         # Combine the callbacks, and update the trainer callbacks.
         self._cache.args["callbacks"] = callbacks + self._cache.args["callbacks"]
