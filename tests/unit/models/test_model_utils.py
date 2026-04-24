@@ -7,7 +7,15 @@ import pytest
 from jsonargparse import Namespace
 from omegaconf import OmegaConf
 
-from anomalib.models import EfficientAd, Padim, Patchcore, UnknownModelError, get_model
+from anomalib.models import EfficientAd, GeneralAD, Padim, Patchcore, UnknownModelError, get_model
+
+SMALL_GENERAL_AD_ARGS = {
+    "backbone": "vit_tiny_patch16_224",
+    "layers": (9, 10, 11, 12),
+    "hidden_dim": 1024,
+    "dsc_heads": 12,
+    "dsc_dropout": 0.0,
+}
 
 
 class TestGetModel:
@@ -27,6 +35,11 @@ class TestGetModel:
         assert isinstance(model, EfficientAd)
         model = get_model("efficientad")
         assert isinstance(model, EfficientAd)
+
+        model = get_model("GeneralAD", pre_trained=False, **SMALL_GENERAL_AD_ARGS)
+        assert isinstance(model, GeneralAD)
+        model = get_model("general_ad", pre_trained=False, **SMALL_GENERAL_AD_ARGS)
+        assert isinstance(model, GeneralAD)
 
     @staticmethod
     def test_get_model_by_name_with_init_args() -> None:
