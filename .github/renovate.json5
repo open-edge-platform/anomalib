@@ -16,6 +16,9 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
 
+  // Ignore compiled workflow files
+  ignorePaths: [".github/workflows/**/*.lock.yml"],
+
   // regenerate lock weekly https://docs.renovatebot.com/configuration-options/#lockfilemaintenance
   lockFileMaintenance: {
     enabled: true,
