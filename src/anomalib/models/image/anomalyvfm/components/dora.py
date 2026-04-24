@@ -1,6 +1,11 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""DoRA Layers for AnomalyVFM."""
+
 import torch
-import torch.nn.functional as F
 from torch import nn
+from torch.nn import functional
 
 
 class _DoRALinearBase(nn.Module):
@@ -47,14 +52,24 @@ class DoRAWrapper(_DoRALinearBase):
 
     @property
     def weight(self) -> torch.Tensor:
+        """Returns the weights of the original layer.
+
+        Returns:
+            (torch.Tensor): original weights.
+        """
         return self.layer.weight
 
     @property
     def bias(self) -> torch.Tensor:
+        """Returns the bias of the original layer.
+
+        Returns:
+            (torch.Tensor): original bias.
+        """
         return self.layer.bias
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Process input features throuhg the original block and the DoRA block.
+        """Process input features through the original block and the DoRA block.
 
         Args:
             x: input features
@@ -71,7 +86,7 @@ class DoRAWrapper(_DoRALinearBase):
 
         direction = adapted_w / (adapted_w.norm(dim=1, keepdim=True) + 1e-8)
         final_w = self.magnitude.unsqueeze(1) * direction
-        return F.linear(x, final_w, self.layer.bias)
+        return functional.linear(x, final_w, self.layer.bias)
 
 
 class DoRAQKVWrapper(_DoRALinearBase):
@@ -134,13 +149,14 @@ class DoRAQKVWrapper(_DoRALinearBase):
         final_v = self.mag_v.unsqueeze(1) * dir_v
         final_w = torch.cat([final_q, base_k, final_v], dim=0)
 
-        return F.linear(x, final_w, self.layer.bias)
+        return functional.linear(x, final_w, self.layer.bias)
 
 
-def add_peft(model, r=64, alpha=1.0) -> None:
+def add_peft(model: nn.Module, r: int = 64, alpha: float = 1.0) -> None:
     """Traversal through the model layers that adds DoRA blocks to the predefined ones.
 
     Args:
+        model (nn:module): model
         r (int): rank of low-rank matrices
         alpha (int): scaling factor
     """

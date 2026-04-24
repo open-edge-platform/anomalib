@@ -8,9 +8,21 @@ See Also:
         AnomalyVFM Lightning model.
 """
 
+try:
+    from huggingface_hub import hf_hub_download
+    from safetensors.torch import load_file
+
+    _HAS_HF_DEPS = True
+except ImportError:
+    _HAS_HF_DEPS = False
+
+import math
+
 import torch
 from torch import nn
-from torchvision.transforms import v2
+from torch.nn import functional
+
+from anomalib import PrecisionType
 
 from .components.decoder import SimpleDecoder, SimplePredictor
 from .components.dora import add_peft
@@ -22,8 +34,8 @@ class AnomalyVFMModel(
 ):
     """AnomalyVFM PyTorch model.
 
-    This model integrates a base Vision Foundation Model (RADIO) configured with 
-    Parameter-Efficient Fine-Tuning (PEFT), alongside a simple decoder for generating 
+    This model integrates a base Vision Foundation Model (RADIO) configured with
+    Parameter-Efficient Fine-Tuning (PEFT), alongside a simple decoder for generating
     pixel-level anomaly masks and a simple predictor for image-level anomaly scores.
     """
 
@@ -32,41 +44,63 @@ class AnomalyVFMModel(
         self.model = BaseModel()
         self.model.add_peft()
         feat_dim = self.model.feature_dim
-        self.feat_size = self.model.H // self.model.patch_size
         self.decoder = SimpleDecoder(feat_dim, 1, 1)
         self.predictor = SimplePredictor(feat_dim * 3)
+
+        if not _HAS_HF_DEPS:
+            msg = "Please install them using: pip install anomalib[huggingface]"
+            raise ImportError(msg)
+        weights_path = hf_hub_download(
+            repo_id="MaticFuc/anomalyvfm_radio",
+            filename="model.safetensors",
+            revision="17654e763c8fae5ae1c44e2ec421a427783d6196",
+            local_files_only=True,
+        )
+        safe_state_dict = load_file(weights_path)
+        self.load_state_dict(safe_state_dict)
+
+        self.mean_kernel = nn.AvgPool2d((5, 5), 1, 5 // 2)
 
     def forward(self, img: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Forward pass to compute anomaly scores and masks.
 
         Args:
-            img (torch.Tensor): Input image batch of shape (B, C, H, W).
+            img (torch.Tensor): Input image batch of shape (b, C, H, W).
 
         Returns:
             (tuple[torch.Tensor, torch.Tensor]): A tuple containing:
                 - anomaly_score (torch.Tensor): Image-level anomaly predictions.
                 - anomaly_mask (torch.Tensor): Pixel-level anomaly prediction masks.
         """
-        B = img.shape[0]
+        b = img.shape[0]
 
         device_type = img.device.type
+        dtype = torch.float32 if self.precision is None or self.precision == PrecisionType.FLOAT32 else torch.bfloat16
 
-        with torch.autocast(device_type=device_type, dtype=torch.bfloat16), torch.no_grad():
+        with torch.autocast(device_type=device_type, dtype=dtype), torch.no_grad():
             summary, ftrs = self.model(img)
+            feat_size = int(math.sqrt(img.shape[1]))
             ftrs = ftrs.permute(0, 2, 1)
-            ftrs = ftrs.reshape(B, -1, self.feat_size, self.feat_size)
+            ftrs = ftrs.reshape(b, -1, feat_size, feat_size)
 
             anomaly_score = self.predictor(summary).sigmoid()
-            anomaly_mask, _ = self.decoder(ftrs)
-            anomaly_mask = anomaly_mask.sigmoid()
+            anomaly_maps, _ = self.decoder(ftrs)
+            anomaly_maps = anomaly_maps.sigmoid()
+            anomaly_maps = self.mean_kernel(anomaly_maps)
+            anomaly_maps = functional.interpolate(
+                anomaly_maps,
+                size=feat_size * self.model.patch_size,
+                mode="bilinear",
+                align_corners=False,
+            )
 
-        return anomaly_score.float(), anomaly_mask.float()
+        return anomaly_score, anomaly_maps
 
 
 class BaseModel(nn.Module):
     """Base model wrapper for the RADIO vision foundation model.
-    
-    Initializes the RADIO model backbone and defines default image dimensions 
+
+    Initializes the RADIO model backbone and defines default image dimensions
     and patch sizes used for spatial feature extraction.
     """
 
@@ -75,20 +109,6 @@ class BaseModel(nn.Module):
         self.net = RADIOModel()
         self.feature_dim = 1024
         self.patch_size = 16
-        self.H = 768
-
-    def get_img_transform(self) -> v2.Compose:
-        """Get the default image transformation pipeline.
-
-        Returns:
-            (v2.Compose): Torchvision v2 transforms for resizing and tensor conversion.
-        """
-        return v2.Compose(
-            [
-                v2.Resize((self.H, self.H)),
-                v2.ToTensor(),
-            ],
-        )
 
     def add_peft(self, r: int = 64) -> None:
         """Add Parameter-Efficient Fine-Tuning (PEFT) adaptors to the network.

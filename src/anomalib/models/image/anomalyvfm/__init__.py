@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """AnomalyVFM -- Transforming Vision Foundation Models into Zero-Shot Anomaly Detectors.
@@ -9,18 +9,17 @@ The model directly predicts an anomaly score and a anomaly mask.
 
 Example:
     >>> from anomalib.models.image import AnomalyVFM
-    >>> model = AnomalyVFM("radio")
+    >>> model = AnomalyVFM()
 
 The model can be used with any of the supported datasets.
 
 Notes:
     - Is already pretrained, i.e. requires no training
-    - Supports 4 VFM backbones (RADIO, SigLIP2, CLIP and DINOv2)
     - Supports both anomaly detection and localization tasks
     - Requires significant GPU memory due to Vision Transformer architecture
 
 See Also:
-    :class:`anomalib.models.image.dinomaly.lightning_model.AnomalyVFM`:
+    :class:`anomalib.models.image.anomalyvfm.lightning_model.AnomalyVFM`:
         Lightning implementation of the AnomalyVFM model.
 """
 

@@ -1,8 +1,13 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""RADIO Model for AnomalyVFM."""
+
 import math
 
 import torch
-import torch.nn.functional as F
 from torch import nn
+from torch.nn import functional
 
 
 class Im2Patches(nn.Module):
@@ -25,12 +30,11 @@ class Im2Patches(nn.Module):
         Returns:
             (torch.Tensor): patches
         """
-        B, C, H, W = x.shape
-        P = self.patch_size
-        x = x.unfold(2, P, P).unfold(3, P, P)
-        x = x.contiguous().view(B, C, H // P, W // P, P, P)
-        x = x.permute(0, 2, 3, 1, 4, 5).contiguous().view(B, -1, C * P * P)
-        return x
+        b, c, h, w = x.shape
+        p = self.patch_size
+        x = x.unfold(2, p, p).unfold(3, p, p)
+        x = x.contiguous().view(b, c, h // p, w // p, p, p)
+        return x.permute(0, 2, 3, 1, 4, 5).contiguous().view(b, -1, c * p * p)
 
 
 class ViTPatchLinear(nn.Linear):
@@ -92,15 +96,15 @@ class ViTPatchGenerator(nn.Module):
     """
 
     def __init__(
-        self, 
-        patch_size: int = 16, 
-        in_chans: int = 3, 
-        embed_dim: int = 1024, 
-        num_prefix_tokens: int = 8
+        self,
+        patch_size: int = 16,
+        in_chans: int = 3,
+        embed_dim: int = 1024,
+        num_prefix_tokens: int = 8,
     ) -> None:
         super().__init__()
-        self.im_to_patches = Im2Patches(patch_size) 
-        self.embedder = ViTPatchLinear(             
+        self.im_to_patches = Im2Patches(patch_size)
+        self.embedder = ViTPatchLinear(
             in_features=in_chans * patch_size * patch_size,
             out_features=embed_dim,
             bias=False,
@@ -122,8 +126,7 @@ class ViTPatchGenerator(nn.Module):
         x = self.im_to_patches(x)
         x = self.embedder(x)
         x = self.cls_token(x)
-        x = self.patch_normalizer(x)
-        return x
+        return self.patch_normalizer(x)
 
 
 class Mlp(nn.Module):
@@ -138,12 +141,12 @@ class Mlp(nn.Module):
     """
 
     def __init__(
-        self, 
-        in_features: int, 
-        hidden_features: int, 
-        out_features: int, 
-        act_layer: Type[nn.Module] = nn.GELU, 
-        drop: float = 0.0
+        self,
+        in_features: int,
+        hidden_features: int,
+        out_features: int,
+        act_layer: type[nn.Module] = nn.GELU,
+        drop: float = 0.0,
     ) -> None:
         super().__init__()
         self.fc1 = nn.Linear(in_features, hidden_features)
@@ -167,8 +170,7 @@ class Mlp(nn.Module):
         x = self.drop1(x)
         x = self.norm(x)
         x = self.fc2(x)
-        x = self.drop2(x)
-        return x
+        return self.drop2(x)
 
 
 class Attention(nn.Module):
@@ -183,12 +185,12 @@ class Attention(nn.Module):
     """
 
     def __init__(
-        self, 
-        dim: int, 
-        num_heads: int = 16, 
-        qkv_bias: bool = True, 
-        attn_drop: float = 0.0, 
-        proj_drop: float = 0.0
+        self,
+        dim: int,
+        num_heads: int = 16,
+        qkv_bias: bool = True,
+        attn_drop: float = 0.0,
+        proj_drop: float = 0.0,
     ) -> None:
         super().__init__()
         self.num_heads = num_heads
@@ -212,24 +214,23 @@ class Attention(nn.Module):
         Returns:
             (torch.Tensor): Attended features.
         """
-        B, N, C = x.shape
-        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+        b, n, c = x.shape
+        qkv = self.qkv(x).reshape(b, n, 3, self.num_heads, c // self.num_heads).permute(2, 0, 3, 1, 4)
         q, k, v = qkv.unbind(0)
 
         q = self.q_norm(q)
         k = self.k_norm(k)
 
-        x = F.scaled_dot_product_attention(
+        x = functional.scaled_dot_product_attention(
             q,
             k,
             v,
             dropout_p=self.attn_drop.p if self.training else 0.0,
         )
-        x = x.transpose(1, 2).reshape(B, N, C)
+        x = x.transpose(1, 2).reshape(b, n, c)
         x = self.norm(x)
         x = self.proj(x)
-        x = self.proj_drop(x)
-        return x
+        return self.proj_drop(x)
 
 
 class Block(nn.Module):
@@ -243,11 +244,11 @@ class Block(nn.Module):
     """
 
     def __init__(
-        self, 
-        dim: int, 
-        num_heads: int, 
-        mlp_ratio: float = 4.0, 
-        qkv_bias: bool = True
+        self,
+        dim: int,
+        num_heads: int,
+        mlp_ratio: float = 4.0,
+        qkv_bias: bool = True,
     ) -> None:
         super().__init__()
         self.norm1 = nn.LayerNorm(dim, eps=1e-06)
@@ -270,8 +271,7 @@ class Block(nn.Module):
             (torch.Tensor): Block output features.
         """
         x = x + self.drop_path1(self.ls1(self.attn(self.norm1(x))))
-        x = x + self.drop_path2(self.ls2(self.mlp(self.norm2(x))))
-        return x
+        return x + self.drop_path2(self.ls2(self.mlp(self.norm2(x))))
 
 
 class VisionTransformer(nn.Module):
@@ -320,38 +320,43 @@ class VisionTransformer(nn.Module):
         self.head_drop = nn.Dropout(0.0)
         self.head = nn.Identity()
 
-    def _interpolate_pos_encoding(self, x: torch.Tensor, H: int, W: int) -> torch.Tensor:
+    def _interpolate_pos_encoding(self, x: torch.Tensor, h: int, w: int) -> torch.Tensor:
         """Interpolate positional encodings for dynamic image resolutions.
 
         Args:
             x (torch.Tensor): Input features.
-            H (int): Original image height.
-            W (int): Original image width.
+            h (int): Original image height.
+            w (int): Original image width.
 
         Returns:
             (torch.Tensor): Interpolated positional encodings.
         """
         pos_embed = self.patch_generator.pos_embed
-        L = pos_embed.shape[1]
+        seq_length = pos_embed.shape[1]
 
-        if int(math.sqrt(L - self.num_prefix_tokens)) ** 2 == L - self.num_prefix_tokens:
+        if int(math.sqrt(seq_length - self.num_prefix_tokens)) ** 2 == seq_length - self.num_prefix_tokens:
             pos_prefix_len = self.num_prefix_tokens
         else:
-            base_grid = int(math.sqrt(L))
-            pos_prefix_len = L - (base_grid**2)
+            base_grid = int(math.sqrt(seq_length))
+            pos_prefix_len = seq_length - (base_grid**2)
 
-        base_spatial_len = L - pos_prefix_len
+        base_spatial_len = seq_length - pos_prefix_len
         base_grid = int(math.sqrt(base_spatial_len))
 
         extra_pos_embed = pos_embed[:, :pos_prefix_len]
         patch_pos_embed = pos_embed[:, pos_prefix_len:]
 
         dim = x.shape[-1]
-        w0, h0 = W // self.patch_size, H // self.patch_size
+        w0, h0 = w // self.patch_size, h // self.patch_size
 
         if h0 != base_grid or w0 != base_grid:
             patch_pos_embed = patch_pos_embed.reshape(1, base_grid, base_grid, dim).permute(0, 3, 1, 2)
-            patch_pos_embed = F.interpolate(patch_pos_embed, size=(h0, w0), mode="bicubic", align_corners=False)
+            patch_pos_embed = functional.interpolate(
+                patch_pos_embed,
+                size=(h0, w0),
+                mode="bicubic",
+                align_corners=False,
+            )
             patch_pos_embed = patch_pos_embed.permute(0, 2, 3, 1).view(1, -1, dim)
 
         if pos_prefix_len < self.num_prefix_tokens:
@@ -369,27 +374,26 @@ class VisionTransformer(nn.Module):
 
         return torch.cat((extra_pos_embed, patch_pos_embed), dim=1)
 
-    def forward(self, x: torch.Tensor, original_H: int, original_W: int) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, original_h: int, original_w: int) -> torch.Tensor:
         """Forward pass through the Vision Transformer.
 
         Args:
             x (torch.Tensor): Input image tensor.
-            original_H (int): Original height of the input image.
-            original_W (int): Original width of the input image.
+            original_h (int): Original height of the input image.
+            original_w (int): Original width of the input image.
 
         Returns:
             (torch.Tensor): Output features from the final transformer block.
         """
         x = self.patch_generator(x)
         x = self.norm_pre(x)
-        x = x + self._interpolate_pos_encoding(x, original_H, original_W)
+        x = x + self._interpolate_pos_encoding(x, original_h, original_w)
         x = self.patch_drop(x)
         x = self.blocks(x)
         x = self.norm(x)
         x = self.fc_norm(x)
         x = self.head_drop(x)
-        x = self.head(x)
-        return x
+        return self.head(x)
 
 
 class InputConditioner(nn.Module):
@@ -428,7 +432,7 @@ class RADIOModel(nn.Module):
 
         self.register_buffer("summary_idxs", torch.tensor([0, 1, 2]))
 
-    def forward(self, x: torch.Tensor, feature_fmt: str = "NLD") -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Forward pass extracting summary and spatial features.
 
         Args:
@@ -440,14 +444,14 @@ class RADIOModel(nn.Module):
                 - summary (torch.Tensor): Flattened summary features from designated tokens.
                 - spatial_features (torch.Tensor): Spatial patch features.
         """
-        B, C, H, W = x.shape
+        b, c, h, w = x.shape
         x = self.input_conditioner(x)
-        x = self.model(x, original_H=H, original_W=W)
+        x = self.model(x, original_h=h, original_w=w)
         x = self.feature_normalizer(x)
 
         summary = x[:, self.summary_idxs]
         spatial_features = x[:, self.model.num_prefix_tokens :]
 
-        B, C, D = summary.shape
-        summary = summary.reshape(B, C * D)
+        b, c, d = summary.shape
+        summary = summary.reshape(b, c * d)
         return summary, spatial_features

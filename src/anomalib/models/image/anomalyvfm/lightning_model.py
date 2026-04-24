@@ -1,4 +1,4 @@
-# Copyright (C) 2024-2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Vision Foundation Model (VFM) based zero-shot anomaly detection model.
@@ -12,13 +12,10 @@ Example:
 
 import logging
 
-from huggingface_hub import hf_hub_download
 from lightning.pytorch.utilities.types import STEP_OUTPUT
-from safetensors.torch import load_file
-from torch import nn
-from torch.nn import functional
+from torchvision.transforms.v2 import Compose, Resize
 
-from anomalib import LearningType
+from anomalib import LearningType, PrecisionType
 from anomalib.data import ImageBatch, InferenceBatch
 from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule
@@ -50,6 +47,7 @@ class AnomalyVFM(AnomalibModule):
         post_processor: PostProcessor | bool = True,
         evaluator: Evaluator | bool = True,
         visualizer: Visualizer | bool = True,
+        precision: str | PrecisionType = PrecisionType.FLOAT32,
     ) -> None:
         super().__init__(
             pre_processor=pre_processor,
@@ -58,20 +56,37 @@ class AnomalyVFM(AnomalibModule):
             visualizer=visualizer,
         )
         self.model = AnomalyVFMModel()
-        weights_path = hf_hub_download(
-            repo_id="MaticFuc/anomalyvfm_radio",
-            filename="model.safetensors",
+
+        if isinstance(precision, str):
+            self.model.precision = PrecisionType(precision.lower())
+        else:
+            self.model.precision = PrecisionType.FLOAT32
+
+    @classmethod
+    def configure_pre_processor(cls, image_size: tuple[int, int] | None = None) -> PreProcessor:
+        """Configure the default pre-processor for AnomalyVFM.
+
+        Pre-processor resizes images.
+
+        Args:
+            image_size (tuple[int, int] | None, optional): Target size for
+                resizing. Defaults to ``(768, 768)``.
+
+        Returns:
+            PreProcessor: Configured AnomalyVFM pre-processor
+        """
+        image_size = image_size or (DEFAULT_IMAGE_SIZE, DEFAULT_IMAGE_SIZE)
+        return PreProcessor(
+            transform=Compose([
+                Resize(image_size, antialias=True),
+            ]),
         )
-        safe_state_dict = load_file(weights_path)
-        self.model.load_state_dict(safe_state_dict)
-        self.mean_kernel = nn.AvgPool2d((5, 5), 1, 5 // 2)
-        self.pre_processor = PreProcessor(transform=self.model.model.get_img_transform())
 
     def validation_step(self, batch: ImageBatch, *args, **kwargs) -> STEP_OUTPUT:
         """Perform the validation step and return the anomaly map and anomaly score.
 
         Args:
-            batch (dict[str, str | torch.Tensor]): Input batch
+            batch (ImageBatch): Input batch
             args: Additional arguments.
             kwargs: Additional keyword arguments.
 
@@ -83,13 +98,6 @@ class AnomalyVFM(AnomalibModule):
 
         # Get anomaly maps and predicted scores from the model.
         anomaly_scores, anomaly_maps = self.model(batch.image)
-        anomaly_maps = self.mean_kernel(anomaly_maps)
-        anomaly_maps = functional.interpolate(
-            anomaly_maps,
-            size=self.model.model.H,
-            mode="bilinear",
-            align_corners=False,
-        )
         predictions = InferenceBatch(pred_score=anomaly_scores, anomaly_map=anomaly_maps)
 
         return batch.update(**predictions._asdict())
@@ -104,10 +112,10 @@ class AnomalyVFM(AnomalibModule):
 
     @property
     def learning_type(self) -> LearningType:
-        """Get the learning type of the model.
+        """Get the learning type of the model. This model always uses zero-shot learning.
 
         Returns:
-            LearningType: ZERO_SHOT if k_shot=0, else FEW_SHOT.
+            LearningType: ZERO_SHOT.
         """
         return LearningType.ZERO_SHOT
 
@@ -140,3 +148,19 @@ class AnomalyVFM(AnomalibModule):
                 converts raw scores to anomaly predictions
         """
         return PostProcessor()
+
+    @staticmethod
+    def _export_not_supported_message() -> None:
+        logger.warning("Exporting the model is not supported for AnomalyVFM model. Skipping...")
+
+    def to_torch(self, *_, **__) -> None:  # type: ignore[override]
+        """Skip export to torch."""
+        return self._export_not_supported_message()
+
+    def to_onnx(self, *_, **__) -> None:  # type: ignore[override]
+        """Skip export to onnx."""
+        return self._export_not_supported_message()
+
+    def to_openvino(self, *_, **__) -> None:  # type: ignore[override]
+        """Skip export to openvino."""
+        return self._export_not_supported_message()

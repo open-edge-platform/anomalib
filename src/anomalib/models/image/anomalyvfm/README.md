@@ -16,7 +16,7 @@ This implementation supports the zero-shot setting.
 
 ## Architecture
 
-![AnomalyVFM architecture](/docs/source/images/anomalyvfm/architecture.png "AnomalyVFM architecture")
+![AnomalyVFM architecture](/docs/source/images/anomalyvfm/anomalyvfm.png "AnomalyVFM architecture")
 
 Currently, the difference between ICPR and JIMS code is only the `adapt_cls_features` which controls whether the features used for classification head are adapted or not.
 For ICPR this is set to True (i.e. the features for classification head are adapted), and for JIMS version this is False (which is also the default).

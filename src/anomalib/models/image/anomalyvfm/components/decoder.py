@@ -1,3 +1,8 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Decoder Layers for AnomalyVFM."""
+
 import torch
 from torch import nn
 
@@ -28,8 +33,7 @@ class BottleNeck(nn.Module):
             (torch.Tensor): processed features
         """
         x = self.relu(self.bn1(self.conv1(x)))
-        x = self.relu(self.bn2(self.conv2(x)))
-        return x
+        return self.relu(self.bn2(self.conv2(x)))
 
 
 class DecoderBlockBilinear(nn.Module):
@@ -60,8 +64,7 @@ class DecoderBlockBilinear(nn.Module):
         """
         x = self.upsample(x)
         x = self.relu(self.bn1(self.conv1(x)))
-        x = self.relu(self.bn2(self.conv2(x)))
-        return x
+        return self.relu(self.bn2(self.conv2(x)))
 
 
 class SimpleDecoder(nn.Module):
@@ -123,5 +126,4 @@ class SimplePredictor(nn.Module):
         Returns:
             (torch.Tensor): predicted anomaly score.
         """
-        x = self.lin(x)
-        return x
+        return self.lin(x)
