@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 🚀 **model**: Add L2BT anomaly detection model by @Sharon-9 in https://github.com/open-edge-platform/anomalib/pull/3410
 - 🚀 **model**: Add GeneralAD anomaly detection model by @SMSD75 in https://github.com/open-edge-platform/anomalib/pull/3513
 - 🚀 **model**: Add PatchFlow anomaly detection model by @BOX-LEO in https://github.com/open-edge-platform/anomalib/pull/3433
+- 🚀 **model**: Add context-aware recentering option from Dinomaly2 to Dinomaly model by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3435
 
 ### Removed
 
