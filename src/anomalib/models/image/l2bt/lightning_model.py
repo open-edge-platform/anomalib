@@ -171,7 +171,7 @@ class L2BT(AnomalibModule):
 
         Args:
             image_size (tuple[int, int] | None, optional): Target image size for
-                resizing. Defaults to ``(224, 224)``.
+                resizing. Defaults to ``None``. If ``None``, ``(224, 224)`` is used.
 
         Returns:
             PreProcessor: Configured pre-processor with the L2BT transform pipeline.
