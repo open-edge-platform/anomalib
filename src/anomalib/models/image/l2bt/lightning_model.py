@@ -85,9 +85,9 @@ class L2BT(AnomalibModule):
         blur_pad_u (int): Upper bound for blur padding in augmentation.
             Defaults to ``3``.
         blur_repeats_l (int): Number of repetitions for lower blur kernel.
-            Defaults to ``5``.
-        blur_repeats_u (int): Number of repetitions for upper blur kernel.
             Defaults to ``3``.
+        blur_repeats_u (int): Number of repetitions for upper blur kernel.
+            Defaults to ``5``.
         topk_ratio (float): Fraction of highest anomaly-map values to use for
             image-level anomaly scoring. Defaults to ``0.001``.
         pre_processor (PreProcessor | bool, optional): Pre-processor to transform
