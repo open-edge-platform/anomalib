@@ -7,6 +7,7 @@ This module implements the L2BT model for anomaly detection as described in
 `Costanzino et al. (2025) <https://ieeexplore.ieee.org/document/11048772>`_.
 
 The model consists of:
+
 - A pre-trained Vision Transformer teacher that extracts patch embeddings
 - Two shallow student MLPs (backward_net and forward_net) that learn to match
   teacher patch embeddings
@@ -60,9 +61,9 @@ __all__ = ["L2BT"]
 
 
 class L2BT(AnomalibModule):
-    """PL Lightning Module for the L2BT algorithm.
+    """Learning to Be a Transformer algorithm.
 
-    The Learning to Be a Transformer (L2BT) model consists of a pre-trained
+    The L2BT model consists of a pre-trained
     Vision Transformer teacher that extracts patch embeddings and two shallow
     student MLPs (backward_net and forward_net) that learn to match the teacher's
     patch embeddings. The model detects anomalies by comparing the student's
