@@ -1,5 +1,12 @@
 # PatchFlow
 
+## Architecture
+
+```{eval-rst}
+.. image:: ../../../../../images/patchflow/architecture.png
+    :alt: PatchFlow Architecture
+```
+
 ```{eval-rst}
 .. automodule:: anomalib.models.image.patchflow.lightning_model
    :members:
