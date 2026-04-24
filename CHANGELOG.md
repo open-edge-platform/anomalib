@@ -8,10 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- 🚀 **model**: Add L2BT anomaly detection model by @Sharon-9 in https://github.com/open-edge-platform/anomalib/pull/3410
-- 🚀 **model**: Add GeneralAD anomaly detection model by @SMSD75 in https://github.com/open-edge-platform/anomalib/pull/3513
-- 🚀 **model**: Add PatchFlow anomaly detection model by @BOX-LEO in https://github.com/open-edge-platform/anomalib/pull/3433
-
 ### Removed
 
 ### Changed
@@ -20,7 +16,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+## [v2.4.0] - 2026-04-24
+
+### Added
+
+- 🚀 **model**: Add L2BT anomaly detection model by @Sharon-9 in https://github.com/open-edge-platform/anomalib/pull/3410
+- 🚀 **model**: Add GeneralAD anomaly detection model by @SMSD75 in https://github.com/open-edge-platform/anomalib/pull/3513
+- 🚀 **model**: Add PatchFlow anomaly detection model by @BOX-LEO in https://github.com/open-edge-platform/anomalib/pull/3433
+
+### Changed
+
+- 🔧 **lib**: Migrate deprecated torchvision APIs, and fix resource leak by @Lidang-Jiang in https://github.com/open-edge-platform/anomalib/pull/3508
+
+### Fixed
+
 - 🐞 **export**: Fix duplicated size parameter in `ExportableCenterCrop` by checking `Sequence` instead of `tuple` by @CarlosNacher in https://github.com/open-edge-platform/anomalib/pull/2203
+- 🐞 **data**: Reject `str` size in `ExportableCenterCrop` by @shaun0927 in https://github.com/open-edge-platform/anomalib/pull/3547
+- 🐞 **sampling**: Handle `coreset_size == 0` in `KCenterGreedy` by early-returning empty list instead of returning a single-element coreset by @shaun0927 in https://github.com/open-edge-platform/anomalib/pull/3546
+- 🐞 **sampling**: Include initial random seed point in PatchCore coreset selection by @Lidang-Jiang in https://github.com/open-edge-platform/anomalib/pull/3509
 
 ## [v2.3.3] - 2026-04-10
 
