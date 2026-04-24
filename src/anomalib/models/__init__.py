@@ -189,7 +189,7 @@ def list_models(case: str = "snake") -> set[str]:
         msg = f"Unsupported format: {case}. Must be one of: snake, pascal, title"
         raise ValueError(msg)
 
-    models = {cls.__name__ for cls in AnomalibModule.__subclasses__() if cls.__name__ != "AnomalyModule"}
+    models = {cls.__name__ for cls in AnomalibModule.__subclasses__()}
 
     if case == "snake":
         return {convert_to_snake_case(name) for name in models}
