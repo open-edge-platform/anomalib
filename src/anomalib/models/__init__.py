@@ -48,42 +48,45 @@ Video Models:
     - FUVAS (:class:`anomalib.models.video.Fuvas`)
 """
 
+from __future__ import annotations
+
 import logging
 from importlib import import_module
-
-from jsonargparse import Namespace
-from omegaconf import DictConfig, OmegaConf
+from typing import TYPE_CHECKING
 
 from anomalib.models.components import AnomalibModule
-from anomalib.utils.path import convert_snake_to_pascal_case, convert_to_snake_case, convert_to_title_case
 
-from .image import (
-    AnomalyDINO,
-    Cfa,
-    Cflow,
-    Csflow,
-    Dfkde,
-    Dfm,
-    Dinomaly,
-    Draem,
-    Dsr,
-    EfficientAd,
-    Fastflow,
-    Fre,
-    Ganomaly,
-    Padim,
-    Patchcore,
-    ReverseDistillation,
-    Stfpm,
-    Supersimplenet,
-    Uflow,
-    UniNet,
-    VlmAd,
-    WinClip,
-)
-from .video import AiVad, Fuvas
+if TYPE_CHECKING:
+    from jsonargparse import Namespace
+    from omegaconf import DictConfig
 
-# Whitelist of allowed modules for dynamic imports
+_MODEL_CLASS_MAP: dict[str, str] = {
+    "AnomalyDINO": ".image.anomaly_dino",
+    "Cfa": ".image.cfa",
+    "Cflow": ".image.cflow",
+    "Csflow": ".image.csflow",
+    "Dfkde": ".image.dfkde",
+    "Dfm": ".image.dfm",
+    "Dinomaly": ".image.dinomaly",
+    "Draem": ".image.draem",
+    "Dsr": ".image.dsr",
+    "EfficientAd": ".image.efficient_ad",
+    "Fastflow": ".image.fastflow",
+    "Fre": ".image.fre",
+    "Ganomaly": ".image.ganomaly",
+    "Padim": ".image.padim",
+    "Patchcore": ".image.patchcore",
+    "ReverseDistillation": ".image.reverse_distillation",
+    "Stfpm": ".image.stfpm",
+    "Supersimplenet": ".image.supersimplenet",
+    "Uflow": ".image.uflow",
+    "UniNet": ".image.uninet",
+    "VlmAd": ".image.vlm_ad",
+    "WinClip": ".image.winclip",
+    "AiVad": ".video.ai_vad",
+    "Fuvas": ".video.fuvas",
+}
+
 ALLOWED_MODULES = {
     "anomalib.models",
     "anomalib.models.image",
@@ -125,6 +128,30 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
+_all_models_imported = False
+
+
+def _import_all_models() -> None:
+    """Import all model classes to populate AnomalibModule.__subclasses__()."""
+    global _all_models_imported  # noqa: PLW0603
+    if _all_models_imported:
+        return
+    for cls_name, module_path in _MODEL_CLASS_MAP.items():
+        if cls_name not in globals():
+            mod = import_module(module_path, __name__)
+            globals()[cls_name] = getattr(mod, cls_name)
+    _all_models_imported = True
+
+
+def __getattr__(name: str) -> object:
+    if name in _MODEL_CLASS_MAP:
+        mod = import_module(_MODEL_CLASS_MAP[name], __name__)
+        obj = getattr(mod, name)
+        globals()[name] = obj
+        return obj
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)
+
 
 def list_models(case: str = "snake") -> set[str]:
     """List available anomaly detection models.
@@ -134,9 +161,10 @@ def list_models(case: str = "snake") -> set[str]:
 
     Args:
         case (str): The format to return model names in. Options are:
-            - "snake_case": Returns names in snake_case format (e.g. "efficient_ad")
-            - "original": Returns the original PascalCase class names (e.g. "EfficientAd")
-            Defaults to "snake_case".
+            - "snake": Returns names in snake_case format (e.g. "efficient_ad")
+            - "pascal": Returns the original PascalCase class names (e.g. "EfficientAd")
+            - "title": Returns names in Title Case format (e.g. "Efficient Ad")
+            Defaults to "snake".
 
     Returns:
         set[str]: Set of available model names in the specified format.
@@ -170,6 +198,10 @@ def list_models(case: str = "snake") -> set[str]:
         The returned model names can be used with :func:`get_model` to instantiate
         the corresponding model class.
     """
+    from anomalib.utils.path import convert_to_snake_case, convert_to_title_case
+
+    _import_all_models()
+
     if case not in {"snake", "pascal", "title"}:
         msg = f"Unsupported format: {case}. Must be one of: snake, pascal, title"
         raise ValueError(msg)
@@ -213,6 +245,10 @@ def _get_model_class_by_name(name: str) -> type[AnomalibModule]:
         >>> model_class.__name__
         'EfficientAd'
     """
+    from anomalib.utils.path import convert_snake_to_pascal_case
+
+    _import_all_models()
+
     logger.info("Loading the model.")
     model_class: type[AnomalibModule] | None = None
 
@@ -276,6 +312,9 @@ def get_model(model: DictConfig | str | dict | Namespace, *args, **kwdargs) -> A
         ...     "init_args": {"backbone": "resnet18""}
         ... })
     """
+    from jsonargparse import Namespace
+    from omegaconf import DictConfig, OmegaConf
+
     model_: AnomalibModule
     if isinstance(model, str):
         model_class_ = _get_model_class_by_name(model)
@@ -285,7 +324,6 @@ def get_model(model: DictConfig | str | dict | Namespace, *args, **kwdargs) -> A
             model = OmegaConf.create(model)
         try:
             if len(model.class_path.split(".")) > 1:
-                # Security check: Only allow imports from whitelisted modules
                 module_path = ".".join(model.class_path.split(".")[:-1])
                 if module_path not in ALLOWED_MODULES:
                     logger.error(
@@ -295,7 +333,6 @@ def get_model(model: DictConfig | str | dict | Namespace, *args, **kwdargs) -> A
                     msg = f"Module import from '{module_path}' is not allowed."
                     raise UnknownModelError(msg)
 
-                # Use a whitelist approach to prevent arbitrary code execution
                 # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
                 module = import_module(module_path)
             else:
