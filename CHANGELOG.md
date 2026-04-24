@@ -24,6 +24,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 🚀 **model**: Add GeneralAD anomaly detection model by @SMSD75 in https://github.com/open-edge-platform/anomalib/pull/3513
 - 🚀 **model**: Add PatchFlow anomaly detection model by @BOX-LEO in https://github.com/open-edge-platform/anomalib/pull/3433
 
+### Removed
+
+- ⚠️ **api**: Remove deprecated `AnomalyModule` class alias (deprecated since v2.1.0, scheduled for removal in v2.3.0). Use `AnomalibModule` instead.
+
 ### Changed
 
 - 🔧 **lib**: Migrate deprecated torchvision APIs, and fix resource leak by @Lidang-Jiang in https://github.com/open-edge-platform/anomalib/pull/3508
