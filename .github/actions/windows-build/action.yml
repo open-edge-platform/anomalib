@@ -5,25 +5,20 @@ inputs:
   rc_version:
     description: "Release candidate version used in MSIX filename"
     required: false
-    type: string
     default: ""
   accelerator:
-    description: "Backend accelerator to build (matrix: cpu, cu124, xpu)"
+    description: "Backend accelerator to build (matrix: cpu, cu130, xpu)"
     required: true
-    type: string
   debug_build:
     description: "Produce debug build (unoptimized, with symbols)"
-    type: boolean
     required: false
-    default: false
+    default: "false"
   MSIX_SIGN_CERTIFICATE:
     description: "Base64-encoded Windows signing certificate used for MSIX signing"
     required: true
-    type: string
   MSIX_SIGN_CERTIFICATE_PASSWORD:
     description: "Password for the Windows signing certificate"
     required: true
-    type: string
 
 runs:
   using: "composite"
@@ -32,7 +27,7 @@ runs:
 
       env:
         ACCELERATOR: ${{ inputs.accelerator }}
-        DEBUG_BUILD: ${{ inputs.debug_build || false }}
+        DEBUG_BUILD: ${{ inputs.debug_build || 'false' }}
         RC_VERSION: ${{ inputs.rc_version || '' }}
         TAURI_PATH: application/binary/tauri
         TAURI_SRC_PATH: application/binary/tauri/src-tauri
@@ -67,6 +62,7 @@ runs:
         "MSIX_FILE_PATH=$msixFilePath" | Out-File -FilePath $env:GITHUB_ENV -Append
         "MAKEAPPX_PATH=$makeappx" | Out-File -FilePath $env:GITHUB_ENV -Append
         "SIGNTOOL_PATH=$signtool" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "TAURI_SRC_PATH=$($env:TAURI_SRC_PATH)" | Out-File -FilePath $env:GITHUB_ENV -Append
 
     - name: Set up Python
       uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
@@ -124,8 +120,11 @@ runs:
     - name: Build Python sidecar (Windows ${{ inputs.accelerator }})
       working-directory: application/backend
       shell: powershell
+      env:
+          ACCELERATOR: ${{ inputs.accelerator }}
       run: |
-        uv sync --no-dev --extra ${{ inputs.accelerator }}
+        uv sync --no-dev --extra $env:ACCELERATOR
+        uv pip install pyinstaller==6.19.0
         .\.venv\Scripts\Activate.ps1
         Push-Location ..\binary\sidecar
         uv run --active pyinstaller --clean --noconfirm anomalib_studio.spec
@@ -213,7 +212,9 @@ runs:
     - name: Upload MSIX artifact
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
-        name: anomalib-studio-windows-msix-${{ inputs.accelerator }}
+        name: anomalib-studio-windows-msix-${{ env.ACCELERATOR }}
         path: ${{ env.MSIX_FILE_PATH }}
         retention-days: 30
         if-no-files-found: error
+      env:
+        ACCELERATOR: ${{ inputs.accelerator }}
