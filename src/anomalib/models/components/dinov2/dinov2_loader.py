@@ -184,11 +184,30 @@ class DinoV2Loader:
         if not weight_path.exists():
             self._download_weights(model_type, architecture, patch_size)
 
+        try:
+            state_dict = self._load_state_dict(weight_path)
+        except (RuntimeError, EOFError, OSError):
+            logger.warning(
+                "Cached DINOv2 weights at %s appear to be invalid. Re-downloading.",
+                weight_path,
+            )
+            weight_path.unlink(missing_ok=True)
+            self._download_weights(model_type, architecture, patch_size)
+            try:
+                state_dict = self._load_state_dict(weight_path)
+            except (RuntimeError, EOFError, OSError) as retry_err:
+                msg = f"Failed to load DINOv2 weights from {weight_path} after re-downloading."
+                raise RuntimeError(msg) from retry_err
+
+        model.load_state_dict(state_dict, strict=False)
+
+    @staticmethod
+    def _load_state_dict(weight_path: Path) -> dict:
+        """Load a DINOv2 state dict from disk."""
         # Weights_only is set to True
         # See mitigation details in https://github.com/open-edge-platform/anomalib/pull/2729
         # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
-        state_dict = torch.load(weight_path, map_location="cpu", weights_only=True)  # nosec B614
-        model.load_state_dict(state_dict, strict=False)
+        return torch.load(weight_path, map_location="cpu", weights_only=True)  # nosec B614
 
     def _get_weight_path(
         self,
@@ -231,16 +250,22 @@ class DinoV2Loader:
         )
 
         self.cache_dir.mkdir(parents=True, exist_ok=True)
+        temp_path = weight_path.with_name(f"{weight_path.name}.tmp")
+        temp_path.unlink(missing_ok=True)
 
-        with DownloadProgressBar(
-            unit="B",
-            unit_scale=True,
-            miniters=1,
-            desc=download_info.name,
-        ) as progress_bar:
-            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected  # noqa: ERA001, E501
-            urlretrieve(  # noqa: S310  # nosec B310
-                url=url,
-                filename=weight_path,
-                reporthook=progress_bar.update_to,
-            )
+        try:
+            with DownloadProgressBar(
+                unit="B",
+                unit_scale=True,
+                miniters=1,
+                desc=download_info.name,
+            ) as progress_bar:
+                # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected  # noqa: ERA001, E501
+                urlretrieve(  # noqa: S310  # nosec B310
+                    url=url,
+                    filename=temp_path,
+                    reporthook=progress_bar.update_to,
+                )
+            temp_path.replace(weight_path)
+        finally:
+            temp_path.unlink(missing_ok=True)
