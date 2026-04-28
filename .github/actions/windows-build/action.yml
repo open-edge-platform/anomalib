@@ -189,11 +189,9 @@ runs:
       shell: pwsh
       run: |
         $bytes = [System.Convert]::FromBase64String($env:MSIX_SIGN_CERTIFICATE)
-        $securePassword = ConvertTo-SecureString $env:MSIX_SIGN_CERTIFICATE_PASSWORD -AsPlainText -Force
-        $cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new()
-        $cert.Import(
+        $cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new(
           $bytes,
-          $securePassword,
+          $env:MSIX_SIGN_CERTIFICATE_PASSWORD,
           [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet -bor
           [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::UserKeySet
         )
