@@ -1,5 +1,12 @@
 # STFPM
 
+## Architecture
+
+```{eval-rst}
+.. image:: ../../../../../images/stfpm/architecture.jpg
+    :alt: STFPM Architecture
+```
+
 ```{eval-rst}
 .. automodule:: anomalib.models.image.stfpm.lightning_model
    :members:

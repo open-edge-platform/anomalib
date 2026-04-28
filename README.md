@@ -31,19 +31,21 @@
 
 ---
 
-> 🌟 **Announcing v2.3.3 Patch Release!** 🌟
+> 🌟 **Announcing v2.4.0 Release!** 🌟
 >
-> This patch release changes data and model download locations, adds pandas 3.0 compatibility fixes, and includes security-focused dependency updates.
+> This release brings three new anomaly detection models and important bug fixes.
 >
-> What's changed
+> New Models
 >
-> - Moved pre-trained model downloads to platform-specific cache directories.
-> - Added deprecation warnings for legacy local `./datasets/<dataset>` roots ahead of the v2.6.0 cache-directory migration.
-> - Updated security-sensitive dependencies including `mlflow`.
+> - **L2BT**: A new anomaly detection model.
+> - **GeneralAD**: A general-purpose anomaly detection model.
+> - **PatchFlow**: A flow-based patch-level anomaly detection model.
 >
-> Bug fixes
+> Key Fixes
 >
-> - Fixed enum-based DataFrame comparisons for pandas >= 3.0 compatibility.
+> - Fixed PatchCore coreset selection to include the initial random point.
+> - Fixed `ExportableCenterCrop` duplicated size parameter and string size handling.
+> - Fixed `KCenterGreedy` crash when `coreset_size == 0`.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 

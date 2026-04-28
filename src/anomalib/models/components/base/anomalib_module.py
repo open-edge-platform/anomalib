@@ -59,7 +59,6 @@ from anomalib.metrics import AUROC, F1Score
 from anomalib.metrics.evaluator import Evaluator
 from anomalib.post_processing import PostProcessor
 from anomalib.pre_processing import PreProcessor
-from anomalib.utils import deprecate
 from anomalib.visualization import ImageVisualizer, Visualizer
 
 from .export_mixin import ExportMixin
@@ -476,11 +475,3 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
 
         msg = f"Model is not an instance of AnomalibModule: {model}"
         raise ValueError(msg)
-
-
-@deprecate(since="2.1.0", remove="2.3.0", use="AnomalibModule")
-class AnomalyModule(AnomalibModule):
-    """Deprecated AnomalyModule class. Use AnomalibModule instead."""
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
