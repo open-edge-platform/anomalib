@@ -1,5 +1,12 @@
 # FastFlow
 
+## Architecture
+
+```{eval-rst}
+.. image:: ../../../../../images/fastflow/architecture.jpg
+    :alt: FastFlow Architecture
+```
+
 ```{eval-rst}
 .. automodule:: anomalib.models.image.fastflow.lightning_model
    :members:

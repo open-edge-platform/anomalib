@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """CUHK Avenue Data Module.
@@ -67,6 +67,7 @@ from anomalib.data.datamodules.base.video import AnomalibVideoDataModule
 from anomalib.data.datasets.base.video import VideoTargetFrame
 from anomalib.data.datasets.video.avenue import AvenueDataset
 from anomalib.data.utils import DownloadInfo, Split, ValSplitMode, download_and_extract
+from anomalib.utils.path import resolve_with_warning
 
 logger = logging.getLogger(__name__)
 
@@ -86,9 +87,9 @@ class Avenue(AnomalibVideoDataModule):
     """Avenue DataModule class.
 
     Args:
-        root (Path | str): Path to the root of the dataset.
+        root (Path | str | None): Path to the root of the dataset.
             Defaults to ``"./datasets/avenue"``.
-        gt_dir (Path | str): Path to the ground truth files.
+        gt_dir (Path | str | None): Path to the ground truth files.
             Defaults to ``"./datasets/avenue/ground_truth_demo"``.
         clip_length_in_frames (int): Number of video frames in each clip.
             Defaults to ``2``.
@@ -139,8 +140,8 @@ class Avenue(AnomalibVideoDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/avenue",
-        gt_dir: Path | str = "./datasets/avenue/ground_truth_demo",
+        root: Path | str | None = "./datasets/avenue",
+        gt_dir: Path | str | None = "./datasets/avenue/ground_truth_demo",
         clip_length_in_frames: int = 2,
         frames_between_clips: int = 1,
         target_frame: VideoTargetFrame | str = VideoTargetFrame.LAST,
@@ -168,6 +169,8 @@ class Avenue(AnomalibVideoDataModule):
             seed=seed,
         )
 
+        root = resolve_with_warning(root, "avenue")
+        gt_dir = resolve_with_warning(gt_dir, "avenue/ground_truth_demo")
         self.root = Path(root)
         self.gt_dir = Path(gt_dir)
         self.clip_length_in_frames = clip_length_in_frames

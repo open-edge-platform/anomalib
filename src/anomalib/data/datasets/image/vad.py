@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """VAD Dataset.
@@ -31,6 +31,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datasets.base import AnomalibDataset
 from anomalib.data.errors import MisMatchError
 from anomalib.data.utils import LabelName, Split, validate_path
+from anomalib.utils.path import get_datasets_dir
 
 IMG_EXTENSIONS = (".png", ".PNG")
 CATEGORIES = ("vad",)
@@ -43,8 +44,8 @@ class VADDataset(AnomalibDataset):
     only classification task.
 
     Args:
-        root (Path | str): Path to root directory containing the dataset.
-            Defaults to ``"./datasets/VAD"``.
+        root (Path | str | None): Path to root directory containing the dataset.
+            Defaults to ``None``.
         category (str): Category name, must be one of ``CATEGORIES``.
             Defaults to ``"vad"``.
         augmentations (Transform, optional): Augmentations that should be applied to the input images.
@@ -83,12 +84,14 @@ class VADDataset(AnomalibDataset):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/VAD",
+        root: Path | str | None = None,
         category: str = "vad",
         augmentations: Transform | None = None,
         split: str | Split | None = None,
     ) -> None:
         super().__init__(augmentations=augmentations)
+
+        root = root if root is not None else get_datasets_dir() / "VAD"
 
         self.root_category = Path(root) / Path(category)
         self.category = category

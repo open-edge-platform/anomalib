@@ -64,7 +64,7 @@ def handle_mac(metric: "_F1AdaptiveThreshold") -> Generator[None, None, None]:
     """
     # Only handle MPS for non-binned mode (thresholds=None) where preds/target exist
     # When thresholds are specified, confmat is used instead
-    if metric.thresholds is None and bool(metric.preds) and metric.preds[0].is_mps:
+    if metric.thresholds is None and isinstance(metric.preds, list) and metric.preds and metric.preds[0].is_mps:
         original_device = metric.preds[0].device
         metric.preds = [pred.cpu() for pred in metric.preds]
         metric.target = [target.cpu() for target in metric.target]

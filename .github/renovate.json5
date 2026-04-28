@@ -16,13 +16,31 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
 
+  // Ignore compiled workflow files
+  ignorePaths: [".github/workflows/**/*.lock.yml"],
+
   // regenerate lock weekly https://docs.renovatebot.com/configuration-options/#lockfilemaintenance
   lockFileMaintenance: {
     enabled: true,
-    schedule: ["* * * * 0"], // weekly
+    schedule: ["* * * * 0"], // weekly on Sunday
+    automerge: true,
+    automergeType: "pr",
+    reviewers: ["sys-geti"],
+    platformAutomerge: true,
+
+    // Renovate does not assign reviewers and assignees to
+    // automerge-enabled PR unless it fails status checks.
+    // With this setting Renovate will instead assign reviewers and
+    // assignees for automerging PRs at time of creation.
+    assignAutomerge: true,
   },
 
-  extends: ["config:base", ":gitSignOff", "helpers:pinGitHubActionDigests"],
+  extends: [
+    "config:base",
+    ":gitSignOff",
+    "helpers:pinGitHubActionDigests",
+    ":semanticCommits",
+  ],
   // https://docs.renovatebot.com/presets-default/#gitsignoff
   // https://docs.renovatebot.com/presets-helpers/#helperspingithubactiondigests
 
@@ -31,7 +49,14 @@
   // `matchBaseBranches` in specific rule
   baseBranches: ["main"],
 
-  enabledManagers: ["github-actions", "pep621", "dockerfile", "npm", "cargo"],
+  enabledManagers: [
+    "github-actions",
+    "pep621",
+    "dockerfile",
+    "npm",
+    "cargo",
+    "custom.regex",
+  ],
 
   // ignore Geti components
   ignoreDeps: ["@geti/config", "@geti/ui"],
@@ -49,7 +74,12 @@
       pinDigests: true,
       groupName: "Pin images",
       groupSlug: "pin-images",
-      schedule: ["* * * * 0"], // weekly
+      schedule: ["* * * * 6"], // weekly on Saturday
+      automerge: true,
+      automergeType: "pr",
+      reviewers: ["sys-geti"],
+      platformAutomerge: true,
+      assignAutomerge: true,
     },
 
     // Disable python base image upgrades, except patch and digest pinning
@@ -109,7 +139,7 @@
       enabled: true,
       separateMajorMinor: false,
       groupName: "GitHub Actions",
-      matchManagers: ["github-actions"],
+      matchManagers: ["github-actions", "custom.regex"],
       matchPackagePatterns: ["*"],
       schedule: ["* * 1 * *"], // every month
     },
@@ -136,6 +166,17 @@
       matchDepTypes: ["container"],
       matchDepNames: ["mcr.microsoft.com/playwright"],
       matchUpdateTypes: ["major", "minor", "patch"],
+    },
+  ],
+
+  // Is used to upgrade Renovate version
+  customManagers: [
+    {
+      fileMatch: ["^\\.github/workflows/[^/]+\\.ya?ml$"],
+      matchStrings: [
+        "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\s+.+version: (?<currentValue>.*)",
+        "# renovate: datasource=(?<datasource>.*?)\\s+export RENOVATE_IMAGE=(?<depName>[^:]+):(?<currentValue>[^@]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?",
+      ],
     },
   ],
 

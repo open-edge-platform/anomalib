@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """MVTec AD 2 Lightning Data Module.
@@ -41,6 +41,7 @@ from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image import MVTecAD2Dataset
 from anomalib.data.datasets.image.mvtecad2 import TestType
 from anomalib.data.utils import DownloadInfo, Split, download_and_extract
+from anomalib.utils.path import resolve_with_warning
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ class MVTecAD2(AnomalibDataModule):
     """MVTec AD 2 Lightning Data Module.
 
     Args:
-        root (str | Path): Path to the dataset root directory.
+        root (str | Path | None): Path to the dataset root directory.
             Defaults to ``"./datasets/MVTec_AD_2"``.
         category (str): Name of the MVTec AD 2 category to load.
             Defaults to ``"sheet_metal"``.
@@ -111,7 +112,7 @@ class MVTecAD2(AnomalibDataModule):
 
     def __init__(
         self,
-        root: str | Path = "./datasets/MVTec_AD_2",
+        root: str | Path | None = "./datasets/MVTec_AD_2",
         category: str = "sheet_metal",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
@@ -135,6 +136,7 @@ class MVTecAD2(AnomalibDataModule):
             seed=seed,
         )
 
+        root = resolve_with_warning(root, "MVTec_AD_2")
         self.root = Path(root)
         self.category = category
         self.test_type = TestType(test_type) if isinstance(test_type, str) else test_type

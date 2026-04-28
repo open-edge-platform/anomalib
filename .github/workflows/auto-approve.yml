@@ -1,0 +1,117 @@
+name: Approve Renovate PR
+
+on:
+  pull_request:
+    types:
+      - review_requested
+
+# No permissions by default, no specific permissions are required for this workflow
+permissions: {}
+
+jobs:
+  pre-approve:
+    # Only run in the upstream repository, not in forks
+    name: Pre-Approve
+    runs-on: ubuntu-latest
+    outputs:
+      commit_sha: ${{ steps.capture_sha.outputs.sha }}
+    if: ${{
+      github.repository_owner == 'open-edge-platform' &&
+      github.repository == github.event.pull_request.head.repo.full_name &&
+      github.event.pull_request.user.login == 'oep-renovate[bot]' &&
+      github.event.requested_reviewer.login == 'sys-geti' &&
+      github.event.sender.login == 'oep-renovate[bot]'
+      }}
+    steps:
+      - name: Capture Commit SHA
+        id: capture_sha
+        run: |
+          echo "sha=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
+          echo "Captured commit SHA: ${{ github.event.pull_request.head.sha }}"
+
+      - name: Debug
+        env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          REQUESTED_REVIEWER: ${{ github.event.requested_reviewer.login }}
+          SENDER_LOGIN: ${{ github.event.sender.login }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          echo "PR Author: $PR_AUTHOR"
+          echo "Requested Reviewer: $REQUESTED_REVIEWER"
+          echo "Review Requested By (sender): $SENDER_LOGIN"
+          echo "PR Head SHA: $PR_HEAD_SHA"
+
+  approve:
+    name: Approve
+    needs: pre-approve
+    environment:
+      name: auto-approve
+      deployment: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug
+        env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          REQUESTED_REVIEWER: ${{ github.event.requested_reviewer.login }}
+          SENDER_LOGIN: ${{ github.event.sender.login }}
+          ORIGINAL_COMMIT_SHA: ${{ needs.pre-approve.outputs.commit_sha }}
+        run: |
+          echo "PR Author: $PR_AUTHOR"
+          echo "Requested Reviewer: $REQUESTED_REVIEWER"
+          echo "Review Requested By (sender): $SENDER_LOGIN"
+          echo "Original Commit SHA: $ORIGINAL_COMMIT_SHA"
+
+      - name: Validate and Approve PR
+        # Approve the PR if all the following conditions are true:
+        # - running in open-edge-platform repository (not a fork)
+        # - the PR is not from a fork (same repository)
+        # - the PR was created by oep-renovate[bot]
+        # - review was requested from sys-geti
+        # - review was requested by oep-renovate[bot]
+        if: ${{
+          github.repository_owner == 'open-edge-platform' &&
+          github.repository == github.event.pull_request.head.repo.full_name &&
+          github.event.pull_request.user.login == 'oep-renovate[bot]' &&
+          github.event.requested_reviewer.login == 'sys-geti' &&
+          github.event.sender.login == 'oep-renovate[bot]'
+          }}
+        env:
+          GH_TOKEN: ${{ secrets.AUTO_APPROVE_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          ORIGINAL_SHA: ${{ needs.pre-approve.outputs.commit_sha }}
+        run: |
+          # Defense-in-depth: re-validate PR state at approval time
+          echo "Verifying PR author..."
+          pr_author=$(gh api "/repos/${REPO}/pulls/${PR_NUMBER}" --jq '.user.login')
+
+          if [ "$pr_author" != "oep-renovate[bot]" ]; then
+            echo "Error: PR author is not oep-renovate[bot], actual: ${pr_author}"
+            exit 1
+          fi
+
+          echo "Verifying sys-geti is a requested reviewer..."
+          is_reviewer=$(gh api "/repos/${REPO}/pulls/${PR_NUMBER}" --jq '[.requested_reviewers[].login] | contains(["sys-geti"])')
+
+          if [ "$is_reviewer" != "true" ]; then
+            echo "Error: sys-geti is not a requested reviewer"
+            exit 1
+          fi
+
+          # Verify commit SHA has not changed (no new commits added)
+          echo "Verifying commit SHA has not changed..."
+          current_sha=$(gh api "/repos/${REPO}/pulls/${PR_NUMBER}" --jq '.head.sha')
+
+          if [ "$current_sha" != "$ORIGINAL_SHA" ]; then
+            echo "Error: PR has been modified since review request"
+            echo "Original SHA: ${ORIGINAL_SHA}"
+            echo "Current SHA:  ${current_sha}"
+            exit 1
+          fi
+
+          echo "Commit SHA verified: ${current_sha}"
+
+          echo "All security checks passed. Approving PR #${PR_NUMBER}..."
+          gh pr review "${PR_NUMBER}" \
+            --repo "${REPO}" \
+            --approve

@@ -1,7 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_all, collect_data_files
-import platform
 import glob
+import os
+
+from PyInstaller import compat
+from PyInstaller.utils.hooks import collect_all
 datas = [
     ('../../backend/src/alembic', 'alembic'),  # Alembic migration scripts
     ('../../backend/src/alembic.ini', '.'),  # Alembic configuration
@@ -10,9 +12,9 @@ datas = [
 
 # Add all binaries
 ## Linux/macOS/Windows
-if platform.system() == "Linux":
+if compat.is_linux:
     binaries = [(so, '.') for so in glob.glob('../../backend/.venv/lib/**/*.so.*', recursive=True)]
-elif platform.system() == "Darwin":
+elif compat.is_darwin:
     binaries = [(so, '.') for so in glob.glob('../../backend/.venv/lib/**/*.dylib', recursive=True)]
 else:
     # Windows: uv venv uses Scripts/ and may have DLLs in site-packages; add if needed
@@ -57,8 +59,7 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 runtime_hooks = ["hooks/setup.py"]
 
-system = platform.system()
-if system == "Windows":
+if compat.is_win:
     runtime_hooks += ["hooks/windows/uwp.py", "hooks/windows/proxy.py"]
 
 a = Analysis(
@@ -89,9 +90,7 @@ a = Analysis(
 # Filter out problematic TBB binaries from Analysis (macOS only)
 # These have malformed Mach-O headers and cause install_name_tool/codesign failures
 # Keep libtbb.12.dylib (core library needed by OpenVINO), but exclude optional bind/malloc libs
-import platform
-import os
-if platform.system() == "Darwin":
+if compat.is_darwin:
     # Exclude only the problematic TBB bind and malloc libraries, keep the core libtbb
     problematic_tbb_libs = ['libtbbbind', 'libtbbmalloc']
     
@@ -103,6 +102,16 @@ if platform.system() == "Darwin":
     a.binaries = [b for b in a.binaries if not is_problematic_tbb(b[0])]
     # Filter from datas (symlinks/data files can end up here too)
     a.datas = [d for d in a.datas if not is_problematic_tbb(d[0])]
+
+# Filter out redundant triton backends (nvidia, amd) not needed for XPU distribution
+_excluded_triton_backends = ('triton/backends/nvidia', 'triton/backends/amd')
+
+def _is_excluded_triton_backend(name):
+    normalized = name.replace('\\', '/')
+    return any(backend in normalized for backend in _excluded_triton_backends)
+
+a.binaries = [b for b in a.binaries if not _is_excluded_triton_backend(b[0])]
+a.datas = [d for d in a.datas if not _is_excluded_triton_backend(d[0])]
 
 pyz = PYZ(a.pure)
 

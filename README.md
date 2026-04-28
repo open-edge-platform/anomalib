@@ -31,21 +31,21 @@
 
 ---
 
-> 🌟 **Announcing v2.3.1 Patch Release!** 🌟
+> 🌟 **Announcing v2.4.0 Release!** 🌟
 >
-> This patch release removes previously deprecated API symbols and fixes bugs in Anomalib Studio.
+> This release brings three new anomaly detection models and important bug fixes.
 >
-> Deprecated API removals
+> New Models
 >
-> - **`MVTec`** → Use `MVTecAD` (datamodule) and `MVTecADDataset` (dataset) instead.
-> - **`BaseThreshold`** → Use `Threshold` instead.
-> - **`BaseVisualizer`** → Renamed to `Visualizer`.
-> - **`plot_figure`** → Use `plot_metric_curve` instead.
+> - **L2BT**: A new anomaly detection model.
+> - **GeneralAD**: A general-purpose anomaly detection model.
+> - **PatchFlow**: A flow-based patch-level anomaly detection model.
 >
-> Bug fixes
+> Key Fixes
 >
-> - Fixed Windows long path issue in Anomalib Studio by switching to ShortUUID.
-> - Fixed source path overflow in Studio UI.
+> - Fixed PatchCore coreset selection to include the initial random point.
+> - Fixed `ExportableCenterCrop` duplicated size parameter and string size handling.
+> - Fixed `KCenterGreedy` crash when `coreset_size == 0`.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 
