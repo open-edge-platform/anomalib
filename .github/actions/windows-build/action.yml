@@ -121,7 +121,7 @@ runs:
       working-directory: application/backend
       shell: pwsh
       env:
-          ACCELERATOR: ${{ inputs.accelerator }}
+        ACCELERATOR: ${{ inputs.accelerator }}
       run: |
         uv sync --no-dev --extra $env:ACCELERATOR
         uv pip install pyinstaller==6.19.0

@@ -167,7 +167,7 @@ jobs:
           debug_build: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_build || false }}
           MSIX_SIGN_CERTIFICATE: ${{ secrets.MSIX_SIGN_CERTIFICATE }}
           MSIX_SIGN_CERTIFICATE_PASSWORD: ${{ secrets.MSIX_SIGN_CERTIFICATE_PASSWORD }}
-    
+
   # build-macos:
   #   name: Build macOS DMG
   #   runs-on: macos-latest
