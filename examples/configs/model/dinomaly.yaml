@@ -4,6 +4,7 @@ model:
     encoder_name: dinov2reg_vit_base_14
     bottleneck_dropout: 0.2
     decoder_depth: 8
+    use_context_recentering: false # Dinomaly2 Context-Aware Recentering
 
 trainer:
   max_steps: 5000

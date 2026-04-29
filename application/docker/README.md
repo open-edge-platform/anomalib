@@ -47,6 +47,9 @@ docker compose up
 
 Use this for Intel discrete or integrated GPUs. Requires Intel GPU drivers and the oneAPI runtime on the host.
 
+> [!NOTE]
+> The XPU container persists the Intel SYCL kernel cache under `/app/data/.sycl-cache` by default. This avoids paying the full first-run kernel compilation cost after container restarts. Override `SYCL_CACHE_PERSISTENT` or `SYCL_CACHE_DIR` if you need different cache behavior.
+
 ```bash
 AI_DEVICE=xpu docker compose build
 AI_DEVICE=xpu docker compose up

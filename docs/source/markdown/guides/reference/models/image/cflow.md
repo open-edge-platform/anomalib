@@ -1,5 +1,12 @@
 # C-Flow
 
+## Architecture
+
+```{eval-rst}
+.. image:: ../../../../../images/cflow/architecture.jpg
+    :alt: C-Flow Architecture
+```
+
 ```{eval-rst}
 .. automodule:: anomalib.models.image.cflow.lightning_model
    :members:
