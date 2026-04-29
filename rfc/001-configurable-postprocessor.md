@@ -147,10 +147,20 @@ During ONNX tracing, sensitivity is always a tensor (never `None`), so the trace
 
 ```python
 # In ExportMixin
-def to_onnx(self, export_root, ..., write_metadata: bool = False) -> Path:
+def to_onnx(self, export_root, ..., write_metadata: bool = True) -> Path:
     ...
     default_img_sens = torch.tensor(self.post_processor.image_sensitivity)
     default_pix_sens = torch.tensor(self.post_processor.pixel_sensitivity)
+
+    # Derive output names by running forward with sensitivity args.
+    # Without passing sensitivity tensors here, forward() would still work
+    # (falls back to module attributes), but we pass them explicitly to
+    # match the exact tracing path used by torch.onnx.export below.
+    output_names = [
+        name for name, value in
+        self.eval()(input_shape, default_img_sens, default_pix_sens)._asdict().items()
+        if value is not None
+    ]
 
     torch.onnx.export(
         model=self,
@@ -261,20 +271,20 @@ Today, `_apply_threshold` receives the threshold from a property that reads `sel
  -            pred_mask = self._apply_threshold(anomaly_map, self.normalized_pixel_threshold)
  +            pred_label = self._apply_threshold(pred_score, torch.tensor(0.5))
  +            pred_mask = self._apply_threshold(anomaly_map, torch.tensor(0.5))
- ```
+```
 
- The new `_effective_threshold` helper converts sensitivity to a shifted threshold in the raw score space:
+The new `_effective_threshold` helper converts sensitivity to a shifted threshold in the raw score space:
 
- ```python
- @staticmethod
- def _effective_threshold(
-     threshold: torch.Tensor,
-     norm_min: torch.Tensor,
-     norm_max: torch.Tensor,
-     sensitivity: torch.Tensor,
- ) -> torch.Tensor:
-     return threshold + (norm_max - norm_min) * (0.5 - sensitivity)
- ```
+```python
+@staticmethod
+def _effective_threshold(
+    threshold: torch.Tensor,
+    norm_min: torch.Tensor,
+    norm_max: torch.Tensor,
+    sensitivity: torch.Tensor,
+) -> torch.Tensor:
+    return threshold + (norm_max - norm_min) * (0.5 - sensitivity)
+```
 
 ```python
 # _apply_threshold (unchanged)
@@ -334,210 +344,50 @@ Exposing the raw threshold directly was considered (user provides a value in the
 
 Sensitivity is portable: `0.7` means "somewhat more sensitive than optimal" regardless of model. `0.5` always means "use the trained default." Power users who need exact threshold control can inspect the `PostProcessor` buffers in the graph directly.
 
-### 5. Metadata Versioning & Migration (Alembic-inspired)
+### 5. Metadata Versioning & Migration
 
-The `schema_version` field in `metadata.json` drives a lightweight migration system modeled after Alembic. The design goals are:
+The `schema_version` field in `metadata.json` drives a lightweight migration system. Both writer and reader live in the same repository and schema versions will change infrequently, so the system is deliberately simple: a chain of pure upgrade functions, no registry, no decorators, no downgrade support (added only if a concrete need arises).
 
-- **Upgrade**: Automatically bring old metadata up to the current schema when loading.
-- **Downgrade**: Optionally convert current metadata back to an older schema (e.g., for shipping a model to a deployment node running an older anomalib).
-- **Serialization**: Each schema version defines its canonical JSON shape, so serializers always produce valid output for the target version.
-
-#### Revision Chain
-
-Versions form a linear chain. Each revision declares its predecessor:
-
-```
-(none) ──► 1.0 ──► 1.1 ──► 2.0 ──► ...
-```
-
-Unlike Alembic (which supports branching for parallel teams), anomalib uses a single linear chain — there is only one metadata contract at any point in time.
-
-#### Migration Module Layout
+#### Module Layout
 
 ```
 src/anomalib/deploy/metadata/
-├── __init__.py          # re-exports MetadataConverter, CURRENT_SCHEMA_VERSION
-├── converter.py         # MetadataConverter (registry + upgrade/downgrade engine)
-├── schema.py            # Pydantic/dataclass schemas per version (validation)
-└── revisions/
-    ├── __init__.py
-    ├── rev_1_0.py       # initial schema, no predecessor
-    └── rev_1_1.py       # example: adds `anomalib_version`, renames field
+├── __init__.py          # re-exports load_metadata, dump_metadata, CURRENT_SCHEMA_VERSION
+├── migration.py         # upgrade_to_latest() + per-version upgrade functions
+└── schema.py            # dataclass/TypedDict schemas per version (validation)
 ```
 
-Each revision file registers itself with the converter:
+#### Migration Implementation
 
 ```python
-# src/anomalib/deploy/metadata/revisions/rev_1_1.py
-"""Schema 1.0 → 1.1: Add anomalib_version field."""
-from anomalib.deploy.metadata.converter import revision
+# src/anomalib/deploy/metadata/migration.py
+from __future__ import annotations
 
-rev = revision("1.1", prev="1.0")
+import json
+from pathlib import Path
 
-@rev.upgrade
-def upgrade(metadata: dict) -> dict:
-    metadata.setdefault("anomalib_version", "unknown")
-    return metadata
+CURRENT_SCHEMA_VERSION = "1.0"
 
-@rev.downgrade
-def downgrade(metadata: dict) -> dict:
-    metadata.pop("anomalib_version", None)
-    return metadata
-```
 
-#### MetadataConverter API
+def upgrade_to_latest(metadata: dict) -> dict:
+    """Upgrade metadata dict to the current schema version.
 
-```python
-from anomalib.deploy.metadata import MetadataConverter
-
-CURRENT_SCHEMA_VERSION = "1.1"
-
-class MetadataConverter:
-    """Registry of schema revisions with upgrade/downgrade engine.
-
-    Inspired by Alembic's revision chain but operating on dicts instead of SQL.
+    Applies each step in sequence. Pure function — does not mutate input.
     """
-
-    def __init__(self) -> None:
-        self._revisions: dict[str, Revision] = {}
-        self._chain: list[str] = []  # ordered oldest → newest
-
-    # --- public API ---
-
-    def upgrade(
-        self,
-        metadata: dict,
-        target: str = CURRENT_SCHEMA_VERSION,
-    ) -> dict:
-        """Upgrade metadata from its current schema_version to target.
-
-        Applies each revision's upgrade() in chain order. Raises
-        MigrationError if there is no path from current to target.
-        """
-        ...
-
-    def downgrade(self, metadata: dict, target: str) -> dict:
-        """Downgrade metadata to an older schema_version.
-
-        Applies each revision's downgrade() in reverse chain order.
-        """
-        ...
-
-    def validate(self, metadata: dict) -> None:
-        """Validate metadata against the schema for its declared version.
-
-        Raises SchemaValidationError on mismatch.
-        """
-        ...
-
-    # --- serialization helpers ---
-
-    @staticmethod
-    def load(path: Path) -> dict:
-        """Read metadata.json, auto-upgrade to current schema, validate."""
-        raw = json.loads(path.read_text())
-        converter = get_default_converter()
-        upgraded = converter.upgrade(raw)
-        converter.validate(upgraded)
-        return upgraded
-
-    @staticmethod
-    def dump(metadata: dict, path: Path, target_version: str | None = None) -> None:
-        """Validate and write metadata.json.
-
-        If target_version is set and differs from current, downgrade first
-        (e.g., exporting for an older deployment).
-        """
-        ...
-```
-
-#### How Inferencers Use It
-
-```python
-class OpenVINOInferencer:
-    def __init__(self, path, ...):
-        ...
-        raw_metadata = self._read_metadata_file(path)
-        if raw_metadata is not None:
-            self.metadata = MetadataConverter.load(raw_metadata)
-        else:
-            self.metadata = None  # fallback to legacy behavior
-```
-
-The inferencer never interprets `schema_version` directly — the converter handles all translation before the inferencer sees the dict.
-
-#### Downgrade for Deployment
-
-When exporting a model for a deployment node running an older anomalib, the user can target a specific schema version:
-
-```python
-model.to_openvino(
-    "exports/",
-    write_metadata=True,
-    metadata_schema_version="1.0",  # older deploy node
-)
-```
-
-Internally `_write_metadata` calls `MetadataConverter.dump(..., target_version="1.0")`, which downgrades the metadata before writing.
-
-### 6. Inferencer Version Support & Backwards Compatibility
-
-Inferencers must gracefully handle metadata produced by older (and cautiously, newer) anomalib versions. This section defines the compatibility contract.
-
-#### Version Fields in Metadata
-
-| Field              | Purpose                                                              |
-| ------------------ | -------------------------------------------------------------------- |
-| `schema_version`   | Drives migration. Determines which fields exist and their semantics. |
-| `anomalib_version` | Informational. The anomalib release that exported the model.         |
-
-#### Inferencer Compatibility Declaration
-
-Each inferencer declares the schema versions it supports:
-
-```python
-class OpenVINOInferencer:
-    SUPPORTED_SCHEMA_RANGE = ("1.0", "1.1")  # (min_inclusive, max_inclusive)
-```
-
-When loading metadata:
-
-1. **`schema_version` < min**: The converter upgrades it. If the version is so old that no migration path exists, raise `MetadataVersionError` with a message like _"This model was exported with anomalib X.Y (schema 0.5). Please re-export with anomalib >= 2.1."_
-2. **`schema_version` within range**: No migration needed (or only minor ones). Load directly.
-3. **`schema_version` > max**: The metadata is from a newer anomalib. The inferencer issues a warning and attempts a best-effort load (ignore unknown keys, use defaults for missing ones). If critical fields are missing, raise `MetadataVersionError`.
-4. **No `schema_version` field**: Treat as legacy/pre-schema metadata. Apply a `legacy → 1.0` migration that maps the old OmegaConf-based format (used in current `base_inferencer._load_metadata`) to the new contract.
-
-```python
-def _load_and_migrate(self, metadata_path: Path | None) -> dict | None:
-    if metadata_path is None or not metadata_path.exists():
-        return None
-
-    raw = json.loads(metadata_path.read_text())
-    version = raw.get("schema_version")
+    metadata = metadata.copy()
+    version = metadata.get("schema_version")
 
     if version is None:
-        raw = _migrate_legacy_to_v1(raw)
+        metadata = _legacy_to_v1(metadata)
 
-    converter = get_default_converter()
-    metadata = converter.upgrade(raw)
-
-    min_v, max_v = self.SUPPORTED_SCHEMA_RANGE
-    if metadata["schema_version"] > max_v:
-        logger.warning(
-            "Metadata schema %s is newer than this inferencer supports (%s). "
-            "Unknown fields will be ignored. Consider upgrading anomalib.",
-            metadata["schema_version"], max_v,
-        )
+    # Future upgrades go here:
+    # if metadata["schema_version"] < "1.1":
+    #     metadata = _v1_to_v1_1(metadata)
 
     return metadata
-```
 
-#### Legacy Migration (`pre-schema → 1.0`)
 
-The current base inferencer loads metadata via OmegaConf with keys like `"pred_scores.min"`, `"anomaly_maps.max"`, `"image_threshold"`, `"pixel_threshold"`. A one-time migration bridges this to the new slim format. Note: legacy models are old single-input exports where threshold/min/max were not in the graph. The inferencer detects these (1 input) and falls back to non-configurable behavior. The migration only captures defaults:
-
-```python
-def _migrate_legacy_to_v1(raw: dict) -> dict:
+def _legacy_to_v1(raw: dict) -> dict:
     """Convert OmegaConf-style legacy metadata to schema 1.0."""
     return {
         "schema_version": "1.0",
@@ -551,15 +401,98 @@ def _migrate_legacy_to_v1(raw: dict) -> dict:
     }
 ```
 
+#### Load / Dump Helpers
+
+```python
+# src/anomalib/deploy/metadata/__init__.py
+from anomalib.deploy.metadata.migration import CURRENT_SCHEMA_VERSION, upgrade_to_latest
+
+
+def load_metadata(path: Path) -> dict:
+    """Read metadata.json, auto-upgrade to current schema, validate."""
+    raw = json.loads(path.read_text())
+    metadata = upgrade_to_latest(raw)
+    _validate(metadata)
+    return metadata
+
+
+def dump_metadata(metadata: dict, path: Path) -> None:
+    """Validate and write metadata.json."""
+    _validate(metadata)
+    path.write_text(json.dumps(metadata, indent=2))
+
+
+def _validate(metadata: dict) -> None:
+    """Validate metadata against expected schema fields.
+
+    Raises SchemaValidationError on mismatch.
+    """
+    required = {"schema_version", "anomalib_version", "model", "postprocess"}
+    missing = required - metadata.keys()
+    if missing:
+        msg = f"Metadata missing required fields: {missing}"
+        raise SchemaValidationError(msg)
+```
+
+#### How Inferencers Use It
+
+```python
+class OpenVINOInferencer:
+    def __init__(self, path, ...):
+        ...
+        metadata_path = self._find_metadata(path)
+        if metadata_path is not None:
+            self.metadata = load_metadata(metadata_path)
+        else:
+            self.metadata = None  # fallback to legacy behavior
+```
+
+The inferencer never interprets `schema_version` directly — `upgrade_to_latest()` handles all translation before the inferencer sees the dict. Downgrade support is intentionally omitted; it will be added only when a concrete deployment scenario requires it.
+
+### 6. Inferencer Version Support & Backwards Compatibility
+
+Inferencers must gracefully handle metadata produced by older (and cautiously, newer) anomalib versions. This section defines the compatibility contract.
+
+#### Version Fields in Metadata
+
+| Field              | Purpose                                                              |
+| ------------------ | -------------------------------------------------------------------- |
+| `schema_version`   | Drives migration. Determines which fields exist and their semantics. |
+| `anomalib_version` | Informational. The anomalib release that exported the model.         |
+
+When loading metadata:
+
+1. **No `schema_version` field**: Treat as legacy/pre-schema metadata. `upgrade_to_latest()` applies `_legacy_to_v1()` automatically.
+2. **`schema_version` is current**: Load directly.
+3. **`schema_version` is older**: `upgrade_to_latest()` applies each step in sequence.
+4. **`schema_version` is newer** (from a future anomalib): Issue a warning, attempt best-effort load (ignore unknown keys, use defaults for missing ones). If critical fields are missing, raise `MetadataVersionError`.
+
+```python
+def _load_and_migrate(self, metadata_path: Path | None) -> dict | None:
+    if metadata_path is None or not metadata_path.exists():
+        return None
+
+    metadata = load_metadata(metadata_path)  # auto-upgrades + validates
+
+    if metadata["schema_version"] > CURRENT_SCHEMA_VERSION:
+        logger.warning(
+            "Metadata schema %s is newer than this anomalib supports (%s). "
+            "Unknown fields will be ignored. Consider upgrading anomalib.",
+            metadata["schema_version"], CURRENT_SCHEMA_VERSION,
+        )
+
+    return metadata
+```
+
 #### Serialization Round-Trip Guarantee
 
 For any supported schema version `V`:
 
 ```
-load(dump(metadata, version=V), version=V) == metadata
+load_metadata(dump_metadata(metadata, path)) == metadata
 ```
 
-This is enforced by golden-file tests: each revision ships a `tests/fixtures/metadata_v{X}.json` that is loaded, upgraded, downgraded, and diffed.
+This is enforced by golden-file tests: each schema version ships a `tests/fixtures/metadata_v{X}.json` that is loaded, upgraded, and diffed.
 
 #### Deprecation Policy
 
@@ -658,7 +591,7 @@ This gives users roughly 2 minor releases to re-export models before old metadat
 
 ```diff
  class ExportMixin:
-     def to_onnx(self, export_root, ..., write_metadata: bool = False) -> Path:
+     def to_onnx(self, export_root, ..., write_metadata: bool = True) -> Path:
          ...
 -        torch.onnx.export(model=self, args=(input_shape,),
 -                          input_names=["input"], ...)
@@ -726,19 +659,19 @@ result = compiled({
 - **New exports** have 3 graph inputs (`input`, `image_sensitivity`, `pixel_sensitivity`). All are required. The inferencer always provides sensitivity values.
 - **Old exports** (pre-change, 1 input) continue to work. The inferencer detects the input count and omits sensitivity — the graph uses its baked-in post-processing as before.
 - **Python API**: `AnomalibModule.forward(batch)` still works during training because sensitivity defaults to `None`, falling back to `PostProcessor.image_sensitivity`. The `None` path is only used in non-traced code (training, callbacks).
-- **`write_metadata`** is optional. When absent, the inferencer uses `0.5` as the default sensitivity.
+- **`write_metadata`** defaults to `True`. Metadata absence is the footgun (silent fallback to 0.5), not presence. Users who want lean artifacts can opt out with `write_metadata=False`.
 - No API breakage — all new parameters are optional with `None`/`False` defaults.
 
 ### Rollout
 
-1. **PostProcessor change**: Add `image_sensitivity`, `pixel_sensitivity` parameters to `PostProcessor.forward()`.
+1. **PostProcessor change**: Add `image_sensitivity`, `pixel_sensitivity` parameters to `PostProcessor.forward()`. Add `_effective_threshold()` with sensitivity clamping. Deprecate `normalized_image_threshold` / `normalized_pixel_threshold` properties.
 2. **AnomalibModule change**: Add sensitivity parameters to `AnomalibModule.forward()`, pass through to `PostProcessor`.
-3. **Export**: Update `to_onnx()` to trace with 3 inputs. Add `_write_metadata()` helper. Add optional `write_metadata: bool = False` parameter to `to_onnx`, `to_openvino`, `to_torch`.
-4. **Metadata infrastructure**: Create `src/anomalib/deploy/metadata/` with `MetadataConverter`, initial `rev_1_0.py` revision, and schema validation.
-5. **Legacy migration**: Implement `_migrate_legacy_to_v1()` to bridge the existing OmegaConf-based format.
-6. **OpenVINOInferencer**: Add sensitivity parameters to constructor and `predict()`. Detect graph input count for backward compat. Pass sensitivity tensors to graph. Declare `SUPPORTED_SCHEMA_RANGE`.
+3. **Export**: Update `to_onnx()` to trace with 3 inputs — including `output_names` derivation. Add `_write_metadata()` helper. Add `write_metadata: bool = True` parameter to `to_onnx`, `to_openvino`, `to_torch`.
+4. **Metadata infrastructure**: Create `src/anomalib/deploy/metadata/` with `load_metadata`, `dump_metadata`, `upgrade_to_latest()`, and schema validation.
+5. **Legacy migration**: Implement `_legacy_to_v1()` inside `migration.py` to bridge the existing OmegaConf-based format.
+6. **OpenVINOInferencer**: Add sensitivity parameters to constructor and `predict()`. Detect graph input count for backward compat. Pass sensitivity tensors to graph.
 7. **TorchInferencer**: Add sensitivity parameters to constructor and `predict()`. Pass as `forward()` args.
-8. **Golden tests**: Export model → load with each inferencer → assert outputs match `Engine.predict()`. Test sensitivity override changes labels. Add migration round-trip tests with fixture files per schema version.
+8. **Golden tests**: Export model → load with each inferencer → assert outputs match `Engine.predict()`. Test sensitivity override changes labels. Add migration round-trip tests with fixture files per schema version. Add training/export path consistency test (see Testing section).
 
 ## Risks
 
@@ -752,6 +685,8 @@ result = compiled({
 - Override tests: verify sensitivity override changes predictions as expected.
 - Missing metadata tests: verify fallback to current behavior.
 - Cross-runtime parity: same model, same image → `TorchInferencer` and `OpenVINOInferencer` produce identical normalized scores (within floating-point tolerance).
+- **Training/export path consistency**: `forward()` (used by export tracing) and `post_process_batch()` (used by Lightning training hooks) must produce identical results at default sensitivity. Add a parametrized test that runs both paths on the same input batch with several sensitivity values and asserts outputs match within floating-point tolerance. This catches any drift between the two code paths as the codebase evolves.
+- Metadata migration round-trip: golden-file tests per schema version — load fixture, upgrade, validate, diff.
 
 ## Appendix: JSON over YAML
 
@@ -761,9 +696,29 @@ JSON for deploy artifacts. Deterministic, schema-first, cross-language. YAML acc
 
 ### Remaining Concerns
 
-**A. Pixel-level sensitivity for classification-only models.** The `pixel_sensitivity` graph input exists even when the model produces no anomaly map. The `PostProcessor` already handles this (thresholding is skipped when `anomaly_map` is `None`), but the exported graph will always have the input node. Document that `pixel_sensitivity` is a no-op for classification-only models.
+**A. Pixel-level sensitivity for classification-only models.** The `pixel_sensitivity` graph input exists even when the model produces no anomaly map. The `PostProcessor` already handles this (thresholding is skipped when `anomaly_map` is `None`), but the exported graph will always have the input node. The inferencer always passes `pixel_sensitivity` — it is a no-op for classification-only models. Document this in the inferencer docstring and metadata spec.
 
 **B. Old exports (1 input) vs new exports (3 inputs).** The inferencer must detect whether a loaded model has sensitivity inputs. Proposed approach: check `len(compiled.inputs)` or inspect input names. This is straightforward but should be tested explicitly with old exported models.
+
+**C. Sensitivity clamping.** `_effective_threshold` should clamp the sensitivity input to `[0, 1]` inside the graph to prevent nonsensical thresholds from out-of-range values:
+
+```python
+@staticmethod
+def _effective_threshold(
+    threshold: torch.Tensor,
+    norm_min: torch.Tensor,
+    norm_max: torch.Tensor,
+    sensitivity: torch.Tensor,
+) -> torch.Tensor:
+    sensitivity = sensitivity.clamp(0.0, 1.0)
+    return threshold + (norm_max - norm_min) * (0.5 - sensitivity)
+```
+
+**D. Sensitivity batch semantics.** Sensitivity inputs are scalar (`shape=()` or `(1,)`) — one value per inference call, applied uniformly to the batch. Per-image sensitivity (`shape=(B,)`) is not supported in this RFC. If needed later, it can be added as a backward-compatible extension (broadcast rules already work).
+
+**E. Deprecation of `normalized_image_threshold` / `normalized_pixel_threshold`.** These properties become dead code in the traced graph path after this change. They will be deprecated with a warning in the same release and removed in the next minor version. The `threshold_batch()` and `normalize_batch()` training-time helpers continue to use them until the training path is unified (see Testing section for the consistency test that guards against drift).
+
+**F. `write_metadata` default.** Changed from `False` to `True` in the export methods. Metadata absence is the footgun (inferencer silently falls back to 0.5), not metadata presence. Users who want lean artifacts can opt out with `write_metadata=False`.
 
 ## Appendix: Reproducer — Sensitivity as Graph Input
 
