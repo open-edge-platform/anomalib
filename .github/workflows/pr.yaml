@@ -118,6 +118,7 @@ jobs:
     permissions:
       security-events: write # needed to upload results
       contents: read
+      packages: read # needed to pull images for scanning
     with:
       tools: "semgrep,bandit,zizmor" # Security tools to run
       scan-scope: "changed" # Only scan changed files
