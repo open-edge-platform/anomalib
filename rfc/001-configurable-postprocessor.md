@@ -127,15 +127,17 @@ def forward(self, predictions: InferenceBatch,
     img_sens = image_sensitivity if image_sensitivity is not None else self.image_sensitivity
     pix_sens = pixel_sensitivity if pixel_sensitivity is not None else self.pixel_sensitivity
 
-    # normalization uses baked-in buffers (unchanged)
+    # normalization re-centered around effective threshold derived from sensitivity
     if self.enable_normalization:
-        pred_score = self._normalize(pred_score, self.image_min, self.image_max, self.image_threshold)
-        anomaly_map = self._normalize(predictions.anomaly_map, self.pixel_min, self.pixel_max, self.pixel_threshold)
+        pred_score = self._normalize(pred_score, self.image_min, self.image_max,
+                                     self._effective_threshold(self.image_threshold, self.image_min, self.image_max, img_sens))
+        anomaly_map = self._normalize(predictions.anomaly_map, self.pixel_min, self.pixel_max,
+                                      self._effective_threshold(self.pixel_threshold, self.pixel_min, self.pixel_max, pix_sens))
 
-    # thresholding uses the sensitivity parameter
+    # thresholding at fixed 0.5 on the re-centered normalized scores
     if self.enable_thresholding:
-        pred_label = self._apply_threshold(pred_score, 1.0 - img_sens)
-        pred_mask = self._apply_threshold(anomaly_map, 1.0 - pix_sens)
+        pred_label = self._apply_threshold(pred_score, torch.tensor(0.5))
+        pred_mask = self._apply_threshold(anomaly_map, torch.tensor(0.5))
     ...
 ```
 
@@ -224,35 +226,55 @@ class OpenVINOInferencer:
 
 #### How It Works
 
-Sensitivity is a [0, 1] knob that controls the thresholding cutoff inside the graph. The normalization formula is unchanged — it always centers scores around the learned threshold. Sensitivity only shifts the binary decision boundary on the normalized scale:
+Sensitivity is a [0, 1] knob that controls the normalization center inside the graph. Instead of shifting the binary decision boundary, sensitivity computes an effective threshold that re-centers the normalization itself. Both the reported anomaly score and the binary label are affected:
 
 ```python
 # Inside PostProcessor.forward() (in the graph)
-normalized = ((raw_score - learned_threshold) / (max - min)) + 0.5   # clamp [0, 1]
-label = normalized > (1.0 - sensitivity)
+eff_threshold = learned_threshold + (max - min) * (0.5 - sensitivity)
+normalized = ((raw_score - eff_threshold) / (max - min)) + 0.5   # clamp [0, 1]
+label = normalized > 0.5
 ```
 
-At `sensitivity=0.5`, the threshold is 0.5 (the normalization center — same as current behavior). Higher sensitivity lowers the threshold (more detections). Lower sensitivity raises it (fewer detections).
+At `sensitivity=0.5`, the effective threshold equals the learned threshold (no change — same as current behavior). Higher sensitivity lowers the effective threshold (scores shift up, more detections). Lower sensitivity raises it (scores shift down, fewer detections). The binary cutoff is always 0.5 — sensitivity controls what "0.5" means in the score space.
 
 #### `_apply_threshold` change
 
-Today, `_apply_threshold` receives the threshold from a property that reads `self.image_sensitivity` — a module attribute baked into the graph at trace time. The change makes it receive sensitivity as a `forward()` argument instead:
+Today, `_apply_threshold` receives the threshold from a property that reads `self.image_sensitivity` — a module attribute baked into the graph at trace time. The change makes normalization use an effective threshold derived from the sensitivity argument, while the binary cutoff becomes a fixed 0.5:
 
 ```diff
-     def forward(self, predictions: InferenceBatch,
-+                image_sensitivity: torch.Tensor | None = None,
-+                pixel_sensitivity: torch.Tensor | None = None) -> InferenceBatch:
-+        img_sens = image_sensitivity if image_sensitivity is not None else self.image_sensitivity
-+        pix_sens = pixel_sensitivity if pixel_sensitivity is not None else self.pixel_sensitivity
-         ...
-         if self.enable_thresholding:
--            pred_label = self._apply_threshold(pred_score, self.normalized_image_threshold)
--            pred_mask = self._apply_threshold(anomaly_map, self.normalized_pixel_threshold)
-+            pred_label = self._apply_threshold(pred_score, 1.0 - img_sens)
-+            pred_mask = self._apply_threshold(anomaly_map, 1.0 - pix_sens)
-```
+      def forward(self, predictions: InferenceBatch,
+ +                image_sensitivity: torch.Tensor | None = None,
+ +                pixel_sensitivity: torch.Tensor | None = None) -> InferenceBatch:
+ +        img_sens = image_sensitivity if image_sensitivity is not None else self.image_sensitivity
+ +        pix_sens = pixel_sensitivity if pixel_sensitivity is not None else self.pixel_sensitivity
+          ...
+ +        # sensitivity shifts normalization center, not the decision boundary
+          if self.enable_normalization:
+ -            pred_score = self._normalize(pred_score, self.image_min, self.image_max, self.image_threshold)
+ -            anomaly_map = self._normalize(anomaly_map, self.pixel_min, self.pixel_max, self.pixel_threshold)
+ +            pred_score = self._normalize(pred_score, self.image_min, self.image_max,
+ +                                         self._effective_threshold(self.image_threshold, self.image_min, self.image_max, img_sens))
+ +            anomaly_map = self._normalize(anomaly_map, self.pixel_min, self.pixel_max,
+ +                                          self._effective_threshold(self.pixel_threshold, self.pixel_min, self.pixel_max, pix_sens))
+          if self.enable_thresholding:
+ -            pred_label = self._apply_threshold(pred_score, self.normalized_image_threshold)
+ -            pred_mask = self._apply_threshold(anomaly_map, self.normalized_pixel_threshold)
+ +            pred_label = self._apply_threshold(pred_score, torch.tensor(0.5))
+ +            pred_mask = self._apply_threshold(anomaly_map, torch.tensor(0.5))
+ ```
 
-`_apply_threshold` itself is unchanged — it still does `preds > threshold`. The difference is that the threshold value now flows from a graph input rather than a frozen property:
+ The new `_effective_threshold` helper converts sensitivity to a shifted threshold in the raw score space:
+
+ ```python
+ @staticmethod
+ def _effective_threshold(
+     threshold: torch.Tensor,
+     norm_min: torch.Tensor,
+     norm_max: torch.Tensor,
+     sensitivity: torch.Tensor,
+ ) -> torch.Tensor:
+     return threshold + (norm_max - norm_min) * (0.5 - sensitivity)
+ ```
 
 ```python
 # _apply_threshold (unchanged)
@@ -280,7 +302,7 @@ def _apply_threshold(
     return preds > threshold
 ```
 
-During ONNX tracing, the `preds is None` and `threshold.isnan()` branches are resolved statically — the tracer takes one path and bakes it into the graph. With the new design, `threshold` is `1.0 - image_sensitivity` where `image_sensitivity` is a graph input tensor. Since `isnan()` evaluates to `False` at trace time (the default sensitivity is a concrete value like `0.5`), the traced graph always contains `preds > threshold`. This is the desired behavior.
+With this new design, `_apply_threshold` is always called with a fixed `torch.tensor(0.5)`, so the `isnan()` guard is never needed. The sensitivity logic lives entirely in `_effective_threshold` + `_normalize`. During ONNX tracing, the `preds is None` branch is resolved statically — the tracer takes one path and bakes it into the graph.
 
 ```diff
  @staticmethod
@@ -294,7 +316,7 @@ During ONNX tracing, the `preds is None` and `threshold.isnan()` branches are re
      return preds > threshold
 ```
 
-The `isnan()` guard can be removed — sensitivity graph inputs are always provided by the inferencer, so `threshold` is never NaN in the traced path. The `preds is None` check remains for Python-side usage (e.g., classification-only models with no anomaly map) but is resolved statically during tracing.
+The `isnan()` guard can be removed — the threshold is always `0.5` in the traced path. The `preds is None` check remains for Python-side usage (e.g., classification-only models with no anomaly map) but is resolved statically during tracing.
 
 #### Override Precedence
 
@@ -562,11 +584,18 @@ This gives users roughly 2 minor releases to re-export models before old metadat
 +        img_sens = image_sensitivity if image_sensitivity is not None else self.image_sensitivity
 +        pix_sens = pixel_sensitivity if pixel_sensitivity is not None else self.pixel_sensitivity
          ...
++        if self.enable_normalization:
+-            pred_score = self._normalize(pred_score, self.image_min, self.image_max, self.image_threshold)
+-            anomaly_map = self._normalize(anomaly_map, self.pixel_min, self.pixel_max, self.pixel_threshold)
++            pred_score = self._normalize(pred_score, self.image_min, self.image_max,
++                                         self._effective_threshold(self.image_threshold, self.image_min, self.image_max, img_sens))
++            anomaly_map = self._normalize(anomaly_map, self.pixel_min, self.pixel_max,
++                                          self._effective_threshold(self.pixel_threshold, self.pixel_min, self.pixel_max, pix_sens))
          if self.enable_thresholding:
 -            pred_label = self._apply_threshold(pred_score, self.normalized_image_threshold)
 -            pred_mask = self._apply_threshold(anomaly_map, self.normalized_pixel_threshold)
-+            pred_label = self._apply_threshold(pred_score, 1.0 - img_sens)
-+            pred_mask = self._apply_threshold(anomaly_map, 1.0 - pix_sens)
++            pred_label = self._apply_threshold(pred_score, torch.tensor(0.5))
++            pred_mask = self._apply_threshold(anomaly_map, torch.tensor(0.5))
 ```
 
 ### AnomalibModule (graph signature change)
@@ -742,15 +771,15 @@ A standalone reproducer validates that sensitivity can be passed as an ONNX/Open
 
 ### What the reproducer tests
 
-A `MiniPostProcessor` accepts `image_sensitivity` as a `forward()` argument (instead of reading `self.image_sensitivity`). It normalizes scores using baked-in buffers (threshold, min, max) and applies thresholding via `1.0 - image_sensitivity`. A `MiniModel` wraps a backbone + post-processor, exported to ONNX with 2 inputs: `input` (image) and `image_sensitivity` (scalar).
+A `MiniPostProcessor` accepts `image_sensitivity` as a `forward()` argument. It computes an effective threshold from sensitivity, normalizes scores using baked-in buffers (threshold, min, max) centered around the effective threshold, and applies a fixed 0.5 cutoff. A `MiniModel` wraps a backbone + post-processor, exported to ONNX with 2 inputs: `input` (image) and `image_sensitivity` (scalar).
 
 ### Results
 
 | Test | Runtime      | Sensitivity                     | Score   | Label   | Status                              |
 | ---- | ------------ | ------------------------------- | ------- | ------- | ----------------------------------- |
 | 1    | ONNX Runtime | 0.5 (explicit)                  | 0.7022  | 1       | Matches PyTorch                     |
-| 2    | ONNX Runtime | 0.9 (override)                  | 0.7022  | 1       | More detections                     |
-| 3    | ONNX Runtime | 0.1 (override)                  | 0.7022  | 0       | Fewer detections                    |
+| 2    | ONNX Runtime | 0.9 (override)                  | 1.0000  | 1       | Score shifts up, more detections    |
+| 3    | ONNX Runtime | 0.1 (override)                  | 0.3022  | 0       | Score shifts down, fewer detections |
 | 4    | ONNX Runtime | omitted (initializer default)   | 0.7022  | 1       | Initializer works                   |
 | 5a   | OpenVINO     | ONNX w/ initializer             | 0.7021  | 1       | Default OK, but **not overridable** |
 | 6    | OpenVINO     | required input, 0.5 / 0.9 / 0.1 | correct | correct | Override works                      |
@@ -772,10 +801,11 @@ class MiniPostProcessor(nn.Module):
         self.register_buffer("image_max", torch.tensor(0.91))
 
     def forward(self, pred_score, image_sensitivity):
-        normalized = ((pred_score - self._image_threshold)
+        eff_threshold = self._image_threshold + (self.image_max - self.image_min) * (0.5 - image_sensitivity)
+        normalized = ((pred_score - eff_threshold)
                       / (self.image_max - self.image_min)) + 0.5
         normalized = normalized.clamp(0, 1)
-        pred_label = (normalized > (1.0 - image_sensitivity)).float()
+        pred_label = (normalized > 0.5).float()
         return normalized, pred_label
 
 # Export with 2 inputs
