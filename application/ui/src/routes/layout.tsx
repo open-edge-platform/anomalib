@@ -1,3 +1,7 @@
+// Copyright (C) 2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import { usePersistLastUsedProject, useProjectIdentifier } from '@anomalib-studio/hooks';
 import { Flex, Grid, Tabs, View } from '@geti/ui';
 import { Outlet, useLocation } from 'react-router';
 
@@ -24,6 +28,9 @@ const getFirstPathSegment = (path: string): string => {
 
 export const Layout = () => {
     const { pathname } = useLocation();
+    const { projectId } = useProjectIdentifier();
+
+    usePersistLastUsedProject(projectId);
 
     return (
         <Tabs aria-label='Header navigation' selectedKey={getFirstPathSegment(pathname)}>
