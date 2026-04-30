@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Tests for image utils."""
+from PIL import Image
 
 from pathlib import Path
 
@@ -57,7 +58,7 @@ class TestReadMask:
         """Test that the function correctly converts the image to a numpy array."""
         # Sample image: [[0, 236], [255, 0]]
         mocker.patch(
-            "anomalib.data.utils.image.Image.open",
+            "anomalib.data.utils.Image.Image.open",
             return_value=Image.fromarray(np.array([[0, 236], [255, 0]], dtype=np.uint8)),
         )
 
@@ -77,7 +78,7 @@ class TestReadMask:
         - Value 255 becomes anomalous (1)
         """
         mocker.patch(
-            "anomalib.data.utils.image.Image.open",
+            "anomalib.data.utils.Image.Image.open",
             return_value=Image.fromarray(np.array([[0, 236], [255, 0]], dtype=np.uint8)),
         )
         result = read_mask("dummy_path.png", as_tensor=True)

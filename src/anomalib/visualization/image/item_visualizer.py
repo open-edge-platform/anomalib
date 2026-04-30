@@ -75,7 +75,7 @@ def visualize_image_item(
     fields_config: dict[str, dict[str, Any]] = DEFAULT_FIELDS_CONFIG,
     overlay_fields_config: dict[str, dict[str, Any]] = DEFAULT_OVERLAY_FIELDS_CONFIG,
     text_config: dict[str, Any] = DEFAULT_TEXT_CONFIG,
-) -> Image.Image | None:
+) -> "Image.Image | None":
     """Visualize specified fields of an ``ImageItem`` or ``NumpyImageItem`` with configurable options.
 
     This function creates visualizations for individual fields and overlays of an
@@ -332,7 +332,7 @@ def visualize_image_item(
     output_images = []
 
     for field in all_fields:
-        image: Image.Image | None = None
+        image: "Image.Image | None" = None
         if field == "image":
             # Prefer loading from image_path if available, else use image attribute
             image_path = getattr(item, "image_path", None)

@@ -308,7 +308,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 🔨 Linting: Enable `PLR6301`, # could be a function, class method or static method by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2288
 - 🔨 Restructure unit tests and fix ruff issues by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2306pdate Ruff Config - Add Missing Copyright Headers by @samet-akcay in https://github.com/open-edge-platform/anomalib/pull/2281
 - 🔨 optimization/quantization added into 500 series by @paularamo in https://github.com/open-edge-platform/anomalib/pull/2197
-- 🚀 Made OpenVINOInferencer and TorchInferencer predict accept all the following types: str, Path, np.ndarray, PIL.Image.Image, torch.Tensor by @adrianboguszewski in https://github.com/open-edge-platform/anomalib/pull/2565
+- 🚀 Made OpenVINOInferencer and TorchInferencer predict accept all the following types: str, Path, np.ndarray, Image.Image, torch.Tensor by @adrianboguszewski in https://github.com/open-edge-platform/anomalib/pull/2565
 
 ### Fixed
 

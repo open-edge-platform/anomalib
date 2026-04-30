@@ -28,6 +28,7 @@ Note:
     All visualization functions preserve the input image format and dimensions
     unless explicitly specified otherwise.
 """
+from __future__ import annotations
 
 import inspect
 import logging
@@ -37,12 +38,13 @@ from typing import Any, Literal
 
 import numpy as np
 import torch
-import torch.nn.functional as F  # noqa: N812
+import cv2
+
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 from torchvision.transforms.functional import to_pil_image
+import torch.nn.functional as F   
 
 logger = logging.getLogger(__name__)
-
 
 def dynamic_font_size(image_size: tuple[int, int], min_size: int = 20, max_size: int = 100, divisor: int = 10) -> int:
     """Calculate a dynamic font size based on image dimensions.
@@ -85,7 +87,7 @@ def dynamic_font_size(image_size: tuple[int, int], min_size: int = 20, max_size:
     min_dimension = min(image_size)
     return max(min_size, min(max_size, min_dimension // divisor))
 
-
+from PIL import Image
 def add_text_to_image(
     image: Image.Image,
     text: str,
@@ -340,7 +342,7 @@ def overlay_image(base: Image.Image, overlay: Image.Image, alpha: float = 0.5) -
 
 def overlay_images(
     base: Image.Image,
-    overlays: Image.Image | list[Image.Image],
+    overlays: list[Image.Image] | Image.Image,
     alpha: float | list[float] = 0.5,
 ) -> Image.Image:
     """Overlay multiple images on top of a base image with specified transparency.
@@ -1112,3 +1114,55 @@ def get_visualize_function(field: str) -> Callable:
     current_module = sys.modules[__name__]
     func_name = f"visualize_{field}"
     return getattr(current_module, func_name)
+
+
+from PIL import Image
+import numpy as np
+import cv2
+
+
+def add_bounding_boxes_to_image(
+    image: Image.Image,
+    anomaly_map: np.ndarray,
+    threshold: float = 0.5,
+    box_color: tuple = (255, 0, 0),
+    box_thickness: int = 2,
+    min_box_size: int = 5,
+    show_score: bool = False,
+) -> Image.Image:
+
+    result = np.array(image).copy()
+
+    norm_map = (anomaly_map - anomaly_map.min()) / (
+        anomaly_map.max() - anomaly_map.min() + 1e-8
+    )
+
+    binary_mask = (norm_map > threshold).astype(np.uint8) * 255
+
+    contours, _ = cv2.findContours(
+        binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    )
+
+    for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)
+
+        if w <= min_box_size or h <= min_box_size:
+            continue
+
+        cv2.rectangle(result, (x, y), (x + w, y + h), box_color, box_thickness)
+
+        if show_score:
+            roi = anomaly_map[y:y+h, x:x+w]
+            if roi.size > 0:
+                score = float(roi.max())
+                cv2.putText(
+                    result,
+                    f"{score:.2f}",
+                    (x, y - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.5,
+                    box_color,
+                    1,
+                )
+
+    return Image.fromarray(result)

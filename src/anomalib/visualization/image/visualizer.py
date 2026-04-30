@@ -189,7 +189,7 @@ class ImageVisualizer(Visualizer):
     def visualize(
         self,
         predictions: "ImageItem | NumpyImageItem | ImageBatch | NumpyImageBatch",
-    ) -> Image.Image | list[Image.Image | None] | None:
+    ) -> "Image.Image | list[Image.Image | None] | None":
         """Visualize image predictions.
 
         This method visualizes anomaly detection predictions intelligently:
@@ -205,7 +205,7 @@ class ImageVisualizer(Visualizer):
 
         Returns:
             - For single items or single-item batches: ``Image.Image`` or ``None``
-            - For multi-item batches: ``list[Image.Image | None]``
+            - For multi-item batches: ``list["Image.Image | None"]``
 
         Examples:
             Visualize a torch-based image item:
@@ -319,7 +319,7 @@ class ImageVisualizer(Visualizer):
     def __call__(
         self,
         predictions: "ImageItem | NumpyImageItem | ImageBatch | NumpyImageBatch",
-    ) -> Image.Image | list[Image.Image | None] | None:
+    ) -> "Image.Image | list[Image.Image | None] | None":
         """Make the visualizer callable.
 
         This method allows the visualizer to be used as a callable object.
