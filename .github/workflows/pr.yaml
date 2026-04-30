@@ -118,10 +118,11 @@ jobs:
     permissions:
       security-events: write # needed to upload results
       contents: read
+      packages: read # needed to pull images for scanning
     with:
       tools: "semgrep,bandit,zizmor" # Security tools to run
       scan-scope: "changed" # Only scan changed files
-      severity-level: "MEDIUM" # Minimum severity to report
+      severity-level: "LOW" # Minimum severity to report
       confidence-level: "HIGH" # High confidence to report
       fail-on-findings: true # explicitly set
 

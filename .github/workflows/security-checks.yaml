@@ -26,6 +26,7 @@
 # - Zizmor: Workflows security scanner
 # - Semgrep: Static Application Security Testing (SAST)
 # - Trivy: Vulnerability scanning
+# - DAST scan: Runtime API and UI scanning via ZAP and Schemathesis
 #
 # Required Permissions:
 # - contents: read
@@ -38,7 +39,7 @@
 # 2. Manual Trigger:
 #    workflow_dispatch:
 #      inputs:
-#        tools: "bandit,semgrep,trivy-scan"
+#        tools: "bandit,semgrep,trivy-scan,zizmor,dast-scan,trivy-image-scan"
 #        scan-scope: "changed"
 #        severity-level: "MEDIUM"
 #
@@ -64,8 +65,9 @@ on:
           - "bandit,semgrep"
           - "bandit,semgrep,trivy-scan"
           - "bandit,semgrep,trivy-scan,zizmor"
-          - "bandit,semgrep,trivy-scan,zizmor,trivy-image-scan"
-        default: "bandit,semgrep,trivy-scan,zizmor"
+          - "bandit,semgrep,trivy-scan,zizmor,dast-scan"
+          - "bandit,semgrep,trivy-scan,zizmor,dast-scan,trivy-image-scan"
+        default: "bandit,semgrep,trivy-scan,zizmor,dast-scan,trivy-image-scan"
       scan-scope:
         description: "Scan scope"
         required: true
@@ -100,10 +102,11 @@ jobs:
     uses: ./.github/workflows/_reusable-security-scan.yaml
     permissions:
       contents: read
+      packages: read # needed to pull images for scanning
       security-events: write # needed to upload results
     with:
       # For scheduled runs, use full scan configuration
-      tools: ${{ inputs.tools || 'bandit,semgrep,trivy-scan,zizmor,trivy-image-scan' }}
+      tools: ${{ inputs.tools || 'bandit,semgrep,trivy-scan,zizmor,dast-scan,trivy-image-scan' }}
       scan-scope: ${{ inputs.scan-scope || 'all' }}
       severity-level: ${{ inputs.severity-level || 'LOW' }}
       confidence-level: ${{ inputs.confidence-level || 'LOW' }}
