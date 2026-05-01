@@ -60,6 +60,11 @@ jobs:
     outputs:
       version: ${{ steps.validate-version.outputs.version }}
     steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
@@ -148,6 +153,11 @@ jobs:
       contents: write # Required by softprops/action-gh-release to publish release
       id-token: write # Required for OIDC authentication with PyPI
     steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: ${{ needs.build.outputs.artifact-name }}
@@ -168,6 +178,11 @@ jobs:
     if: always() && !inputs.dry_run
     runs-on: ubuntu-latest
     steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
       - name: Verify workflow status
         env:
           RELEASE_VERSION: lib/${{ needs.version-check.outputs.version }}
