@@ -16,6 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+## [v2.4.1] - 2026-05-01
+
+### Fixed
+
+- 🐞 **training**: Fix DDP adaptive F1 score computation by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3569
+
 ## [v2.4.0] - 2026-04-24
 
 ### Added
