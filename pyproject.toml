@@ -36,7 +36,7 @@ dependencies = [
     "docstring_parser",     # CLI help-formatter
     "rich_argparse",        # CLI help-formatter
     # Torch and Lightning dependencies
-    "lightning>=2.6",
+    "lightning>=2.6,!=2.6.2,!=2.6.3",  # Malicious supply chain attack (Shai-Hulud)
     "torchmetrics>=1.8.2",
     "lightning-utilities",
     # Deep learning models and utilities
@@ -75,7 +75,7 @@ loggers = [
     "wandb",
     "mlflow >=1.0.0",
 ]
-notebooks = ["gitpython", "ipykernel", "ipywidgets", "notebook"]
+notebooks = ["gitpython", "ipykernel", "ipywidgets", "notebook>=7.5.6"]
 # dataset specific dependencies
 datasets = ["pyarrow"]
 # documentation dependencies
@@ -124,8 +124,8 @@ cu130 = [
     "torchvision>=0.24.0",
 ]
 rocm = [
-    "torch>=2.6.0,<=2.8.0",
-    "torchvision>=0.21.0",
+    "torch>=2.7.0,<=2.8.0",
+    "torchvision>=0.22.0",
     "pytorch-triton-rocm ; sys_platform == 'linux'",
 ]
 xpu = [
@@ -193,8 +193,8 @@ url = "https://download.pytorch.org/whl/cu130"
 explicit = true
 
 [[tool.uv.index]]
-name = "pytorch-rocm61"
-url = "https://download.pytorch.org/whl/rocm6.1"
+name = "pytorch-rocm63"
+url = "https://download.pytorch.org/whl/rocm6.3"
 explicit = true
 
 [[tool.uv.index]]
@@ -209,7 +209,7 @@ torch = [
     { index = "pytorch-cu118", extra = "cu118" },
     { index = "pytorch-cu126", extra = "cu126" },
     { index = "pytorch-cu130", extra = "cu130" },
-    { index = "pytorch-rocm61", extra = "rocm" },
+    { index = "pytorch-rocm63", extra = "rocm" },
     { index = "pytorch-xpu", extra = "xpu" },
 ]
 torchvision = [
@@ -217,11 +217,11 @@ torchvision = [
     { index = "pytorch-cu118", extra = "cu118" },
     { index = "pytorch-cu126", extra = "cu126" },
     { index = "pytorch-cu130", extra = "cu130" },
-    { index = "pytorch-rocm61", extra = "rocm" },
+    { index = "pytorch-rocm63", extra = "rocm" },
     { index = "pytorch-xpu", extra = "xpu" },
 ]
 pytorch-triton-rocm = [
-    { index = "pytorch-rocm61", extra = "rocm" },
+    { index = "pytorch-rocm63", extra = "rocm" },
 ]
 pytorch-triton-xpu = [
     { index = "pytorch-xpu", extra = "xpu" },
