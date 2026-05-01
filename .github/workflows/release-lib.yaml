@@ -127,6 +127,7 @@ jobs:
     uses: ./.github/workflows/_reusable-security-scan.yaml
     permissions:
       security-events: write
+      packages: read
       contents: read
     with:
       tools: "bandit,semgrep,trivy,zizmor"
