@@ -65,6 +65,9 @@
   ignorePresets: [":prHourlyLimit2"],
   prHourlyLimit: 10,
 
+  // Apply a default blanket cooldown of 7 days to all dependencies
+  minimumReleaseAge: '7 days',
+
   packageRules: [
     // Enable pinning for container images
     // https://docs.renovatebot.com/presets-docker/#dockerpindigests
