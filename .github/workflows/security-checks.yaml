@@ -105,8 +105,8 @@ jobs:
       packages: read # needed to pull images for scanning
       security-events: write # needed to upload results
     with:
-      # For scheduled runs, use full scan configuration
-      tools: ${{ inputs.tools || 'bandit,semgrep,trivy-scan,zizmor,dast-scan,trivy-image-scan' }}
+      # For push events, use basic scans; for scheduled runs, use full scan configuration
+      tools: ${{ inputs.tools || (github.event_name == 'push' && 'bandit,semgrep,trivy-scan,zizmor' || 'bandit,semgrep,trivy-scan,zizmor,dast-scan,trivy-image-scan') }}
       scan-scope: ${{ inputs.scan-scope || 'all' }}
       severity-level: ${{ inputs.severity-level || 'LOW' }}
       confidence-level: ${{ inputs.confidence-level || 'LOW' }}
