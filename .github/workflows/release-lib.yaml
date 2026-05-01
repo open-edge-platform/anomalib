@@ -53,6 +53,7 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 jobs:
   version-check:
