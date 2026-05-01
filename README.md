@@ -31,21 +31,13 @@
 
 ---
 
-> 🌟 **Announcing v2.4.0 Release!** 🌟
+> 🌟 **Announcing v2.4.1 Release!** 🌟
 >
-> This release brings three new anomaly detection models and important bug fixes.
->
-> New Models
->
-> - **L2BT**: A new anomaly detection model.
-> - **GeneralAD**: A general-purpose anomaly detection model.
-> - **PatchFlow**: A flow-based patch-level anomaly detection model.
+> This patch release fixes DDP training issues.
 >
 > Key Fixes
 >
-> - Fixed PatchCore coreset selection to include the initial random point.
-> - Fixed `ExportableCenterCrop` duplicated size parameter and string size handling.
-> - Fixed `KCenterGreedy` crash when `coreset_size == 0`.
+> - Fixed DDP adaptive F1 score computation.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 
