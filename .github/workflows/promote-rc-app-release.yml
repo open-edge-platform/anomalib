@@ -37,6 +37,11 @@ jobs:
       docker_rc_tag: ${{ steps.validate.outputs.docker_rc_tag }}
       docker_patch_tag: ${{ steps.validate.outputs.docker_patch_tag }}
     steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
@@ -149,6 +154,11 @@ jobs:
     permissions:
       contents: write # Permission to push release tag to git
     steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
       - name: Create release git tag
         env:
           GH_TOKEN: ${{ github.token }}
@@ -199,6 +209,11 @@ jobs:
       RC_TAG: ${{ inputs.rc_tag }}
       DEVICE: ${{ matrix.device }}
     steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
       - name: Log in to GHCR
         uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
         with:
