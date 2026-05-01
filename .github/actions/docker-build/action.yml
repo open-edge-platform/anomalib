@@ -43,19 +43,19 @@ runs:
   using: composite
   steps:
     - name: Cleanup runner
-      uses: open-edge-platform/geti-ci/actions/cleanup-runner@e80098b3d180db37914f11ff6021f9fa34d0bb9f
+      uses: open-edge-platform/geti-ci/actions/cleanup-runner@7d25e47329bbfcde4ee51ab3581aea8613e245e2
       with:
         type: all
 
     - name: Set up Docker engine
-      uses: docker/setup-docker-action@1a6edb0ba9ac496f6850236981f15d8f9a82254d # v5.0.0
+      uses: docker/setup-docker-action@b2189fbf2a6592b51fee7cdd93ee2bfaeba733db # v5.1.0
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
     - name: Build Docker image
       id: build
-      uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+      uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
       with:
         context: .
         file: application/docker/Dockerfile
