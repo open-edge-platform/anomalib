@@ -158,6 +158,7 @@ only-include = [
 # UV CONFIGURATION                                                            #
 [tool.uv]
 # UV workspace configuration
+exclude-newer = "7 days"
 package = true
 managed = true
 conflicts = [

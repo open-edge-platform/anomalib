@@ -57,6 +57,7 @@ cu130 = ["anomalib[cu130,openvino]"]
 xpu = ["anomalib[xpu,openvino] ; sys_platform == 'linux' or sys_platform == 'win32'"]
 
 [tool.uv]
+exclude-newer = "7 days"
 conflicts = [
     [
         { extra = "cpu" },
