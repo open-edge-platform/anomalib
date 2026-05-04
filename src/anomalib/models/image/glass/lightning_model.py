@@ -158,6 +158,8 @@ class Glass(AnomalibModule):
             if not dtd_dir.is_dir():
                 download_and_extract(dtd_dir, DTD_DOWNLOAD_INFO)
 
+        normalize_mean, normalize_std = self._extract_normalize_params()
+
         self.model = GlassModel(
             input_shape=input_shape,
             anomaly_source_path=anomaly_source_path,
@@ -179,6 +181,8 @@ class Glass(AnomalibModule):
             radius=radius,
             p=p,
             mining=mining,
+            normalize_mean=normalize_mean,
+            normalize_std=normalize_std,
         )
 
         self.learning_rate = learning_rate
@@ -252,6 +256,19 @@ class Glass(AnomalibModule):
             ])
 
         return PreProcessor(transform=transform)
+
+    def _extract_normalize_params(self) -> tuple[list[float] | None, list[float] | None]:
+        """Extract mean and std from the Normalize transform in the pre-processor."""
+        if self.pre_processor is None or not hasattr(self.pre_processor, "transform"):
+            return None, None
+        transform = self.pre_processor.transform
+        transforms = transform.transforms if isinstance(transform, Compose) else [transform]
+        for t in transforms:
+            if isinstance(t, Normalize):
+                mean = [float(x) for x in t.mean]
+                std = [float(x) for x in t.std]
+                return mean, std
+        return None, None
 
     @staticmethod
     def configure_evaluator() -> Evaluator:
@@ -335,6 +352,7 @@ class Glass(AnomalibModule):
         self.log("focal_loss", focal_loss, prog_bar=True)
         self.log("loss", loss, prog_bar=True)
 
+        assert batch.image is not None, "Batch image is None"
         self._epoch_samples_seen = getattr(self, "_epoch_samples_seen", 0) + batch.image.shape[0]
 
     def validation_step(self, batch: Batch, batch_idx: int) -> STEP_OUTPUT:

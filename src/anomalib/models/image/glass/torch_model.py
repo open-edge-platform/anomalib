@@ -26,10 +26,18 @@ from torch import nn
 from torch.utils.data import dataloader
 
 from anomalib.data import InferenceBatch
+from anomalib.data.utils.generators import PerlinAnomalyGenerator
 from anomalib.models.components import TimmFeatureExtractor
 from anomalib.models.components.feature_extractors import dryrun_find_featuremap_dims
 
-from .components import Aggregator, Discriminator, GlassAnomalyAugmentor, PatchMaker, Preprocessing, Projection, RescaleSegmentor
+from .components import (
+    Aggregator,
+    Discriminator,
+    PatchMaker,
+    Preprocessing,
+    Projection,
+    RescaleSegmentor,
+)
 from .loss import FocalLoss
 
 
@@ -79,8 +87,11 @@ class GlassModel(nn.Module):
         radius: float = 0.75,
         p: float = 0.5,
         mining: int = 1,
+        normalize_mean: list[float] | None = None,
+        normalize_std: list[float] | None = None,
     ) -> None:
         super().__init__()
+        del downsampling  # mask downsampling is computed dynamically in forward()
 
         if layers is None:
             layers = ["layer2", "layer3"]
@@ -90,11 +101,19 @@ class GlassModel(nn.Module):
         self.input_shape = input_shape
         self.pre_trained = pre_trained
 
-        self.augmentor = GlassAnomalyAugmentor(
+        self.augmentor = PerlinAnomalyGenerator(
             anomaly_source_path=anomaly_source_path,
-            input_size=input_shape[0],
-            downsampling=downsampling,
+            probability=1.0,
+            dual_mask=True,
         )
+
+        # The augmentor operates in [0, 1] pixel space, but GLASS passes
+        # pre-processor-normalized images. We denormalize before augmentation
+        # and renormalize after so the augmentor stays domain-agnostic.
+        mean = normalize_mean or [0.485, 0.456, 0.406]
+        std = normalize_std or [0.229, 0.224, 0.225]
+        self.register_buffer("_img_mean", torch.tensor(mean).view(1, 3, 1, 1))
+        self.register_buffer("_img_std", torch.tensor(std).view(1, 3, 1, 1))
 
         self.focal_loss = FocalLoss()
 
@@ -350,22 +369,23 @@ class GlassModel(nn.Module):
             return InferenceBatch(pred_score=anomaly_scores, anomaly_map=masks)
 
         device = img.device
-        aug, mask_s = self.augmentor(img)
+        # inverse normalization is applied because augmentor requires images in range [0, 1]
+        img_raw = img * self._img_std + self._img_mean  # denormalize to [0, 1]
+        aug_raw, mask_s = self.augmentor(img_raw)
+        aug = (aug_raw - self._img_mean) / self._img_std  # renormalize to ImageNet scale
         if img is not None:
             batch_size = img.shape[0]
 
         true_feats, fake_feats = self.calculate_features(img, aug)
 
-        # The new augmentor returns mask_s already downsampled to feature size
-        # [B, 1, feat_h, feat_w]. We just need to match the spatial dimensions
-        # with the actual feature patch grid.
         feat_grid_size = int(math.sqrt(fake_feats.shape[0] // batch_size))
         if mask_s.shape[2] != feat_grid_size or mask_s.shape[3] != feat_grid_size:
-            mask_s = f.interpolate(
-                mask_s.float(),
-                size=(feat_grid_size, feat_grid_size),
-                mode="nearest",
-            )
+            pool_h = mask_s.shape[2] // feat_grid_size
+            pool_w = mask_s.shape[3] // feat_grid_size
+            if pool_h >= 1 and pool_w >= 1:
+                mask_s = f.max_pool2d(mask_s.float(), kernel_size=(pool_h, pool_w))
+            if mask_s.shape[2] != feat_grid_size or mask_s.shape[3] != feat_grid_size:
+                mask_s = f.interpolate(mask_s.float(), size=(feat_grid_size, feat_grid_size), mode="nearest")
         mask_s_gt = mask_s.reshape(-1, 1)
 
         noise = torch.normal(0, self.noise, true_feats.shape).to(device)
