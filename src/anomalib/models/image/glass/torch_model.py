@@ -190,7 +190,7 @@ class GlassModel(nn.Module):
                 batch_size = images.shape[0]
 
                 if self.pre_projection > 0:
-                    outputs = self.projection(self.generate_embeddings(images)[0])
+                    outputs = self.projection(self.generate_embeddings(images, evaluation=True)[0])
                     outputs = outputs[0] if isinstance(outputs, (tuple, list)) else outputs
                 else:
                     outputs = self.generate_embeddings(images, evaluation=True)[0]
@@ -215,10 +215,11 @@ class GlassModel(nn.Module):
         img: torch.Tensor,
         aug: torch.Tensor,
         evaluation: bool = False,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, list[list[int]]]:
         """Calculate and return feature embeddings for the input and augmented images.
 
         Depending on whether a pre-projection module is used, this method optionally applies it to the
+        embeddings before returning them.
 
         Args:
             img (torch.Tensor): The original input image tensor.
@@ -226,27 +227,27 @@ class GlassModel(nn.Module):
             evaluation (bool, optional): Whether the model is in evaluation mode. Defaults to False.
 
         Returns:
-            tuple[torch.Tensor, torch.Tensor]: A tuple containing the feature embeddings for the original
-                image (`true_feats`) and the augmented image (`fake_feats`).
+            tuple[torch.Tensor, torch.Tensor, list[list[int]]]: A tuple containing the feature embeddings
+                for the original image (`true_feats`), the augmented image (`fake_feats`), and the patch
+                grid shapes from the first feature level.
         """
         if self.pre_projection > 0:
-            fake_feats = self.projection(
-                self.generate_embeddings(aug, evaluation=evaluation)[0],
-            )
+            fake_embeddings, patch_shapes = self.generate_embeddings(aug, evaluation=evaluation)
+            fake_feats = self.projection(fake_embeddings)
             fake_feats = fake_feats[0] if isinstance(fake_feats, (tuple, list)) else fake_feats
             true_feats = self.projection(
                 self.generate_embeddings(img, evaluation=evaluation)[0],
             )
             true_feats = true_feats[0] if isinstance(true_feats, (tuple, list)) else true_feats
         else:
-            fake_feats = self.generate_embeddings(aug, evaluation=evaluation)[0]
+            fake_feats, patch_shapes = self.generate_embeddings(aug, evaluation=evaluation)
             assert isinstance(fake_feats, torch.Tensor)
             fake_feats.requires_grad = True
             true_feats = self.generate_embeddings(img, evaluation=evaluation)[0]
             assert isinstance(true_feats, torch.Tensor)
             true_feats.requires_grad = True
 
-        return true_feats, fake_feats
+        return true_feats, fake_feats, patch_shapes
 
     def generate_embeddings(
         self,
@@ -415,18 +416,17 @@ class GlassModel(nn.Module):
         img_raw = img * self._img_std + self._img_mean  # denormalize to [0, 1]
         aug_raw, mask_s = self.augmentor(img_raw)
         aug = (aug_raw - self._img_mean) / self._img_std  # renormalize to ImageNet scale
-        batch_size = img.shape[0]
 
-        true_feats, fake_feats = self.calculate_features(img, aug)
+        true_feats, fake_feats, patch_shapes = self.calculate_features(img, aug)
 
-        feat_grid_size = int(math.sqrt(fake_feats.shape[0] // batch_size))
-        if mask_s.shape[2] != feat_grid_size or mask_s.shape[3] != feat_grid_size:
-            pool_h = mask_s.shape[2] // feat_grid_size
-            pool_w = mask_s.shape[3] // feat_grid_size
+        patch_grid_h, patch_grid_w = patch_shapes[0]
+        if mask_s.shape[2] != patch_grid_h or mask_s.shape[3] != patch_grid_w:
+            pool_h = mask_s.shape[2] // patch_grid_h
+            pool_w = mask_s.shape[3] // patch_grid_w
             if pool_h >= 1 and pool_w >= 1:
                 mask_s = f.max_pool2d(mask_s.float(), kernel_size=(pool_h, pool_w))
-            if mask_s.shape[2] != feat_grid_size or mask_s.shape[3] != feat_grid_size:
-                mask_s = f.interpolate(mask_s.float(), size=(feat_grid_size, feat_grid_size), mode="nearest")
+            if mask_s.shape[2] != patch_grid_h or mask_s.shape[3] != patch_grid_w:
+                mask_s = f.interpolate(mask_s.float(), size=(patch_grid_h, patch_grid_w), mode="nearest")
         mask_s_gt = mask_s.reshape(-1, 1)
         is_normal = mask_s_gt[:, 0] == 0
         is_anomalous = ~is_normal
