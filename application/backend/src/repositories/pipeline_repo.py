@@ -1,7 +1,6 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from collections.abc import Callable
-from uuid import UUID
 
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
@@ -9,6 +8,7 @@ from db.schema import PipelineDB
 from pydantic_models import Pipeline
 from repositories.base import BaseRepository
 from repositories.mappers.pipeline_mapper import PipelineMapper
+from utils.short_uuid import ShortUUID
 
 
 class PipelineRepository(BaseRepository):
@@ -25,7 +25,7 @@ class PipelineRepository(BaseRepository):
     def from_schema(self) -> Callable[[PipelineDB], Pipeline]:
         return PipelineMapper.from_schema
 
-    async def get_by_id(self, project_id: str | UUID) -> Pipeline | None:
+    async def get_by_id(self, project_id: str | ShortUUID) -> Pipeline | None:
         return await self.get_one(extra_filters={"project_id": self._id_to_str(project_id)})
 
     async def get_active_pipeline(self) -> Pipeline | None:

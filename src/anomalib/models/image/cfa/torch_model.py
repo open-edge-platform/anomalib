@@ -112,7 +112,8 @@ def get_feature_extractor(backbone: str, return_nodes: list[str]) -> GraphModule
         >>> x = torch.randn(1, 3, 224, 224)
         >>> features = extractor(x)
     """
-    model = getattr(torchvision.models, backbone)(pretrained=True)
+    weights = torchvision.models.get_model_weights(backbone).DEFAULT
+    model = getattr(torchvision.models, backbone)(weights=weights)
     feature_extractor = create_feature_extractor(model=model, return_nodes=return_nodes)
     feature_extractor.eval()
 
@@ -400,7 +401,7 @@ class Descriptor(nn.Module):
                 else torch.cat(
                     (
                         patch_features,
-                        F.interpolate(feature, patch_features.size(2), mode="bilinear"),
+                        F.interpolate(pooled_features, patch_features.size(2), mode="bilinear"),
                     ),
                     dim=1,
                 )

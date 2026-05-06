@@ -197,7 +197,8 @@ class Teachers(nn.Module):
         Returns:
             GraphModule: The teacher model.
         """
-        model = getattr(torchvision.models, backbone)(pretrained=True)
+        weights = torchvision.models.get_model_weights(backbone).DEFAULT
+        model = getattr(torchvision.models, backbone)(weights=weights)
         return create_feature_extractor(model, return_nodes=["layer3", "layer2", "layer1"])
 
     def forward(self, images: torch.Tensor) -> tuple[torch.Tensor, list[torch.Tensor]]:

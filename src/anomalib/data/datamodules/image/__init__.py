@@ -40,7 +40,7 @@ from .kaputt import Kaputt
 from .kolektor import Kolektor
 from .mpdd import MPDD
 from .mvtec_loco import MVTecLOCO
-from .mvtecad import MVTec, MVTecAD
+from .mvtecad import MVTecAD
 from .mvtecad2 import MVTecAD2
 from .realiad import RealIAD
 from .tabular import Tabular
@@ -99,7 +99,6 @@ __all__ = [
     "Kaputt",
     "Kolektor",
     "MPDD",
-    "MVTec",  # Include MVTec for backward compatibility
     "MVTecAD",
     "MVTecAD2",
     "MVTecLOCO",

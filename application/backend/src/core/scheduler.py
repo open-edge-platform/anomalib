@@ -15,7 +15,6 @@ from loguru import logger
 from core.mjpeg_broadcaster import MJPEGBroadcaster
 from services.metrics_service import SIZE
 from utils.singleton import Singleton
-from workers import DispatchingWorker, InferenceWorker, StreamLoader, TrainingWorker
 
 
 class Scheduler(metaclass=Singleton):
@@ -61,6 +60,8 @@ class Scheduler(metaclass=Singleton):
 
     def start_workers(self) -> None:
         """Start all worker processes and threads"""
+        from workers import DispatchingWorker, InferenceWorker, StreamLoader, TrainingWorker  # noqa: PLC0415
+
         logger.info("Starting worker processes...")
 
         # Create and start processes

@@ -4,19 +4,18 @@
 """Endpoints for managing pipeline sources"""
 
 from typing import Annotated
-from uuid import UUID
 
 import yaml
 from fastapi import APIRouter, Body, Depends, File, Query, UploadFile, status
 from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse, Response
-from sqlalchemy.exc import IntegrityError
 
 from api.dependencies import PaginationLimit, get_configuration_service, get_project_id, get_source_id
 from pydantic_models import Source, SourceType
 from pydantic_models.source import SourceAdapter, SourceCreate, SourceCreateAdapter, SourceList
 from services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
+from utils.short_uuid import ShortUUID
 
 router = APIRouter(prefix="/api/projects/{project_id}/sources", tags=["Sources"])
 
@@ -98,7 +97,7 @@ UPDATE_SOURCE_BODY_EXAMPLES = {
     },
 )
 async def create_source(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: Annotated[ShortUUID, Depends(get_project_id)],
     source_config: Annotated[
         SourceCreate,
         Body(description=CREATE_SOURCE_BODY_DESCRIPTION, openapi_examples=CREATE_SOURCE_BODY_EXAMPLES),
@@ -130,8 +129,6 @@ async def create_source(
         return await configuration_service.create_source(validated_source)
     except ResourceAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-    except IntegrityError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Name must be unique within a project")
 
 
 @router.get(
@@ -141,7 +138,7 @@ async def create_source(
     },
 )
 async def list_sources(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: Annotated[ShortUUID, Depends(get_project_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
     limit: Annotated[int, Depends(PaginationLimit())],
     offset: Annotated[int, Query(ge=0)] = 0,
@@ -163,8 +160,8 @@ async def list_sources(
     },
 )
 async def get_source(
-    project_id: Annotated[UUID, Depends(get_project_id)],
-    source_id: Annotated[UUID, Depends(get_source_id)],
+    project_id: Annotated[ShortUUID, Depends(get_project_id)],
+    source_id: Annotated[ShortUUID, Depends(get_source_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Source:
     """Get info about a source"""
@@ -183,8 +180,8 @@ async def get_source(
     },
 )
 async def update_source(
-    project_id: Annotated[UUID, Depends(get_project_id)],
-    source_id: Annotated[UUID, Depends(get_source_id)],
+    project_id: Annotated[ShortUUID, Depends(get_project_id)],
+    source_id: Annotated[ShortUUID, Depends(get_source_id)],
     source_config: Annotated[
         dict,
         Body(
@@ -218,8 +215,8 @@ async def update_source(
     },
 )
 async def export_source(
-    project_id: Annotated[UUID, Depends(get_project_id)],
-    source_id: Annotated[UUID, Depends(get_source_id)],
+    project_id: Annotated[ShortUUID, Depends(get_project_id)],
+    source_id: Annotated[ShortUUID, Depends(get_source_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Response:
     """Export a source to file"""
@@ -245,7 +242,7 @@ async def export_source(
     },
 )
 async def import_source(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: Annotated[ShortUUID, Depends(get_project_id)],
     yaml_file: Annotated[UploadFile, File(description="YAML file containing the source configuration")],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Source:
@@ -281,8 +278,8 @@ async def import_source(
     },
 )
 async def delete_source(
-    project_id: Annotated[UUID, Depends(get_project_id)],
-    source_id: Annotated[UUID, Depends(get_source_id)],
+    project_id: Annotated[ShortUUID, Depends(get_project_id)],
+    source_id: Annotated[ShortUUID, Depends(get_source_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> None:
     """Remove a source"""

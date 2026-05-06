@@ -84,6 +84,12 @@ class DinomalyModel(nn.Module):
             If None, uses [[0, 1, 2, 3], [4, 5, 6, 7]].
         remove_class_token (bool): Whether to remove class token from features
             before processing. Defaults to False.
+        use_context_recentering (bool): Whether to apply Context-Aware Recentering
+            from Dinomaly2. When enabled, the class token is subtracted from patch
+            features before reconstruction, conditioning the feature space on
+            class-specific context. This is particularly beneficial for multi-class
+            anomaly detection settings. Incompatible with ``remove_class_token=True``.
+            Defaults to False.
 
     Example:
         >>> model = DinomalyModel(
@@ -103,8 +109,16 @@ class DinomalyModel(nn.Module):
         fuse_layer_encoder: list[list[int]] | None = None,
         fuse_layer_decoder: list[list[int]] | None = None,
         remove_class_token: bool = False,
+        use_context_recentering: bool = False,
     ) -> None:
         super().__init__()
+
+        if use_context_recentering and remove_class_token:
+            msg = (
+                "use_context_recentering=True requires access "
+                "to the class token and is incompatible with remove_class_token=True"
+            )
+            raise ValueError(msg)
 
         if target_layers is None:
             # 8 middle layers of the encoder are used for feature extraction.
@@ -175,6 +189,7 @@ class DinomalyModel(nn.Module):
         self.fuse_layer_encoder = fuse_layer_encoder
         self.fuse_layer_decoder = fuse_layer_decoder
         self.remove_class_token = remove_class_token
+        self.use_context_recentering = use_context_recentering
 
         if not hasattr(self.encoder, "num_register_tokens"):
             self.encoder.num_register_tokens = 0
@@ -221,6 +236,16 @@ class DinomalyModel(nn.Module):
 
         if self.remove_class_token:
             encoder_features = [e[:, 1 + self.encoder.num_register_tokens :, :] for e in encoder_features]
+        elif self.use_context_recentering:
+            # Context-Aware Recentering (Dinomaly2): subtract the class token from
+            # patch features so reconstruction is conditioned on class-specific context.
+            recentered = []
+            for e in encoder_features:
+                cls_token = e[:, 0:1, :]  # (B, 1, D)
+                patch_start = 1 + self.encoder.num_register_tokens
+                patches = e[:, patch_start:, :] - cls_token  # (B, N, D)
+                recentered.append(patches)
+            encoder_features = recentered
 
         x = self._fuse_feature(encoder_features)
         for _i, block in enumerate(self.bottleneck):
@@ -391,7 +416,7 @@ class DinomalyModel(nn.Module):
             List of processed feature tensors with spatial dimensions
         """
         # Remove class token and register tokens if not already removed
-        if not self.remove_class_token:
+        if not self.remove_class_token and not self.use_context_recentering:
             features = [f[:, 1 + self.encoder.num_register_tokens :, :] for f in features]
 
         # Reshape to spatial dimensions

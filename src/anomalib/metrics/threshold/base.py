@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Base classes for thresholding metrics.
@@ -7,7 +7,6 @@ This module provides base classes for implementing threshold-based metrics for
 anomaly detection. The main classes are:
 
 - ``Threshold``: Abstract base class for all threshold metrics
-- ``BaseThreshold``: Deprecated alias for ``Threshold`` class
 
 Example:
     >>> from anomalib.metrics.threshold import Threshold
@@ -29,8 +28,6 @@ Example:
 
 import torch
 from torchmetrics import Metric
-
-from anomalib.utils import deprecate
 
 
 class Threshold(Metric):
@@ -89,20 +86,3 @@ class Threshold(Metric):
         """
         msg = "Subclass of Threshold must implement the update method"
         raise NotImplementedError(msg)
-
-
-@deprecate(since="0.4.0", remove="2.3.0", use="Threshold")
-class BaseThreshold(Threshold):
-    """Deprecated alias for ``Threshold`` class.
-
-    .. deprecated:: 0.4.0
-        Use ``Threshold`` instead. This class will be removed in a future version.
-    """
-
-    def __init__(self, **kwargs) -> None:
-        """Initialize with deprecation warning.
-
-        Args:
-            **kwargs: Keyword arguments passed to parent ``Threshold`` class.
-        """
-        super().__init__(**kwargs)

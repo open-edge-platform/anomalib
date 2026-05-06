@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Base visualization generator for anomaly detection.
@@ -8,12 +8,12 @@ across different visualization types. The key components include:
 
     - ``GeneratorResult``: Dataclass for standardized visualization outputs
     - ``VisualizationStep``: Enum for controlling when visualizations are generated
-    - ``BaseVisualizer``: Abstract base class defining the visualization interface
+    - ``Visualizer``: Abstract base class defining the visualization interface
 
 Example:
-    >>> from anomalib.utils.visualization import BaseVisualizer
+    >>> from anomalib.utils.visualization import Visualizer
     >>> # Create custom visualizer
-    >>> class CustomVisualizer(BaseVisualizer):
+    >>> class CustomVisualizer(Visualizer):
     ...     def generate(self, **kwargs):
     ...         # Generate visualization
     ...         yield GeneratorResult(image=img)
@@ -32,8 +32,6 @@ from enum import Enum
 from pathlib import Path
 
 import numpy as np
-
-from anomalib.utils import deprecate
 
 
 @dataclass
@@ -55,12 +53,8 @@ class VisualizationStep(str, Enum):
     STAGE_END = "stage_end"
 
 
-@deprecate(since="2.0.0", remove="2.2.0", use="Visualizer")
-class BaseVisualizer(ABC):
-    """Base visualization generator.
-
-    Deprecated: This class will be removed in v2.2.0 release.
-    """
+class Visualizer(ABC):
+    """Base visualization generator."""
 
     def __init__(self, visualize_on: VisualizationStep) -> None:
         self.visualize_on = visualize_on

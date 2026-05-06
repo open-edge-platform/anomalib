@@ -58,7 +58,7 @@ if (!fs.existsSync(srcBinary)) {
   console.error(
     "Sidecar not built. Build it first:\n" +
       "  cd application/binary/sidecar\n" +
-      "  uv run --active --with pyinstaller pyinstaller anomalib_studio.spec",
+      "  uv run --active --with pyinstaller pyinstaller --clean --noconfirm anomalib_studio.spec",
   );
   process.exit(1);
 }

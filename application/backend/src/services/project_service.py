@@ -1,8 +1,6 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from uuid import UUID
-
 from loguru import logger
 
 from db import get_async_db_session_ctx
@@ -16,6 +14,7 @@ from services.media_service import MediaService
 from services.model_service import ModelService
 from services.pipeline_service import PipelineService
 from services.video_service import VideoService
+from utils.short_uuid import ShortUUID
 
 
 class ProjectService:
@@ -36,7 +35,7 @@ class ProjectService:
         )
 
     @staticmethod
-    async def get_project_by_id(project_id: UUID) -> Project | None:
+    async def get_project_by_id(project_id: ShortUUID) -> Project | None:
         async with get_async_db_session_ctx() as session:
             repo = ProjectRepository(session)
             return await repo.get_by_id(project_id)
@@ -48,7 +47,7 @@ class ProjectService:
             return await repo.save(project)
 
     @staticmethod
-    async def update_project(project_id: UUID, project_update: ProjectUpdate) -> Project | None:
+    async def update_project(project_id: ShortUUID, project_update: ProjectUpdate) -> Project | None:
         async with get_async_db_session_ctx() as session:
             repo = ProjectRepository(session)
             project = await repo.get_by_id(project_id)
@@ -58,7 +57,7 @@ class ProjectService:
 
     @staticmethod
     @logger.catch(reraise=True)
-    async def delete_project(project_id: UUID) -> None:
+    async def delete_project(project_id: ShortUUID) -> None:
         """
         Delete a project in a transactional manner.
 
