@@ -18,12 +18,16 @@ model:
     learning_rate: 0.0001
     step: 20
     svd: 0
-    downsampling: 8
-    limit: 392
-    noise: 0.015
-    radius: 0.75
-    p: 0.5
-    mining: 1
+    gaussian_noise_std: 0.015
+    radius_quantile: 0.75
+    focal_loss_quantile_threshold: 0.5
+    mining: true
 
 trainer:
-  max_epochs: 100
+  max_epochs: 640
+  callbacks:
+    - class_path: lightning.pytorch.callbacks.EarlyStopping
+      init_args:
+        patience: 5
+        monitor: pixel_AUROC
+        mode: max

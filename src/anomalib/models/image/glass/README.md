@@ -20,23 +20,11 @@ A shared discriminator is trained on features from all three branches. During in
 
 `anomalib train --model Glass --data MVTecAD --data.category <category>`
 
-**Note:** GLASS requires the [DTD](https://www.robots.ox.ac.uk/~vgg/data/dtd/) texture dataset for local anomaly synthesis. It will be downloaded automatically if not present.
-
 **Note:** GLASS uses different distribution hypotheses per category (`svd=0` for manifold, `svd=1` for hypersphere). The default config uses `svd=0`. For optimal per-category results, set `svd` according to the table below:
 
-| svd=0 (manifold)                                                           | svd=1 (hypersphere)                      |
-| -------------------------------------------------------------------------- | ---------------------------------------- |
+| svd=0 (manifold)                                                                    | svd=1 (hypersphere)                    |
+| ----------------------------------------------------------------------------------- | -------------------------------------- |
 | Carpet, Grid, Leather, Tile, Wood, Capsule, Hazelnut, Metal Nut, Toothbrush, Zipper | Bottle, Cable, Pill, Screw, Transistor |
-
-## Benchmarking
-
-To reproduce per-category results on MVTec AD with the correct SVD settings, use the dedicated benchmark script:
-
-```bash
-python tools/experimental/benchmarking/benchmark_glass.py \
-    --dataset-root ~/datasets/MVTecAD \
-    --anomaly-source ~/datasets/dtd/dtd/images
-```
 
 ## Benchmark
 

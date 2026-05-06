@@ -36,17 +36,12 @@ Args:
     smooth (float): Label smoothing factor. A small value (e.g., 1e-5) helps prevent overconfidence.
     size_average (bool): If True, average the loss over the batch; if False, sum the loss.
 
+Returns:
+    torch.Tensor: Scalar loss value (averaged or summed based on `size_average`).
+
 Raises:
     ValueError: If `smooth` is outside the range [0, 1].
     TypeError: If `alpha` is not a supported type.
-
-Inputs:
-    logit (torch.Tensor): Raw model outputs (logits) of shape (B, C, ...) where B is batch size and C is number of
-      classes.
-    target (torch.Tensor): Ground-truth class indices of shape (B, 1, ...) or broadcastable to match logit.
-
-Returns:
-    torch.Tensor: Scalar loss value (averaged or summed based on `size_average`).
 """
 
 import numpy as np
@@ -145,11 +140,9 @@ class FocalLoss(nn.Module):
         if alpha.device != logits.device:
             alpha = alpha.to(logits.device)
 
-        idx = target.cpu().long()
-        one_hot_key = torch.FloatTensor(target.size(0), num_classes).zero_()
-        one_hot_key = one_hot_key.scatter_(1, idx, 1)
-        if one_hot_key.device != logits.device:
-            one_hot_key = one_hot_key.to(logits.device)
+        idx = target.long()
+        one_hot_key = torch.zeros(target.size(0), num_classes, device=logits.device, dtype=logits.dtype)
+        one_hot_key.scatter_(1, idx, 1)
 
         if self.smooth:
             one_hot_key = torch.clamp(

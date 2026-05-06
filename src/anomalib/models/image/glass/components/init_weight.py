@@ -1,22 +1,29 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Initializes network weights using Xavier normal initialization."""
+"""Xavier/Kaiming weight initialization for GLASS network components."""
 
-import torch
 from torch import nn
 
 
-def init_weight(m: nn.Module) -> None:
-    """Initializes network weights using Xavier normal initialization.
+def init_weight(module: nn.Module) -> None:
+    """Initialize network weights using Xavier normal initialization.
 
-    Applies Xavier initialization for linear layers and normal initialization
-    for convolutional and batch normalization layers.
+    Applies Xavier initialization for linear layers, normal initialization
+    for convolutional layers, and standard initialization for batch
+    normalization layers (both 1D and 2D).
+
+    Args:
+        module (nn.Module): The module whose weights should be initialized.
     """
-    if isinstance(m, torch.nn.Linear):
-        torch.nn.init.xavier_normal_(m.weight)
-    if isinstance(m, torch.nn.BatchNorm2d):
-        m.weight.data.normal_(1.0, 0.02)
-        m.bias.data.fill_(0)
-    elif isinstance(m, torch.nn.Conv2d):
-        m.weight.data.normal_(0.0, 0.02)
+    if isinstance(module, nn.Linear):
+        nn.init.xavier_normal_(module.weight)
+        if module.bias is not None:
+            nn.init.zeros_(module.bias)
+    elif isinstance(module, (nn.BatchNorm1d, nn.BatchNorm2d)):
+        module.weight.data.normal_(1.0, 0.02)
+        module.bias.data.fill_(0)
+    elif isinstance(module, (nn.Conv1d, nn.Conv2d)):
+        nn.init.kaiming_normal_(module.weight, nonlinearity="leaky_relu")
+        if module.bias is not None:
+            nn.init.zeros_(module.bias)

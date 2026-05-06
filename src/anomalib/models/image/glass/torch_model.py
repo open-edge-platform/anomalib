@@ -23,7 +23,7 @@ import math
 import torch
 import torch.nn.functional as f
 from torch import nn
-from torch.utils.data import dataloader
+from torch.utils.data import DataLoader
 
 from anomalib.data import InferenceBatch
 from anomalib.data.utils.generators import PerlinAnomalyGenerator
@@ -82,16 +82,14 @@ class GlassModel(nn.Module):
         discriminator_margin: float = 0.5,
         step: int = 20,
         svd: int = 0,
-        downsampling: int = 8,
-        noise: float = 0.015,
-        radius: float = 0.75,
-        p: float = 0.5,
-        mining: int = 1,
+        gaussian_noise_std: float = 0.015,
+        radius_quantile: float = 0.75,
+        focal_loss_quantile_threshold: float = 0.5,
+        mining: bool = True,
         normalize_mean: list[float] | None = None,
         normalize_std: list[float] | None = None,
     ) -> None:
         super().__init__()
-        del downsampling  # mask downsampling is computed dynamically in forward()
 
         if layers is None:
             layers = ["layer2", "layer3"]
@@ -116,6 +114,7 @@ class GlassModel(nn.Module):
         self.register_buffer("_img_std", torch.tensor(std).view(1, 3, 1, 1))
 
         self.focal_loss = FocalLoss()
+        self.bce_loss = nn.BCELoss()
 
         self.forward_modules = torch.nn.ModuleDict({})
         feature_aggregator = TimmFeatureExtractor(
@@ -152,9 +151,9 @@ class GlassModel(nn.Module):
         self.distribution = 0
         self.step = step
         self.svd = svd
-        self.noise = noise
-        self.radius = radius
-        self.p = p
+        self.gaussian_noise_std = gaussian_noise_std
+        self.radius_quantile = radius_quantile
+        self.focal_loss_quantile_threshold = focal_loss_quantile_threshold
         self.mining = mining
 
         self.patch_maker = PatchMaker(patchsize, stride=patchstride)
@@ -163,7 +162,7 @@ class GlassModel(nn.Module):
 
     def calculate_center(
         self,
-        dataloader: dataloader,
+        dataloader: DataLoader,
         device: torch.device,
     ) -> None:
         """Calculates and updates the center embedding from a dataset.
@@ -183,10 +182,12 @@ class GlassModel(nn.Module):
             center tensor.
         """
         self.forward_modules.eval()
-        self.center = torch.tensor([1])
+        center_acc: torch.Tensor | None = None
+        total_samples = 0
         with torch.no_grad():
-            for i, batch in enumerate(dataloader):
+            for batch in dataloader:
                 images = batch.image.to(device)
+                batch_size = images.shape[0]
 
                 if self.pre_projection > 0:
                     outputs = self.projection(self.generate_embeddings(images)[0])
@@ -195,13 +196,19 @@ class GlassModel(nn.Module):
                     outputs = self._embed(images, evaluation=False)[0]
 
                 outputs = outputs[0] if len(outputs) == 2 else outputs
-                outputs = outputs.reshape(images.shape[0], -1, outputs.shape[-1])
+                outputs = outputs.reshape(batch_size, -1, outputs.shape[-1])
 
-                if i == 0:
-                    self.center = torch.mean(outputs, dim=0)
+                batch_sum = outputs.sum(dim=0)
+                if center_acc is None:
+                    center_acc = batch_sum
                 else:
-                    self.center += torch.mean(outputs, dim=0)
-            self.center /= len(dataloader)
+                    center_acc += batch_sum
+                total_samples += batch_size
+
+        if center_acc is None:
+            msg = "Cannot compute center: dataloader yielded no batches."
+            raise ValueError(msg)
+        self.center = center_acc / total_samples
 
     def calculate_features(
         self,
@@ -245,27 +252,21 @@ class GlassModel(nn.Module):
         self,
         images: torch.Tensor,
         evaluation: bool = False,
-    ) -> tuple[list[torch.Tensor], list[tuple[int, int]]]:
+    ) -> tuple[torch.Tensor, list[list[int]]]:
         """Generates patch-wise feature embeddings for a batch of input images.
 
-        This method performs a forward pass through the model's feature extraction pipeline,
-        processes selected intermediate layers, reshapes them into patches, aligns their spatial sizes,
-        and passes them through preprocessing and aggregation modules.
+        Extracts multi-scale features, patchifies them, aligns spatial sizes via
+        bilinear interpolation, then preprocesses and aggregates into a single
+        embedding tensor.
 
         Args:
-            images (torch.Tensor): Input images of shape (B, C, H, W), where:
-                - B is the batch size,
-                - C is the number of channels,
-                - H and W are the image height and width.
-            evaluation (bool, optional): Whether to run in evaluation mode (disabling gradients).
-                Default is False.
+            images (torch.Tensor): Input images of shape (B, C, H, W).
+            evaluation (bool, optional): Whether to run in evaluation mode. Default is False.
 
         Returns:
-            tuple[list[torch.Tensor], list[tuple[int, int]]]:
-                - A list of patch-level feature tensors, each of shape (N, D, P, P),
-                where N is the number of patches, D is the channel dimension, and P is patch size.
-                - A list of (height, width) tuples indicating the number of patches in each spatial dimension
-                for each corresponding feature level.
+            tuple[torch.Tensor, list[list[int]]]:
+                - Patch-level embeddings of shape (B*N, D) where N is patches per image.
+                - List of [height, width] patch counts per feature level.
         """
         if not evaluation and not self.pre_trained:
             self.forward_modules["feature_aggregator"].train()
@@ -326,16 +327,16 @@ class GlassModel(nn.Module):
 
         return patch_features, patch_shapes
 
-    def calculate_anomaly_scores(self, images: torch.Tensor) -> torch.Tensor:
-        """Calculates anomaly scores and segmentation masks for a batch of input images.
+    def calculate_anomaly_scores(self, images: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Calculates anomaly scores and segmentation masks for input images.
 
         Args:
             images (torch.Tensor): Batch of input images of shape [B, C, H, W].
 
         Returns:
-            tuple[torch.Tensor, list[torch.Tensor]]:
-                - image_scores: Tensor of anomaly scores per image, shape [B].
-                - masks: List of segmentation masks for each image, each of shape [H, W].
+            tuple[torch.Tensor, torch.Tensor]:
+                - image_scores: Anomaly scores per image, shape [B].
+                - masks: Segmentation masks, shape [B, H, W].
         """
         with torch.no_grad():
             patch_features, patch_shapes = self.generate_embeddings(images, evaluation=True)
@@ -365,7 +366,6 @@ class GlassModel(nn.Module):
         """
         if not self.training:
             anomaly_scores, masks = self.calculate_anomaly_scores(img)
-            masks = torch.stack(masks)
             return InferenceBatch(pred_score=anomaly_scores, anomaly_map=masks)
 
         device = img.device
@@ -373,8 +373,7 @@ class GlassModel(nn.Module):
         img_raw = img * self._img_std + self._img_mean  # denormalize to [0, 1]
         aug_raw, mask_s = self.augmentor(img_raw)
         aug = (aug_raw - self._img_mean) / self._img_std  # renormalize to ImageNet scale
-        if img is not None:
-            batch_size = img.shape[0]
+        batch_size = img.shape[0]
 
         true_feats, fake_feats = self.calculate_features(img, aug)
 
@@ -387,36 +386,38 @@ class GlassModel(nn.Module):
             if mask_s.shape[2] != feat_grid_size or mask_s.shape[3] != feat_grid_size:
                 mask_s = f.interpolate(mask_s.float(), size=(feat_grid_size, feat_grid_size), mode="nearest")
         mask_s_gt = mask_s.reshape(-1, 1)
+        is_normal = mask_s_gt[:, 0] == 0
+        is_anomalous = ~is_normal
 
-        noise = torch.normal(0, self.noise, true_feats.shape).to(device)
+        noise = torch.randn_like(true_feats) * self.gaussian_noise_std
         gaus_feats = true_feats + noise
 
         center = self.center.repeat(img.shape[0], 1, 1)
         center = center.reshape(-1, center.shape[-1])
-        true_points = torch.concat(
-            [fake_feats[mask_s_gt[:, 0] == 0], true_feats],
+        true_points = torch.cat(
+            [fake_feats[is_normal], true_feats],
             dim=0,
         )
-        c_t_points = torch.concat([center[mask_s_gt[:, 0] == 0], center], dim=0)
-        dist_t = torch.norm(true_points - c_t_points, dim=1)
-        r_t = torch.tensor([torch.quantile(dist_t, q=self.radius)]).to(device)
+        c_t_points = torch.cat([center[is_normal], center], dim=0)
+        dist_t = torch.linalg.vector_norm(true_points - c_t_points, dim=1)
+        r_t = torch.tensor([torch.quantile(dist_t, q=self.radius_quantile)]).to(device)
 
         for step in range(self.step + 1):
             scores = self.discriminator(torch.cat([true_feats, gaus_feats]))
             true_scores = scores[: len(true_feats)]
             gaus_scores = scores[len(true_feats) :]
-            true_loss = nn.BCELoss()(true_scores, torch.zeros_like(true_scores))
-            gaus_loss = nn.BCELoss()(gaus_scores, torch.ones_like(gaus_scores))
+            true_loss = self.bce_loss(true_scores, torch.zeros_like(true_scores))
+            gaus_loss = self.bce_loss(gaus_scores, torch.ones_like(gaus_scores))
             bce_loss = true_loss + gaus_loss
 
             if step == self.step:
                 break
-            if self.mining == 0:
+            if not self.mining:
                 break
 
             if self.training:
                 grad = torch.autograd.grad(gaus_loss, [gaus_feats])[0]
-                grad_norm = torch.norm(grad, dim=1)
+                grad_norm = torch.linalg.vector_norm(grad, dim=1)
                 grad_norm = grad_norm.view(-1, 1)
                 grad_normalized = grad / (grad_norm + 1e-10)
 
@@ -424,38 +425,38 @@ class GlassModel(nn.Module):
                     gaus_feats.add_(0.001 * grad_normalized)
 
                 if (step + 1) % 5 == 0:
-                    dist_g = torch.norm(gaus_feats - center, dim=1)
+                    dist_g = torch.linalg.vector_norm(gaus_feats - center, dim=1)
                     proj_feats = center if self.svd == 1 else true_feats
                     r = r_t if self.svd == 1 else 0.5
 
                     h = gaus_feats - proj_feats
-                    h_norm = dist_g if self.svd == 1 else torch.norm(h, dim=1)
+                    h_norm = dist_g if self.svd == 1 else torch.linalg.vector_norm(h, dim=1)
                     alpha = torch.clamp(h_norm, r, 2 * r)
                     proj = (alpha / (h_norm + 1e-10)).view(-1, 1)
                     h = proj * h
                     gaus_feats = proj_feats + h
 
-        fake_points = fake_feats[mask_s_gt[:, 0] == 1]
-        true_points = true_feats[mask_s_gt[:, 0] == 1]
-        c_f_points = center[mask_s_gt[:, 0] == 1]
-        dist_f = torch.norm(fake_points - c_f_points, dim=1)
+        fake_points = fake_feats[is_anomalous]
+        true_points = true_feats[is_anomalous]
+        c_f_points = center[is_anomalous]
+        dist_f = torch.linalg.vector_norm(fake_points - c_f_points, dim=1)
         proj_feats = c_f_points if self.svd == 1 else true_points
         r = r_t if self.svd == 1 else 1
 
         if self.svd == 1:
             h = fake_points - proj_feats
-            h_norm = dist_f if self.svd == 1 else torch.norm(h, dim=1)
+            h_norm = dist_f
             alpha = torch.clamp(h_norm, 2 * r, 4 * r)
             proj = (alpha / (h_norm + 1e-10)).view(-1, 1)
             h = proj * h
             fake_points = proj_feats + h
-            fake_feats[mask_s_gt[:, 0] == 1] = fake_points
+            fake_feats[is_anomalous] = fake_points
 
         fake_scores = self.discriminator(fake_feats)
 
-        if self.p > 0:
+        if self.focal_loss_quantile_threshold > 0:
             fake_dist = (fake_scores - mask_s_gt) ** 2
-            d_hard = torch.quantile(fake_dist, q=self.p)
+            d_hard = torch.quantile(fake_dist, q=self.focal_loss_quantile_threshold)
             fake_scores_ = fake_scores[fake_dist >= d_hard].unsqueeze(1)
             mask_ = mask_s_gt[fake_dist >= d_hard].unsqueeze(1)
         else:

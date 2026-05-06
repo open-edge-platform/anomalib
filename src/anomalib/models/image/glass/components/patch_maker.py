@@ -86,3 +86,6 @@ class PatchMaker:
         """
         x = x[:, :, 0]  # remove last dimension if singleton
         return torch.max(x, dim=1).values
+
+    def __repr__(self) -> str:  # noqa: D105
+        return f"{self.__class__.__name__}(patchsize={self.patchsize}, stride={self.stride})"
