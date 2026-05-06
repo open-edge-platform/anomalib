@@ -276,8 +276,11 @@ class PerlinAnomalyGenerator(v2.Transform):
         perlin_noise = generate_perlin_noise(height, width, device=device)
         # in some cases the perlin noise is all less than 0.5, so we need to rescale it between 0 and 1
         if not (perlin_noise > 0.5).any():
-            perlin_noise = (perlin_noise - perlin_noise.min()) / (perlin_noise.max() - perlin_noise.min())
-            # rescale to [-1, 1] range
+            noise_range = perlin_noise.max() - perlin_noise.min()
+            if noise_range > 0:
+                perlin_noise = (perlin_noise - perlin_noise.min()) / noise_range
+            else:
+                perlin_noise = torch.zeros_like(perlin_noise)
             perlin_noise = (perlin_noise * 2) - 1
 
         # Create rotated noise pattern
@@ -294,7 +297,11 @@ class PerlinAnomalyGenerator(v2.Transform):
         if self.dual_mask:
             perlin_noise_2 = generate_perlin_noise(height, width, device=device)
             if not (perlin_noise_2 > 0.5).any():
-                perlin_noise_2 = (perlin_noise_2 - perlin_noise_2.min()) / (perlin_noise_2.max() - perlin_noise_2.min())
+                noise_range = perlin_noise_2.max() - perlin_noise_2.min()
+                if noise_range > 0:
+                    perlin_noise_2 = (perlin_noise_2 - perlin_noise_2.min()) / noise_range
+                else:
+                    perlin_noise_2 = torch.zeros_like(perlin_noise_2)
                 perlin_noise_2 = (perlin_noise_2 * 2) - 1
             perlin_noise_2 = perlin_noise_2.unsqueeze(0)
             perlin_noise_2 = self.perlin_rotation_transform(perlin_noise_2).squeeze(0)

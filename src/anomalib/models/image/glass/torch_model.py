@@ -191,11 +191,11 @@ class GlassModel(nn.Module):
 
                 if self.pre_projection > 0:
                     outputs = self.projection(self.generate_embeddings(images)[0])
-                    outputs = outputs[0] if len(outputs) == 2 else outputs
+                    outputs = outputs[0] if isinstance(outputs, (tuple, list)) else outputs
                 else:
-                    outputs = self._embed(images, evaluation=False)[0]
+                    outputs = self.generate_embeddings(images, evaluation=True)[0]
 
-                outputs = outputs[0] if len(outputs) == 2 else outputs
+                outputs = outputs[0] if isinstance(outputs, (tuple, list)) else outputs
                 outputs = outputs.reshape(batch_size, -1, outputs.shape[-1])
 
                 batch_sum = outputs.sum(dim=0)
@@ -233,11 +233,11 @@ class GlassModel(nn.Module):
             fake_feats = self.projection(
                 self.generate_embeddings(aug, evaluation=evaluation)[0],
             )
-            fake_feats = fake_feats[0] if len(fake_feats) == 2 else fake_feats
+            fake_feats = fake_feats[0] if isinstance(fake_feats, (tuple, list)) else fake_feats
             true_feats = self.projection(
                 self.generate_embeddings(img, evaluation=evaluation)[0],
             )
-            true_feats = true_feats[0] if len(true_feats) == 2 else true_feats
+            true_feats = true_feats[0] if isinstance(true_feats, (tuple, list)) else true_feats
         else:
             fake_feats = self.generate_embeddings(aug, evaluation=evaluation)[0]
             assert isinstance(fake_feats, torch.Tensor)
@@ -342,7 +342,7 @@ class GlassModel(nn.Module):
             patch_features, patch_shapes = self.generate_embeddings(images, evaluation=True)
             if self.pre_projection > 0:
                 patch_features = self.projection(patch_features)
-                patch_features = patch_features[0] if len(patch_features) == 2 else patch_features
+                patch_features = patch_features[0] if isinstance(patch_features, (tuple, list)) else patch_features
 
             patch_scores = image_scores = self.discriminator(patch_features)
             patch_scores = self.patch_maker.unpatch_scores(patch_scores, images.shape[0])
@@ -354,6 +354,49 @@ class GlassModel(nn.Module):
             image_scores = self.patch_maker.compute_score(image_scores)
 
             return image_scores, masks
+
+    def _gradient_ascent_step(
+        self,
+        gaus_feats: torch.Tensor,
+        gaus_loss: torch.Tensor,
+        center: torch.Tensor,
+        true_feats: torch.Tensor,
+        r_t: torch.Tensor,
+        step: int,
+    ) -> torch.Tensor:
+        """Perform one gradient ascent step with optional truncated projection.
+
+        Args:
+            gaus_feats (torch.Tensor): Current Gaussian-perturbed features (N, D).
+            gaus_loss (torch.Tensor): Scalar loss for gradient computation.
+            center (torch.Tensor): Hypersphere/manifold center (N, D).
+            true_feats (torch.Tensor): Original unperturbed features (N, D).
+            r_t (torch.Tensor): Radius threshold from quantile estimation.
+            step (int): Current iteration index (0-based).
+
+        Returns:
+            torch.Tensor: Updated gaus_feats after ascent and optional projection.
+        """
+        grad = torch.autograd.grad(gaus_loss, [gaus_feats])[0]
+        grad_norm = torch.linalg.vector_norm(grad, dim=1).view(-1, 1)
+        grad_normalized = grad / (grad_norm + 1e-10)
+
+        with torch.no_grad():
+            gaus_feats.add_(0.001 * grad_normalized)
+
+        if (step + 1) % 5 == 0:
+            dist_g = torch.linalg.vector_norm(gaus_feats - center, dim=1)
+            proj_feats = center if self.svd == 1 else true_feats
+            r = r_t if self.svd == 1 else 0.5
+
+            h = gaus_feats - proj_feats
+            h_norm = dist_g if self.svd == 1 else torch.linalg.vector_norm(h, dim=1)
+            alpha = torch.clamp(h_norm, r, 2 * r)
+            proj = (alpha / (h_norm + 1e-10)).view(-1, 1)
+            h = proj * h
+            gaus_feats = proj_feats + h
+
+        return gaus_feats
 
     def forward(
         self,
@@ -368,7 +411,6 @@ class GlassModel(nn.Module):
             anomaly_scores, masks = self.calculate_anomaly_scores(img)
             return InferenceBatch(pred_score=anomaly_scores, anomaly_map=masks)
 
-        device = img.device
         # inverse normalization is applied because augmentor requires images in range [0, 1]
         img_raw = img * self._img_std + self._img_mean  # denormalize to [0, 1]
         aug_raw, mask_s = self.augmentor(img_raw)
@@ -400,7 +442,7 @@ class GlassModel(nn.Module):
         )
         c_t_points = torch.cat([center[is_normal], center], dim=0)
         dist_t = torch.linalg.vector_norm(true_points - c_t_points, dim=1)
-        r_t = torch.tensor([torch.quantile(dist_t, q=self.radius_quantile)]).to(device)
+        r_t = torch.quantile(dist_t, q=self.radius_quantile).unsqueeze(0)
 
         for step in range(self.step + 1):
             scores = self.discriminator(torch.cat([true_feats, gaus_feats]))
@@ -416,25 +458,7 @@ class GlassModel(nn.Module):
                 break
 
             if self.training:
-                grad = torch.autograd.grad(gaus_loss, [gaus_feats])[0]
-                grad_norm = torch.linalg.vector_norm(grad, dim=1)
-                grad_norm = grad_norm.view(-1, 1)
-                grad_normalized = grad / (grad_norm + 1e-10)
-
-                with torch.no_grad():
-                    gaus_feats.add_(0.001 * grad_normalized)
-
-                if (step + 1) % 5 == 0:
-                    dist_g = torch.linalg.vector_norm(gaus_feats - center, dim=1)
-                    proj_feats = center if self.svd == 1 else true_feats
-                    r = r_t if self.svd == 1 else 0.5
-
-                    h = gaus_feats - proj_feats
-                    h_norm = dist_g if self.svd == 1 else torch.linalg.vector_norm(h, dim=1)
-                    alpha = torch.clamp(h_norm, r, 2 * r)
-                    proj = (alpha / (h_norm + 1e-10)).view(-1, 1)
-                    h = proj * h
-                    gaus_feats = proj_feats + h
+                gaus_feats = self._gradient_ascent_step(gaus_feats, gaus_loss, center, true_feats, r_t, step)
 
         fake_points = fake_feats[is_anomalous]
         true_points = true_feats[is_anomalous]

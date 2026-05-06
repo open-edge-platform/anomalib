@@ -29,6 +29,9 @@ class RescaleSegmentor:
         kernel_size: int = 33,
         sigma: float = 4.0,
     ) -> None:
+        if kernel_size < 1 or kernel_size % 2 == 0:
+            msg = f"kernel_size must be a positive odd integer, got {kernel_size}"
+            raise ValueError(msg)
         self.target_size = target_size
         self.kernel_size = kernel_size
         self.sigma = sigma
