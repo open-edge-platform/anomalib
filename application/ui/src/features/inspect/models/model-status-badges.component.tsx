@@ -8,9 +8,10 @@ import classes from './models-view.module.scss';
 interface ModelStatusBadgesProps {
     isSelected: boolean;
     jobStatus?: SchemaJob['status'];
+    progress?: number;
 }
 
-export const ModelStatusBadges = ({ isSelected, jobStatus }: ModelStatusBadgesProps) => {
+export const ModelStatusBadges = ({ isSelected, jobStatus, progress }: ModelStatusBadgesProps) => {
     if (!isSelected && !jobStatus) {
         return null;
     }
@@ -32,7 +33,7 @@ export const ModelStatusBadges = ({ isSelected, jobStatus }: ModelStatusBadgesPr
             {jobStatus === 'running' && (
                 <Badge variant='info' UNSAFE_className={classes.badge}>
                     <LoadingIcon />
-                    Training...
+                    Training{progress !== undefined ? ` ${Math.round(progress)}%` : '...'}
                 </Badge>
             )}
             {jobStatus === 'failed' && (

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 
+import { $api } from '@anomalib-studio/api';
 import { usePipeline } from '@anomalib-studio/hooks';
 import {
     Cell,
@@ -33,6 +34,19 @@ import classes from './models-view.module.scss';
 interface ModelsViewProps {
     onModelSelect: (modelId: string) => void;
 }
+
+const useShowModels = (models: ModelData[], nonCompletedJobs: ModelData[]) => {
+    const { data: trainableModelsData } = $api.useSuspenseQuery('get', '/api/trainable-models');
+    return sortBy(
+        [...nonCompletedJobs, ...models].map((model) => {
+            return {
+                ...model,
+                name: trainableModelsData?.trainable_models?.find((m) => m.id === model.name)?.name ?? model.name,
+            };
+        }),
+        (model) => -model.startTime
+    );
+};
 
 export const ModelsView = ({ onModelSelect }: ModelsViewProps) => {
     const { data: pipeline } = usePipeline();
@@ -68,7 +82,7 @@ export const ModelsView = ({ onModelSelect }: ModelsViewProps) => {
             };
         });
 
-    const showModels = sortBy([...nonCompletedJobs, ...models], (model) => -model.startTime);
+    const showModels = useShowModels(models, nonCompletedJobs);
 
     const tableSelectedKeys = useMemo(() => {
         if (selectedModelId === undefined) {
@@ -129,6 +143,7 @@ export const ModelsView = ({ onModelSelect }: ModelsViewProps) => {
                                         <ModelStatusBadges
                                             isSelected={selectedModelId === model.id}
                                             jobStatus={model.job?.status}
+                                            progress={model.progress}
                                         />
                                     </Flex>
                                     <Text UNSAFE_className={classes.modelTimestamp}>{model.timestamp}</Text>

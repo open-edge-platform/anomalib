@@ -1,0 +1,262 @@
+name: Promote Application RC Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      rc_tag:
+        description: "RC tag version (example: app/v0.1.0rc1)"
+        required: true
+        type: string
+      sha:
+        description: "Expected 40-char commit SHA for the RC tag"
+        required: true
+        type: string
+      dry_run:
+        description: "Dry run mode (validate only, make no changes)"
+        required: false
+        type: boolean
+        default: false
+      force:
+        description: "Force overwrite if the stable tag already exists in GHCR with a different digest"
+        required: false
+        type: boolean
+        default: false
+
+permissions: {} # No permissions by default
+
+jobs:
+  validate:
+    name: Validate inputs and RC tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      rc_tag: ${{ steps.validate.outputs.rc_tag }}
+      rc_sha: ${{ steps.validate.outputs.rc_sha }}
+      release_tag: ${{ steps.validate.outputs.release_tag }}
+      docker_rc_tag: ${{ steps.validate.outputs.docker_rc_tag }}
+      docker_patch_tag: ${{ steps.validate.outputs.docker_patch_tag }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate and normalize inputs
+        id: validate
+        env:
+          RC_TAG_INPUT: ${{ inputs.rc_tag }}
+          EXPECTED_SHA: ${{ inputs.sha }}
+        run: |
+          if [[ "${RC_TAG_INPUT}" != app/v* ]]; then
+            echo "Error: rc_tag must start with 'app/v'"
+            echo "Received: ${RC_TAG_INPUT}"
+            exit 1
+          fi
+          RC_TAG="${RC_TAG_INPUT}"
+          if [[ ! "${RC_TAG}" =~ ^app/v[0-9]+\.[0-9]+\.[0-9]+rc[0-9]+$ ]]; then
+            echo "Error: rc_tag must match 'app/v<major>.<minor>.<patch>rc<N>'"
+            echo "Received: ${RC_TAG_INPUT}"
+            exit 1
+          fi
+
+          if [[ ! "${EXPECTED_SHA}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "Error: sha must be exactly 40 hex characters"
+            echo "Received: ${EXPECTED_SHA}"
+            exit 1
+          fi
+
+          # Derive release tag by stripping rc[N] suffix
+          RELEASE_TAG="$(echo "${RC_TAG}" | sed -E 's/rc[0-9]+$//')"
+          if [[ "${RELEASE_TAG}" == "${RC_TAG}" ]]; then
+            echo "Error: could not validate release tag from rc tag '${RC_TAG}'"
+            exit 1
+          fi
+          VERSION="${RELEASE_TAG#app/v}"
+
+          # Docker image tags (no app/v prefix)
+          DOCKER_RC_TAG="${RC_TAG#app/v}"
+          DOCKER_PATCH_TAG="${VERSION}"
+
+          echo "RC tag:             ${RC_TAG}"
+          echo "Release tag:        ${RELEASE_TAG}"
+          echo "Docker RC tag:      ${DOCKER_RC_TAG}"
+          echo "Docker release tag: ${DOCKER_PATCH_TAG}"
+
+          # Verify RC tag exists in git
+          if ! git rev-parse "refs/tags/${RC_TAG}" >/dev/null 2>&1; then
+            echo "::error::RC tag ${RC_TAG} does not exist in git"
+            exit 1
+          fi
+          RC_SHA=$(git rev-parse "refs/tags/${RC_TAG}^{commit}")
+          echo "RC SHA:             ${RC_SHA}"
+
+          # Verify RC SHA matches expected SHA input
+          if [[ "${RC_SHA}" != "${EXPECTED_SHA}" ]]; then
+            echo "::error::RC tag ${RC_TAG} points to ${RC_SHA} but expected ${EXPECTED_SHA}"
+            exit 1
+          fi
+          # If release tag already exists, verify it points to the same commit (idempotent re-run)
+          if git rev-parse "refs/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
+            EXISTING_SHA=$(git rev-parse "refs/tags/${RELEASE_TAG}^{commit}")
+            if [[ "${EXISTING_SHA}" != "${RC_SHA}" ]]; then
+              echo "::error::Release tag ${RELEASE_TAG} already exists at ${EXISTING_SHA}, but RC points to ${RC_SHA}. Aborting to prevent overwrite."
+              exit 1
+            fi
+            echo "::notice::Release tag ${RELEASE_TAG} already exists at the correct commit (idempotent re-run)"
+          fi
+
+          echo "rc_tag=${RC_TAG}" >> "$GITHUB_OUTPUT"
+          echo "rc_sha=${RC_SHA}" >> "$GITHUB_OUTPUT"
+          echo "release_tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "docker_rc_tag=${DOCKER_RC_TAG}" >> "$GITHUB_OUTPUT"
+          echo "docker_patch_tag=${DOCKER_PATCH_TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Print promotion summary
+        env:
+          RC_TAG: ${{ steps.validate.outputs.rc_tag }}
+          RELEASE_TAG: ${{ steps.validate.outputs.release_tag }}
+          RC_SHA: ${{ steps.validate.outputs.rc_sha }}
+          DOCKER_RC_TAG: ${{ steps.validate.outputs.docker_rc_tag }}
+          DOCKER_PATCH_TAG: ${{ steps.validate.outputs.docker_patch_tag }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          {
+            echo "## Promotion Summary"
+            echo ""
+            echo "| Item | Value |"
+            echo "|------|-------|"
+            echo "| RC tag | \`${RC_TAG}\` |"
+            echo "| Release tag | \`${RELEASE_TAG}\` |"
+            echo "| Commit SHA | \`${RC_SHA}\` |"
+            echo "| Docker RC tag | \`${DOCKER_RC_TAG}\` |"
+            echo "| Docker release tag | \`${DOCKER_PATCH_TAG}\` |"
+            echo "| Dry run | \`${DRY_RUN}\` |"
+            echo "| Force overwrite | \`${FORCE}\` |"
+            echo ""
+            if [[ "${DRY_RUN}" == "true" ]]; then
+              echo "> **Dry run mode:** No changes will be made."
+            fi
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  create-release-tag:
+    needs: validate
+    if: inputs.dry_run == false
+    name: Create release git tag
+    runs-on: ubuntu-latest
+    environment: "production"
+    permissions:
+      contents: write # Permission to push release tag to git
+    steps:
+      - name: Create release git tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.validate.outputs.release_tag }}
+          RC_SHA: ${{ needs.validate.outputs.rc_sha }}
+        run: |
+          set -euo pipefail
+          URL_RELEASE_TAG="${RELEASE_TAG//\//%2F}"
+          if gh api "repos/${{ github.repository }}/git/ref/tags/${URL_RELEASE_TAG}" --silent >/dev/null 2>&1; then
+            # Resolve the tag to a commit SHA, handling annotated tags that point to tag objects
+            TAG_INFO=$(gh api "repos/${{ github.repository }}/git/ref/tags/${URL_RELEASE_TAG}" --jq '.object.sha + " " + .object.type')
+            RESOLVED_SHA=${TAG_INFO%% *}
+            RESOLVED_TYPE=${TAG_INFO##* }
+            # Dereference tag objects until we reach a commit
+            while [[ "${RESOLVED_TYPE}" == "tag" ]]; do
+              TAG_OBJECT_INFO=$(gh api "repos/${{ github.repository }}/git/tags/${RESOLVED_SHA}" --jq '.object.sha + " " + .object.type')
+              RESOLVED_SHA=${TAG_OBJECT_INFO%% *}
+              RESOLVED_TYPE=${TAG_OBJECT_INFO##* }
+            done
+            if [[ "${RESOLVED_SHA}" == "${RC_SHA}" ]]; then
+              echo "Tag ${RELEASE_TAG} already exists at ${RC_SHA}, skipping creation"
+            else
+              echo "::error::Tag ${RELEASE_TAG} already exists at ${RESOLVED_SHA} but expected ${RC_SHA}"
+              exit 1
+            fi
+          else
+            echo "Creating tag ${RELEASE_TAG} pointing to ${RC_SHA}"
+            gh api "repos/${{ github.repository }}/git/refs" \
+              -f "ref=refs/tags/${RELEASE_TAG}" \
+              -f "sha=${RC_SHA}"
+            echo "Tag ${RELEASE_TAG} created successfully"
+          fi
+
+  promote-docker:
+    needs: [validate, create-release-tag]
+    if: inputs.dry_run == false
+    name: Promote RC image to release image
+    runs-on: ubuntu-latest
+    environment: "production"
+    permissions:
+      packages: write # Permission to push packages to GHCR
+      id-token: write # Permission to request OIDC token for signing images
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        device: [cpu, xpu, cuda]
+    env:
+      RC_TAG: ${{ inputs.rc_tag }}
+      DEVICE: ${{ matrix.device }}
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Promote application image for ${{ matrix.device }}
+        env:
+          DOCKER_RC_TAG: ${{ needs.validate.outputs.docker_rc_tag }}
+          DOCKER_PATCH_TAG: ${{ needs.validate.outputs.docker_patch_tag }}
+          DEVICE: ${{ matrix.device }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          set -euo pipefail
+          SOURCE_IMAGE="ghcr.io/open-edge-platform/anomalib-studio-${DEVICE}:${DOCKER_RC_TAG}"
+          TARGET_IMAGE="ghcr.io/open-edge-platform/anomalib-studio-${DEVICE}:${DOCKER_PATCH_TAG}"
+
+          echo "Pulling ${SOURCE_IMAGE}"
+          docker pull "${SOURCE_IMAGE}"
+
+          # Pre-check: verify target tag is absent or already points to the same image
+          if docker manifest inspect "${TARGET_IMAGE}" >/dev/null 2>&1; then
+            echo "Target image ${TARGET_IMAGE} already exists in GHCR."
+            docker pull "${TARGET_IMAGE}"
+            SOURCE_ID=$(docker inspect --format='{{.Id}}' "${SOURCE_IMAGE}")
+            TARGET_ID=$(docker inspect --format='{{.Id}}' "${TARGET_IMAGE}")
+            if [[ "${SOURCE_ID}" == "${TARGET_ID}" ]]; then
+              echo "::notice::${TARGET_IMAGE} already points to the same image as ${SOURCE_IMAGE}. Skipping push (idempotent re-run)."
+              exit 0
+            elif [[ "${FORCE}" == "true" ]]; then
+              echo "::warning::${TARGET_IMAGE} exists with a different digest; overwriting because force=true."
+            else
+              echo "::error::${TARGET_IMAGE} already exists in GHCR with a different digest. Set 'force: true' to overwrite."
+              exit 1
+            fi
+          fi
+
+          echo "Tagging ${TARGET_IMAGE}"
+          docker tag "${SOURCE_IMAGE}" "${TARGET_IMAGE}"
+
+          echo "Pushing ${TARGET_IMAGE}"
+          docker push "${TARGET_IMAGE}"
+
+      - name: Sign Docker image
+        uses: open-edge-platform/geti-ci/actions/sign-image@e80098b3d180db37914f11ff6021f9fa34d0bb9f
+        with:
+          image-uri: ghcr.io/open-edge-platform/anomalib-studio-${{ matrix.device }}:${{ needs.validate.outputs.docker_patch_tag }}
+
+      - name: Print summary
+        env:
+          DOCKER_PATCH_TAG: ${{ needs.validate.outputs.docker_patch_tag }}
+          DEVICE: ${{ matrix.device }}
+        run: |
+          {
+            echo "## Promotion Complete"
+            echo ""
+            echo "### Docker Images"
+            echo "- \`ghcr.io/open-edge-platform/anomalib-studio-${DEVICE}:${DOCKER_PATCH_TAG}\`"
+            echo ""
+          } >> "${GITHUB_STEP_SUMMARY}"

@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Metrics visualization generator for anomaly detection results.
@@ -31,13 +31,13 @@ Note:
 from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
-from .base import BaseVisualizer, GeneratorResult, VisualizationStep
+from .base import GeneratorResult, VisualizationStep, Visualizer
 
 if TYPE_CHECKING:
     from anomalib.models import AnomalibModule
 
 
-class MetricsVisualizer(BaseVisualizer):
+class MetricsVisualizer(Visualizer):
     """Generate metric plots from model metrics.
 
     This class handles the automatic generation of metric plots from an anomalib

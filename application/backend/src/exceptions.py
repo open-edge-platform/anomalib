@@ -1,7 +1,9 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import http
-from uuid import UUID
+
+from pydantic_models.job import JobStatus
+from utils.short_uuid import ShortUUID
 
 
 class GetiBaseException(Exception):
@@ -77,9 +79,32 @@ class ResourceNotFoundException(GetiBaseException):
         resource_id: ID of the resource that was not found
     """
 
-    def __init__(self, resource_id: str | UUID, resource_name: str) -> None:
+    def __init__(self, resource_id: str | ShortUUID, resource_name: str) -> None:
         super().__init__(
             message=f"The requested {resource_name} could not be found. {resource_name.title()} ID: `{resource_id}`.",
             error_code=f"{resource_name}_not_found",
             http_status=http.HTTPStatus.NOT_FOUND,
+        )
+
+
+class JobNotDeletableException(GetiBaseException):
+    """
+    Exception raised when attempting to delete a job that is not in a terminal state.
+
+    Args:
+        job_id: ID of the job that cannot be deleted
+        job_status: Current status of the job
+    """
+
+    def __init__(self, job_id: str | ShortUUID, job_status: str) -> None:
+        if job_status in {JobStatus.PENDING, JobStatus.RUNNING}:
+            hint = "Cancel the job first before deleting it."
+        elif job_status == JobStatus.COMPLETED:
+            hint = "Completed jobs cannot be deleted while the associated model exists."
+        else:
+            hint = "Only failed or canceled jobs can be deleted."
+        super().__init__(
+            message=f"Job `{job_id}` cannot be deleted because it is in status '{job_status}'. {hint}",
+            error_code="job_not_deletable",
+            http_status=http.HTTPStatus.CONFLICT,
         )

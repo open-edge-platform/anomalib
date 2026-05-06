@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """PyTorch model for the PaDiM model implementation.
@@ -34,7 +34,6 @@ See Also:
         Multivariate Gaussian distribution modeling
 """
 
-from random import sample
 from typing import TYPE_CHECKING
 
 import torch
@@ -140,7 +139,7 @@ class PadimModel(nn.Module):
         # Since idx is randomly selected, save it with model to get same results
         self.register_buffer(
             "idx",
-            torch.tensor(sample(range(self.n_features_original), self.n_features)),
+            torch.randperm(self.n_features_original)[: self.n_features],
         )
         self.idx: torch.Tensor
         self.loss = None

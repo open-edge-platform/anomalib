@@ -30,11 +30,18 @@ export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuPro
             ],
         },
     });
+    const deleteJobMutation = $api.useMutation('delete', '/api/jobs/{job_id}', {
+        meta: {
+            invalidates: [['get', '/api/jobs']],
+        },
+    });
 
     const hasJobActions = Boolean(model.job?.id);
     const hasCompletedStatus = model.status === 'Completed';
     const canDeleteModel = hasCompletedStatus && model.id !== selectedModelId;
-    const shouldShowMenu = hasJobActions || canDeleteModel;
+    const canDeleteJob =
+        model.status !== 'Completed' && (model.job?.status === 'failed' || model.job?.status === 'canceled');
+    const shouldShowMenu = hasJobActions || canDeleteModel || canDeleteJob;
 
     if (!shouldShowMenu) {
         return null;
@@ -46,6 +53,9 @@ export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuPro
     }
     if (deleteModelMutation.isPending) {
         disabledMenuKeys.push('delete');
+    }
+    if (deleteJobMutation.isPending) {
+        disabledMenuKeys.push('delete-job');
     }
     if (model.id === selectedModelId || patchPipeline.isPending) {
         disabledMenuKeys.push('activate');
@@ -90,6 +100,24 @@ export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuPro
         );
     };
 
+    const handleDeleteJob = () => {
+        if (!model.job?.id) {
+            return;
+        }
+
+        void deleteJobMutation.mutateAsync(
+            { params: { path: { job_id: model.job.id } } },
+            {
+                onSuccess: () => {
+                    toast({ type: 'success', message: 'Job record has been deleted.' });
+                },
+                onError: () => {
+                    toast({ type: 'error', message: 'Failed to delete job record.' });
+                },
+            }
+        );
+    };
+
     const handleActivateModel = () => {
         void patchPipeline.mutateAsync(
             { params: { path: { project_id: projectId } }, body: { model_id: model.id } },
@@ -125,6 +153,9 @@ export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuPro
                         if (actionKey === 'delete' && canDeleteModel) {
                             setOpenDialog('delete');
                         }
+                        if (actionKey === 'delete-job' && canDeleteJob) {
+                            void handleDeleteJob();
+                        }
                         if (actionKey === 'activate' && hasCompletedStatus && model.id !== selectedModelId) {
                             setOpenDialog('activate');
                         }
@@ -136,6 +167,7 @@ export const ModelActionsMenu = ({ model, selectedModelId }: ModelActionsMenuPro
                         <Item key='cancel'>Cancel training</Item>
                     ) : null}
                     {canDeleteModel ? <Item key='delete'>Delete model</Item> : null}
+                    {canDeleteJob ? <Item key='delete-job'>Delete</Item> : null}
                 </Menu>
             </MenuTrigger>
 

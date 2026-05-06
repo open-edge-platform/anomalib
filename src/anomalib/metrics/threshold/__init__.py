@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Thresholding metrics for anomaly detection.
@@ -7,7 +7,6 @@ This module provides various thresholding techniques to convert anomaly scores i
 binary predictions.
 
 Available Thresholds:
-    - ``BaseThreshold``: Abstract base class for implementing threshold methods
     - ``Threshold``: Generic threshold class that can be initialized with a value
     - ``F1AdaptiveThreshold``: Automatically finds optimal threshold by maximizing
       F1 score
@@ -21,8 +20,8 @@ Example:
     [0, 1, 0, 1]
 """
 
-from .base import BaseThreshold, Threshold
+from .base import Threshold
 from .f1_adaptive_threshold import F1AdaptiveThreshold
 from .manual_threshold import ManualThreshold
 
-__all__ = ["BaseThreshold", "Threshold", "F1AdaptiveThreshold", "ManualThreshold"]
+__all__ = ["Threshold", "F1AdaptiveThreshold", "ManualThreshold"]

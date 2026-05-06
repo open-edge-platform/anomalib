@@ -82,12 +82,12 @@ def test_get_cuda_version_with_version_file(mocker: MockerFixture, tmp_path: Pat
 
 def test_get_cuda_version_with_nvcc(mocker: MockerFixture) -> None:
     """Test that get_cuda_version returns the expected CUDA version when nvcc is available."""
-    mock_run = mocker.patch("anomalib.cli.utils.installation.Path.exists", return_value=False)
-    mock_run = mocker.patch("os.popen")
-    mock_run.return_value.read.return_value = "Build cuda_11.2.r11.2/compiler.00000_0"
+    mocker.patch("anomalib.cli.utils.installation.Path.exists", return_value=False)
+    mock_run = mocker.patch("anomalib.cli.utils.installation.subprocess.run")
+    mock_run.return_value.stdout = "Build cuda_11.2.r11.2/compiler.00000_0"
     assert get_cuda_version() == "11.2"
 
-    mock_run = mocker.patch("os.popen")
+    mock_run = mocker.patch("anomalib.cli.utils.installation.subprocess.run")
     mock_run.side_effect = FileNotFoundError
     assert get_cuda_version() is None
 
@@ -96,9 +96,9 @@ def test_update_cuda_version_with_available_torch_cuda_build() -> None:
     """Test that update_cuda_version_with_available_torch_cuda_build returns the expected CUDA version."""
     assert update_cuda_version_with_available_torch_cuda_build("11.1", "2.6.0") == "11.8"
     assert update_cuda_version_with_available_torch_cuda_build("11.8", "2.6.0") == "11.8"
-    assert update_cuda_version_with_available_torch_cuda_build("12.4", "2.6.0") == "12.4"
     assert update_cuda_version_with_available_torch_cuda_build("12.6", "2.7.0") == "12.6"
     assert update_cuda_version_with_available_torch_cuda_build("11.8", "2.8.0") == "12.6"
+    assert update_cuda_version_with_available_torch_cuda_build("13.0", "2.9.0") == "13.0"
 
 
 def test_get_cuda_suffix() -> None:
@@ -137,12 +137,12 @@ def test_get_torch_install_args(mocker: MockerFixture) -> None:
     for arg in expected_args:
         assert arg in install_args
 
-    requirement = Requirement("torch>=2.6.0,<=2.7.1")
-    mocker.patch("anomalib.cli.utils.installation.get_hardware_suffix", return_value="cu124")
+    requirement = Requirement("torch>=2.9.0")
+    mocker.patch("anomalib.cli.utils.installation.get_hardware_suffix", return_value="cu130")
     install_args = get_torch_install_args(requirement)
     expected_args = [
         "--extra-index-url",
-        "https://download.pytorch.org/whl/cu124",
+        "https://download.pytorch.org/whl/cu130",
     ]
     for arg in expected_args:
         assert arg in install_args

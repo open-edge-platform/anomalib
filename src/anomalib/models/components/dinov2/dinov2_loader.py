@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Loading pre-trained DINOv2 Vision Transformer models.
@@ -37,6 +37,7 @@ import torch
 from anomalib.data.utils import DownloadInfo
 from anomalib.data.utils.download import DownloadProgressBar
 from anomalib.models.components.dinov2 import vision_transformer as dinov2_models
+from anomalib.utils.path import get_pretrained_weights_dir
 
 logger = logging.getLogger(__name__)
 
@@ -63,10 +64,10 @@ class DinoV2Loader:
 
     def __init__(
         self,
-        cache_dir: str | Path = "./pre_trained/",
+        cache_dir: str | Path | None = None,
         vit_factory: object | None = None,
     ) -> None:
-        self.cache_dir = Path(cache_dir)
+        self.cache_dir = Path(cache_dir) if cache_dir is not None else get_pretrained_weights_dir() / "dinov2"
         self.vit_factory = vit_factory
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -93,7 +94,7 @@ class DinoV2Loader:
     def from_name(
         cls,
         model_name: str,
-        cache_dir: str | Path = "./pre_trained/",
+        cache_dir: str | Path | None = None,
     ) -> torch.nn.Module:
         """Instantiate a loader and return the requested model."""
         loader = cls(cache_dir)

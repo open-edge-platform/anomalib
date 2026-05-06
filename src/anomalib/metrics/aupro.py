@@ -70,7 +70,7 @@ from .utils import plot_metric_curve
 @deprecate(
     args={"num_thresholds": None},
     since="2.1.0",
-    remove="3.0.0",
+    remove="2.6.0",
     reason="New AUPRO computation does not require number of thresholds",
 )
 class _AUPRO(Metric):
@@ -208,7 +208,7 @@ class _AUPRO(Metric):
     @deprecate(
         args={"target": None},
         since="2.1.0",
-        remove="3.0.0",
+        remove="2.6.0",
         reason="Compute PRO computes overlap with connected components not target.",
     )
     def compute_pro(

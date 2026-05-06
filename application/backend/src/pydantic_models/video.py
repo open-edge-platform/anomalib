@@ -3,11 +3,11 @@
 
 from datetime import datetime
 from enum import StrEnum
-from uuid import UUID
 
 from pydantic import BaseModel, Field
 
 from pydantic_models.base import Pagination
+from utils.short_uuid import ShortUUID
 
 
 class VideoExtension(StrEnum):
@@ -25,7 +25,7 @@ class Video(BaseModel):
     No database persistence - metadata is derived from the filesystem.
     """
 
-    project_id: UUID
+    project_id: ShortUUID
     filename: str = Field(..., description="Filename (unique identifier within project)")
     video_path: str = Field(..., description="Full path to the video file on the server")
     size: int = Field(..., ge=0, description="File size in bytes")
@@ -34,9 +34,9 @@ class Video(BaseModel):
     model_config = {
         "json_schema_extra": {
             "example": {
-                "project_id": "12345678-1234-1234-1234-123456789012",
+                "project_id": "JMuZHsGgoQZwUtEVTi5sea",
                 "filename": "sample_video.mp4",
-                "video_path": "data/videos/projects/12345678-1234-1234-1234-123456789012/sample_video.mp4",
+                "video_path": "data/videos/projects/JMuZHsGgoQZwUtEVTi5sea/sample_video.mp4",
                 "size": 10485760,
                 "created_at": "2025-01-21T10:30:00",
             },

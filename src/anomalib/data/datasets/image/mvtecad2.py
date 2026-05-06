@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """MVTec AD 2 Dataset.
@@ -38,6 +38,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datasets.base.image import AnomalibDataset
 from anomalib.data.errors import MisMatchError
 from anomalib.data.utils import Split, validate_path
+from anomalib.utils.path import get_datasets_dir
 
 
 class TestType(str, Enum):
@@ -73,8 +74,8 @@ class MVTecAD2Dataset(AnomalibDataset):
     """MVTec AD 2 dataset class.
 
     Args:
-        root (Path | str): Path to the root of the dataset.
-            Defaults to ``"./datasets/MVTec_AD_2"``.
+        root (Path | str | None): Path to the root of the dataset.
+            Defaults to ``None``.
         category (str): Category name, e.g. ``"sheet_metal"``.
             Defaults to ``"sheet_metal"``.
         augmentations (Transform, optional): Augmentations that should be applied to the input images.
@@ -139,13 +140,15 @@ class MVTecAD2Dataset(AnomalibDataset):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/MVTec_AD_2",
+        root: Path | str | None = None,
         category: str = "sheet_metal",
         augmentations: Transform | None = None,
         split: str | Split | None = None,
         test_type: TestType | str = TestType.PUBLIC,
     ) -> None:
         super().__init__(augmentations=augmentations)
+
+        root = root if root is not None else get_datasets_dir() / "MVTec_AD_2"
 
         self.root_category = Path(root) / Path(category)
         self.split = split
