@@ -165,10 +165,17 @@ class TestAPI:
 
         # Use context manager only for CSFlow
         with increased_recursion_limit() if model_name == "csflow" else contextlib.nullcontext():
+            # Glass requires a fixed input size for ONNX export because
+            # adaptive_avg_pool1d is not supported with dynamic spatial dims.
+            export_kwargs = {}
+            if model_name == "glass":
+                export_kwargs["input_size"] = (288, 288)
+
             engine.export(
                 model=model,
                 ckpt_path=f"{project_path}/{model.name}/{dataset.name}/dummy/v0/weights/lightning/model.ckpt",
                 export_type=export_type,
+                **export_kwargs,
             )
 
     @staticmethod
