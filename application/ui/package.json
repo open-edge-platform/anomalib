@@ -115,6 +115,7 @@
         },
         "openapi-typescript": {
             "minimatch": "10.2.5"
-        }
+        },
+        "postcss": ">=8.5.10"
     }
 }
