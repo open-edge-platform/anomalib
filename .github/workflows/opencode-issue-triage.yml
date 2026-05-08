@@ -45,7 +45,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
-          OPENCODE_PERMISSION: '{"read":"allow","glob":"allow","grep":"allow","bash":{"*":"deny","gh issue *":"allow","gh search *":"allow","gh label *":"allow","gh api *":"allow"},"edit":"deny"}'
+          OPENCODE_PERMISSION: '{"read":"allow","glob":"allow","grep":"allow","bash":{"*":"deny","gh issue *":"allow","gh search *":"allow","gh label *":"allow","gh api *":"allow","cat *":"allow","find *":"allow"},"edit":"deny"}'
           OPENCODE_CONFIG: .github/opencode.json
         run: |
           opencode run --pure -m ollama/gemma4:31b --agent issue-triage \
