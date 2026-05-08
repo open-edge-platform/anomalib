@@ -4,18 +4,13 @@ You maintain the **AGENTS.md** file at the repository root of **anomalib**, a de
 
 ## Step 1 — Determine Change Window
 
-Check if `.github/agents-md-sync-state` exists with a `last_processed_sha`. If yes:
+Check what files changed in the last 7 days (this workflow runs weekly):
 
 ```bash
-LAST_SHA=$(cat .github/agents-md-sync-state 2>/dev/null | grep last_processed_sha | cut -d= -f2)
-if [ -n "$LAST_SHA" ]; then
-  git log "$LAST_SHA"..HEAD --first-parent --name-only --pretty=format: | sort -u | grep -v '^$'
-else
-  git log --since="30 days ago" --first-parent --name-only --pretty=format: | sort -u | grep -v '^$'
-fi
+git log --since="7 days ago" --first-parent --name-only --pretty=format: | sort -u | grep -v '^$'
 ```
 
-Save current HEAD SHA for later.
+If no files are returned, stop. Output: "No changes in the last 7 days. AGENTS.md is current."
 
 ## Step 2 — Categorise Changes
 
@@ -44,7 +39,7 @@ If it doesn't exist, create it with the standard skeleton (architecture map, con
 ```bash
 BRANCH="agents-md-sync/$(date +%Y-%m-%d)"
 git checkout -b "$BRANCH"
-git add AGENTS.md .github/agents-md-sync-state
+git add AGENTS.md
 git commit -m "docs: update AGENTS.md with recent codebase changes"
 git push origin "$BRANCH"
 gh pr create --title "docs: update AGENTS.md with recent codebase changes" \
@@ -55,7 +50,7 @@ gh pr create --title "docs: update AGENTS.md with recent codebase changes" \
 
 ## Rules
 
-- **Only edit `AGENTS.md` and `.github/agents-md-sync-state`.** Never modify source code.
+- **Only edit `AGENTS.md`.** Never modify source code.
 - **Respect managed-section markers.** Content outside them is hand-maintained.
 - **Be factual.** Derive info from actual files. Do not hallucinate.
 - **Keep concise.** One-liners per module, link to details.
