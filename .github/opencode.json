@@ -1,6 +1,5 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["oh-my-openagent"],
   "provider": {
     "ollama": {
       "npm": "@ai-sdk/openai-compatible",
@@ -11,19 +10,31 @@
       "models": {
         "qwen3.6:27b": {
           "name": "Qwen 3.6 27B",
-          "contextLength": 262144
+          "limit": {
+            "context": 262144,
+            "output": 8192
+          }
         },
         "gemma4:31b": {
           "name": "Gemma 4 31B",
-          "contextLength": 262144
+          "limit": {
+            "context": 262144,
+            "output": 8192
+          }
         },
         "deepseek-v4-flash": {
           "name": "DeepSeek V4 Flash",
-          "contextLength": 131072
+          "limit": {
+            "context": 131072,
+            "output": 8192
+          }
         },
         "kimi-k2.6": {
           "name": "Kimi K2.6",
-          "contextLength": 131072
+          "limit": {
+            "context": 131072,
+            "output": 8192
+          }
         }
       }
     }
@@ -32,7 +43,6 @@
   "agent": {
     "issue-triage": {
       "description": "Triages new GitHub issues — classifies type, sets priority, detects duplicates, requests info, assigns owner",
-      "mode": "subagent",
       "model": "ollama/gemma4:31b",
       "prompt": "{file:agents/issue-triage-opencode.md}",
       "temperature": 0.1,
@@ -53,7 +63,6 @@
     },
     "docs-sync": {
       "description": "Detects documentation drift from recent code changes and opens a PR with fixes",
-      "mode": "subagent",
       "model": "ollama/qwen3.6:27b",
       "prompt": "{file:agents/docs-sync-opencode.md}",
       "temperature": 0.1,
@@ -82,7 +91,6 @@
     },
     "agents-md-sync": {
       "description": "Maintains AGENTS.md knowledge base by reviewing merged PRs and structural changes",
-      "mode": "subagent",
       "model": "ollama/qwen3.6:27b",
       "prompt": "{file:agents/agents-md-sync-opencode.md}",
       "temperature": 0.1,
