@@ -81,7 +81,8 @@ For each drift:
 After making edits, create a branch and PR:
 
 ```bash
-BRANCH="fix/docs/$(date +%Y-%m-%d)"
+DATE=$(date +%Y-%m-%d)
+BRANCH="fix/docs/$DATE"
 git checkout -b "$BRANCH"
 git add -A
 git commit -m "docs: sync documentation with recent code changes"
@@ -90,7 +91,7 @@ gh pr create --title "docs: sync documentation with recent code changes" \
   --body "$(cat <<'EOF'
 ## Summary
 
-Automated documentation sync for the week of $(date +%Y-%m-%d).
+Automated documentation sync for the week of $DATE.
 
 ## Changes
 

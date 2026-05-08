@@ -8,41 +8,20 @@
         "baseURL": "http://localhost:11434/v1"
       },
       "models": {
-        "qwen3.6:27b": {
-          "name": "Qwen 3.6 27B",
-          "limit": {
-            "context": 262144,
-            "output": 8192
-          }
-        },
         "gemma4:31b": {
           "name": "Gemma 4 31B",
           "limit": {
             "context": 262144,
             "output": 8192
           }
-        },
-        "deepseek-v4-flash": {
-          "name": "DeepSeek V4 Flash",
-          "limit": {
-            "context": 131072,
-            "output": 8192
-          }
-        },
-        "kimi-k2.6": {
-          "name": "Kimi K2.6",
-          "limit": {
-            "context": 131072,
-            "output": 8192
-          }
         }
       }
     }
   },
-  "model": "ollama/qwen3.6:27b",
+  "model": "ollama/gemma4:31b",
   "agent": {
     "issue-triage": {
-      "description": "Triages new GitHub issues — classifies type, sets priority, detects duplicates, requests info, assigns owner",
+      "description": "Triages new GitHub issues — classifies type, detects duplicates, requests info",
       "model": "ollama/gemma4:31b",
       "prompt": "{file:agents/issue-triage-opencode.md}",
       "temperature": 0.1,
@@ -63,7 +42,7 @@
     },
     "docs-sync": {
       "description": "Detects documentation drift from recent code changes and opens a PR with fixes",
-      "model": "ollama/qwen3.6:27b",
+      "model": "ollama/gemma4:31b",
       "prompt": "{file:agents/docs-sync-opencode.md}",
       "temperature": 0.1,
       "steps": 30,
@@ -91,7 +70,7 @@
     },
     "agents-md-sync": {
       "description": "Maintains AGENTS.md knowledge base by reviewing merged PRs and structural changes",
-      "model": "ollama/qwen3.6:27b",
+      "model": "ollama/gemma4:31b",
       "prompt": "{file:agents/agents-md-sync-opencode.md}",
       "temperature": 0.1,
       "steps": 20,

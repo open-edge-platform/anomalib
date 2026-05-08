@@ -21,7 +21,7 @@ gh label list --repo $GITHUB_REPOSITORY --limit 100 --json name --jq '.[].name'
 The issue number is provided in the environment variable `ISSUE_NUMBER`. Read it:
 
 ```bash
-gh issue view $ISSUE_NUMBER --json number,title,body,labels,author
+gh issue view $ISSUE_NUMBER --repo $GITHUB_REPOSITORY --json number,title,body,labels,author
 ```
 
 ## Step 3 — Classify Issue Type
@@ -129,7 +129,7 @@ Do not comment about clarity.
 Apply all labels in a single command. **Only include labels that exist in the repository** (from Step 1):
 
 ```bash
-gh issue edit $ISSUE_NUMBER --add-label "<type>,<priority>,<component>"
+gh issue edit $ISSUE_NUMBER --add-label "<type>,<component>"
 ```
 
 If none of the desired labels exist, skip the label command entirely.
