@@ -34,7 +34,7 @@
       "description": "Triages new GitHub issues — classifies type, sets priority, detects duplicates, requests info, assigns owner",
       "mode": "subagent",
       "model": "ollama/gemma4:31b",
-      "prompt": "{file:.github/agents/issue-triage-opencode.md}",
+      "prompt": "{file:agents/issue-triage-opencode.md}",
       "temperature": 0.1,
       "steps": 10,
       "permission": {
@@ -55,7 +55,7 @@
       "description": "Detects documentation drift from recent code changes and opens a PR with fixes",
       "mode": "subagent",
       "model": "ollama/qwen3.6:27b",
-      "prompt": "{file:.github/agents/docs-sync-opencode.md}",
+      "prompt": "{file:agents/docs-sync-opencode.md}",
       "temperature": 0.1,
       "steps": 30,
       "permission": {
@@ -84,7 +84,7 @@
       "description": "Maintains AGENTS.md knowledge base by reviewing merged PRs and structural changes",
       "mode": "subagent",
       "model": "ollama/qwen3.6:27b",
-      "prompt": "{file:.github/agents/agents-md-sync-opencode.md}",
+      "prompt": "{file:agents/agents-md-sync-opencode.md}",
       "temperature": 0.1,
       "steps": 20,
       "permission": {
