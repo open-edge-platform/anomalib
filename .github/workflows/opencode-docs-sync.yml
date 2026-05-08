@@ -57,7 +57,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          OPENCODE_PERMISSION: '{"read":"allow","glob":"allow","grep":"allow","edit":{"*":"deny","*.md":"allow","*.rst":"allow","*.mdx":"allow","docs/**":"allow","src/anomalib/models/**/README.md":"allow","README.md":"allow"},"bash":{"*":"deny","git *":"allow","gh pr *":"allow","gh api *":"allow","gh search *":"allow","date *":"allow","ls *":"allow"}}'
+          OPENCODE_PERMISSION: '{"read":"allow","glob":"allow","grep":"allow","edit":{"*":"deny","*.md":"allow","*.rst":"allow","*.mdx":"allow","docs/**":"allow","src/anomalib/models/**/README.md":"allow","README.md":"allow"},"bash":{"*":"deny","git *":"allow","gh pr *":"allow","gh api *":"allow","gh search *":"allow","date *":"allow","ls *":"allow","find *":"allow","cat *":"allow"}}'
           OPENCODE_CONFIG: .github/opencode.json
         run: |
           opencode run --pure -m ollama/gemma4:31b --agent docs-sync \
