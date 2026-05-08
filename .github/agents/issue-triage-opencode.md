@@ -33,7 +33,9 @@ Map the issue to exactly **one** type label:
 - If from `feature_request` template, default to `Feature Request`.
 - If from `question` template, default to `Question`.
 - If from `documentation` template, default to `Documentation`.
-- Override the template default only when the body clearly contradicts it.
+- **Always classify based on the actual content, not just the template.** Users sometimes pick the wrong template. If the body clearly describes a different issue type than the template suggests (e.g. a bug report filed under `feature_request`, or a question filed under `bug_report`), classify according to the content and mention the mismatch in your comment:
+
+  > It looks like this issue was filed using the [template name] template, but the content describes a [actual type]. I've re-classified it accordingly. If this is wrong, please let us know!
 
 ## Step 3 — Set Priority
 
@@ -79,48 +81,65 @@ gh search issues --repo $GITHUB_REPOSITORY --state closed --sort updated "<key t
 
 ## Step 6 — Check for Clarity
 
-Evaluate whether the issue provides enough information:
+Evaluate whether the issue provides enough information to act on. Use the checklists below.
 
-- For bugs: steps to reproduce, expected vs actual, environment info?
-- For feature requests: motivation clear? scope defined?
-- For questions: specific enough to answer?
+### For bugs — require ALL of:
 
-**If critical information is missing**, post a polite comment requesting it and add `More Info Requested` label.
+- [ ] **What happened** — actual behavior, exact error message or traceback (as text, not screenshots)
+- [ ] **What was expected** — desired behavior
+- [ ] **Steps to reproduce** — minimal code or CLI command that triggers the issue
+- [ ] **Environment** — anomalib version, Python version, OS, GPU (if relevant)
 
-**If the issue is clear and complete**, do not comment about clarity.
+### For feature requests — require ALL of:
 
-## Step 7 — Assign Owner
+- [ ] **Motivation** — what problem does this solve? why is it needed?
+- [ ] **Scope** — specific enough to act on (not multiple requests bundled into one)
 
-Based on the component detected in Step 4, assign using this mapping:
+### For questions — require:
 
-| Component / Area                   | Assignees                                           |
-| ---------------------------------- | --------------------------------------------------- |
-| Models                             | `ashwinvaidya17`, `samet-akcay`, `rajeshgangireddy` |
-| Data, Metrics, Pre/Post-Processing | `ashwinvaidya17`, `rajeshgangireddy`                |
-| Engine, CLI, Callbacks, Pipelines  | `ashwinvaidya17`                                    |
-| Docs, Visualization, Notebooks     | `ashwinvaidya17`, `samet-akcay`, `rajeshgangireddy` |
-| Deploy, Inference                  | `ashwinvaidya17`, `rajeshgangireddy`                |
-| CI/CD, GitHub Actions              | `ashwinvaidya17`                                    |
-| Anomalib Studio (UI)               | `MarkRedeman`, `maxxgx`                             |
-| Anomalib Studio (Backend)          | `maxxgx`, `rajeshgangireddy`, `MarkRedeman`         |
-| Tests                              | `ashwinvaidya17`, `rajeshgangireddy`                |
-| General / Unclear                  | `ashwinvaidya17`, `samet-akcay`, `rajeshgangireddy` |
+- [ ] **Specific question** — not "how do I use anomalib?" but a focused, answerable question
+- [ ] **What was tried** — what did the user attempt before asking?
 
-Assign the **first** person listed for the matching component.
+### If critical information is missing
 
-## Step 8 — Apply Changes
+Post a **single polite comment** requesting the missing items. Be specific about what's needed — don't ask generically for "more info". Add the `More Info Requested` label.
 
-Apply all labels and assignee in a single command:
+Use this template, keeping only the bullet points that apply:
+
+> Thanks for opening this issue! To help us investigate, could you provide:
+>
+> - The **exact error message or traceback** (as text, not a screenshot)
+> - A **minimal code snippet or CLI command** that reproduces the problem
+> - Your **environment**: anomalib version (`pip show anomalib`), Python version, OS, GPU
+> - What **behavior you expected** vs what actually happened
+> - What you've **already tried** to resolve this
+>
+> This helps us reproduce and fix the issue faster. For guidance on writing effective bug reports, see [How to create a Minimal, Reproducible Example](https://stackoverflow.com/help/minimal-reproducible-example).
+
+### If the issue contains multiple unrelated requests
+
+Post a comment asking the author to split it into separate issues, one per request. Add `More Info Requested` label.
+
+### If the issue is clear and complete
+
+Do not comment about clarity.
+
+## Step 7 — Apply Changes
+
+Apply all labels in a single command:
 
 ```bash
-gh issue edit $ISSUE_NUMBER --add-label "<type>,<priority>,<component>" --add-assignee "<user>"
+gh issue edit $ISSUE_NUMBER --add-label "<type>,<priority>,<component>"
 ```
+
+**Do not assign anyone.** Assignees are managed manually by maintainers.
 
 ## Output Rules
 
-- Only post a comment when you have something actionable: a duplicate reference or a request for more information.
+- Only post a comment when you have something actionable: a duplicate reference, a request for more information, or a template mismatch note.
 - **Do not post a comment just to summarize what labels you applied.**
 - Be concise and professional in any comment.
 - Never close or lock the issue.
+- Never assign anyone to the issue.
 - Maximum 2 comments per issue.
-- Maximum 3 label/assignee updates per issue.
+- Maximum 3 label updates per issue.
