@@ -60,5 +60,5 @@ jobs:
           OPENCODE_PERMISSION: '{"read":"allow","glob":"allow","grep":"allow","edit":{"*":"deny","AGENTS.md":"allow",".github/agents-md-sync-state":"allow"},"bash":{"*":"deny","git *":"allow","gh pr *":"allow","gh api *":"allow","gh search *":"allow","ls *":"allow","cat *":"allow","date *":"allow"}}'
           OPENCODE_CONFIG: .github/opencode.json
         run: |
-          opencode run -m ollama/gemma4:31b --agent agents-md-sync \
+          opencode run --pure -m ollama/gemma4:31b --agent agents-md-sync \
             "Run the AGENTS.md maintenance process. Check for structural codebase changes and update AGENTS.md if needed."
