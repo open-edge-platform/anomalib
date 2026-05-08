@@ -13,6 +13,7 @@ import json
 import os
 import platform
 import re
+import subprocess
 from importlib.metadata import requires
 from pathlib import Path
 from warnings import warn
@@ -185,8 +186,13 @@ def get_cuda_version() -> str | None:
                     return ".".join(cuda_version_parts[:2])
     # 2. 'nvcc --version' check & without version.json case
     try:
-        result = os.popen(cmd="nvcc --version")
-        output = result.read()
+        result = subprocess.run(
+            ["nvcc", "--version"],  # noqa: S607
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        output = result.stdout
 
         cuda_version_pattern = r"cuda_(\d+\.\d+)"
         cuda_version_match = re.search(cuda_version_pattern, output)

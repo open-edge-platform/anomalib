@@ -16,6 +16,9 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
 
+  // Ignore compiled workflow files
+  ignorePaths: [".github/workflows/**/*.lock.yml"],
+
   // regenerate lock weekly https://docs.renovatebot.com/configuration-options/#lockfilemaintenance
   lockFileMaintenance: {
     enabled: true,
@@ -61,6 +64,9 @@
   // Set limit to 10
   ignorePresets: [":prHourlyLimit2"],
   prHourlyLimit: 10,
+
+  // Apply a default blanket cooldown of 7 days to all dependencies
+  minimumReleaseAge: "7 days",
 
   packageRules: [
     // Enable pinning for container images

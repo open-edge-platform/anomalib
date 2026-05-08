@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 # Modified
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Custom Torchvision transforms for Anomalib.
@@ -22,10 +22,12 @@ Example:
     torch.Size([3, 224, 224])
 """
 
+from collections.abc import Sequence
 from typing import Any
 
 import torch
 from torch.nn.functional import pad
+from torchvision.transforms.transforms import _setup_size
 from torchvision.transforms.v2 import Transform
 from torchvision.transforms.v2.functional._geometry import (
     _center_crop_compute_padding,
@@ -114,7 +116,7 @@ class ExportableCenterCrop(Transform):
     """Transform that applies center-cropping with ONNX export support.
 
     Args:
-        size (int | tuple[int, int]): Desired output size. If int, creates a
+        size (int | Sequence[int]): Desired output size. If int, creates a
             square crop of size ``(size, size)``. If tuple, creates a
             rectangular crop of size ``(height, width)``.
 
@@ -126,9 +128,12 @@ class ExportableCenterCrop(Transform):
         torch.Size([3, 224, 224])
     """
 
-    def __init__(self, size: int | tuple[int, int]) -> None:
+    def __init__(self, size: int | Sequence[int]) -> None:
         super().__init__()
-        self.size = list(size) if isinstance(size, tuple) else [size, size]
+        # Delegate to torchvision's _setup_size for parity with upstream CenterCrop:
+        # normalises int → [size, size], validates len==2 for sequences, rejects str.
+        # list() converts the returned tuple to a list for downstream compatibility.
+        self.size = list(_setup_size(size, error_msg="Please provide only two dimensions (h, w) for size."))
 
     def _transform(self, inpt: torch.Tensor, params: dict[str, Any]) -> torch.Tensor:
         """Apply the center crop transform.
@@ -146,7 +151,8 @@ class ExportableCenterCrop(Transform):
     def transform(self, inpt: torch.Tensor, params: dict[str, Any]) -> torch.Tensor:
         """Wrapper for self._transform.
 
-        This is to ensure compatibility with Torchvision 2.6+, where the `_transform` method was renamed to `transform`.
+        This is to ensure compatibility with newer Torchvision versions where the `_transform` method was renamed
+        to `transform`.
 
         Args:
             inpt (torch.Tensor): Input tensor to transform

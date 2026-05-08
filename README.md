@@ -31,19 +31,13 @@
 
 ---
 
-> 🌟 **Announcing v2.3.3 Patch Release!** 🌟
+> 🌟 **Announcing v2.4.1 Release!** 🌟
 >
-> This patch release changes data and model download locations, adds pandas 3.0 compatibility fixes, and includes security-focused dependency updates.
+> This patch release fixes DDP training issues.
 >
-> What's changed
+> Key Fixes
 >
-> - Moved pre-trained model downloads to platform-specific cache directories.
-> - Added deprecation warnings for legacy local `./datasets/<dataset>` roots ahead of the v2.6.0 cache-directory migration.
-> - Updated security-sensitive dependencies including `mlflow`.
->
-> Bug fixes
->
-> - Fixed enum-based DataFrame comparisons for pandas >= 3.0 compatibility.
+> - Fixed DDP adaptive F1 score computation.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 

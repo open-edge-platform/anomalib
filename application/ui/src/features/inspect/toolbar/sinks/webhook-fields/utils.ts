@@ -17,7 +17,7 @@ export const getPairsFromObject = (obj: Record<string, string>): Pair[] => {
 
 export const getWebhookInitialConfig = (project_id: string): WebhookSinkConfig => ({
     id: generateShortUUID(),
-    name: '',
+    name: 'Webhook sink',
     timeout: 10,
     project_id,
     sink_type: 'webhook',
