@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Rescale and smooth patch-level anomaly scores into segmentation masks."""
@@ -47,7 +47,7 @@ class RescaleSegmentor:
 
         Args:
             patch_scores: Patch-wise scores of shape (N, H_patch, W_patch).
-            device: Device for computation. Inferred from input if None.
+            device: Device for computation. If provided, `patch_scores` is moved to this device.
 
         Returns:
             torch.Tensor: Smoothed segmentation masks of shape (N, H, W).

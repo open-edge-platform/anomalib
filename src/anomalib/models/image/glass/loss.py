@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Modified
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Focal Loss for multi-class classification with optional label smoothing and class weighting.
@@ -140,7 +140,7 @@ class FocalLoss(nn.Module):
         if alpha.device != logits.device:
             alpha = alpha.to(logits.device)
 
-        idx = target.long()
+        idx = target.to(device=logits.device, dtype=torch.long)
         one_hot_key = torch.zeros(target.size(0), num_classes, device=logits.device, dtype=logits.dtype)
         one_hot_key.scatter_(1, idx, 1)
 

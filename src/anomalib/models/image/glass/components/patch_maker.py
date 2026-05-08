@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Handles patch-based processing of feature maps."""
@@ -26,7 +26,7 @@ class PatchMaker:
         self,
         features: torch.Tensor,
         return_spatial_info: bool = False,
-    ) -> tuple[torch.Tensor, list[int]] | torch.Tensor:
+    ) -> tuple[torch.Tensor, tuple[int, int]] | torch.Tensor:
         """Converts a batch of feature maps into patches.
 
         Args:
@@ -35,7 +35,8 @@ class PatchMaker:
 
         Returns:
             torch.Tensor: Output tensor of shape (B, N, C, patchsize, patchsize), where N is number of patches.
-            list[int], optional: Number of patches in (height, width) dimensions, only if return_spatial_info is True.
+            tuple[int, int], optional: Number of patches in (height, width) dimensions when `return_spatial_info` is
+                True.
         """
         padding = int((self.patchsize - 1) / 2)
         unfolder = torch.nn.Unfold(
@@ -45,10 +46,12 @@ class PatchMaker:
             dilation=1,
         )
         unfolded_features = unfolder(features)
-        number_of_total_patches = []
+        number_of_total_patches: tuple[int, int] = (0, 0)
+        patch_counts: list[int] = []
         for s in features.shape[-2:]:
             n_patches = (s + 2 * padding - 1 * (self.patchsize - 1) - 1) / self.stride + 1
-            number_of_total_patches.append(int(n_patches))
+            patch_counts.append(int(n_patches))
+        number_of_total_patches = (patch_counts[0], patch_counts[1])
         unfolded_features = unfolded_features.reshape(
             *features.shape[:2],
             self.patchsize,

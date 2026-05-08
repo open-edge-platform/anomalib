@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """GLASS - Unsupervised anomaly detection via Gradient Ascent for Industrial Anomaly detection and localization.
@@ -19,6 +19,7 @@ Paper: `A Unified Anomaly Synthesis Strategy with Gradient Ascent for Industrial
 """
 
 import math
+from typing import cast
 
 import torch
 import torch.nn.functional as f
@@ -215,7 +216,7 @@ class GlassModel(nn.Module):
         img: torch.Tensor,
         aug: torch.Tensor,
         evaluation: bool = False,
-    ) -> tuple[torch.Tensor, torch.Tensor, list[list[int]]]:
+    ) -> tuple[torch.Tensor, torch.Tensor, list[tuple[int, int]]]:
         """Calculate and return feature embeddings for the input and augmented images.
 
         Depending on whether a pre-projection module is used, this method optionally applies it to the
@@ -227,7 +228,7 @@ class GlassModel(nn.Module):
             evaluation (bool, optional): Whether the model is in evaluation mode. Defaults to False.
 
         Returns:
-            tuple[torch.Tensor, torch.Tensor, list[list[int]]]: A tuple containing the feature embeddings
+            tuple[torch.Tensor, torch.Tensor, list[tuple[int, int]]]: A tuple containing the feature embeddings
                 for the original image (`true_feats`), the augmented image (`fake_feats`), and the patch
                 grid shapes from the first feature level.
         """
@@ -253,7 +254,7 @@ class GlassModel(nn.Module):
         self,
         images: torch.Tensor,
         evaluation: bool = False,
-    ) -> tuple[torch.Tensor, list[list[int]]]:
+    ) -> tuple[torch.Tensor, list[tuple[int, int]]]:
         """Generates patch-wise feature embeddings for a batch of input images.
 
         Extracts multi-scale features, patchifies them, aligns spatial sizes via
@@ -265,9 +266,9 @@ class GlassModel(nn.Module):
             evaluation (bool, optional): Whether to run in evaluation mode. Default is False.
 
         Returns:
-            tuple[torch.Tensor, list[list[int]]]:
+            tuple[torch.Tensor, list[tuple[int, int]]]:
                 - Patch-level embeddings of shape (B*N, D) where N is patches per image.
-                - List of [height, width] patch counts per feature level.
+                - List of `(height, width)` patch counts per feature level.
         """
         if not evaluation and not self.pre_trained:
             self.forward_modules["feature_aggregator"].train()
@@ -288,9 +289,12 @@ class GlassModel(nn.Module):
                     C,
                 ).permute(0, 3, 1, 2)
 
-        features = [self.patch_maker.patchify(x, return_spatial_info=True) for x in features]
-        patch_shapes = [x[1] for x in features]
-        patch_features = [x[0] for x in features]
+        patchified_features = [
+            cast("tuple[torch.Tensor, tuple[int, int]]", self.patch_maker.patchify(x, return_spatial_info=True))
+            for x in features
+        ]
+        patch_shapes = [x[1] for x in patchified_features]
+        patch_features = [x[0] for x in patchified_features]
         ref_num_patches = patch_shapes[0]
 
         for i in range(1, len(patch_features)):
