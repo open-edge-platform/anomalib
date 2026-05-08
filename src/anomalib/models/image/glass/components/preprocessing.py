@@ -29,6 +29,14 @@ class MeanMapper(torch.nn.Module):
             torch.Tensor: Output tensor of shape (B, D), where D is `preprocessing_dim`.
         """
         features = features.reshape(len(features), 1, -1)
+        if torch.onnx.is_in_onnx_export():
+            # ONNX export can fail for adaptive_avg_pool1d when the flattened input length is symbolic.
+            return f.interpolate(
+                features,
+                size=self.preprocessing_dim,
+                mode="linear",
+                align_corners=False,
+            ).squeeze(1)
         return f.adaptive_avg_pool1d(features, self.preprocessing_dim).squeeze(1)
 
 
