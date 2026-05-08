@@ -101,7 +101,7 @@ Based on the component detected in Step 4, assign using this mapping:
 | Docs, Visualization, Notebooks     | `ashwinvaidya17`, `samet-akcay`, `rajeshgangireddy` |
 | Deploy, Inference                  | `ashwinvaidya17`, `rajeshgangireddy`                |
 | CI/CD, GitHub Actions              | `ashwinvaidya17`                                    |
-| Anomalib Studio (UI)               | `ActiveChooN`, `MarkRedeman`, `maxxgx`              |
+| Anomalib Studio (UI)               | `MarkRedeman`, `maxxgx`                             |
 | Anomalib Studio (Backend)          | `maxxgx`, `rajeshgangireddy`, `MarkRedeman`         |
 | Tests                              | `ashwinvaidya17`, `rajeshgangireddy`                |
 | General / Unclear                  | `ashwinvaidya17`, `samet-akcay`, `rajeshgangireddy` |
