@@ -48,5 +48,5 @@ jobs:
           OPENCODE_PERMISSION: '{"read":"allow","glob":"allow","grep":"allow","bash":{"*":"deny","gh issue *":"allow","gh search *":"allow","gh label *":"allow","gh api *":"allow"},"edit":"deny"}'
           OPENCODE_CONFIG: .github/opencode.json
         run: |
-          opencode run -m ollama/gemma4:31b --agent issue-triage \
+          opencode run --pure -m ollama/gemma4:31b --agent issue-triage \
             "Triage issue #${ISSUE_NUMBER} in repository ${GITHUB_REPOSITORY}. The issue number is in the ISSUE_NUMBER environment variable."
