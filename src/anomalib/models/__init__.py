@@ -23,6 +23,7 @@ The module provides both image and video anomaly detection models:
 Image Models:
     - CFA (:class:`anomalib.models.image.Cfa`)
     - Cflow (:class:`anomalib.models.image.Cflow`)
+    - CFM (:class:`anomalib.models.image.CFM`)
     - CSFlow (:class:`anomalib.models.image.Csflow`)
     - DFKDE (:class:`anomalib.models.image.Dfkde`)
     - DFM (:class:`anomalib.models.image.Dfm`)
@@ -58,6 +59,7 @@ from anomalib.models.components import AnomalibModule
 from anomalib.utils.path import convert_snake_to_pascal_case, convert_to_snake_case, convert_to_title_case
 
 from .image import (
+    CFM,
     AnomalyDINO,
     Cfa,
     Cflow,
@@ -121,6 +123,7 @@ __all__ = [
     "UniNet",
     "VlmAd",
     "WinClip",
+    "CFM",
 ]
 
 logger = logging.getLogger(__name__)
