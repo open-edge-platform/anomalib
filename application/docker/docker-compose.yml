@@ -14,6 +14,11 @@ services:
     image: anomalib-studio-${AI_DEVICE:-cpu}:${TAG:-latest}
     environment:
       DEBUG: ${DEBUG:-false}
+      HOST: ${HOST:-0.0.0.0}
+      # Persist Intel SYCL kernel cache under the existing data volume so
+      # first-run XPU kernel compilation cost is paid only once.
+      SYCL_CACHE_PERSISTENT: ${SYCL_CACHE_PERSISTENT:-1}
+      SYCL_CACHE_DIR: ${SYCL_CACHE_DIR:-/app/data/.sycl-cache}
       <<: *proxy-env
     restart: unless-stopped
     build:

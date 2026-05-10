@@ -50,3 +50,7 @@ terms are listed below.
 9. UninetModel
    Copyright (c) 2025 @pangdatangtt, https://github.com/pangdatangtt/UniNet/
    SPDX-License-Identifier: MIT
+
+10. GeneralAD model (anomalib.models.image.general_ad)
+    Copyright (c) 2024 @LucStrater, https://github.com/LucStrater/GeneralAD
+    SPDX-License-Identifier: MIT

@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Explanation visualization generator for model interpretability.
@@ -37,10 +37,10 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from .base import BaseVisualizer, GeneratorResult, VisualizationStep
+from .base import GeneratorResult, VisualizationStep, Visualizer
 
 
-class ExplanationVisualizer(BaseVisualizer):
+class ExplanationVisualizer(Visualizer):
     """Explanation visualization generator."""
 
     def __init__(self) -> None:

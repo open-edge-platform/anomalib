@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Visualizer callback.
@@ -39,7 +39,7 @@ from anomalib.data.utils.image import save_image, show_image
 from anomalib.loggers import AnomalibWandbLogger
 from anomalib.loggers.base import ImageLoggerBase
 from anomalib.models import AnomalibModule
-from anomalib.utils.visualization import BaseVisualizer, GeneratorResult, VisualizationStep
+from anomalib.utils.visualization import GeneratorResult, VisualizationStep, Visualizer
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class _VisualizationCallback(Callback):
     to various backends.
 
     Args:
-        visualizers (BaseVisualizer | list[BaseVisualizer]): Visualizer objects that
+        visualizers (Visualizer | list[Visualizer]): Visualizer objects that
             are used for computing the visualizations.
         save (bool, optional): Save the visualizations. Defaults to ``False``.
         root (Path | None, optional): The path to save the visualizations. Defaults to ``None``.
@@ -80,7 +80,7 @@ class _VisualizationCallback(Callback):
 
     def __init__(
         self,
-        visualizers: BaseVisualizer | list[BaseVisualizer],
+        visualizers: Visualizer | list[Visualizer],
         save: bool = False,
         root: Path | None = None,
         log: bool = False,

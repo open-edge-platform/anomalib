@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """UCSD Pedestrian Data Module.
@@ -18,6 +18,7 @@ from anomalib.data.datamodules.base.video import AnomalibVideoDataModule
 from anomalib.data.datasets.base.video import VideoTargetFrame
 from anomalib.data.datasets.video.ucsd_ped import UCSDpedDataset
 from anomalib.data.utils import DownloadInfo, Split, ValSplitMode, download_and_extract
+from anomalib.utils.path import resolve_with_warning
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ class UCSDped(AnomalibVideoDataModule):
     """UCSD Pedestrian DataModule Class.
 
     Args:
-        root (Path | str): Path to the root directory where the dataset will be
+        root (Path | str | None): Path to the root directory where the dataset will be
             downloaded and extracted. Defaults to ``"./datasets/ucsd"``.
         category (str): Dataset subcategory. Must be either ``"UCSDped1"`` or
             ``"UCSDped2"``. Defaults to ``"UCSDped2"``.
@@ -70,7 +71,7 @@ class UCSDped(AnomalibVideoDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/ucsd",
+        root: Path | str | None = "./datasets/ucsd",
         category: str = "UCSDped2",
         clip_length_in_frames: int = 2,
         frames_between_clips: int = 10,
@@ -99,6 +100,7 @@ class UCSDped(AnomalibVideoDataModule):
             seed=seed,
         )
 
+        root = resolve_with_warning(root, "ucsd")
         self.root = Path(root)
         self.category = category
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """DRÆM.
@@ -31,6 +31,7 @@ from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule
 from anomalib.post_processing import PostProcessor
 from anomalib.pre_processing import PreProcessor
+from anomalib.utils.path import resolve_with_warning
 from anomalib.visualization import Visualizer
 
 from .loss import DraemLoss
@@ -56,7 +57,7 @@ class Draem(AnomalibModule):
     2. A discriminative network that learns to identify anomalous regions
 
     Args:
-        dtd_dir (Path | str): Directory path for the DTD dataset for anomaly deneration.
+        dtd_dir (Path | str | None): Directory path for the DTD dataset for anomaly generation.
             Defaults to ``./datasets/dtd``.
         enable_sspcab (bool, optional): Enable SSPCAB training.
             Defaults to ``False``.
@@ -84,7 +85,7 @@ class Draem(AnomalibModule):
 
     def __init__(
         self,
-        dtd_dir: Path | str = "./datasets/dtd",
+        dtd_dir: Path | str | None = "./datasets/dtd",
         enable_sspcab: bool = False,
         sspcab_lambda: float = 0.1,
         beta: float | tuple[float, float] = (0.1, 1.0),
@@ -99,7 +100,7 @@ class Draem(AnomalibModule):
             evaluator=evaluator,
             visualizer=visualizer,
         )
-        dtd_dir = Path(dtd_dir)
+        dtd_dir = resolve_with_warning(dtd_dir, "dtd")
         if not dtd_dir.is_dir():
             download_and_extract(dtd_dir, DTD_DOWNLOAD_INFO)
         self.augmenter = PerlinAnomalyGenerator(anomaly_source_path=dtd_dir, blend_factor=beta)
