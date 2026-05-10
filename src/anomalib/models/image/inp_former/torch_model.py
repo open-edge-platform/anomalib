@@ -6,15 +6,38 @@
 """
 
 
+from functools import partial
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
 
 from anomalib.data import InferenceBatch
-
+from anomalib.models.image.dinomaly.components import vision_transformer as dinomaly_vision_transformer
+from anomalib.models.components.dinov2 import DinoV2Loader
+from anomalib.models.components import GaussianBlur2d
+from anomalib.models.image.dinomaly.components import DinomalyMLP
+from anomalib.models.image.inp_former.components.layers import Aggregation_Block, Prototype_Block
 from .loss import GlobalCosineHmAdaptiveLoss
 
+
+DEFAULT_FUSE_LAYERS = [[0, 1, 2, 3], [4, 5, 6, 7]]
+
+
+# Encoder architecture configurations for DINOv2 models.
+# The target layers are the
+DINOV2_ARCHITECTURES = {
+    "small": {"embed_dim": 384, "num_heads": 6, "target_layers": [2, 3, 4, 5, 6, 7, 8, 9]},
+    "base": {"embed_dim": 768, "num_heads": 12, "target_layers": [2, 3, 4, 5, 6, 7, 8, 9]},
+    "large": {"embed_dim": 1024, "num_heads": 16, "target_layers": [4, 6, 8, 10, 12, 14, 16, 18]},
+}
+
+# Default values for inference processing
+DEFAULT_RESIZE_SIZE = 256
+DEFAULT_GAUSSIAN_KERNEL_SIZE = 5
+DEFAULT_GAUSSIAN_SIGMA = 4
+DEFAULT_MAX_RATIO = 0.01
 
 class InpFormerModel(nn.Module):
     """TODO
@@ -22,31 +45,78 @@ class InpFormerModel(nn.Module):
 
     def __init__(
             self,
-            encoder,
-            bottleneck,
-            aggregation,
-            decoder,
-            target_layers =[2, 3, 4, 5, 6, 7, 8, 9],
-            fuse_layer_encoder =[[0, 1, 2, 3, 4, 5, 6, 7]],
-            fuse_layer_decoder =[[0, 1, 2, 3, 4, 5, 6, 7]],
+            encoder_name: str,
+            inp_num: int = 6,
+            target_layers: list[int] | None = None,
+            fuse_layer_encoder: list[list[int]] | None = None,
+            fuse_layer_decoder: list[list[int]] | None = None,
             remove_class_token=False,
             encoder_require_grad_layer=[],
-            prototype_token=None,
     ) -> None:
         super(InpFormerModel, self).__init__()
-        self.encoder = encoder
-        self.bottleneck = bottleneck
-        self.aggregation = aggregation
-        self.decoder = decoder
-        self.target_layers = target_layers
-        self.fuse_layer_encoder = fuse_layer_encoder
-        self.fuse_layer_decoder = fuse_layer_decoder
-        self.remove_class_token = remove_class_token
         self.encoder_require_grad_layer = encoder_require_grad_layer
-        self.prototype_token = prototype_token[0]
+        self.remove_class_token = remove_class_token
+
+        if target_layers is None:
+            self.target_layers = [2, 3, 4, 5, 6, 7, 8, 9]
+
+        if fuse_layer_encoder is None:
+            self.fuse_layer_encoder = DEFAULT_FUSE_LAYERS
+        if fuse_layer_decoder is None:
+            self.fuse_layer_decoder = DEFAULT_FUSE_LAYERS
+
+        self.encoder = DinoV2Loader(vit_factory=dinomaly_vision_transformer).load(encoder_name)
+
+        # Extract architecture configuration based on the model name
+        arch_config = self._get_architecture_config(encoder_name, target_layers)
+        embed_dim = arch_config["embed_dim"]
+        num_heads = arch_config["num_heads"]
+        target_layers = arch_config["target_layers"]
+
+        # INP
+        self.prototype_token = nn.ParameterList(
+                    [nn.Parameter(torch.randn(inp_num, embed_dim))
+                     for _ in range(1)])
+
+        #Bottleneck MLP for feature fusion
+        bottleneck = []
+        bottle_neck_mlp = DinomalyMLP(
+            in_features=embed_dim,
+            hidden_features=embed_dim * 4,
+            out_features=embed_dim,
+            act_layer=nn.GELU,
+            drop=0.0,
+            bias=False,
+            apply_input_dropout=False,
+        )
+        bottleneck.append(bottle_neck_mlp)
+        self.bottleneck = nn.ModuleList(bottleneck)
+
+        #INP Extractor
+        inp_extractor = []
+        for i in range(1):
+            blk = Aggregation_Block(dim=embed_dim, num_heads=num_heads, mlp_ratio=4.,
+                                    qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-8))
+            inp_extractor.append(blk)
+        self.aggregation = nn.ModuleList(inp_extractor)
+
+        #INP Decoder
+        inp_guided_decoder = []
+        for i in range(8):
+            blk = Prototype_Block(dim=embed_dim, num_heads=num_heads, mlp_ratio=4.,
+                                qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-8))
+            inp_guided_decoder.append(blk)
+        self.decoder = nn.ModuleList(inp_guided_decoder)
 
         if not hasattr(self.encoder, 'num_register_tokens'):
             self.encoder.num_register_tokens = 0
+
+        # Initialize Gaussian blur for anomaly map smoothing
+        self.gaussian_blur = GaussianBlur2d(
+            sigma=DEFAULT_GAUSSIAN_SIGMA,
+            channels=1,
+            kernel_size=DEFAULT_GAUSSIAN_KERNEL_SIZE,
+        )
 
         self.loss = GlobalCosineHmAdaptiveLoss()
 
@@ -86,11 +156,77 @@ class InpFormerModel(nn.Module):
                   and anomaly_map (pixel-level anomaly maps).
 
         """
-        en, de, inp_loss = self.get_encoder_decoder_inploss(self, batch)
+        en, de, inp_loss = self.get_encoder_decoder_inploss(batch)
+        image_size = (batch.shape[2], batch.shape[3])
 
         if self.training:
             return self.loss(encoder_features=en, decoder_features=de, inp_loss=inp_loss)
+    
+        # If inference, calculate anomaly maps, predictions, from the encoder and decoder features.
+        anomaly_map, _ = self.calculate_anomaly_maps(en, de, out_size=image_size)
+        anomaly_map_resized = anomaly_map.clone()
 
+        # Resize anomaly map for processing
+        if DEFAULT_RESIZE_SIZE is not None:
+            anomaly_map = F.interpolate(anomaly_map, size=DEFAULT_RESIZE_SIZE, mode="bilinear", align_corners=False)
+
+        # Apply Gaussian smoothing
+        anomaly_map = self.gaussian_blur(anomaly_map)
+
+        # Calculate anomaly score
+        if DEFAULT_MAX_RATIO == 0:
+            sp_score = torch.max(anomaly_map.flatten(1), dim=1)[0]
+        else:
+            anomaly_map_flat = anomaly_map.flatten(1)
+            sp_score = torch.sort(anomaly_map_flat, dim=1, descending=True)[0][
+                :,
+                : int(anomaly_map_flat.shape[1] * DEFAULT_MAX_RATIO),
+            ]
+            sp_score = sp_score.mean(dim=1)
+        pred_score = sp_score
+
+        return InferenceBatch(pred_score=pred_score, anomaly_map=anomaly_map_resized)
+    
+
+    @staticmethod
+    def calculate_anomaly_maps(
+        source_feature_maps: list[torch.Tensor],
+        target_feature_maps: list[torch.Tensor],
+        out_size: int | tuple[int, int] = 392,
+    ) -> tuple[torch.Tensor, list[torch.Tensor]]:
+        """Calculate anomaly maps by comparing encoder and decoder features.
+
+        Computes pixel-level anomaly maps by calculating cosine similarity between
+        corresponding encoder (source) and decoder (target) feature maps. Lower
+        cosine similarity indicates a higher anomaly likelihood.
+
+        Args:
+            source_feature_maps (list[torch.Tensor]): List of encoder feature maps
+                from different layer groups.
+            target_feature_maps (list[torch.Tensor]): List of decoder feature maps
+                from different layer groups.
+            out_size (int | tuple[int, int]): Output size for anomaly maps.
+                Defaults to 392.
+
+        Returns:
+            tuple[torch.Tensor, list[torch.Tensor]]: Tuple containing:
+                - anomaly_map: Combined anomaly map averaged across all feature scales
+                - anomaly_map_list: List of individual anomaly maps for each feature scale
+        """
+        if not isinstance(out_size, tuple):
+            out_size = (out_size, out_size)
+
+        anomaly_map_list = []
+        for i in range(len(target_feature_maps)):
+            fs = source_feature_maps[i]
+            ft = target_feature_maps[i]
+            a_map = 1 - F.cosine_similarity(fs, ft)
+            a_map = torch.unsqueeze(a_map, dim=1)
+            a_map = F.interpolate(a_map, size=out_size, mode="bilinear", align_corners=True)
+            anomaly_map_list.append(a_map)
+        anomaly_map = torch.cat(anomaly_map_list, dim=1).mean(dim=1, keepdim=True)
+        return anomaly_map, anomaly_map_list
+    
     @staticmethod
     def _fuse_feature(feat_list: list[torch.Tensor]) -> torch.Tensor:
         """Fuse multiple feature tensors by averaging.
@@ -106,6 +242,28 @@ class InpFormerModel(nn.Module):
 
         """
         return torch.stack(feat_list, dim=1).mean(dim=1)
+
+    @staticmethod
+    def _get_architecture_config(encoder_name: str, target_layers: list[int] | None) -> dict:
+        """Get architecture configuration based on model name.
+
+        Args:
+            encoder_name: Name of the encoder model
+            target_layers: Override target layers if provided
+
+        Returns:
+            Dictionary containing embed_dim, num_heads, and target_layers
+        """
+        for arch_name, config in DINOV2_ARCHITECTURES.items():
+            if arch_name in encoder_name:
+                result = config.copy()
+                # Override target_layers if explicitly provided
+                if target_layers is not None:
+                    result["target_layers"] = target_layers
+                return result
+
+        msg = f"Architecture not supported. Encoder name must contain one of {list(DINOV2_ARCHITECTURES.keys())}"
+        raise ValueError(msg)
     
     def get_encoder_decoder_inploss(self, x):
         """Extract and process features through encoder and decoder.
@@ -145,7 +303,7 @@ class InpFormerModel(nn.Module):
 
         x = self._fuse_feature(en_list)
 
-        agg_prototype = self.prototype_token
+        agg_prototype = self.prototype_token[0]
         for i, blk in enumerate(self.aggregation):
             agg_prototype = blk(agg_prototype.unsqueeze(0).repeat((batch_size, 1, 1)), x)
         inp_loss = self.get_inp_loss(x, agg_prototype)

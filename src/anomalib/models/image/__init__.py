@@ -64,6 +64,7 @@ from .fastflow import Fastflow
 from .fre import Fre
 from .ganomaly import Ganomaly
 from .general_ad import GeneralAD
+from .inp_former import InpFormer
 from .l2bt import L2BT
 from .padim import Padim
 from .patchcore import Patchcore
@@ -91,6 +92,7 @@ __all__ = [
     "Fre",
     "Ganomaly",
     "GeneralAD",
+    "InpFormer",
     "L2BT",
     "Padim",
     "Patchcore",

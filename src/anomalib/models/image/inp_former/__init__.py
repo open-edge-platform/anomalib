@@ -4,6 +4,5 @@
 """
 """
 
-from .lightning_model import InpFormer
-
+from anomalib.models.image.inp_former.lightning_model import InpFormer
 __all__ = ["InpFormer"]

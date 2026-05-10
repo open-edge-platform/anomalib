@@ -8,7 +8,7 @@ Reference: https://github.com/luow23/INP-Former/blob/5252579e5f401199643fbd16e03
 """
 
 import torch
-from functools import partil
+from functools import partial
 
 
 class GlobalCosineHmAdaptiveLoss(torch.nn.Module):
