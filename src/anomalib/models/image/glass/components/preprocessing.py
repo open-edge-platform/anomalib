@@ -29,7 +29,13 @@ class MeanMapper(torch.nn.Module):
             torch.Tensor: Output tensor of shape (B, D), where D is `preprocessing_dim`.
         """
         features = features.reshape(len(features), 1, -1)
-        return f.adaptive_avg_pool1d(features, self.preprocessing_dim).squeeze(1)
+        if torch.onnx.is_in_onnx_export():
+            input_len = features.shape[-1]
+            kernel_size = input_len // self.preprocessing_dim
+            features = f.avg_pool1d(features, kernel_size=kernel_size, stride=kernel_size)
+        else:
+            features = f.adaptive_avg_pool1d(features, self.preprocessing_dim)
+        return features.squeeze(1)
 
 
 class Preprocessing(torch.nn.Module):
