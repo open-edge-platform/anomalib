@@ -47,12 +47,6 @@ Map the issue to exactly **one** type label from the list below, **but only if t
 
   > It looks like this issue was filed using the [template name] template, but the content describes a [actual type]. I've re-classified it accordingly. If this is wrong, please let us know!
 
-**Heuristics:**
-
-- Mentions of "crash", "data loss", "security", "vulnerability" → lean High.
-- Mentions of "workaround", "minor", "cosmetic", "typo" → lean Low.
-- If you cannot determine severity, default to Medium.
-
 ## Step 4 — Detect Component
 
 If the issue clearly relates to a specific component, identify the matching label **only if it exists in the repository** (from Step 1):
