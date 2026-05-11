@@ -193,7 +193,12 @@ class InpFormer(AnomalibModule):
         for param in self.model.prototype_token.parameters():
             param.requires_grad = True
 
-        self.trainable_modules = torch.nn.ModuleList([self.model.decoder, self.model.aggregation, self.model.prototype_token])
+        self.trainable_modules = torch.nn.ModuleList([
+            self.model.bottleneck,
+            self.model.decoder,
+            self.model.aggregation,
+            self.model.prototype_token,
+        ])
         self._initialize_trainable_modules(self.trainable_modules)
 
     @classmethod
