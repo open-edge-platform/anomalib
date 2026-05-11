@@ -54,7 +54,7 @@ class AnomalyVFMModel(
             repo_id="MaticFuc/anomalyvfm_radio",
             filename="model.safetensors",
             revision="17654e763c8fae5ae1c44e2ec421a427783d6196",
-            local_files_only=True,
+            local_files_only=False,
         )
         safe_state_dict = load_file(weights_path)
         self.load_state_dict(safe_state_dict)
@@ -79,7 +79,7 @@ class AnomalyVFMModel(
 
         with torch.autocast(device_type=device_type, dtype=dtype), torch.no_grad():
             summary, ftrs = self.model(img)
-            feat_size = int(math.sqrt(img.shape[1]))
+            feat_size = int(math.sqrt(ftrs.shape[1]))
             ftrs = ftrs.permute(0, 2, 1)
             ftrs = ftrs.reshape(b, -1, feat_size, feat_size)
 

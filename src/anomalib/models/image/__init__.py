@@ -23,8 +23,8 @@ Example:
     >>> predictions = engine.predict(model=model, datamodule=datamodule)  # doctest: +SKIP
 
 Available Models:
-    - :class: `AnomalyVFM`: Transforming Vision Foundation Models into Zero-Shot Anomaly Detectors
-    - :class: `AnomalyDINO`: Boost Memorybank Models with DINOv2
+    - :class:`AnomalyVFM`: Transforming Vision Foundation Models into Zero-Shot Anomaly Detectors
+    - :class:`AnomalyDINO`: Boost Memorybank Models with DINOv2
     - :class:`Cfa`: Contrastive Feature Aggregation
     - :class:`Cflow`: Conditional Normalizing Flow
     - :class:`Csflow`: Conditional Split Flow

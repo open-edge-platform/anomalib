@@ -136,7 +136,7 @@ xpu = [
     "torchvision>=0.21.0",
     "pytorch-triton-xpu ; sys_platform == 'linux' or sys_platform == 'win32'",
 ]
-full = ["anomalib[clip,datasets,openvino,loggers,notebooks,vlm,video]"]
+full = ["anomalib[clip,datasets,openvino,loggers,notebooks,vlm,video,huggingface]"]
 dev = ["anomalib[full,docs,test]"]
 
 [project.scripts]
