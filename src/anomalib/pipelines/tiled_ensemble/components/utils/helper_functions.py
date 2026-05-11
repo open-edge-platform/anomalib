@@ -106,7 +106,7 @@ def get_ensemble_model(
         normalization_stage (NormalizationStage): stage when normalization performed.
 
     Returns:
-        AnomalyModule: model with input_size setup
+        AnomalibModule: model with input_size setup
     """
     # first make temporary model to get object
     temp_model = get_model(model_args)

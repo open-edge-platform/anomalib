@@ -27,12 +27,12 @@ name: Tauri Build
 
 on:
   push:
-    branches: ["main", "feature/**"]
+    branches: ["main", "feature/**", "release/**"]
     paths:
       - "application/**"
       - ".github/workflows/tauri-build.yaml"
   pull_request:
-    branches: ["main", "feature/**"]
+    branches: ["main", "feature/**", "release/**"]
     paths:
       - "application/**"
       - ".github/workflows/tauri-build.yaml"
@@ -115,7 +115,7 @@ jobs:
   #         uv pip install pyinstaller==6.19.0
   #         source .venv/bin/activate
   #         cd ../binary/sidecar
-  #         uv run --active pyinstaller anomalib_studio.spec
+  #         uv run --active pyinstaller --clean --noconfirm anomalib_studio.spec
   #         # Rename binary with target triple
   #         TARGET_TRIPLE=$(rustc -Vv | grep host | cut -f2 -d' ')
   #         mv dist/anomalib-studio-backend/anomalib-studio-backend "dist/anomalib-studio-backend/anomalib-studio-backend-${TARGET_TRIPLE}"
@@ -199,18 +199,22 @@ jobs:
         with:
           python-version: "3.13"
 
+      # Cache poisoning mitigation: fork PRs blocked, same-repo PRs allowed
       - name: Install uv
-        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0 # zizmor: ignore[cache-poisoning]
         with:
           version: "latest"
+          enable-cache: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
         with:
           toolchain: stable
 
+      # Cache poisoning mitigation: fork PRs blocked, same-repo PRs allowed with event+branch isolation
       - name: Cache Rust dependencies
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4 # zizmor: ignore[cache-poisoning]
         with:
           path: |
             ~/.cargo/bin/
@@ -218,15 +222,16 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             application/binary/tauri/src-tauri/target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.event_name }}-${{ github.ref_name }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-cargo-${{ github.event_name }}-${{ github.ref_name }}-
 
+      # Cache poisoning mitigation: fork PRs blocked, same-repo PRs allowed
       - name: Setup Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0 # zizmor: ignore[cache-poisoning]
         with:
           node-version: "24"
-          cache: "npm"
+          cache: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'npm' || '' }}
           cache-dependency-path: application/binary/tauri/package-lock.json
 
       - name: Enable long paths
@@ -244,7 +249,7 @@ jobs:
           uv pip install pyinstaller==6.19.0
           .\.venv\Scripts\Activate.ps1
           Push-Location ..\binary\sidecar
-          uv run --active pyinstaller anomalib_studio.spec
+          uv run --active pyinstaller --clean --noconfirm anomalib_studio.spec
           Pop-Location
 
       - name: Install Tauri dependencies
@@ -369,7 +374,7 @@ jobs:
   #         uv pip install pyinstaller==6.19.0
   #         source .venv/bin/activate
   #         cd ../binary/sidecar
-  #         uv run --active pyinstaller anomalib_studio.spec
+  #         uv run --active pyinstaller --clean --noconfirm anomalib_studio.spec
   #         # Rename binary with target triple
   #         TARGET_TRIPLE=$(rustc -Vv | grep host | cut -f2 -d' ')
   #         mv dist/anomalib-studio-backend/anomalib-studio-backend "dist/anomalib-studio-backend/anomalib-studio-backend-${TARGET_TRIPLE}"

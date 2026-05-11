@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """3D-ADAM Datamodule.
@@ -25,6 +25,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datasets.base.depth import AnomalibDepthDataset
 from anomalib.data.errors import MisMatchError
 from anomalib.data.utils import LabelName, Split, validate_path
+from anomalib.utils.path import get_datasets_dir
 
 IMG_EXTENSIONS = [".png", ".PNG", ".tiff"]
 CATEGORIES = (
@@ -58,8 +59,8 @@ class ADAM3DDataset(AnomalibDepthDataset):
     """3D ADAM dataset class.
 
     Args:
-        root (Path | str): Path to the root of the dataset.
-            Defaults to ``"./datasets/ADAM3D"``.
+        root (Path | str | None): Path to the root of the dataset.
+            Defaults to ``None``.
         category (str): Category name, e.g. ``"1m1"``.
             Defaults to ``"1m1"``.
         augmentations (Transform, optional): Augmentations that should be applied to the input images.
@@ -78,12 +79,14 @@ class ADAM3DDataset(AnomalibDepthDataset):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/Adam3D",
+        root: Path | str | None = None,
         category: str = "1m1",
         augmentations: Transform | None = None,
         split: str | Split | None = None,
     ) -> None:
         super().__init__(augmentations=augmentations)
+
+        root = root if root is not None else get_datasets_dir() / "ADAM3D"
 
         self.root_category = Path(root) / Path(category)
         self.split = split

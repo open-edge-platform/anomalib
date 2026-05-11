@@ -96,6 +96,20 @@ FRE: A Fast Method For Anomaly Detection And Segmentation
 GANomaly: Semi-Supervised Anomaly Detection via Adversarial Training
 :::
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` GeneralAD
+:link: ./general_ad
+:link-type: doc
+
+Anomaly Detection Across Domains by Attending to Distorted Features
+:::
+
+:::{grid-item-card} {material-regular}`model_training;1.5em` L2BT
+:link: ./l2bt
+:link-type: doc
+
+Learning to Be a Transformer to Pinpoint Anomalies
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` PaDiM
 :link: ./padim
 :link-type: doc
@@ -108,6 +122,13 @@ PaDiM: A Patch Distribution Modeling Framework for Anomaly Detection and Localiz
 :link-type: doc
 
 Towards Total Recall in Industrial Anomaly Detection
+:::
+
+:::{grid-item-card} {material-regular}`model_training;1.5em` PatchFlow
+:link: ./patchflow
+:link-type: doc
+
+PatchFlow: Leveraging a Flow-Based Model with Patch Features
 :::
 
 :::{grid-item-card} {material-regular}`model_training;1.5em` Reverse Distillation
@@ -177,8 +198,11 @@ WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation
 ./fastflow
 ./fre
 ./ganomaly
+./general_ad
+./l2bt
 ./padim
 ./patchcore
+./patchflow
 ./reverse_distillation
 ./stfpm
 ./supersimplenet

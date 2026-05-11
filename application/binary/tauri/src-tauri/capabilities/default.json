@@ -13,6 +13,12 @@
     "dialog:allow-ask",
     "dialog:allow-save",
     "fs:default",
-    "fs:allow-write-file"
+    "fs:allow-write-file",
+    {
+      "identifier": "shell:allow-open",
+      "allow": [
+        { "url": "https://github.com/**" }
+      ]
+    }
   ]
 }

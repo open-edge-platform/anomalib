@@ -31,18 +31,13 @@
 
 ---
 
-> 🌟 **Announcing v2.3.2 Patch Release!** 🌟
+> 🌟 **Announcing v2.4.1 Release!** 🌟
 >
-> This patch release adds a new example notebook and includes bug fixes.
+> This patch release fixes DDP training issues.
 >
-> What's changed
+> Key Fixes
 >
-> - Added Kaputt example notebook.
->
-> Bug fixes
->
-> - Fixed Descriptor model to use pooled features in multi-scale fusion.
-> - Removed cu124 dependency.
+> - Fixed DDP adaptive F1 score computation.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 

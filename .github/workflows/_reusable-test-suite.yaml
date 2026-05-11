@@ -102,6 +102,12 @@ jobs:
     runs-on: ${{ inputs.runner }}
     timeout-minutes: ${{ inputs.timeout }}
     steps:
+      - name: Harden the runner (audit all outbound calls)
+        if: "!contains(inputs.runner, 'self-hosted')"
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
       - name: Verify GPU availability
         if: contains(inputs.runner, 'self-hosted')
         shell: bash

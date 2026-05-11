@@ -16,6 +16,49 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+## [v2.4.1] - 2026-05-01
+
+### Fixed
+
+- 🐞 **training**: Fix DDP adaptive F1 score computation by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3569
+- 🔧 **deps**: Update dependencies to address security vulnerabilities by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3574
+
+## [v2.4.0] - 2026-04-24
+
+### Added
+
+- 🚀 **model**: Add L2BT anomaly detection model by @Sharon-9 in https://github.com/open-edge-platform/anomalib/pull/3410
+- 🚀 **model**: Add GeneralAD anomaly detection model by @SMSD75 in https://github.com/open-edge-platform/anomalib/pull/3513
+- 🚀 **model**: Add PatchFlow anomaly detection model by @BOX-LEO in https://github.com/open-edge-platform/anomalib/pull/3433
+- 🚀 **model**: Add context-aware recentering option from Dinomaly2 to Dinomaly model by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3435
+
+### Removed
+
+- ⚠️ **api**: Remove deprecated `AnomalyModule` class alias (deprecated since v2.1.0, scheduled for removal in v2.3.0). Use `AnomalibModule` instead.
+
+### Changed
+
+- 🔧 **lib**: Migrate deprecated torchvision APIs, and fix resource leak by @Lidang-Jiang in https://github.com/open-edge-platform/anomalib/pull/3508
+
+### Fixed
+
+- 🐞 **export**: Fix duplicated size parameter in `ExportableCenterCrop` by checking `Sequence` instead of `tuple` by @CarlosNacher in https://github.com/open-edge-platform/anomalib/pull/2203
+- 🐞 **data**: Reject `str` size in `ExportableCenterCrop` by @shaun0927 in https://github.com/open-edge-platform/anomalib/pull/3547
+- 🐞 **sampling**: Handle `coreset_size == 0` in `KCenterGreedy` by early-returning empty list instead of returning a single-element coreset by @shaun0927 in https://github.com/open-edge-platform/anomalib/pull/3546
+- 🐞 **sampling**: Include initial random seed point in PatchCore coreset selection by @Lidang-Jiang in https://github.com/open-edge-platform/anomalib/pull/3509
+
+## [v2.3.3] - 2026-04-10
+
+### Changed
+
+- 🔧 **path**: Move pre-trained model downloads to platform-specific cache directories and add deprecation warnings for legacy local `./datasets/<dataset>` roots by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3461
+- 🔧 **deps**: Update `mlflow` to v3.11.1 for security hardening by @oep-renovate[bot] in https://github.com/open-edge-platform/anomalib/pull/3517
+- 🤖 **agents**: Add skills and copilot instructions by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3524
+
+### Fixed
+
+- 🐞 **data**: Use enum `.value` for pandas >= 3.0 DataFrame compatibility by @Lidang-Jiang in https://github.com/open-edge-platform/anomalib/pull/3512
+
 ## [v2.3.2] - 2026-04-02
 
 ### Changed

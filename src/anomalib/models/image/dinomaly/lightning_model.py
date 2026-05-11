@@ -113,6 +113,10 @@ class Dinomaly(AnomalibModule):
             for feature fusion. If None, uses [[0, 1, 2, 3], [4, 5, 6, 7]].
         remove_class_token (bool): Whether to remove class token from features
             before processing. Defaults to False.
+        use_context_recentering (bool): Whether to apply Context-Aware Recentering
+            from Dinomaly2. When enabled, the class token is subtracted from patch
+            features before reconstruction. Most beneficial in multi-class settings.
+            Incompatible with ``remove_class_token=True``. Defaults to False.
         pre_processor (PreProcessor | bool, optional): Pre-processor instance or
             flag to use default. Defaults to ``True``.
         post_processor (PostProcessor | bool, optional): Post-processor instance
@@ -157,6 +161,7 @@ class Dinomaly(AnomalibModule):
         fuse_layer_encoder: list[list[int]] | None = None,
         fuse_layer_decoder: list[list[int]] | None = None,
         remove_class_token: bool = False,
+        use_context_recentering: bool = False,
         pre_processor: PreProcessor | bool = True,
         post_processor: PostProcessor | bool = True,
         evaluator: Evaluator | bool = True,
@@ -177,6 +182,7 @@ class Dinomaly(AnomalibModule):
             fuse_layer_encoder=fuse_layer_encoder,
             fuse_layer_decoder=fuse_layer_decoder,
             remove_class_token=remove_class_token,
+            use_context_recentering=use_context_recentering,
         )
 
         # Set the trainable parameters for the model.
