@@ -1,27 +1,33 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Dinomaly: Vision Transformer-based Anomaly Detection with Feature Reconstruction.
+"""Exploring Intrinsic Normal Prototypes within a Single Image for Universal Anomaly Detection.
 
-This module implements the Dinomaly model for anomaly detection using a Vision Transformer
-encoder-decoder architecture. The model leverages pre-trained DINOv2 features and employs
-a reconstruction-based approach to detect anomalies by comparing encoder and decoder features.
+INP-Former is trained on normal images using a feature-reconstruction framework based von
+DINOv2.
 
-Dinomaly extracts features from multiple intermediate layers of a DINOv2 Vision Transformer,
-compresses them through a bottleneck MLP, and reconstructs them using a Vision Transformer
-decoder. Anomaly detection is performed by computing cosine similarity between encoder
-and decoder features at multiple scales.
+A frozen pre-trained encoder produces patch tokens, and an INP Extractor uses M learnable
+query tokens with cross-attention over those patch tokens to aggregate them into M Intrinsic
+Normal Prototypes (INPs) per image; an INP Coherence Loss pulls each patch feature toward
+its nearest INP so the INPs reliably capture that image's normal patterns.
 
-The model is particularly effective for visual anomaly detection tasks where the goal is
-to identify regions or images that deviate from normal patterns learned during training.
+A Bottleneck fuses
+multi-scale encoder features, and an INP-Guided Decoder reconstructs them using the
+INPs as keys/values in cross-attention (with the first residual connection removed
+and a ReLU on attention weights), so its output is constrained to lie in the span of
+normal prototypes and anomalous queries cannot be reconstructed. A Soft Mining Loss
+upweights hard-to-reconstruct tokens during training, and at test time the per-token
+discrepancy between encoder features and decoder outputs is used as the anomaly
+score and map.
+
 
 Example:
     >>> from anomalib.data import MVTecAD
-    >>> from anomalib.models import Dinomaly
+    >>> from anomalib.models import InpFormer
     >>> from anomalib.engine import Engine
 
     >>> datamodule = MVTecAD()
-    >>> model = Dinomaly()
+    >>> model = InpFormer()
     >>> engine = Engine()
 
     >>> engine.fit(model, datamodule=datamodule)  # doctest: +SKIP
@@ -35,8 +41,8 @@ Notes:
     - The model supports both unsupervised anomaly detection and localization
 
 See Also:
-    :class:`anomalib.models.image.dinomaly.torch_model.DinomalyModel`:
-        PyTorch implementation of the Dinomaly model.
+    :class:`anomalib.models.image.inp_former.torch_model.InpFormerModel`:
+        PyTorch implementation of the InpFormer model.
 """
 
 import logging
@@ -46,24 +52,23 @@ import torch
 from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 from torch.nn.init import trunc_normal_
 from torchvision.transforms.v2 import CenterCrop, Compose, Normalize, Resize
-from anomalib.models.image.dinomaly.components import StableAdamW, WarmCosineScheduler
 
 from anomalib import LearningType
 from anomalib.data import Batch
 from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule
+from anomalib.models.image.dinomaly.components import StableAdamW, WarmCosineScheduler
 from anomalib.models.image.inp_former.torch_model import InpFormerModel
 from anomalib.post_processing import PostProcessor
 from anomalib.pre_processing import PreProcessor
 from anomalib.visualization import Visualizer
 
-
 logger = logging.getLogger(__name__)
 
-# Training constants
 DEFAULT_IMAGE_SIZE = 448
 DEFAULT_CROP_SIZE = 392
-MAX_STEPS_DEFAULT = 5000
+
+MAX_EPOCHS_DEFAULT = 200
 
 # Default Training hyperparameters
 TRAINING_CONFIG: dict[str, Any] = {
@@ -77,13 +82,12 @@ TRAINING_CONFIG: dict[str, Any] = {
     "scheduler": {
         "base_value": 1e-3,
         "final_value": 1e-4,
-        "total_iters": MAX_STEPS_DEFAULT,
         "warmup_iters": 100,
     },
     "trainer": {
         "gradient_clip_val": 0.1,
         "num_sanity_val_steps": 0,
-        "max_steps": MAX_STEPS_DEFAULT,
+        "max_epochs": MAX_EPOCHS_DEFAULT,
     },
 }
 
@@ -91,20 +95,17 @@ TRAINING_CONFIG: dict[str, Any] = {
 class InpFormer(AnomalibModule):
     """InpFormer Lightning Module for Vision Transformer-based Anomaly Detection.
 
-    This lightning module trains the InpFormer anomaly detection model (InpFormerModel).
-    During training, the decoder learns to reconstruct normal features.
-    During inference, the trained decoder is expected to successfully reconstruct normal
-    regions of feature maps, but fail to reconstruct anomalous regions as
-    it has not seen such patterns.
+    This lightning module trains the INP-Former anomaly detection model (InpFormerModel).
+    During training, the decoder learns to reconstruct normal features from Intrinsic
+    Normal Prototypes (INPs) extracted from each image by an INP Extractor.
+    During inference, INPs extracted from the test image guide the decoder to reconstruct
+    normal regions successfully but fail on anomalous ones, and the per-token
+    reconstruction error serves as the anomaly score.
 
     Args:
         encoder_name (str): Name of the Vision Transformer encoder to use.
             Supports DINOv2 variants (small, base, large) with different patch sizes.
             Defaults to "dinov2reg_vit_base_14".
-        bottleneck_dropout (float): Dropout rate for the bottleneck MLP layer.
-            Helps prevent overfitting during feature compression. Defaults to 0.2.
-        decoder_depth (int): Number of Vision Transformer decoder layers.
-            More layers allow for more complex reconstruction. Defaults to 8.
         target_layers (list[int] | None): List of encoder layer indices to extract
             features from. If None, uses [2, 3, 4, 5, 6, 7, 8, 9] for base models
             and [4, 6, 8, 10, 12, 14, 16, 18] for large models.
@@ -113,11 +114,9 @@ class InpFormer(AnomalibModule):
         fuse_layer_decoder (list[list[int]] | None): Groupings of decoder layers
             for feature fusion. If None, uses [[0, 1, 2, 3], [4, 5, 6, 7]].
         remove_class_token (bool): Whether to remove class token from features
-            before processing. Defaults to False.
-        use_context_recentering (bool): Whether to apply Context-Aware Recentering
-            from Dinomaly2. When enabled, the class token is subtracted from patch
-            features before reconstruction. Most beneficial in multi-class settings.
-            Incompatible with ``remove_class_token=True``. Defaults to False.
+            before processing. Defaults to True.
+        inp_num (int): Number of Intrinsic Normal Prototypes (INPs) to extract per image.
+            Defaults to 6.
         pre_processor (PreProcessor | bool, optional): Pre-processor instance or
             flag to use default. Defaults to ``True``.
         post_processor (PostProcessor | bool, optional): Post-processor instance
@@ -137,9 +136,7 @@ class InpFormer(AnomalibModule):
         >>> # Custom configuration
         >>> model = InpFormer(
         ...     encoder_name="dinov2reg_vit_large_14",
-        ...     decoder_depth=12,
-        ...     bottleneck_dropout=0.1,
-        ...     mask_neighbor_size=3
+        ...     inp_num=6
         ... )
         >>>
         >>> # Training with datamodule
@@ -248,8 +245,8 @@ class InpFormer(AnomalibModule):
         """Training step for the InpFormer model.
 
         Performs a single training iteration by computing feature reconstruction loss
-        between encoder and decoder features. Uses progressive cosine similarity loss
-        with the hardest mining to focus training on difficult examples.
+        between encoder and decoder features. Uses cosine similarity loss with hard
+        mining and adaptive weighting based on distance ratios.
 
         Args:
             batch (Batch): Input batch containing images and metadata.
@@ -262,10 +259,6 @@ class InpFormer(AnomalibModule):
         Raises:
             ValueError: If model output doesn't contain required features during training.
 
-        Note:
-            The loss function uses progressive weight scheduling where the hardest
-            mining percentage increases from 0 to 0.9 over 1000 steps, focusing
-            on increasingly difficult examples as training progresses.
         """
         del args, kwargs  # These variables are not used.
         loss = self.model(batch.image)
@@ -302,7 +295,7 @@ class InpFormer(AnomalibModule):
         return batch.update(pred_score=predictions.pred_score, anomaly_map=predictions.anomaly_map)
 
     def configure_optimizers(self) -> OptimizerLRScheduler:
-        """Configure optimizer and learning rate scheduler for Dinomaly training.
+        """Configure optimizer and learning rate scheduler for INP-Former training.
 
         Sets up the training configuration with frozen DINOv2 encoder and trainable
         bottleneck and decoder components. Uses StableAdamW optimizer with warm
@@ -317,13 +310,6 @@ class InpFormer(AnomalibModule):
         Raises:
             ValueError: If neither max_epochs nor max_steps is defined.
 
-        Note:
-            - DINOv2 encoder parameters are frozen to preserve pre-trained features
-            - Only bottleneck MLP and decoder parameters are trained
-            - Uses truncated normal initialization for Linear layers
-            - Learning rate schedule: warmup (100 steps) + cosine decay
-            - Base learning rate: 2e-3, final learning rate: 2e-4
-            - Total steps determined from trainer's max_steps or max_epochs
         """
         # Determine total training steps dynamically from trainer configuration
         # Check if the trainer has valid max_epochs and max_steps set
@@ -366,7 +352,7 @@ class InpFormer(AnomalibModule):
     def learning_type(self) -> LearningType:
         """Return the learning type of the model.
 
-        Dinomaly is an unsupervised anomaly detection model that learns normal
+        INP-Former is an unsupervised anomaly detection model that learns normal
         data patterns without requiring anomaly labels during training.
 
         Returns:
@@ -380,9 +366,9 @@ class InpFormer(AnomalibModule):
 
     @property
     def trainer_arguments(self) -> dict[str, Any]:
-        """Return Dinomaly-specific trainer arguments.
+        """Return INP-Former-specific trainer arguments.
 
-        Provides configuration arguments optimized for Dinomaly training,
+        Provides configuration arguments optimized for INP-Former training,
         excluding max_steps to allow users to set their own training duration.
 
         Returns:

@@ -1,26 +1,31 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-# https://github.com/luow23/INP-Former/blob/5252579e5f401199643fbd16e030175856386f12/models/uad.py
 
-"""TODO
+"""PyTorch model for the INP-Former model implementation.
+
+Based on PyTorch Implementation of "INP-Former" by luow23
+Reference: https://github.com/luow23/INP-Former
+License: MIT
+
+See Also:
+    :class:`anomalib.models.image.inp_former.lightning_model.InpFormer`:
+        INP-Former Lightning model.
 """
 
-
+import math
 from functools import partial
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import math
+import torch.nn.functional as F  # noqa: N812
+from torch import nn
 
 from anomalib.data import InferenceBatch
-from anomalib.models.image.dinomaly.components import vision_transformer as dinomaly_vision_transformer
-from anomalib.models.components.dinov2 import DinoV2Loader
 from anomalib.models.components import GaussianBlur2d
+from anomalib.models.components.dinov2 import DinoV2Loader
 from anomalib.models.image.dinomaly.components import DinomalyMLP
-from anomalib.models.image.inp_former.components.layers import Aggregation_Block, Prototype_Block
-from .loss import GlobalCosineHmAdaptiveLoss
-
+from anomalib.models.image.dinomaly.components import vision_transformer as dinomaly_vision_transformer
+from anomalib.models.image.inp_former.components.layers import AggregationBlock, PrototypeBlock
+from anomalib.models.image.inp_former.components.loss import GlobalCosineHmAdaptiveLoss
 
 DEFAULT_FUSE_LAYERS = [[0, 1, 2, 3], [4, 5, 6, 7]]
 
@@ -39,22 +44,52 @@ DEFAULT_GAUSSIAN_KERNEL_SIZE = 5
 DEFAULT_GAUSSIAN_SIGMA = 4
 DEFAULT_MAX_RATIO = 0.01
 
+
 class InpFormerModel(nn.Module):
-    """TODO
+    """PyTorch module implementing the INP-Former anomaly detection model.
+
+    The model consists of four components: a frozen pre-trained Vision Transformer
+    encoder, an INP Extractor that aggregates encoder patch tokens into a small set of
+    Intrinsic Normal Prototypes (INPs) via cross-attention with learnable queries, a
+    bottleneck that fuses multi-scale encoder features, and an INP-Guided Decoder that
+    reconstructs normal features using the INPs as keys and values. Anomaly scores are
+    computed from the per-token cosine discrepancy between encoder and decoder features
+    at multiple scales.
+
+    Args:
+        encoder_name (str): Name of the pre-trained Vision Transformer backbone to use
+            as the encoder (e.g., a DINOv2 variant).
+        inp_num (int): Number of Intrinsic Normal Prototypes to extract per image.
+            Defaults to ``6``.
+        target_layers (list[int] | None): Indices of encoder layers from which to
+            extract intermediate features for reconstruction. Defaults to ``None``.
+        fuse_layer_encoder (list[list[int]] | None): Groups of encoder layer indices to
+            fuse together when forming the multi-scale encoder feature targets.
+            Defaults to ``None``.
+        fuse_layer_decoder (list[list[int]] | None): Groups of decoder layer indices to
+            fuse together when forming the multi-scale decoder outputs.
+            Defaults to ``None``.
+        remove_class_token (bool): If ``True``, the class token is dropped from the
+            patch token sequence before INP extraction and reconstruction.
+            Defaults to ``False``.
+        encoder_require_grad_layer (list[int]): Indices of encoder layers that should
+            remain trainable; all other encoder layers are frozen. Defaults to ``[]``
+            (fully frozen encoder).
     """
 
     def __init__(
-            self,
-            encoder_name: str,
-            inp_num: int = 6,
-            target_layers: list[int] | None = None,
-            fuse_layer_encoder: list[list[int]] | None = None,
-            fuse_layer_decoder: list[list[int]] | None = None,
-            remove_class_token=False,
-            encoder_require_grad_layer=[],
+        self,
+        encoder_name: str,
+        inp_num: int = 6,
+        target_layers: list[int] | None = None,
+        fuse_layer_encoder: list[list[int]] | None = None,
+        fuse_layer_decoder: list[list[int]] | None = None,
+        remove_class_token: bool = False,
+        encoder_require_grad_layer: list[int] | None = None,
     ) -> None:
-        super(InpFormerModel, self).__init__()
-        self.encoder_require_grad_layer = encoder_require_grad_layer
+        super().__init__()
+        if encoder_require_grad_layer is None:
+            self.encoder_require_grad_layer: list[int] = []
         self.remove_class_token = remove_class_token
 
         if target_layers is None:
@@ -74,11 +109,9 @@ class InpFormerModel(nn.Module):
         target_layers = arch_config["target_layers"]
 
         # INP
-        self.prototype_token = nn.ParameterList(
-                    [nn.Parameter(torch.randn(inp_num, embed_dim))
-                     for _ in range(1)])
+        self.prototype_token = nn.ParameterList([nn.Parameter(torch.randn(inp_num, embed_dim)) for _ in range(1)])
 
-        #Bottleneck MLP for feature fusion
+        # Bottleneck MLP for feature fusion
         bottleneck = []
         bottle_neck_mlp = DinomalyMLP(
             in_features=embed_dim,
@@ -92,23 +125,33 @@ class InpFormerModel(nn.Module):
         bottleneck.append(bottle_neck_mlp)
         self.bottleneck = nn.ModuleList(bottleneck)
 
-        #INP Extractor
+        # INP Extractor
         inp_extractor = []
-        for i in range(1):
-            blk = Aggregation_Block(dim=embed_dim, num_heads=num_heads, mlp_ratio=4.,
-                                    qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-8))
+        for _ in range(1):
+            blk = AggregationBlock(
+                dim=embed_dim,
+                num_heads=num_heads,
+                mlp_ratio=4.0,
+                qkv_bias=True,
+                norm_layer=partial(nn.LayerNorm, eps=1e-8),
+            )
             inp_extractor.append(blk)
         self.aggregation = nn.ModuleList(inp_extractor)
 
-        #INP Decoder
+        # INP Decoder
         inp_guided_decoder = []
-        for i in range(8):
-            blk = Prototype_Block(dim=embed_dim, num_heads=num_heads, mlp_ratio=4.,
-                                qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-8))
+        for _ in range(8):
+            blk = PrototypeBlock(
+                dim=embed_dim,
+                num_heads=num_heads,
+                mlp_ratio=4.0,
+                qkv_bias=True,
+                norm_layer=partial(nn.LayerNorm, eps=1e-8),
+            )
             inp_guided_decoder.append(blk)
         self.decoder = nn.ModuleList(inp_guided_decoder)
 
-        if not hasattr(self.encoder, 'num_register_tokens'):
+        if not hasattr(self.encoder, "num_register_tokens"):
             self.encoder.num_register_tokens = 0
 
         # Initialize Gaussian blur for anomaly map smoothing
@@ -120,11 +163,11 @@ class InpFormerModel(nn.Module):
 
         self.loss = GlobalCosineHmAdaptiveLoss()
 
-
     def get_inp_loss(self, query: torch.Tensor, keys: torch.Tensor) -> torch.Tensor:
-        """INP coherence loss helps to ensure that INPs represent normal features 
-        while minimizing the capture of anomalous features during testing. It minimizes 
-        the distances between individual normal features and the corresponding nearest INP.
+        """INP coherence loss helps to ensure that INPs represent normal features.
+
+        It minimizes the distances between individual normal features and the corresponding
+        nearest INP.
 
         Args:
             query (torch.Tensor): Fused encoder features (element-wise average).
@@ -132,11 +175,11 @@ class InpFormerModel(nn.Module):
 
         Returns:
             torch.Tensor: INP coherence loss.
+
         """
-        self.distribution = 1. - F.cosine_similarity(query.unsqueeze(2), keys.unsqueeze(1), dim=-1)
+        self.distribution = 1.0 - F.cosine_similarity(query.unsqueeze(2), keys.unsqueeze(1), dim=-1)
         self.distance, self.cluster_index = torch.min(self.distribution, dim=2)
-        inp_loss = self.distance.mean()
-        return inp_loss
+        return self.distance.mean()
 
     def forward(self, batch: torch.Tensor) -> torch.Tensor | InferenceBatch:
         """Forward pass of the INPFormerModel model.
@@ -144,7 +187,7 @@ class InpFormerModel(nn.Module):
         During training, the model extracts features from the encoder and decoder
         and returns them for loss computation. During inference, it computes
         anomaly maps by comparing encoder and decoder features using cosine similarity,
-        applies Gaussian smoothing, and returns anomaly scores and maps. TODO
+        applies Gaussian smoothing, and returns anomaly scores and maps.
 
         Args:
             batch (torch.Tensor): Input batch of images with shape (B, C, H, W).
@@ -161,7 +204,7 @@ class InpFormerModel(nn.Module):
 
         if self.training:
             return self.loss(encoder_features=en, decoder_features=de, inp_loss=inp_loss)
-    
+
         # If inference, calculate anomaly maps, predictions, from the encoder and decoder features.
         anomaly_map, _ = self.calculate_anomaly_maps(en, de, out_size=image_size)
         anomaly_map_resized = anomaly_map.clone()
@@ -186,7 +229,6 @@ class InpFormerModel(nn.Module):
         pred_score = sp_score
 
         return InferenceBatch(pred_score=pred_score, anomaly_map=anomaly_map_resized)
-    
 
     @staticmethod
     def calculate_anomaly_maps(
@@ -226,7 +268,7 @@ class InpFormerModel(nn.Module):
             anomaly_map_list.append(a_map)
         anomaly_map = torch.cat(anomaly_map_list, dim=1).mean(dim=1, keepdim=True)
         return anomaly_map, anomaly_map_list
-    
+
     @staticmethod
     def _fuse_feature(feat_list: list[torch.Tensor]) -> torch.Tensor:
         """Fuse multiple feature tensors by averaging.
@@ -264,8 +306,11 @@ class InpFormerModel(nn.Module):
 
         msg = f"Architecture not supported. Encoder name must contain one of {list(DINOV2_ARCHITECTURES.keys())}"
         raise ValueError(msg)
-    
-    def get_encoder_decoder_inploss(self, x):
+
+    def get_encoder_decoder_inploss(
+        self,
+        x: torch.Tensor,
+    ) -> tuple[list[torch.Tensor], list[torch.Tensor], torch.Tensor]:
         """Extract and process features through encoder and decoder.
 
         This method processes input images through the DINOv2 encoder to extract
@@ -299,20 +344,20 @@ class InpFormerModel(nn.Module):
         side = int(math.sqrt(en_list[0].shape[1] - 1 - self.encoder.num_register_tokens))
 
         if self.remove_class_token:
-            en_list = [e[:, 1 + self.encoder.num_register_tokens:, :] for e in en_list]
+            en_list = [e[:, 1 + self.encoder.num_register_tokens :, :] for e in en_list]
 
         x = self._fuse_feature(en_list)
 
         agg_prototype = self.prototype_token[0]
-        for i, blk in enumerate(self.aggregation):
+        for _, blk in enumerate(self.aggregation):
             agg_prototype = blk(agg_prototype.unsqueeze(0).repeat((batch_size, 1, 1)), x)
         inp_loss = self.get_inp_loss(x, agg_prototype)
 
-        for i, blk in enumerate(self.bottleneck):
+        for _, blk in enumerate(self.bottleneck):
             x = blk(x)
 
         de_list = []
-        for i, blk in enumerate(self.decoder):
+        for _, blk in enumerate(self.decoder):
             x = blk(x, agg_prototype)
             de_list.append(x)
         de_list = de_list[::-1]
@@ -321,8 +366,8 @@ class InpFormerModel(nn.Module):
         de = [self._fuse_feature([de_list[idx] for idx in idxs]) for idxs in self.fuse_layer_decoder]
 
         if not self.remove_class_token:
-            en = [e[:, 1 + self.encoder.num_register_tokens:, :] for e in en]
-            de = [d[:, 1 + self.encoder.num_register_tokens:, :] for d in de]
+            en = [e[:, 1 + self.encoder.num_register_tokens :, :] for e in en]
+            de = [d[:, 1 + self.encoder.num_register_tokens :, :] for d in de]
 
         en = [e.permute(0, 2, 1).reshape([x.shape[0], -1, side, side]).contiguous() for e in en]
         de = [d.permute(0, 2, 1).reshape([x.shape[0], -1, side, side]).contiguous() for d in de]

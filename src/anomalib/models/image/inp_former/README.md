@@ -3,4 +3,3 @@
 This is the implementation of the [INP-Former](https://arxiv.org/abs/2503.02424) paper.
 
 Model Type: Segmentation
-
