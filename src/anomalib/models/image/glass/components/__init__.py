@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Utility functions for GLASS Model."""
@@ -10,7 +10,8 @@ from .preprocessing import Preprocessing
 from .projection import Projection
 from .rescale_segmentor import RescaleSegmentor
 
-__all__ = ["Aggregator",
+__all__ = [
+    "Aggregator",
     "Discriminator",
     "PatchMaker",
     "Preprocessing",

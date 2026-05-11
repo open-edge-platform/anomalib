@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """GLASS - Unsupervised anomaly detection via Gradient Ascent for Industrial Anomaly detection and localization.
@@ -19,18 +19,26 @@ Paper: `A Unified Anomaly Synthesis Strategy with Gradient Ascent for Industrial
 """
 
 import math
+from typing import cast
 
 import torch
 import torch.nn.functional as f
 from torch import nn
-from torch.utils.data import dataloader
+from torch.utils.data import DataLoader
 
 from anomalib.data import InferenceBatch
-from anomalib.data.utils.generators.perlin import PerlinAnomalyGenerator
+from anomalib.data.utils.generators import PerlinAnomalyGenerator
 from anomalib.models.components import TimmFeatureExtractor
 from anomalib.models.components.feature_extractors import dryrun_find_featuremap_dims
 
-from .components import Aggregator, Discriminator, PatchMaker, Preprocessing, Projection, RescaleSegmentor
+from .components import (
+    Aggregator,
+    Discriminator,
+    PatchMaker,
+    Preprocessing,
+    Projection,
+    RescaleSegmentor,
+)
 from .loss import FocalLoss
 
 
@@ -75,6 +83,12 @@ class GlassModel(nn.Module):
         discriminator_margin: float = 0.5,
         step: int = 20,
         svd: int = 0,
+        gaussian_noise_std: float = 0.015,
+        radius_quantile: float = 0.75,
+        focal_loss_quantile_threshold: float = 0.5,
+        mining: bool = True,
+        normalize_mean: list[float] | None = None,
+        normalize_std: list[float] | None = None,
     ) -> None:
         super().__init__()
 
@@ -86,9 +100,22 @@ class GlassModel(nn.Module):
         self.input_shape = input_shape
         self.pre_trained = pre_trained
 
-        self.augmentor = PerlinAnomalyGenerator(anomaly_source_path)
+        self.augmentor = PerlinAnomalyGenerator(
+            anomaly_source_path=anomaly_source_path,
+            probability=1.0,
+            dual_mask=True,
+        )
+
+        # The augmentor operates in [0, 1] pixel space, but GLASS passes
+        # pre-processor-normalized images. We denormalize before augmentation
+        # and renormalize after so the augmentor stays domain-agnostic.
+        mean = normalize_mean or [0.485, 0.456, 0.406]
+        std = normalize_std or [0.229, 0.224, 0.225]
+        self.register_buffer("_img_mean", torch.tensor(mean).view(1, 3, 1, 1))
+        self.register_buffer("_img_std", torch.tensor(std).view(1, 3, 1, 1))
 
         self.focal_loss = FocalLoss()
+        self.bce_loss = nn.BCELoss()
 
         self.forward_modules = torch.nn.ModuleDict({})
         feature_aggregator = TimmFeatureExtractor(
@@ -99,10 +126,10 @@ class GlassModel(nn.Module):
         feature_dimensions = _deduce_dims(feature_aggregator, self.input_shape, layers)
         self.forward_modules["feature_aggregator"] = feature_aggregator
 
-        preprocessing = Preprocessing(feature_dimensions, pretrain_embed_dim)
+        preprocessing = Preprocessing(feature_dimensions, pretrain_embed_dim, patchsize=patchsize)
         self.forward_modules["preprocessing"] = preprocessing
         self.target_embed_dimension = target_embed_dim
-        preadapt_aggregator = Aggregator(target_dim=target_embed_dim)
+        preadapt_aggregator = Aggregator(target_dim=target_embed_dim, num_features=len(layers))
         self.forward_modules["preadapt_aggregator"] = preadapt_aggregator
 
         self.pre_projection = pre_projection
@@ -125,12 +152,20 @@ class GlassModel(nn.Module):
         self.distribution = 0
         self.step = step
         self.svd = svd
+        self.gaussian_noise_std = gaussian_noise_std
+        self.radius_quantile = radius_quantile
+        self.focal_loss_quantile_threshold = focal_loss_quantile_threshold
+        self.mining = mining
 
         self.patch_maker = PatchMaker(patchsize, stride=patchstride)
 
         self.anomaly_segmentor = RescaleSegmentor(target_size=input_shape)
 
-    def calculate_center(self, dataloader: dataloader, device: torch.device) -> None:
+    def calculate_center(
+        self,
+        dataloader: DataLoader,
+        device: torch.device,
+    ) -> None:
         """Calculates and updates the center embedding from a dataset.
 
         This method runs the model in evaluation mode and computes the mean feature
@@ -139,40 +174,53 @@ class GlassModel(nn.Module):
 
         Args:
             dataloader (DataLoader): A PyTorch DataLoader providing batches of data,
-                                    where each batch contains an 'image' attribute.
+                where each batch contains an ``image`` attribute.
             device (torch.device): The device on which tensors should be processed
-                                (e.g., torch.device("cuda") or torch.device("cpu")).
+                (e.g., ``torch.device("cuda")`` or ``torch.device("cpu")``).
 
         Returns:
-            None: The method updates `self.center` in-place with the computed center tensor.
+            None: The method updates ``self.center`` in-place with the computed
+            center tensor.
         """
         self.forward_modules.eval()
-        self.center = torch.tensor([1])
+        center_acc: torch.Tensor | None = None
+        total_samples = 0
         with torch.no_grad():
-            for i, batch in enumerate(dataloader):
+            for batch in dataloader:
+                images = batch.image.to(device)
+                batch_size = images.shape[0]
+
                 if self.pre_projection > 0:
-                    outputs = self.projection(self.generate_embeddings(batch.image.to(device))[0])
-                    outputs = outputs[0] if len(outputs) == 2 else outputs
+                    outputs = self.projection(self.generate_embeddings(images, evaluation=True)[0])
+                    outputs = outputs[0] if isinstance(outputs, (tuple, list)) else outputs
                 else:
-                    outputs = self._embed(batch.image.to(device), evaluation=False)[0]
+                    outputs = self.generate_embeddings(images, evaluation=True)[0]
 
-                outputs = outputs[0] if len(outputs) == 2 else outputs
-                outputs = outputs.reshape(batch.image.to(device).shape[0], -1, outputs.shape[-1])
+                outputs = outputs[0] if isinstance(outputs, (tuple, list)) else outputs
+                outputs = outputs.reshape(batch_size, -1, outputs.shape[-1])
 
-                if i == 0:
-                    self.center = torch.mean(outputs, dim=0)
+                batch_sum = outputs.sum(dim=0)
+                if center_acc is None:
+                    center_acc = batch_sum
                 else:
-                    self.center += torch.mean(outputs, dim=0)
+                    center_acc += batch_sum
+                total_samples += batch_size
+
+        if center_acc is None:
+            msg = "Cannot compute center: dataloader yielded no batches."
+            raise ValueError(msg)
+        self.center = center_acc / total_samples
 
     def calculate_features(
         self,
         img: torch.Tensor,
         aug: torch.Tensor,
         evaluation: bool = False,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, list[tuple[int, int]]]:
         """Calculate and return feature embeddings for the input and augmented images.
 
         Depending on whether a pre-projection module is used, this method optionally applies it to the
+        embeddings before returning them.
 
         Args:
             img (torch.Tensor): The original input image tensor.
@@ -180,53 +228,47 @@ class GlassModel(nn.Module):
             evaluation (bool, optional): Whether the model is in evaluation mode. Defaults to False.
 
         Returns:
-            tuple[torch.Tensor, torch.Tensor]: A tuple containing the feature embeddings for the original
-                image (`true_feats`) and the augmented image (`fake_feats`).
+            tuple[torch.Tensor, torch.Tensor, list[tuple[int, int]]]: A tuple containing the feature embeddings
+                for the original image (`true_feats`), the augmented image (`fake_feats`), and the patch
+                grid shapes from the first feature level.
         """
         if self.pre_projection > 0:
-            fake_feats = self.projection(
-                self.generate_embeddings(aug, evaluation=evaluation)[0],
-            )
-            fake_feats = fake_feats[0] if len(fake_feats) == 2 else fake_feats
+            fake_embeddings, patch_shapes = self.generate_embeddings(aug, evaluation=evaluation)
+            fake_feats = self.projection(fake_embeddings)
+            fake_feats = fake_feats[0] if isinstance(fake_feats, (tuple, list)) else fake_feats
             true_feats = self.projection(
                 self.generate_embeddings(img, evaluation=evaluation)[0],
             )
-            true_feats = true_feats[0] if len(true_feats) == 2 else true_feats
+            true_feats = true_feats[0] if isinstance(true_feats, (tuple, list)) else true_feats
         else:
-            fake_feats = self.generate_embeddings(aug, evaluation=evaluation)[0]
+            fake_feats, patch_shapes = self.generate_embeddings(aug, evaluation=evaluation)
             assert isinstance(fake_feats, torch.Tensor)
             fake_feats.requires_grad = True
             true_feats = self.generate_embeddings(img, evaluation=evaluation)[0]
             assert isinstance(true_feats, torch.Tensor)
             true_feats.requires_grad = True
 
-        return true_feats, fake_feats
+        return true_feats, fake_feats, patch_shapes
 
     def generate_embeddings(
         self,
         images: torch.Tensor,
         evaluation: bool = False,
-    ) -> tuple[list[torch.Tensor], list[tuple[int, int]]]:
+    ) -> tuple[torch.Tensor, list[tuple[int, int]]]:
         """Generates patch-wise feature embeddings for a batch of input images.
 
-        This method performs a forward pass through the model's feature extraction pipeline,
-        processes selected intermediate layers, reshapes them into patches, aligns their spatial sizes,
-        and passes them through preprocessing and aggregation modules.
+        Extracts multi-scale features, patchifies them, aligns spatial sizes via
+        bilinear interpolation, then preprocesses and aggregates into a single
+        embedding tensor.
 
         Args:
-            images (torch.Tensor): Input images of shape (B, C, H, W), where:
-                - B is the batch size,
-                - C is the number of channels,
-                - H and W are the image height and width.
-            evaluation (bool, optional): Whether to run in evaluation mode (disabling gradients).
-                Default is False.
+            images (torch.Tensor): Input images of shape (B, C, H, W).
+            evaluation (bool, optional): Whether to run in evaluation mode. Default is False.
 
         Returns:
-            tuple[list[torch.Tensor], list[tuple[int, int]]]:
-                - A list of patch-level feature tensors, each of shape (N, D, P, P),
-                where N is the number of patches, D is the channel dimension, and P is patch size.
-                - A list of (height, width) tuples indicating the number of patches in each spatial dimension
-                for each corresponding feature level.
+            tuple[torch.Tensor, list[tuple[int, int]]]:
+                - Patch-level embeddings of shape (B*N, D) where N is patches per image.
+                - List of `(height, width)` patch counts per feature level.
         """
         if not evaluation and not self.pre_trained:
             self.forward_modules["feature_aggregator"].train()
@@ -247,9 +289,12 @@ class GlassModel(nn.Module):
                     C,
                 ).permute(0, 3, 1, 2)
 
-        features = [self.patch_maker.patchify(x, return_spatial_info=True) for x in features]
-        patch_shapes = [x[1] for x in features]
-        patch_features = [x[0] for x in features]
+        patchified_features = [
+            cast("tuple[torch.Tensor, tuple[int, int]]", self.patch_maker.patchify(x, return_spatial_info=True))
+            for x in features
+        ]
+        patch_shapes = [x[1] for x in patchified_features]
+        patch_features = [x[0] for x in patchified_features]
         ref_num_patches = patch_shapes[0]
 
         for i in range(1, len(patch_features)):
@@ -287,22 +332,22 @@ class GlassModel(nn.Module):
 
         return patch_features, patch_shapes
 
-    def calculate_anomaly_scores(self, images: torch.Tensor) -> torch.Tensor:
-        """Calculates anomaly scores and segmentation masks for a batch of input images.
+    def calculate_anomaly_scores(self, images: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Calculates anomaly scores and segmentation masks for input images.
 
         Args:
             images (torch.Tensor): Batch of input images of shape [B, C, H, W].
 
         Returns:
-            tuple[torch.Tensor, list[torch.Tensor]]:
-                - image_scores: Tensor of anomaly scores per image, shape [B].
-                - masks: List of segmentation masks for each image, each of shape [H, W].
+            tuple[torch.Tensor, torch.Tensor]:
+                - image_scores: Anomaly scores per image, shape [B].
+                - masks: Segmentation masks, shape [B, H, W].
         """
         with torch.no_grad():
             patch_features, patch_shapes = self.generate_embeddings(images, evaluation=True)
             if self.pre_projection > 0:
                 patch_features = self.projection(patch_features)
-                patch_features = patch_features[0] if len(patch_features) == 2 else patch_features
+                patch_features = patch_features[0] if isinstance(patch_features, (tuple, list)) else patch_features
 
             patch_scores = image_scores = self.discriminator(patch_features)
             patch_scores = self.patch_maker.unpatch_scores(patch_scores, images.shape[0])
@@ -315,108 +360,139 @@ class GlassModel(nn.Module):
 
             return image_scores, masks
 
+    def _gradient_ascent_step(
+        self,
+        gaus_feats: torch.Tensor,
+        gaus_loss: torch.Tensor,
+        center: torch.Tensor,
+        true_feats: torch.Tensor,
+        r_t: torch.Tensor,
+        step: int,
+    ) -> torch.Tensor:
+        """Perform one gradient ascent step with optional truncated projection.
+
+        Args:
+            gaus_feats (torch.Tensor): Current Gaussian-perturbed features (N, D).
+            gaus_loss (torch.Tensor): Scalar loss for gradient computation.
+            center (torch.Tensor): Hypersphere/manifold center (N, D).
+            true_feats (torch.Tensor): Original unperturbed features (N, D).
+            r_t (torch.Tensor): Radius threshold from quantile estimation.
+            step (int): Current iteration index (0-based).
+
+        Returns:
+            torch.Tensor: Updated gaus_feats after ascent and optional projection.
+        """
+        grad = torch.autograd.grad(gaus_loss, [gaus_feats])[0]
+        grad_norm = torch.linalg.vector_norm(grad, dim=1).view(-1, 1)
+        grad_normalized = grad / (grad_norm + 1e-10)
+
+        with torch.no_grad():
+            gaus_feats.add_(0.001 * grad_normalized)
+
+        if (step + 1) % 5 == 0:
+            dist_g = torch.linalg.vector_norm(gaus_feats - center, dim=1)
+            proj_feats = center if self.svd == 1 else true_feats
+            r = r_t if self.svd == 1 else 0.5
+
+            h = gaus_feats - proj_feats
+            h_norm = dist_g if self.svd == 1 else torch.linalg.vector_norm(h, dim=1)
+            alpha = torch.clamp(h_norm, r, 2 * r)
+            proj = (alpha / (h_norm + 1e-10)).view(-1, 1)
+            h = proj * h
+            gaus_feats = proj_feats + h
+
+        return gaus_feats
+
     def forward(
         self,
         img: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor] | InferenceBatch:
-        """Forward pass to compute patch-wise feature embeddings for original and augmented images.
+        """Forward pass for training and inference.
 
-        Depending on whether a pre-projection module is used, this method optionally applies it to the
-        embeddings generated for both `img` and `aug`. If not, the embeddings are directly obtained and
-        `requires_grad` is enabled for them, likely for gradient-based optimization or anomaly generation.
+        During training, synthesizes global and local anomalies and computes the combined loss (BCE + focal).
+        During inference, skips augmentation entirely and directly computes anomaly scores and segmentation masks.
         """
-        device = img.device
-        aug, mask_s = self.augmentor(img)
-        if img is not None:
-            batch_size = img.shape[0]
+        if not self.training:
+            anomaly_scores, masks = self.calculate_anomaly_scores(img)
+            return InferenceBatch(pred_score=anomaly_scores, anomaly_map=masks)
 
-        true_feats, fake_feats = self.calculate_features(img, aug)
+        # inverse normalization is applied because augmentor requires images in range [0, 1]
+        img_raw = img * self._img_std + self._img_mean  # denormalize to [0, 1]
+        aug_raw, mask_s = self.augmentor(img_raw)
+        aug = (aug_raw - self._img_mean) / self._img_std  # renormalize to ImageNet scale
 
-        h_ratio = mask_s.shape[2] // int(math.sqrt(fake_feats.shape[0] // batch_size))
-        w_ratio = mask_s.shape[3] // int(math.sqrt(fake_feats.shape[0] // batch_size))
+        true_feats, fake_feats, patch_shapes = self.calculate_features(img, aug)
 
-        mask_s_resized = f.interpolate(
-            mask_s.float(),
-            size=(mask_s.shape[2] // h_ratio, mask_s.shape[3] // w_ratio),
-            mode="nearest",
-        )
-        mask_s_gt = mask_s_resized.reshape(-1, 1)
+        patch_grid_h, patch_grid_w = patch_shapes[0]
+        if mask_s.shape[2] != patch_grid_h or mask_s.shape[3] != patch_grid_w:
+            pool_h = mask_s.shape[2] // patch_grid_h
+            pool_w = mask_s.shape[3] // patch_grid_w
+            if pool_h >= 1 and pool_w >= 1:
+                mask_s = f.max_pool2d(mask_s.float(), kernel_size=(pool_h, pool_w))
+            if mask_s.shape[2] != patch_grid_h or mask_s.shape[3] != patch_grid_w:
+                mask_s = f.interpolate(mask_s.float(), size=(patch_grid_h, patch_grid_w), mode="nearest")
+        mask_s_gt = mask_s.reshape(-1, 1)
+        is_normal = mask_s_gt[:, 0] == 0
+        is_anomalous = ~is_normal
 
-        noise = torch.normal(0, 0.015, true_feats.shape).to(device)
+        noise = torch.randn_like(true_feats) * self.gaussian_noise_std
         gaus_feats = true_feats + noise
 
         center = self.center.repeat(img.shape[0], 1, 1)
         center = center.reshape(-1, center.shape[-1])
-        true_points = torch.concat(
-            [fake_feats[mask_s_gt[:, 0] == 0], true_feats],
+        true_points = torch.cat(
+            [fake_feats[is_normal], true_feats],
             dim=0,
         )
-        c_t_points = torch.concat([center[mask_s_gt[:, 0] == 0], center], dim=0)
-        dist_t = torch.norm(true_points - c_t_points, dim=1)
-        r_t = torch.tensor([torch.quantile(dist_t, q=0.75)]).to(device)
+        c_t_points = torch.cat([center[is_normal], center], dim=0)
+        dist_t = torch.linalg.vector_norm(true_points - c_t_points, dim=1)
+        r_t = torch.quantile(dist_t, q=self.radius_quantile).unsqueeze(0)
 
         for step in range(self.step + 1):
             scores = self.discriminator(torch.cat([true_feats, gaus_feats]))
             true_scores = scores[: len(true_feats)]
             gaus_scores = scores[len(true_feats) :]
-            true_loss = nn.BCELoss()(true_scores, torch.zeros_like(true_scores))
-            gaus_loss = nn.BCELoss()(gaus_scores, torch.ones_like(gaus_scores))
+            true_loss = self.bce_loss(true_scores, torch.zeros_like(true_scores))
+            gaus_loss = self.bce_loss(gaus_scores, torch.ones_like(gaus_scores))
             bce_loss = true_loss + gaus_loss
 
             if step == self.step:
                 break
+            if not self.mining:
+                break
 
             if self.training:
-                grad = torch.autograd.grad(gaus_loss, [gaus_feats])[0]
-                grad_norm = torch.norm(grad, dim=1)
-                grad_norm = grad_norm.view(-1, 1)
-                grad_normalized = grad / (grad_norm + 1e-10)
+                gaus_feats = self._gradient_ascent_step(gaus_feats, gaus_loss, center, true_feats, r_t, step)
 
-                with torch.no_grad():
-                    gaus_feats.add_(0.001 * grad_normalized)
-
-                if (step + 1) % 5 == 0:
-                    dist_g = torch.norm(gaus_feats - center, dim=1)
-                    proj_feats = center if self.svd == 1 else true_feats
-                    r = r_t if self.svd == 1 else 0.5
-
-                    h = gaus_feats - proj_feats
-                    h_norm = dist_g if self.svd == 1 else torch.norm(h, dim=1)
-                    alpha = torch.clamp(h_norm, r, 2 * r)
-                    proj = (alpha / (h_norm + 1e-10)).view(-1, 1)
-                    h = proj * h
-                    gaus_feats = proj_feats + h
-
-        fake_points = fake_feats[mask_s_gt[:, 0] == 1]
-        true_points = true_feats[mask_s_gt[:, 0] == 1]
-        c_f_points = center[mask_s_gt[:, 0] == 1]
-        dist_f = torch.norm(fake_points - c_f_points, dim=1)
+        fake_points = fake_feats[is_anomalous]
+        true_points = true_feats[is_anomalous]
+        c_f_points = center[is_anomalous]
+        dist_f = torch.linalg.vector_norm(fake_points - c_f_points, dim=1)
         proj_feats = c_f_points if self.svd == 1 else true_points
         r = r_t if self.svd == 1 else 1
 
         if self.svd == 1:
             h = fake_points - proj_feats
-            h_norm = dist_f if self.svd == 1 else torch.norm(h, dim=1)
+            h_norm = dist_f
             alpha = torch.clamp(h_norm, 2 * r, 4 * r)
             proj = (alpha / (h_norm + 1e-10)).view(-1, 1)
             h = proj * h
             fake_points = proj_feats + h
-            fake_feats[mask_s_gt[:, 0] == 1] = fake_points
+            fake_feats[is_anomalous] = fake_points
 
         fake_scores = self.discriminator(fake_feats)
 
-        fake_dist = (fake_scores - mask_s_gt) ** 2
-        d_hard = torch.quantile(fake_dist, q=0.5)
-        fake_scores_ = fake_scores[fake_dist >= d_hard].unsqueeze(1)
-        mask_ = mask_s_gt[fake_dist >= d_hard].unsqueeze(1)
+        if self.focal_loss_quantile_threshold > 0:
+            fake_dist = (fake_scores - mask_s_gt) ** 2
+            d_hard = torch.quantile(fake_dist, q=self.focal_loss_quantile_threshold)
+            fake_scores_ = fake_scores[fake_dist >= d_hard].unsqueeze(1)
+            mask_ = mask_s_gt[fake_dist >= d_hard].unsqueeze(1)
+        else:
+            fake_scores_ = fake_scores
+            mask_ = mask_s_gt
 
         output = torch.cat([1 - fake_scores_, fake_scores_], dim=1)
         focal_loss = self.focal_loss(output, mask_)
 
-        if self.training:
-            loss = bce_loss + focal_loss
-            return true_loss, gaus_loss, bce_loss, focal_loss, loss
-
-        anomaly_scores, masks = self.calculate_anomaly_scores(img)
-        masks = torch.stack(masks)
-        return InferenceBatch(pred_score=anomaly_scores, anomaly_map=masks)
+        loss = bce_loss + focal_loss
+        return true_loss, gaus_loss, bce_loss, focal_loss, loss

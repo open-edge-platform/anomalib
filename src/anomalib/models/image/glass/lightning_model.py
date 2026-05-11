@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """GLASS - Unsupervised anomaly detection via Gradient Ascent for Industrial Anomaly detection and localization.
@@ -28,7 +28,7 @@ from torchvision.transforms.v2 import CenterCrop, Compose, Normalize, Resize
 from anomalib import LearningType
 from anomalib.data import Batch
 from anomalib.data.utils import DownloadInfo, download_and_extract
-from anomalib.metrics import Evaluator
+from anomalib.metrics import AUROC, Evaluator, F1Score
 from anomalib.models.components import AnomalibModule
 from anomalib.post_processing import PostProcessor
 from anomalib.pre_processing import PreProcessor
@@ -89,6 +89,14 @@ class Glass(AnomalibModule):
             Defaults to `20`.
         svd (int, optional): Flag to enable SVD-based feature projection.
             Defaults to `0`.
+        gaussian_noise_std (float, optional): Standard deviation of Gaussian noise added to features
+            for global anomaly synthesis. Defaults to ``0.015``.
+        radius_quantile (float, optional): Quantile used to compute the truncated projection radius
+            during gradient ascent. Defaults to ``0.75``.
+        focal_loss_quantile_threshold (float, optional): Quantile threshold for hard example mining in focal loss
+            computation. When ``0``, all samples are used. Defaults to ``0.5``.
+        mining (bool): Whether to perform gradient ascent or skip it.
+            Defaults to ``True``.
         pre_processor (PreProcessor | bool, optional): reprocessing module or flag to enable default preprocessing.
             Set to `True` to apply default normalization and resizing.
             Defaults to `True`.
@@ -120,6 +128,10 @@ class Glass(AnomalibModule):
         learning_rate: float = 0.0001,
         step: int = 20,
         svd: int = 0,
+        gaussian_noise_std: float = 0.015,
+        radius_quantile: float = 0.75,
+        focal_loss_quantile_threshold: float = 0.5,
+        mining: bool = True,
         pre_processor: PreProcessor | bool = True,
         post_processor: PostProcessor | bool = True,
         evaluator: Evaluator | bool = True,
@@ -140,6 +152,8 @@ class Glass(AnomalibModule):
             if not dtd_dir.is_dir():
                 download_and_extract(dtd_dir, DTD_DOWNLOAD_INFO)
 
+        normalize_mean, normalize_std = self._extract_normalize_params()
+
         self.model = GlassModel(
             input_shape=input_shape,
             anomaly_source_path=anomaly_source_path,
@@ -156,6 +170,12 @@ class Glass(AnomalibModule):
             discriminator_margin=discriminator_margin,
             step=step,
             svd=svd,
+            gaussian_noise_std=gaussian_noise_std,
+            radius_quantile=radius_quantile,
+            focal_loss_quantile_threshold=focal_loss_quantile_threshold,
+            mining=mining,
+            normalize_mean=normalize_mean,
+            normalize_std=normalize_std,
         )
 
         self.learning_rate = learning_rate
@@ -228,6 +248,48 @@ class Glass(AnomalibModule):
             ])
 
         return PreProcessor(transform=transform)
+
+    def _extract_normalize_params(self) -> tuple[list[float] | None, list[float] | None]:
+        """Extract mean and std from the Normalize transform in the pre-processor."""
+        if self.pre_processor is None or not hasattr(self.pre_processor, "transform"):
+            return None, None
+        transform = self.pre_processor.transform
+        transforms = transform.transforms if isinstance(transform, Compose) else [transform]
+        for t in transforms:
+            if isinstance(t, Normalize):
+                mean = [float(x) for x in t.mean]
+                std = [float(x) for x in t.std]
+                return mean, std
+        return None, None
+
+    @staticmethod
+    def configure_evaluator() -> Evaluator:
+        """Configure the evaluator with validation and test metrics.
+
+        Overrides the default evaluator to include both ``image_AUROC`` and
+        ``pixel_AUROC`` as validation metrics. The official GLASS implementation
+        selects the best checkpoint based on ``image_auroc + pixel_auroc``, so
+        both must be available during validation.
+
+        Returns:
+            Evaluator: Configured evaluator with both validation and test metrics.
+
+        Example:
+            >>> evaluator = Glass.configure_evaluator()
+            >>> len(evaluator.val_metrics) > 0
+            True
+        """
+        val_image_auroc = AUROC(fields=["pred_score", "gt_label"], prefix="image_")
+        val_pixel_auroc = AUROC(fields=["anomaly_map", "gt_mask"], prefix="pixel_", strict=False)
+        val_metrics = [val_image_auroc, val_pixel_auroc]
+
+        image_auroc = AUROC(fields=["pred_score", "gt_label"], prefix="image_")
+        image_f1score = F1Score(fields=["pred_label", "gt_label"], prefix="image_")
+        pixel_auroc = AUROC(fields=["anomaly_map", "gt_mask"], prefix="pixel_", strict=False)
+        pixel_f1score = F1Score(fields=["pred_mask", "gt_mask"], prefix="pixel_", strict=False)
+        test_metrics = [image_auroc, image_f1score, pixel_auroc, pixel_f1score]
+
+        return Evaluator(val_metrics=val_metrics, test_metrics=test_metrics)
 
     def configure_optimizers(self) -> optim.Optimizer:
         """Configure optimizer for the discriminator.
