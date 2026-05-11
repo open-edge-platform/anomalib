@@ -119,7 +119,7 @@ class InpFormerModel(nn.Module):
             out_features=embed_dim,
             act_layer=nn.GELU,
             drop=0.0,
-            bias=False,
+            bias=True,
             apply_input_dropout=False,
         )
         bottleneck.append(bottle_neck_mlp)
@@ -207,11 +207,6 @@ class InpFormerModel(nn.Module):
 
         # If inference, calculate anomaly maps, predictions, from the encoder and decoder features.
         anomaly_map, _ = self.calculate_anomaly_maps(en, de, out_size=image_size)
-        anomaly_map_resized = anomaly_map.clone()
-
-        # Resize anomaly map for processing
-        if DEFAULT_RESIZE_SIZE is not None:
-            anomaly_map = F.interpolate(anomaly_map, size=DEFAULT_RESIZE_SIZE, mode="bilinear", align_corners=False)
 
         # Apply Gaussian smoothing
         anomaly_map = self.gaussian_blur(anomaly_map)
@@ -228,7 +223,7 @@ class InpFormerModel(nn.Module):
             sp_score = sp_score.mean(dim=1)
         pred_score = sp_score
 
-        return InferenceBatch(pred_score=pred_score, anomaly_map=anomaly_map_resized)
+        return InferenceBatch(pred_score=pred_score, anomaly_map=anomaly_map)
 
     @staticmethod
     def calculate_anomaly_maps(
