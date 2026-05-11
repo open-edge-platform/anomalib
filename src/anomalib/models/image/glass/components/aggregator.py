@@ -21,14 +21,5 @@ class Aggregator(torch.nn.Module):
     def forward(self, features: torch.Tensor) -> torch.Tensor:
         """Returns reshaped and average pooled features."""
         features = features.reshape(len(features), 1, -1)
-        if torch.onnx.is_in_onnx_export():
-            # Keep ONNX export robust when flattened feature length is symbolic.
-            features = f.interpolate(
-                features,
-                size=self.target_dim,
-                mode="linear",
-                align_corners=False,
-            )
-        else:
-            features = f.adaptive_avg_pool1d(features, self.target_dim)
+        features = f.adaptive_avg_pool1d(features, self.target_dim)
         return features.reshape(len(features), -1)
