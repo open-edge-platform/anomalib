@@ -20,22 +20,23 @@ runs:
     - name: Verify required binaries
       shell: bash
       run: |
-        for cmd in ollama opencode gh curl; do
+        for cmd in ollama opencode gh curl jq; do
           command -v "$cmd" >/dev/null 2>&1 || { echo "::error::$cmd is not installed on this runner"; exit 1; }
         done
 
     - name: Verify Ollama and pull models
       shell: bash
       env:
-        OLLAMA_URL: ${{ inputs.ollama-url }}
+        OLLAMA_HOST: ${{ inputs.ollama-url }}
         MODELS: ${{ inputs.models }}
       run: |
-        if ! curl -sf "${OLLAMA_URL}/api/tags" > /dev/null; then
-          echo "::error::Ollama is not running at ${OLLAMA_URL}"
+        if ! curl -sf "${OLLAMA_HOST}/api/tags" > /dev/null; then
+          echo "::error::Ollama is not running at ${OLLAMA_HOST}"
           exit 1
         fi
+        AVAILABLE=$(curl -sf "${OLLAMA_HOST}/api/tags" | jq -r '.models[].name // empty')
         for MODEL in $MODELS; do
-          if ! curl -sf "${OLLAMA_URL}/api/tags" | grep -q "$MODEL"; then
+          if ! echo "$AVAILABLE" | grep -qxF "$MODEL"; then
             echo "::warning::$MODEL not found, pulling..."
             ollama pull "$MODEL"
           fi
