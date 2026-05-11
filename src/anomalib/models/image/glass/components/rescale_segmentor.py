@@ -6,16 +6,14 @@
 import numpy as np
 import torch
 import torch.nn.functional as f
-
-try:
-    import kornia.filters as kf
-except ImportError as e:
-    msg = "kornia is required for RescaleSegmentor. Install with: pip install kornia"
-    raise ImportError(msg) from e
+from torch import nn
 
 
-class RescaleSegmentor:
+class RescaleSegmentor(nn.Module):
     """Rescales patch-level scores to full-resolution smoothed segmentation masks.
+
+    Pre-computes a Gaussian kernel at construction for ONNX-friendly export
+    (avoids kornia's dynamic-shape filter2d).
 
     Args:
         target_size: Output spatial size (H, W) for segmentation maps.
@@ -29,12 +27,26 @@ class RescaleSegmentor:
         kernel_size: int = 33,
         sigma: float = 4.0,
     ) -> None:
+        super().__init__()
         if kernel_size < 1 or kernel_size % 2 == 0:
             msg = f"kernel_size must be a positive odd integer, got {kernel_size}"
             raise ValueError(msg)
         self.target_size = target_size
         self.kernel_size = kernel_size
         self.sigma = sigma
+
+        kernel = self._make_gaussian_kernel(kernel_size, sigma)
+        self.register_buffer("_kernel", kernel)
+
+    @staticmethod
+    def _make_gaussian_kernel(kernel_size: int, sigma: float) -> torch.Tensor:
+        """Create a 2D Gaussian kernel of shape (1, 1, K, K)."""
+        coords = torch.arange(kernel_size, dtype=torch.float32) - (kernel_size - 1) / 2.0
+        g = torch.exp(-coords.pow(2) / (2 * sigma**2))
+        g /= g.sum()
+        kernel_2d = g.unsqueeze(1) * g.unsqueeze(0)
+        kernel_2d /= kernel_2d.sum()
+        return kernel_2d.unsqueeze(0).unsqueeze(0)
 
     def convert_to_segmentation(
         self,
@@ -67,12 +79,9 @@ class RescaleSegmentor:
                 align_corners=False,
             )
 
-            scores = kf.gaussian_blur2d(
-                scores,
-                kernel_size=(self.kernel_size, self.kernel_size),
-                sigma=(self.sigma, self.sigma),
-                border_type="reflect",
-            )
+            pad = self.kernel_size // 2
+            scores = f.pad(scores, (pad, pad, pad, pad), mode="reflect")
+            scores = f.conv2d(scores, self._kernel)
 
         return scores.squeeze(1)
 

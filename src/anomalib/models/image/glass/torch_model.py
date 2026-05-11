@@ -126,10 +126,10 @@ class GlassModel(nn.Module):
         feature_dimensions = _deduce_dims(feature_aggregator, self.input_shape, layers)
         self.forward_modules["feature_aggregator"] = feature_aggregator
 
-        preprocessing = Preprocessing(feature_dimensions, pretrain_embed_dim)
+        preprocessing = Preprocessing(feature_dimensions, pretrain_embed_dim, patchsize=patchsize)
         self.forward_modules["preprocessing"] = preprocessing
         self.target_embed_dimension = target_embed_dim
-        preadapt_aggregator = Aggregator(target_dim=target_embed_dim)
+        preadapt_aggregator = Aggregator(target_dim=target_embed_dim, num_features=len(layers))
         self.forward_modules["preadapt_aggregator"] = preadapt_aggregator
 
         self.pre_projection = pre_projection
