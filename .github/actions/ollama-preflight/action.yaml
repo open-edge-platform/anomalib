@@ -1,0 +1,43 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: "Ollama Preflight"
+description: "Verify required CLI tools are installed, Ollama is running, and models are available"
+
+inputs:
+  models:
+    description: "Space-separated list of Ollama model tags to verify/pull"
+    required: false
+    default: "gemma4:31b"
+  ollama-url:
+    description: "Ollama API base URL"
+    required: false
+    default: "http://localhost:11434"
+
+runs:
+  using: composite
+  steps:
+    - name: Verify required binaries
+      shell: bash
+      run: |
+        for cmd in ollama opencode gh curl jq; do
+          command -v "$cmd" >/dev/null 2>&1 || { echo "::error::$cmd is not installed on this runner"; exit 1; }
+        done
+
+    - name: Verify Ollama and pull models
+      shell: bash
+      env:
+        OLLAMA_HOST: ${{ inputs.ollama-url }}
+        MODELS: ${{ inputs.models }}
+      run: |
+        if ! curl -sf "${OLLAMA_HOST}/api/tags" > /dev/null; then
+          echo "::error::Ollama is not running at ${OLLAMA_HOST}"
+          exit 1
+        fi
+        AVAILABLE=$(curl -sf "${OLLAMA_HOST}/api/tags" | jq -r '.models[].name // empty')
+        for MODEL in $MODELS; do
+          if ! echo "$AVAILABLE" | grep -qxF "$MODEL"; then
+            echo "::warning::$MODEL not found, pulling..."
+            ollama pull "$MODEL"
+          fi
+        done
