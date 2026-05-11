@@ -72,7 +72,7 @@ class Glass(AnomalibModule):
         pre_trained (bool, optional): Whether to use ImageNet pre-trained weights for the backbone network.
             Defaults to `True`.
         layers (list[str], optional): List of backbone layers to extract features from.
-            Defaults to `["layer1", "layer2", "layer3"]`.
+            Defaults to `["layer2", "layer3"]`.
         pre_projection (int, optional): Number of projection layers used in the feature adaptor (e.g., MLP before
           discriminator).
             Defaults to `1`.
@@ -80,9 +80,6 @@ class Glass(AnomalibModule):
             Defaults to `2`.
         discriminator_hidden (int, optional): Number of hidden units in each discriminator layer.
             Defaults to `1024`.
-        discriminator_margin (float, optional): Margin used for contrastive or binary classification loss in
-          discriminator training.
-            Defaults to `0.5`.
         learning_rate (float, optional): Learning rate for training the feature adaptor and discriminator networks.
             Defaults to `0.0001`.
         step (int, optional): Number of gradient ascent steps for anomaly synthesis.
@@ -124,7 +121,6 @@ class Glass(AnomalibModule):
         pre_projection: int = 1,
         discriminator_layers: int = 2,
         discriminator_hidden: int = 1024,
-        discriminator_margin: float = 0.5,
         learning_rate: float = 0.0001,
         step: int = 20,
         svd: int = 0,
@@ -167,7 +163,6 @@ class Glass(AnomalibModule):
             pre_projection=pre_projection,
             discriminator_layers=discriminator_layers,
             discriminator_hidden=discriminator_hidden,
-            discriminator_margin=discriminator_margin,
             step=step,
             svd=svd,
             gaussian_noise_std=gaussian_noise_std,
@@ -180,23 +175,7 @@ class Glass(AnomalibModule):
 
         self.learning_rate = learning_rate
         self.pre_trained = pre_trained
-
-        if pre_projection > 0:
-            self.projection_opt = optim.Adam(
-                self.model.projection.parameters(),
-                self.learning_rate,
-                weight_decay=1e-5,
-            )
-        else:
-            self.projection_opt = None
-
-        if not self.pre_trained:
-            self.backbone_opt = optim.AdamW(
-                self.model.forward_modules["feature_aggregator"].backbone.parameters(),
-                self.learning_rate,
-            )
-        else:
-            self.backbone_opt = None
+        self.pre_projection = pre_projection
 
         self.automatic_optimization = False
 
@@ -213,7 +192,7 @@ class Glass(AnomalibModule):
 
         Args:
             image_size (tuple[int, int] | None, optional): Target size for
-                resizing. Defaults to ``(256, 256)``.
+                resizing. Defaults to ``(288, 288)``.
             center_crop_size (tuple[int, int] | None, optional): Size for center
                 cropping. Defaults to ``None``.
 
@@ -226,7 +205,7 @@ class Glass(AnomalibModule):
 
         Example:
             >>> pre_processor = Glass.configure_pre_processor(
-            ...     image_size=(256, 256)
+            ...     image_size=(288, 288)
             ... )
             >>> transformed_image = pre_processor(image)
         """
@@ -291,13 +270,31 @@ class Glass(AnomalibModule):
 
         return Evaluator(val_metrics=val_metrics, test_metrics=test_metrics)
 
-    def configure_optimizers(self) -> optim.Optimizer:
-        """Configure optimizer for the discriminator.
+    def configure_optimizers(self) -> list[optim.Optimizer]:
+        """Configure optimizers for the discriminator, projection, and backbone.
+
+        Returns all active optimizers in a fixed order: discriminator first,
+        then projection (if ``pre_projection > 0``), then backbone (if not
+        pre-trained). This ordering is critical for checkpoint resume.
 
         Returns:
-            Optimizer: AdamW Optimizer for the discriminator.
+            list[optim.Optimizer]: List of optimizers managed by Lightning.
         """
-        return optim.AdamW(self.model.discriminator.parameters(), lr=self.learning_rate * 2)
+        optimizers: list[optim.Optimizer] = [
+            optim.AdamW(self.model.discriminator.parameters(), lr=self.learning_rate * 2),
+        ]
+        if self.pre_projection > 0:
+            optimizers.append(
+                optim.Adam(self.model.projection.parameters(), lr=self.learning_rate, weight_decay=1e-5),
+            )
+        if not self.pre_trained:
+            optimizers.append(
+                optim.AdamW(
+                    self.model.forward_modules["feature_aggregator"].backbone.parameters(),
+                    lr=self.learning_rate,
+                ),
+            )
+        return optimizers
 
     def training_step(self, batch: Batch, batch_idx: int) -> STEP_OUTPUT:
         """Training step for GLASS model.
@@ -311,7 +308,18 @@ class Glass(AnomalibModule):
         """
         del batch_idx
 
-        discriminator_opt = self.optimizers()
+        optimizers = self.optimizers()
+        if not isinstance(optimizers, list):
+            optimizers = [optimizers]
+
+        # Unpack in same order as configure_optimizers: discriminator, [projection], [backbone]
+        idx = 0
+        discriminator_opt = optimizers[idx]
+        idx += 1
+        projection_opt = optimizers[idx] if self.pre_projection > 0 else None
+        if self.pre_projection > 0:
+            idx += 1
+        backbone_opt = optimizers[idx] if not self.pre_trained else None
 
         if not self.pre_trained:
             self.model.forward_modules["feature_aggregator"].train()
@@ -320,18 +328,18 @@ class Glass(AnomalibModule):
         self.model.discriminator.train()
 
         discriminator_opt.zero_grad()
-        if self.projection_opt is not None:
-            self.projection_opt.zero_grad()
-        if self.backbone_opt is not None:
-            self.backbone_opt.zero_grad()
+        if projection_opt is not None:
+            projection_opt.zero_grad()
+        if backbone_opt is not None:
+            backbone_opt.zero_grad()
 
         true_loss, gaus_loss, bce_loss, focal_loss, loss = self.model(batch.image)
         self.manual_backward(loss)
 
-        if self.projection_opt is not None:
-            self.projection_opt.step()
-        if self.backbone_opt is not None:
-            self.backbone_opt.step()
+        if projection_opt is not None:
+            projection_opt.step()
+        if backbone_opt is not None:
+            backbone_opt.step()
         discriminator_opt.step()
 
         self.log("true_loss", true_loss, prog_bar=True)
@@ -339,6 +347,14 @@ class Glass(AnomalibModule):
         self.log("bce_loss", bce_loss, prog_bar=True)
         self.log("focal_loss", focal_loss, prog_bar=True)
         self.log("loss", loss, prog_bar=True)
+
+        return {
+            "loss": loss,
+            "true_loss": true_loss,
+            "gaus_loss": gaus_loss,
+            "bce_loss": bce_loss,
+            "focal_loss": focal_loss,
+        }
 
     def validation_step(self, batch: Batch, batch_idx: int) -> STEP_OUTPUT:
         """Performs a single validation step during model evaluation.

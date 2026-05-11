@@ -57,14 +57,17 @@ class FocalLoss(nn.Module):
         Focal_Loss = -1 * alpha * (1 - pt) ** gamma * log(pt)
 
     Args:
-        num_class (int): Number of classes.
-        alpha (float or Tensor): Scalar or Tensor weight factor for class imbalance. If float, `balance_index` should be
-          set.
-        gamma (float): Focusing parameter that reduces the relative loss for well-classified examples (gamma > 0).
-        smooth (float): Label smoothing factor for cross-entropy.
-        balance_index (int): Index of the class to balance when `alpha` is a float.
-        size_average (bool, optional): If True (default), the loss is averaged over the batch; otherwise, the loss is
-          summed.
+        apply_nonlinearity (nn.Module | None): Optional non-linearity to apply to logits before loss computation
+            (e.g., ``nn.Softmax(dim=1)`` or ``nn.Sigmoid()``). Defaults to ``None``.
+        alpha (float | torch.Tensor | np.ndarray | None): Weighting factor for class imbalance. Can be:
+            - ``None``: Equal weighting for all classes.
+            - ``float``: Class at ``balance_index`` is weighted by ``alpha``, others by ``1 - alpha``.
+            - ``Tensor`` or array: Direct per-class weights of shape ``(num_classes,)``.
+            Defaults to ``None``.
+        gamma (float): Focusing parameter (> 0) to reduce loss contribution from easy examples. Defaults to ``2``.
+        balance_index (int): Index of the class to apply ``alpha`` to when ``alpha`` is a float. Defaults to ``0``.
+        smooth (float): Label smoothing factor in ``[0, 1]``. Defaults to ``1e-5``.
+        size_average (bool): If ``True``, average the loss over the batch; otherwise sum. Defaults to ``True``.
     """
 
     def __init__(
@@ -76,19 +79,6 @@ class FocalLoss(nn.Module):
         smooth: float = 1e-5,
         size_average: bool = True,
     ) -> None:
-        """Initializes the FocalLoss instance.
-
-        Args:
-            apply_nonlinearity (nn.Module or None): Optional non-linearity to apply to logits (e.g., softmax or sigmoid)
-            alpha (float or torch.Tensor, optional): Weighting factor for class imbalance. Can be:
-                - None: Equal weighting.
-                - float: Class at `balance_index` is weighted by `alpha`, others by 1 - `alpha`.
-                - Tensor: Direct per-class weights.
-            gamma (float): Focusing parameter for down-weighting easy examples (y > 0).
-            balance_index (int): Index of the class to apply `alpha` to when `alpha` is a float.
-            smooth (float): Label smoothing factor (0 to 1).
-            size_average (bool): If True, average the loss over the batch. If False, sum the loss.
-        """
         super().__init__()
         self.apply_nonlinearity = apply_nonlinearity
         self.alpha = alpha
@@ -126,6 +116,9 @@ class FocalLoss(nn.Module):
         alpha = self.alpha
         if self.alpha is None:
             alpha = torch.ones(num_classes, 1)
+        elif isinstance(self.alpha, torch.Tensor):
+            alpha = self.alpha.view(num_classes, 1).float()
+            alpha = alpha / alpha.sum()
         elif isinstance(self.alpha, (list | np.ndarray)):
             alpha = torch.FloatTensor(alpha).view(num_classes, 1)
             alpha = alpha / alpha.sum()
@@ -134,7 +127,7 @@ class FocalLoss(nn.Module):
             alpha = alpha * (1 - self.alpha)
             alpha[self.balance_index] = self.alpha
         else:
-            msg = "Not support alpha type"
+            msg = f"Unsupported alpha type: {type(self.alpha)}"
             raise TypeError(msg)
 
         if alpha.device != logits.device:

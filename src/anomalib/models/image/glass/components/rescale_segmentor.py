@@ -81,7 +81,7 @@ class RescaleSegmentor(nn.Module):
 
             pad = self.kernel_size // 2
             scores = f.pad(scores, (pad, pad, pad, pad), mode="reflect")
-            scores = f.conv2d(scores, self._kernel)
+            scores = f.conv2d(scores, self._kernel.to(dtype=scores.dtype))
 
         return scores.squeeze(1)
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Tests for PerlinAnomalyGenerator, focusing on dual_mask behavior."""
@@ -105,6 +105,7 @@ def test_dual_mask_binary_after_union() -> None:
 
 def test_dual_mask_can_produce_nonempty_mask() -> None:
     """Over many trials, dual_mask should produce at least one non-empty mask."""
+    torch.manual_seed(123)
     gen = PerlinAnomalyGenerator(probability=1.0, dual_mask=True)
     img = torch.rand(3, 64, 64)
     found_nonempty = False

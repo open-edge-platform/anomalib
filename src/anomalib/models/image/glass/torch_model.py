@@ -80,7 +80,6 @@ class GlassModel(nn.Module):
         pre_projection: int = 1,
         discriminator_layers: int = 2,
         discriminator_hidden: int = 1024,
-        discriminator_margin: float = 0.5,
         step: int = 20,
         svd: int = 0,
         gaussian_noise_std: float = 0.015,
@@ -122,6 +121,7 @@ class GlassModel(nn.Module):
             backbone=self.backbone,
             layers=self.layers,
             pre_trained=self.pre_trained,
+            requires_grad=not self.pre_trained,
         )
         feature_dimensions = _deduce_dims(feature_aggregator, self.input_shape, layers)
         self.forward_modules["feature_aggregator"] = feature_aggregator
@@ -142,7 +142,6 @@ class GlassModel(nn.Module):
 
         self.discriminator_layers = discriminator_layers
         self.discriminator_hidden = discriminator_hidden
-        self.discriminator_margin = discriminator_margin
         self.discriminator = Discriminator(
             self.target_embed_dimension,
             n_layers=self.discriminator_layers,
@@ -272,7 +271,7 @@ class GlassModel(nn.Module):
         """
         if not evaluation and not self.pre_trained:
             self.forward_modules["feature_aggregator"].train()
-            features = self.forward_modules["feature_aggregator"](images, eval=evaluation)
+            features = self.forward_modules["feature_aggregator"](images)
         else:
             self.forward_modules["feature_aggregator"].eval()
             with torch.no_grad():
