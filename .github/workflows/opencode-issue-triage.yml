@@ -30,21 +30,7 @@ jobs:
           sparse-checkout-cone-mode: true
           fetch-depth: 1
 
-      - name: Verify ollama is running
-        run: |
-          for cmd in ollama opencode gh curl; do
-            command -v "$cmd" >/dev/null 2>&1 || { echo "::error::$cmd is not installed on this runner"; exit 1; }
-          done
-          if ! curl -sf http://localhost:11434/api/tags > /dev/null; then
-            echo "::error::Ollama is not running on this runner"
-            exit 1
-          fi
-          for MODEL in gemma4:31b; do
-            if ! curl -sf http://localhost:11434/api/tags | grep -q "$MODEL"; then
-              echo "::warning::$MODEL not found, pulling..."
-              ollama pull "$MODEL"
-            fi
-          done
+      - uses: ./.github/actions/ollama-preflight
 
       - name: Triage issue with OpenCode
         env:

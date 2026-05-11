@@ -88,7 +88,7 @@ git add -A
 git commit -m "docs: sync documentation with recent code changes"
 git push origin "$BRANCH"
 gh pr create --title "docs: sync documentation with recent code changes" \
-  --body "$(cat <<'EOF'
+  --body "$(cat <<EOF
 ## Summary
 
 Automated documentation sync for the week of $DATE.
