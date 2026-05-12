@@ -1,0 +1,44 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: "Issue Triage (OpenCode)"
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: "opencode-issue-triage-${{ github.event.issue.number }}"
+
+jobs:
+  triage:
+    # Skip issues from users with no GitHub association (spam protection)
+    if: >-
+      github.event.issue.author_association != 'NONE'
+    runs-on: self-hosted
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          sparse-checkout: |
+            .github
+            .agents
+          sparse-checkout-cone-mode: true
+          fetch-depth: 1
+
+      - uses: ./.github/actions/ollama-preflight
+
+      - name: Triage issue with OpenCode
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          OPENCODE_PERMISSION: '{"read":"allow","glob":"allow","grep":"allow","bash":{"*":"deny","gh issue *":"allow","gh search *":"allow","gh label *":"allow","gh api *":"allow","cat *":"allow","find *":"allow","grep *":"allow","head *":"allow"},"edit":"deny"}'
+          OPENCODE_CONFIG: .github/opencode.json
+        run: |
+          opencode run --pure -m ollama/gemma4:31b --agent issue-triage \
+            "Triage issue #${ISSUE_NUMBER} in repository ${GITHUB_REPOSITORY}. The issue number is in the ISSUE_NUMBER environment variable."
