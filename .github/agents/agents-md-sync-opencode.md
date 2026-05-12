@@ -51,7 +51,6 @@ gh pr create --title "docs: update AGENTS.md with recent codebase changes" \
 ## Rules
 
 - **Only edit `AGENTS.md`.** Never modify source code.
-- **Respect managed-section markers.** Content outside them is hand-maintained.
 - **Be factual.** Derive info from actual files. Do not hallucinate.
 - **Keep concise.** One-liners per module, link to details.
 - **Idempotent.** If already accurate, do not open a PR.
