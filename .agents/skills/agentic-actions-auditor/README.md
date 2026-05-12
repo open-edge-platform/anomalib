@@ -6,6 +6,11 @@ Detects attack vectors where attacker-controlled input reaches AI agents running
 
 ## Source
 
+This skill is derived from the Trail of Bits `skills` project and adapts content from the upstream `plugins/agentic-actions-auditor` subtree.
+
 - **Upstream**: <https://github.com/trailofbits/skills> (`plugins/agentic-actions-auditor`)
+- **Attribution**: Original content Copyright Trail of Bits and contributors.
 - **License**: CC-BY-SA-4.0
-- **Retrieved**: 2025-05-12
+- **Retrieved**: 2026-05-12
+
+Redistribution and adaptation of this skill must preserve the upstream attribution and CC-BY-SA-4.0 licensing terms.

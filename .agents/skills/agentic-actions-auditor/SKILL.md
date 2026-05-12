@@ -163,7 +163,7 @@ After identifying AI action steps, check for `uses:` references that may contain
 2. **Job-level `uses:`**: Resolve the reusable workflow (local or remote) and analyze it through Steps 2-4
 3. **Depth limit**: Only resolve one level deep. References found inside resolved files are logged as unresolved, not followed
 
-For the complete resolution procedures including `uses:` format classification, composite action type discrimination, input mapping traces, remote fetching, and edge cases, see [{baseDir}/references/cross-file-resolution.md]({baseDir}/references/cross-file-resolution.md).
+For the complete resolution procedures including `uses:` format classification, composite action type discrimination, input mapping traces, remote fetching, and edge cases, see [references/cross-file-resolution.md](references/cross-file-resolution.md).
 
 ### Step 3: Capture Security Context
 
@@ -238,21 +238,21 @@ Include the security context captured for each instance in the detailed output.
 
 ### Step 4: Analyze for Attack Vectors
 
-First, read [{baseDir}/references/foundations.md]({baseDir}/references/foundations.md) to understand the attacker-controlled input model, env block mechanics, and data flow paths.
+First, read [references/foundations.md](references/foundations.md) to understand the attacker-controlled input model, env block mechanics, and data flow paths.
 
 Then check each vector against the security context captured in Step 3:
 
-| Vector | Name                        | Quick Check                                                                      | Reference                                                                                                                    |
-| ------ | --------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| A      | Env Var Intermediary        | `env:` block with `${{ github.event.* }}` value + prompt reads that env var name | [{baseDir}/references/vector-a-env-var-intermediary.md]({baseDir}/references/vector-a-env-var-intermediary.md)               |
-| B      | Direct Expression Injection | `${{ github.event.* }}` inside prompt or system-prompt field                     | [{baseDir}/references/vector-b-direct-expression-injection.md]({baseDir}/references/vector-b-direct-expression-injection.md) |
-| C      | CLI Data Fetch              | `gh issue view`, `gh pr view`, or `gh api` commands in prompt text               | [{baseDir}/references/vector-c-cli-data-fetch.md]({baseDir}/references/vector-c-cli-data-fetch.md)                           |
-| D      | PR Target + Checkout        | `pull_request_target` trigger + checkout with `ref:` pointing to PR head         | [{baseDir}/references/vector-d-pr-target-checkout.md]({baseDir}/references/vector-d-pr-target-checkout.md)                   |
-| E      | Error Log Injection         | CI logs, build output, or `workflow_dispatch` inputs passed to AI prompt         | [{baseDir}/references/vector-e-error-log-injection.md]({baseDir}/references/vector-e-error-log-injection.md)                 |
-| F      | Subshell Expansion          | Tool restriction list includes commands supporting `$()` expansion               | [{baseDir}/references/vector-f-subshell-expansion.md]({baseDir}/references/vector-f-subshell-expansion.md)                   |
-| G      | Eval of AI Output           | `eval`, `exec`, or `$()` in `run:` step consuming `steps.*.outputs.*`            | [{baseDir}/references/vector-g-eval-of-ai-output.md]({baseDir}/references/vector-g-eval-of-ai-output.md)                     |
-| H      | Dangerous Sandbox Configs   | `danger-full-access`, `Bash(*)`, `--yolo`, `safety-strategy: unsafe`             | [{baseDir}/references/vector-h-dangerous-sandbox-configs.md]({baseDir}/references/vector-h-dangerous-sandbox-configs.md)     |
-| I      | Wildcard Allowlists         | `allowed_non_write_users: "*"`, `allow-users: "*"`                               | [{baseDir}/references/vector-i-wildcard-allowlists.md]({baseDir}/references/vector-i-wildcard-allowlists.md)                 |
+| Vector | Name                        | Quick Check                                                                      | Reference                                                                                                |
+| ------ | --------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| A      | Env Var Intermediary        | `env:` block with `${{ github.event.* }}` value + prompt reads that env var name | [references/vector-a-env-var-intermediary.md](references/vector-a-env-var-intermediary.md)               |
+| B      | Direct Expression Injection | `${{ github.event.* }}` inside prompt or system-prompt field                     | [references/vector-b-direct-expression-injection.md](references/vector-b-direct-expression-injection.md) |
+| C      | CLI Data Fetch              | `gh issue view`, `gh pr view`, or `gh api` commands in prompt text               | [references/vector-c-cli-data-fetch.md](references/vector-c-cli-data-fetch.md)                           |
+| D      | PR Target + Checkout        | `pull_request_target` trigger + checkout with `ref:` pointing to PR head         | [references/vector-d-pr-target-checkout.md](references/vector-d-pr-target-checkout.md)                   |
+| E      | Error Log Injection         | CI logs, build output, or `workflow_dispatch` inputs passed to AI prompt         | [references/vector-e-error-log-injection.md](references/vector-e-error-log-injection.md)                 |
+| F      | Subshell Expansion          | Tool restriction list includes commands supporting `$()` expansion               | [references/vector-f-subshell-expansion.md](references/vector-f-subshell-expansion.md)                   |
+| G      | Eval of AI Output           | `eval`, `exec`, or `$()` in `run:` step consuming `steps.*.outputs.*`            | [references/vector-g-eval-of-ai-output.md](references/vector-g-eval-of-ai-output.md)                     |
+| H      | Dangerous Sandbox Configs   | `danger-full-access`, `Bash(*)`, `--yolo`, `safety-strategy: unsafe`             | [references/vector-h-dangerous-sandbox-configs.md](references/vector-h-dangerous-sandbox-configs.md)     |
+| I      | Wildcard Allowlists         | `allowed_non_write_users: "*"`, `allow-users: "*"`                               | [references/vector-i-wildcard-allowlists.md](references/vector-i-wildcard-allowlists.md)                 |
 
 For each vector, read the referenced file and apply its detection heuristic against the security context captured in Step 3. For each finding, record: the vector letter and name, the specific evidence from the workflow, the data flow path from attacker input to AI agent, and the affected workflow file and step.
 
@@ -271,7 +271,7 @@ Each finding uses this section order:
 - **Impact:** One sentence stating what an attacker can achieve
 - **Evidence:** YAML code snippet from the workflow showing the vulnerable pattern, with line number comments
 - **Data Flow:** Annotated numbered steps (see 5c for format)
-- **Remediation:** Action-specific guidance. For action-specific remediation details (exact field names, safe defaults, dangerous patterns), consult [{baseDir}/references/action-profiles.md]({baseDir}/references/action-profiles.md) to look up the affected action's secure configuration defaults, dangerous patterns, and recommended fixes.
+- **Remediation:** Action-specific guidance. For action-specific remediation details (exact field names, safe defaults, dangerous patterns), consult [references/action-profiles.md](references/action-profiles.md) to look up the affected action's secure configuration defaults, dangerous patterns, and recommended fixes.
 
 #### 5b. Severity Judgment
 
@@ -331,6 +331,6 @@ When analyzing a remote repository, add these elements to the report:
 
 For complete documentation beyond this methodology overview:
 
-- **Action Security Profiles:** See [{baseDir}/references/action-profiles.md]({baseDir}/references/action-profiles.md) for per-action security field documentation, default configurations, and dangerous configuration patterns.
-- **Detection Vectors:** See [{baseDir}/references/foundations.md]({baseDir}/references/foundations.md) for the shared attacker-controlled input model, and individual vector files `{baseDir}/references/vector-{a..i}-*.md` for per-vector detection heuristics.
-- **Cross-File Resolution:** See [{baseDir}/references/cross-file-resolution.md]({baseDir}/references/cross-file-resolution.md) for `uses:` reference classification, composite action and reusable workflow resolution procedures, input mapping traces, and depth-1 limit.
+- **Action Security Profiles:** See [references/action-profiles.md](references/action-profiles.md) for per-action security field documentation, default configurations, and dangerous configuration patterns.
+- **Detection Vectors:** See [references/foundations.md](references/foundations.md) for the shared attacker-controlled input model, and individual vector files `references/vector-{a..i}-*.md` for per-vector detection heuristics.
+- **Cross-File Resolution:** See [references/cross-file-resolution.md](references/cross-file-resolution.md) for `uses:` reference classification, composite action and reusable workflow resolution procedures, input mapping traces, and depth-1 limit.
