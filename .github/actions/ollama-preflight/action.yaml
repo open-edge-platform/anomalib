@@ -17,6 +17,11 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Add OpenCode CLI to PATH
+      shell: bash
+      run: |
+        echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
+
     - name: Verify required binaries
       shell: bash
       run: |
