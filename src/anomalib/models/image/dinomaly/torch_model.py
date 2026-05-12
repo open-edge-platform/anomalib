@@ -99,8 +99,8 @@ class DinomalyModel(nn.Module):
         bottleneck_dropout: float = 0.2,
         decoder_depth: int = 8,
         target_layers: list[int] | None = None,
-        fuse_layer_encoder: list[list[int]] = [[0, 1, 2, 3], [4, 5, 6, 7]],
-        fuse_layer_decoder: list[list[int]] = [[0, 1, 2, 3], [4, 5, 6, 7]],
+        fuse_layer_encoder: list[list[int]] | None = None,
+        fuse_layer_decoder: list[list[int]] | None = None,
         remove_class_token: bool = False,
         use_context_recentering: bool = False,
     ) -> None:
@@ -112,7 +112,7 @@ class DinomalyModel(nn.Module):
                 "to the class token and is incompatible with remove_class_token=True"
             )
             raise ValueError(msg)
-        
+
         # Extract architecture configuration based on the model name
         arch_config = self._get_architecture_config(encoder_name, target_layers)
         embed_dim = arch_config["embed_dim"]
@@ -123,8 +123,10 @@ class DinomalyModel(nn.Module):
         else:
             self.target_layers = target_layers
 
-        self.fuse_layer_encoder = fuse_layer_encoder
-        self.fuse_layer_decoder = fuse_layer_decoder
+        if fuse_layer_encoder is None:
+            self.fuse_layer_encoder = [[0, 1, 2, 3], [4, 5, 6, 7]]
+        if fuse_layer_decoder is None:
+            self.fuse_layer_decoder = [[0, 1, 2, 3], [4, 5, 6, 7]]
 
         self.encoder = DinoV2Loader(vit_factory=dinomaly_vision_transformer).load(encoder_name)
 
@@ -170,7 +172,6 @@ class DinomalyModel(nn.Module):
             decoder.append(decoder_block)
         self.decoder = nn.ModuleList(decoder)
 
-       
         self.remove_class_token = remove_class_token
         self.use_context_recentering = use_context_recentering
 

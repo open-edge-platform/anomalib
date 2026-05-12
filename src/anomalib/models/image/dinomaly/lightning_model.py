@@ -118,8 +118,7 @@ class Dinomaly(AnomalibModule):
             features before reconstruction. Most beneficial in multi-class settings.
             Incompatible with ``remove_class_token=True``. Defaults to False.
         precision (str | PrecisionType): Numerical precision for model parameters.
-            Supports "float16" and "float32". Defaults to "float16" for faster
-            training and inference with DINOv2 backbones.
+            Supports "float16" and "float32". Defaults to "float32".
         pre_processor (PreProcessor | bool, optional): Pre-processor instance or
             flag to use default. Defaults to ``True``.
         post_processor (PostProcessor | bool, optional): Post-processor instance
@@ -141,8 +140,6 @@ class Dinomaly(AnomalibModule):
         ...     encoder_name="dinov2reg_vit_large_14",
         ...     decoder_depth=12,
         ...     bottleneck_dropout=0.1,
-        ...     fuse_layer_encoder=[[0, 1, 2, 3], [4, 5, 6, 7]],
-        ...     fuse_layer_decoder=[[0, 1, 2, 3], [4, 5, 6, 7]]
         ... )
         >>>
         >>> # Training with datamodule
@@ -162,8 +159,8 @@ class Dinomaly(AnomalibModule):
         bottleneck_dropout: float = 0.2,
         decoder_depth: int = 8,
         target_layers: list[int] | None = None,
-        fuse_layer_encoder: list[list[int]] = [[0, 1, 2, 3], [4, 5, 6, 7]],
-        fuse_layer_decoder: list[list[int]] = [[0, 1, 2, 3], [4, 5, 6, 7]],
+        fuse_layer_encoder: list[list[int]] | None = None,
+        fuse_layer_decoder: list[list[int]] | None = None,
         remove_class_token: bool = False,
         use_context_recentering: bool = False,
         precision: str | PrecisionType = PrecisionType.FLOAT32,
