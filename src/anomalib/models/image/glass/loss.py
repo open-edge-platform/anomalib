@@ -119,7 +119,7 @@ class FocalLoss(nn.Module):
         elif isinstance(self.alpha, torch.Tensor):
             alpha = self.alpha.view(num_classes, 1).float()
             alpha = alpha / alpha.sum()
-        elif isinstance(self.alpha, (list | np.ndarray)):
+        elif isinstance(self.alpha, (list, np.ndarray)):
             alpha = torch.FloatTensor(alpha).view(num_classes, 1)
             alpha = alpha / alpha.sum()
         elif isinstance(self.alpha, float):

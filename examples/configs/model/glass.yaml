@@ -14,7 +14,6 @@ model:
     pre_projection: 1
     discriminator_layers: 2
     discriminator_hidden: 1024
-    discriminator_margin: 0.5
     learning_rate: 0.0001
     step: 20
     svd: 0
@@ -24,7 +23,7 @@ model:
     mining: true
 
 trainer:
-  max_epochs: 640
+  max_epochs: 100
   callbacks:
     - class_path: lightning.pytorch.callbacks.EarlyStopping
       init_args:
