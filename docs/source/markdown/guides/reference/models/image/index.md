@@ -4,6 +4,13 @@
 :margin: 1 1 0 0
 :gutter: 1
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` AnomalyVFM
+:link: ./anomalyvfm
+:link-type: doc
+
+Transforming Vision Foundation Models into Zero-Shot Anomaly Detectors
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` AnomalyDINO
 :link: ./anomaly_dino
 :link-type: doc
@@ -185,6 +192,7 @@ WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation
 :caption: Data
 :hidden:
 
+./anomalyvfm
 ./anomaly_dino
 ./cfa
 ./cflow
