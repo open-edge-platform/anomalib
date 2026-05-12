@@ -397,7 +397,7 @@ class VisionTransformer(nn.Module):
 
 
 class InputConditioner(nn.Module):
-    """Input conditioning module for image normalization."""
+    """Input conditioning module for image normalization using CLIP-style mean and std."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -405,7 +405,7 @@ class InputConditioner(nn.Module):
         self.register_buffer("norm_std", torch.tensor([0.26862954, 0.26130258, 0.27577711]).view(3, 1, 1))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Normalize the input image tensor using standard ImageNet mean and std.
+        """Normalize the input image tensor using CLIP-style mean and std.
 
         Args:
             x (torch.Tensor): Input image tensor.

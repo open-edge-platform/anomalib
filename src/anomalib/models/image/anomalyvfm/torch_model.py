@@ -47,7 +47,10 @@ class AnomalyVFMModel(
         self.predictor = SimplePredictor(feat_dim * 3)
 
         if not _HAS_HF_DEPS:
-            msg = "Please install them using: pip install anomalib[huggingface]"
+            msg = (
+                "AnomalyVFM requires 'huggingface_hub' and 'safetensors'. "
+                "Install them using: pip install anomalib[huggingface]"
+            )
             raise ImportError(msg)
         weights_path = hf_hub_download(
             repo_id="MaticFuc/anomalyvfm_radio",
@@ -75,7 +78,12 @@ class AnomalyVFMModel(
         h, w = img.shape[2], img.shape[3]
 
         device_type = img.device.type
-        dtype = torch.float32 if self.precision is None or self.precision == PrecisionType.FLOAT32 else torch.float16
+        if self.precision is None or self.precision == PrecisionType.FLOAT32:
+            dtype = torch.float32
+        elif device_type == "cpu":
+            dtype = torch.bfloat16
+        else:
+            dtype = torch.float16
 
         with torch.autocast(device_type=device_type, dtype=dtype), torch.no_grad():
             summary, ftrs = self.model(img)
