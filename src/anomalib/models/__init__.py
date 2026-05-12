@@ -21,6 +21,7 @@ Example:
 The module provides both image and video anomaly detection models:
 
 Image Models:
+    - AnomalyVFM (:class:`anomalib.models.image.AnomalyVFM`)
     - CFA (:class:`anomalib.models.image.Cfa`)
     - Cflow (:class:`anomalib.models.image.Cflow`)
     - CFM (:class:`anomalib.models.image.CFM`)
@@ -65,6 +66,7 @@ from .image import (
     L2BT,
     CFM,
     AnomalyDINO,
+    AnomalyVFM,
     Cfa,
     Cflow,
     Csflow,
@@ -107,6 +109,7 @@ class UnknownModelError(ModuleNotFoundError):
 __all__ = [
     "AiVad",
     "AnomalyDINO",
+    "AnomalyVFM",
     "Cfa",
     "Cflow",
     "Csflow",

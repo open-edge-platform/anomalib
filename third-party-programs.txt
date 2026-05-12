@@ -55,6 +55,10 @@ terms are listed below.
     Copyright (c) 2024 @LucStrater, https://github.com/LucStrater/GeneralAD
     SPDX-License-Identifier: MIT
 
+11. AnomalyVFM model (anomalib.models.image.anomalyvfm)
+    Copyright (c) 2025 @MaticFuc, https://github.com/MaticFuc/AnomalyVFM
+    SPDX-License-Identifier: MIT
+
 11. Agentic Actions Auditor skill (.agents/skills/agentic-actions-auditor)
     Copyright (c) Trail of Bits and contributors, https://github.com/trailofbits/skills
     SPDX-License-Identifier: CC-BY-SA-4.0
