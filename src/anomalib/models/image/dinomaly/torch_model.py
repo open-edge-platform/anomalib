@@ -33,6 +33,13 @@ DINOV2_ARCHITECTURES = {
     "large": {"embed_dim": 1024, "num_heads": 16, "target_layers": [4, 6, 8, 10, 12, 14, 16, 18]},
 }
 
+# Default fusion layer configurations
+# Instead of comparing layer to layer between encoder and decoder, dinomaly uses
+# layer groups to fuse features from multiple layers.
+# By Default, the first 4 layers and the last 4 layers are fused.
+# Note that these are the layer indices of the encoder and decoder layers used for feature extraction.
+DEFAULT_FUSE_LAYERS = [[0, 1, 2, 3], [4, 5, 6, 7]]
+
 # Default values for inference processing
 DEFAULT_RESIZE_SIZE = 256
 DEFAULT_GAUSSIAN_KERNEL_SIZE = 5
@@ -71,9 +78,9 @@ class DinomalyModel(nn.Module):
         target_layers (list[int] | None): List of encoder layer indices to extract features from.
             If None, uses [2, 3, 4, 5, 6, 7, 8, 9] for base models.
             For large models, uses [4, 6, 8, 10, 12, 14, 16, 18].
-        fuse_layer_encoder (list[list[int]]): Layer groupings for encoder feature fusion.
+        fuse_layer_encoder (list[list[int]] | None): Layer groupings for encoder feature fusion.
             If None, uses [[0, 1, 2, 3], [4, 5, 6, 7]].
-        fuse_layer_decoder (list[list[int]]): Layer groupings for decoder feature fusion.
+        fuse_layer_decoder (list[list[int]] | None): Layer groupings for decoder feature fusion.
             If None, uses [[0, 1, 2, 3], [4, 5, 6, 7]].
         remove_class_token (bool): Whether to remove class token from features
             before processing. Defaults to False.
@@ -124,9 +131,9 @@ class DinomalyModel(nn.Module):
             self.target_layers = target_layers
 
         if fuse_layer_encoder is None:
-            self.fuse_layer_encoder = [[0, 1, 2, 3], [4, 5, 6, 7]]
+            self.fuse_layer_encoder = DEFAULT_FUSE_LAYERS
         if fuse_layer_decoder is None:
-            self.fuse_layer_decoder = [[0, 1, 2, 3], [4, 5, 6, 7]]
+            self.fuse_layer_decoder = DEFAULT_FUSE_LAYERS
 
         self.encoder = DinoV2Loader(vit_factory=dinomaly_vision_transformer).load(encoder_name)
 
