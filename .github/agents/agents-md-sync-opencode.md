@@ -30,7 +30,7 @@ If ALL changes are "No structural impact", stop. Output: "No structural changes.
 
 ## Step 3 — Update AGENTS.md
 
-If `AGENTS.md` exists, edit only within `<!-- BEGIN MANAGED SECTION -->` / `<!-- END MANAGED SECTION -->` markers.
+If `AGENTS.md` exists, refresh the file with the current state of the repository.
 
 If it doesn't exist, create it with the standard skeleton (architecture map, conventions, API surface, models list, CI section, agent config files table).
 
@@ -51,7 +51,6 @@ gh pr create --title "docs: update AGENTS.md with recent codebase changes" \
 ## Rules
 
 - **Only edit `AGENTS.md`.** Never modify source code.
-- **Respect managed-section markers.** Content outside them is hand-maintained.
 - **Be factual.** Derive info from actual files. Do not hallucinate.
 - **Keep concise.** One-liners per module, link to details.
 - **Idempotent.** If already accurate, do not open a PR.
