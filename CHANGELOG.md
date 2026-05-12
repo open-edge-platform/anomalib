@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - 🚀 **model**: Add GLASS anomaly detection model by @code-dev05 in https://github.com/open-edge-platform/anomalib/pull/2629
+- 🚀 **model**: Add AnomalyVFM zero-shot anomaly detection model by @MaticFuc in https://github.com/open-edge-platform/anomalib/pull/3559
 
 ### Removed
 

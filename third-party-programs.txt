@@ -55,6 +55,10 @@ terms are listed below.
    Copyright (c) 2024 @LucStrater, https://github.com/LucStrater/GeneralAD
    SPDX-License-Identifier: MIT
 
-11. GLASS Model implementation is based on the original code
+11. AnomalyVFM model (anomalib.models.image.anomalyvfm)
+   Copyright (c) 2025 @MaticFuc, https://github.com/MaticFuc/AnomalyVFM
+   SPDX-License-Identifier: MIT
+
+12. GLASS Model implementation is based on the original code
    Copyright (c) 2024 Qiyu Chen, https://github.com/cqylunlun/GLASS
    SPDX-License-Identifier: MIT
