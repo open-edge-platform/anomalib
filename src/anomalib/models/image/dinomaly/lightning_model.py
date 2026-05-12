@@ -140,6 +140,7 @@ class Dinomaly(AnomalibModule):
         ...     encoder_name="dinov2reg_vit_large_14",
         ...     decoder_depth=12,
         ...     bottleneck_dropout=0.1,
+        ...     mask_neighbor_size=3
         ... )
         >>>
         >>> # Training with datamodule
