@@ -124,7 +124,7 @@ class DoRAQKVWrapper(_DoRALinearBase):
             self.register_parameter("mag_v", None)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Process input features throuhg the original block and the DoRA block.
+        """Process input features through the original block and the DoRA block.
 
         Args:
             x: input features

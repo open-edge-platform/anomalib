@@ -136,7 +136,7 @@ class Mlp(nn.Module):
         in_features (int): Number of input features.
         hidden_features (int): Number of hidden features.
         out_features (int): Number of output features.
-        act_layer (Type[nn.Module]): Activation layer type. Default is nn.GELU.
+        act_layer (type[nn.Module]): Activation layer type. Default is nn.GELU.
         drop (float): Dropout probability. Default is 0.0.
     """
 
@@ -437,14 +437,13 @@ class RADIOModel(nn.Module):
 
         Args:
             x (torch.Tensor): Input image tensor.
-            feature_fmt (str): Expected format of the spatial features. Default is "NLD".
 
         Returns:
-            (Tuple[torch.Tensor, torch.Tensor]): A tuple containing:
+            (tuple[torch.Tensor, torch.Tensor]): A tuple containing:
                 - summary (torch.Tensor): Flattened summary features from designated tokens.
                 - spatial_features (torch.Tensor): Spatial patch features.
         """
-        b, c, h, w = x.shape
+        _, _, h, w = x.shape
         x = self.input_conditioner(x)
         x = self.model(x, original_h=h, original_w=w)
         x = self.feature_normalizer(x)

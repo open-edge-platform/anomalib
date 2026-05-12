@@ -12,13 +12,6 @@ from .dora import add_peft
 from .radio import RADIOModel
 
 __all__ = [
-    # Decoders
-    "SimpleDecoder"
-    "SimplePredictor"
-    # PEFT Method
-    "add_peft"
-    # Vision Transformer
-    "RADIOModel",
     "SimpleDecoder",
     "SimplePredictor",
     "add_peft",

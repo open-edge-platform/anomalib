@@ -16,8 +16,6 @@ try:
 except ImportError:
     _HAS_HF_DEPS = False
 
-import math
-
 import torch
 from torch import nn
 from torch.nn import functional
@@ -41,6 +39,7 @@ class AnomalyVFMModel(
 
     def __init__(self) -> None:
         super().__init__()
+        self.precision: PrecisionType | None = None
         self.model = BaseModel()
         self.model.add_peft()
         feat_dim = self.model.feature_dim
@@ -73,15 +72,17 @@ class AnomalyVFMModel(
                 - anomaly_mask (torch.Tensor): Pixel-level anomaly prediction masks.
         """
         b = img.shape[0]
+        h, w = img.shape[2], img.shape[3]
 
         device_type = img.device.type
-        dtype = torch.float32 if self.precision is None or self.precision == PrecisionType.FLOAT32 else torch.bfloat16
+        dtype = torch.float32 if self.precision is None or self.precision == PrecisionType.FLOAT32 else torch.float16
 
         with torch.autocast(device_type=device_type, dtype=dtype), torch.no_grad():
             summary, ftrs = self.model(img)
-            feat_size = int(math.sqrt(ftrs.shape[1]))
+            feat_h = h // self.model.patch_size
+            feat_w = w // self.model.patch_size
             ftrs = ftrs.permute(0, 2, 1)
-            ftrs = ftrs.reshape(b, -1, feat_size, feat_size)
+            ftrs = ftrs.reshape(b, -1, feat_h, feat_w)
 
             anomaly_score = self.predictor(summary).sigmoid()
             anomaly_maps, _ = self.decoder(ftrs)
@@ -89,7 +90,7 @@ class AnomalyVFMModel(
             anomaly_maps = self.mean_kernel(anomaly_maps)
             anomaly_maps = functional.interpolate(
                 anomaly_maps,
-                size=feat_size * self.model.patch_size,
+                size=(h, w),
                 mode="bilinear",
                 align_corners=False,
             )

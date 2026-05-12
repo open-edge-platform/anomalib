@@ -60,7 +60,7 @@ class AnomalyVFM(AnomalibModule):
         if isinstance(precision, str):
             self.model.precision = PrecisionType(precision.lower())
         else:
-            self.model.precision = PrecisionType.FLOAT32
+            self.model.precision = precision
 
     @classmethod
     def configure_pre_processor(cls, image_size: tuple[int, int] | None = None) -> PreProcessor:

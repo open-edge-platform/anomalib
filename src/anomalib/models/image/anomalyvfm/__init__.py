@@ -5,7 +5,7 @@
 
 AnomalyVFM implements a zero-shot anomaly detector on top of pretrained VFMs.
 It does so by first generating synthetic images using FLUX and training on top of them.
-The model directly predicts an anomaly score and a anomaly mask.
+The model directly predicts an anomaly score and an anomaly mask.
 
 Example:
     >>> from anomalib.models.image import AnomalyVFM
