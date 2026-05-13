@@ -232,6 +232,8 @@ class PostProcessor(nn.Module, Callback):
 
         image_sens = image_sensitivity if image_sensitivity is not None else torch.tensor(self.image_sensitivity)
         pixel_sens = pixel_sensitivity if pixel_sensitivity is not None else torch.tensor(self.pixel_sensitivity)
+        image_sens = image_sens.to(device=pred_score.device, dtype=pred_score.dtype)
+        pixel_sens = pixel_sens.to(device=pred_score.device, dtype=pred_score.dtype)
 
         if self.enable_normalization:
             image_eff_threshold = self._effective_threshold(
@@ -253,9 +255,13 @@ class PostProcessor(nn.Module, Callback):
             anomaly_map = predictions.anomaly_map
 
         if self.enable_thresholding:
-            # After normalization with effective threshold, decision boundary is at 0.5
-            pred_label = self._apply_threshold(pred_score, torch.tensor(0.5))
-            pred_mask = self._apply_threshold(anomaly_map, torch.tensor(0.5))
+            if self.enable_normalization:
+                threshold = torch.tensor(0.5, device=self.image_threshold.device, dtype=self.image_threshold.dtype)
+                pred_label = self._apply_threshold(pred_score, threshold)
+                pred_mask = self._apply_threshold(anomaly_map, threshold)
+            else:
+                pred_label = self._apply_threshold(pred_score, self.image_threshold)
+                pred_mask = self._apply_threshold(anomaly_map, self.pixel_threshold)
         else:
             pred_label = None
             pred_mask = None

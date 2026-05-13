@@ -97,6 +97,11 @@ class TorchInferencer:
         device (str, optional): Device to use for inference.
             Options are ``"auto"``, ``"cpu"``, ``"cuda"``, ``"xpu"``.
             Defaults to ``"auto"``.
+        image_sensitivity (float | None, optional): Override image-level sensitivity.
+            Takes precedence over ``metadata.json`` value. Falls back to 0.5 if
+            neither this nor metadata provides a value. Defaults to ``None``.
+        pixel_sensitivity (float | None, optional): Override pixel-level sensitivity.
+            Same precedence as ``image_sensitivity``. Defaults to ``None``.
 
     Example:
         >>> from anomalib.deploy import TorchInferencer
@@ -300,11 +305,18 @@ class TorchInferencer:
         img_sens = image_sensitivity if image_sensitivity is not None else self._default_image_sensitivity
         pix_sens = pixel_sensitivity if pixel_sensitivity is not None else self._default_pixel_sensitivity
 
-        predictions = self.model(
-            image,
-            torch.tensor(img_sens, device=self.device),
-            torch.tensor(pix_sens, device=self.device),
-        )
+        try:
+            predictions = self.model(
+                image,
+                torch.tensor(img_sens, device=self.device),
+                torch.tensor(pix_sens, device=self.device),
+            )
+        except TypeError:
+            logger.warning(
+                "Image only API is deprecated and will be removed in Anomalib 2.7.0."
+                " Models exported from current version of Anomalib already support the new API.",
+            )
+            predictions = self.model(image)
 
         return ImageBatch(image=image, **predictions._asdict())
 

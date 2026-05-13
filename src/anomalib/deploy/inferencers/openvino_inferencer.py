@@ -251,15 +251,13 @@ class OpenVINOInferencer:
         img_sens = image_sensitivity if image_sensitivity is not None else self._default_image_sensitivity
         pix_sens = pixel_sensitivity if pixel_sensitivity is not None else self._default_pixel_sensitivity
 
-        input_names = [inp.any_name for inp in self.model.inputs]
+        input_names = {inp.any_name for inp in self.model.inputs}
+        feed_dict: dict[str, np.ndarray] = {self.input_blob.any_name: image}
         if "image_sensitivity" in input_names:
-            predictions = self.model({
-                self.input_blob.any_name: image,
-                "image_sensitivity": np.array(img_sens, dtype=np.float32),
-                "pixel_sensitivity": np.array(pix_sens, dtype=np.float32),
-            })
-        else:
-            predictions = self.model({self.input_blob.any_name: image})
+            feed_dict["image_sensitivity"] = np.array(img_sens, dtype=np.float32)
+        if "pixel_sensitivity" in input_names:
+            feed_dict["pixel_sensitivity"] = np.array(pix_sens, dtype=np.float32)
+        predictions = self.model(feed_dict)
 
         pred_dict = self.post_process(predictions)
 

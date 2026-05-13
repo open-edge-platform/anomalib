@@ -12,6 +12,11 @@ logger = logging.getLogger(__name__)
 CURRENT_SCHEMA_VERSION = "1.0"
 
 
+def _parse_version(version_str: str) -> tuple[int, ...]:
+    """Parse a dotted version string into a comparable tuple of ints."""
+    return tuple(int(x) for x in version_str.split("."))
+
+
 def upgrade_to_latest(metadata: dict) -> dict:
     """Upgrade metadata dict to the current schema version.
 
@@ -29,7 +34,7 @@ def upgrade_to_latest(metadata: dict) -> dict:
     if version is None:
         metadata = _legacy_to_v1(metadata)
 
-    if metadata["schema_version"] > CURRENT_SCHEMA_VERSION:
+    if _parse_version(metadata["schema_version"]) > _parse_version(CURRENT_SCHEMA_VERSION):
         logger.warning(
             "Metadata schema %s is newer than supported (%s). "
             "Unknown fields will be ignored. Consider upgrading anomalib.",

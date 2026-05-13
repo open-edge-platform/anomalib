@@ -355,14 +355,17 @@ class ExportMixin:
                 ``init_args``.
         """
         transforms: list[dict] = []
-        if hasattr(pre_processor, "transforms"):
-            for t in pre_processor.transforms:
-                entry: dict[str, Any] = {"class_path": f"{type(t).__module__}.{type(t).__qualname__}"}
-                if hasattr(t, "__dict__"):
-                    init_args = {k: v for k, v in t.__dict__.items() if not k.startswith("_") and not callable(v)}
-                    if init_args:
-                        entry["init_args"] = init_args
-                transforms.append(entry)
+        transform = getattr(pre_processor, "export_transform", None) or getattr(pre_processor, "transform", None)
+        if transform is None:
+            return transforms
+        iterable = getattr(transform, "transforms", [transform])
+        for t in iterable:
+            entry: dict[str, Any] = {"class_path": f"{type(t).__module__}.{type(t).__qualname__}"}
+            if hasattr(t, "__dict__"):
+                init_args = {k: v for k, v in t.__dict__.items() if not k.startswith("_") and not callable(v)}
+                if init_args:
+                    entry["init_args"] = init_args
+            transforms.append(entry)
         return transforms
 
     def _compress_ov_model(
