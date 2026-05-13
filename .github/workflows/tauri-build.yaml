@@ -28,14 +28,8 @@ name: Tauri Build
 on:
   push:
     branches: ["main", "feature/**", "release/**"]
-    paths:
-      - "application/**"
-      - ".github/workflows/tauri-build.yaml"
   pull_request:
     branches: ["main", "feature/**", "release/**"]
-    paths:
-      - "application/**"
-      - ".github/workflows/tauri-build.yaml"
   workflow_dispatch:
     inputs:
       accelerator:
@@ -59,6 +53,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check-paths:
+    name: Check if workflow should run
+    runs-on: ubuntu-latest
+    outputs:
+      run_workflow: ${{ steps.check_paths.outputs.run }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Check paths
+        id: check_paths
+        uses: open-edge-platform/geti-ci/actions/check-paths@7e686c1248b3939f8ee8e04e2612da727e379d91
+        with:
+          files_yaml: |
+            test:
+              - application/**
+              - .github/workflows/tauri-build.yaml
+
   # build-linux:
   #   runs-on: ubuntu-latest
   #   timeout-minutes: 90
@@ -139,9 +155,11 @@ jobs:
 
   build-windows:
     name: Build Windows MSIX
+    needs: check-paths
     # Only run in the source repo where MSIX signing secrets are configured.
     # Skipped on forks; run manually via workflow_dispatch from the repo.
     if: |
+      needs.check-paths.outputs.run_workflow == 'true' &&
       github.repository == 'open-edge-platform/anomalib' &&
       (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: windows-latest
@@ -400,3 +418,28 @@ jobs:
   #         path: application/binary/tauri/src-tauri/target/release/bundle/dmg/*.dmg
   #         retention-days: 30
   #         if-no-files-found: error
+
+  required-check:
+    name: Required Check tauri-build
+    needs:
+      - check-paths
+      - build-windows
+    runs-on: ubuntu-latest
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    if: always() && !cancelled()
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
+      - name: Check jobs results
+        run: |
+          for check in ${CHECKS}; do
+            echo "::notice::check=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error ::Required status checks failed. They must succeed before this pull request can be merged."
+              exit 1
+            fi
+          done
