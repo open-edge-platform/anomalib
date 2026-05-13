@@ -341,7 +341,11 @@ class PointTransformer(nn.Module):
 
     def load_model_from_ckpt(self, bert_ckpt_path: str) -> None:
         """Loads model from a checkpoint."""
-        ckpt = torch.load(bert_ckpt_path, map_location="cpu" if not torch.cuda.is_available() else "cuda")  # nosec B614
+        ckpt = torch.load(
+            bert_ckpt_path,
+            map_location="cpu" if not torch.cuda.is_available() else "cuda",
+            weights_only=True, 
+        )
         base_ckpt = {k.replace("module.", ""): v for k, v in ckpt["base_model"].items()}
         for k in list(base_ckpt.keys()):
             if k.startswith("MAE_encoder."):
