@@ -60,6 +60,7 @@ from PIL.Image import Image as PILImage
 
 from anomalib.data import NumpyImageBatch
 from anomalib.data.utils import read_image
+from anomalib.deploy.metadata import load_metadata
 
 if TYPE_CHECKING:
     from openvino.utils.data_helpers.wrappers import OVDict
@@ -279,7 +280,5 @@ class OpenVINOInferencer:
         path = Path(path) if not isinstance(path, Path) else path
         metadata_path = path.parent / "metadata.json"
         if metadata_path.exists():
-            from anomalib.deploy.metadata import load_metadata
-
             return load_metadata(metadata_path)
         return None

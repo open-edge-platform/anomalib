@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Mixin for exporting anomaly detection models to disk.
@@ -49,9 +49,10 @@ from lightning_utilities.core.imports import module_available
 from torch import nn
 from torchmetrics import Metric
 
-from anomalib import TaskType
+from anomalib import TaskType, __version__
 from anomalib.data import AnomalibDataModule, ImageBatch
 from anomalib.deploy.export import CompressionType, ExportType
+from anomalib.deploy.metadata import CURRENT_SCHEMA_VERSION, dump_metadata
 
 if TYPE_CHECKING:
     if module_available("openvino"):
@@ -318,9 +319,6 @@ class ExportMixin:
         Returns:
             Path: Path to the written metadata.json file.
         """
-        import anomalib
-        from anomalib.deploy.metadata import CURRENT_SCHEMA_VERSION, dump_metadata
-
         image_sensitivity = 0.5
         pixel_sensitivity = 0.5
         if hasattr(self, "post_processor") and self.post_processor is not None:
@@ -333,7 +331,7 @@ class ExportMixin:
 
         metadata = {
             "schema_version": CURRENT_SCHEMA_VERSION,
-            "anomalib_version": anomalib.__version__,
+            "anomalib_version": __version__,
             "model": self.__class__.__name__,
             "preprocess": preprocess_transforms,
             "postprocess": {

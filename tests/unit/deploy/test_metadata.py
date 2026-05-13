@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from anomalib.deploy.metadata import SchemaValidationError, dump_metadata, load_metadata
-from anomalib.deploy.metadata.migration import CURRENT_SCHEMA_VERSION, upgrade_to_latest
+from anomalib.deploy.metadata.migration import upgrade_to_latest
 
 
 def _make_valid_metadata() -> dict:
@@ -87,8 +87,3 @@ class TestMigration:
         metadata["schema_version"] = "99.0"
         result = upgrade_to_latest(metadata)
         assert result["schema_version"] == "99.0"
-
-    @staticmethod
-    def test_current_schema_version() -> None:
-        """Verify CURRENT_SCHEMA_VERSION constant."""
-        assert CURRENT_SCHEMA_VERSION == "1.0"

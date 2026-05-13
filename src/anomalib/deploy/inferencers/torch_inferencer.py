@@ -66,6 +66,7 @@ from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from anomalib.data import ImageBatch
 from anomalib.data.utils import read_image
+from anomalib.deploy.metadata import load_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -341,7 +342,5 @@ class TorchInferencer:
         path = Path(path) if not isinstance(path, Path) else path
         metadata_path = path.parent / "metadata.json"
         if metadata_path.exists():
-            from anomalib.deploy.metadata import load_metadata
-
             return load_metadata(metadata_path)
         return None
