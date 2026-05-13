@@ -79,12 +79,15 @@ class ExportMixin:
         self,
         export_root: Path | str,
         model_file_name: str = "model",
+        write_metadata: bool = True,
     ) -> Path:
         """Export model to PyTorch format.
 
         Args:
             export_root (Path | str): Path to the output folder
             model_file_name (str): Name of the exported model
+            write_metadata (bool): Whether to write metadata.json sidecar file.
+                Defaults to ``True``.
 
         Returns:
             Path: Path to the exported PyTorch model (.pt file)
@@ -106,6 +109,8 @@ class ExportMixin:
             obj={"model": self},
             f=pt_model_path,
         )
+        if write_metadata:
+            self._write_metadata(export_root)
         return pt_model_path
 
     def to_onnx(
@@ -113,6 +118,7 @@ class ExportMixin:
         export_root: Path | str,
         model_file_name: str = "model",
         input_size: tuple[int, int] | None = None,
+        write_metadata: bool = True,
         **kwargs,
     ) -> Path:
         """Export model to ONNX format.
@@ -122,6 +128,8 @@ class ExportMixin:
             model_file_name (str): Name of the exported model.
             input_size (tuple[int, int] | None): Input image dimensions (height, width).
                 If ``None``, uses dynamic input shape. Defaults to ``None``
+            write_metadata (bool): Whether to write metadata.json sidecar file.
+                Defaults to ``True``.
             **kwargs: Additional arguments to pass to torch.onnx.export.
                 See https://pytorch.org/docs/stable/onnx.html#torch.onnx.export for details.
                 Common options include:
@@ -169,19 +177,36 @@ class ExportMixin:
         onnx_path = export_root / (model_file_name + ".onnx")
         # apply pass through the model to get the output names
         assert isinstance(self, LightningModule)  # mypy
-        output_names = [name for name, value in self.eval()(input_shape)._asdict().items() if value is not None]
+
+        default_image_sensitivity = 0.5
+        default_pixel_sensitivity = 0.5
+        if hasattr(self, "post_processor") and self.post_processor is not None:
+            default_image_sensitivity = float(self.post_processor.image_sensitivity)
+            default_pixel_sensitivity = float(self.post_processor.pixel_sensitivity)
+
+        image_sensitivity = torch.tensor(default_image_sensitivity, device=self.device)
+        pixel_sensitivity = torch.tensor(default_pixel_sensitivity, device=self.device)
+
+        output_names = [
+            name
+            for name, value in self.eval()(input_shape, image_sensitivity, pixel_sensitivity)._asdict().items()
+            if value is not None
+        ]
 
         torch.onnx.export(
             model=self,
-            args=(input_shape.to(self.device),),
+            args=(input_shape.to(self.device), image_sensitivity, pixel_sensitivity),
             f=str(onnx_path),
             opset_version=kwargs.pop("opset_version", 14),
             dynamic_axes=kwargs.pop("dynamic_axes", dynamic_axes),
-            input_names=kwargs.pop("input_names", ["input"]),
+            input_names=kwargs.pop("input_names", ["input", "image_sensitivity", "pixel_sensitivity"]),
             output_names=kwargs.pop("output_names", output_names),
             dynamo=kwargs.pop("dynamo", False),  # Dynamo is changed to True by default in torch 2.9
             **kwargs,
         )
+
+        if write_metadata:
+            self._write_metadata(export_root)
 
         return onnx_path
 
@@ -197,6 +222,7 @@ class ExportMixin:
         max_drop: float = 0.01,
         ov_kwargs: dict[str, Any] | None = None,
         onnx_kwargs: dict[str, Any] | None = None,
+        write_metadata: bool = True,
     ) -> Path:
         """Export model to OpenVINO IR format.
 
@@ -224,6 +250,8 @@ class ExportMixin:
             onnx_kwargs (dict[str, Any] | None): Additional arguments to pass to torch.onnx.export
                 during the initial ONNX conversion. See https://pytorch.org/docs/stable/onnx.html#torch.onnx.export
                 for details. Defaults to ``None``
+            write_metadata (bool): Whether to write metadata.json sidecar file.
+                Defaults to ``True``.
 
         Returns:
             Path: Path to the exported OpenVINO model (.xml file)
@@ -258,7 +286,13 @@ class ExportMixin:
         import openvino as ov
 
         with TemporaryDirectory() as onnx_directory:
-            model_path = self.to_onnx(onnx_directory, model_file_name, input_size, **(onnx_kwargs or {}))
+            model_path = self.to_onnx(
+                onnx_directory,
+                model_file_name,
+                input_size,
+                write_metadata=False,
+                **(onnx_kwargs or {}),
+            )
             export_root = _create_export_root(export_root, ExportType.OPENVINO)
             ov_model_path = export_root / (model_file_name + ".xml")
 
@@ -270,7 +304,68 @@ class ExportMixin:
             compress_to_fp16 = compression_type == CompressionType.FP16
             ov.save_model(model, ov_model_path, compress_to_fp16=compress_to_fp16)
 
+        if write_metadata:
+            self._write_metadata(export_root)
+
         return ov_model_path
+
+    def _write_metadata(self, export_root: Path) -> Path:
+        """Write metadata.json sidecar to the export directory.
+
+        Args:
+            export_root (Path): Directory where the model was exported.
+
+        Returns:
+            Path: Path to the written metadata.json file.
+        """
+        import anomalib
+        from anomalib.deploy.metadata import CURRENT_SCHEMA_VERSION, dump_metadata
+
+        image_sensitivity = 0.5
+        pixel_sensitivity = 0.5
+        if hasattr(self, "post_processor") and self.post_processor is not None:
+            image_sensitivity = float(self.post_processor.image_sensitivity)
+            pixel_sensitivity = float(self.post_processor.pixel_sensitivity)
+
+        preprocess_transforms: list[dict] = []
+        if hasattr(self, "pre_processor") and self.pre_processor is not None:
+            preprocess_transforms = self._serialize_preprocess(self.pre_processor)
+
+        metadata = {
+            "schema_version": CURRENT_SCHEMA_VERSION,
+            "anomalib_version": anomalib.__version__,
+            "model": self.__class__.__name__,
+            "preprocess": preprocess_transforms,
+            "postprocess": {
+                "image_sensitivity": image_sensitivity,
+                "pixel_sensitivity": pixel_sensitivity,
+            },
+        }
+        metadata_path = export_root / "metadata.json"
+        dump_metadata(metadata, metadata_path)
+        return metadata_path
+
+    @staticmethod
+    def _serialize_preprocess(pre_processor: nn.Module) -> list[dict]:
+        """Serialize pre-processor transforms to jsonargparse-style dicts.
+
+        Args:
+            pre_processor (nn.Module): The pre-processor module.
+
+        Returns:
+            list[dict]: List of transform descriptors with ``class_path`` and
+                ``init_args``.
+        """
+        transforms: list[dict] = []
+        if hasattr(pre_processor, "transforms"):
+            for t in pre_processor.transforms:
+                entry: dict[str, Any] = {"class_path": f"{type(t).__module__}.{type(t).__qualname__}"}
+                if hasattr(t, "__dict__"):
+                    init_args = {k: v for k, v in t.__dict__.items() if not k.startswith("_") and not callable(v)}
+                    if init_args:
+                        entry["init_args"] = init_args
+                transforms.append(entry)
+        return transforms
 
     def _compress_ov_model(
         self,

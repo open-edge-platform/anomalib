@@ -106,3 +106,94 @@ class TestPostProcessor:
         pre_processor.on_validation_batch_end(None, None, batch)
         pre_processor.on_validation_epoch_end(None, None)
         assert pre_processor.image_threshold == pre_processor.pixel_threshold
+
+
+class TestEffectiveThreshold:
+    """Tests for _effective_threshold and sensitivity-driven forward pass."""
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        ("threshold", "norm_min", "norm_max", "sensitivity", "expected"),
+        [
+            # sensitivity=0.5 → no shift
+            (0.5, 0.0, 1.0, 0.5, 0.5),
+            # sensitivity=1.0 → shift down by half range
+            (0.5, 0.0, 1.0, 1.0, 0.0),
+            # sensitivity=0.0 → shift up by half range
+            (0.5, 0.0, 1.0, 0.0, 1.0),
+            # non-unit range
+            (0.3, 0.1, 0.9, 0.5, 0.3),
+            # clamping: sensitivity > 1 treated as 1
+            (0.5, 0.0, 1.0, 2.0, 0.0),
+            # clamping: sensitivity < 0 treated as 0
+            (0.5, 0.0, 1.0, -1.0, 1.0),
+            # arbitrary values
+            (0.4, 0.2, 0.8, 0.7, 0.4 + (0.8 - 0.2) * (0.5 - 0.7)),
+        ],
+    )
+    def test_effective_threshold(
+        threshold: float,
+        norm_min: float,
+        norm_max: float,
+        sensitivity: float,
+        expected: float,
+    ) -> None:
+        """Test _effective_threshold computes correct shifted threshold."""
+        result = PostProcessor._effective_threshold(  # noqa: SLF001
+            torch.tensor(threshold),
+            torch.tensor(norm_min),
+            torch.tensor(norm_max),
+            torch.tensor(sensitivity),
+        )
+        assert result.item() == pytest.approx(expected, abs=1e-6)
+
+    @staticmethod
+    def test_forward_with_sensitivity_override() -> None:
+        """Test that forward accepts sensitivity tensors without error."""
+        processor = PostProcessor()
+        processor._image_threshold.copy_(torch.tensor(0.5))  # noqa: SLF001
+        processor._pixel_threshold.copy_(torch.tensor(0.5))  # noqa: SLF001
+        processor.image_min.copy_(torch.tensor(0.0))
+        processor.image_max.copy_(torch.tensor(1.0))
+        processor.pixel_min.copy_(torch.tensor(0.0))
+        processor.pixel_max.copy_(torch.tensor(1.0))
+
+        batch = ImageBatch(
+            image=torch.rand(2, 3, 4, 4),
+            pred_score=torch.tensor([0.3, 0.7]),
+            anomaly_map=torch.rand(2, 1, 4, 4),
+        )
+        result = processor(batch, image_sensitivity=torch.tensor(0.8), pixel_sensitivity=torch.tensor(0.8))
+        assert result.pred_label is not None
+        assert result.pred_mask is not None
+
+    @staticmethod
+    def test_forward_sensitivity_changes_labels() -> None:
+        """High sensitivity should label more as anomalous (lower effective threshold)."""
+        processor = PostProcessor()
+        processor._image_threshold.copy_(torch.tensor(0.5))  # noqa: SLF001
+        processor._pixel_threshold.copy_(torch.tensor(0.5))  # noqa: SLF001
+        processor.image_min.copy_(torch.tensor(0.0))
+        processor.image_max.copy_(torch.tensor(1.0))
+        processor.pixel_min.copy_(torch.tensor(0.0))
+        processor.pixel_max.copy_(torch.tensor(1.0))
+
+        batch = ImageBatch(
+            image=torch.rand(4, 3, 4, 4),
+            pred_score=torch.tensor([0.3, 0.4, 0.6, 0.7]),
+            anomaly_map=torch.rand(4, 1, 4, 4),
+        )
+
+        # Default sensitivity (0.5) → threshold stays at 0.5
+        result_default = processor(batch, image_sensitivity=torch.tensor(0.5))
+        # High sensitivity (0.9) → threshold shifts down
+        result_high = processor(batch, image_sensitivity=torch.tensor(0.9))
+
+        # More anomalous labels with high sensitivity
+        assert result_high.pred_label.sum() >= result_default.pred_label.sum()
+
+    @staticmethod
+    def test_apply_threshold_none_input() -> None:
+        """_apply_threshold returns None when pred_score is None."""
+        result = PostProcessor._apply_threshold(None, torch.tensor(0.5))  # noqa: SLF001
+        assert result is None
