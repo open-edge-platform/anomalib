@@ -28,14 +28,8 @@ name: Tauri Build
 on:
   push:
     branches: ["main", "feature/**", "release/**"]
-    paths:
-      - "application/**"
-      - ".github/workflows/tauri-build.yaml"
   pull_request:
     branches: ["main", "feature/**", "release/**"]
-    paths:
-      - "application/**"
-      - ".github/workflows/tauri-build.yaml"
   workflow_dispatch:
     inputs:
       accelerator:
@@ -59,6 +53,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check-paths:
+    name: Check if workflow should run
+    runs-on: ubuntu-latest
+    outputs:
+      run_workflow: ${{ steps.check_paths.outputs.run }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Check paths
+        id: check_paths
+        uses: open-edge-platform/geti-ci/actions/check-paths@7e686c1248b3939f8ee8e04e2612da727e379d91
+        with:
+          files_yaml: |
+            test:
+              - application/**
+              - .github/workflows/tauri-build.yaml
+
   # build-linux:
   #   runs-on: ubuntu-latest
   #   timeout-minutes: 90
@@ -139,9 +155,11 @@ jobs:
 
   build-windows:
     name: Build Windows MSIX
+    needs: check-paths
     # Only run in the source repo where MSIX signing secrets are configured.
     # Skipped on forks; run manually via workflow_dispatch from the repo.
     if: |
+      needs.check-paths.outputs.run_workflow == 'true' &&
       github.repository == 'open-edge-platform/anomalib' &&
       (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: windows-latest
@@ -201,7 +219,7 @@ jobs:
 
       # Cache poisoning mitigation: fork PRs blocked, same-repo PRs allowed
       - name: Install uv
-        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0 # zizmor: ignore[cache-poisoning]
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0 # zizmor: ignore[cache-poisoning]
         with:
           version: "latest"
           enable-cache: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
@@ -214,7 +232,7 @@ jobs:
       # Cache poisoning mitigation: fork PRs blocked, same-repo PRs allowed with event+branch isolation
       - name: Cache Rust dependencies
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4 # zizmor: ignore[cache-poisoning]
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5 # zizmor: ignore[cache-poisoning]
         with:
           path: |
             ~/.cargo/bin/
@@ -228,7 +246,7 @@ jobs:
 
       # Cache poisoning mitigation: fork PRs blocked, same-repo PRs allowed
       - name: Setup Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0 # zizmor: ignore[cache-poisoning]
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0 # zizmor: ignore[cache-poisoning]
         with:
           node-version: "24"
           cache: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'npm' || '' }}
@@ -318,7 +336,7 @@ jobs:
           }
 
       - name: Upload MSIX artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: anomalib-studio-windows-msix-${{ matrix.accelerator }}
           path: ${{ env.MSIX_FILE_PATH }}
@@ -400,3 +418,23 @@ jobs:
   #         path: application/binary/tauri/src-tauri/target/release/bundle/dmg/*.dmg
   #         retention-days: 30
   #         if-no-files-found: error
+
+  required-check:
+    name: Required Check tauri-build
+    needs:
+      - check-paths
+      - build-windows
+    runs-on: ubuntu-latest
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    if: always() && !cancelled()
+    steps:
+      - name: Check jobs results
+        run: |
+          for check in ${CHECKS}; do
+            echo "::notice::check=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error ::Required status checks failed. They must succeed before this pull request can be merged."
+              exit 1
+            fi
+          done

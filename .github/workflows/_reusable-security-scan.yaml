@@ -97,7 +97,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/geti-ci/actions/bandit@e80098b3d180db37914f11ff6021f9fa34d0bb9f
+        uses: open-edge-platform/geti-ci/actions/bandit@7d25e47329bbfcde4ee51ab3581aea8613e245e2
         with:
           scan-scope: ${{ inputs.scan-scope }}
           severity-level: ${{ inputs.severity-level }}
@@ -121,7 +121,7 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
       - name: Run Semgrep scan
-        uses: open-edge-platform/geti-ci/actions/semgrep@e80098b3d180db37914f11ff6021f9fa34d0bb9f
+        uses: open-edge-platform/geti-ci/actions/semgrep@7d25e47329bbfcde4ee51ab3581aea8613e245e2
         with:
           scan-scope: ${{ inputs.scan-scope }}
           severity: ${{ inputs.severity-level }}
@@ -144,7 +144,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Trivy scan
-        uses: open-edge-platform/geti-ci/actions/trivy@e80098b3d180db37914f11ff6021f9fa34d0bb9f
+        uses: open-edge-platform/geti-ci/actions/trivy@7d25e47329bbfcde4ee51ab3581aea8613e245e2
         with:
           scan_type: "fs"
           scan-scope: ${{ inputs.scan-scope }}
@@ -170,7 +170,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Zizmor scan
-        uses: open-edge-platform/geti-ci/actions/zizmor@e80098b3d180db37914f11ff6021f9fa34d0bb9f
+        uses: open-edge-platform/geti-ci/actions/zizmor@7d25e47329bbfcde4ee51ab3581aea8613e245e2
         with:
           scan-scope: ${{ inputs.scan-scope }}
           severity-level: ${{ inputs.severity-level }}
@@ -332,7 +332,7 @@ jobs:
           egress-policy: audit
 
       - name: Run container image scan (${{ matrix.ai-device }})
-        uses: open-edge-platform/geti-ci/actions/trivy@e80098b3d180db37914f11ff6021f9fa34d0bb9f
+        uses: open-edge-platform/geti-ci/actions/trivy@7d25e47329bbfcde4ee51ab3581aea8613e245e2
         with:
           artifact-name: "trivy-scan-container-${{ matrix.ai-device }}"
           scan_type: "image"
