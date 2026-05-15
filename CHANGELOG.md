@@ -16,6 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+## [v2.4.2] - 2026-05-15
+
+### Added
+
+- 🚀 **model**: Half precision training for Dinomaly by @alexriedel1 in https://github.com/open-edge-platform/anomalib/pull/3593
+
 ## [v2.4.1] - 2026-05-01
 
 ### Fixed
