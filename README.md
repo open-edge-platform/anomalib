@@ -31,13 +31,13 @@
 
 ---
 
-> 🌟 **Announcing v2.4.1 Release!** 🌟
+> 🌟 **Announcing v2.4.2 Release!** 🌟
 >
-> This patch release fixes DDP training issues.
+> This patch release adds half-precision training for Dinomaly.
 >
-> Key Fixes
+> Key Changes
 >
-> - Fixed DDP adaptive F1 score computation.
+> - Half precision training support for Dinomaly.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 
