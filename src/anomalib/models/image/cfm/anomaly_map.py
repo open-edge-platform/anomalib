@@ -18,19 +18,16 @@ class CFMAnomalyMapGenerator(nn.Module):
 
     def __init__(
         self,
-        image_size: int = 224,
         sigma: float = 4.0,
         topk_ratio: float = 0.001,
     ) -> None:
         """Initialize the maps generator.
 
         Args:
-            image_size: Final resolution of anomaly map.
             sigma: Standard Deviation for Gaussian Blur.
             topk_ratio: Percentage of worst pixels used for the score of the image.
         """
         super().__init__()
-        self.image_size = image_size
         self.topk_ratio = topk_ratio
 
         # Substituted KNNGaussianBlur based on PIL with a 2D kernel PyTorch.
@@ -54,6 +51,7 @@ class CFMAnomalyMapGenerator(nn.Module):
         xyz_feat: torch.Tensor,
         pred_rgb: torch.Tensor,
         pred_xyz: torch.Tensor,
+        target_size: tuple[int, int],
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Generates combined map and global score.
 
@@ -75,10 +73,10 @@ class CFMAnomalyMapGenerator(nn.Module):
         anomaly_map = combined_map.unsqueeze(1)
 
         # 4. Upsampling to original dimension of the image
-        if anomaly_map.shape[-2:] != (self.image_size, self.image_size):
+        if anomaly_map.shape[-2:] != (target_size):
             anomaly_map = functional.interpolate(
                 anomaly_map,
-                size=(self.image_size, self.image_size),
+                size=(target_size),
                 mode="bilinear",
                 align_corners=False,
             )
