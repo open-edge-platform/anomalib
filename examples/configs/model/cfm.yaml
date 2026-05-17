@@ -6,13 +6,3 @@ model:
     rgb_backbone: vit_base_patch8_224.dino
     group_size: 128
     num_group: 1024
-
-data:
-  class_path: anomalib.data.MVTec3D
-  init_args:
-    root: ./datasets/mvtec_3d_ad
-    category: bagel
-    train_batch_size: 4
-    eval_batch_size: 4
-    image_size: [224, 224]
-    num_workers: 4
