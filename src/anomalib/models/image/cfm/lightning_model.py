@@ -23,7 +23,6 @@ class CFM(AnomalibModule):
     def __init__(
         self,
         lr: float = 1e-4,
-        image_size: int = 224,
         rgb_backbone: str = "vit_base_patch8_224.dino",
         group_size: int = 128,
         num_group: int = 1024,
@@ -32,16 +31,13 @@ class CFM(AnomalibModule):
 
         Args:
             lr: Learning rate.
-            image_size: Dimension of input image (default 224 for DINO).
             rgb_backbone: Name of the backbone DINO for RGB.
             group_size: Dimension of the groups for PointTransformer.
             num_group: Number of groups for PointTransformer.
         """
-        # The PreProcessor takes care for normalization and standard resizing of RGB images
-        pre_processor = PreProcessor(transform=Resize((image_size, image_size)))
-        super().__init__(pre_processor=pre_processor)
+        super().__init__()
 
-        self.save_hyperparameters(ignore=["pre_processor"])
+        self.save_hyperparameters()
         self.lr = lr
 
         # Inizialization of core model
@@ -49,8 +45,12 @@ class CFM(AnomalibModule):
             rgb_backbone=rgb_backbone,
             group_size=group_size,
             num_group=num_group,
-            image_size=image_size,
         )
+        
+    def configure_pre_processor(self, image_size: tuple[int, int] | None = None) -> PreProcessor:
+        """Configure the pre-processor dynamically based on config/data."""
+        size = image_size if image_size is not None else (224, 224)
+        return PreProcessor(transform=Resize(size))
 
     @property
     def learning_type(self) -> LearningType:
