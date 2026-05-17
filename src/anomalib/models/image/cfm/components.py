@@ -37,7 +37,6 @@ class MultimodalFeatures(nn.Module):
 
     def __init__(
         self,
-        image_size: int = 224,
         rgb_backbone_name: str = "vit_base_patch8_224.dino",
         group_size: int = 128,
         num_group: int = 1024,
@@ -51,15 +50,13 @@ class MultimodalFeatures(nn.Module):
             num_group=num_group,
         )
 
-        self.image_size = image_size
-
-        # Resize and smoothing
-        self.resize = nn.AdaptiveAvgPool2d((image_size, image_size))
+        # Smoothing
         self.average = nn.AvgPool2d(kernel_size=3, stride=1, padding=1)
 
     def get_features_maps(self, rgb: torch.Tensor, pc: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Extract 2D and 3D features, interpolates and aligns them dimensionally."""
         # pc -> (B, C, H, W). Transformed in (B, N, 3)
+        h, w = rgb.shape[-2:]
         b = pc.shape[0]
         unorganized_pc = pc.view(b, pc.shape[1], -1).permute(0, 2, 1)
 
@@ -80,20 +77,20 @@ class MultimodalFeatures(nn.Module):
 
         # Feature 3D onto 2D grid
         xyz_patch_full = torch.zeros(
-            (b, interpolated_pc.shape[1], self.image_size * self.image_size),
+            (b, interpolated_pc.shape[1], h * w),
             dtype=interpolated_pc.dtype,
             device=rgb.device,
         )
         xyz_patch_full[..., nonzero_indices] = interpolated_pc
 
         # Smooth and Resize for XYZ
-        xyz_patch_full_2d = xyz_patch_full.view(b, interpolated_pc.shape[1], self.image_size, self.image_size)
-        xyz_feat = self.resize(self.average(xyz_patch_full_2d))
+        xyz_patch_full_2d = xyz_patch_full.view(b, interpolated_pc.shape[1], h, w)
+        xyz_feat = functional.adaptive_avg_pool2d(self.average(xyz_patch_full_2d), (h, w))
 
         # Resize for RGB
         rgb_feat = functional.interpolate(
             rgb_raw,
-            size=(self.image_size, self.image_size),
+            size=(h, w),
             mode="bilinear",
             align_corners=False,
         )
