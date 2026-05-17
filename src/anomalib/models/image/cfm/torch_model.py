@@ -25,7 +25,6 @@ class CFMModel(nn.Module):
         rgb_backbone: str = "vit_base_patch8_224.dino",
         group_size: int = 128,
         num_group: int = 1024,
-        image_size: int = 224,
     ) -> None:
         """Initialise the multimodal mapping system.
 
@@ -33,14 +32,10 @@ class CFMModel(nn.Module):
             rgb_backbone: Name of DINO model to upload.
             group_size: Dimension of groups for the Point Cloud (KNN).
             num_group: Number of groups (FPS) for the Point Cloud.
-            image_size: Spatial dimension for interpolation of the features.
         """
         super().__init__()
 
-        self.image_size = image_size
-
         self.feature_extractors = MultimodalFeatures(
-            image_size=image_size,
             rgb_backbone_name=rgb_backbone,
             group_size=group_size,
             num_group=num_group,
@@ -60,7 +55,7 @@ class CFMModel(nn.Module):
 
         self.cos_sim = nn.CosineSimilarity(dim=-1, eps=1e-6)
         # This class manages the KNN blur and the spatial computation of anomalies
-        self.anomaly_map_generator = CFMAnomalyMapGenerator(image_size=image_size)
+        self.anomaly_map_generator = CFMAnomalyMapGenerator()
 
     def mapper_parameters(self) -> list[torch.nn.Parameter]:
         """It returns only the mapping network parameters for the optimiser."""
