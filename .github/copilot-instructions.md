@@ -241,6 +241,26 @@ Apply this priority primarily to `application/backend/` FastAPI endpoint and ser
 
 ---
 
+## Priority 9 — CI/CD Agentic Actions Security
+
+> Skill reference: `.agents/skills/agentic-actions-auditor/SKILL.md`
+
+Apply when a PR adds or modifies GitHub Actions workflows that invoke AI coding agents (Claude Code Action, Gemini CLI, OpenAI Codex, GitHub AI Inference).
+
+**Flag if a PR:**
+
+- Adds an AI agent action step with `pull_request_target`, `issue_comment`, or `issues` triggers without justifying the security implications.
+- Passes attacker-controlled input (`github.event.issue.body`, `github.event.pull_request.title`, etc.) into an AI agent prompt — directly via `${{ }}` expressions or indirectly through `env:` blocks.
+- Uses dangerous sandbox configurations (`danger-full-access`, `Bash(*)`, `--yolo`, `safety-strategy: unsafe`).
+- Sets wildcard user allowlists (`allowed_non_write_users: "*"`, `allow-users: "*"`).
+- Consumes AI agent step outputs in `eval`, `exec`, or `$()` shell constructs without sanitization.
+- Adds CLI data-fetch commands (`gh issue view`, `gh pr view`) inside AI agent prompts, pulling attacker-controlled content at runtime.
+- Checks out PR head code under `pull_request_target` trigger, granting untrusted code access to secrets.
+
+**Key vectors to check:** Env var intermediary (A), direct expression injection (B), CLI data fetch (C), PR target + checkout (D), error log injection (E), subshell expansion (F), eval of AI output (G), dangerous sandbox configs (H), wildcard allowlists (I). See skill references for full detection heuristics.
+
+---
+
 ## Do Not Flag
 
 - **Formatting** — Ruff and pre-commit handle this.
@@ -307,3 +327,4 @@ For the full detailed policy on each topic, consult:
 | Benchmark refresh                          | `.agents/skills/benchmark-and-docs-refresh/SKILL.md` |
 | Sample image export                        | `.agents/skills/model-sample-image-export/SKILL.md`  |
 | FastAPI REST API design (Studio backend)   | `.agents/skills/fastapi-rest-api-design/SKILL.md`    |
+| CI/CD agentic actions security             | `.agents/skills/agentic-actions-auditor/SKILL.md`    |

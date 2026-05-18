@@ -29,6 +29,7 @@ jobs:
             .agents
           sparse-checkout-cone-mode: true
           fetch-depth: 1
+          persist-credentials: false
 
       - uses: ./.github/actions/ollama-preflight
 

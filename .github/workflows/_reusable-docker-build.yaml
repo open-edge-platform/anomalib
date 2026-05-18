@@ -58,18 +58,18 @@ jobs:
           persist-credentials: false
 
       - name: Initial cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@e80098b3d180db37914f11ff6021f9fa34d0bb9f
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@7d25e47329bbfcde4ee51ab3581aea8613e245e2
         with:
           type: "initial"
 
       - name: Pre-build cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@e80098b3d180db37914f11ff6021f9fa34d0bb9f
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@7d25e47329bbfcde4ee51ab3581aea8613e245e2
         with:
           type: "pre-build"
 
       # Install the latest Docker, since the version available by default on the runners may be outdated
       - name: Set up Docker
-        uses: docker/setup-docker-action@1a6edb0ba9ac496f6850236981f15d8f9a82254d # v5.0.0
+        uses: docker/setup-docker-action@b2189fbf2a6592b51fee7cdd93ee2bfaeba733db # v5.1.0
 
       - name: Set up Docker Compose
         uses: docker/setup-compose-action@8cccb8c14b6500aaffebff1aa49c502c34d2e5e6 # v2.1.0
@@ -174,7 +174,7 @@ jobs:
 
       - name: Upload image sizes
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: image-sizes-${{ matrix.device }}
           path: application/docker/image-sizes/${{ matrix.device }}.md
@@ -203,7 +203,7 @@ jobs:
           path: image-sizes
 
       - name: Combine image sizes and comment
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const fs = require('fs');
