@@ -47,7 +47,7 @@ from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 from torch.nn.init import trunc_normal_
 from torchvision.transforms.v2 import CenterCrop, Compose, Normalize, Resize
 
-from anomalib import LearningType
+from anomalib import LearningType, PrecisionType
 from anomalib.data import Batch
 from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule
@@ -117,6 +117,8 @@ class Dinomaly(AnomalibModule):
             from Dinomaly2. When enabled, the class token is subtracted from patch
             features before reconstruction. Most beneficial in multi-class settings.
             Incompatible with ``remove_class_token=True``. Defaults to False.
+        precision (str | PrecisionType): Numerical precision for model parameters.
+            Supports "float16" and "float32". Defaults to "float32".
         pre_processor (PreProcessor | bool, optional): Pre-processor instance or
             flag to use default. Defaults to ``True``.
         post_processor (PostProcessor | bool, optional): Post-processor instance
@@ -162,6 +164,7 @@ class Dinomaly(AnomalibModule):
         fuse_layer_decoder: list[list[int]] | None = None,
         remove_class_token: bool = False,
         use_context_recentering: bool = False,
+        precision: str | PrecisionType = PrecisionType.FLOAT32,
         pre_processor: PreProcessor | bool = True,
         post_processor: PostProcessor | bool = True,
         evaluator: Evaluator | bool = True,
@@ -184,6 +187,18 @@ class Dinomaly(AnomalibModule):
             remove_class_token=remove_class_token,
             use_context_recentering=use_context_recentering,
         )
+
+        if isinstance(precision, str):
+            precision = PrecisionType(precision.lower())
+
+        if precision == PrecisionType.FLOAT16:
+            self.model = self.model.to(torch.bfloat16)
+        elif precision == PrecisionType.FLOAT32:
+            self.model = self.model.float()
+        else:
+            msg = f"""Unsupported precision type: {precision}.
+            Supported types are: {PrecisionType.FLOAT16}, {PrecisionType.FLOAT32}."""
+            raise ValueError(msg)
 
         # Set the trainable parameters for the model.
         # Only the bottleneck and decoder parameters are trained.
