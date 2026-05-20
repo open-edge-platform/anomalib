@@ -60,11 +60,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
-        with:
-          egress-policy: audit
-
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -72,16 +67,14 @@ jobs:
 
       - name: Get token
         id: get-github-app-token
-        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
         with:
           app-id: ${{ secrets.RENOVATE_APP_ID }}
           private-key: ${{ secrets.RENOVATE_APP_PEM }}
 
       - name: Self-hosted Renovate
-        uses: renovatebot/github-action@f66d8679fcfcfa051abde6e7a623007173bf5164 # v46.1.12
+        uses: renovatebot/github-action@3633cede7d4d4598438e654eac4a695e46004420 # v46.1.7
         with:
-          # renovate: datasource=github-releases depName=renovatebot/renovate
-          renovate-version: 43.160.2
           configurationFile: .github/renovate.json5
           token: "${{ steps.get-github-app-token.outputs.token }}"
         env:

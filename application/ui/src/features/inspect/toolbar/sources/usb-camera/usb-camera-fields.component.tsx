@@ -14,14 +14,8 @@ type UsbCameraFieldsProps = {
     defaultState: UsbCameraSourceConfig;
 };
 
-const findDeviceName = (devices: { id: number; name: string }[], deviceId: number): string | undefined =>
-    devices.find(({ id }) => id === deviceId)?.name;
-
 export const UsbCameraFields = ({ defaultState }: UsbCameraFieldsProps) => {
-    const [userOverrideName, setUserOverrideName] = useState<string | null>(
-        isEmpty(defaultState.name) ? null : defaultState.name
-    );
-
+    const [name, setName] = useState(defaultState.name);
     const isSystemName = useRef(isEmpty(defaultState.name));
 
     const {
@@ -31,23 +25,21 @@ export const UsbCameraFields = ({ defaultState }: UsbCameraFieldsProps) => {
         refetch,
     } = $api.useQuery('get', '/api/system/devices/camera');
 
-    const devices = (cameraDevices ?? []).map((device) => ({ id: device.index, name: device.name }));
-    const name = userOverrideName ?? findDeviceName(devices, defaultState.device_id) ?? '';
+    const devices = (cameraDevices ?? []).map((device) => ({
+        id: device.index,
+        name: device.name,
+    }));
 
     const handleNameChange = (value: string) => {
-        setUserOverrideName(value);
+        setName(value);
         isSystemName.current = false;
     };
 
     const handleSelectionChange = (key: Key | null) => {
-        if (key === null) {
-            return;
-        }
+        const device = devices.find(({ id }) => id === Number(key));
 
-        const deviceName = findDeviceName(devices, Number(key));
-
-        if (deviceName && isSystemName.current) {
-            setUserOverrideName(deviceName);
+        if (device && isSystemName.current) {
+            setName(device.name);
         }
     };
 

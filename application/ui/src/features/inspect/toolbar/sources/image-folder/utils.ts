@@ -1,9 +1,8 @@
-import { generateShortUUID } from '../../../../../utils/short-uuid';
 import { ImagesFolderSourceConfig } from '../util';
 
 export const getImageFolderInitialConfig = (projectId: string): ImagesFolderSourceConfig => ({
-    id: generateShortUUID(),
-    name: 'Images folder source',
+    id: '',
+    name: '',
     project_id: projectId,
     source_type: 'images_folder',
     images_folder_path: '',

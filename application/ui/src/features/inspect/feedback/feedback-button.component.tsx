@@ -24,7 +24,6 @@ import {
 } from '@geti/ui';
 import { CheckmarkCircleOutline, DownloadIcon, ExternalLinkIcon, HelpIcon } from '@geti/ui/icons';
 import { useMutation } from '@tanstack/react-query';
-import { isTauri } from '@tauri-apps/api/core';
 
 import { downloadBlob } from '../utils';
 
@@ -178,27 +177,10 @@ interface SubmitFeedbackParams {
     description: string;
 }
 
-/**
- * Opens the GitHub issue URL in the user's default browser.
- * In Tauri, window.open() is silently blocked by the webview, so we use the
- * shell plugin to launch the URL externally. Falls back to window.open() if
- * the shell plugin is unavailable or in a regular browser environment.
- * @see https://github.com/open-edge-platform/anomalib/issues/3425
- */
 const submitFeedback = async ({ issueType, description }: SubmitFeedbackParams): Promise<void> => {
     const systemInfo = await fetchSystemInfo();
     const issueUrl = createGitHubIssueUrl(systemInfo, issueType, description);
-    if (isTauri()) {
-        try {
-            const { open } = await import('@tauri-apps/plugin-shell');
-            await open(issueUrl);
-        } catch {
-            // Fallback to browser API if shell plugin fails
-            window.open(issueUrl, '_blank', 'noopener,noreferrer');
-        }
-    } else {
-        window.open(issueUrl, '_blank', 'noopener,noreferrer');
-    }
+    window.open(issueUrl, '_blank', 'noopener,noreferrer');
 };
 
 interface FeedbackDialogContentProps {

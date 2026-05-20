@@ -25,8 +25,6 @@ on:
   pull_request:
     paths:
       - ".github/renovate.json5"
-      - ".github/workflows/renovate.yml"
-      - ".github/workflows/renovate-config-validator.yml"
 
 permissions:
   contents: read
@@ -39,11 +37,6 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
-        with:
-          egress-policy: audit
-
       - name: Checkout configuration
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -52,7 +45,7 @@ jobs:
       - name: Validate configuration
         run: |
           # renovate: datasource=docker
-          export RENOVATE_IMAGE=ghcr.io/renovatebot/renovate:43.160.2@sha256:e977df2dbd4b978cc301a0b4d8e0162ec4ce08bd205422c02c4cf55f52b67336
+          export RENOVATE_IMAGE=ghcr.io/renovatebot/renovate:40.11
           docker run --rm --entrypoint "renovate-config-validator" \
           -v "${{ github.workspace }}/.github/renovate.json5":"/renovate.json5" \
           ${RENOVATE_IMAGE} "/renovate.json5"

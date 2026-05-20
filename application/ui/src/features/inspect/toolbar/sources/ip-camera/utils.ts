@@ -1,9 +1,8 @@
-import { generateShortUUID } from '../../../../../utils/short-uuid';
 import { IPCameraSourceConfig } from '../util';
 
 export const getIpCameraInitialConfig = (projectId: string): IPCameraSourceConfig => ({
-    id: generateShortUUID(),
-    name: 'IP camera source',
+    id: '',
+    name: '',
     project_id: projectId,
     source_type: 'ip_camera',
     stream_url: '',

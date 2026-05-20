@@ -105,11 +105,6 @@ jobs:
       new-version: ${{ steps.bump.outputs.new_version }}
       version-changed: ${{ steps.bump.outputs.version_changed }}
     steps:
-      - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
-        with:
-          egress-policy: audit
-
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -125,8 +120,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip==26.0.1
-          python -m pip install commitizen==4.13.9
+          python -m pip install --upgrade pip
+          pip install commitizen
 
       - name: Get current version
         id: current-version
@@ -178,7 +173,7 @@ jobs:
 
       - name: Create Pull Request
         if: steps.check-bump.outputs.version_needs_bump == 'true' && inputs.create-pr && !inputs.dry-run
-        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8.1.0
         env:
           CURRENT_VERSION: ${{ steps.current-version.outputs.current_version }}
           NEW_VERSION: ${{ steps.bump.outputs.new_version }}

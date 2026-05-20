@@ -60,11 +60,6 @@ jobs:
     outputs:
       version: ${{ steps.validate-version.outputs.version }}
     steps:
-      - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
-        with:
-          egress-policy: audit
-
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
@@ -82,11 +77,7 @@ jobs:
           fi
 
           TAG_VERSION="${VERSION#v}"
-          PKG_VERSION=$(sed -n "s/^[[:space:]]*__version__[[:space:]]*=[[:space:]]*[\"']\([^\"']*\)[\"']/\1/p" src/anomalib/__init__.py)
-          if [[ -z "$PKG_VERSION" ]]; then
-            echo "::error::Could not extract __version__ from src/anomalib/__init__.py"
-            exit 1
-          fi
+          PKG_VERSION=$(python3 -c "import re, pathlib; m = re.search(r'__version__\s*=\s*[\"'"'"']([^\"'"'"']+)[\"'"'"']', pathlib.Path('src/anomalib/__init__.py').read_text()); print(m.group(1))")
           if [[ "$PKG_VERSION" != "$TAG_VERSION" ]]; then
             echo "::error::Tag version ($TAG_VERSION) does not match __version__ in src/anomalib/__init__.py ($PKG_VERSION)"
             exit 1
@@ -127,7 +118,6 @@ jobs:
     uses: ./.github/workflows/_reusable-security-scan.yaml
     permissions:
       security-events: write
-      packages: read
       contents: read
     with:
       tools: "bandit,semgrep,trivy,zizmor"
@@ -154,18 +144,13 @@ jobs:
       contents: write # Required by softprops/action-gh-release to publish release
       id-token: write # Required for OIDC authentication with PyPI
     steps:
-      - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
-        with:
-          egress-policy: audit
-
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: ${{ needs.build.outputs.artifact-name }}
           path: dist
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
-      - uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0 # zizmor: ignore[superfluous-actions]
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
+      - uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
           tag_name: lib/${{ needs.version-check.outputs.version }}
           name: Release Anomalib Library ${{ needs.version-check.outputs.version }}
@@ -179,11 +164,6 @@ jobs:
     if: always() && !inputs.dry_run
     runs-on: ubuntu-latest
     steps:
-      - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
-        with:
-          egress-policy: audit
-
       - name: Verify workflow status
         env:
           RELEASE_VERSION: lib/${{ needs.version-check.outputs.version }}

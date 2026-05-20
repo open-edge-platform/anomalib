@@ -58,9 +58,7 @@ describe('add-source', () => {
         await userEvent.click(screen.getByRole('button', { name: /Add & Connect/i }));
 
         await waitFor(() => {
-            expect(mockSourceMutation).toHaveBeenCalledWith(
-                expect.objectContaining({ ...newConfig, id: expect.any(String) })
-            );
+            expect(mockSourceMutation).toHaveBeenCalledWith(expect.objectContaining({ ...newConfig, id: '' }));
             expect(mockConnectToPipeline).toHaveBeenCalledWith(newConfig.id);
             expect(mockOnSaved).toHaveBeenCalled();
         });
