@@ -341,7 +341,7 @@ class PointTransformer(nn.Module):
         ckpt = torch.load(
             bert_ckpt_path,
             map_location="cpu" if not torch.cuda.is_available() else "cuda",
-            weights_only=True, 
+            weights_only=True,
         )
         base_ckpt = {k.replace("module.", ""): v for k, v in ckpt["base_model"].items()}
         for k in list(base_ckpt.keys()):

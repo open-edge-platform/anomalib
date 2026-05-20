@@ -46,8 +46,9 @@ class CFM(AnomalibModule):
             group_size=group_size,
             num_group=num_group,
         )
-        
-    def configure_pre_processor(self, image_size: tuple[int, int] | None = None) -> PreProcessor:
+
+    @staticmethod
+    def configure_pre_processor(image_size: tuple[int, int] | None = None) -> PreProcessor:
         """Configure the pre-processor dynamically based on config/data."""
         size = image_size if image_size is not None else (224, 224)
         return PreProcessor(transform=Resize(size))
