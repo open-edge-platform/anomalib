@@ -36,12 +36,15 @@ jobs:
     name: Scorecards analysis
     runs-on: ubuntu-latest
     permissions:
-      # Needed to upload the results to code-scanning dashboard
-      security-events: write
-      # Needed to publish results and get a badge
-      id-token: write
+      security-events: write # Needed to upload the results to code-scanning dashboard
+      id-token: write # Needed to publish results and get a badge
 
     steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -56,6 +59,6 @@ jobs:
 
       # Upload the results to GitHub's code scanning dashboard
       - name: Upload to code-scanning
-        uses: github/codeql-action/upload-sarif@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
+        uses: github/codeql-action/upload-sarif@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4.35.2
         with:
           sarif_file: results.sarif
