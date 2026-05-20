@@ -30,7 +30,7 @@ def dummy_batch() -> dict[str, torch.Tensor]:
 
 def test_cfm_model_forward_training(dummy_batch: dict[str, torch.Tensor]) -> None:
     """Verifies that the model correctly computes the losses during training."""
-    model = CFMModel(image_size=224)
+    model = CFMModel()
     model.train()  # Set the model to training mode
 
     rgb, xyz = dummy_batch["image"], dummy_batch["point_cloud"]
@@ -46,7 +46,7 @@ def test_cfm_model_forward_training(dummy_batch: dict[str, torch.Tensor]) -> Non
 
 def test_cfm_model_forward_inference(dummy_batch: dict[str, torch.Tensor]) -> None:
     """Verifies that the model generates anomaly maps and scores during inference."""
-    model = CFMModel(image_size=224)
+    model = CFMModel()
     model.eval()  # Set the model to evaluation mode
 
     rgb, xyz = dummy_batch["image"], dummy_batch["point_cloud"]
@@ -66,7 +66,7 @@ def test_cfm_model_forward_inference(dummy_batch: dict[str, torch.Tensor]) -> No
 
 def test_lightning_module_steps(dummy_batch: dict[str, torch.Tensor]) -> None:
     """Verifies that the Lightning wrapper accepts the data without crashing."""
-    lightning_model = CFM(image_size=224)
+    lightning_model = CFM()
 
     # Test training step
     loss = lightning_model.training_step(dummy_batch, 0)
