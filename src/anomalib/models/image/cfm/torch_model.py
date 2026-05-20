@@ -112,6 +112,7 @@ class CFMModel(nn.Module):
             xyz_feat=xyz_feat,
             pred_rgb=pred_rgb,
             pred_xyz=pred_xyz,
+            target_size=rgb.shape[-2:],
         )
 
         return InferenceBatch(pred_score=pred_score, anomaly_map=anomaly_map)
