@@ -7,28 +7,29 @@ The code is based on the `global_cosine_hm_adaptive` method in the original impl
 Reference: https://github.com/luow23/INP-Former/blob/5252579e5f401199643fbd16e030175856386f12/utils.py#L130-L151
 """
 
+from functools import partial
+
 import torch
-from functools import partil
 
 
 class GlobalCosineHmAdaptiveLoss(torch.nn.Module):
-    """Cosine similarity loss with hard mining and adaptive weighting based on distance ratios. 
+    """Cosine similarity loss with hard mining and adaptive weighting based on distance ratios.
 
-    This loss function focuses training on hard-to-reconstruct points, enabling the model to learn 
-    a sufficient description of normality quickly without becoming overly effective at reconstructing 
+    This loss function focuses training on hard-to-reconstruct points, enabling the model to learn
+    a sufficient description of normality quickly without becoming overly effective at reconstructing
     anomalous points.
 
     Description:
-    1. Compute cosine similarity between encoder and decoder features 
+    1. Compute cosine similarity between encoder and decoder features
     2. High cosine similarity means that points are easy to reconstruct and vice versa
     3. Calculate adaptive weights by amplifying the difference between easy and hard-to-reconstruct points
     4. Apply adaptive weights to modify hard-to-reconstruct points more than easy ones
     5. Training focuses on hard-to-reconstruct points, while modifying easy-to-reconstruct points as well
 
-    Note: 
-        This loss is called "Soft Mining" in the paper, presumably referring to using all points in backpropagation 
-        with weights applied to focus on hard-to-reconstruct points, in contrast to the "Hard Mining" which uses only 
-        hard-to-reconstruct points in backpropagation, ignoring others. The naming follows the original implementation 
+    Note:
+        This loss is called "Soft Mining" in the paper, presumably referring to using all points in backpropagation
+        with weights applied to focus on hard-to-reconstruct points, in contrast to the "Hard Mining" which uses only
+        hard-to-reconstruct points in backpropagation, ignoring others. The naming follows the original implementation
         for consistency, which uses the name `global_cosine_hm_adaptive`.
 
     """
@@ -44,11 +45,11 @@ class GlobalCosineHmAdaptiveLoss(torch.nn.Module):
         self.power = power
 
     def forward(
-            self, 
-            encoder_features: list[torch.Tensor], 
-            decoder_features: list[torch.Tensor],
-            inp_loss: torch.Tensor
-        ) -> torch.Tensor:
+        self,
+        encoder_features: list[torch.Tensor],
+        decoder_features: list[torch.Tensor],
+        inp_loss: torch.Tensor,
+    ) -> torch.Tensor:
         """Forward pass of the cosine adaptive loss plus INP loss.
 
         Args:
@@ -56,7 +57,7 @@ class GlobalCosineHmAdaptiveLoss(torch.nn.Module):
                 Each tensor should have a shape (batch_size, num_features, height, width).
             decoder_features: List of corresponding feature tensors from decoder layers.
                 Must have the same length and compatible shapes as encoder_features.
-            inp_loss: INP coherence loss to minimize the distances between individual 
+            inp_loss: INP coherence loss to minimize the distances between individual
                 normal features and the corresponding nearest INP.
 
         Returns:
@@ -75,21 +76,19 @@ class GlobalCosineHmAdaptiveLoss(torch.nn.Module):
             with torch.no_grad():
                 point_dist = 1 - cos_loss(en_, de_).unsqueeze(1)
             mean_dist = point_dist.mean()
-            adaptive_weights = (point_dist/mean_dist)**self.power
-            loss += torch.mean(1 - cos_loss(en_.reshape(en_.shape[0], -1),
-                                            de_.reshape(de_.shape[0], -1)))
+            adaptive_weights = (point_dist / mean_dist) ** self.power
+            loss += torch.mean(1 - cos_loss(en_.reshape(en_.shape[0], -1), de_.reshape(de_.shape[0], -1)))
             partial_func = partial(self._modify_grad, adaptive_weights=adaptive_weights)
             de_.register_hook(partial_func)
 
         loss = loss / len(encoder_features)
-        loss = loss + 0.2 * inp_loss
 
-        return loss
-    
+        return loss + 0.2 * inp_loss
+
     @staticmethod
     def _modify_grad(
         x: torch.Tensor,
-        adaptive_weights: float = 0.0,
+        adaptive_weights: torch.Tensor,
     ) -> torch.Tensor:
         """Modify gradients based on adaptive weights.
 
@@ -102,5 +101,4 @@ class GlobalCosineHmAdaptiveLoss(torch.nn.Module):
         """
         adaptive_weights = adaptive_weights.expand_as(x)
         result = x.clone()
-        result = result * adaptive_weights
-        return result
+        return result * adaptive_weights

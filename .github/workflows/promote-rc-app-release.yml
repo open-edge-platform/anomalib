@@ -215,7 +215,7 @@ jobs:
           egress-policy: audit
 
       - name: Log in to GHCR
-        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -259,7 +259,7 @@ jobs:
           docker push "${TARGET_IMAGE}"
 
       - name: Sign Docker image
-        uses: open-edge-platform/geti-ci/actions/sign-image@e80098b3d180db37914f11ff6021f9fa34d0bb9f
+        uses: open-edge-platform/geti-ci/actions/sign-image@7d25e47329bbfcde4ee51ab3581aea8613e245e2
         with:
           image-uri: ghcr.io/open-edge-platform/anomalib-studio-${{ matrix.device }}:${{ needs.validate.outputs.docker_patch_tag }}
 
