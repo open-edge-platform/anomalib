@@ -93,7 +93,7 @@ jobs:
       # No cache for build/ or dist/ - Python packaging regenerates them from scratch each time
       - name: Cache pip dependencies
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: |
             ~/.cache/pip
@@ -113,7 +113,7 @@ jobs:
       - name: Set artifact name
         id: set-artifact-name
         run: echo "name=dist-$(date +%s)" >> $GITHUB_OUTPUT
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ${{ steps.set-artifact-name.outputs.name }}
           path: dist/
