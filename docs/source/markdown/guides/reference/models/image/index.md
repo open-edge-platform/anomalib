@@ -75,6 +75,13 @@ DSR – A Dual Subspace Re-Projection Network for Surface Anomaly Detection
 EfficientAD: Accurate Visual Anomaly Detection at Millisecond-Level Latencies
 :::
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` INP-Former
+:link: ./inp_former
+:link-type: doc
+
+Exploring Intrinsic Normal Prototypes within a Single Image for Universal Anomaly Detection
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` FastFlow
 :link: ./fastflow
 :link-type: doc
@@ -199,6 +206,7 @@ WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation
 ./fre
 ./ganomaly
 ./general_ad
+./inp_former
 ./l2bt
 ./padim
 ./patchcore
