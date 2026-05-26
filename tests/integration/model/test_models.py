@@ -10,6 +10,7 @@ import contextlib
 import sys
 from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -163,12 +164,20 @@ class TestAPI:
             project_path=project_path,
         )
 
+        # Some models require a fixed input size for ONNX export because they
+        # use ops (e.g. kornia gaussian_blur2d) that ONNX cannot trace with
+        # symbolic spatial dimensions.
+        export_kwargs: dict[str, Any] = {}
+        if model_name == "glass":
+            export_kwargs["input_size"] = (288, 288)
+
         # Use context manager only for CSFlow
         with increased_recursion_limit() if model_name == "csflow" else contextlib.nullcontext():
             engine.export(
                 model=model,
                 ckpt_path=f"{project_path}/{model.name}/{dataset.name}/dummy/v0/weights/lightning/model.ckpt",
                 export_type=export_type,
+                **export_kwargs,
             )
 
     @staticmethod

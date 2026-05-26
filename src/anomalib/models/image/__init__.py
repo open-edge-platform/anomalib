@@ -23,7 +23,8 @@ Example:
     >>> predictions = engine.predict(model=model, datamodule=datamodule)  # doctest: +SKIP
 
 Available Models:
-    - :class: `AnomalyDINO`: Boost Memorybank Models with DINOv2
+    - :class:`AnomalyVFM`: Transforming Vision Foundation Models into Zero-Shot Anomaly Detectors
+    - :class:`AnomalyDINO`: Boost Memorybank Models with DINOv2
     - :class:`Cfa`: Contrastive Feature Aggregation
     - :class:`Cflow`: Conditional Normalizing Flow
     - :class:`Csflow`: Conditional Split Flow
@@ -51,6 +52,7 @@ Available Models:
 """
 
 from .anomaly_dino import AnomalyDINO
+from .anomalyvfm import AnomalyVFM
 from .cfa import Cfa
 from .cflow import Cflow
 from .csflow import Csflow
@@ -64,6 +66,7 @@ from .fastflow import Fastflow
 from .fre import Fre
 from .ganomaly import Ganomaly
 from .general_ad import GeneralAD
+from .glass import Glass
 from .inp_former import InpFormer
 from .l2bt import L2BT
 from .padim import Padim
@@ -78,6 +81,7 @@ from .vlm_ad import VlmAd
 from .winclip import WinClip
 
 __all__ = [
+    "AnomalyVFM",
     "AnomalyDINO",
     "Cfa",
     "Cflow",
@@ -92,6 +96,7 @@ __all__ = [
     "Fre",
     "Ganomaly",
     "GeneralAD",
+    "Glass",
     "InpFormer",
     "L2BT",
     "Padim",

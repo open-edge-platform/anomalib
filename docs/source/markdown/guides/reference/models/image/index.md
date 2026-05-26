@@ -4,6 +4,13 @@
 :margin: 1 1 0 0
 :gutter: 1
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` AnomalyVFM
+:link: ./anomalyvfm
+:link-type: doc
+
+Transforming Vision Foundation Models into Zero-Shot Anomaly Detectors
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` AnomalyDINO
 :link: ./anomaly_dino
 :link-type: doc
@@ -103,6 +110,13 @@ FRE: A Fast Method For Anomaly Detection And Segmentation
 GANomaly: Semi-Supervised Anomaly Detection via Adversarial Training
 :::
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` GLASS
+:link: ./glass
+:link-type: doc
+
+A Unified Anomaly Synthesis Strategy with Gradient Ascent for Industrial Anomaly Detection and Localization
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` GeneralAD
 :link: ./general_ad
 :link-type: doc
@@ -192,6 +206,7 @@ WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation
 :caption: Data
 :hidden:
 
+./anomalyvfm
 ./anomaly_dino
 ./cfa
 ./cflow
@@ -205,6 +220,7 @@ WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation
 ./fastflow
 ./fre
 ./ganomaly
+./glass
 ./general_ad
 ./inp_former
 ./l2bt

@@ -59,6 +59,10 @@ dependencies = [
 
 [project.optional-dependencies]
 # Model-specific optional dependencies
+huggingface = [
+    "huggingface_hub",
+    "safetensors"
+]
 openvino = ["openvino>=2024.0", "nncf>=2.10.0", "onnx>=1.16.0", "onnxscript"]
 clip = [
     # NOTE: open-clip-torch throws the following error on v2.26.1
@@ -133,7 +137,7 @@ xpu = [
     "torchvision>=0.21.0",
     "pytorch-triton-xpu ; sys_platform == 'linux' or sys_platform == 'win32'",
 ]
-full = ["anomalib[clip,datasets,openvino,loggers,notebooks,vlm,video]"]
+full = ["anomalib[clip,datasets,openvino,loggers,notebooks,vlm,video,huggingface]"]
 dev = ["anomalib[full,docs,test]"]
 
 [project.scripts]

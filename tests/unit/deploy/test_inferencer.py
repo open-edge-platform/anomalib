@@ -138,16 +138,21 @@ def compare_predictions(
             score1 = score1.cpu().item()
         if isinstance(score2, torch.Tensor):
             score2 = score2.cpu().item()
+        if isinstance(score1, np.ndarray):
+            score1 = float(score1)
+        if isinstance(score2, np.ndarray):
+            score2 = float(score2)
 
     if score1 is not None and score2 is not None:
         score_diff = abs(score1 - score2)
         if score_diff > tolerance:
-            pytest.fail(f"Anomaly score absolute difference: {score_diff:.3f}")
+            pytest.fail(f"Anomaly score absolute difference: {float(score_diff):.3f}")
 
     if map1 is not None and map2 is not None:
         map_diff = np.abs(map1 - map2)
-        if np.mean(map_diff) > tolerance:
-            pytest.fail(f"Anomaly map mean absolute difference: {np.mean(map_diff):.3f}")
+        mean_diff = float(np.mean(map_diff))
+        if mean_diff > tolerance:
+            pytest.fail(f"Anomaly map mean absolute difference: {mean_diff:.3f}")
 
 
 def test_inference_similarity(
