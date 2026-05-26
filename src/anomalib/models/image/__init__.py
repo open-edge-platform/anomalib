@@ -67,6 +67,7 @@ from .fre import Fre
 from .ganomaly import Ganomaly
 from .general_ad import GeneralAD
 from .glass import Glass
+from .inp_former import InpFormer
 from .l2bt import L2BT
 from .padim import Padim
 from .patchcore import Patchcore
@@ -96,6 +97,7 @@ __all__ = [
     "Ganomaly",
     "GeneralAD",
     "Glass",
+    "InpFormer",
     "L2BT",
     "Padim",
     "Patchcore",
