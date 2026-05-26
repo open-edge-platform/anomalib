@@ -116,6 +116,8 @@
         "openapi-typescript": {
             "minimatch": "10.2.5"
         },
-        "postcss": ">=8.5.10"
+        "postcss": "8.5.10",
+        "rollup": "4.59.0",
+        "picomatch": "4.0.4"
     }
 }
