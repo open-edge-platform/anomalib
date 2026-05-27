@@ -383,7 +383,7 @@ class PointTransformer(nn.Module):
         """Loads model from a checkpoint."""
         ckpt = torch.load(
             bert_ckpt_path,
-            map_location="cpu" if not torch.cuda.is_available() else "cuda",
+            map_location="cpu",
             weights_only=True,
         )
         base_ckpt = {k.replace("module.", ""): v for k, v in ckpt["base_model"].items()}

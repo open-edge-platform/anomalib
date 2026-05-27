@@ -9,7 +9,7 @@ import pytest
 import torch
 
 from anomalib.data import Batch, InferenceBatch
-from anomalib.models.image.cfm.lightning_model import CFM
+from anomalib.models import CFM
 from anomalib.models.image.cfm.torch_model import CFMModel
 
 
@@ -84,6 +84,6 @@ def test_lightning_module_steps(dummy_batch: Batch) -> None:
 
     with torch.no_grad():
         val_out = lightning_model.validation_step(dummy_batch, 0)
-    # Test validation stepc
+    # Test validation step
     assert "anomaly_map" in val_out, "The batch was not updated with anomaly_map"
     assert "pred_score" in val_out, "The batch was not updated with pred_score"

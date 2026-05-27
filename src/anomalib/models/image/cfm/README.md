@@ -28,14 +28,20 @@ For each spatial location, the model computes:
 
 ## Architecture
 
-![CFM Architecture](./images/architecture.jpg "CFM Architecture")
+For the full architecture diagram, see the [original paper](https://arxiv.org/abs/2312.04521).
 
 ## Usage
 
 CFM requires a multimodal dataset with RGB and depth/point-cloud data (e.g., MVTec 3D-AD). Train one category at a time:
 
 ```bash
-anomalib train -c examples/configs/train/cfm_mvtec3d_single_category.yaml
+anomalib train --model anomalib.models.CFM --data anomalib.data.MVTec3D --data.category bagel --data.train_batch_size 1 --trainer.devices 1
+```
+
+Or with a config file:
+
+```bash
+anomalib train -c examples/configs/model/cfm.yaml --data anomalib.data.MVTec3D --data.category bagel --data.train_batch_size 1
 ```
 
 Point-cloud operations are memory-intensive. If you hit OOM, keep batch size at 1, use a single device, and reduce `num_group`.

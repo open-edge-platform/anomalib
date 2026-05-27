@@ -61,7 +61,7 @@ class CFMModel(nn.Module):
         self.xyz_to_rgb_mapper = FeatureProjectionMLP(in_features=xyz_dim, out_features=rgb_dim)
         self.rgb_to_xyz_mapper = FeatureProjectionMLP(in_features=rgb_dim, out_features=xyz_dim)
 
-        self.cos_sim = nn.CosineSimilarity(dim=-1, eps=1e-6)
+        self.cos_sim = nn.CosineSimilarity(dim=1, eps=1e-6)
         # This class manages the KNN blur and the spatial computation of anomalies
         self.anomaly_map_generator = CFMAnomalyMapGenerator()
 

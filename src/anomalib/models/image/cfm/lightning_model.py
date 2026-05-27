@@ -47,7 +47,7 @@ class CFM(AnomalibModule):
 
     Note:
         Use a depth datamodule such as ``MVTec3D`` and set ``category`` to train on a
-        single object class. See ``examples/configs/train/cfm_mvtec3d_single_category.yaml``.
+        single object class. See ``examples/configs/model/cfm.yaml``.
 
     Example:
         >>> from anomalib.models import CFM
