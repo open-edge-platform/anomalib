@@ -87,7 +87,8 @@ __all__ = [
     "AnomalyDINO",
     "Cfa",
     "Cflow",
-    "cfmCsflow",
+    "CFM",
+    "Csflow",
     "Dfkde",
     "Dfm",
     "Dinomaly",
@@ -111,6 +112,4 @@ __all__ = [
     "UniNet",
     "VlmAd",
     "WinClip",
-    "CFM",
-    "Csflow",
 ]
