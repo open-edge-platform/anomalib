@@ -66,3 +66,7 @@ terms are listed below.
 13. Agentic Actions Auditor skill (.agents/skills/agentic-actions-auditor)
     Copyright (c) Trail of Bits and contributors, https://github.com/trailofbits/skills
     SPDX-License-Identifier: CC-BY-SA-4.0
+
+14. CFM model (anomalib.models.image.cfm)
+    Copyright (c) 2023 CVLAB-Unibo, https://github.com/CVLAB-Unibo/crossmodal-feature-mapping
+    SPDX-License-Identifier: MIT

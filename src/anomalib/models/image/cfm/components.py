@@ -14,7 +14,8 @@ from timm.models.layers import DropPath
 from torch import nn
 from torch.nn import functional
 
-from anomalib.data.utils import DownloadInfo, download_and_extract
+from anomalib.data.utils import DownloadInfo
+from anomalib.data.utils.download import DownloadProgressBar, check_hash
 from anomalib.utils.path import get_pretrained_weights_dir
 
 from .utils import farthest_point_sample, index_points, interpolating_points
@@ -41,10 +42,15 @@ def _resolve_pointmae_weights(pointmae_weights: str | Path | None) -> Path:
     if not weight_file.is_file():
         logger.info("Downloading Point-MAE pretrained weights to %s", cache_dir)
         cache_dir.mkdir(parents=True, exist_ok=True)
-        download_and_extract(cache_dir, POINTMAE_DOWNLOAD_INFO)
-        downloaded = cache_dir / "pretrain.pth"
-        if downloaded.is_file() and not weight_file.is_file():
-            downloaded.rename(weight_file)
+        from urllib.request import urlretrieve
+
+        with DownloadProgressBar(unit="B", unit_scale=True, miniters=1, desc="Point-MAE") as pbar:
+            urlretrieve(  # noqa: S310  # nosec B310
+                POINTMAE_DOWNLOAD_INFO.url,
+                filename=weight_file,
+                reporthook=pbar.update_to,
+            )
+        check_hash(weight_file, POINTMAE_DOWNLOAD_INFO.hashsum)
     return weight_file
 
 
@@ -96,8 +102,8 @@ class MultimodalFeatures(nn.Module):
         b = pc.shape[0]
         unorganized_pc = pc.view(b, pc.shape[1], -1).permute(0, 2, 1)
 
-        # Removed points (0,0,0) to avoid noise.
-        nonzero_indices = torch.nonzero(torch.all(unorganized_pc[0] != 0, dim=1)).squeeze(dim=1)
+        # Filter (0,0,0) padding; uses batch[0] mask (consistent padding in organized PCs, batch_size=1 recommended)
+        nonzero_indices = torch.nonzero((unorganized_pc[0] != 0).any(dim=1)).squeeze(dim=1)
         unorganized_pc_no_zeros = unorganized_pc[:, nonzero_indices, :]
 
         # Extraction (only eval/no_grad)
@@ -165,8 +171,10 @@ class FeatureExtractors(nn.Module):
     def forward_rgb_features(self, x: torch.Tensor) -> torch.Tensor:
         """Extracts RGB features."""
         x = self.rgb_backbone.forward_features(x)
-        # Patch size 8x8 on 224x224 = grid 28x28
-        return x[:, 1:].permute(0, 2, 1).view(x.shape[0], -1, 28, 28)
+        # Remove CLS token and reshape patch tokens to spatial grid
+        num_patches = x.shape[1] - 1
+        grid_size = int(num_patches**0.5)
+        return x[:, 1:].permute(0, 2, 1).view(x.shape[0], -1, grid_size, grid_size)
 
     def forward(
         self,

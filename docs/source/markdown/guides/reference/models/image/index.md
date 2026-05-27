@@ -25,6 +25,13 @@ Boosting Patch-based Few-shot Anomaly Detection with DINOv2
 Coupled-hypersphere-based Feature Adaptation for Target-Oriented Anomaly Localization
 :::
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` CFM
+:link: ./cfm
+:link-type: doc
+
+Multimodal Industrial Anomaly Detection by Crossmodal Feature Mapping
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` C-Flow
 :link: ./cflow
 :link-type: doc

@@ -11,7 +11,7 @@ from torch.nn import functional
 
 
 class CFMAnomalyMapGenerator(nn.Module):
-    """Generates anomaly map and scores based on crossmodal discrepance.
+    """Generates anomaly map and scores based on crossmodal discrepancy.
 
     Computes the mapping error between 2d and 3d domains and applies a spatial filter.
     """
@@ -125,4 +125,4 @@ class GaussianBlurKernel(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Applies a convolution on anomaly map."""
         padding = self.kernel_size // 2
-        return functional.conv2d(x, self.kernel, padding=padding)
+        return functional.conv2d(x, self.kernel.to(x.dtype), padding=padding)

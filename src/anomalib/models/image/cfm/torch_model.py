@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 class CFMModel(nn.Module):
     """Crossmodal Feature Mapping (CFM) model.
 
-    Model learns from the correspondance between geometry(3D) and appearance (2D).
+    Model learns from the correspondence between geometry(3D) and appearance (2D).
     """
 
     def __init__(
@@ -32,7 +32,7 @@ class CFMModel(nn.Module):
         num_group: int = 1024,
         pointmae_weights: str | Path | None = None,
     ) -> None:
-        """Initialise the multimodal mapping system.
+        """Initialize the multimodal mapping system.
 
         Args:
             rgb_backbone: Name of DINO model to upload.

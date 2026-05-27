@@ -98,11 +98,11 @@ def interpolating_points(xyz1: torch.Tensor, xyz2: torch.Tensor, points2: torch.
     _, s, _ = xyz2.shape
 
     if s == 1:
-        interpolated_points = points2.repeat(1, n, 1)
+        interpolated_points = points2.repeat(1, n, 1).permute(0, 2, 1)
     else:
         dists = square_distance(xyz1, xyz2)
         dists, idx = dists.sort(dim=-1)
-        dists, idx = dists[:, :, :3], idx[:, :, :3]  # Prende i 3 vicini più prossimi
+        dists, idx = dists[:, :, :3], idx[:, :, :3]  # Take 3 nearest neighbors
         dist_recip = 1.0 / (dists + 1e-8)
         norm = torch.sum(dist_recip, dim=2, keepdim=True)
         weight = dist_recip / norm
