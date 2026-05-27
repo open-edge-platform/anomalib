@@ -2,7 +2,6 @@ model:
   class_path: anomalib.models.image.cfm.lightning_model.CFM
   init_args:
     lr: 1.0e-4
-    image_size: 224
     rgb_backbone: vit_base_patch8_224.dino
     group_size: 128
     num_group: 1024

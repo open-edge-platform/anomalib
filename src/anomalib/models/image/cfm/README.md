@@ -1,73 +1,55 @@
-<h1 align="center"> Multimodal Industrial Anomaly Detection by Crossmodal Feature Mapping (CVPR 2024) </h1>
+# CFM: Crossmodal Feature Mapping
 
-<br>
+This is the implementation of the [Multimodal Industrial Anomaly Detection by Crossmodal Feature Mapping](https://arxiv.org/abs/2312.04521) paper (CVPR 2024). Based on <https://github.com/CVLAB-Unibo/crossmodal-feature-mapping>.
 
-:rotating_light: This repository contains download links to the datasets, code snippets, and checkpoints of our work "**Multimodal Industrial Anomaly Detection by Crossmodal Feature Mapping**", [CVPR 2024](https://cvpr.thecvf.com/Conferences/2024)
+Model Type: Segmentation
 
-by [Alex Costanzino\*](https://alex-costanzino.github.io/), [Pierluigi Zama Ramirez\*](https://pierlui92.github.io/), [Giuseppe Lisanti](https://www.unibo.it/sitoweb/giuseppe.lisanti), and [Luigi Di Stefano](https://www.unibo.it/sitoweb/luigi.distefano). \* _Equal Contribution_
+## Description
 
-University of Bologna
+CFM is a lightweight multimodal anomaly detection method that leverages both RGB images and 3D point clouds. Unlike memory-bank-based approaches (M3DM, 3D-ADS), CFM trains two small MLP networks to map features between modalities: one predicts 3D features from RGB, and the other predicts RGB features from 3D. Training uses only nominal (defect-free) samples, so the mappings learn cross-modal consistency on normal data.
 
-<div class="alert alert-info">
+During inference, anomalies are detected as inconsistencies between observed features and their cross-modal predictions. The anomaly map is computed as the element-wise product of normalized L2 distances in both directions, amplifying regions where both modalities disagree.
 
-<h2 align="center">
+### Feature Extraction
 
-[Project Page](https://cvlab-unibo.github.io/CrossmodalFeatureMapping/) | [Paper](https://arxiv.org/abs/2312.04521)
+- **RGB**: DINO ViT-Base (patch size 8, 224×224 input) extracts 768-dim patch features.
+- **3D**: Point-MAE pretrained PointTransformer groups the point cloud into local neighborhoods and produces 1152-dim features (concatenation of layers 3, 7, 11).
 
-</h2>
+Both backbones are frozen; only the two mapping MLPs are trained.
 
-## :bookmark_tabs: Table of Contents
+### Anomaly Detection
 
-1. [Introduction](#clapper-introduction)
-2. [Datasets](#file_cabinet)
-3. [Checkpoints](#inbox_tray)
-4. [Code](code)
-5. [Contacts](contacts)
+For each spatial location, the model computes:
 
-</div>
+1. Normalized L2 distance between predicted RGB features and observed RGB features.
+2. Normalized L2 distance between predicted 3D features and observed 3D features.
+3. Element-wise product of the two distance maps (amplifies co-occurring anomalies).
+4. Gaussian blur smoothing and top-k scoring for the image-level anomaly score.
 
-## :clapper: Introduction
+## Architecture
 
-Recent advancements have shown the potential of leveraging both point clouds and images to localize anomalies.
-Nevertheless, their applicability in industrial manufacturing is often constrained by significant drawbacks, such as the use of memory banks, which lead to a substantial increase in terms of memory footprint and inference time.
-We propose a novel light and fast framework that learns to map features from one modality to the other on nominal samples and detect anomalies by pinpointing inconsistencies between observed and mapped features.
-Extensive experiments show that our approach achieves state-of-the-art detection and segmentation performance, in both the standard and few-shot settings, on the MVTec 3D-AD dataset while achieving faster inference and occupying less memory than previous multimodal AD methods.
-Furthermore, we propose a layer pruning technique to improve memory and time efficiency with a marginal sacrifice in performance.
+![CFM Architecture](./images/architecture.jpg "CFM Architecture")
 
-<h4 align="center">
+## Usage
 
-</h4>
+CFM requires a multimodal dataset with RGB and depth/point-cloud data (e.g., MVTec 3D-AD). Train one category at a time:
 
-<img src="./images/architecture.jpg" alt="Alt text" style="width: 800px;" title="architecture">
-
-:fountain_pen: If you find this code useful in your research, please cite:
-
-```bibtex
-@inproceedings{costanzino2024cross,
-    title = {Multimodal Industrial Anomaly Detection by Crossmodal Feature Mapping},
-    author = {Costanzino, Alex and Zama Ramirez, Pierluigi and Lisanti, Giuseppe and Di Stefano, Luigi},
-    booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
-    note = {CVPR},
-    year = {2024},
-}
+```bash
+anomalib train -c examples/configs/train/cfm_mvtec3d_single_category.yaml
 ```
 
-<h2 id="file_cabinet"> :file_cabinet: Datasets </h2>
+Point-cloud operations are memory-intensive. If you hit OOM, keep batch size at 1, use a single device, and reduce `num_group`.
 
-In our experiments, we employed two datasets featuring rgb images and point clouds: [MVTec 3D-AD](https://www.mvtec.com/company/research/datasets/mvtec-3d-ad) and [Eyecandies](https://eyecan-ai.github.io/eyecandies/).
+## Benchmark
 
-<h2 id="inbox_tray"> :inbox_tray: Checkpoints </h2>
+All results gathered with seed `42` on [MVTec 3D-AD](https://www.mvtec.com/company/research/datasets/mvtec-3d-ad).
 
-Here, you can download the weights of **CFMs** employed in the results of Table 1 and Table 2 of our paper.
+> **Note**: Benchmarks pending full evaluation. The table below will be populated after a complete training run across all categories.
 
-To use these weights, please follow these steps:
+### MVTec 3D-AD Dataset
 
-1. Create a folder named `checkpoints/checkpoints_CFM_mvtec` in the project directory;
-2. Download the weights [[Download]](https://t.ly/DZ-o1);
-3. Copy the downloaded weights into the `checkpoints_CFM_mvtec` folder.
-
-## :pray: Acknowledgements
-
-We would like to extend our sincere appreciation to the authors of the following projects for making their code available, which we have utilized in our work:
-
-- We would like to thank the authors of [M3DM](https://github.com/nomewang/M3DM), [3D-ADS](https://github.com/eliahuhorwitz/3D-ADS) and [AST](https://github.com/marco-rudolph/AST) for providing their code, which has been instrumental in our experiments.
+| Metric      | Avg |
+| ----------- | :-: |
+| Image AUROC |  -  |
+| Pixel AUROC |  -  |
+| Image F1    |  -  |

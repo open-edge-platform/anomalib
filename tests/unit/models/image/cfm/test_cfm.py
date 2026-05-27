@@ -3,16 +3,18 @@
 
 """Unit tests for the CFM model."""
 
+from typing import cast
+
 import pytest
 import torch
 
-from anomalib.data import InferenceBatch
+from anomalib.data import Batch, InferenceBatch
 from anomalib.models.image.cfm.lightning_model import CFM
 from anomalib.models.image.cfm.torch_model import CFMModel
 
 
 @pytest.fixture
-def dummy_batch() -> dict[str, torch.Tensor]:
+def dummy_batch() -> Batch:
     """Creates a dummy batch with RGB and Point Cloud to test the model."""
     batch_size = 2
     image_size = 224
@@ -22,18 +24,22 @@ def dummy_batch() -> dict[str, torch.Tensor]:
     rgb = torch.rand(batch_size, 3, image_size, image_size)
     xyz = torch.rand(batch_size, 3, image_size, image_size)
 
-    return {
-        "image": rgb,
-        "point_cloud": xyz,
-    }
+    return cast(
+        "Batch",
+        {
+            "image": rgb,
+            "point_cloud": xyz,
+        },
+    )
 
 
-def test_cfm_model_forward_training(dummy_batch: dict[str, torch.Tensor]) -> None:
+def test_cfm_model_forward_training(dummy_batch: Batch) -> None:
     """Verifies that the model correctly computes the losses during training."""
     model = CFMModel()
     model.train()  # Set the model to training mode
 
-    rgb, xyz = dummy_batch["image"], dummy_batch["point_cloud"]
+    tensors = cast("dict[str, torch.Tensor]", dummy_batch)
+    rgb, xyz = tensors["image"], tensors["point_cloud"]
 
     # Execute the forward pass
     output = model(rgb, xyz)
@@ -44,12 +50,13 @@ def test_cfm_model_forward_training(dummy_batch: dict[str, torch.Tensor]) -> Non
     assert output["loss"].shape == torch.Size([]), "The loss must be a scalar (empty shape)"
 
 
-def test_cfm_model_forward_inference(dummy_batch: dict[str, torch.Tensor]) -> None:
+def test_cfm_model_forward_inference(dummy_batch: Batch) -> None:
     """Verifies that the model generates anomaly maps and scores during inference."""
     model = CFMModel()
     model.eval()  # Set the model to evaluation mode
 
-    rgb, xyz = dummy_batch["image"], dummy_batch["point_cloud"]
+    tensors = cast("dict[str, torch.Tensor]", dummy_batch)
+    rgb, xyz = tensors["image"], tensors["point_cloud"]
 
     with torch.no_grad():
         output = model(rgb, xyz)
@@ -64,7 +71,7 @@ def test_cfm_model_forward_inference(dummy_batch: dict[str, torch.Tensor]) -> No
     assert output.pred_score.shape == (2,), "Incorrect shape for the pred_score"
 
 
-def test_lightning_module_steps(dummy_batch: dict[str, torch.Tensor]) -> None:
+def test_lightning_module_steps(dummy_batch: Batch) -> None:
     """Verifies that the Lightning wrapper accepts the data without crashing."""
     lightning_model = CFM()
 

@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import torch
 from torch import nn
 
@@ -12,6 +14,9 @@ from anomalib.data import InferenceBatch
 
 from .anomaly_map import CFMAnomalyMapGenerator
 from .components import FeatureProjectionMLP, MultimodalFeatures
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class CFMModel(nn.Module):
@@ -25,6 +30,7 @@ class CFMModel(nn.Module):
         rgb_backbone: str = "vit_base_patch8_224.dino",
         group_size: int = 128,
         num_group: int = 1024,
+        pointmae_weights: str | Path | None = None,
     ) -> None:
         """Initialise the multimodal mapping system.
 
@@ -32,6 +38,7 @@ class CFMModel(nn.Module):
             rgb_backbone: Name of DINO model to upload.
             group_size: Dimension of groups for the Point Cloud (KNN).
             num_group: Number of groups (FPS) for the Point Cloud.
+            pointmae_weights: Path to Point-MAE pretrained weights, or None for auto-download.
         """
         super().__init__()
 
@@ -39,6 +46,7 @@ class CFMModel(nn.Module):
             rgb_backbone_name=rgb_backbone,
             group_size=group_size,
             num_group=num_group,
+            pointmae_weights=pointmae_weights,
         ).eval()
 
         # Blocking the gradients: extractors aren't updated

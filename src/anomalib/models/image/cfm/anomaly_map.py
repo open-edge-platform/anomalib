@@ -36,14 +36,15 @@ class CFMAnomalyMapGenerator(nn.Module):
 
     @staticmethod
     def compute_distance(real: torch.Tensor, predicted: torch.Tensor) -> torch.Tensor:
-        """Evaluates crossmodal discrepance (1 - Cosine Similarity).
+        """Compute normalized L2 distance between real and predicted features.
 
+        Matches the original paper: ||normalize(pred) - normalize(real)||_2
         Input: (B, C, H, W).
         Output: (B, H, W).
         """
-        # Feature (C) channels dim=1.
-        cos_sim = functional.cosine_similarity(real, predicted, dim=1)
-        return 1 - cos_sim
+        real_norm = functional.normalize(real, dim=1)
+        pred_norm = functional.normalize(predicted, dim=1)
+        return (pred_norm - real_norm).pow(2).sum(dim=1).sqrt()
 
     def forward(
         self,
@@ -65,9 +66,8 @@ class CFMAnomalyMapGenerator(nn.Module):
         # 2. Distance 2D -> 3D
         dist_xyz = self.compute_distance(xyz_feat, pred_xyz)  # Shape: (B, H, W)
 
-        # 3. Combination of the maps (Sum of the errors)
-        # If there's an anomaly both the mapping will be wrong amplifying the signal.
-        combined_map = dist_rgb + dist_xyz
+        # 3. Combination via element-wise product (paper: cos_2d * cos_3d)
+        combined_map = dist_rgb * dist_xyz
 
         # Aggiungiamo the dimension of the channel(B, 1, H, W)
         anomaly_map = combined_map.unsqueeze(1)

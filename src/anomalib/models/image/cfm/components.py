@@ -5,13 +5,47 @@
 
 from __future__ import annotations
 
+import logging
+from pathlib import Path
+
 import timm
 import torch
 from timm.models.layers import DropPath
 from torch import nn
 from torch.nn import functional
 
+from anomalib.data.utils import DownloadInfo, download_and_extract
+from anomalib.utils.path import get_pretrained_weights_dir
+
 from .utils import farthest_point_sample, index_points, interpolating_points
+
+logger = logging.getLogger(__name__)
+
+POINTMAE_DOWNLOAD_INFO = DownloadInfo(
+    name="pointmae_pretrain.pth",
+    url="https://github.com/Pang-Yatian/Point-MAE/releases/download/main/pretrain.pth",
+    hashsum="27ded932bb0a2625d5a8eb006df199b2578598c774aee6d86b985300b6a5fd20",
+)
+
+
+def _resolve_pointmae_weights(pointmae_weights: str | Path | None) -> Path:
+    """Resolve Point-MAE weights path: use explicit path or download to cache."""
+    if pointmae_weights is not None:
+        path = Path(pointmae_weights)
+        if path.is_file():
+            return path
+        logger.warning("Point-MAE weights not found at '%s', falling back to auto-download.", path)
+
+    cache_dir = get_pretrained_weights_dir() / "pointmae"
+    weight_file = cache_dir / "pointmae_pretrain.pth"
+    if not weight_file.is_file():
+        logger.info("Downloading Point-MAE pretrained weights to %s", cache_dir)
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        download_and_extract(cache_dir, POINTMAE_DOWNLOAD_INFO)
+        downloaded = cache_dir / "pretrain.pth"
+        if downloaded.is_file() and not weight_file.is_file():
+            downloaded.rename(weight_file)
+    return weight_file
 
 
 class FeatureProjectionMLP(nn.Module):
@@ -40,6 +74,7 @@ class MultimodalFeatures(nn.Module):
         rgb_backbone_name: str = "vit_base_patch8_224.dino",
         group_size: int = 128,
         num_group: int = 1024,
+        pointmae_weights: str | Path | None = None,
     ) -> None:
         super().__init__()
 
@@ -48,6 +83,7 @@ class MultimodalFeatures(nn.Module):
             rgb_backbone_name=rgb_backbone_name,
             group_size=group_size,
             num_group=num_group,
+            pointmae_weights=pointmae_weights,
         )
 
         # Smoothing
@@ -102,7 +138,13 @@ class MultimodalFeatures(nn.Module):
 class FeatureExtractors(nn.Module):
     """Wrapper for the two pre-trained Backbone."""
 
-    def __init__(self, rgb_backbone_name: str, group_size: int = 128, num_group: int = 1024) -> None:
+    def __init__(
+        self,
+        rgb_backbone_name: str,
+        group_size: int = 128,
+        num_group: int = 1024,
+        pointmae_weights: str | Path | None = None,
+    ) -> None:
         super().__init__()
         layers_keep = 12
 
@@ -113,10 +155,11 @@ class FeatureExtractors(nn.Module):
         # XYZ Backbone (PointTransformer)
         self.xyz_backbone = PointTransformer(group_size=group_size, num_group=num_group)
 
-        try:
-            self.xyz_backbone.load_model_from_ckpt("checkpoints/feature_extractors/pointmae_pretrain.pth")
-        except FileNotFoundError:
-            print("Attention: Point-MAE weights not found. Random weights will be used.")
+        weight_path = _resolve_pointmae_weights(pointmae_weights)
+        if weight_path.is_file():
+            self.xyz_backbone.load_model_from_ckpt(str(weight_path))
+        else:
+            logger.warning("Point-MAE weights unavailable. Using random initialization.")
         self.xyz_backbone.blocks.blocks = nn.Sequential(*self.xyz_backbone.blocks.blocks[:layers_keep])
 
     def forward_rgb_features(self, x: torch.Tensor) -> torch.Tensor:
