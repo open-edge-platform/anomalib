@@ -45,7 +45,7 @@ def _resolve_pointmae_weights(pointmae_weights: str | Path | None) -> Path:
         cache_dir.mkdir(parents=True, exist_ok=True)
 
         with DownloadProgressBar(unit="B", unit_scale=True, miniters=1, desc="Point-MAE") as pbar:
-            urlretrieve(  # noqa: S310  # nosec B310
+            urlretrieve(  # noqa: S310  # nosec B310  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
                 POINTMAE_DOWNLOAD_INFO.url,
                 filename=weight_file,
                 reporthook=pbar.update_to,
