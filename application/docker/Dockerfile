@@ -175,7 +175,7 @@ RUN echo "Removing non-redistributable CUDA components per NVIDIA EULA..." && \
     -name "libnvperf_host.so*" -o \
     -name "libnvperf_target.so*" -o \
     -name "libpcsamplingutil.so*" \
-    \) -path "*cupti*" -delete 2>/dev/null || true && \
+    \) -delete 2>/dev/null || true && \
     # Remove cuSolver MG libraries (enterprise feature)
     find $SEARCH_PATHS -name "libcusolverMg.so*" -delete 2>/dev/null || true && \
     # Remove Triton NVIDIA backends (development components)
@@ -238,6 +238,9 @@ WORKDIR /app/application/backend
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --extra xpu
+
+# CUDA EULA Compliance Cleanup
+RUN find /app/application/backend/.venv -type d -path "*/triton/backends/nvidia" -exec rm -rf {} + 2>/dev/null || true
 
 EXPOSE 8000
 
