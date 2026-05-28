@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import logging
+import warnings
 from pathlib import Path
 from urllib.request import urlretrieve
 
@@ -104,10 +105,11 @@ class MultimodalFeatures(nn.Module):
 
         # Filter (0,0,0) padding; uses batch[0] mask (consistent padding in organized PCs, batch_size=1 recommended)
         if b > 1:
-            msg = (
-                "CFM expects batch_size=1 for point cloud processing (padding mask is computed from first sample only)."
+            warnings.warn(
+                "CFM computes the zero-padding mask from the first sample only. "
+                "For batch_size > 1, all samples must share the same padding pattern.",
+                stacklevel=2,
             )
-            raise ValueError(msg)
         nonzero_indices = torch.nonzero((unorganized_pc[0] != 0).any(dim=1)).squeeze(dim=1)
         unorganized_pc_no_zeros = unorganized_pc[:, nonzero_indices, :]
 
