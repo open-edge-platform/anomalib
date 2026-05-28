@@ -3,51 +3,7 @@
 
 """Utility functions for Point Cloud and 3D operations in CFM."""
 
-import numpy as np
-import tifffile as tiff
 import torch
-
-
-def organized_pc_to_unorganized_pc(organized_pc: np.ndarray) -> np.ndarray:
-    """Converts an organized point cloud to an unorganized one."""
-    return organized_pc.reshape(organized_pc.shape[0] * organized_pc.shape[1], organized_pc.shape[2])
-
-
-def read_tiff_organized_pc(path: str) -> np.ndarray:
-    """Reads a TIFF file and returns the point cloud."""
-    return tiff.imread(path)
-
-
-def resize_organized_pc(
-    organized_pc: np.ndarray,
-    target_height: int = 224,
-    target_width: int = 224,
-    tensor_out: bool = True,
-) -> torch.Tensor | np.ndarray:
-    """Resizes an organized point cloud."""
-    torch_organized_pc = (
-        torch.as_tensor(organized_pc, dtype=torch.float32).permute(2, 0, 1).unsqueeze(dim=0).contiguous()
-    )
-    torch_resized_organized_pc = torch.nn.functional.interpolate(
-        torch_organized_pc,
-        size=(target_height, target_width),
-        mode="nearest",
-    )
-    if tensor_out:
-        return torch_resized_organized_pc.squeeze(dim=0).contiguous()
-    return torch_resized_organized_pc.squeeze().permute(1, 2, 0).contiguous().numpy()
-
-
-def organized_pc_to_depth_map(organized_pc: np.ndarray) -> np.ndarray:
-    """Extracts the depth map from an organized point cloud."""
-    return organized_pc[:, :, 2]
-
-
-def pc_normalize(pc: np.ndarray) -> np.ndarray:
-    """Normalizes a point cloud to fit within a unit sphere."""
-    centroid = np.mean(pc, axis=0)
-    pc = pc - centroid
-    return pc / np.max(np.sqrt(np.sum(pc**2, axis=1)))
 
 
 def square_distance(src: torch.Tensor, dst: torch.Tensor) -> torch.Tensor:
