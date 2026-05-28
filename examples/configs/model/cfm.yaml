@@ -1,0 +1,7 @@
+model:
+  class_path: anomalib.models.CFM
+  init_args:
+    lr: 1.0e-4
+    rgb_backbone: vit_base_patch8_224.dino
+    group_size: 128
+    num_group: 1024

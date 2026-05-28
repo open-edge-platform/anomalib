@@ -15,7 +15,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from anomalib.data import AnomalibDataModule, MVTecAD
+from anomalib.data import AnomalibDataModule, MVTec3D, MVTecAD
 from anomalib.deploy import ExportType
 from anomalib.engine import Engine
 from anomalib.models import AnomalibModule, get_model, list_models
@@ -170,6 +170,10 @@ class TestAPI:
         export_kwargs: dict[str, Any] = {}
         if model_name == "glass":
             export_kwargs["input_size"] = (288, 288)
+        if model_name in {"cfm", "c_f_m"}:
+            export_kwargs["input_size"] = (224, 224)
+            if export_type in {ExportType.ONNX, ExportType.OPENVINO}:
+                pytest.skip("CFM uses dynamic point-cloud ops that are not ONNX/OpenVINO exportable")
 
         # Use context manager only for CSFlow
         with increased_recursion_limit() if model_name == "csflow" else contextlib.nullcontext():
@@ -204,9 +208,20 @@ class TestAPI:
         extra_args = {}
         if model_name == "dfkde":
             extra_args["n_pca_components"] = 2
+        if model_name in {"cfm", "c_f_m"}:
+            # Keep integration tests lightweight/stable (point ops are memory hungry).
+            extra_args["num_group"] = 128
+            extra_args["group_size"] = 32
 
         if model_name in {"ai_vad", "fuvas"}:
             pytest.skip("Revisit video models tests")
+        elif model_name in {"cfm", "c_f_m"}:
+            dataset = MVTec3D(
+                root=dataset_path / "mvtec_3d",
+                category="dummy",
+                # Keep parity with other models (and reduce runtime).
+                train_batch_size=1,
+            )
         else:
             # EfficientAd requires that the batch size be lesser than the number of images in the dataset.
             # This is so that the LR step size is not 0.

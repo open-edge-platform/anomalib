@@ -27,6 +27,7 @@ Available Models:
     - :class:`AnomalyDINO`: Boost Memorybank Models with DINOv2
     - :class:`Cfa`: Contrastive Feature Aggregation
     - :class:`Cflow`: Conditional Normalizing Flow
+    - :class:`CFM`: Crossmodal Feature Mapping
     - :class:`Csflow`: Conditional Split Flow
     - :class:`Dfkde`: Deep Feature Kernel Density Estimation
     - :class:`Dfm`: Deep Feature Modeling
@@ -55,6 +56,7 @@ from .anomaly_dino import AnomalyDINO
 from .anomalyvfm import AnomalyVFM
 from .cfa import Cfa
 from .cflow import Cflow
+from .cfm import CFM
 from .csflow import Csflow
 from .dfkde import Dfkde
 from .dfm import Dfm
@@ -85,6 +87,7 @@ __all__ = [
     "AnomalyDINO",
     "Cfa",
     "Cflow",
+    "CFM",
     "Csflow",
     "Dfkde",
     "Dfm",
