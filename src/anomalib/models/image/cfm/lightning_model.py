@@ -143,6 +143,9 @@ class CFM(AnomalibModule):
         rgb = cls._get_first_tensor(batch, ("image",))
         xyz = cls._get_first_tensor(batch, ("point_cloud", "depth_map"))
         if rgb is not None and xyz is not None:
+            if xyz.ndim != 4 or xyz.shape[1] != 3:
+                msg = f"CFM requires 3D input with shape (B, 3, H, W), got {xyz.shape}"
+                raise TypeError(msg)
             if xyz.shape[-2:] != rgb.shape[-2:]:
                 xyz = functional.interpolate(xyz, size=rgb.shape[-2:], mode="bilinear", align_corners=False)
             return rgb, xyz
@@ -155,17 +158,20 @@ class CFM(AnomalibModule):
 
         Notes:
             `AnomalibModule`'s default `forward` assumes single-input models and calls
-            `self.model(image)`. CFM is multimodal, so we override `forward` to support:
-            - `Batch` instances and mapping-like batches (extract RGB + 3D tensor)
-            - raw image tensors (best-effort: synthesize a dummy xyz tensor)
+            `self.model(image)`. CFM is multimodal, so we override `forward` to require
+            a `Batch` or mapping with both 'image' and 'point_cloud'/'depth_map' keys.
+
+        Raises:
+            TypeError: If called with a raw image tensor (missing 3D modality).
+            TypeError: If model is not in eval mode.
         """
         if isinstance(batch, torch.Tensor):
-            rgb = batch
-            # Best-effort synthetic point cloud for export paths that only provide images.
-            # Avoid all-zeros, since downstream point ops may drop zero points entirely.
-            xyz = torch.ones((rgb.shape[0], 3, *rgb.shape[-2:]), device=rgb.device, dtype=rgb.dtype)
-        else:
-            rgb, xyz = self._get_data(batch)
+            msg = (
+                "CFM requires both RGB and 3D point cloud inputs. "
+                "Pass a Batch/dict with 'image' and 'point_cloud' keys."
+            )
+            raise TypeError(msg)
+        rgb, xyz = self._get_data(batch)
 
         out = self.model(rgb, xyz)
         if isinstance(out, InferenceBatch):

@@ -389,7 +389,7 @@ class PointTransformer(nn.Module):
 
     def load_model_from_ckpt(self, bert_ckpt_path: str) -> None:
         """Loads model from a checkpoint."""
-        ckpt = torch.load(
+        ckpt = torch.load(  # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
             bert_ckpt_path,
             map_location="cpu",
             weights_only=True,

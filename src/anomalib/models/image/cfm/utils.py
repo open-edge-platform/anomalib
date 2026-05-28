@@ -25,7 +25,9 @@ def resize_organized_pc(
     tensor_out: bool = True,
 ) -> torch.Tensor | np.ndarray:
     """Resizes an organized point cloud."""
-    torch_organized_pc = torch.tensor(organized_pc).permute(2, 0, 1).unsqueeze(dim=0).contiguous()
+    torch_organized_pc = (
+        torch.as_tensor(organized_pc, dtype=torch.float32).permute(2, 0, 1).unsqueeze(dim=0).contiguous()
+    )
     torch_resized_organized_pc = torch.nn.functional.interpolate(
         torch_organized_pc,
         size=(target_height, target_width),
