@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
@@ -20,19 +21,21 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 
+@dataclass
 class DummyBatch:
     """Simple multimodal batch used for offline CFM tests."""
 
-    def __init__(self, image: torch.Tensor, point_cloud: torch.Tensor) -> None:
-        self.image: torch.Tensor = image
-        self.point_cloud: torch.Tensor = point_cloud
-        self.anomaly_map: torch.Tensor | None = None
-        self.pred_score: torch.Tensor | None = None
+    image: torch.Tensor
+    point_cloud: torch.Tensor
+    anomaly_map: torch.Tensor | None = field(default=None)
+    pred_score: torch.Tensor | None = field(default=None)
 
     def update(self, **kwargs: torch.Tensor) -> DummyBatch:
         """Update batch fields in-place and return self."""
-        for key, value in kwargs.items():
-            setattr(self, key, value)
+        if "anomaly_map" in kwargs:
+            self.anomaly_map = kwargs["anomaly_map"]
+        if "pred_score" in kwargs:
+            self.pred_score = kwargs["pred_score"]
         return self
 
 
