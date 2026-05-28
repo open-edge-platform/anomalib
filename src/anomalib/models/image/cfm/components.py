@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from urllib.request import urlretrieve
 
 import timm
 import torch
@@ -42,16 +43,10 @@ def _resolve_pointmae_weights(pointmae_weights: str | Path | None) -> Path:
     if not weight_file.is_file():
         logger.info("Downloading Point-MAE pretrained weights to %s", cache_dir)
         cache_dir.mkdir(parents=True, exist_ok=True)
-        from urllib.request import urlretrieve
-
-        url = POINTMAE_DOWNLOAD_INFO.url
-        if not url.startswith("https://"):
-            msg = f"Point-MAE download URL must use HTTPS, got: {url}"
-            raise ValueError(msg)
 
         with DownloadProgressBar(unit="B", unit_scale=True, miniters=1, desc="Point-MAE") as pbar:
             urlretrieve(  # noqa: S310  # nosec B310
-                url,
+                POINTMAE_DOWNLOAD_INFO.url,
                 filename=weight_file,
                 reporthook=pbar.update_to,
             )
