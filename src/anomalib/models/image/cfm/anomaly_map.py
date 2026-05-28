@@ -69,7 +69,7 @@ class CFMAnomalyMapGenerator(nn.Module):
         # 3. Combination via element-wise product (paper: cos_2d * cos_3d)
         combined_map = dist_rgb * dist_xyz
 
-        # Aggiungiamo the dimension of the channel(B, 1, H, W)
+        # Add channel dimension (B, 1, H, W)
         anomaly_map = combined_map.unsqueeze(1)
 
         # 4. Upsampling to original dimension of the image

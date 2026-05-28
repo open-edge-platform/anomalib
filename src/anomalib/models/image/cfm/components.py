@@ -84,7 +84,7 @@ class MultimodalFeatures(nn.Module):
     ) -> None:
         super().__init__()
 
-        # Uploades wrapper with DINO and Point-MAE
+        # Feature extraction with DINO and Point-MAE
         self.extractors = FeatureExtractors(
             rgb_backbone_name=rgb_backbone_name,
             group_size=group_size,
