@@ -70,3 +70,7 @@ terms are listed below.
 14. CFM model (anomalib.models.image.cfm)
     Copyright (c) 2023 CVLAB-Unibo, https://github.com/CVLAB-Unibo/crossmodal-feature-mapping
     SPDX-License-Identifier: MIT
+
+15. INP-Former model (anomalib.models.image.inp_former)
+    Copyright (c) 2025 Wei Luo, https://github.com/luow23/INP-Former
+    SPDX-License-Identifier: MIT
