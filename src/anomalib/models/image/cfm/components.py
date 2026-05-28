@@ -44,9 +44,14 @@ def _resolve_pointmae_weights(pointmae_weights: str | Path | None) -> Path:
         cache_dir.mkdir(parents=True, exist_ok=True)
         from urllib.request import urlretrieve
 
+        url = POINTMAE_DOWNLOAD_INFO.url
+        if not url.startswith("https://"):
+            msg = f"Point-MAE download URL must use HTTPS, got: {url}"
+            raise ValueError(msg)
+
         with DownloadProgressBar(unit="B", unit_scale=True, miniters=1, desc="Point-MAE") as pbar:
             urlretrieve(  # noqa: S310  # nosec B310
-                POINTMAE_DOWNLOAD_INFO.url,
+                url,
                 filename=weight_file,
                 reporthook=pbar.update_to,
             )
