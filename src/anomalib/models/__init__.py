@@ -112,6 +112,7 @@ __all__ = [
     "AiVad",
     "AnomalyDINO",
     "AnomalyVFM",
+    "CFM",
     "Cfa",
     "Cflow",
     "Csflow",
@@ -139,7 +140,6 @@ __all__ = [
     "UniNet",
     "VlmAd",
     "WinClip",
-    "CFM",
 ]
 
 logger = logging.getLogger(__name__)

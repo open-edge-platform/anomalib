@@ -3,8 +3,7 @@
 
 """Exploring Intrinsic Normal Prototypes within a Single Image for Universal Anomaly Detection.
 
-INP-Former is trained on normal images using a feature-reconstruction framework based von
-DINOv2.
+INP-Former is trained on normal images using a feature-reconstruction framework based on DINOv2.
 
 A frozen pre-trained encoder produces patch tokens, and an INP Extractor uses M learnable
 query tokens with cross-attention over those patch tokens to aggregate them into M Intrinsic
@@ -379,15 +378,15 @@ class InpFormer(AnomalibModule):
         Returns:
             dict[str, Any]: Dictionary of trainer arguments with strategy
                 configuration for optimal training performance. Does not include
-                max_steps so it can be set by the engine or user.
+                max_epochs so it can be set by the engine or user.
 
         Note:
-            The max_steps is intentionally excluded to allow user override.
+            The max_epochs is intentionally excluded to allow user override.
         """
         trainer_config = TRAINING_CONFIG["trainer"].copy()
         assert isinstance(trainer_config, dict)
-        # Remove max_steps to allow user override
-        trainer_config.pop("max_steps", None)
+        # Remove max_epochs to allow user override
+        trainer_config.pop("max_epochs", None)
         return trainer_config
 
     @staticmethod
@@ -403,5 +402,7 @@ class InpFormer(AnomalibModule):
                 if isinstance(m, torch.nn.Linear) and m.bias is not None:
                     torch.nn.init.constant_(m.bias, 0)
             elif isinstance(m, torch.nn.LayerNorm):
-                torch.nn.init.constant_(m.bias, 0)
-                torch.nn.init.constant_(m.weight, 1.0)
+                if m.bias is not None:
+                    torch.nn.init.constant_(m.bias, 0)
+                if m.weight is not None:
+                    torch.nn.init.constant_(m.weight, 1.0)

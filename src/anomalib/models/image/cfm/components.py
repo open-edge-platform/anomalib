@@ -103,6 +103,11 @@ class MultimodalFeatures(nn.Module):
         unorganized_pc = pc.view(b, pc.shape[1], -1).permute(0, 2, 1)
 
         # Filter (0,0,0) padding; uses batch[0] mask (consistent padding in organized PCs, batch_size=1 recommended)
+        if b > 1:
+            msg = (
+                "CFM expects batch_size=1 for point cloud processing (padding mask is computed from first sample only)."
+            )
+            raise ValueError(msg)
         nonzero_indices = torch.nonzero((unorganized_pc[0] != 0).any(dim=1)).squeeze(dim=1)
         unorganized_pc_no_zeros = unorganized_pc[:, nonzero_indices, :]
 

@@ -39,6 +39,13 @@ class AnomalyVFMModel(
 
     def __init__(self) -> None:
         super().__init__()
+        if not _HAS_HF_DEPS:
+            msg = (
+                "AnomalyVFM requires 'huggingface_hub' and 'safetensors'. "
+                "Install them using: pip install anomalib[huggingface]"
+            )
+            raise ImportError(msg)
+
         self.precision: PrecisionType | None = None
         self.model = BaseModel()
         self.model.add_peft()
@@ -46,12 +53,6 @@ class AnomalyVFMModel(
         self.decoder = SimpleDecoder(feat_dim, 1, 1)
         self.predictor = SimplePredictor(feat_dim * 3)
 
-        if not _HAS_HF_DEPS:
-            msg = (
-                "AnomalyVFM requires 'huggingface_hub' and 'safetensors'. "
-                "Install them using: pip install anomalib[huggingface]"
-            )
-            raise ImportError(msg)
         weights_path = hf_hub_download(
             repo_id="MaticFuc/anomalyvfm_radio",
             filename="model.safetensors",

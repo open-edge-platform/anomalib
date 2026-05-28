@@ -216,6 +216,7 @@ WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation
 ./anomalyvfm
 ./anomaly_dino
 ./cfa
+./cfm
 ./cflow
 ./csflow
 ./dfkde

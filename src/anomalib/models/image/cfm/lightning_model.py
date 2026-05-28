@@ -163,7 +163,8 @@ class CFM(AnomalibModule):
 
         Raises:
             TypeError: If called with a raw image tensor (missing 3D modality).
-            TypeError: If model is not in eval mode.
+            TypeError: If the underlying model did not return an ``InferenceBatch``
+                (e.g. model is in training mode).
         """
         if isinstance(batch, torch.Tensor):
             msg = (

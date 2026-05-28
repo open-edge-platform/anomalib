@@ -88,17 +88,13 @@ class InpFormerModel(nn.Module):
         encoder_require_grad_layer: list[int] | None = None,
     ) -> None:
         super().__init__()
-        if encoder_require_grad_layer is None:
-            self.encoder_require_grad_layer: list[int] = []
+        self.encoder_require_grad_layer: list[int] = (
+            encoder_require_grad_layer if encoder_require_grad_layer is not None else []
+        )
         self.remove_class_token = remove_class_token
-
-        if target_layers is None:
-            self.target_layers = [2, 3, 4, 5, 6, 7, 8, 9]
-
-        if fuse_layer_encoder is None:
-            self.fuse_layer_encoder = DEFAULT_FUSE_LAYERS
-        if fuse_layer_decoder is None:
-            self.fuse_layer_decoder = DEFAULT_FUSE_LAYERS
+        self.target_layers = target_layers if target_layers is not None else [2, 3, 4, 5, 6, 7, 8, 9]
+        self.fuse_layer_encoder = fuse_layer_encoder if fuse_layer_encoder is not None else DEFAULT_FUSE_LAYERS
+        self.fuse_layer_decoder = fuse_layer_decoder if fuse_layer_decoder is not None else DEFAULT_FUSE_LAYERS
 
         self.encoder = DinoV2Loader(vit_factory=dinomaly_vision_transformer).load(encoder_name)
 
@@ -336,6 +332,7 @@ class InpFormerModel(nn.Module):
                 continue
             if i in self.target_layers:
                 en_list.append(x)
+        # Compute spatial side length. DINOv2 produces square patch grids (input is resized to square).
         side = int(math.sqrt(en_list[0].shape[1] - 1 - self.encoder.num_register_tokens))
 
         if self.remove_class_token:
