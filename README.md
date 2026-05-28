@@ -31,13 +31,16 @@
 
 ---
 
-> 🌟 **Announcing v2.4.2 Release!** 🌟
+> 🌟 **Announcing v2.5.0 Release!** 🌟
 >
-> This patch release adds half-precision training for Dinomaly.
+> This release introduces four new anomaly detection models!
 >
 > Key Changes
 >
-> - Half precision training support for Dinomaly.
+> - **INP-Former**: Incremental Normal Proxy based anomaly detection model.
+> - **GLASS**: Global-Local Anomaly detection on Submanifold Slices.
+> - **AnomalyVFM**: Zero-shot anomaly detection with Vision Foundation Models.
+> - **CFM**: Cross-modal Feature Mapping for 3D anomaly detection.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 
