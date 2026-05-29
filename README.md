@@ -37,8 +37,8 @@
 >
 > Key Changes
 >
-> - **INP-Former**: Incremental Normal Proxy based anomaly detection model.
-> - **GLASS**: Global-Local Anomaly detection on Submanifold Slices.
+> - **INP-Former**: Intrinsic Normal Prototypes for universal anomaly detection.
+> - **GLASS**: A unified anomaly synthesis strategy with gradient ascent for industrial anomaly detection and localization.
 > - **AnomalyVFM**: Zero-shot anomaly detection with Vision Foundation Models.
 > - **CFM**: Cross-modal Feature Mapping for 3D anomaly detection.
 >
