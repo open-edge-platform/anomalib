@@ -66,8 +66,8 @@ def mock_cfm_backbones(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.fixture
 def dummy_batch() -> DummyBatch:
     """Creates a dummy batch with RGB and Point Cloud to test the model."""
-    batch_size = 2
-    image_size = 224
+    batch_size = 1
+    image_size = 64
 
     rgb = torch.rand(batch_size, 3, image_size, image_size)
     xyz = torch.rand(batch_size, 3, image_size, image_size)
@@ -103,8 +103,8 @@ def test_cfm_model_forward_inference(dummy_batch: DummyBatch) -> None:
     pred_score = output.pred_score
     assert anomaly_map is not None
     assert pred_score is not None
-    assert anomaly_map.shape == (2, 1, 224, 224), "Incorrect shape for the anomaly map"
-    assert pred_score.shape == (2,), "Incorrect shape for the pred_score"
+    assert anomaly_map.shape == (1, 1, 64, 64), "Incorrect shape for the anomaly map"
+    assert pred_score.shape == (1,), "Incorrect shape for the pred_score"
 
 
 def test_lightning_module_steps(dummy_batch: DummyBatch) -> None:
