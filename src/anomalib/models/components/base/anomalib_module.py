@@ -129,7 +129,7 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
         super().__init__()
         logger.info("Initializing %s model.", self.__class__.__name__)
 
-        self.save_hyperparameters()
+        self.save_hyperparameters(ignore=["evaluator"])
         self.model: nn.Module
         self.loss: nn.Module
         self.callbacks: list[Callback]
