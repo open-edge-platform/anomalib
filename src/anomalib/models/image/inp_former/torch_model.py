@@ -195,6 +195,7 @@ class InpFormerModel(nn.Module):
                   and anomaly_map (pixel-level anomaly maps).
 
         """
+        batch = batch.type(self.prototype_token[0].dtype)
         en, de, inp_loss = self.get_encoder_decoder_inploss(batch)
         image_size = (batch.shape[2], batch.shape[3])
 
