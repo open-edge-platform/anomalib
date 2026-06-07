@@ -99,7 +99,7 @@ class Dinomaly(AnomalibModule):
     Args:
         encoder_name (str): Name of the Vision Transformer encoder to use.
             Supports DINOv2 variants (small, base, large) with different patch sizes.
-            Defaults to "dinov2reg_vit_base_14".
+            Defaults to "vit_base_patch14_reg4_dinov2".
         bottleneck_dropout (float): Dropout rate for the bottleneck MLP layer.
             Helps prevent overfitting during feature compression. Defaults to 0.2.
         decoder_depth (int): Number of Vision Transformer decoder layers.
@@ -137,7 +137,7 @@ class Dinomaly(AnomalibModule):
         >>>
         >>> # Custom configuration
         >>> model = Dinomaly(
-        ...     encoder_name="dinov2reg_vit_large_14",
+        ...     encoder_name="vit_large_patch14_reg4_dinov2",
         ...     decoder_depth=12,
         ...     bottleneck_dropout=0.1,
         ...     mask_neighbor_size=3
@@ -156,7 +156,7 @@ class Dinomaly(AnomalibModule):
 
     def __init__(
         self,
-        encoder_name: str = "dinov2reg_vit_base_14",
+        encoder_name: str = "vit_base_patch14_reg4_dinov2",
         bottleneck_dropout: float = 0.2,
         decoder_depth: int = 8,
         target_layers: list[int] | None = None,

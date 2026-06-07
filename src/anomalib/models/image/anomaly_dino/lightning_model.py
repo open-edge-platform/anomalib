@@ -32,7 +32,7 @@ Example:
     ...     # Initialize model
     ...     model = AnomalyDINO(
     ...         num_neighbours=1,
-    ...         encoder_name="dinov2_vit_small_14",
+    ...         encoder_name="vit_small_patch14_dinov2",
     ...         masking=mask,
     ...         coreset_subsampling=False,
     ...     )
@@ -83,7 +83,7 @@ class AnomalyDINO(MemoryBankMixin, AnomalibModule):
         num_neighbours (int, optional): Number of nearest neighbors to use for
             anomaly scoring. Defaults to ``1``.
         encoder_name (str, optional): Name of the pretrained DINO encoder to use.
-            Defaults to ``"dinov2_vits14"``.
+            Defaults to ``"vit_small_patch14_dinov2"``.
         masking (bool, optional): Whether to apply masking during feature extraction
             to simulate occlusions or missing patches. Defaults to ``False``.
         coreset_subsampling (bool, optional): Whether to apply coreset subsampling
@@ -123,7 +123,7 @@ class AnomalyDINO(MemoryBankMixin, AnomalibModule):
         ...     # Initialize model
         ...     model = AnomalyDINO(
         ...         num_neighbours=1,
-        ...         encoder_name="dinov2_vit_small_14",
+        ...         encoder_name="vit_small_patch14_dinov2",
         ...         masking=mask,
         ...         coreset_subsampling=False,
         ...     )
@@ -150,7 +150,7 @@ class AnomalyDINO(MemoryBankMixin, AnomalibModule):
     def __init__(
         self,
         num_neighbours: int = 1,
-        encoder_name: str = "dinov2_vit_small_14",
+        encoder_name: str = "vit_small_patch14_dinov2",
         masking: bool = False,
         coreset_subsampling: bool = False,
         sampling_ratio: float = 0.1,
