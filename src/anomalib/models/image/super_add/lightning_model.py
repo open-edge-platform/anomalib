@@ -1,10 +1,36 @@
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-""" """
+"""SuperADD: PatchCore-style anomaly detection on a DINOv3 backbone.
+
+This module provides the Lightning implementation of the SuperADD model. SuperADD
+extracts multi-layer Vision Transformer token features from a pretrained DINOv3
+backbone over overlapping image patches, builds a per-layer memory bank from
+normal training images using distance-based coreset subsampling, and detects
+anomalies by nearest-neighbor search against this memory bank.
+
+Example:
+    >>> from anomalib.data import MVTecAD
+    >>> from anomalib.models import SuperADD
+    >>> from anomalib.engine import Engine
+
+    >>> # Initialize model and data
+    >>> datamodule = MVTecAD()
+    >>> model = SuperADD()
+
+    >>> # Train using the Engine
+    >>> engine = Engine()
+    >>> engine.fit(model=model, datamodule=datamodule)
+
+    >>> # Get predictions
+    >>> predictions = engine.predict(model=model, datamodule=datamodule)
+
+See Also:
+    - :class:`anomalib.models.image.super_add.torch_model.SuperADDModel`:
+        PyTorch implementation of the SuperADD model architecture
+"""
 
 import logging
-from collections.abc import Sequence
 from typing import Any
 
 import torch
@@ -24,21 +50,71 @@ from .torch_model import SuperADDModel
 
 logger = logging.getLogger(__name__)
 
-DINO_ARCHITECTURES = {
-    "small": {"embed_dim": 384, "num_heads": 6, "target_layers": [2, 3, 4, 5, 6, 7, 8, 9]},
-    "base": {"embed_dim": 768, "num_heads": 12, "target_layers": [2, 3, 4, 5, 6, 7, 8, 9]},
-    "large": {"embed_dim": 1024, "num_heads": 16, "target_layers": [4, 6, 8, 10, 12, 14, 16, 18]},
-}
-
 
 class SuperADD(MemoryBankMixin, AnomalibModule):
-    """ """
+    """SuperADD Lightning Module for anomaly detection.
+
+    This class implements the SuperADD algorithm, which uses a memory bank of
+    patch features for anomaly detection. Multi-layer token features are
+    extracted from a pretrained DINOv3 Vision Transformer over overlapping image
+    patches and stored in a per-layer memory bank. Anomalies are detected by
+    comparing test image patches against the stored features using nearest
+    neighbor search.
+
+    The model works in two phases:
+    1. Training: Extract and store patch features from normal training images,
+       then build a coreset memory bank.
+    2. Inference: Compare test image patches against the stored features to
+       detect anomalies.
+
+    Args:
+        backbone (str): Name of the timm DINOv3 backbone used for feature
+            extraction. Defaults to ``"vit_huge_plus_patch16_dinov3"``.
+        patch_size (int): Side length (in pixels) of the overlapping patches the
+            input image is split into before being passed to the backbone.
+            Defaults to ``448``.
+        patch_overlap (int): Overlap (in pixels) between neighboring patches.
+            Defaults to ``16``.
+        precision (str | PrecisionType, optional): Precision type for model
+            computations. Can be either a string (``"float32"``, ``"float16"``)
+            or a :class:`PrecisionType` enum value.
+            Defaults to ``PrecisionType.FLOAT32``.
+        pre_processor (nn.Module | bool, optional): Pre-processor instance or
+            bool flag. Defaults to ``True``.
+        post_processor (nn.Module | bool, optional): Post-processor instance or
+            bool flag. Defaults to ``True``.
+        evaluator (Evaluator | bool, optional): Evaluator instance or bool flag.
+            Defaults to ``True``.
+        visualizer (Visualizer | bool, optional): Visualizer instance or bool
+            flag. Defaults to ``True``.
+
+    Raises:
+        ValueError: If an unsupported ``precision`` value is provided.
+
+    Example:
+        >>> from anomalib.data import MVTecAD
+        >>> from anomalib.models import SuperADD
+        >>> from anomalib.engine import Engine
+
+        >>> datamodule = MVTecAD()
+        >>> model = SuperADD()
+
+        >>> engine = Engine()
+        >>> engine.fit(model=model, datamodule=datamodule)
+        >>> predictions = engine.predict(model=model, datamodule=datamodule)
+
+    See Also:
+        - :class:`anomalib.models.image.super_add.torch_model.SuperADDModel`:
+            PyTorch implementation of the SuperADD model
+        - :class:`anomalib.models.components.AnomalibModule`:
+            Base class for all anomaly detection models
+        - :class:`anomalib.models.components.MemoryBankMixin`:
+            Mixin class for models using feature memory banks
+    """
 
     def __init__(
         self,
-        weights_path: str = None,
-        backbone: str = "dinov3_vith16plus",  # "dinov3_vit7b16",
-        layers: Sequence[str] = [7, 15, 23, 31],  # ,[3, 5, 7, 10]
+        backbone: str = "vit_huge_plus_patch16_dinov3",
         patch_size: int = 448,
         patch_overlap: int = 16,
         precision: str | PrecisionType = PrecisionType.FLOAT32,
@@ -54,15 +130,9 @@ class SuperADD(MemoryBankMixin, AnomalibModule):
             visualizer=visualizer,
         )
 
-        if weights_path is None:
-            msg = f"DINOv3 ({backbone})Weights path must be provided for SuperADD."
-            raise ValueError(msg)
-
         self.model: SuperADDModel = SuperADDModel(
             backbone=backbone,
-            layers=layers,
-            weights_path=weights_path,
-            patch_batch_size=patch_size,
+            patch_size=patch_size,
             patch_overlap=patch_overlap,
         )
 
@@ -103,7 +173,7 @@ class SuperADD(MemoryBankMixin, AnomalibModule):
                 than correspondent ``image_size`` dimension.
 
         Example:
-            >>> pre_processor = Patchcore.configure_pre_processor(
+            >>> pre_processor = SuperADD.configure_pre_processor(
             ...     image_size=(256, 256)
             ... )
             >>> transformed_image = pre_processor(image)
@@ -132,7 +202,7 @@ class SuperADD(MemoryBankMixin, AnomalibModule):
         """Configure optimizers.
 
         Returns:
-            None: PatchCore requires no optimization.
+            None: SuperADD requires no optimization.
         """
         return
 
@@ -190,7 +260,7 @@ class SuperADD(MemoryBankMixin, AnomalibModule):
 
     @property
     def trainer_arguments(self) -> dict[str, Any]:
-        """Get default trainer arguments for PatchCore.
+        """Get default trainer arguments for SuperADD.
 
         Returns:
             dict[str, Any]: Trainer arguments
@@ -206,7 +276,7 @@ class SuperADD(MemoryBankMixin, AnomalibModule):
         """Get the learning type.
 
         Returns:
-            LearningType: Always ``LearningType.ONE_CLASS`` as PatchCore only
+            LearningType: Always ``LearningType.ONE_CLASS`` as SuperADD only
                 trains on normal samples
         """
         return LearningType.ONE_CLASS

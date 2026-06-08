@@ -16,8 +16,6 @@ nearest neighbor search.
 See Also:
     - :class:`anomalib.models.image.super_add.lightning_model.SuperADD`:
         Lightning implementation of the SuperADD model
-    - :class:`anomalib.models.image.super_add.anomaly_map.AnomalyMapGenerator`:
-        Anomaly map generation using nearest neighbor search
 """
 
 import gc
@@ -25,8 +23,8 @@ import itertools
 import logging
 import math
 from collections import defaultdict
-from collections.abc import Sequence
 
+import timm
 import torch
 from torch import nn
 from tqdm import tqdm
@@ -34,48 +32,83 @@ from tqdm import tqdm
 from anomalib.data import InferenceBatch
 from anomalib.models.components import DynamicBufferMixin
 
-from .anomaly_map import AnomalyMapGenerator
-
 logger = logging.getLogger(__name__)
 
 DEFAULT_CHUNK_SIZE = 1024
 
-import time
-from contextlib import contextmanager
-
-
-@contextmanager
-def timer(name, sync=True):
-    if sync and torch.cuda.is_available():
-        torch.cuda.synchronize()
-    t0 = time.perf_counter()
-    yield
-    if sync and torch.cuda.is_available():
-        torch.cuda.synchronize()
-    print(f"{name}: {(time.perf_counter() - t0) * 1000:.2f} ms")
+DINO_TARGET_LAYERS = {
+    "small": [3, 5, 7, 10],
+    "base": [3, 5, 7, 10],
+    "large": [10, 14, 19, 23],
+    "huge": [7, 15, 23, 31],
+}
 
 
 class DinoV3Backbone(nn.Module):
-    def __init__(self, backbone: str, layers: list[int], weights_path: str):
+    """DINOv3 Vision Transformer feature extractor.
+
+    Wraps a pretrained timm DINOv3 model and exposes the token features of a
+    selected set of intermediate transformer blocks. The backbone is created in
+    evaluation mode and run without classification head.
+
+    Args:
+        backbone (str): Name of the timm DINOv3 model to instantiate.
+        layers (list[int]): Indices of the intermediate transformer blocks whose
+            token features should be returned.
+
+    Attributes:
+        dino (nn.Module): The underlying pretrained timm model.
+        layers (list[int]): Indices of the extracted intermediate blocks.
+        model_patch_size (int): Patch size of the ViT (pixels per token).
+    """
+
+    def __init__(self, backbone: str, layers: list[int]) -> None:
         super().__init__()
 
-        self.dino = torch.hub.load(
-            "facebookresearch/dinov3",
-            model=backbone,
-            pretrained=True,
-            weights=weights_path,
-        ).eval()
+        self.dino = timm.create_model(backbone, pretrained=True, num_classes=0).eval()
         self.layers = layers
         self.model_patch_size = self.dino.patch_embed.patch_size[0]
 
     def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
+        """Extract intermediate-layer token features.
+
+        Args:
+            x (torch.Tensor): Input image batch of shape ``(b, c, h, w)``.
+
+        Returns:
+            list[torch.Tensor]: One tensor per requested layer, each in ``NLC``
+                format (batch, tokens, channels).
+        """
         with torch.inference_mode():
-            result = self.dino.get_intermediate_layers(x, n=self.layers, norm=False)
-            return result
+            return self.dino.forward_intermediates(
+                x,
+                indices=self.layers,
+                norm=False,
+                output_fmt="NLC",
+                intermediates_only=True,
+            )
 
 
 class PatchedExecution(nn.Module):
-    def __init__(self, model: nn.Module, patch_size: int, patch_overlap: int, model_patch_size: int):
+    """Run a backbone on large images via overlapping patches.
+
+    The input image is split into a grid of overlapping square patches, each
+    patch is processed independently by the wrapped backbone, and the resulting
+    per-patch token grids are stitched back into full-resolution token maps. The
+    overlap regions are split between neighboring patches so that each output
+    token is taken from the patch in which it is most centered, avoiding border
+    artifacts.
+
+    Args:
+        model (nn.Module): Backbone applied to each patch. Expected to return a
+            list of token tensors (one per layer) in ``NLC`` format.
+        patch_size (int): Side length (in pixels) of each square patch.
+        patch_overlap (int): Overlap (in pixels) between neighboring patches.
+        model_patch_size (int): Patch size of the backbone (pixels per token).
+            ``patch_size`` and ``patch_overlap`` must both be multiples of this.
+    """
+
+    def __init__(self, model: nn.Module, patch_size: int, patch_overlap: int, model_patch_size: int) -> None:
         super().__init__()
         assert patch_overlap > 0
         assert patch_size > 2 * patch_overlap
@@ -87,7 +120,26 @@ class PatchedExecution(nn.Module):
         self.model_patch_size = model_patch_size
         self.model = model
 
-    def axis_patch_split(self, dim_size):
+    def axis_patch_split(self, dim_size: int) -> tuple[list, list, list]:
+        """Compute the patch layout along a single image axis.
+
+        Determines how one axis of length ``dim_size`` is covered by overlapping
+        patches and returns, in backbone-token units, the regions used to slice
+        the input, to keep from each patch's prediction, and to write into the
+        stitched output. The input ROIs are returned in pixels.
+
+        Args:
+            dim_size (int): Length of the image axis in pixels. Must be at least
+                ``patch_size``.
+
+        Returns:
+            tuple[list, list, list]: ``(input_rois, prediction_rois,
+                result_rois)``. ``input_rois`` are ``(start, end)`` pixel
+                ranges used to crop input patches; ``prediction_rois`` are the
+                ``(start, end)`` token ranges to keep from each patch output;
+                ``result_rois`` are the ``(start, end)`` token ranges they map
+                to in the stitched result.
+        """
         assert dim_size >= self.patch_size
 
         dim_size_t = dim_size // self.model_patch_size
@@ -125,7 +177,21 @@ class PatchedExecution(nn.Module):
 
         return input_rois, prediction_rois, result_rois
 
-    def forward(self, x: torch.Tensor):
+    def forward(self, x: torch.Tensor) -> list:
+        """Run the backbone over overlapping patches and stitch the outputs.
+
+        Splits the input into overlapping patches, runs the backbone on the full
+        batch of patches, and reassembles the per-layer token grids into
+        full-resolution token maps.
+
+        Args:
+            x (torch.Tensor): Input image batch of shape ``(b, c, h, w)``.
+
+        Returns:
+            list[torch.Tensor]: One stitched token map per backbone layer, each
+                of shape ``(b, h // model_patch_size, w // model_patch_size,
+                feature_count)``.
+        """
         assert len(x.shape) == 4
 
         b, c, h, w = x.shape
@@ -166,44 +232,80 @@ class PatchedExecution(nn.Module):
             p = prediction[:, :, i, pred_roi_y[0] : pred_roi_y[1], pred_roi_x[0] : pred_roi_x[1]]
             result[:, :, res_roi_y[0] : res_roi_y[1], res_roi_x[0] : res_roi_x[1]] = p
 
-        # result = [t.cpu().numpy() for t in result]
-        result = [t for t in result]
-
-        return result
+        return list(result)
 
 
 class SuperADDModel(DynamicBufferMixin, nn.Module):
-    """ """
+    """SuperADD PyTorch model for anomaly detection.
+
+    This model implements the SuperADD algorithm, a PatchCore-style detector
+    built on a pretrained DINOv3 backbone. Multi-layer ViT token features are
+    extracted over overlapping image patches, a per-layer memory bank is built
+    from normal training images via distance-based coreset subsampling, and test
+    images are scored by nearest-neighbor distance to the bank.
+
+    The model works in two phases:
+    1. Training: Extract patch features from normal training images and store
+       them, then build a coreset memory bank via :meth:`subsample_embedding`.
+    2. Inference: Compare test image patches against the memory bank using
+       nearest neighbor search to produce an anomaly map and score.
+
+    Args:
+        backbone (str): Name of the timm DINOv3 backbone used for feature
+            extraction. Defaults to ``"vit_small_patch16_dinov3"``.
+        patch_size (int): Side length (in pixels) of the overlapping patches the
+            input image is split into. Defaults to ``448``.
+        patch_overlap (int): Overlap (in pixels) between neighboring patches.
+            Defaults to ``16``.
+        max_database_size (int): Target number of features retained per layer
+            after coreset subsampling. Defaults to ``100000``.
+        subsampling_iterations (int): Number of random-subset iterations used by
+            the fast subsampling routine. Defaults to ``100``.
+
+    Attributes:
+        backbone (DinoV3Backbone): DINOv3 feature extractor.
+        patch_exec (PatchedExecution): Overlapping-patch inference wrapper.
+        layers (list[int]): Indices of the extracted backbone layers.
+        memory_bank (torch.Tensor): Per-layer coreset of normal patch features.
+
+    Note:
+        The model requires no optimization/backpropagation as it uses a
+        pretrained backbone and nearest neighbor search.
+
+    See Also:
+        - :class:`anomalib.models.image.super_add.lightning_model.SuperADD`:
+            Lightning implementation of the SuperADD model
+    """
 
     def __init__(
         self,
-        layers: Sequence[str] = [3, 5, 7, 10],
-        backbone: str = "dinov3_vits16",
-        weights_path: str = "dinov3_vits16_pretrain_lvd1689m-08c60483.pth",
+        backbone: str = "vit_small_patch16_dinov3",
         patch_size: int = 448,
         patch_overlap: int = 16,
         max_database_size: int = 100000,
         subsampling_iterations: int = 100,
-        patch_batch_size: int = 8,
     ) -> None:
         super().__init__()
         self.backbone_name = backbone
-        self.layers = layers
-        self.backbone = DinoV3Backbone(backbone, layers, weights_path)
+
+        for arch_name, target_layers in DINO_TARGET_LAYERS.items():
+            if arch_name in backbone:
+                self.layers = target_layers
+
+        self.backbone = DinoV3Backbone(backbone, self.layers)
         self.patch_exec = PatchedExecution(self.backbone, patch_size, patch_overlap, self.backbone.model_patch_size)
         self.max_database_size = max_database_size
         self.subsampling_iterations = subsampling_iterations
 
         self.threshold = 0
 
-        self.anomaly_map_generator = AnomalyMapGenerator()
-
-        self.embedding_store: dict[str, list[torch.Tensor]] = defaultdict(list)
+        self.embedding_store: dict[int, list[torch.Tensor]] = defaultdict(list)
         self.memory_bank: torch.Tensor
 
         self.register_buffer("memory_bank", torch.empty(0))
 
-    def __clear_cache(self):
+    @staticmethod
+    def __clear_cache() -> None:
         torch.cuda.empty_cache()
         gc.collect()
 
@@ -211,9 +313,16 @@ class SuperADDModel(DynamicBufferMixin, nn.Module):
         return next(self.backbone.parameters()).device
 
     def subsample_embedding(self) -> None:
-        logger.info("Subsampling embeddings ...")
+        """Build the memory bank by coreset-subsampling the stored embeddings.
+
+        For each extracted layer, the patch features collected during training
+        (kept on CPU) are concatenated, reduced to at most ``max_database_size``
+        representative features via distance-based subsampling, and written into
+        the corresponding row of ``memory_bank``. The per-layer embedding store
+        is cleared afterward to free memory.
+        """
         device = self._compute_device()
-        for layer_idx, layer in enumerate(self.layers):
+        for layer_idx, _ in enumerate(self.layers):
             # Embeddings live on CPU (offloaded during training); concatenate and
             # subsample there, then move the (small) coreset to the compute device.
             embeddings = torch.cat(self.embedding_store[layer_idx], dim=0)
@@ -242,52 +351,87 @@ class SuperADDModel(DynamicBufferMixin, nn.Module):
         self.__clear_cache()
 
     def forward(self, input_tensor: torch.Tensor) -> torch.Tensor | InferenceBatch:
-        """ """
-        with timer("full pass"):
-            input_tensor = input_tensor.type(self.memory_bank.dtype)
-            if self.training:
-                prediction = self.patch_exec(input_tensor)
-                for layer_idx, (_, embedding) in enumerate(zip(self.layers, prediction, strict=False)):
-                    embedding = embedding.reshape(-1, embedding.shape[-1])
-                    self.embedding_store[layer_idx].append(embedding.to("cpu", non_blocking=True))
+        """Extract features during training or compute anomaly scores at test time.
 
-                return embedding  # Return the embedding for the training step (not used for loss computation)
+        During training, multi-layer patch features are extracted and appended to
+        the per-layer embedding store (on CPU) for later coreset construction. At
+        inference time, the per-layer features are compared against the memory
+        bank using chunked nearest-neighbor search; the resulting per-layer
+        distance maps are normalized, interpolated to the input resolution, and
+        averaged into a single anomaly map, with the pixel maximum used as the
+        image-level score.
 
-            input_shape = input_tensor.shape
-            with timer("model run"):
-                predicted_embeddings = self.patch_exec(input_tensor)
+        Args:
+            input_tensor (torch.Tensor): Input image batch of shape
+                ``(b, c, h, w)``.
 
-            layer_distances = []
-            with timer("nn search full"):
-                for layer_idx, (_, predicted_embedding) in enumerate(
-                    zip(self.layers, predicted_embeddings, strict=False),
-                ):
-                    b, h, w, c = predicted_embedding.shape
-                    query = predicted_embedding.reshape(b, h * w, c)
-                    keys = self.memory_bank[layer_idx]
-                    # Chunk over the query (token) dimension so we never materialize the
-                    # full [b, h*w, N_bank] distance matrix at once.
-                    with timer(f"nn search layer {layer_idx}"):
-                        dists, _ = self.nearest_neighbors_chunked(query, keys, knn_neighbors=1)
-                    dists = dists.mean(dim=-1)
-                    dists = (
-                        dists.reshape(b, h, w) / c
-                    )  # normalize distance by dimsize to account for different dimsizes
-                    layer_distances.append(dists)
-            with timer("finalize"):
-                layer_distances = torch.stack(layer_distances, dim=1)
-                layer_distances = torch.nn.functional.interpolate(
-                    layer_distances,
-                    size=(input_shape[-2], input_shape[-1]),
-                    mode="bilinear",
-                    align_corners=False,
-                )
-                anomaly_map = torch.mean(layer_distances, dim=1)
-                pred_score = anomaly_map.amax(dim=(1, 2))
+        Returns:
+            torch.Tensor | InferenceBatch: During training, the last layer's
+                patch embedding (only used to satisfy the Lightning training
+                step). During inference, an :class:`InferenceBatch` containing
+                the anomaly map and predicted scores.
+        """
+        input_tensor = input_tensor.type(self.memory_bank.dtype)
+        if self.training:
+            prediction = self.patch_exec(input_tensor)
+            for layer_idx, (_, embedding) in enumerate(zip(self.layers, prediction, strict=False)):
+                embedding_reshaped = embedding.reshape(-1, embedding.shape[-1])
+                self.embedding_store[layer_idx].append(embedding_reshaped.to("cpu", non_blocking=True))
+
+            return embedding_reshaped  # Return the embedding for the training step (not used for loss computation)
+
+        input_shape = input_tensor.shape
+        predicted_embeddings = self.patch_exec(input_tensor)
+
+        layer_distances = []
+        for layer_idx, (_, predicted_embedding) in enumerate(
+            zip(self.layers, predicted_embeddings, strict=False),
+        ):
+            b, h, w, c = predicted_embedding.shape
+            query = predicted_embedding.reshape(b, h * w, c)
+            keys = self.memory_bank[layer_idx]
+            # Chunk over the query (token) dimension so we never materialize the
+            # full [b, h*w, N_bank] distance matrix at once.
+            dists, _ = self.nearest_neighbors_chunked(query, keys, knn_neighbors=1)
+            dists = dists.mean(dim=-1)
+            dists = dists.reshape(b, h, w) / c  # normalize distance by dimsize to account for different dimsizes
+            layer_distances.append(dists)
+        layer_distances = torch.stack(layer_distances, dim=1)
+        layer_distances = torch.nn.functional.interpolate(
+            layer_distances,
+            size=(input_shape[-2], input_shape[-1]),
+            mode="bilinear",
+            align_corners=False,
+        )
+        anomaly_map = torch.mean(layer_distances, dim=1)
+        pred_score = anomaly_map.amax(dim=(1, 2))
 
         return InferenceBatch(pred_score=pred_score, anomaly_map=anomaly_map)
 
-    def subsample(self, x, target_number_of_samples, knn_neighbors, normalize):
+    def subsample_features(
+        self,
+        x: torch.Tensor,
+        target_number_of_samples: int,
+        knn_neighbors: int,
+        normalize: bool,
+    ) -> torch.Tensor:
+        """Select a subset of features that are roughly evenly spaced.
+
+        Computes the nearest-neighbor distances within ``x`` and probabilistically
+        keeps each feature with a probability inversely proportional to how many
+        neighbors fall within a growing distance threshold. The threshold is
+        increased until at most ``target_number_of_samples`` features remain.
+
+        Args:
+            x (torch.Tensor): Candidate features of shape ``(n, d)``.
+            target_number_of_samples (int): Maximum number of features to keep.
+            knn_neighbors (int): Number of neighbors used for the density
+                estimate.
+            normalize (bool): Whether to L2-normalize before computing distances.
+
+        Returns:
+            torch.Tensor: Boolean keep-mask of shape ``(n,)`` on the CPU.
+        """
         device = self._compute_device()
         x = x.to(device)
         dists, _ = self.nearest_neighbors(x, x, knn_neighbors=knn_neighbors, normalize=normalize)
@@ -307,12 +451,34 @@ class SuperADDModel(DynamicBufferMixin, nn.Module):
 
     def subsampling_distance_based_fast(
         self,
-        features,
-        target_number_of_samples,
-        iterations=100,
-        normalize=False,
-        knn_neighbors=100,
-    ):
+        features: torch.Tensor,
+        target_number_of_samples: int,
+        iterations: int = 100,
+        normalize: bool = False,
+        knn_neighbors: int = 100,
+    ) -> torch.Tensor:
+        """Distance-based coreset subsampling over random subsets.
+
+        Repeatedly draws random subsets of the not-yet-kept features and applies
+        :meth:`subsample_features` to each, accumulating a global keep-mask. This
+        keeps the nearest-neighbor search tractable on large feature sets. If
+        fewer than ``target_number_of_samples`` features are kept, additional
+        features are randomly added back to reach the target.
+
+        Args:
+            features (torch.Tensor): Features to subsample, of shape ``(n, d)``.
+            target_number_of_samples (int): Desired number of retained features.
+            iterations (int): Number of random-subset iterations. Defaults to
+                ``100``.
+            normalize (bool): Whether to L2-normalize before computing distances.
+                Defaults to ``False``.
+            knn_neighbors (int): Number of neighbors used for the density
+                estimate. Defaults to ``100``.
+
+        Returns:
+            torch.Tensor: The subsampled features of shape
+                ``(target_number_of_samples, d)``.
+        """
         # perform subsample iteratively on random subsets of the data to speed up the nearest neighbor search
         keep_mask_total = torch.zeros(len(features), dtype=torch.bool)
         size_of_subsets = int(1 / iterations * len(features))  # Size of subsets
@@ -325,7 +491,12 @@ class SuperADDModel(DynamicBufferMixin, nn.Module):
             perm = torch.randperm(len(candidate_indices))[:n]
             indices = candidate_indices[perm]
 
-            keep_mask_subset = self.subsample(features[indices], target_to_keep_subset, knn_neighbors, normalize)
+            keep_mask_subset = self.subsample_features(
+                features[indices],
+                target_to_keep_subset,
+                knn_neighbors,
+                normalize,
+            )
 
             keep_mask_total[indices] = keep_mask_subset  # Update total keep mask with this subset's results
             number_of_samples = int(keep_mask_total.sum())
@@ -339,21 +510,37 @@ class SuperADDModel(DynamicBufferMixin, nn.Module):
             indices_to_add_back = indices_to_add_back[shuffle]
             keep_mask_total[indices_to_add_back[:difference]] = True
 
-        # do the subsampling
-        features_subsampled = features[keep_mask_total]
+        return features[keep_mask_total]
 
-        return features_subsampled
+    def nearest_neighbors(
+        self,
+        features_query: torch.Tensor,
+        features_key: torch.Tensor,
+        knn_neighbors: int,
+        normalize: bool = False,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Find the ``k`` nearest keys for each query by Euclidean distance.
 
-    def nearest_neighbors(self, features_query, features_key, knn_neighbors, normalize=False):
+        Computes the full pairwise distance matrix between queries and keys using
+        :meth:`euclidean_dist` and returns the ``knn_neighbors`` smallest
+        distances and their indices.
+
+        Args:
+            features_query (torch.Tensor): Query features of shape ``(..., n, d)``.
+            features_key (torch.Tensor): Key features of shape ``(..., m, d)``.
+            knn_neighbors (int): Number of nearest neighbors to return.
+            normalize (bool): Whether to L2-normalize both inputs before
+                computing distances. Defaults to ``False``.
+
+        Returns:
+            tuple[torch.Tensor, torch.Tensor]: ``(distances, indices)``, each of
+                shape ``(..., n, knn_neighbors)``.
+        """
         if normalize:
             features_query = torch.nn.functional.normalize(features_query, dim=-1)
             features_key = torch.nn.functional.normalize(features_key, dim=-1)
 
-        dists_full = torch.cdist(
-            features_query,
-            features_key,
-            compute_mode="use_mm_for_euclid_dist",
-        )  # [Nq, Nk] Fast GEMM-based distance computation
+        dists_full = self.euclidean_dist(features_query, features_key)
 
         topk_vals, topk_idx = torch.topk(
             dists_full,
@@ -363,6 +550,41 @@ class SuperADDModel(DynamicBufferMixin, nn.Module):
             sorted=False,
         )
         return topk_vals, topk_idx
+
+    @staticmethod
+    def euclidean_dist(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        """Compute pairwise Euclidean distances between two sets of vectors.
+
+        Implements an efficient matrix computation of Euclidean distances between
+        all pairs of vectors in ``x`` and ``y`` without using ``torch.cdist()``.
+
+        Args:
+            x (torch.Tensor): First tensor of shape ``(n, d)``.
+            y (torch.Tensor): Second tensor of shape ``(m, d)``.
+
+        Returns:
+            torch.Tensor: Distance matrix of shape ``(n, m)`` where element
+                ``(i,j)`` is the distance between row ``i`` of ``x`` and row
+                ``j`` of ``y``.
+
+        Example:
+            >>> x = torch.randn(100, 512)
+            >>> y = torch.randn(50, 512)
+            >>> distances = SuperADDModel.euclidean_dist(x, y)
+            >>> distances.shape
+            torch.Size([100, 50])
+
+        Note:
+            This implementation avoids using ``torch.cdist()`` for better
+            compatibility with ONNX export and OpenVINO conversion.
+        """
+        x_norm = x.pow(2).sum(dim=-1, keepdim=True)
+        y_norm = y.pow(2).sum(dim=-1, keepdim=True)
+        res = torch.matmul(x, y.transpose(-2, -1))
+        res.mul_(-2)
+        res.add_(x_norm)
+        res.add_(y_norm.transpose(-2, -1))
+        return res.clamp_min_(0).sqrt_()
 
     def nearest_neighbors_chunked(
         self,
