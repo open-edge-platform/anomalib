@@ -24,6 +24,12 @@ from .torch_model import SuperADDModel
 
 logger = logging.getLogger(__name__)
 
+DINO_ARCHITECTURES = {
+    "small": {"embed_dim": 384, "num_heads": 6, "target_layers": [2, 3, 4, 5, 6, 7, 8, 9]},
+    "base": {"embed_dim": 768, "num_heads": 12, "target_layers": [2, 3, 4, 5, 6, 7, 8, 9]},
+    "large": {"embed_dim": 1024, "num_heads": 16, "target_layers": [4, 6, 8, 10, 12, 14, 16, 18]},
+}
+
 
 class SuperADD(MemoryBankMixin, AnomalibModule):
     """ """
@@ -31,8 +37,8 @@ class SuperADD(MemoryBankMixin, AnomalibModule):
     def __init__(
         self,
         weights_path: str = None,
-        backbone: str = "dinov3_vits16",  # "dinov3_vit7b16",
-        layers: Sequence[str] = [3, 5, 7, 10],  # [7, 15, 23, 31],
+        backbone: str = "dinov3_vith16plus",  # "dinov3_vit7b16",
+        layers: Sequence[str] = [7, 15, 23, 31],  # ,[3, 5, 7, 10]
         patch_size: int = 448,
         patch_overlap: int = 16,
         precision: str | PrecisionType = PrecisionType.FLOAT32,
@@ -78,7 +84,7 @@ class SuperADD(MemoryBankMixin, AnomalibModule):
         image_size: tuple[int, int] | None = None,
         center_crop_size: tuple[int, int] | None = None,
     ) -> PreProcessor:
-        """Configure the default pre-processor for PatchCore.
+        """Configure the default pre-processor for SuperADD.
 
         If valid center_crop_size is provided, the pre-processor will
         also perform center cropping, according to the paper.

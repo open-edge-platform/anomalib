@@ -85,7 +85,7 @@ class PatchedExecution(nn.Module):
         self.patch_size = patch_size
         self.patch_overlap = patch_overlap
         self.model_patch_size = model_patch_size
-        self.model = model.half()
+        self.model = model
 
     def axis_patch_split(self, dim_size):
         assert dim_size >= self.patch_size
