@@ -33,7 +33,7 @@ from anomalib.models.image.patchcore.anomaly_map import AnomalyMapGenerator
 
 # Number of transformer blocks per DINOv2 ViT architecture, used to select the
 # final block for feature extraction.
-DINOV2_DEPTHS = {"small": 12, "base": 12, "large": 24, "giant": 40}
+DINO_DEPTHS = {"small": 12, "base": 12, "large": 24, "huge": 32, "giant": 40}
 
 
 class AnomalyDINOModel(DynamicBufferMixin, nn.Module):
@@ -46,8 +46,8 @@ class AnomalyDINOModel(DynamicBufferMixin, nn.Module):
     Args:
         num_neighbours (int, optional): Number of nearest neighbors used for
             anomaly scoring. Defaults to ``1``.
-        encoder_name (str, optional): DINOv2 encoder architecture name (timm model
-            name containing ``"dinov2"``). Defaults to ``"vit_small_patch14_dinov2"``.
+        encoder_name (str, optional): DINO encoder architecture name (timm model
+            name containing ``"dino"``). Defaults to ``"vit_small_patch14_dinov2"``.
         masking (bool, optional): Whether to apply PCA-based masking to suppress
             background features. Defaults to ``False``.
         coreset_subsampling (bool, optional): Whether to apply greedy coreset
@@ -78,9 +78,9 @@ class AnomalyDINOModel(DynamicBufferMixin, nn.Module):
         self.coreset_subsampling = coreset_subsampling
         self.sampling_ratio = sampling_ratio
 
-        # Load DINOv2 backbone via timm. Features are taken from the last transformer block.
-        if "dinov2" not in encoder_name:
-            err_str = f"Encoder name must be a DINOv2 timm model (containing 'dinov2'), got '{encoder_name}'"
+        # Load DINO backbone via timm. Features are taken from the last transformer block.
+        if "dino" not in encoder_name:
+            err_str = f"Encoder name must be a DINO timm model (containing 'dino'), got '{encoder_name}'"
             raise ValueError(err_str)
         last_block = self._last_block_index(encoder_name)
         self.last_layer = f"blocks.{last_block}"
@@ -131,7 +131,7 @@ class AnomalyDINOModel(DynamicBufferMixin, nn.Module):
         """Return the index of the final transformer block for a DINOv2 ViT.
 
         Args:
-            encoder_name (str): timm DINOv2 model name (e.g. ``"vit_small_patch14_dinov2"``).
+            encoder_name (str): timm DINO model name (e.g. ``"vit_small_patch14_dinov2"``).
 
         Returns:
             int: Index of the last transformer block (``depth - 1``).
@@ -139,10 +139,10 @@ class AnomalyDINOModel(DynamicBufferMixin, nn.Module):
         Raises:
             ValueError: If the architecture size cannot be inferred from the name.
         """
-        for arch, depth in DINOV2_DEPTHS.items():
+        for arch, depth in DINO_DEPTHS.items():
             if arch in encoder_name:
                 return depth - 1
-        msg = f"Could not infer architecture from '{encoder_name}'. Expected one of {list(DINOV2_DEPTHS)}."
+        msg = f"Could not infer architecture from '{encoder_name}'. Expected one of {list(DINO_DEPTHS)}."
         raise ValueError(msg)
 
     def extract_features(self, image_tensor: torch.Tensor) -> torch.Tensor:
