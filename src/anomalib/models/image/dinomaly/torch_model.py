@@ -26,10 +26,11 @@ from anomalib.models.image.dinomaly.components import CosineHardMiningLoss, Dino
 
 # Encoder architecture configurations for DINOv2 models.
 # The target layers are the
-DINOV2_ARCHITECTURES = {
+DINO_ARCHITECTURES = {
     "small": {"embed_dim": 384, "num_heads": 6, "target_layers": [2, 3, 4, 5, 6, 7, 8, 9]},
     "base": {"embed_dim": 768, "num_heads": 12, "target_layers": [2, 3, 4, 5, 6, 7, 8, 9]},
     "large": {"embed_dim": 1024, "num_heads": 16, "target_layers": [4, 6, 8, 10, 12, 14, 16, 18]},
+    "huge": {"embed_dim": 1280, "num_heads": 20, "target_layers": [3, 9, 12, 15, 18, 21, 24, 27]},
 }
 
 # Default fusion layer configurations
@@ -68,7 +69,7 @@ class DinomalyModel(nn.Module):
 
     Args:
         encoder_name (str): Name of the Vision Transformer encoder to use.
-            Supports DINOv2 variants like "vit_base_patch14_reg4_dinov2".
+            Supports DINO variants like "vit_base_patch14_reg4_dinov2".
             Defaults to "vit_base_patch14_reg4_dinov2".
         bottleneck_dropout (float): Dropout rate for the bottleneck MLP layer.
             Defaults to 0.2.
@@ -382,7 +383,7 @@ class DinomalyModel(nn.Module):
         Returns:
             Dictionary containing embed_dim, num_heads, and target_layers
         """
-        for arch_name, config in DINOV2_ARCHITECTURES.items():
+        for arch_name, config in DINO_ARCHITECTURES.items():
             if arch_name in encoder_name:
                 result = config.copy()
                 # Override target_layers if explicitly provided
@@ -390,7 +391,7 @@ class DinomalyModel(nn.Module):
                     result["target_layers"] = target_layers
                 return result
 
-        msg = f"Architecture not supported. Encoder name must contain one of {list(DINOV2_ARCHITECTURES.keys())}"
+        msg = f"Architecture not supported. Encoder name must contain one of {list(DINO_ARCHITECTURES.keys())}"
         raise ValueError(msg)
 
     def _process_features_for_spatial_output(
