@@ -306,11 +306,17 @@ class DinomalyModel(nn.Module):
             sp_score = torch.max(anomaly_map.flatten(1), dim=1)[0]
         else:
             anomaly_map_flat = anomaly_map.flatten(1)
-            sp_score = torch.sort(anomaly_map_flat, dim=1, descending=True)[0][
-                :,
-                : int(anomaly_map_flat.shape[1] * DEFAULT_MAX_RATIO),
-            ]
-            sp_score = sp_score.mean(dim=1)
+
+            # Number of top values: the specified percentage of the total number of pixels
+            # k is limited from above by the number 3840 — the TensorRT limit for the topk operation
+            k = int(anomaly_map_flat.shape[1] * DEFAULT_MAX_RATIO)
+            k = min(k, 3840)
+
+            # Get the k largest anomaly values for each image in the batch
+            topk_vals, _ = torch.topk(anomaly_map_flat, k=k, dim=1, largest=True, sorted=False)
+
+            # The final anomaly score is the average of the top K values
+            sp_score = topk_vals.mean(dim=1)
         pred_score = sp_score
 
         return InferenceBatch(pred_score=pred_score, anomaly_map=anomaly_map_resized)
