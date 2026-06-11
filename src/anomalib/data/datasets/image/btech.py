@@ -158,7 +158,7 @@ def make_btech_dataset(path: Path, split: str | Split | None = None) -> DataFram
 
     # Get the data frame for the split.
     if split:
-        samples = samples[samples.split == split]
-        samples = samples.reset_index(drop=True)
+        split = Split(split) if isinstance(split, str) else split
+        samples = samples[samples.split == split.value].reset_index(drop=True)
 
     return samples

@@ -191,7 +191,8 @@ def make_kolektor_dataset(
 
     # Get the dataframe for the required split
     if split:
-        samples = samples[samples.split == split].reset_index(drop=True)
+        split = Split(split) if isinstance(split, str) else split
+        samples = samples[samples.split == split.value].reset_index(drop=True)
 
     return samples
 
