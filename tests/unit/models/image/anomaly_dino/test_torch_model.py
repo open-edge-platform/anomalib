@@ -24,7 +24,9 @@ class TestAnomalyDINOModel:
     @staticmethod
     def test_invalid_encoder_name_raises() -> None:
         """Test that invalid encoder names raise an error."""
-        with pytest.raises(ValueError, match="must be a DINOv2 timm model"):
+        with pytest.raises(
+            ValueError, match="Encoder name must be a DINO timm model (containing 'dino'), got 'resnet50'"
+        ):
             _ = AnomalyDINOModel(encoder_name="resnet50")
 
     @staticmethod
