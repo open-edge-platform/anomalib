@@ -105,8 +105,7 @@ class PatchflowModel(nn.Module):
                 msg = f"Could not infer DINOv2 architecture from '{backbone}'. Expected one of {list(_DINOV2_DEPTHS)}."
                 raise ValueError(msg) from exc
             self.dino_layer_indices: list[int] = [0, num_blocks // 2, num_blocks - 1]
-            # Token-mode extractor (forward_intermediates) with the original facebook-DINOv2
-            # positional-embedding interpolation (timm's default degrades downscaled features).
+            # Token-mode extractor (forward_intermediates) returning patch tokens per block.
             self.feature_extractor = TimmFeatureExtractor(
                 backbone=backbone,
                 layers=[f"blocks.{i}" for i in self.dino_layer_indices],
@@ -116,7 +115,6 @@ class PatchflowModel(nn.Module):
                 return_class_token=False,
                 norm=True,
                 dynamic_img_size=True,
-                dinov2_pos_embed=False,
             )
             self._dino_patch_size = self.feature_extractor.patch_size
 
@@ -130,12 +128,12 @@ class PatchflowModel(nn.Module):
             # is not divisible by the DINOv2 patch size.
             if crop_size is not None or self._internal_size != input_size:
                 self.crop_size = self._internal_size
-            embed_dim: int = self.feature_extractor.out_dims[0]
+            embed_dim = self.feature_extractor.out_dims[0]
             total_channels = embed_dim * len(self.dino_layer_indices) * num_scales
         else:
             self.feature_extractor = TimmFeatureExtractor(
                 backbone=backbone,
-                layers=[2, 3, 4],
+                layers=["blocks.2", "blocks.4", "blocks.6"],
                 pre_trained=pre_trained,
                 requires_grad=False,
                 output_fmt="NCHW",

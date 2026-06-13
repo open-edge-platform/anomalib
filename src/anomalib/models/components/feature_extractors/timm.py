@@ -27,52 +27,17 @@ Example:
 """
 
 import logging
-import math
 from collections.abc import Sequence
+from typing import cast
 
 import timm
 import torch
 from torch import nn
-from torch.nn import functional as F  # noqa: N812
 from torchvision.models.feature_extraction import create_feature_extractor
 
 from .utils import dryrun_find_featuremap_dims
 
 logger = logging.getLogger(__name__)
-
-# DINOv2 positional-embedding interpolation offset. The original DINOv2/Facebook
-# implementation interpolates the patch position embeddings with a +0.1 coordinate
-# offset, mode="bicubic" and antialias=False. We therefore patch the timm ViT to
-# reproduce the original DINOv2 interpolation exactly (timm's default differs and
-# degrades downscaled multi-scale features).
-_DINOV2_POS_EMBED_OFFSET = 0.1
-
-
-def _dinov2_resample_pos_embed(
-    pos_embed: torch.Tensor,
-    new_grid: tuple[int, int],
-    num_prefix_tokens: int,
-) -> torch.Tensor:
-    """Interpolate ViT patch position embeddings facebook-DINOv2-style (offset, no antialias)."""
-    h, w = new_grid
-    if num_prefix_tokens:
-        prefix = pos_embed[:, :num_prefix_tokens]
-        patch_pos = pos_embed[:, num_prefix_tokens:]
-    else:
-        prefix = None
-        patch_pos = pos_embed
-    dim = patch_pos.shape[-1]
-    m = math.isqrt(patch_pos.shape[1])
-    sx = (h + _DINOV2_POS_EMBED_OFFSET) / m
-    sy = (w + _DINOV2_POS_EMBED_OFFSET) / m
-    patch_pos = F.interpolate(
-        patch_pos.float().reshape(1, m, m, dim).permute(0, 3, 1, 2),
-        scale_factor=(sx, sy),
-        mode="bicubic",
-        antialias=False,
-    )
-    patch_pos = patch_pos.permute(0, 2, 3, 1).reshape(1, -1, dim).to(pos_embed.dtype)
-    return patch_pos if prefix is None else torch.cat([prefix, patch_pos], dim=1)
 
 
 class TimmFeatureExtractor(nn.Module):
@@ -91,10 +56,8 @@ class TimmFeatureExtractor(nn.Module):
 
     Args:
         backbone (str | nn.Module): Name of the timm model architecture or any torch model to use as backbone.
-        layers (Sequence[str | int]): Names of layers from which to extract features. In
-            ``"NLC"`` mode these are transformer block names such as ``"blocks.2"``. In
-            ``"NCHW"`` mode (string backbone) these may instead be integer indices, which
-            are passed directly as ``out_indices`` to timm's ``features_only`` API.
+        layers (Sequence[str]): Names of layers from which to extract features. In
+            ``"NLC"`` mode these are transformer block names such as ``"blocks.2"``.
         pre_trained (bool, optional): Whether to use pre-trained weights.
             Defaults to ``True``.
         requires_grad (bool, optional): Whether to compute gradients for the
@@ -113,10 +76,6 @@ class TimmFeatureExtractor(nn.Module):
         dynamic_img_size (bool, optional): Passed to ``timm.create_model``. Allows ViT
             backbones to accept input sizes other than their default ``img_size`` by
             interpolating positional embeddings. Defaults to ``False``.
-        dinov2_pos_embed (bool, optional): ``"NLC"`` mode only. If ``True``, the ViT's
-            ``_pos_embed`` is replaced with the original facebook-DINOv2 positional
-            embedding interpolation (``+0.1`` offset, bicubic, no antialias), which timm
-            does not reproduce by default. Defaults to ``False``.
 
     Attributes:
         backbone (str | nn.Module): Name of the backbone model or actual torch backbone model.
@@ -170,23 +129,18 @@ class TimmFeatureExtractor(nn.Module):
     def __init__(
         self,
         backbone: str | nn.Module,
-        layers: Sequence[str | int],
+        layers: Sequence[str],
         pre_trained: bool = True,
         requires_grad: bool = False,
         output_fmt: str = "NCHW",
         return_class_token: bool = False,
         norm: bool = False,
         dynamic_img_size: bool = False,
-        dinov2_pos_embed: bool = False,
     ) -> None:
         super().__init__()
 
         if output_fmt not in {"NCHW", "NLC"}:
             msg = f"output_fmt must be one of 'NCHW' or 'NLC', got '{output_fmt}'."
-            raise ValueError(msg)
-
-        if dinov2_pos_embed and output_fmt != "NLC":
-            msg = "dinov2_pos_embed is only supported in 'NLC' mode."
             raise ValueError(msg)
 
         self.backbone = backbone
@@ -195,7 +149,7 @@ class TimmFeatureExtractor(nn.Module):
         self.output_fmt = output_fmt
         self.return_class_token = return_class_token
         self.norm = norm
-        self.dinov2_pos_embed = dinov2_pos_embed
+        self.out_dims: Sequence[int]
 
         if isinstance(backbone, nn.Module):
             self.feature_extractor = create_feature_extractor(
@@ -203,7 +157,7 @@ class TimmFeatureExtractor(nn.Module):
                 return_nodes={layer: layer for layer in self.layers},
             )
             layer_metadata = dryrun_find_featuremap_dims(self.feature_extractor, (256, 256), layers=self.layers)
-            self.out_dims = [feature_info["num_features"] for layer_name, feature_info in layer_metadata.items()]
+            self.out_dims = [cast("int", feature_info["num_features"]) for feature_info in layer_metadata.values()]
 
         elif isinstance(backbone, str) and output_fmt == "NLC":
             # Token mode: use the full model with forward_intermediates (e.g. ViT/DINOv2).
@@ -219,15 +173,9 @@ class TimmFeatureExtractor(nn.Module):
             self.num_register_tokens = self.num_prefix_tokens - 1
             embed_dim = self.feature_extractor.num_features
             self.out_dims = [embed_dim] * len(self.layers)
-            if self.dinov2_pos_embed:
-                # Reproduce the original facebook-DINOv2 positional-embedding interpolation.
-                self.feature_extractor._pos_embed = self._dinov2_pos_embed  # noqa: SLF001
 
         elif isinstance(backbone, str):
-            # Integer layers are treated as out_indices for timm's features_only API;
-            # otherwise the layer names are mapped to their indices.
-            indices_given = all(isinstance(layer, int) for layer in self.layers)
-            self.idx = list(self.layers) if indices_given else self._map_layer_to_idx()
+            self.idx = self._map_layer_to_idx()
             self.feature_extractor = timm.create_model(
                 backbone,
                 pretrained=pre_trained,
@@ -236,10 +184,6 @@ class TimmFeatureExtractor(nn.Module):
                 exportable=True,
                 out_indices=self.idx,
             )
-            if indices_given:
-                # Resolve indices to the actual module names so outputs are keyed by name.
-                info = self.feature_extractor.feature_info.info
-                self.layers = [info[i]["module"] for i in self.idx]
             self.out_dims = self.feature_extractor.feature_info.channels()
             self.reductions = self.feature_extractor.feature_info.reduction()
 
@@ -264,39 +208,6 @@ class TimmFeatureExtractor(nn.Module):
         except ValueError as exc:
             msg = f"In 'NLC' mode, layer names must be of the form 'blocks.<int>', got '{layer}'."
             raise ValueError(msg) from exc
-
-    def _dinov2_pos_embed(self, x: torch.Tensor) -> torch.Tensor:
-        """Replacement for timm ViT ``_pos_embed`` using the original facebook-DINOv2 interpolation.
-
-        Args:
-            x (torch.Tensor): Patch-embedded input of shape ``(B, H, W, C)``.
-
-        Returns:
-            torch.Tensor: Token sequence with positional (and prefix) embeddings added.
-        """
-        model = self.feature_extractor
-        to_cat = []
-        if model.cls_token is not None:
-            to_cat.append(model.cls_token.expand(x.shape[0], -1, -1))
-        if model.reg_token is not None:
-            to_cat.append(model.reg_token.expand(x.shape[0], -1, -1))
-
-        b, h, w, c = x.shape
-        pos_embed = _dinov2_resample_pos_embed(
-            model.pos_embed,
-            (h, w),
-            num_prefix_tokens=0 if model.no_embed_class else model.num_prefix_tokens,
-        )
-        x = x.view(b, -1, c)
-        if model.no_embed_class:
-            x = x + pos_embed
-            if to_cat:
-                x = torch.cat([*to_cat, x], dim=1)
-        else:
-            if to_cat:
-                x = torch.cat([*to_cat, x], dim=1)
-            x = x + pos_embed
-        return model.pos_drop(x)
 
     def _map_layer_to_idx(self) -> list[int]:
         """Map layer names to their indices in the model's output.
