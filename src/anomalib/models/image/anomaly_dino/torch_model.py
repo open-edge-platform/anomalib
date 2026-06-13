@@ -80,7 +80,7 @@ class AnomalyDINOModel(DynamicBufferMixin, nn.Module):
 
         # Load DINO backbone via timm. Features are taken from the last transformer block.
         if "dino" not in encoder_name:
-            err_str = f"Encoder name must be a DINO timm model (containing 'dino'), got '{encoder_name}'"
+            err_str = f"Encoder name must be a DINO timm model (containing dino), got {encoder_name}"
             raise ValueError(err_str)
         last_block = self._last_block_index(encoder_name)
         self.last_layer = f"blocks.{last_block}"
