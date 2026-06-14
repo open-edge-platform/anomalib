@@ -26,6 +26,7 @@ Example:
     torch.Size([32, 64, 64, 64])
 """
 
+import functools
 import logging
 from collections.abc import Sequence
 from typing import cast
@@ -38,6 +39,31 @@ from torchvision.models.feature_extraction import create_feature_extractor
 from .utils import dryrun_find_featuremap_dims
 
 logger = logging.getLogger(__name__)
+
+
+def _disable_pos_embed_antialiasing() -> None:
+    """Force timm ViT pos-embed resampling to ``antialias=False``.
+
+    timm's ``VisionTransformer._pos_embed`` uses interpolation with
+    ``antialias=True``. This operation isn't supported in ONNX export
+    and is patched off. It doesn't affect model performance.
+    """
+    try:
+        import timm.models.vision_transformer as vit
+    except ImportError:
+        return
+
+    original = getattr(vit, "resample_abs_pos_embed", None)
+    if original is None or getattr(original, "_anomalib_no_antialias", False):
+        return
+
+    @functools.wraps(original)
+    def _no_antialias(*args, **kwargs):  # noqa: ANN202
+        kwargs["antialias"] = False
+        return original(*args, **kwargs)
+
+    setattr(_no_antialias, "_anomalib_no_antialias", True)  # noqa: B010
+    vit.resample_abs_pos_embed = _no_antialias
 
 
 class TimmFeatureExtractor(nn.Module):
@@ -168,6 +194,7 @@ class TimmFeatureExtractor(nn.Module):
                 pretrained_cfg=None,
                 dynamic_img_size=dynamic_img_size,
             )
+            _disable_pos_embed_antialiasing()
             self.patch_size = self.feature_extractor.patch_embed.patch_size[0]
             self.num_prefix_tokens = getattr(self.feature_extractor, "num_prefix_tokens", 1)
             self.num_register_tokens = self.num_prefix_tokens - 1

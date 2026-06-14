@@ -37,9 +37,8 @@ Example:
     ... )
 """
 
-import contextlib
 import logging
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any
@@ -59,43 +58,6 @@ if TYPE_CHECKING:
         from openvino import CompiledModel
 
 logger = logging.getLogger(__name__)
-
-
-@contextlib.contextmanager
-def _disable_pos_embed_antialiasing() -> Iterator[None]:
-    """Force timm ViT pos-embed resampling to ``antialias=False`` during ONNX export.
-
-    timm's ``VisionTransformer`` resamples the absolute position embedding via
-    ``resample_abs_pos_embed`` with bicubic interpolation and ``antialias=True``. That
-    lowers to ``aten::_upsample_bicubic2d_aa``, which ONNX cannot export at any opset.
-    Antialiasing only matters when downsampling the pos-embed grid, so disabling it is
-    harmless for export.
-
-    The patched name lives in ``timm.models.vision_transformer`` because ``_pos_embed``
-    binds it via ``from timm.layers import resample_abs_pos_embed`` at import time. This
-    is a no-op when timm is unavailable or the symbol is missing, and the original is
-    always restored on exit.
-    """
-    try:
-        import timm.models.vision_transformer as vit
-    except ImportError:
-        yield
-        return
-
-    original = getattr(vit, "resample_abs_pos_embed", None)
-    if original is None:
-        yield
-        return
-
-    def _no_antialias(*args, **kwargs):  # noqa: ANN202
-        kwargs["antialias"] = False
-        return original(*args, **kwargs)
-
-    vit.resample_abs_pos_embed = _no_antialias
-    try:
-        yield
-    finally:
-        vit.resample_abs_pos_embed = original
 
 
 class ExportMixin:
@@ -209,20 +171,17 @@ class ExportMixin:
         assert isinstance(self, LightningModule)  # mypy
         output_names = [name for name, value in self.eval()(input_shape)._asdict().items() if value is not None]
 
-        # timm ViT backbones (e.g. DINOv2) resample the pos-embed with antialiased
-        # bicubic interpolation, which ONNX cannot export. Disable it for the export.
-        with _disable_pos_embed_antialiasing():
-            torch.onnx.export(
-                model=self,
-                args=(input_shape.to(self.device),),
-                f=str(onnx_path),
-                opset_version=kwargs.pop("opset_version", 14),
-                dynamic_axes=kwargs.pop("dynamic_axes", dynamic_axes),
-                input_names=kwargs.pop("input_names", ["input"]),
-                output_names=kwargs.pop("output_names", output_names),
-                dynamo=kwargs.pop("dynamo", False),  # Dynamo is changed to True by default in torch 2.9
-                **kwargs,
-            )
+        torch.onnx.export(
+            model=self,
+            args=(input_shape.to(self.device),),
+            f=str(onnx_path),
+            opset_version=kwargs.pop("opset_version", 14),
+            dynamic_axes=kwargs.pop("dynamic_axes", dynamic_axes),
+            input_names=kwargs.pop("input_names", ["input"]),
+            output_names=kwargs.pop("output_names", output_names),
+            dynamo=kwargs.pop("dynamo", False),  # Dynamo is changed to True by default in torch 2.9
+            **kwargs,
+        )
 
         return onnx_path
 

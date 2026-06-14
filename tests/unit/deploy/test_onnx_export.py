@@ -1,38 +1,23 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Tests for ONNX export helpers."""
+"""Tests for ViT pos-embed antialiasing handling that enables ONNX export."""
 
 import pytest
+import torch
 
-from anomalib.models.components.base.export_mixin import _disable_pos_embed_antialiasing
+from anomalib.models.components.feature_extractors import TimmFeatureExtractor
+from anomalib.models.components.feature_extractors.timm import _disable_pos_embed_antialiasing
 
 timm_vit = pytest.importorskip("timm.models.vision_transformer")
 
 
 class TestDisablePosEmbedAntialiasing:
-    """Tests for the ``_disable_pos_embed_antialiasing`` context manager."""
+    """Tests for the ``_disable_pos_embed_antialiasing`` global patch."""
 
     @staticmethod
-    def test_swaps_and_restores() -> None:
-        """The resample function is swapped inside the context and restored on exit."""
-        original = timm_vit.resample_abs_pos_embed
-        with _disable_pos_embed_antialiasing():
-            assert timm_vit.resample_abs_pos_embed is not original
-        assert timm_vit.resample_abs_pos_embed is original
-
-    @staticmethod
-    def test_restores_on_exception() -> None:
-        """The original reference is restored even if the body raises."""
-        original = timm_vit.resample_abs_pos_embed
-        msg = "boom"
-        with pytest.raises(RuntimeError, match=msg), _disable_pos_embed_antialiasing():
-            raise RuntimeError(msg)
-        assert timm_vit.resample_abs_pos_embed is original
-
-    @staticmethod
-    def test_forces_antialias_false(monkeypatch: pytest.MonkeyPatch) -> None:
-        """The wrapper forwards ``antialias=False`` to the underlying resample call."""
+    def test_installs_wrapper(monkeypatch: pytest.MonkeyPatch) -> None:
+        """The timm resample function is wrapped to force ``antialias=False``."""
         captured: dict[str, object] = {}
 
         def fake_resample(*_args: object, **kwargs: object) -> str:
@@ -41,8 +26,48 @@ class TestDisablePosEmbedAntialiasing:
 
         monkeypatch.setattr(timm_vit, "resample_abs_pos_embed", fake_resample)
 
-        with _disable_pos_embed_antialiasing():
-            result = timm_vit.resample_abs_pos_embed("posemb", antialias=True)
+        _disable_pos_embed_antialiasing()
 
+        result = timm_vit.resample_abs_pos_embed("posemb", antialias=True)
         assert result == "resampled"
         assert captured["antialias"] is False
+
+    @staticmethod
+    def test_idempotent(monkeypatch: pytest.MonkeyPatch) -> None:
+        """Calling the patch twice does not stack wrappers."""
+        monkeypatch.setattr(timm_vit, "resample_abs_pos_embed", lambda *a, **k: (a, k))
+
+        _disable_pos_embed_antialiasing()
+        wrapped_once = timm_vit.resample_abs_pos_embed
+        _disable_pos_embed_antialiasing()
+
+        assert timm_vit.resample_abs_pos_embed is wrapped_once
+
+
+class TestFeatureExtractorPosEmbedPatch:
+    """The NLC ViT feature extractor disables pos-embed antialiasing for export compatibility."""
+
+    @staticmethod
+    def test_forward_resamples_without_antialiasing(monkeypatch: pytest.MonkeyPatch) -> None:
+        """Building an NLC ViT extractor makes pos-embed resampling use ``antialias=False``."""
+        real_resample = timm_vit.resample_abs_pos_embed
+        captured: dict[str, object] = {}
+
+        def spy_resample(*args: object, **kwargs: object) -> torch.Tensor:
+            captured.update(kwargs)
+            return real_resample(*args, **kwargs)
+
+        monkeypatch.setattr(timm_vit, "resample_abs_pos_embed", spy_resample)
+
+        model = TimmFeatureExtractor(
+            backbone="vit_base_patch14_reg4_dinov2",
+            layers=["blocks.2"],
+            pre_trained=False,
+            output_fmt="NLC",
+            dynamic_img_size=True,
+        )
+        # Input size differs from the backbone default, forcing a pos-embed resample.
+        features = model(torch.rand((1, 3, 392, 392)))
+
+        assert captured.get("antialias") is False
+        assert features["blocks.2"].shape == torch.Size((1, 28 * 28, 768))
