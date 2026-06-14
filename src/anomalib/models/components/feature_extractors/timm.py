@@ -90,18 +90,23 @@ class TimmFeatureExtractor(nn.Module):
             backbone. Required for training models like STFPM. Defaults to
             ``False``.
         output_fmt (str, optional): Feature output format, either ``"NCHW"`` (spatial
-            maps via ``features_only``) or ``"NLC"`` (token sequences via
-            ``forward_intermediates``). Defaults to ``"NCHW"``.
-        return_class_token (bool, optional): ``"NLC"`` mode only. If ``True``, the
-            prefix tokens (class token followed by register tokens) are prepended to
-            the patch tokens, yielding the full ``[CLS, reg..., patches]`` sequence.
+            maps) or ``"NLC"`` (token sequences). CNN backbones produce ``"NCHW"`` maps via
+            timm's ``features_only`` API. Transformer backbones (name contains ``"vit"``, or
+            ``output_fmt="NLC"``) use ``forward_intermediates``, which also reshapes patch
+            tokens into ``"NCHW"`` spatial maps when requested (e.g. for PatchCore).
+            Defaults to ``"NCHW"``.
+        return_class_token (bool, optional): Transformer ``"NLC"`` output only. If ``True``,
+            the prefix tokens (class token followed by register tokens) are prepended to the
+            patch tokens, yielding the full ``[CLS, reg..., patches]`` sequence.
             Defaults to ``False``.
-        norm (bool, optional): ``"NLC"`` mode only. If ``True``, the backbone's final
-            normalization layer is applied to each returned intermediate. Defaults to
-            ``False``.
-        dynamic_img_size (bool, optional): Passed to ``timm.create_model``. Allows ViT
-            backbones to accept input sizes other than their default ``img_size`` by
-            interpolating positional embeddings. Defaults to ``False``.
+        norm (bool, optional): Transformer backbones only. If ``True``, the backbone's final
+            normalization layer is applied to each returned intermediate, yielding well-scaled
+            features for nearest-neighbor search (matches AnomalyDINO). Ignored by CNN
+            ``features_only`` backbones. Defaults to ``True``.
+        dynamic_img_size (bool, optional): Passed to ``timm.create_model`` for transformer
+            backbones. Allows ViT backbones to accept input sizes other than their default
+            ``img_size`` by interpolating positional embeddings. Ignored by CNN backbones.
+            Defaults to ``True``.
 
     Attributes:
         backbone (str | nn.Module): Name of the backbone model or actual torch backbone model.
@@ -160,8 +165,8 @@ class TimmFeatureExtractor(nn.Module):
         requires_grad: bool = False,
         output_fmt: str = "NCHW",
         return_class_token: bool = False,
-        norm: bool = False,
-        dynamic_img_size: bool = False,
+        norm: bool = True,
+        dynamic_img_size: bool = True,
     ) -> None:
         super().__init__()
 
@@ -177,6 +182,10 @@ class TimmFeatureExtractor(nn.Module):
         self.norm = norm
         self.out_dims: Sequence[int]
 
+        # ViT backbones are extracted via ``forward_intermediates`` (the ``features_only`` API cannot
+        # handle dynamic ViT input sizes).
+        self._uses_intermediates = isinstance(backbone, str) and (output_fmt == "NLC" or "vit" in backbone.lower())
+
         if isinstance(backbone, nn.Module):
             self.feature_extractor = create_feature_extractor(
                 backbone,
@@ -185,8 +194,8 @@ class TimmFeatureExtractor(nn.Module):
             layer_metadata = dryrun_find_featuremap_dims(self.feature_extractor, (256, 256), layers=self.layers)
             self.out_dims = [cast("int", feature_info["num_features"]) for feature_info in layer_metadata.values()]
 
-        elif isinstance(backbone, str) and output_fmt == "NLC":
-            # Token mode: use the full model with forward_intermediates (e.g. ViT/DINOv2).
+        elif self._uses_intermediates:
+            # Transformer mode: use the full model with forward_intermediates (e.g. ViT/DINOv2).
             self.idx = [self._block_name_to_idx(layer) for layer in self.layers]
             self.feature_extractor = timm.create_model(
                 backbone,
@@ -292,7 +301,7 @@ class TimmFeatureExtractor(nn.Module):
             >>> features["layer1"].shape
             torch.Size([1, 64, 56, 56])
         """
-        if self.output_fmt == "NLC":
+        if self._uses_intermediates:
             return self._forward_nlc(inputs)
 
         if self.requires_grad:
@@ -306,16 +315,17 @@ class TimmFeatureExtractor(nn.Module):
         return features
 
     def _forward_nlc(self, inputs: torch.Tensor) -> dict[str, torch.Tensor]:
-        """Extract token-sequence features via timm's ``forward_intermediates``.
+        """Extract transformer features via timm's ``forward_intermediates``.
 
         Args:
             inputs (torch.Tensor): Input tensor of shape ``(B, C, H, W)``.
 
         Returns:
-            dict[str, torch.Tensor]: Mapping of block layer names to token tensors.
-                Each tensor has shape ``(B, N, D)`` (patch tokens), or
-                ``(B, P + N, D)`` with the ``[CLS, reg..., patches]`` prefix tokens
-                prepended when ``return_class_token`` is ``True``.
+            dict[str, torch.Tensor]: Mapping of block layer names to feature tensors.
+                With ``output_fmt="NLC"`` each tensor has shape ``(B, N, D)`` (patch
+                tokens), or ``(B, P + N, D)`` with the ``[CLS, reg..., patches]`` prefix
+                tokens prepended when ``return_class_token`` is ``True``. With
+                ``output_fmt="NCHW"`` each tensor is a spatial map ``(B, D, H, W)``.
         """
         if self.requires_grad:
             intermediates = self._run_intermediates(inputs)
@@ -340,6 +350,6 @@ class TimmFeatureExtractor(nn.Module):
             indices=self.idx,
             norm=self.norm,
             return_prefix_tokens=self.return_class_token,
-            output_fmt="NLC",
+            output_fmt=self.output_fmt,
             intermediates_only=True,
         )
