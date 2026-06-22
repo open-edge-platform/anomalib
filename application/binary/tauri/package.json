@@ -22,7 +22,7 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "~5.6.2",
-    "vite": "^6.0.3"
+    "vite": "^7.0.0"
   },
   "overrides": {
     "rollup": "4.59.0",
