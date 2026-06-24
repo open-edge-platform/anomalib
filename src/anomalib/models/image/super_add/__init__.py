@@ -11,12 +11,12 @@ subsampling, and test images are scored by nearest-neighbor distance to the
 bank.
 
 Example:
-    >>> from anomalib.data import MVTecAD
+    >>> from anomalib.data import MVTecAD2
     >>> from anomalib.models import SuperADD
     >>> from anomalib.engine import Engine
 
     >>> # Initialize model and data
-    >>> datamodule = MVTecAD()
+    >>> datamodule = MVTecAD2()
     >>> model = SuperADD()
 
     >>> # Train using the Engine
