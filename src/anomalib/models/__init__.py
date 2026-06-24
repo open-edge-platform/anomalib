@@ -139,7 +139,6 @@ __all__ = [
     "Stfpm",
     "SuperADD",
     "Supersimplenet",
-    "SuperADD",
     "Uflow",
     "UniNet",
     "VlmAd",
