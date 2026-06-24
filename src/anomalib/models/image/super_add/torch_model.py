@@ -37,9 +37,9 @@ logger = logging.getLogger(__name__)
 DEFAULT_CHUNK_SIZE = 1024
 
 DINO_TARGET_LAYERS = {
-    "small": [3, 5, 7, 10],
-    "base": [3, 5, 7, 10],
-    "large": [10, 14, 19, 23],
+    "small": [3, 5, 8, 10],
+    "base": [3, 5, 8, 10],
+    "large": [5, 11, 17, 23],
     "huge": [7, 15, 23, 31],
 }
 
@@ -279,7 +279,7 @@ class SuperADDModel(DynamicBufferMixin, nn.Module):
 
     def __init__(
         self,
-        backbone: str = "vit_small_patch16_dinov3",
+        backbone: str = "vit_huge_plus_patch16_dinov3",
         patch_size: int = 448,
         patch_overlap: int = 16,
         max_database_size: int = 100000,
