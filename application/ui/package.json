@@ -12,7 +12,7 @@
         "build:api:types": "npx openapi-typescript ./src/api/openapi-spec.json -o ./src/api/openapi-spec.d.ts  --root-types && prettier --write src/api/openapi-spec.d.ts",
         "build:api:download": "curl -o ./src/api/openapi-spec.json http://localhost:8000/api/openapi.json && prettier --write src/api/openapi-spec.json",
         "build:api": "npm run build:api:download && npm run build:api:types",
-        "clone-geti-ui-packages": "npx degit git@github.com:open-edge-platform/geti_v2.git/web_ui/packages/config packages/config --force && npx degit git@github.com:open-edge-platform/geti_v2.git/web_ui/packages/ui packages/ui --force",
+        "clone-geti-ui-packages": "npx tiged --force --mode=git https://github.com/open-edge-platform/geti_v2.git/web_ui/packages/config#02d99ef600635d3c49ad9a52ca3f7aade829053e packages/config && npx tiged --force --mode=git https://github.com/open-edge-platform/geti_v2.git/web_ui/packages/ui#02d99ef600635d3c49ad9a52ca3f7aade829053e packages/ui",
         "cyclic-deps-check": "npx madge --circular src/**/*.ts*",
         "dev": "concurrently -n Server,UI -c blue,yellow \"npm run server\" \"npm start\"",
         "server": "cd ../backend && ./run.sh",
