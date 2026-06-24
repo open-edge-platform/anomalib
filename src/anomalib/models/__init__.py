@@ -21,8 +21,10 @@ Example:
 The module provides both image and video anomaly detection models:
 
 Image Models:
+    - AnomalyVFM (:class:`anomalib.models.image.AnomalyVFM`)
     - CFA (:class:`anomalib.models.image.Cfa`)
     - Cflow (:class:`anomalib.models.image.Cflow`)
+    - CFM (:class:`anomalib.models.image.CFM`)
     - CSFlow (:class:`anomalib.models.image.Csflow`)
     - DFKDE (:class:`anomalib.models.image.Dfkde`)
     - DFM (:class:`anomalib.models.image.Dfm`)
@@ -61,8 +63,10 @@ from anomalib.models.components import AnomalibModule
 from anomalib.utils.path import convert_snake_to_pascal_case, convert_to_snake_case, convert_to_title_case
 
 from .image import (
+    CFM,
     L2BT,
     AnomalyDINO,
+    AnomalyVFM,
     Cfa,
     Cflow,
     Csflow,
@@ -76,6 +80,8 @@ from .image import (
     Fre,
     Ganomaly,
     GeneralAD,
+    Glass,
+    InpFormer,
     Padim,
     Patchcore,
     Patchflow,
@@ -105,6 +111,8 @@ class UnknownModelError(ModuleNotFoundError):
 __all__ = [
     "AiVad",
     "AnomalyDINO",
+    "AnomalyVFM",
+    "CFM",
     "Cfa",
     "Cflow",
     "Csflow",
@@ -119,6 +127,8 @@ __all__ = [
     "Fuvas",
     "Ganomaly",
     "GeneralAD",
+    "Glass",
+    "InpFormer",
     "L2BT",
     "Padim",
     "Patchcore",
