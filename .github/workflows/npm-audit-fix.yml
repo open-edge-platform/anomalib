@@ -57,11 +57,32 @@ jobs:
         continue-on-error: true
         run: npm audit fix --force || true
 
+      - name: Install dependencies (tauri)
+        working-directory: application/binary/tauri
+        run: npm ci
+
+      - name: Display audit report (tauri)
+        working-directory: application/binary/tauri
+        continue-on-error: true
+        run: |
+          npm audit || true
+
+      - name: Run npm audit fix - safe mode (tauri)
+        if: ${{ github.event_name == 'schedule' || github.event.inputs.force_fix != 'true' }}
+        working-directory: application/binary/tauri
+        continue-on-error: true
+        run: npm audit fix --package-lock-only || echo "Some issues could not be auto-fixed"
+
+      - name: Run npm audit fix - force mode (tauri)
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force_fix == 'true' }}
+        working-directory: application/binary/tauri
+        continue-on-error: true
+        run: npm audit fix --force || true
+
       - name: Check for changes
         id: check-changes
-        working-directory: application/ui
         run: |
-          if git diff --quiet package-lock.json package.json; then
+          if git diff --quiet application/ui/package-lock.json application/ui/package.json application/binary/tauri/package-lock.json application/binary/tauri/package.json; then
             echo "changed=false" >> $GITHUB_OUTPUT
           else
             echo "changed=true" >> $GITHUB_OUTPUT
@@ -94,3 +115,5 @@ jobs:
           add-paths: |
             application/ui/package-lock.json
             application/ui/package.json
+            application/binary/tauri/package-lock.json
+            application/binary/tauri/package.json
