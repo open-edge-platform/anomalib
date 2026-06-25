@@ -71,6 +71,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Determines if library checks (quality, unit/integration tests) should run
+  check-library-paths:
+    name: Check if library checks should run
+    runs-on: ubuntu-latest
+    outputs:
+      run_library: ${{ steps.check-library-paths.outputs.run }}
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Check paths
+        id: check-library-paths
+        uses: open-edge-platform/geti-ci/actions/check-paths@7d25e47329bbfcde4ee51ab3581aea8613e245e2
+        with:
+          files_yaml: |
+            test:
+              - src/**
+              - tests/**
+              - examples/**
+              - tools/**
+              - pyproject.toml
+              - tox.ini
+              - .github/workflows/pr.yaml
+              - .github/workflows/_reusable-code-quality.yaml
+              - .github/workflows/_reusable-test-suite.yaml
+
   # PR title validation - runs first as it's quick and fundamental
   # Only runs on actual pull requests, not merge groups
   pr-title-check:
@@ -81,14 +114,16 @@ jobs:
 
   # Code quality job using reusable workflow
   quality:
-    if: github.event.pull_request.draft != true
+    needs: check-library-paths
+    if: needs.check-library-paths.outputs.run_library == 'true' && github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-code-quality.yaml
     with:
       python-version: "3.10"
 
   # Test suite job using reusable workflow
   unit-tests:
-    if: github.event.pull_request.draft != true
+    needs: check-library-paths
+    if: needs.check-library-paths.outputs.run_library == 'true' && github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-test-suite.yaml
     with:
       test-type: "unit"
@@ -99,7 +134,8 @@ jobs:
       codecov-token: ${{ secrets.CODECOV_TOKEN }}
 
   integration-tests:
-    if: github.event.pull_request.draft != true
+    needs: check-library-paths
+    if: needs.check-library-paths.outputs.run_library == 'true' && github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-test-suite.yaml
     with:
       test-type: "integration"
@@ -186,6 +222,33 @@ jobs:
             echo "::notice::check=${check}"
             if [[ "$check" != "success" && "$check" != "skipped" ]]; then
               echo "::error::Build docker image status checks failed. They must succeed before this pull request can be merged."
+              exit 1
+            fi
+          done
+
+  library-checks-status:
+    name: Library checks status
+    needs:
+      - check-library-paths
+      - quality
+      - unit-tests
+      - integration-tests
+    runs-on: ubuntu-latest
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    if: always() && !cancelled()
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
+      - name: Check jobs results
+        run: |
+          for check in ${CHECKS}; do
+            echo "::notice::check=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error::Library checks failed. They must succeed before this pull request can be merged."
               exit 1
             fi
           done

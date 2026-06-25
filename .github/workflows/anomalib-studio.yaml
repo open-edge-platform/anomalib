@@ -1,6 +1,10 @@
 name: Anomalib Studio UI checks
 permissions: {} # No permissions by default on workflow level
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main]
@@ -12,13 +16,35 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-    paths:
-      - "application/**"
   workflow_dispatch: # run on request (no need for PR)
 
 jobs:
+  check-paths:
+    name: Check if workflow should run
+    runs-on: ubuntu-latest
+    outputs:
+      run_workflow: ${{ steps.check_paths.outputs.run }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Check paths
+        id: check_paths
+        uses: open-edge-platform/geti-ci/actions/check-paths@7e686c1248b3939f8ee8e04e2612da727e379d91
+        with:
+          files_yaml: |
+            test:
+              - application/**
+              - .github/workflows/anomalib-studio.yaml
+
   generate-openapi-spec:
     name: Generate OpenAPI Spec
+    needs: check-paths
+    if: needs.check-paths.outputs.run_workflow == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read # to checkout code
@@ -69,6 +95,8 @@ jobs:
           path: application/backend/openapi-spec.json
 
   python-checks:
+    needs: check-paths
+    if: needs.check-paths.outputs.run_workflow == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read # to checkout code
@@ -121,7 +149,9 @@ jobs:
   ui-build:
     name: Build UI
     needs:
+      - check-paths
       - generate-openapi-spec
+    if: needs.check-paths.outputs.run_workflow == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read # to checkout code
@@ -171,7 +201,9 @@ jobs:
   ui-lint:
     name: Eslint checks
     needs:
+      - check-paths
       - generate-openapi-spec
+    if: needs.check-paths.outputs.run_workflow == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read # to checkout code
@@ -228,7 +260,9 @@ jobs:
   ui-unit-tests:
     name: Unit tests
     needs:
+      - check-paths
       - generate-openapi-spec
+    if: needs.check-paths.outputs.run_workflow == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read # to checkout code
@@ -273,8 +307,10 @@ jobs:
   ui-playwright-tests:
     name: Playwright Tests
     needs:
+      - check-paths
       - ui-build
       - generate-openapi-spec
+    if: needs.check-paths.outputs.run_workflow == 'true'
     permissions:
       contents: read # to checkout code
     timeout-minutes: 60
@@ -333,3 +369,28 @@ jobs:
           name: playwright-report
           path: application/ui/playwright-report/
           retention-days: 30
+
+  required-check:
+    name: Required Check anomalib-studio
+    needs:
+      - check-paths
+      - generate-openapi-spec
+      - python-checks
+      - ui-build
+      - ui-lint
+      - ui-unit-tests
+      - ui-playwright-tests
+    runs-on: ubuntu-latest
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    if: always() && !cancelled()
+    steps:
+      - name: Check jobs results
+        run: |
+          for check in ${CHECKS}; do
+            echo "::notice::check=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error ::Required status checks failed. They must succeed before this pull request can be merged."
+              exit 1
+            fi
+          done
