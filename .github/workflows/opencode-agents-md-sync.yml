@@ -8,9 +8,7 @@ on:
     - cron: "0 8 * * 1" # Weekly on Monday at 8:00 UTC
   workflow_dispatch:
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {} # No permissions by default on workflow level
 
 concurrency:
   group: "opencode-agents-md-sync"
@@ -20,6 +18,9 @@ jobs:
   agents-md-sync:
     runs-on: self-hosted
     timeout-minutes: 45
+    permissions:
+      contents: write       # Required to commit and push AGENTS.md updates
+      pull-requests: write  # Required to create the agents-md-sync PR
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:

@@ -73,12 +73,13 @@ on:
         description: "Whether version is a pre-release"
         value: ${{ jobs.validate.outputs.is_prerelease }}
 
-permissions:
-  contents: read
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   validate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read  # Required to checkout the repository for git tag reading
     outputs:
       version: ${{ steps.get-version.outputs.version }}
       is_prerelease: ${{ steps.check-prerelease.outputs.is_prerelease }}

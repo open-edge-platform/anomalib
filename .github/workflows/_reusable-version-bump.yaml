@@ -91,16 +91,15 @@ on:
         description: "Whether the version was changed"
         value: ${{ jobs.bump-version.outputs.version-changed }}
 
-permissions:
-  contents: read
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   bump-version:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: write
-      pull-requests: write
+      contents: write       # Required to commit version bump changes (pyproject.toml, CHANGELOG.md)
+      pull-requests: write  # Required to create the automated version bump PR
     outputs:
       new-version: ${{ steps.bump.outputs.new_version }}
       version-changed: ${{ steps.bump.outputs.version_changed }}

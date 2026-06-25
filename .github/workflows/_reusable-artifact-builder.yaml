@@ -69,12 +69,13 @@ on:
         description: "Name of the uploaded artifact"
         value: ${{ jobs.build.outputs.artifact-name }}
 
-permissions:
-  contents: read
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read  # Required to checkout the repository
     outputs:
       artifact-name: ${{ steps.set-artifact-name.outputs.name }}
     steps:

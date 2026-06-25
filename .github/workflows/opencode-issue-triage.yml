@@ -7,9 +7,7 @@ on:
   issues:
     types: [opened]
 
-permissions:
-  contents: read
-  issues: write
+permissions: {} # No permissions by default on workflow level
 
 concurrency:
   group: "opencode-issue-triage-${{ github.event.issue.number }}"
@@ -21,6 +19,9 @@ jobs:
       github.event.issue.author_association != 'NONE'
     runs-on: self-hosted
     timeout-minutes: 20
+    permissions:
+      contents: read  # Required to checkout the repository
+      issues: write   # Required to label and comment on issues
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:

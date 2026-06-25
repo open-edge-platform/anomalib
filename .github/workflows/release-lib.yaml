@@ -51,14 +51,15 @@ on:
         type: boolean
         default: false
 
-permissions:
-  contents: read
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   version-check:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.validate-version.outputs.version }}
+    permissions:
+      contents: read  # Required to checkout the repository for version validation
     steps:
       - name: Harden the runner (audit all outbound calls)
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
@@ -97,12 +98,16 @@ jobs:
   quality:
     needs: [version-check]
     uses: ./.github/workflows/_reusable-code-quality.yaml
+    permissions:
+      contents: read  # Required by the called workflow to checkout the repository
     with:
       python-version: "3.10"
 
   unit-tests:
     needs: [version-check]
     uses: ./.github/workflows/_reusable-test-suite.yaml
+    permissions:
+      contents: read  # Required by the called workflow to checkout the repository
     with:
       python-version: "3.10"
       test-type: "unit"
@@ -114,6 +119,8 @@ jobs:
   integration-tests:
     needs: [version-check]
     uses: ./.github/workflows/_reusable-test-suite.yaml
+    permissions:
+      contents: read  # Required by the called workflow to checkout the repository
     with:
       python-version: "3.10"
       test-type: "integration"
@@ -126,7 +133,7 @@ jobs:
     needs: [version-check]
     uses: ./.github/workflows/_reusable-security-scan.yaml
     permissions:
-      security-events: write
+      security-events: write  # Required to upload SARIF scan results to the Security tab
       packages: read
       contents: read
     with:
@@ -141,6 +148,8 @@ jobs:
       !inputs.dry_run &&
       !failure() && !cancelled()
     uses: ./.github/workflows/_reusable-artifact-builder.yaml
+    permissions:
+      contents: read  # Required by the called workflow to checkout the repository
     with:
       python-version: "3.10"
       verify-package: true

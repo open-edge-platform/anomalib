@@ -63,8 +63,7 @@ on:
   merge_group:
     branches: [main]
 
-permissions:
-  contents: read
+permissions: {} # No permissions by default on workflow level
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -77,6 +76,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       run_library: ${{ steps.check-library-paths.outputs.run }}
+    permissions:
+      contents: read  # Required to checkout the repository
     steps:
       - name: Harden the runner (audit all outbound calls)
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
@@ -109,6 +110,8 @@ jobs:
   pr-title-check:
     if: github.event_name == 'pull_request'
     uses: ./.github/workflows/_reusable-pr-title-check.yaml
+    permissions:
+      contents: read  # Required by the called workflow to checkout the repository
     with:
       python-version: "3.10"
 
@@ -117,6 +120,8 @@ jobs:
     needs: check-library-paths
     if: needs.check-library-paths.outputs.run_library == 'true' && github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-code-quality.yaml
+    permissions:
+      contents: read  # Required by the called workflow to checkout the repository
     with:
       python-version: "3.10"
 
@@ -125,6 +130,8 @@ jobs:
     needs: check-library-paths
     if: needs.check-library-paths.outputs.run_library == 'true' && github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-test-suite.yaml
+    permissions:
+      contents: read  # Required by the called workflow to checkout the repository
     with:
       test-type: "unit"
       runner: "ubuntu-latest"
@@ -137,6 +144,8 @@ jobs:
     needs: check-library-paths
     if: needs.check-library-paths.outputs.run_library == 'true' && github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-test-suite.yaml
+    permissions:
+      contents: read  # Required by the called workflow to checkout the repository
     with:
       test-type: "integration"
       runner: "self-hosted"
@@ -170,6 +179,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       run_build: ${{ steps.check-paths.outputs.run }}
+    permissions:
+      contents: read  # Required to checkout the repository
     steps:
       - name: Harden the runner (audit all outbound calls)
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4

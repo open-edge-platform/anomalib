@@ -50,7 +50,7 @@ jobs:
     if: github.event_name == 'issues'
     runs-on: ubuntu-latest
     permissions:
-      issues: write
+      issues: write  # Required to post a triage comment on the issue
     steps:
       - name: Harden the runner (audit all outbound calls)
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
@@ -72,8 +72,8 @@ jobs:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
     permissions:
-      issues: write
-      pull-requests: write
+      issues: write          # Required to mark issues as stale and close them
+      pull-requests: write   # Required to mark pull requests as stale and close them
     steps:
       - name: Harden the runner (audit all outbound calls)
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4

@@ -186,8 +186,7 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
-      # write permissions are required to update PR comments with image sizes
-      pull-requests: write
+      pull-requests: write # write permissions are required to update PR comments with image sizes
     continue-on-error: true
     steps:
       - name: Harden the runner (audit all outbound calls)

@@ -56,13 +56,14 @@ on:
         type: string
         default: "3.10"
 
-permissions:
-  contents: read
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   prek:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read  # Required to checkout the repository
     steps:
       - name: Harden the runner (audit all outbound calls)
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
