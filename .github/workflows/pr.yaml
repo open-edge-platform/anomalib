@@ -106,7 +106,7 @@ jobs:
 
   # Determines if test suite should run based on changed paths
   check-library-paths:
-    name: Check if library checks should run
+    name: Check if tests should run
     runs-on: ubuntu-latest
     outputs:
       run_library: ${{ steps.check-library-paths.outputs.run }}
