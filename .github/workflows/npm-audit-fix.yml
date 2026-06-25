@@ -2,7 +2,7 @@ name: NPM Audit Fix
 
 on:
   schedule:
-    - cron: "0 3 2,16 * *"
+    - cron: "0 3 * * 6"
   workflow_dispatch:
     inputs:
       force_fix:
