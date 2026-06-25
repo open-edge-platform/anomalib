@@ -14,9 +14,13 @@ concurrency:
 
 jobs:
   triage:
-    # Skip issues from users with no GitHub association (spam protection)
+    # Allow only trusted associations: OWNER, MEMBER, COLLABORATOR.
+    # CONTRIBUTOR / FIRST_TIME_CONTRIBUTOR / FIRST_TIMER / NONE are excluded
+    # because any GitHub user can reach those tiers and trigger this agent on
+    # a self-hosted runner via a crafted issue body (prompt injection).
     if: >-
-      github.event.issue.author_association != 'NONE'
+      contains(fromJson('["OWNER","MEMBER","COLLABORATOR"]'),
+               github.event.issue.author_association)
     runs-on: self-hosted
     timeout-minutes: 20
     permissions:
@@ -39,7 +43,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
-          OPENCODE_PERMISSION: '{"read":"allow","glob":"allow","grep":"allow","bash":{"*":"deny","gh issue *":"allow","gh search *":"allow","gh label *":"allow","gh api *":"allow","cat *":"allow","find *":"allow","grep *":"allow","head *":"allow"},"edit":"deny"}'
+          OPENCODE_PERMISSION: '{"read":"allow","glob":"allow","grep":"allow","bash":{"*":"deny","gh issue *":"allow","gh search *":"allow","gh label *":"allow","gh api *":"allow"},"edit":"deny"}'
           OPENCODE_CONFIG: .github/opencode.json
         run: |
           opencode run --pure -m ollama/gemma4:31b --agent issue-triage \
