@@ -91,7 +91,7 @@ jobs:
 
       - name: Check paths
         id: check-library-paths
-        uses: open-edge-platform/geti-ci/actions/check-paths@7d25e47329bbfcde4ee51ab3581aea8613e245e2
+        uses: open-edge-platform/geti-ci/actions/check-paths@7e686c1248b3939f8ee8e04e2612da727e379d91
         with:
           files_yaml: |
             test:
@@ -194,7 +194,7 @@ jobs:
 
       - name: Check paths
         id: check-paths
-        uses: open-edge-platform/geti-ci/actions/check-paths@7d25e47329bbfcde4ee51ab3581aea8613e245e2
+        uses: open-edge-platform/geti-ci/actions/check-paths@7e686c1248b3939f8ee8e04e2612da727e379d91
         with:
           files_yaml: |
             test:
