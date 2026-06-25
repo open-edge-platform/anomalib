@@ -11,6 +11,7 @@ import {
     Divider,
     Flex,
     Heading,
+    InlineAlert,
     Loading,
     RadioGroup,
     Text,
@@ -18,6 +19,7 @@ import {
 } from '@geti/ui';
 import { useSearchParams } from 'react-router-dom';
 import { toast as sonnerToast } from 'sonner';
+import { useProjectTrainingJobs } from 'src/hooks/use-project-trainingJobs.hook';
 
 import { TrainableModelListBox } from './trainable-model-list-box.component';
 import { TrainingDevicePicker, useTrainingDevice } from './training-device-picker.component';
@@ -37,6 +39,23 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
 
     // Resolve selected key back to the full device object
     const selectedDeviceInfo = devices.find((d) => getDeviceKey(d) === selectedDevice);
+
+    // Warning 1: active training job for this project
+    const { jobs = [] } = useProjectTrainingJobs();
+    const hasActiveTrainingJob = jobs.some((job) => job.status === 'running' || job.status === 'pending');
+
+    // Warning 2: pipeline running on the same device as selected for training
+    const { data: pipeline } = $api.useQuery('get', '/api/projects/{project_id}/pipeline', {
+        params: { path: { project_id: projectId } },
+    });
+    const pipelineIsActive = pipeline?.status === 'running' || pipeline?.status === 'active';
+    const selectedDeviceType = selectedDeviceInfo?.type.toUpperCase() ?? '';
+    const inferenceDeviceType = pipeline?.inference_device?.split('.')[0].toUpperCase() ?? '';
+    const isDeviceConflict =
+        pipelineIsActive &&
+        selectedDeviceType.length > 0 &&
+        inferenceDeviceType.length > 0 &&
+        selectedDeviceType === inferenceDeviceType;
 
     const startTraining = async () => {
         if (selectedModel === null || selectedDeviceInfo === undefined) {
@@ -75,6 +94,15 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
                     minWidth={'60vw'}
                 >
                     <Flex direction='column' gap='size-300'>
+                        {hasActiveTrainingJob && (
+                            <InlineAlert variant='info'>
+                                <Heading level={5}>Training already queued</Heading>
+                                <Text>
+                                    A training job is already pending or running for this project. Starting now will
+                                    queue this job to run after the current one finishes.
+                                </Text>
+                            </InlineAlert>
+                        )}
                         <Flex direction='column' gap='size-150'>
                             <Flex alignItems='center' gap='size-100'>
                                 <Heading level={4} margin={0}>
@@ -115,6 +143,17 @@ export const TrainModelDialog = ({ close }: { close: () => void }) => {
                                 onDeviceChange={setSelectedDevice}
                                 devices={devices}
                             />
+                            {isDeviceConflict && (
+                                <InlineAlert variant='notice'>
+                                    <Heading level={5}>
+                                        Inference pipeline is running on {pipeline?.inference_device}
+                                    </Heading>
+                                    <Text>
+                                        Training on the same device may reduce inference performance. Consider switching
+                                        to a different device or stopping the pipeline before training.
+                                    </Text>
+                                </InlineAlert>
+                            )}
                         </Flex>
                     </Flex>
                 </View>
