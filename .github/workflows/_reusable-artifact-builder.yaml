@@ -75,7 +75,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read  # Required to checkout the repository
+      contents: read # Required to checkout the repository
     outputs:
       artifact-name: ${{ steps.set-artifact-name.outputs.name }}
     steps:

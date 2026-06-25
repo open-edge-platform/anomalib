@@ -101,7 +101,7 @@ jobs:
     runs-on: ${{ inputs.runner }}
     timeout-minutes: ${{ inputs.timeout }}
     permissions:
-      contents: read  # Required to checkout the repository
+      contents: read # Required to checkout the repository
     steps:
       - name: Harden the runner (audit all outbound calls)
         if: "!contains(inputs.runner, 'self-hosted')"

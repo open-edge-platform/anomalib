@@ -98,8 +98,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: write       # Required to commit version bump changes (pyproject.toml, CHANGELOG.md)
-      pull-requests: write  # Required to create the automated version bump PR
+      contents: write # Required to commit version bump changes (pyproject.toml, CHANGELOG.md)
+      pull-requests: write # Required to create the automated version bump PR
     outputs:
       new-version: ${{ steps.bump.outputs.new_version }}
       version-changed: ${{ steps.bump.outputs.version_changed }}
