@@ -323,11 +323,7 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-jammy@sha256:6aca677c27a967caf7673d108ac67ffaf8fed134f27e17b27a05464ca0ace831
     steps:
-      - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
-        with:
-          egress-policy: audit
-
+      # harden-runner action is not used here due to container-job constraints
       - name: Install git lfs
         run: apt-get update && apt-get install git-lfs
 
