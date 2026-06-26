@@ -471,7 +471,7 @@ requires-dist = [
     { name = "torchvision", marker = "extra == 'cu126'", specifier = ">=0.21.0", index = "https://download.pytorch.org/whl/cu126", conflict = { package = "anomalib", extra = "cu126" } },
     { name = "torchvision", marker = "extra == 'cu130'", specifier = ">=0.24.0", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "anomalib", extra = "cu130" } },
     { name = "torchvision", marker = "extra == 'rocm'", specifier = ">=0.22.0", index = "https://download.pytorch.org/whl/rocm6.3", conflict = { package = "anomalib", extra = "rocm" } },
-    { name = "torchvision", marker = "extra == 'xpu'", specifier = ">=0.21.0", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "anomalib", extra = "xpu" } },
+    { name = "torchvision", marker = "extra == 'xpu'", specifier = ">=0.24.0", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "anomalib", extra = "xpu" } },
     { name = "tox", marker = "extra == 'dev'" },
     { name = "tox", marker = "extra == 'test'" },
     { name = "transformers", marker = "extra == 'dev'" },

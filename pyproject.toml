@@ -130,7 +130,7 @@ rocm = [
 ]
 xpu = [
     "torch>=2.9.0", # Note : Last tested with torch+xpu (2.9.1)
-    "torchvision>=0.21.0",
+    "torchvision>=0.24.0",
     "pytorch-triton-xpu ; sys_platform == 'linux' or sys_platform == 'win32'",
 ]
 full = ["anomalib[clip,datasets,openvino,loggers,notebooks,vlm,video,huggingface]"]
