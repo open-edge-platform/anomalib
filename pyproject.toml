@@ -129,7 +129,7 @@ rocm = [
     "pytorch-triton-rocm ; sys_platform == 'linux'",
 ]
 xpu = [
-    "torch>=2.9.0", # CVE-2025-2953, CVE-2025-3730: no torch+xpu builds for 2.7.x/2.8.x; 2.9.1 is the tested version
+    "torch>=2.9.0", # Note : Last tested with torch+xpu (2.9.1)
     "torchvision>=0.21.0",
     "pytorch-triton-xpu ; sys_platform == 'linux' or sys_platform == 'win32'",
 ]
