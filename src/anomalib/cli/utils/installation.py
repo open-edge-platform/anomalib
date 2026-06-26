@@ -13,7 +13,7 @@ import json
 import os
 import platform
 import re
-import subprocess
+import subprocess  # nosec B404 - hardcoded nvcc invocation only
 from importlib.metadata import requires
 from pathlib import Path
 from warnings import warn
@@ -187,7 +187,8 @@ def get_cuda_version() -> str | None:
     # 2. 'nvcc --version' check & without version.json case
     try:
         result = subprocess.run(
-            ["nvcc", "--version"],  # noqa: S607
+            # command is a hardcoded literal with no user-controlled input
+            ["nvcc", "--version"],  # noqa: S607  # nosec B603, B607
             capture_output=True,
             text=True,
             check=False,
