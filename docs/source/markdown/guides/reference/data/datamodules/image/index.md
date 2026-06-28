@@ -7,6 +7,13 @@ Anomalib provides various datamodules for handling image-based anomaly detection
 ```{grid} 3
 :gutter: 2
 
+:::{grid-item-card} AutoVI
+:link: autovi
+:link-type: doc
+
+AutoVI dataset datamodule for automotive visual defect inspection.
+:::
+
 :::{grid-item-card} BMAD
 :link: bmad
 :link-type: doc
@@ -61,6 +68,7 @@ Visual Anomaly (VisA) dataset datamodule.
 :hidden:
 :maxdepth: 1
 
+autovi
 bmad
 btech
 datumaro

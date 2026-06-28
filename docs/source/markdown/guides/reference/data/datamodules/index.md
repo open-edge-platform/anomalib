@@ -7,6 +7,13 @@ Anomalib provides various datamodules for different types of data modalities. Th
 ```{grid} 3
 :gutter: 2
 
+:::{grid-item-card} AutoVI
+:link: image/autovi
+:link-type: doc
+
+AutoVI dataset datamodule for automotive visual inspection.
+:::
+
 :::{grid-item-card} BMAD
 :link: image/bmad
 :link-type: doc
