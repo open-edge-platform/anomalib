@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -13,6 +14,9 @@ import torch
 from torch import nn
 
 from anomalib.models.components.dinov2.dinov2_loader import DinoV2Loader
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.fixture()
@@ -155,3 +159,59 @@ def test_load_triggers_download_when_missing(
     mock_download.assert_called_once()
     mock_torch_load.assert_called_once()
     fake_module.vit_small.assert_called_once()
+
+
+@patch("anomalib.models.components.dinov2.dinov2_loader.torch.load")
+def test_load_redownloads_corrupted_cached_weights(
+    mock_torch_load: MagicMock,
+    tmp_path: Path,
+    dummy_model: nn.Module,
+) -> None:
+    """Confirm corrupted cached weights are removed and downloaded again."""
+    loader = DinoV2Loader(cache_dir=tmp_path)
+    fake_module = MagicMock()
+    fake_module.vit_small = MagicMock(return_value=dummy_model)
+    loader.vit_factory = fake_module
+
+    weight_path = loader._get_weight_path("dinov2", "small", 14)  # noqa: SLF001
+    weight_path.write_bytes(b"incomplete checkpoint")
+
+    def recreate_weights(*_: object) -> None:
+        assert not weight_path.exists()
+        weight_path.write_bytes(b"complete checkpoint")
+
+    mock_download = MagicMock(side_effect=recreate_weights)
+    loader._download_weights = mock_download  # noqa: SLF001
+    mock_torch_load.side_effect = [
+        RuntimeError("PytorchStreamReader failed reading zip archive: failed finding central directory"),
+        {},
+    ]
+
+    loaded = loader.load("dinov2_vit_small_14")
+
+    assert loaded is dummy_model
+    mock_download.assert_called_once_with("dinov2", "small", 14)
+    assert weight_path.read_bytes() == b"complete checkpoint"
+    assert mock_torch_load.call_count == 2
+
+
+@patch("anomalib.models.components.dinov2.dinov2_loader.urlretrieve")
+def test_download_weights_uses_temporary_file(
+    mock_urlretrieve: MagicMock,
+    tmp_path: Path,
+) -> None:
+    """Confirm downloads are moved into place only after completion."""
+    loader = DinoV2Loader(cache_dir=tmp_path)
+
+    def create_temp_file(*, filename: Path, **_: object) -> None:
+        filename.write_bytes(b"complete checkpoint")
+
+    mock_urlretrieve.side_effect = create_temp_file
+
+    loader._download_weights("dinov2", "small", 14)  # noqa: SLF001
+
+    weight_path = loader._get_weight_path("dinov2", "small", 14)  # noqa: SLF001
+    temp_path = weight_path.with_name(f"{weight_path.name}.tmp")
+    assert weight_path.read_bytes() == b"complete checkpoint"
+    assert not temp_path.exists()
+    assert mock_urlretrieve.call_args.kwargs["filename"] == temp_path
