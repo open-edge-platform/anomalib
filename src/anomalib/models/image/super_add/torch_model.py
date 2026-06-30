@@ -257,6 +257,8 @@ class SuperADDModel(DynamicBufferMixin, nn.Module):
             input image is split into. Defaults to ``448``.
         patch_overlap (int): Overlap (in pixels) between neighboring patches.
             Defaults to ``16``.
+        layers (list[int] | None): List of encoder layer indices to extract features from.
+            If None, DINO_TARGET_LAYERS of the respective model size.
         max_database_size (int): Target number of features retained per layer
             after coreset subsampling. Defaults to ``100000``.
         subsampling_iterations (int): Number of random-subset iterations used by
@@ -280,6 +282,7 @@ class SuperADDModel(DynamicBufferMixin, nn.Module):
     def __init__(
         self,
         backbone: str = "vit_huge_plus_patch16_dinov3",
+        layers: list[int] | None = None,
         patch_size: int = 448,
         patch_overlap: int = 16,
         max_database_size: int = 100000,
@@ -288,9 +291,12 @@ class SuperADDModel(DynamicBufferMixin, nn.Module):
         super().__init__()
         self.backbone_name = backbone
 
-        for arch_name, target_layers in DINO_TARGET_LAYERS.items():
-            if arch_name in backbone:
-                self.layers = target_layers
+        if layers is None:
+            for arch_name, target_layers in DINO_TARGET_LAYERS.items():
+                if arch_name in backbone:
+                    self.layers = target_layers
+        else:
+            self.layers = layers
 
         self.backbone = DinoV3Backbone(backbone, self.layers)
         self.patch_exec = PatchedExecution(self.backbone, patch_size, patch_overlap, self.backbone.model_patch_size)

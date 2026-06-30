@@ -75,6 +75,8 @@ class SuperADD(MemoryBankMixin, AnomalibModule):
             Defaults to ``448``.
         patch_overlap (int): Overlap (in pixels) between neighboring patches.
             Defaults to ``16``.
+        layers (list[int] | None): List of encoder layer indices to extract features from.
+            If None, DINO_TARGET_LAYERS of the respective model size.
         precision (str | PrecisionType, optional): Precision type for model
             computations. Can be either a string (``"float32"``, ``"float16"``)
             or a :class:`PrecisionType` enum value.
@@ -117,6 +119,7 @@ class SuperADD(MemoryBankMixin, AnomalibModule):
         backbone: str = "vit_huge_plus_patch16_dinov3",
         patch_size: int = 448,
         patch_overlap: int = 16,
+        layers: list[int] | None = None,
         precision: str | PrecisionType = PrecisionType.FLOAT32,
         pre_processor: nn.Module | bool = True,
         post_processor: nn.Module | bool = True,
@@ -131,6 +134,7 @@ class SuperADD(MemoryBankMixin, AnomalibModule):
         )
 
         self.model: SuperADDModel = SuperADDModel(
+            layers=layers,
             backbone=backbone,
             patch_size=patch_size,
             patch_overlap=patch_overlap,
