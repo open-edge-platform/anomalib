@@ -131,14 +131,15 @@ class KCenterGreedy:
         # from the final memory bank (see gh-3459).
         idx = torch.randint(high=self.n_observations, size=(1,), device=self.features.device).squeeze()
 
-        selected_coreset_idxs: list[int] = [int(idx.item())]
-        for _ in tqdm(range(self.coreset_size - 1), desc="Selecting Coreset Indices."):
+        selected_coreset_idxs = torch.empty(self.coreset_size, dtype=torch.long, device=self.features.device)
+        selected_coreset_idxs[0] = idx
+        for i in tqdm(range(1, self.coreset_size), desc="Selecting Coreset Indices."):
             self.update_distances(cluster_center=idx)
             idx = self.get_new_idx()
             self.min_distances.scatter_(0, idx.unsqueeze(0).unsqueeze(1), 0.0)
-            selected_coreset_idxs.append(int(idx.item()))
+            selected_coreset_idxs[i] = idx
 
-        return selected_coreset_idxs
+        return selected_coreset_idxs.cpu().tolist()
 
     def sample_coreset(self) -> torch.Tensor:
         """Select coreset from the embedding.
