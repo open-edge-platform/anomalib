@@ -10,20 +10,23 @@ anomaly detection.
 
 from collections.abc import Callable
 
-import timm
 import torch
 from FrEIA.framework import SequenceINN
 from torch import nn
 from torch.nn import functional as F  # noqa: N812
 
 from anomalib.data import InferenceBatch
-from anomalib.models.components.dinov2 import DinoV2Loader
+from anomalib.models.components.feature_extractors import TimmFeatureExtractor
 from anomalib.models.components.flow import AllInOneBlock
 
 from .anomaly_map import AnomalyMapGenerator
 
-# DINOv2 model name prefix used to distinguish from timm CNN backbones.
+# DINOv2 model name marker used to distinguish from timm CNN backbones.
+# timm DINOv2 names contain "dinov2" (e.g. "vit_base_patch14_dinov2").
 _DINOV2_PREFIX = "dinov2"
+
+# Number of transformer blocks per DINOv2 ViT architecture.
+_DINOV2_DEPTHS = {"small": 12, "base": 12, "large": 24, "giant": 40}
 
 
 def _build_subnet_constructor(hidden_dim: int) -> Callable:
@@ -57,7 +60,7 @@ class PatchflowModel(nn.Module):
     Args:
         input_size: Model input size ``(H, W)``.
         backbone: timm model name or DINOv2 model name (e.g.
-            ``"tf_efficientnet_b5"`` or ``"dinov2_vit_base_14"``).
+            ``"tf_efficientnet_b5"`` or ``"vit_base_patch14_dinov2"``).
         pre_trained: Whether to use pre-trained backbone weights.
         flow_steps: Number of coupling blocks in the normalizing flow.
         flow_feature_dim: Channel dimension after the feature adaptor.
@@ -91,20 +94,32 @@ class PatchflowModel(nn.Module):
         self._internal_size = crop_size if crop_size is not None else input_size
         self.num_scales = num_scales
         self.backbone_name = backbone
-        self.is_dinov2 = backbone.startswith(_DINOV2_PREFIX)
+        self.is_dinov2 = _DINOV2_PREFIX in backbone
 
         # --- Feature extractor (frozen) ---
         if self.is_dinov2:
-            if pre_trained:
-                # Load DINOv2 backbone with pretrained weights (may download if missing).
-                self.feature_extractor = DinoV2Loader.from_name(backbone)
-            else:
-                # Create DINOv2 backbone architecture without loading pretrained weights.
-                dino_loader = DinoV2Loader()
-                model_type, arch, ps = dino_loader._parse_name(backbone)  # noqa: SLF001
-                self.feature_extractor = dino_loader.create_model(model_type, arch, ps)
+            # Determine depth from the architecture name to pick early/middle/late layers.
+            try:
+                num_blocks = next(depth for arch, depth in _DINOV2_DEPTHS.items() if arch in backbone)
+            except StopIteration as exc:
+                msg = f"Could not infer DINOv2 architecture from '{backbone}'. Expected one of {list(_DINOV2_DEPTHS)}."
+                raise ValueError(msg) from exc
+            self.dino_layer_indices: list[int] = [0, num_blocks // 2, num_blocks - 1]
+            # Token-mode extractor (forward_intermediates) returning patch tokens per block.
+            self.feature_extractor = TimmFeatureExtractor(
+                backbone=backbone,
+                layers=[f"blocks.{i}" for i in self.dino_layer_indices],
+                pre_trained=pre_trained,
+                requires_grad=False,
+                output_fmt="NLC",
+                return_class_token=False,
+                norm=True,
+                dynamic_img_size=True,
+            )
+            self._dino_patch_size = self.feature_extractor.patch_size
+
             # Ensure internal size is divisible by DINOv2 patch size
-            dino_patch = self.feature_extractor.patch_size
+            dino_patch = self._dino_patch_size
             self._internal_size = (
                 (self._internal_size[0] // dino_patch) * dino_patch,
                 (self._internal_size[1] // dino_patch) * dino_patch,
@@ -113,20 +128,17 @@ class PatchflowModel(nn.Module):
             # is not divisible by the DINOv2 patch size.
             if crop_size is not None or self._internal_size != input_size:
                 self.crop_size = self._internal_size
-            # Use early, middle, and late intermediate layers
-            num_blocks = len(self.feature_extractor.blocks)
-            self.dino_layer_indices: list[int] = [0, num_blocks // 2, num_blocks - 1]
-            embed_dim: int = self.feature_extractor.embed_dim
+            embed_dim = self.feature_extractor.out_dims[0]
             total_channels = embed_dim * len(self.dino_layer_indices) * num_scales
         else:
-            self.feature_extractor = timm.create_model(
-                backbone,
-                pretrained=pre_trained,
-                features_only=True,
-                out_indices=[2, 3, 4],
+            self.feature_extractor = TimmFeatureExtractor(
+                backbone=backbone,
+                layers=["blocks.2", "blocks.4", "blocks.6"],
+                pre_trained=pre_trained,
+                requires_grad=False,
+                output_fmt="NCHW",
             )
-            layer_channels: list[int] = self.feature_extractor.feature_info.channels()
-            total_channels = sum(layer_channels) * num_scales
+            total_channels = sum(self.feature_extractor.out_dims) * num_scales
 
         for param in self.feature_extractor.parameters():
             param.requires_grad = False
@@ -134,10 +146,10 @@ class PatchflowModel(nn.Module):
         # --- Feature fuser (AvgPool + upsample + concat) ---
         self.avg_pool = nn.AvgPool2d(kernel_size=patch_size, stride=1, padding=patch_size // 2)
         if self.is_dinov2:
-            dino_patch = self.feature_extractor.patch_size
+            dino_patch = self._dino_patch_size
             self.fused_spatial_size = (self._internal_size[0] // dino_patch, self._internal_size[1] // dino_patch)
         else:
-            finest_stride = min(self.feature_extractor.feature_info.reduction())
+            finest_stride = min(self.feature_extractor.reductions)
             self.fused_spatial_size = (
                 self._internal_size[0] // finest_stride,
                 self._internal_size[1] // finest_stride,
@@ -179,7 +191,7 @@ class PatchflowModel(nn.Module):
             else:
                 scaled = x
             features = self.feature_extractor(scaled)
-            all_features.extend(features)
+            all_features.extend(features.values())
         return all_features
 
     def _extract_dinov2_features(self, x: torch.Tensor) -> list[torch.Tensor]:
@@ -188,7 +200,7 @@ class PatchflowModel(nn.Module):
         Runs the DINOv2 backbone at ``num_scales`` resolutions and collects
         intermediate layer outputs reshaped to ``(B, C, H', W')``.
         """
-        patch_size: int = self.feature_extractor.patch_size
+        patch_size: int = self._dino_patch_size
         all_features: list[torch.Tensor] = []
         for s in range(self.num_scales):
             if s > 0:
@@ -200,12 +212,13 @@ class PatchflowModel(nn.Module):
                 scaled = F.interpolate(x, size=(h, w), mode="bilinear", align_corners=False)
             else:
                 scaled = x
-            features = self.feature_extractor.get_intermediate_layers(
-                scaled,
-                n=self.dino_layer_indices,
-                reshape=True,
-            )
-            all_features.extend(features)
+            # The extractor returns norm-applied patch tokens (B, N, D) per selected block;
+            # reshape each to (B, D, H', W') maps for fusion (prefix tokens already stripped).
+            hp = scaled.shape[-2] // patch_size
+            wp = scaled.shape[-1] // patch_size
+            for tokens in self.feature_extractor(scaled).values():
+                b, _, d = tokens.shape
+                all_features.append(tokens.reshape(b, hp, wp, d).permute(0, 3, 1, 2).contiguous())
         return all_features
 
     # ------------------------------------------------------------------

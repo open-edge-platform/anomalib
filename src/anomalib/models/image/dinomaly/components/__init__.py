@@ -14,9 +14,6 @@ from .layers import Block, DinomalyMLP, LinearAttention, MemEffAttention
 from .loss import CosineHardMiningLoss
 from .optimizer import StableAdamW, WarmCosineScheduler
 
-# Vision transformer components
-from .vision_transformer import DinoVisionTransformer
-
 __all__ = [
     # Layers
     "Block",
@@ -27,6 +24,4 @@ __all__ = [
     "StableAdamW",
     "WarmCosineScheduler",
     "CosineHardMiningLoss",
-    # Vision transformer
-    "DinoVisionTransformer",
 ]
