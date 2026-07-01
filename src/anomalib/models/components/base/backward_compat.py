@@ -17,9 +17,17 @@ from typing import Any
 
 from torch import nn
 
+from anomalib.utils import deprecate
+
 logger = logging.getLogger(__name__)
 
 
+@deprecate(
+    since="2.5.0",
+    remove="3.0.0",
+    reason="Loading Vision Transformer based checkpoints trained before the "
+    "timm-encoder migration is no longer supported",
+)
 def restore_frozen_encoder_weights(module: nn.Module, checkpoint: dict[str, Any], encoder_key: str) -> None:
     """Migrate a legacy frozen-encoder subtree in a checkpoint to the current layout.
 
@@ -53,7 +61,7 @@ def restore_frozen_encoder_weights(module: nn.Module, checkpoint: dict[str, Any]
         # Encoder subtree already matches the current model - nothing to migrate.
         return
 
-    print(
+    logger.info(
         "Migrating legacy frozen encoder '%s' (%d checkpoint tensors -> %d current tensors) "
         "for backward compatibility.",
         encoder_key,
