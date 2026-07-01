@@ -66,6 +66,7 @@ from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from anomalib.data import ImageBatch
 from anomalib.data.utils import read_image
+from anomalib.deploy.metadata import load_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +97,11 @@ class TorchInferencer:
         device (str, optional): Device to use for inference.
             Options are ``"auto"``, ``"cpu"``, ``"cuda"``, ``"xpu"``.
             Defaults to ``"auto"``.
+        image_sensitivity (float | None, optional): Override image-level sensitivity.
+            Takes precedence over ``metadata.json`` value. Falls back to 0.5 if
+            neither this nor metadata provides a value. Defaults to ``None``.
+        pixel_sensitivity (float | None, optional): Override pixel-level sensitivity.
+            Same precedence as ``image_sensitivity``. Defaults to ``None``.
 
     Example:
         >>> from anomalib.deploy import TorchInferencer
@@ -113,6 +119,8 @@ class TorchInferencer:
         self,
         path: str | Path,
         device: str = "auto",
+        image_sensitivity: float | None = None,
+        pixel_sensitivity: float | None = None,
     ) -> None:
         logger.warning(
             "TorchInferencer is a legacy inferencer. Consider using Engine.predict() instead, "
@@ -120,8 +128,23 @@ class TorchInferencer:
         )
         self.device = self._get_device(device)
 
-        # Load the model weights and metadata
         self.model = self.load_model(path)
+
+        self.metadata = self._load_metadata(path)
+        self._default_image_sensitivity = (
+            image_sensitivity
+            if image_sensitivity is not None
+            else self.metadata.get("postprocess", {}).get("image_sensitivity", 0.5)
+            if self.metadata
+            else 0.5
+        )
+        self._default_pixel_sensitivity = (
+            pixel_sensitivity
+            if pixel_sensitivity is not None
+            else self.metadata.get("postprocess", {}).get("pixel_sensitivity", 0.5)
+            if self.metadata
+            else 0.5
+        )
 
     @staticmethod
     def _get_device(device: str) -> torch.device:
@@ -246,12 +269,22 @@ class TorchInferencer:
         model.eval()
         return model.to(self.device)
 
-    def predict(self, image: str | Path | np.ndarray | PILImage | torch.Tensor) -> ImageBatch:
+    def predict(
+        self,
+        image: str | Path | np.ndarray | PILImage | torch.Tensor,
+        *,
+        image_sensitivity: float | None = None,
+        pixel_sensitivity: float | None = None,
+    ) -> ImageBatch:
         """Predict anomalies for an input image.
 
         Args:
             image (str | Path | np.ndarray | PILImage | torch.Tensor): Input image to predict.
                 Can be a file path or PyTorch tensor.
+            image_sensitivity (float | None): Per-call image sensitivity override.
+                Defaults to None (uses constructor/metadata default).
+            pixel_sensitivity (float | None): Per-call pixel sensitivity override.
+                Defaults to None (uses constructor/metadata default).
 
         Returns:
             ImageBatch: Prediction results containing anomaly maps and scores.
@@ -268,7 +301,22 @@ class TorchInferencer:
             image = to_dtype(to_image(image), torch.float32, scale=True)
 
         image = self.pre_process(image)
-        predictions = self.model(image)
+
+        img_sens = image_sensitivity if image_sensitivity is not None else self._default_image_sensitivity
+        pix_sens = pixel_sensitivity if pixel_sensitivity is not None else self._default_pixel_sensitivity
+
+        try:
+            predictions = self.model(
+                image,
+                torch.tensor(img_sens, device=self.device),
+                torch.tensor(pix_sens, device=self.device),
+            )
+        except TypeError:
+            logger.warning(
+                "Image only API is deprecated and will be removed in Anomalib 2.7.0."
+                " Models exported from current version of Anomalib already support the new API.",
+            )
+            predictions = self.model(image)
 
         return ImageBatch(image=image, **predictions._asdict())
 
@@ -292,3 +340,19 @@ class TorchInferencer:
             image = image.unsqueeze(0)  # model expects [B, C, H, W]
 
         return image.to(self.device)
+
+    @staticmethod
+    def _load_metadata(path: str | Path) -> dict | None:
+        """Load metadata.json sidecar if it exists next to the model.
+
+        Args:
+            path (str | Path): Model file path.
+
+        Returns:
+            dict | None: Parsed metadata or None if not found.
+        """
+        path = Path(path) if not isinstance(path, Path) else path
+        metadata_path = path.parent / "metadata.json"
+        if metadata_path.exists():
+            return load_metadata(metadata_path)
+        return None

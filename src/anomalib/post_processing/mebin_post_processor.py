@@ -87,7 +87,12 @@ class MEBinPostProcessor(PostProcessor):
         self.erode = erode
         self.kernel_size = kernel_size
 
-    def forward(self, predictions: InferenceBatch) -> InferenceBatch:
+    def forward(
+        self,
+        predictions: InferenceBatch,
+        image_sensitivity: torch.Tensor | None = None,  # noqa: ARG002
+        pixel_sensitivity: torch.Tensor | None = None,  # noqa: ARG002
+    ) -> InferenceBatch:
         """Post-process model predictions using MEBin adaptive thresholding.
 
         When normalization statistics (``pixel_min`` / ``pixel_max``) are
@@ -102,6 +107,10 @@ class MEBinPostProcessor(PostProcessor):
         Args:
             predictions: Batch of model predictions containing at least one of
                 `pred_score` or `anomaly_map`.
+            image_sensitivity: Unused. Accepted for interface compatibility with
+                :class:`PostProcessor`.
+            pixel_sensitivity: Unused. Accepted for interface compatibility with
+                :class:`PostProcessor`.
 
         Returns:
             InferenceBatch: Post-processed predictions with:

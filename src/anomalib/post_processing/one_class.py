@@ -190,11 +190,20 @@ class OneClassPostProcessor(PostProcessor):
         del trainer, pl_module, args, kwargs
         self.post_process_batch(outputs)
 
-    def forward(self, predictions: InferenceBatch) -> InferenceBatch:
+    def forward(
+        self,
+        predictions: InferenceBatch,
+        image_sensitivity: torch.Tensor | None = None,  # noqa: ARG002
+        pixel_sensitivity: torch.Tensor | None = None,  # noqa: ARG002
+    ) -> InferenceBatch:
         """Post-process model predictions.
 
         Args:
             predictions (InferenceBatch): Batch containing model predictions.
+            image_sensitivity (torch.Tensor | None): Unused. Accepted for
+                interface compatibility with :class:`PostProcessor`.
+            pixel_sensitivity (torch.Tensor | None): Unused. Accepted for
+                interface compatibility with :class:`PostProcessor`.
 
         Returns:
             InferenceBatch: Post-processed batch with normalized scores and

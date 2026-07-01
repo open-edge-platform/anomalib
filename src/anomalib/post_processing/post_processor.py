@@ -194,11 +194,25 @@ class PostProcessor(nn.Module, Callback):
         del trainer, pl_module, args, kwargs
         self.post_process_batch(outputs)
 
-    def forward(self, predictions: InferenceBatch) -> InferenceBatch:
+    def forward(
+        self,
+        predictions: InferenceBatch,
+        image_sensitivity: torch.Tensor | None = None,
+        pixel_sensitivity: torch.Tensor | None = None,
+    ) -> InferenceBatch:
         """Post-process model predictions.
 
         Args:
             predictions (InferenceBatch): Batch containing model predictions.
+            image_sensitivity (torch.Tensor | None): Override for image-level
+                sensitivity. When provided, shifts the effective normalization
+                threshold so that the decision boundary changes at inference time.
+                Must be a scalar tensor in [0, 1]. Defaults to None (uses
+                configured ``self.image_sensitivity``).
+            pixel_sensitivity (torch.Tensor | None): Override for pixel-level
+                sensitivity. Same semantics as ``image_sensitivity`` but applied
+                to the anomaly map. Defaults to None (uses configured
+                ``self.pixel_sensitivity``).
 
         Returns:
             InferenceBatch: Post-processed batch with normalized scores and
@@ -216,16 +230,38 @@ class PostProcessor(nn.Module, Callback):
             else torch.amax(predictions.anomaly_map, dim=(-2, -1))
         )
 
+        image_sens = image_sensitivity if image_sensitivity is not None else torch.tensor(self.image_sensitivity)
+        pixel_sens = pixel_sensitivity if pixel_sensitivity is not None else torch.tensor(self.pixel_sensitivity)
+        image_sens = image_sens.to(device=pred_score.device, dtype=pred_score.dtype)
+        pixel_sens = pixel_sens.to(device=pred_score.device, dtype=pred_score.dtype)
+
         if self.enable_normalization:
-            pred_score = self._normalize(pred_score, self.image_min, self.image_max, self.image_threshold)
-            anomaly_map = self._normalize(predictions.anomaly_map, self.pixel_min, self.pixel_max, self.pixel_threshold)
+            image_eff_threshold = self._effective_threshold(
+                self.image_threshold,
+                self.image_min,
+                self.image_max,
+                image_sens,
+            )
+            pixel_eff_threshold = self._effective_threshold(
+                self.pixel_threshold,
+                self.pixel_min,
+                self.pixel_max,
+                pixel_sens,
+            )
+            pred_score = self._normalize(pred_score, self.image_min, self.image_max, image_eff_threshold)
+            anomaly_map = self._normalize(predictions.anomaly_map, self.pixel_min, self.pixel_max, pixel_eff_threshold)
         else:
             pred_score = predictions.pred_score
             anomaly_map = predictions.anomaly_map
 
         if self.enable_thresholding:
-            pred_label = self._apply_threshold(pred_score, self.normalized_image_threshold)
-            pred_mask = self._apply_threshold(anomaly_map, self.normalized_pixel_threshold)
+            if self.enable_normalization:
+                threshold = torch.tensor(0.5, device=self.image_threshold.device, dtype=self.image_threshold.dtype)
+                pred_label = self._apply_threshold(pred_score, threshold)
+                pred_mask = self._apply_threshold(anomaly_map, threshold)
+            else:
+                pred_label = self._apply_threshold(pred_score, self.image_threshold)
+                pred_mask = self._apply_threshold(anomaly_map, self.pixel_threshold)
         else:
             pred_label = None
             pred_mask = None
@@ -281,6 +317,29 @@ class PostProcessor(nn.Module, Callback):
         batch.pred_score = self._normalize(batch.pred_score, self.image_min, self.image_max, self.image_threshold)
 
     @staticmethod
+    def _effective_threshold(
+        threshold: torch.Tensor,
+        norm_min: torch.Tensor,
+        norm_max: torch.Tensor,
+        sensitivity: torch.Tensor,
+    ) -> torch.Tensor:
+        """Compute effective threshold shifted by sensitivity.
+
+        Re-centers the normalization threshold so that sensitivity controls the
+        decision boundary without changing the normalization range.
+
+        Args:
+            threshold (torch.Tensor): Raw learned threshold.
+            norm_min (torch.Tensor): Min value from calibration.
+            norm_max (torch.Tensor): Max value from calibration.
+            sensitivity (torch.Tensor): Sensitivity in [0, 1]. 0.5 = no shift.
+
+        Returns:
+            torch.Tensor: Shifted threshold value.
+        """
+        return threshold + (norm_max - norm_min) * (0.5 - sensitivity.clamp(0.0, 1.0))
+
+    @staticmethod
     def _apply_threshold(
         preds: torch.Tensor | None,
         threshold: torch.Tensor,
@@ -294,7 +353,7 @@ class PostProcessor(nn.Module, Callback):
         Returns:
             torch.Tensor | None: Thresholded predictions or None if input is None.
         """
-        if preds is None or threshold.isnan():
+        if preds is None:
             return preds
         return preds > threshold
 
