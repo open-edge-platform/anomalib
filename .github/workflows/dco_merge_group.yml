@@ -6,16 +6,17 @@ name: DCO
 on:
   merge_group:
 
-permissions: # set top-level default permissions as security best practice
-  contents: read # Check https://github.com/ossf/scorecard/blob/7ce8609469289d5f3b1bf5ee3122f42b4e3054fb/docs/checks.md#token-permissions
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   DCO:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     if: ${{ github.actor != 'dependabot[bot]' }}
     steps:
       - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
 

@@ -94,17 +94,18 @@ on:
         description: "Path to test results artifact"
         value: ${{ jobs.test.outputs.artifact-path }}
 
-permissions:
-  contents: read
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   test:
     runs-on: ${{ inputs.runner }}
     timeout-minutes: ${{ inputs.timeout }}
+    permissions:
+      contents: read # Required to checkout the repository
     steps:
       - name: Harden the runner (audit all outbound calls)
         if: "!contains(inputs.runner, 'self-hosted')"
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
 
@@ -114,7 +115,7 @@ jobs:
         run: |
           nvidia-smi || echo "::error::No GPU found"
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
       - name: Run tests
