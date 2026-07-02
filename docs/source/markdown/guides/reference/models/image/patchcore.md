@@ -33,7 +33,8 @@ Common examples:
 The correct layer names depend on the selected backbone architecture. PatchCore uses
 `timm` feature extraction, so valid layer names should be checked with
 `timm.create_model(<backbone>, features_only=True).feature_info.module_name()`.
-If a layer name is invalid, feature extraction will fail during training.
+Unknown layer names may be ignored with a warning. If no valid layers remain after
+filtering, PatchCore will later fail because no features are extracted.
 
 ```{eval-rst}
 .. automodule:: anomalib.models.image.patchcore.lightning_model
