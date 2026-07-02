@@ -38,9 +38,11 @@ import timm
 
 model = timm.create_model(
     "mobilenetv3_large_100",
+    pretrained=False,
     features_only=True,
 )
-print(model.feature_info.module_name())
+
+print([info["module"] for info in model.feature_info.info])
 ```
 
 Unknown layer names may be ignored with a warning. If no valid layers remain after
