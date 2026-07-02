@@ -46,6 +46,7 @@ from anomalib.post_processing import PostProcessor
 from anomalib.pre_processing import PreProcessor
 from anomalib.visualization import Visualizer
 
+from .post_processor import SuperADDPostProcessor
 from .torch_model import SuperADDModel
 
 logger = logging.getLogger(__name__)
@@ -77,6 +78,11 @@ class SuperADD(MemoryBankMixin, AnomalibModule):
             Defaults to ``16``.
         layers (list[int] | None): List of encoder layer indices to extract features from.
             If None, DINO_TARGET_LAYERS of the respective model size.
+        gaussian_blur_sigma (float): Standard deviation of the Gaussian filter
+            applied to the anomaly map before scoring. Set to ``0`` to disable.
+            Defaults to ``4.0``.
+        score_quantile (float): Fraction of the highest anomaly map pixels
+            averaged into the image-level score. Defaults to ``1e-3``.
         precision (str | PrecisionType, optional): Precision type for model
             computations. Can be either a string (``"float32"``, ``"float16"``)
             or a :class:`PrecisionType` enum value.
@@ -120,6 +126,8 @@ class SuperADD(MemoryBankMixin, AnomalibModule):
         patch_size: int = 448,
         patch_overlap: int = 16,
         layers: list[int] | None = None,
+        gaussian_blur_sigma: float = 4.0,
+        score_quantile: float = 1e-3,
         precision: str | PrecisionType = PrecisionType.FLOAT32,
         pre_processor: nn.Module | bool = True,
         post_processor: nn.Module | bool = True,
@@ -138,6 +146,8 @@ class SuperADD(MemoryBankMixin, AnomalibModule):
             backbone=backbone,
             patch_size=patch_size,
             patch_overlap=patch_overlap,
+            gaussian_blur_sigma=gaussian_blur_sigma,
+            score_quantile=score_quantile,
         )
 
         if isinstance(precision, str):
@@ -289,8 +299,15 @@ class SuperADD(MemoryBankMixin, AnomalibModule):
     def configure_post_processor() -> PostProcessor:
         """Configure the default post-processor.
 
+        SuperADD uses a percentile-based threshold calibrated on the anomaly
+        scores of normal validation images (95th percentile scaled by 1.421,
+        following the original implementation), instead of the F1-adaptive
+        threshold. The adaptive threshold requires anomalous validation samples
+        and otherwise degenerates to the maximum validation score, which grows
+        with the input resolution and collapses F1 for multi-patch
+        configurations.
+
         Returns:
-            PostProcessor: Post-processor for one-class models that
-                converts raw scores to anomaly predictions
+            PostProcessor: Percentile-based post-processor for SuperADD.
         """
-        return PostProcessor()
+        return SuperADDPostProcessor()

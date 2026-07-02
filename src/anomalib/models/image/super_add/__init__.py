@@ -28,5 +28,6 @@ Example:
 """
 
 from .lightning_model import SuperADD
+from .post_processor import SuperADDPostProcessor
 
-__all__ = ["SuperADD"]
+__all__ = ["SuperADD", "SuperADDPostProcessor"]

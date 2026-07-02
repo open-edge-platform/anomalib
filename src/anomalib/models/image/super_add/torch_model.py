@@ -30,7 +30,7 @@ from torch import nn
 from tqdm import tqdm
 
 from anomalib.data import InferenceBatch
-from anomalib.models.components import DynamicBufferMixin
+from anomalib.models.components import DynamicBufferMixin, GaussianBlur2d
 
 logger = logging.getLogger(__name__)
 
@@ -263,6 +263,14 @@ class SuperADDModel(DynamicBufferMixin, nn.Module):
             after coreset subsampling. Defaults to ``100000``.
         subsampling_iterations (int): Number of random-subset iterations used by
             the fast subsampling routine. Defaults to ``100``.
+        gaussian_blur_sigma (float): Standard deviation of the Gaussian filter
+            applied to the anomaly map before scoring. Suppresses single-token
+            outliers that would otherwise dominate the image score and the
+            adaptive threshold. Set to ``0`` to disable. Defaults to ``4.0``.
+        score_quantile (float): Fraction of the highest anomaly map pixels
+            averaged into the image-level score. Using a small quantile instead
+            of the single maximum keeps the score independent of the input
+            resolution (number of tokens). Defaults to ``1e-3``.
 
     Attributes:
         backbone (DinoV3Backbone): DINOv3 feature extractor.
@@ -287,6 +295,8 @@ class SuperADDModel(DynamicBufferMixin, nn.Module):
         patch_overlap: int = 16,
         max_database_size: int = 100000,
         subsampling_iterations: int = 100,
+        gaussian_blur_sigma: float = 4.0,
+        score_quantile: float = 1e-3,
     ) -> None:
         super().__init__()
         self.backbone_name = backbone
@@ -302,6 +312,15 @@ class SuperADDModel(DynamicBufferMixin, nn.Module):
         self.patch_exec = PatchedExecution(self.backbone, patch_size, patch_overlap, self.backbone.model_patch_size)
         self.max_database_size = max_database_size
         self.subsampling_iterations = subsampling_iterations
+        self.score_quantile = score_quantile
+        self.blur: GaussianBlur2d | None = None
+        if gaussian_blur_sigma > 0:
+            kernel_size = 2 * int(4.0 * gaussian_blur_sigma + 0.5) + 1
+            self.blur = GaussianBlur2d(
+                kernel_size=(kernel_size, kernel_size),
+                sigma=(gaussian_blur_sigma, gaussian_blur_sigma),
+                channels=1,
+            )
 
         self.threshold = 0
 
@@ -363,9 +382,9 @@ class SuperADDModel(DynamicBufferMixin, nn.Module):
         the per-layer embedding store (on CPU) for later coreset construction. At
         inference time, the per-layer features are compared against the memory
         bank using chunked nearest-neighbor search; the resulting per-layer
-        distance maps are normalized, interpolated to the input resolution, and
-        averaged into a single anomaly map, with the pixel maximum used as the
-        image-level score.
+        distance maps are normalized, interpolated to the input resolution,
+        averaged into a single anomaly map and smoothed with a Gaussian filter.
+        The mean of the top-quantile pixels is used as the image-level score.
 
         Args:
             input_tensor (torch.Tensor): Input image batch of shape
@@ -409,8 +428,16 @@ class SuperADDModel(DynamicBufferMixin, nn.Module):
             mode="bilinear",
             align_corners=False,
         )
-        anomaly_map = torch.mean(layer_distances, dim=1)
-        pred_score = anomaly_map.amax(dim=(1, 2))
+        anomaly_map = torch.mean(layer_distances, dim=1, keepdim=True)
+        if self.blur is not None:
+            anomaly_map = self.blur(anomaly_map)
+        anomaly_map = anomaly_map.squeeze(1)
+
+        # Image score: mean of the top-quantile pixels. Robust to single-token
+        # outliers and independent of the number of tokens, unlike a plain max.
+        pixel_scores = anomaly_map.flatten(start_dim=1)
+        top_k = max(1, int(pixel_scores.shape[1] * self.score_quantile))
+        pred_score = pixel_scores.topk(top_k, dim=1).values.mean(dim=1)
 
         return InferenceBatch(pred_score=pred_score, anomaly_map=anomaly_map)
 
@@ -440,6 +467,7 @@ class SuperADDModel(DynamicBufferMixin, nn.Module):
         """
         device = self._compute_device()
         x = x.to(device)
+        knn_neighbors = min(knn_neighbors, len(x))  # subsets can be smaller than the neighbor count
         dists, _ = self.nearest_neighbors(x, x, knn_neighbors=knn_neighbors, normalize=normalize)
         # Start with a small distance and increase until we have fewer than the target number of samples
         target_distance_between_samples = dists.float().mean() / 10

@@ -20,6 +20,8 @@ The original papers authors use a very high input resolution to the model. To re
 
 Also the papers authors use brightness augmentation of the interval [0.8, 1.2]. This can be achieved by using [Data augmentations](https://anomalib.readthedocs.io/en/latest/markdown/guides/how_to/data/transforms.html) in anomalib and adding `ColorJitter` with the respective brightness interval.
 
+Note on thresholding: MVTec AD 2 provides only anomaly-free validation images, so anomalib's default F1-adaptive threshold degenerates to the maximum validation score. This maximum grows with the input resolution, which collapses F1 scores and flattens the visualized anomaly maps for multi-patch configurations even when the underlying maps are good (AUROC is unaffected). SuperADD therefore ships with `SuperADDPostProcessor`, which follows the original implementation and calibrates the threshold as the 95th percentile of the validation anomaly scores scaled by 1.421 — a resolution-independent statistic computed from normal images only. The percentile and factor are configurable via `SuperADD(post_processor=SuperADDPostProcessor(...))`.
+
 Please be aware that the original paper uses additional post-processing steps to achieve the reported results. These steps include:
 
 - Morphological closing using multiple thresholds and filling closed segmented areas
