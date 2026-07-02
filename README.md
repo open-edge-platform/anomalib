@@ -95,9 +95,6 @@ uv pip install "anomalib[cu126]"
 # CUDA 13.0 support (Linux/Windows with NVIDIA GPU)
 uv pip install "anomalib[cu130]"
 
-# CUDA 11.8 support (Linux/Windows with NVIDIA GPU)
-uv pip install "anomalib[cu118]"
-
 # ROCm support (Linux with AMD GPU)
 uv pip install "anomalib[rocm]"
 
