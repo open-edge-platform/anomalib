@@ -45,6 +45,7 @@ Available Models:
     - :class:`Patchflow`: Patch Flow
     - :class:`ReverseDistillation`: Reverse Knowledge Distillation
     - :class:`Stfpm`: Student-Teacher Feature Pyramid Matching
+    - :class:`SuperADD`: Supervised Anomaly Detection with Additive Feature Fusion
     - :class:`SuperSimpleNet`: SuperSimpleNet
     - :class:`Uflow`: Unsupervised Flow
     - :class:`UniNet`: Student-Teacher Contrastive Learning Model
@@ -76,6 +77,7 @@ from .patchcore import Patchcore
 from .patchflow import Patchflow
 from .reverse_distillation import ReverseDistillation
 from .stfpm import Stfpm
+from .super_add import SuperADD
 from .supersimplenet import Supersimplenet
 from .uflow import Uflow
 from .uninet import UniNet
@@ -108,6 +110,7 @@ __all__ = [
     "ReverseDistillation",
     "Stfpm",
     "Supersimplenet",
+    "SuperADD",
     "Uflow",
     "UniNet",
     "VlmAd",
