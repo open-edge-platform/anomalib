@@ -23,15 +23,17 @@ anomalib train \
 
 Common examples:
 
-| Backbone             | Example layers           |
-| -------------------- | ------------------------ |
-| `resnet18`           | `layer2 layer3`          |
-| `resnet50`           | `layer2 layer3`          |
-| `wide_resnet50_2`    | `layer2 layer3`          |
-| `efficientnet_b0`    | `features.4 features.5`  |
-| `mobilenet_v3_large` | `features.6 features.12` |
+| Backbone                | Example layers          |
+| ----------------------- | ----------------------- |
+| `resnet18`              | `layer2 layer3`         |
+| `resnet50`              | `layer2 layer3`         |
+| `wide_resnet50_2`       | `layer2 layer3`         |
+| `mobilenetv3_large_100` | `blocks.4.1 blocks.6.0` |
 
-The correct layer names depend on the model architecture. If a layer name is invalid, feature extraction will fail during training.
+The correct layer names depend on the selected backbone architecture. PatchCore uses
+`timm` feature extraction, so valid layer names should be checked with
+`timm.create_model(<backbone>, features_only=True).feature_info.module_name()`.
+If a layer name is invalid, feature extraction will fail during training.
 
 ```{eval-rst}
 .. automodule:: anomalib.models.image.patchcore.lightning_model
