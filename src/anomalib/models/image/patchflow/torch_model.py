@@ -133,7 +133,7 @@ class PatchflowModel(nn.Module):
         else:
             self.feature_extractor = TimmFeatureExtractor(
                 backbone=backbone,
-                layers=["blocks.2", "blocks.4", "blocks.6"],
+                layers=[2, 3, 4],
                 pre_trained=pre_trained,
                 requires_grad=False,
                 output_fmt="NCHW",

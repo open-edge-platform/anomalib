@@ -82,7 +82,8 @@ class TimmFeatureExtractor(nn.Module):
 
     Args:
         backbone (str | nn.Module): Name of the timm model architecture or any torch model to use as backbone.
-        layers (Sequence[str]): Names of layers from which to extract features. In
+        layers (Sequence[str | int]): Names of layers from which to extract features,
+            or integer ``out_indices`` for ``features_only`` timm backbones. In
             ``"NLC"`` mode these are transformer block names such as ``"blocks.2"``.
         pre_trained (bool, optional): Whether to use pre-trained weights.
             Defaults to ``True``.
@@ -110,7 +111,7 @@ class TimmFeatureExtractor(nn.Module):
 
     Attributes:
         backbone (str | nn.Module): Name of the backbone model or actual torch backbone model.
-        layers (list[str]): Layer names for feature extraction.
+        layers (list[str | int]): Layer names (or out-indices) for feature extraction.
         idx (list[int]): Indices mapping layer names to model outputs.
         requires_grad (bool): Whether gradients are computed.
         feature_extractor (nn.Module): The underlying timm model.
@@ -160,7 +161,7 @@ class TimmFeatureExtractor(nn.Module):
     def __init__(
         self,
         backbone: str | nn.Module,
-        layers: Sequence[str],
+        layers: Sequence[str | int],
         pre_trained: bool = True,
         requires_grad: bool = False,
         output_fmt: str = "NCHW",
@@ -175,7 +176,7 @@ class TimmFeatureExtractor(nn.Module):
             raise ValueError(msg)
 
         self.backbone = backbone
-        self.layers = list(layers)
+        self.layers: list[str | int] = list(layers)
         self.requires_grad = requires_grad
         self.output_fmt = output_fmt
         self.return_class_token = return_class_token
@@ -187,11 +188,13 @@ class TimmFeatureExtractor(nn.Module):
         self._uses_intermediates = isinstance(backbone, str) and (output_fmt == "NLC" or "vit" in backbone.lower())
 
         if isinstance(backbone, nn.Module):
+            # ``nn.Module`` backbones require string node names.
+            layer_names = cast("list[str]", self.layers)
             self.feature_extractor = create_feature_extractor(
                 backbone,
-                return_nodes={layer: layer for layer in self.layers},
+                return_nodes={layer: layer for layer in layer_names},
             )
-            layer_metadata = dryrun_find_featuremap_dims(self.feature_extractor, (256, 256), layers=self.layers)
+            layer_metadata = dryrun_find_featuremap_dims(self.feature_extractor, (256, 256), layers=layer_names)
             self.out_dims = [cast("int", feature_info["num_features"]) for feature_info in layer_metadata.values()]
 
         elif self._uses_intermediates:
@@ -211,7 +214,10 @@ class TimmFeatureExtractor(nn.Module):
             self.out_dims = [embed_dim] * len(self.layers)
 
         elif isinstance(backbone, str):
-            self.idx = self._map_layer_to_idx()
+            if all(isinstance(layer, int) for layer in self.layers):
+                self.idx = [layer for layer in self.layers if isinstance(layer, int)]
+            else:
+                self.idx = self._map_layer_to_idx()
             self.feature_extractor = timm.create_model(
                 backbone,
                 pretrained=pre_trained,
@@ -230,15 +236,18 @@ class TimmFeatureExtractor(nn.Module):
         self._features = {layer: torch.empty(0) for layer in self.layers}
 
     @staticmethod
-    def _block_name_to_idx(layer: str) -> int:
+    def _block_name_to_idx(layer: str | int) -> int:
         """Parse a transformer block layer name such as ``"blocks.2"`` into its index.
 
         Args:
-            layer (str): Block layer name of the form ``"blocks.<int>"``.
+            layer (str | int): Block layer name of the form ``"blocks.<int>"``, or the
+                integer block index itself.
 
         Returns:
             int: The integer block index.
         """
+        if isinstance(layer, int):
+            return layer
         try:
             return int(layer.rsplit(".", 1)[-1])
         except ValueError as exc:
@@ -276,7 +285,7 @@ class TimmFeatureExtractor(nn.Module):
 
         return idx
 
-    def forward(self, inputs: torch.Tensor) -> dict[str, torch.Tensor]:
+    def forward(self, inputs: torch.Tensor) -> dict[str | int, torch.Tensor]:
         """Extract features from the input tensor.
 
         Args:
@@ -284,8 +293,8 @@ class TimmFeatureExtractor(nn.Module):
                 ``(batch_size, channels, height, width)``.
 
         Returns:
-            dict[str, torch.Tensor]: Dictionary mapping layer names to their
-            feature tensors.
+            dict[str | int, torch.Tensor]: Dictionary mapping layer names (or
+            out-indices) to their feature tensors.
 
         Example:
             >>> import torch
@@ -314,7 +323,7 @@ class TimmFeatureExtractor(nn.Module):
             features = dict(zip(self.layers, features, strict=True))
         return features
 
-    def _forward_nlc(self, inputs: torch.Tensor) -> dict[str, torch.Tensor]:
+    def _forward_nlc(self, inputs: torch.Tensor) -> dict[str | int, torch.Tensor]:
         """Extract transformer features via timm's ``forward_intermediates``.
 
         Args:
