@@ -27,6 +27,6 @@ Please be aware that the original paper uses additional post-processing steps to
 
 ### Sample Results
 
-![Sample Result 1](/docs/source/images/super_add/results/0.png "Sample Result 1")
+![Sample Result 1](/docs/source/images/super_add/result_images/0.png "Sample Result 1")
 
-![Sample Result 2](/docs/source/images/super_add/results/1.png "Sample Result 2")
+![Sample Result 2](/docs/source/images/super_add/result_images/1.png "Sample Result 2")
