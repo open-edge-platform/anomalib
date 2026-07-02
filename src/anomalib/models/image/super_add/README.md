@@ -10,7 +10,7 @@ SuperADD extracts multi-layer Vision Transformer token features from a pretraine
 
 ## Architecture
 
-![SuperADD Architecture](/docs/source/images/super_add/architecture.jpg "SuperADD Architecture")
+![SuperADD Architecture](/docs/source/images/super_add/architecture.png "SuperADD Architecture")
 
 ## Usage
 
