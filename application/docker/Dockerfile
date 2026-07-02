@@ -29,7 +29,7 @@ RUN npm run build
 #------------------------------------------
 # Anomalib Studio Base with UI built
 #------------------------------------------
-FROM python:3.13-slim@sha256:b04b5d7233d2ad9c379e22ea8927cd1378cd15c60d4ef876c065b25ea8fb3bf3 AS anomalib-studio-base
+FROM python:3.13-slim@sha256:c33f0bc4364a6881bed1ec0cc2665e6c53c87a43e774aaeab88e6f17af105e4f AS anomalib-studio-base
 COPY --from=docker.io/astral/uv:0.9.7@sha256:ba4857bf2a068e9bc0e64eed8563b065908a4cd6bfb66b531a9c424c8e25e142 /uv /uvx /bin/
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 ENV UV_PYTHON_DOWNLOADS=0
@@ -175,7 +175,7 @@ RUN echo "Removing non-redistributable CUDA components per NVIDIA EULA..." && \
     -name "libnvperf_host.so*" -o \
     -name "libnvperf_target.so*" -o \
     -name "libpcsamplingutil.so*" \
-    \) -path "*cupti*" -delete 2>/dev/null || true && \
+    \) -delete 2>/dev/null || true && \
     # Remove cuSolver MG libraries (enterprise feature)
     find $SEARCH_PATHS -name "libcusolverMg.so*" -delete 2>/dev/null || true && \
     # Remove Triton NVIDIA backends (development components)
@@ -238,6 +238,9 @@ WORKDIR /app/application/backend
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --extra xpu
+
+# CUDA EULA Compliance Cleanup
+RUN find /app/application/backend/.venv -type d -path "*/triton/backends/nvidia" -exec rm -rf {} + 2>/dev/null || true
 
 EXPOSE 8000
 

@@ -19,7 +19,8 @@ runs:
   steps:
     - name: Add OpenCode CLI to PATH
       shell: bash
-      run: |
+      # Path is hardcoded to the standard OpenCode install location
+      run: | # zizmor: ignore[github-env]
         echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
 
     - name: Verify required binaries
