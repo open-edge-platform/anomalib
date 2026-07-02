@@ -31,8 +31,18 @@ Common examples:
 | `mobilenetv3_large_100` | `blocks.4.1 blocks.6.0` |
 
 The correct layer names depend on the selected backbone architecture. PatchCore uses
-`timm` feature extraction, so valid layer names should be checked with
-`timm.create_model(<backbone>, features_only=True).feature_info.module_name()`.
+`timm` feature extraction, so valid layer names can be inspected with:
+
+```python
+import timm
+
+model = timm.create_model(
+    "mobilenetv3_large_100",
+    features_only=True,
+)
+print(model.feature_info.module_name())
+```
+
 Unknown layer names may be ignored with a warning. If no valid layers remain after
 filtering, PatchCore will later fail because no features are extracted.
 
