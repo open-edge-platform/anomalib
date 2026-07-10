@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- 🚀 **model**: Add Add SuperADD by @alexriedel1 in https://github.com/open-edge-platform/anomalib/pull/3628
+- 🚀 **model**: Add SuperADD by @alexriedel1 in https://github.com/open-edge-platform/anomalib/pull/3628
 
 ### Removed
 
