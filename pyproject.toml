@@ -112,11 +112,11 @@ test = [
 #   (torch.load weights_only=True RCE, patched in 2.6.0)
 cpu = [
     "torch>=2.6.0",
-    "torchvision>=0.22.0",
+    "torchvision>=0.21.0",
 ]
 cu126 = [
     "torch>=2.6.0",
-    "torchvision>=0.22.0",
+    "torchvision>=0.21.0",
 ]
 cu130 = [
     "torch>=2.9.0",
