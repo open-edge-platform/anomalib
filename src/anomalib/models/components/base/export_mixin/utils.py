@@ -26,9 +26,17 @@ def get_onnx_dynamo_flag(kwargs: dict[str, Any]) -> bool:
 
     Returns:
         bool: Resolved dynamo flag.
+
+    Raises:
+        TypeError: If ``dynamo`` is not a ``bool`` or ``None``.
     """
     dynamo = kwargs.pop("dynamo", False)
-    return False if dynamo is None else dynamo
+    if dynamo is None:
+        return False
+    if not isinstance(dynamo, bool):
+        msg = f"`dynamo` must be a bool or None, got {type(dynamo).__name__}: {dynamo!r}"
+        raise TypeError(msg)
+    return dynamo
 
 
 def warn_legacy_onnx_exporter_deprecation() -> None:
