@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import warnings
+from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -69,6 +70,9 @@ def get_dynamic_shapes_from_axes(
 def validate_input_names(input_names: object) -> list[str]:
     """Validate ONNX input names.
 
+    Accepts any ``Sequence[str]`` (e.g. list or tuple) and returns a ``list[str]``
+    for downstream use.
+
     Args:
         input_names (object): Candidate input names value.
 
@@ -76,11 +80,15 @@ def validate_input_names(input_names: object) -> list[str]:
         list[str]: Validated input names.
 
     Raises:
-        TypeError: If input names are not a list of strings.
+        TypeError: If input names are not a sequence of strings.
     """
-    if isinstance(input_names, list) and all(isinstance(name, str) for name in input_names):
-        return input_names
-    msg = "input_names must be a list of strings"
+    if (
+        isinstance(input_names, Sequence)
+        and not isinstance(input_names, (str, bytes))
+        and all(isinstance(name, str) for name in input_names)
+    ):
+        return [str(name) for name in input_names]
+    msg = f"input_names must be a sequence of strings, got {type(input_names).__name__}: {input_names!r}"
     raise TypeError(msg)
 
 

@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - 🔧 **deps**: Bump minimum `torch` and `torchvision` versions for the `xpu` install extra by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/3652
+- 🔧 **deps**: Remove upper bound on `torch` for `cpu`, `cu126`, and `rocm` install extras to unblock Python 3.14 wheel resolution
 
 ### Deprecated
 
