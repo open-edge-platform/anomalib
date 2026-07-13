@@ -12,28 +12,29 @@
 # - Automated feedback
 #
 # Process Stages:
-# All stages run in parallel for faster feedback:
+# Jobs are grouped by scope and always-run vs path-gated:
 #
+# [Always run on every non-draft PR]
 # 1. PR Title Validation:
 #    - Conventional commit format verification
 #    - Ensures proper changelog generation
-#    - Can be fixed later while other checks run
 #
 # 2. Quality Checks:
-#    - Code style verification
-#    - Type checking
-#    - Pre-commit hook validation
+#    - Covers library (src/) and application/ via prek workspace mode
+#    - Code style, type checking, pre-commit hooks
 #
-# 3. Testing:
-#    - Unit test execution
-#    - Integration testing
-#    - Coverage reporting
-#
-# 4. Security:
+# 3. Security:
 #    - Changed files scanning
 #    - Vulnerability detection
 #    - Security report generation
 #
+# [Library path-gated: src/, tests/, examples/, tools/, pyproject.toml, ...]
+# 4. Testing:
+#    - Unit test execution
+#    - Integration testing
+#    - Coverage reporting
+#
+# [Application path-gated: application/**, .github/**]
 # 5. Docker Image Build:
 #    - Determines if docker images need to be built based on event type and changed paths
 #    - Builds and uploads docker images as artifacts
@@ -63,33 +64,90 @@ on:
   merge_group:
     branches: [main]
 
-permissions:
-  contents: read
+permissions: {} # No permissions by default on workflow level
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # PR title validation - runs first as it's quick and fundamental
-  # Only runs on actual pull requests, not merge groups
+  # PR title validation - only runs on actual pull requests, not merge groups
   pr-title-check:
     if: github.event_name == 'pull_request'
     uses: ./.github/workflows/_reusable-pr-title-check.yaml
+    permissions:
+      contents: read # Required by the called workflow to checkout the repository
     with:
       python-version: "3.10"
 
-  # Code quality job using reusable workflow
+  # Code quality - covers both library (src/) and application/ via prek workspace mode
   quality:
     if: github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-code-quality.yaml
+    permissions:
+      contents: read # Required by the called workflow to checkout the repository
     with:
       python-version: "3.10"
 
-  # Test suite job using reusable workflow
-  unit-tests:
+  # Security scanning
+  security:
     if: github.event.pull_request.draft != true
+    uses: ./.github/workflows/_reusable-security-scan.yaml
+    permissions:
+      security-events: write # needed to upload results
+      contents: read
+      packages: read # needed to pull images for scanning
+    with:
+      tools: "semgrep,bandit,zizmor" # Security tools to run
+      scan-scope: "changed" # Only scan changed files
+      severity-level: "LOW" # Minimum severity to report
+      confidence-level: "HIGH" # High confidence to report
+      fail-on-findings: true # explicitly set
+
+  # Determines if test suite should run based on changed paths
+  check-library-paths:
+    name: Check if tests should run
+    runs-on: ubuntu-latest
+    outputs:
+      run_library: ${{ steps.check-library-paths.outputs.run }}
+    permissions:
+      contents: read # Required to checkout the repository
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Check paths
+        id: check-library-paths
+        uses: open-edge-platform/geti-ci/actions/check-paths@7e686c1248b3939f8ee8e04e2612da727e379d91
+        with:
+          files_yaml: |
+            test:
+              - src/**
+              - tests/**
+              - examples/**
+              - tools/**
+              - pyproject.toml
+              - uv.lock
+              - .pre-commit-config.yaml
+              - tox.ini
+              - .github/actions/pytest/**
+              - .github/workflows/pr.yaml
+              - .github/workflows/_reusable-code-quality.yaml
+              - .github/workflows/_reusable-test-suite.yaml
+
+  unit-tests:
+    needs: check-library-paths
+    if: needs.check-library-paths.outputs.run_library == 'true' && github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-test-suite.yaml
+    permissions:
+      contents: read # Required by the called workflow to checkout the repository
     with:
       test-type: "unit"
       runner: "ubuntu-latest"
@@ -99,8 +157,11 @@ jobs:
       codecov-token: ${{ secrets.CODECOV_TOKEN }}
 
   integration-tests:
-    if: github.event.pull_request.draft != true
+    needs: check-library-paths
+    if: needs.check-library-paths.outputs.run_library == 'true' && github.event.pull_request.draft != true
     uses: ./.github/workflows/_reusable-test-suite.yaml
+    permissions:
+      contents: read # Required by the called workflow to checkout the repository
     with:
       test-type: "integration"
       runner: "self-hosted"
@@ -111,19 +172,32 @@ jobs:
 
   # NOTE: When we have e2e or other tests, we can add them here.
 
-  # Security scanning job using reusable workflow
-  security:
-    if: github.event.pull_request.draft != true
-    uses: ./.github/workflows/_reusable-security-scan.yaml
-    permissions:
-      security-events: write # needed to upload results
-      contents: read
-    with:
-      tools: "semgrep,bandit,zizmor" # Security tools to run
-      scan-scope: "changed" # Only scan changed files
-      severity-level: "LOW" # Minimum severity to report
-      confidence-level: "HIGH" # High confidence to report
-      fail-on-findings: true # explicitly set
+  library-checks-status:
+    name: Library checks status
+    needs:
+      - check-library-paths
+      - quality
+      - unit-tests
+      - integration-tests
+    runs-on: ubuntu-latest
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    if: always() && !cancelled()
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
+      - name: Check jobs results
+        run: |
+          for check in ${CHECKS}; do
+            echo "::notice::check=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error::Library checks failed. They must succeed before this pull request can be merged."
+              exit 1
+            fi
+          done
 
   # Determines if docker images must be built based on event type and changed paths
   # If push or workflow_dispatch -> always run
@@ -133,15 +207,22 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       run_build: ${{ steps.check-paths.outputs.run }}
+    permissions:
+      contents: read # Required to checkout the repository
     steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
       - name: Check paths
         id: check-paths
-        uses: open-edge-platform/geti-ci/actions/check-paths@e80098b3d180db37914f11ff6021f9fa34d0bb9f
+        uses: open-edge-platform/geti-ci/actions/check-paths@7e686c1248b3939f8ee8e04e2612da727e379d91
         with:
           files_yaml: |
             test:
@@ -169,6 +250,11 @@ jobs:
       CHECKS: ${{ join(needs.*.result, ' ') }}
     if: always() && !cancelled()
     steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
       - name: Check jobs results
         run: |
           for check in ${CHECKS}; do

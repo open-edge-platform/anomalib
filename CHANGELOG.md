@@ -10,7 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 
+- ⚠️ **deps**: Remove `cu118` install extra by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/3652
+
 ### Changed
+
+- 🔧 **deps**: Bump minimum `torch` and `torchvision` versions for the `xpu` install extra by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/3652
 
 ### Deprecated
 
@@ -19,7 +23,52 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - 🐞 **export**: Add `dynamic_shapes` support for torch dynamo ONNX/OpenVINO export while keeping the legacy exporter path available during the 2.7.0 transition
+
+## [v2.5.0] - 2026-05-28
+
+### Added
+
+- 🚀 **model**: Add INP-Former model by @abc-125 and @alexriedel1 in https://github.com/open-edge-platform/anomalib/pull/3605
+- 🚀 **model**: Add GLASS anomaly detection model by @code-dev05 in https://github.com/open-edge-platform/anomalib/pull/2629
+- 🚀 **model**: Add AnomalyVFM zero-shot anomaly detection model by @MaticFuc in https://github.com/open-edge-platform/anomalib/pull/3559
+- 🚀 **model**: Add CFM (Cross-modal Feature Mapping) model by @Collics in https://github.com/open-edge-platform/anomalib/pull/3588
+
+## [v2.4.2] - 2026-05-15
+
+### Added
+
+- 🚀 **model**: Half precision training for Dinomaly by @alexriedel1 in https://github.com/open-edge-platform/anomalib/pull/3593
+
+## [v2.4.1] - 2026-05-01
+
+### Fixed
+
+- 🐞 **training**: Fix DDP adaptive F1 score computation by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3569
+- 🔧 **deps**: Update dependencies to address security vulnerabilities by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3574
+
+## [v2.4.0] - 2026-04-24
+
+### Added
+
+- 🚀 **model**: Add L2BT anomaly detection model by @Sharon-9 in https://github.com/open-edge-platform/anomalib/pull/3410
+- 🚀 **model**: Add GeneralAD anomaly detection model by @SMSD75 in https://github.com/open-edge-platform/anomalib/pull/3513
+- 🚀 **model**: Add PatchFlow anomaly detection model by @BOX-LEO in https://github.com/open-edge-platform/anomalib/pull/3433
+- 🚀 **model**: Add context-aware recentering option from Dinomaly2 to Dinomaly model by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3435
+
+### Removed
+
+- ⚠️ **api**: Remove deprecated `AnomalyModule` class alias (deprecated since v2.1.0, scheduled for removal in v2.3.0). Use `AnomalibModule` instead.
+
+### Changed
+
+- 🔧 **lib**: Migrate deprecated torchvision APIs, and fix resource leak by @Lidang-Jiang in https://github.com/open-edge-platform/anomalib/pull/3508
+
+### Fixed
+
 - 🐞 **export**: Fix duplicated size parameter in `ExportableCenterCrop` by checking `Sequence` instead of `tuple` by @CarlosNacher in https://github.com/open-edge-platform/anomalib/pull/2203
+- 🐞 **data**: Reject `str` size in `ExportableCenterCrop` by @shaun0927 in https://github.com/open-edge-platform/anomalib/pull/3547
+- 🐞 **sampling**: Handle `coreset_size == 0` in `KCenterGreedy` by early-returning empty list instead of returning a single-element coreset by @shaun0927 in https://github.com/open-edge-platform/anomalib/pull/3546
+- 🐞 **sampling**: Include initial random seed point in PatchCore coreset selection by @Lidang-Jiang in https://github.com/open-edge-platform/anomalib/pull/3509
 
 ## [v2.3.3] - 2026-04-10
 

@@ -84,6 +84,12 @@ class DinomalyModel(nn.Module):
             If None, uses [[0, 1, 2, 3], [4, 5, 6, 7]].
         remove_class_token (bool): Whether to remove class token from features
             before processing. Defaults to False.
+        use_context_recentering (bool): Whether to apply Context-Aware Recentering
+            from Dinomaly2. When enabled, the class token is subtracted from patch
+            features before reconstruction, conditioning the feature space on
+            class-specific context. This is particularly beneficial for multi-class
+            anomaly detection settings. Incompatible with ``remove_class_token=True``.
+            Defaults to False.
 
     Example:
         >>> model = DinomalyModel(
@@ -103,28 +109,33 @@ class DinomalyModel(nn.Module):
         fuse_layer_encoder: list[list[int]] | None = None,
         fuse_layer_decoder: list[list[int]] | None = None,
         remove_class_token: bool = False,
+        use_context_recentering: bool = False,
     ) -> None:
         super().__init__()
 
-        if target_layers is None:
-            # 8 middle layers of the encoder are used for feature extraction.
-            target_layers = [2, 3, 4, 5, 6, 7, 8, 9]
-
-        # Instead of comparing layer to layer between encoder and decoder, dinomaly uses
-        # layer groups to fuse features from multiple layers.
-        if fuse_layer_encoder is None:
-            fuse_layer_encoder = DEFAULT_FUSE_LAYERS
-        if fuse_layer_decoder is None:
-            fuse_layer_decoder = DEFAULT_FUSE_LAYERS
-
-        self.encoder_name = encoder_name
-        encoder = DinoV2Loader(vit_factory=dinomaly_vision_transformer).load(encoder_name)
+        if use_context_recentering and remove_class_token:
+            msg = (
+                "use_context_recentering=True requires access "
+                "to the class token and is incompatible with remove_class_token=True"
+            )
+            raise ValueError(msg)
 
         # Extract architecture configuration based on the model name
         arch_config = self._get_architecture_config(encoder_name, target_layers)
         embed_dim = arch_config["embed_dim"]
         num_heads = arch_config["num_heads"]
-        target_layers = arch_config["target_layers"]
+
+        if target_layers is None:
+            self.target_layers = arch_config["target_layers"]
+        else:
+            self.target_layers = target_layers
+
+        if fuse_layer_encoder is None:
+            self.fuse_layer_encoder = DEFAULT_FUSE_LAYERS
+        if fuse_layer_decoder is None:
+            self.fuse_layer_decoder = DEFAULT_FUSE_LAYERS
+
+        self.encoder = DinoV2Loader(vit_factory=dinomaly_vision_transformer).load(encoder_name)
 
         # Add validation
         if decoder_depth <= 1:
@@ -142,7 +153,7 @@ class DinomalyModel(nn.Module):
             apply_input_dropout=True,  # Apply dropout to input
         )
         bottleneck.append(bottle_neck_mlp)
-        bottleneck = nn.ModuleList(bottleneck)
+        self.bottleneck = nn.ModuleList(bottleneck)
 
         decoder = []
         for _ in range(decoder_depth):
@@ -166,15 +177,10 @@ class DinomalyModel(nn.Module):
                 attn=LinearAttention,
             )
             decoder.append(decoder_block)
-        decoder = nn.ModuleList(decoder)
+        self.decoder = nn.ModuleList(decoder)
 
-        self.encoder = encoder
-        self.bottleneck = bottleneck
-        self.decoder = decoder
-        self.target_layers = target_layers
-        self.fuse_layer_encoder = fuse_layer_encoder
-        self.fuse_layer_decoder = fuse_layer_decoder
         self.remove_class_token = remove_class_token
+        self.use_context_recentering = use_context_recentering
 
         if not hasattr(self.encoder, "num_register_tokens"):
             self.encoder.num_register_tokens = 0
@@ -221,6 +227,16 @@ class DinomalyModel(nn.Module):
 
         if self.remove_class_token:
             encoder_features = [e[:, 1 + self.encoder.num_register_tokens :, :] for e in encoder_features]
+        elif self.use_context_recentering:
+            # Context-Aware Recentering (Dinomaly2): subtract the class token from
+            # patch features so reconstruction is conditioned on class-specific context.
+            recentered = []
+            for e in encoder_features:
+                cls_token = e[:, 0:1, :]  # (B, 1, D)
+                patch_start = 1 + self.encoder.num_register_tokens
+                patches = e[:, patch_start:, :] - cls_token  # (B, N, D)
+                recentered.append(patches)
+            encoder_features = recentered
 
         x = self._fuse_feature(encoder_features)
         for _i, block in enumerate(self.bottleneck):
@@ -262,6 +278,8 @@ class DinomalyModel(nn.Module):
                   and anomaly_map (pixel-level anomaly maps).
 
         """
+        dtype = next(self.encoder.parameters()).dtype
+        batch = batch.type(dtype)
         en, de = self.get_encoder_decoder_outputs(batch)
         image_size = (batch.shape[2], batch.shape[3])
 
@@ -391,7 +409,7 @@ class DinomalyModel(nn.Module):
             List of processed feature tensors with spatial dimensions
         """
         # Remove class token and register tokens if not already removed
-        if not self.remove_class_token:
+        if not self.remove_class_token and not self.use_context_recentering:
             features = [f[:, 1 + self.encoder.num_register_tokens :, :] for f in features]
 
         # Reshape to spatial dimensions

@@ -51,16 +51,22 @@ on:
         type: boolean
         default: false
 
-permissions:
-  contents: read
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   version-check:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.validate-version.outputs.version }}
+    permissions:
+      contents: read # Required to checkout the repository for version validation
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
           sparse-checkout: src/anomalib/__init__.py
@@ -92,12 +98,16 @@ jobs:
   quality:
     needs: [version-check]
     uses: ./.github/workflows/_reusable-code-quality.yaml
+    permissions:
+      contents: read # Required by the called workflow to checkout the repository
     with:
       python-version: "3.10"
 
   unit-tests:
     needs: [version-check]
     uses: ./.github/workflows/_reusable-test-suite.yaml
+    permissions:
+      contents: read # Required by the called workflow to checkout the repository
     with:
       python-version: "3.10"
       test-type: "unit"
@@ -109,6 +119,8 @@ jobs:
   integration-tests:
     needs: [version-check]
     uses: ./.github/workflows/_reusable-test-suite.yaml
+    permissions:
+      contents: read # Required by the called workflow to checkout the repository
     with:
       python-version: "3.10"
       test-type: "integration"
@@ -121,7 +133,8 @@ jobs:
     needs: [version-check]
     uses: ./.github/workflows/_reusable-security-scan.yaml
     permissions:
-      security-events: write
+      security-events: write # Required to upload SARIF scan results to the Security tab
+      packages: read
       contents: read
     with:
       tools: "bandit,semgrep,trivy,zizmor"
@@ -135,6 +148,8 @@ jobs:
       !inputs.dry_run &&
       !failure() && !cancelled()
     uses: ./.github/workflows/_reusable-artifact-builder.yaml
+    permissions:
+      contents: read # Required by the called workflow to checkout the repository
     with:
       python-version: "3.10"
       verify-package: true
@@ -148,13 +163,18 @@ jobs:
       contents: write # Required by softprops/action-gh-release to publish release
       id-token: write # Required for OIDC authentication with PyPI
     steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: ${{ needs.build.outputs.artifact-name }}
           path: dist
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
-      - uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
+      - uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0 # zizmor: ignore[superfluous-actions]
         with:
           tag_name: lib/${{ needs.version-check.outputs.version }}
           name: Release Anomalib Library ${{ needs.version-check.outputs.version }}
@@ -168,6 +188,11 @@ jobs:
     if: always() && !inputs.dry_run
     runs-on: ubuntu-latest
     steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
       - name: Verify workflow status
         env:
           RELEASE_VERSION: lib/${{ needs.version-check.outputs.version }}

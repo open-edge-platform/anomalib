@@ -1,0 +1,12 @@
+model:
+  class_path: anomalib.models.L2BT
+  init_args:
+    lr: 1.0e-4
+    layers: [7, 11]
+    blur_w_l: 5
+    blur_w_u: 7
+    blur_pad_l: 2
+    blur_pad_u: 3
+    blur_repeats_l: 5
+    blur_repeats_u: 3
+    topk_ratio: 0.001

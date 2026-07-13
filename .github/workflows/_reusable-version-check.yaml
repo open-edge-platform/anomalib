@@ -73,17 +73,23 @@ on:
         description: "Whether version is a pre-release"
         value: ${{ jobs.validate.outputs.is_prerelease }}
 
-permissions:
-  contents: read
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   validate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # Required to checkout the repository for git tag reading
     outputs:
       version: ${{ steps.get-version.outputs.version }}
       is_prerelease: ${{ steps.check-prerelease.outputs.is_prerelease }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
       - name: Validate version
