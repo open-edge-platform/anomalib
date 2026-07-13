@@ -22,7 +22,7 @@
   // regenerate lock weekly https://docs.renovatebot.com/configuration-options/#lockfilemaintenance
   lockFileMaintenance: {
     enabled: true,
-    schedule: ["* * * * 0"], // weekly on Sunday
+    schedule: ["* * 1,15 * *"], // twice a month
     automerge: true,
     automergeType: "pr",
     reviewers: ["sys-geti"],
