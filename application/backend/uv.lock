@@ -462,7 +462,7 @@ requires-dist = [
     { name = "torch", marker = "extra == 'cpu'", specifier = ">=2.6.0", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "anomalib", extra = "cpu" } },
     { name = "torch", marker = "extra == 'cu126'", specifier = ">=2.6.0", index = "https://download.pytorch.org/whl/cu126", conflict = { package = "anomalib", extra = "cu126" } },
     { name = "torch", marker = "extra == 'cu130'", specifier = ">=2.9.0", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "anomalib", extra = "cu130" } },
-    { name = "torch", marker = "extra == 'rocm'", specifier = ">=2.6.0", index = "https://download.pytorch.org/whl/rocm6.3", conflict = { package = "anomalib", extra = "rocm" } },
+    { name = "torch", marker = "extra == 'rocm'", specifier = ">=2.7.0", index = "https://download.pytorch.org/whl/rocm6.3", conflict = { package = "anomalib", extra = "rocm" } },
     { name = "torch", marker = "extra == 'xpu'", specifier = ">=2.9.0", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "anomalib", extra = "xpu" } },
     { name = "torchcodec", marker = "extra == 'cu130'", specifier = ">=0.9.0" },
     { name = "torchmetrics", specifier = ">=1.8.2" },
@@ -3856,16 +3856,16 @@ wheels = [
 
 [[package]]
 name = "rich-toolkit"
-version = "0.20.1"
+version = "0.20.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
     { name = "rich" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/29/63/3e427c62f1992945c997d4ec31e2fcb37d26aadbe5aa44ae5b29f7f64d26/rich_toolkit-0.20.1.tar.gz", hash = "sha256:c7336ae281f435c785acecaedc4b71d4b663dc73d9c8079fea96372527e822a4", size = 203473, upload-time = "2026-06-05T08:56:57.679Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e4/3a/a258c2fbc6c6bdf428611388f5698ba5d57ffdf0755e1cab474d9cc47813/rich_toolkit-0.20.3.tar.gz", hash = "sha256:223dd2cfba325ed55e94933b9e53f3aca13e9fdf76622bd564c18109a2273c1b", size = 205355, upload-time = "2026-07-13T14:38:06.837Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/00/88/309f07d08155da2ba1d5ceb42d270fb42fbe34a807684543e3ffc10fe713/rich_toolkit-0.20.1-py3-none-any.whl", hash = "sha256:2a6d5f8e15759b9eba5a9ee63da10b275359ead20e5a0fc92bd5b4dbae8ce4bf", size = 35525, upload-time = "2026-06-05T08:56:58.586Z" },
+    { url = "https://files.pythonhosted.org/packages/e2/ce/639d0d0ce3d25c5edbd1afecd308bb35dc04883a45ac9f0855c8aee4e919/rich_toolkit-0.20.3-py3-none-any.whl", hash = "sha256:419aa87516d5f3849cca553c6dcf707c02a36d508fcf996946606725d34a3002", size = 36195, upload-time = "2026-07-13T14:38:05.687Z" },
 ]
 
 [[package]]
