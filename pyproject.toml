@@ -124,7 +124,7 @@ cu130 = [
     "torchvision>=0.24.0",
 ]
 rocm = [
-    "torch>=2.6.0",
+    "torch>=2.7.0",
     "torchvision>=0.22.0",
     "pytorch-triton-rocm ; sys_platform == 'linux'",
 ]
