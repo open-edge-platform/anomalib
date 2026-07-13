@@ -24,7 +24,7 @@
     enabled: true,
     schedule: ["* * 1,15 * *"], // twice a month
 
-    // FIXME: re-enable automerge once issue will be resolved
+    // FIXME: re-enable automerge once the issue is resolved
     // https://github.com/open-edge-platform/anomalib/issues/3666
     //
     // automerge: true,
