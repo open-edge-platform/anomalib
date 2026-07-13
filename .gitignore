@@ -4,6 +4,7 @@ datasets
 pre_trained
 results
 openvino_cache
+logs/
 
 # Test-related files and directories
 tmp*

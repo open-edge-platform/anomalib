@@ -56,6 +56,7 @@ from anomalib import LearningType, PrecisionType
 from anomalib.data import Batch
 from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule
+from anomalib.models.components.base import restore_frozen_encoder_weights
 from anomalib.models.image.dinomaly.components import StableAdamW, WarmCosineScheduler
 from anomalib.models.image.inp_former.torch_model import InpFormerModel
 from anomalib.post_processing import PostProcessor
@@ -104,7 +105,7 @@ class InpFormer(AnomalibModule):
     Args:
         encoder_name (str): Name of the Vision Transformer encoder to use.
             Supports DINOv2 variants (small, base, large) with different patch sizes.
-            Defaults to "dinov2reg_vit_base_14".
+            Defaults to "vit_base_patch14_reg4_dinov2".
         target_layers (list[int] | None): List of encoder layer indices to extract
             features from. If None, uses [2, 3, 4, 5, 6, 7, 8, 9] for base models
             and [4, 6, 8, 10, 12, 14, 16, 18] for large models.
@@ -137,7 +138,7 @@ class InpFormer(AnomalibModule):
         >>>
         >>> # Custom configuration
         >>> model = InpFormer(
-        ...     encoder_name="dinov2reg_vit_large_14",
+        ...     encoder_name="vit_large_patch14_reg4_dinov2",
         ...     inp_num=6
         ... )
         >>>
@@ -154,7 +155,7 @@ class InpFormer(AnomalibModule):
 
     def __init__(
         self,
-        encoder_name: str = "dinov2reg_vit_base_14",
+        encoder_name: str = "vit_base_patch14_reg4_dinov2",
         target_layers: list[int] | None = None,
         fuse_layer_encoder: list[list[int]] | None = None,
         fuse_layer_decoder: list[list[int]] | None = None,
@@ -217,6 +218,20 @@ class InpFormer(AnomalibModule):
             self.model.prototype_token,
         ])
         self._initialize_trainable_modules(self.trainable_modules)
+
+    def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
+        """Make checkpoints trained before the timm-encoder migration loadable.
+
+        Older InpFormer checkpoints built the frozen encoder from a custom Vision Transformer
+        (``anomalib.models.image.dinomaly.components.vision_transformer``); it is now a frozen
+        :class:`TimmFeatureExtractor`. The legacy encoder weights are dropped and replaced by the
+        current timm encoder weights so the strict state-dict load still succeeds. See
+        :func:`~anomalib.models.components.base.restore_frozen_encoder_weights`.
+
+        Args:
+            checkpoint (dict[str, Any]): The checkpoint dictionary being loaded, modified in place.
+        """
+        restore_frozen_encoder_weights(self, checkpoint, encoder_key="encoder")
 
     @classmethod
     def configure_pre_processor(

@@ -1,7 +1,7 @@
 model:
   class_path: anomalib.models.InpFormer
   init_args:
-    encoder_name: dinov2_vitb14_reg
+    encoder_name: vit_base_patch14_reg4_dinov2
     inp_num: 8
 
 trainer:
