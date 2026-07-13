@@ -21,8 +21,15 @@ Example:
 """
 
 from .anomalib_module import AnomalibModule
+from .backward_compat import restore_frozen_encoder_weights
 from .buffer_list import BufferListMixin
 from .dynamic_buffer import DynamicBufferMixin
 from .memory_bank_module import MemoryBankMixin
 
-__all__ = ["AnomalibModule", "BufferListMixin", "DynamicBufferMixin", "MemoryBankMixin"]
+__all__ = [
+    "AnomalibModule",
+    "BufferListMixin",
+    "DynamicBufferMixin",
+    "MemoryBankMixin",
+    "restore_frozen_encoder_weights",
+]

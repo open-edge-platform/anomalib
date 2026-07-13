@@ -53,6 +53,40 @@ class TestFeatureExtractor:
         assert features["layer3"].shape == torch.Size((32, 256, 16, 16))
         assert model.out_dims == [64, 128, 256]
 
+    @staticmethod
+    @pytest.mark.parametrize("return_class_token", [False, True])
+    def test_timm_feature_extraction_nlc_dinov2(return_class_token: bool) -> None:
+        """Test the token (NLC) mode used for DINOv2 ViT backbones."""
+        layers = ["blocks.2", "blocks.9"]
+        model = TimmFeatureExtractor(
+            backbone="vit_base_patch14_reg4_dinov2",
+            layers=layers,
+            pre_trained=False,
+            output_fmt="NLC",
+            return_class_token=return_class_token,
+            norm=False,
+            dynamic_img_size=True,
+        )
+        # 392 / 14 = 28 patches per side -> 784 patch tokens; reg4 model has 5 prefix tokens.
+        features = model(torch.rand((2, 3, 392, 392)))
+        num_patches = 28 * 28
+        expected_tokens = num_patches + (model.num_prefix_tokens if return_class_token else 0)
+
+        assert set(features) == set(layers)
+        for layer in layers:
+            assert features[layer].shape == torch.Size((2, expected_tokens, 768))
+        assert model.idx == [2, 9]
+        assert model.out_dims == [768, 768]
+        assert model.patch_size == 14
+        assert model.num_register_tokens == 4
+        assert model.num_prefix_tokens == 5
+
+    @staticmethod
+    def test_timm_feature_extraction_invalid_output_fmt() -> None:
+        """Test that an invalid output_fmt raises a ValueError."""
+        with pytest.raises(ValueError, match="output_fmt must be one of"):
+            TimmFeatureExtractor(backbone="resnet18", layers=["layer1"], output_fmt="invalid")
+
 
 @pytest.mark.parametrize("backbone", ["resnet18", "wide_resnet50_2"])
 @pytest.mark.parametrize("input_size", [(256, 256), (224, 224), (128, 128)])
