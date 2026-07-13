@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 @deprecate(
     since="2.5.0",
-    remove="3.0.0",
+    remove="2.7.0",
     reason="Loading Vision Transformer based checkpoints trained before the "
     "timm-encoder migration is no longer supported",
 )
