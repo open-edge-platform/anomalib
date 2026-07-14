@@ -6,7 +6,8 @@
 This module provides a PyTorch Dataset implementation for the AutoVI
 (Automotive Visual Inspection) dataset. The dataset is distributed as 6
 separate zip files on Zenodo (https://zenodo.org/records/10459003), one zip
-per class and this module handles downloading each of them.
+per class. Downloading is handled by the :class:`AutoVI` datamodule; this
+module only parses an already-extracted on-disk layout.
 
 The dataset follows the folder layout inside every zip:
 
@@ -162,7 +163,7 @@ def make_autovi_dataset(
 
         <root>/train/good/<image>.png
         <root>/test/<defect_or_good>/<image>.png
-        <root>/ground_truth/<defect>/<mask>.png
+        <root>/ground_truth/<defect>/<image_stem>/0000.png
 
     Args:
         root (Path | str): Path to the **category** root directory
@@ -222,18 +223,18 @@ def make_autovi_dataset(
         int(LabelName.ABNORMAL),
     ).astype(int)
 
-    # Build mask lookup directly from ground_truth structure:
-    # ground_truth/<defect_type>/<image_stem>/0000.png
-    # Key: image_stem (the numbered subdir), value: absolute mask path
-    mask_lookup: dict[str, str] = {
-        f.parent.name: str(f) for f in root.glob("ground_truth/*/*/0000.png") if f.suffix in extensions
+    # Build mask lookup keyed by (defect_type, image_stem) to avoid stem
+    # collisions across defect folders. Layout: ground_truth/<defect>/<stem>/0000.png
+    mask_lookup: dict[tuple[str, str], str] = {
+        (f.parent.parent.name, f.parent.name): str(f)
+        for f in root.glob("ground_truth/*/*/0000.png")
+        if f.suffix in extensions
     }
 
-    # Assign mask paths by matching image stem to ground_truth subdir name
     def lookup_mask(row: Series) -> str:
         if row["split"] == "test" and row["label_index"] == LabelName.ABNORMAL:
             stem = Path(row["image_path"]).stem
-            return mask_lookup.get(stem, "")
+            return mask_lookup.get((row["label"], stem), "")
         return ""
 
     samples["mask_path"] = samples.apply(lookup_mask, axis=1)
