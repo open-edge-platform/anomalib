@@ -6,7 +6,7 @@
 This module provides dataset implementations for various image anomaly detection
 datasets:
 
-- ``AutoVI``: AutoVI Dataset for Automotive Visual Defect Inspection
+- ``AutoVIDataset``: AutoVI Dataset for Automotive Visual Defect Inspection
 - ``BMADDataset``: BMAD dataset containing medical images
 - ``BTechDataset``: BTech dataset containing industrial objects
 - ``DatumaroDataset``: Dataset in Datumaro format (Intel Geti™ export)
