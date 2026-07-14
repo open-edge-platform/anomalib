@@ -216,6 +216,11 @@ torchvision = [
     { index = "pytorch-rocm63", extra = "rocm" },
     { index = "pytorch-xpu", extra = "xpu" },
 ]
+torchcodec = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu126", extra = "cu126" },
+    { index = "pytorch-cu130", extra = "cu130" },
+]
 pytorch-triton-rocm = [
     { index = "pytorch-rocm63", extra = "rocm" },
 ]

@@ -316,18 +316,19 @@ clip = [
 cpu = [
     { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-8-anomalib-cpu') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu126') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-8-anomalib-cpu') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu126') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
-    { name = "torchcodec" },
+    { name = "torchcodec", version = "0.14.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-8-anomalib-cpu') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu126') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
+    { name = "torchcodec", version = "0.14.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-8-anomalib-cpu') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu126') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "torchvision", version = "0.28.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-8-anomalib-cpu') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu126') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "torchvision", version = "0.28.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-8-anomalib-cpu') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu126') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
 ]
 cu126 = [
     { name = "torch", version = "2.13.0+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" } },
-    { name = "torchcodec" },
+    { name = "torchcodec", version = "0.14.0+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" } },
     { name = "torchvision", version = "0.28.0+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" } },
 ]
 cu130 = [
     { name = "torch", version = "2.13.0+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" } },
-    { name = "torchcodec" },
+    { name = "torchcodec", version = "0.14.0+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" } },
     { name = "torchvision", version = "0.28.0+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" } },
 ]
 datasets = [
@@ -454,7 +455,7 @@ openvino = [
 rocm = [
     { name = "pytorch-triton-rocm", marker = "sys_platform == 'linux'" },
     { name = "torch", version = "2.9.1+rocm6.3", source = { registry = "https://download.pytorch.org/whl/rocm6.3" } },
-    { name = "torchcodec" },
+    { name = "torchcodec", version = "0.14.0", source = { registry = "https://pypi.org/simple" } },
     { name = "torchvision", version = "0.24.1+rocm6.3", source = { registry = "https://download.pytorch.org/whl/rocm6.3" } },
 ]
 test = [
@@ -484,7 +485,7 @@ vlm = [
 xpu = [
     { name = "pytorch-triton-xpu", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "torch", version = "2.9.1+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" } },
-    { name = "torchcodec" },
+    { name = "torchcodec", version = "0.14.0", source = { registry = "https://pypi.org/simple" } },
     { name = "torchvision", version = "0.24.1+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" } },
 ]
 
@@ -616,9 +617,9 @@ requires-dist = [
     { name = "torch", marker = "extra == 'cu130'", specifier = ">=2.9.0", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "anomalib", extra = "cu130" } },
     { name = "torch", marker = "extra == 'rocm'", specifier = ">=2.7.0", index = "https://download.pytorch.org/whl/rocm6.3", conflict = { package = "anomalib", extra = "rocm" } },
     { name = "torch", marker = "extra == 'xpu'", specifier = ">=2.9.0", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "anomalib", extra = "xpu" } },
-    { name = "torchcodec", marker = "extra == 'cpu'" },
-    { name = "torchcodec", marker = "extra == 'cu126'" },
-    { name = "torchcodec", marker = "extra == 'cu130'", specifier = ">=0.9.0" },
+    { name = "torchcodec", marker = "extra == 'cpu'", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "anomalib", extra = "cpu" } },
+    { name = "torchcodec", marker = "extra == 'cu126'", index = "https://download.pytorch.org/whl/cu126", conflict = { package = "anomalib", extra = "cu126" } },
+    { name = "torchcodec", marker = "extra == 'cu130'", specifier = ">=0.9.0", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "anomalib", extra = "cu130" } },
     { name = "torchcodec", marker = "extra == 'rocm'" },
     { name = "torchcodec", marker = "extra == 'xpu'" },
     { name = "torchmetrics", specifier = ">=1.8.2" },
@@ -9808,7 +9809,44 @@ wheels = [
 [[package]]
 name = "torchcodec"
 version = "0.14.0"
+source = { registry = "https://download.pytorch.org/whl/cpu" }
+resolution-markers = [
+    "python_full_version >= '3.14' and sys_platform == 'darwin'",
+    "python_full_version == '3.13.*' and sys_platform == 'darwin'",
+    "python_full_version == '3.12.*' and sys_platform == 'darwin'",
+    "python_full_version == '3.11.*' and sys_platform == 'darwin'",
+    "python_full_version < '3.11' and sys_platform == 'darwin'",
+]
+wheels = [
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0-cp310-cp310-macosx_14_0_arm64.whl", hash = "sha256:492e08a606b4fa99cf04337affd2368aef7d598880feff8dffa420da8fa614cb", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0-cp311-cp311-macosx_14_0_arm64.whl", hash = "sha256:3f4a2670429667d72d3b4b011cae972a572a50f0942ca43df741ef8413ca6657", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:849b55c16d3d9791f07c7ff5ef6168a94bbd981e2e9e581999c9a2a8a660c61c", upload-time = "2026-06-03T12:38:56Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0-cp313-cp313-macosx_14_0_arm64.whl", hash = "sha256:7bf335289c475da3e12c4e2ef8295ee3530c4c4e95274c591def53a136cfdbdd", upload-time = "2026-06-03T12:38:56Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0-cp314-cp314-macosx_14_0_arm64.whl", hash = "sha256:f11ec6d25ee47d03eed0763d92bfc884402f583cc71f5697d7fd519be39e7f90", upload-time = "2026-06-03T12:38:56Z" },
+]
+
+[[package]]
+name = "torchcodec"
+version = "0.14.0"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.14' and sys_platform == 'win32' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu126' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu'",
+    "python_full_version >= '3.14' and sys_platform == 'emscripten' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu126' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu'",
+    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu126' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu'",
+    "python_full_version == '3.13.*' and sys_platform == 'win32' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu126' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu'",
+    "python_full_version == '3.12.*' and sys_platform == 'win32' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu126' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu'",
+    "python_full_version == '3.13.*' and sys_platform == 'emscripten' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu126' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu'",
+    "python_full_version == '3.12.*' and sys_platform == 'emscripten' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu126' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu'",
+    "python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu126' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu'",
+    "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu126' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu'",
+    "python_full_version == '3.11.*' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu126' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu'",
+    "python_full_version < '3.11' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu126' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu'",
+    "python_full_version >= '3.14' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu126' and extra != 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm' and extra != 'extra-8-anomalib-xpu'",
+    "python_full_version == '3.13.*' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu126' and extra != 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm' and extra != 'extra-8-anomalib-xpu'",
+    "python_full_version == '3.12.*' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu126' and extra != 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm' and extra != 'extra-8-anomalib-xpu'",
+    "python_full_version == '3.11.*' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu126' and extra != 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm' and extra != 'extra-8-anomalib-xpu'",
+    "python_full_version < '3.11' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu126' and extra != 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm' and extra != 'extra-8-anomalib-xpu'",
+]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/66/30/d6257240ca902a03c6834199246646d63cbf338aa045dc2a9299abc57085/torchcodec-0.14.0-cp310-cp310-macosx_14_0_arm64.whl", hash = "sha256:492e08a606b4fa99cf04337affd2368aef7d598880feff8dffa420da8fa614cb", size = 3916333, upload-time = "2026-06-03T12:41:24.28Z" },
     { url = "https://files.pythonhosted.org/packages/4b/ce/8a6b5557051bbfba80de121b2b84ddbc8f1a88f08c772b608e70d3998dd4/torchcodec-0.14.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:a68a8247c8ddd2a5390ac1b03b12f0bd1db4a43bcaacd274b4c6dce546a82bf6", size = 2664669, upload-time = "2026-06-03T12:41:25.901Z" },
@@ -9834,6 +9872,105 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/42/4d/d871fc24faf454aefbb4caa94c1ce1278f19c152bc2ae5ecc541b6c1260c/torchcodec-0.14.0-cp314-cp314-win_amd64.whl", hash = "sha256:539b814272e724bfe5e9b7328599978ec753735b383a5c3084617ff6d7cbad9c", size = 3146694, upload-time = "2026-06-03T12:41:57.378Z" },
     { url = "https://files.pythonhosted.org/packages/19/f3/270c8876bb47c9061bb1adf42402218407cffc2008f7db1b9e4c98f99f42/torchcodec-0.14.0-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:0ffda245c6d719631cd40060c162a807d571f909ee8eda00f3b56b88be2356a4", size = 2691858, upload-time = "2026-06-03T12:41:58.829Z" },
     { url = "https://files.pythonhosted.org/packages/0f/ab/9d0b12db982dcafad44b4668fdb0a0a078a9c15ceac434d9b0061c1a5f7d/torchcodec-0.14.0-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:241040305c0c3d9c5f9b923562e5e754818568a973a9ad8bb73a7badf4690dd6", size = 2943402, upload-time = "2026-06-03T12:42:00.248Z" },
+]
+
+[[package]]
+name = "torchcodec"
+version = "0.14.0+cpu"
+source = { registry = "https://download.pytorch.org/whl/cpu" }
+resolution-markers = [
+    "python_full_version >= '3.14' and sys_platform != 'darwin'",
+    "python_full_version == '3.13.*' and sys_platform != 'darwin'",
+    "python_full_version == '3.12.*' and sys_platform != 'darwin'",
+    "python_full_version == '3.11.*' and sys_platform != 'darwin'",
+    "python_full_version < '3.11' and sys_platform != 'darwin'",
+]
+wheels = [
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:594bfe7bbefe400caaac96e23bb32989dda6aab52c95f1d34f732205cf08ff93", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:0f1e5a4153a4739053b477474eaef1a94414f97e438b2702966fe6c75a93b589", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp310-cp310-win_amd64.whl", hash = "sha256:cdc991cdc6d5543206e45a03d3eda5b398a4c0c2631ef5257325689b22b6ee87", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:628d1f4d209182a0aeb768447116ec4f83cbbcbf2ae64ef74c01b76e54c2898a", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:67bb31bbac7f6484d67c92e92495b0044c5cdc25898e5f3a78daf279c7270bf4", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp311-cp311-win_amd64.whl", hash = "sha256:af461db773792d2526f18bfe0c1de4f26275c410960c35ae48fdba3c3fac8c21", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:1d7c0cae0baf2447bffcbe0cfababad70dffc090b29cda782fd6f3d04db6cb75", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:0da64ee68e8103a28906e0950acc40e2501d81894c3cb2b17e461336c08ab42f", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp312-cp312-win_amd64.whl", hash = "sha256:dc860a4a71ababdd4b1c58637503bd3f61969a3f8177ccae08f79499f601f341", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:5b35e3c1d00a4f715dfc94b6a6ca2d331bb0358b1b634325648ae804ca8b55ca", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:7deaf484f8986d5246d81336faa8b89327192114c33b0f4582737dc0acec52ab", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp313-cp313-win_amd64.whl", hash = "sha256:8bbadadbacb86711f12d9f44c555650956bb1697cb60c024b65d17608e74dcc2", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:d6292c1f38910e8d71f3d81b0d4dc5f22e76f9543b96f4025709c8d246a23a83", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:d277e8425af0ee4dab20e1e09499171f83acbfe2f5be03e5879490279c0dfd2f", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:54d9b57ee11dbcbdd18bc1c0aeab66bd661f404e94fba8dba42738b12e16e077", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:30216522430b59064943509429d64eccd642e78dab6a008f46806e4f98dfd0ee", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp314-cp314-win_amd64.whl", hash = "sha256:16bfc9bacbc1bead1fa23c06c1a70094d685eaad516fd51233bc6aea5f397a6d", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:ef79a35300805ed0e6ccc67dcd3c97b05695a3d8ee60627fc751d6bc1727368e", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:10c84b5c9eaa835c5f4cd988e1b8a4b2faff0c36f39cd9f0ca4c734e5c519a05", upload-time = "2026-06-03T12:38:56Z" },
+]
+
+[[package]]
+name = "torchcodec"
+version = "0.14.0+cu126"
+source = { registry = "https://download.pytorch.org/whl/cu126" }
+resolution-markers = [
+    "python_full_version >= '3.14'",
+    "python_full_version == '3.13.*'",
+    "python_full_version == '3.12.*'",
+    "python_full_version == '3.11.*'",
+    "python_full_version < '3.11'",
+]
+wheels = [
+    { url = "https://download.pytorch.org/whl/cu126/torchcodec-0.14.0%2Bcu126-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:f4d44fb1440c0b23fdc33a7e39b835aa2c3501bcf7b4e9603c7e9e9e82be83e9", upload-time = "2026-06-03T12:39:01Z" },
+    { url = "https://download.pytorch.org/whl/cu126/torchcodec-0.14.0%2Bcu126-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:948f7ffba774ed4ef19c4d9ff1d22ff9d4a02e65cc510fc39a8eb076d28ebe57", upload-time = "2026-06-03T12:39:01Z" },
+    { url = "https://download.pytorch.org/whl/cu126/torchcodec-0.14.0%2Bcu126-cp310-cp310-win_amd64.whl", hash = "sha256:848286974e7a9f902e50ab75b5c8ee87747305cf26693fc767fa425202681f71", upload-time = "2026-06-03T12:39:01Z" },
+    { url = "https://download.pytorch.org/whl/cu126/torchcodec-0.14.0%2Bcu126-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:c25c30ddf1ce2946f94fd7bb4e51dc87d041fccbeb61b98fe9d8febca86bc06d", upload-time = "2026-06-03T12:39:01Z" },
+    { url = "https://download.pytorch.org/whl/cu126/torchcodec-0.14.0%2Bcu126-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:8bbe286b6ee569f9cb2fc6e5c77ab370fd52d5c34dbdee80f75720ed21d173c6", upload-time = "2026-06-03T12:39:01Z" },
+    { url = "https://download.pytorch.org/whl/cu126/torchcodec-0.14.0%2Bcu126-cp311-cp311-win_amd64.whl", hash = "sha256:d66819fc1175975960c624a9ff14d5b360066bad1625f41f9beb97cd39308a0a", upload-time = "2026-06-03T12:39:01Z" },
+    { url = "https://download.pytorch.org/whl/cu126/torchcodec-0.14.0%2Bcu126-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:c4cbd459a35fd0a4ab6f8fde84a4efe331d540e9f41d197118cda67ce0cda2e2", upload-time = "2026-06-03T12:39:01Z" },
+    { url = "https://download.pytorch.org/whl/cu126/torchcodec-0.14.0%2Bcu126-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:68fa08012359e9936cea3cd1fd9c157cec3602c334d526aa3f87afd404afaafd", upload-time = "2026-06-03T12:39:02Z" },
+    { url = "https://download.pytorch.org/whl/cu126/torchcodec-0.14.0%2Bcu126-cp312-cp312-win_amd64.whl", hash = "sha256:468335d21f4119b75838cc4cf551b243b5867b48671178bfe07c112d7dacdf9f", upload-time = "2026-06-03T12:39:02Z" },
+    { url = "https://download.pytorch.org/whl/cu126/torchcodec-0.14.0%2Bcu126-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:590147f5703c378d485eb768a00d57d01115e2fb8c4184b8bda12b8d47bd16f4", upload-time = "2026-06-03T12:39:02Z" },
+    { url = "https://download.pytorch.org/whl/cu126/torchcodec-0.14.0%2Bcu126-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:f8b3ba1de7b2be397c0362cd2de1ec23ec67a68929a1c5390ecb4ea33cca8bf3", upload-time = "2026-06-03T12:39:02Z" },
+    { url = "https://download.pytorch.org/whl/cu126/torchcodec-0.14.0%2Bcu126-cp313-cp313-win_amd64.whl", hash = "sha256:aa0d367f3375c3ae9380a3e1975c2de7ed540a65477c34b0e8c8747a9a741eaa", upload-time = "2026-06-03T12:39:02Z" },
+    { url = "https://download.pytorch.org/whl/cu126/torchcodec-0.14.0%2Bcu126-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:813e1daaa9c4824e5503b04c7226f0095eb20d9fc6209bab77889496503ea243", upload-time = "2026-06-03T12:39:02Z" },
+    { url = "https://download.pytorch.org/whl/cu126/torchcodec-0.14.0%2Bcu126-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:3dddb978f6f27e72506af84be506e60ab7bc52706a147cc7987cda1fdd16a7d7", upload-time = "2026-06-03T12:39:02Z" },
+    { url = "https://download.pytorch.org/whl/cu126/torchcodec-0.14.0%2Bcu126-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:6e99959edabb5d7d1cfa24d3d3df49c3ec25642c8706e02c9a85a9e2bfca466a", upload-time = "2026-06-03T12:39:02Z" },
+    { url = "https://download.pytorch.org/whl/cu126/torchcodec-0.14.0%2Bcu126-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:a64cbb7b8d9a7c7367260525a844940003156689538b5edf02171c9ce631082b", upload-time = "2026-06-03T12:39:02Z" },
+    { url = "https://download.pytorch.org/whl/cu126/torchcodec-0.14.0%2Bcu126-cp314-cp314-win_amd64.whl", hash = "sha256:9067947beb98876d5caf1c78c81e387810bcd2c76c08deb15000fdb7e147b1bc", upload-time = "2026-06-03T12:39:02Z" },
+    { url = "https://download.pytorch.org/whl/cu126/torchcodec-0.14.0%2Bcu126-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:361f69a8c8be763392c5abaf88f42d5f98d3c49a8645656e740ccb784fc632ee", upload-time = "2026-06-03T12:39:02Z" },
+    { url = "https://download.pytorch.org/whl/cu126/torchcodec-0.14.0%2Bcu126-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:949809b5154170878446bdc9e827cfbabf2670e48742866d8d4acde67a80dfa0", upload-time = "2026-06-03T12:39:02Z" },
+]
+
+[[package]]
+name = "torchcodec"
+version = "0.14.0+cu130"
+source = { registry = "https://download.pytorch.org/whl/cu130" }
+resolution-markers = [
+    "python_full_version >= '3.14'",
+    "python_full_version == '3.13.*'",
+    "python_full_version == '3.12.*'",
+    "python_full_version == '3.11.*'",
+    "python_full_version < '3.11'",
+]
+wheels = [
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:52574161e5dc072acf0f99065cf6cbf4d17116e4c011abbbbde7ea67b560b742", upload-time = "2026-06-03T12:39:04Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:8eb9ba5d4cb65850735e63a93d86bccd2847c32fb77acc1d4b025839db0148a7", upload-time = "2026-06-03T12:39:04Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp310-cp310-win_amd64.whl", hash = "sha256:b4cfae4d2fd58467fccc528a1e31a0ec6fed6a4a49b9495dab50d2aada1918cf", upload-time = "2026-06-03T12:39:04Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:e34f8704bba953771b41834ecaad3d954cbcdb5735b5fec3039580aaafad6618", upload-time = "2026-06-03T12:39:04Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:58402593cff32d19d22ab9de649bc44a73adbf1275b5e14aa952f3338d6ba2f9", upload-time = "2026-06-03T12:39:04Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp311-cp311-win_amd64.whl", hash = "sha256:f8d6baf4cf50f10905537d2e1424e604f9d788de8cfd8b0af8cc4f43b2ce5db7", upload-time = "2026-06-03T12:39:04Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:e3debff1c1932f0b835a250247fd04cf3a1caf5ee76977e3b2a90fece0bdb90b", upload-time = "2026-06-03T12:39:04Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:d40b91faf022d309a878a9cd5685f20279788ca2442cd1cc06c9fef687f8f34e", upload-time = "2026-06-03T12:39:04Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp312-cp312-win_amd64.whl", hash = "sha256:9ee5e1575078d220632ad33d854a928c6546324cb3942bf67e1438487c62d612", upload-time = "2026-06-03T12:39:05Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:7e8bc23f4b20e863788815a48fae54fe13647ec5e9e03921facdfee46f95fd37", upload-time = "2026-06-03T12:39:05Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:e617a1fa40d71541b9677239ec7b7937b3910022b54fe4e98af83ce12295a0da", upload-time = "2026-06-03T12:39:05Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp313-cp313-win_amd64.whl", hash = "sha256:b192bac82652fcc0fcb68cf0ebf291f7eed8b844f279966c4b502d8b9cabee32", upload-time = "2026-06-03T12:39:05Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:e249197b336b097e784d14f160913129064dff3a6e30cf0253b0f9d18baf7d3a", upload-time = "2026-06-03T12:39:05Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:0067feed9b4456e205a71fa4faf4c9c776f2ebd02226f639f7015aae27263c0f", upload-time = "2026-06-03T12:39:05Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:d0a938236825a3b9e970d958466e92d5546cad9c7dcfd580151b20bdf1580df3", upload-time = "2026-06-03T12:39:05Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:e7f2e1c95854e4c0f39f0279d95c71c1810b0bf2e91e820ebc959a103bdb29aa", upload-time = "2026-06-03T12:39:05Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp314-cp314-win_amd64.whl", hash = "sha256:26ed40fc26287e6d6f65268fdaf29017aee803763077e0746aa85fb8cd6a697b", upload-time = "2026-06-03T12:39:05Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:2f293c81d042bb2f88c2242f654bffb2a084b9e3cd32d6a311500dc6ba6bb40c", upload-time = "2026-06-03T12:39:05Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:54e282e1b090bf1ea7da4f29317a1eecb3b21ed8d798b5d67601ad20be34c45d", upload-time = "2026-06-03T12:39:05Z" },
 ]
 
 [[package]]

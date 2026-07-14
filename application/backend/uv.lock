@@ -316,13 +316,14 @@ dependencies = [
 cpu = [
     { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-cu130') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu')" },
     { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-cu130') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra != 'extra-15-anomalib-studio-xpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra != 'extra-15-anomalib-studio-xpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra != 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra != 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra != 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu')" },
-    { name = "torchcodec" },
+    { name = "torchcodec", version = "0.14.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-cu130') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu')" },
+    { name = "torchcodec", version = "0.14.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-cu130') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra != 'extra-15-anomalib-studio-xpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra != 'extra-15-anomalib-studio-xpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra != 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra != 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra != 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu')" },
     { name = "torchvision", version = "0.28.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-cu130') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu')" },
     { name = "torchvision", version = "0.28.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-cu130') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra != 'extra-15-anomalib-studio-xpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra != 'extra-15-anomalib-studio-xpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra != 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra != 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra != 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu')" },
 ]
 cu130 = [
     { name = "torch", version = "2.13.0+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" } },
-    { name = "torchcodec" },
+    { name = "torchcodec", version = "0.14.0+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" } },
     { name = "torchvision", version = "0.28.0+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" } },
 ]
 openvino = [
@@ -334,7 +335,7 @@ openvino = [
 xpu = [
     { name = "pytorch-triton-xpu", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "torch", version = "2.9.1+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" } },
-    { name = "torchcodec" },
+    { name = "torchcodec", version = "0.14.0", source = { registry = "https://pypi.org/simple" } },
     { name = "torchvision", version = "0.24.1+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" } },
 ]
 
@@ -466,9 +467,9 @@ requires-dist = [
     { name = "torch", marker = "extra == 'cu130'", specifier = ">=2.9.0", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "anomalib", extra = "cu130" } },
     { name = "torch", marker = "extra == 'rocm'", specifier = ">=2.7.0", index = "https://download.pytorch.org/whl/rocm6.3", conflict = { package = "anomalib", extra = "rocm" } },
     { name = "torch", marker = "extra == 'xpu'", specifier = ">=2.9.0", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "anomalib", extra = "xpu" } },
-    { name = "torchcodec", marker = "extra == 'cpu'" },
-    { name = "torchcodec", marker = "extra == 'cu126'" },
-    { name = "torchcodec", marker = "extra == 'cu130'", specifier = ">=0.9.0" },
+    { name = "torchcodec", marker = "extra == 'cpu'", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "anomalib", extra = "cpu" } },
+    { name = "torchcodec", marker = "extra == 'cu126'", index = "https://download.pytorch.org/whl/cu126", conflict = { package = "anomalib", extra = "cu126" } },
+    { name = "torchcodec", marker = "extra == 'cu130'", specifier = ">=0.9.0", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "anomalib", extra = "cu130" } },
     { name = "torchcodec", marker = "extra == 'rocm'" },
     { name = "torchcodec", marker = "extra == 'xpu'" },
     { name = "torchmetrics", specifier = ">=1.8.2" },
@@ -4822,7 +4823,30 @@ wheels = [
 [[package]]
 name = "torchcodec"
 version = "0.14.0"
+source = { registry = "https://download.pytorch.org/whl/cpu" }
+resolution-markers = [
+    "python_full_version >= '3.14' and sys_platform == 'darwin' and extra == 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu' and extra == 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-xpu'",
+    "python_full_version < '3.14' and sys_platform == 'darwin' and extra == 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu' and extra == 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-xpu'",
+    "python_full_version >= '3.14' and extra != 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu'",
+    "python_full_version < '3.14' and extra != 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu'",
+]
+wheels = [
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0-cp313-cp313-macosx_14_0_arm64.whl", hash = "sha256:7bf335289c475da3e12c4e2ef8295ee3530c4c4e95274c591def53a136cfdbdd", upload-time = "2026-06-03T12:38:56Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0-cp314-cp314-macosx_14_0_arm64.whl", hash = "sha256:f11ec6d25ee47d03eed0763d92bfc884402f583cc71f5697d7fd519be39e7f90", upload-time = "2026-06-03T12:38:56Z" },
+]
+
+[[package]]
+name = "torchcodec"
+version = "0.14.0"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.14' and sys_platform == 'win32' and extra != 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra == 'extra-15-anomalib-studio-xpu' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu'",
+    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra == 'extra-15-anomalib-studio-xpu' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu'",
+    "python_full_version < '3.14' and sys_platform == 'win32' and extra != 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra == 'extra-15-anomalib-studio-xpu' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu'",
+    "python_full_version < '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra == 'extra-15-anomalib-studio-xpu' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu'",
+    "python_full_version >= '3.14' and extra != 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu'",
+    "python_full_version < '3.14' and extra != 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu'",
+]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/aa/78/a54d8eb6cb1965dafabe68ca3c0d648132928d881b33f6993ffa1c1eaf52/torchcodec-0.14.0-cp313-cp313-macosx_14_0_arm64.whl", hash = "sha256:7bf335289c475da3e12c4e2ef8295ee3530c4c4e95274c591def53a136cfdbdd", size = 4573338, upload-time = "2026-06-03T12:41:42.768Z" },
     { url = "https://files.pythonhosted.org/packages/fc/67/c0c24918f64dbfcb18b682411fda0476c991654bd3c6a252a10415555508/torchcodec-0.14.0-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:15d2abf91d9bdcad308eeda52ba507eaa6b83fc0dc1bb92d11f8c1f7b6343517", size = 2685647, upload-time = "2026-06-03T12:41:44.288Z" },
@@ -4836,6 +4860,60 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/42/4d/d871fc24faf454aefbb4caa94c1ce1278f19c152bc2ae5ecc541b6c1260c/torchcodec-0.14.0-cp314-cp314-win_amd64.whl", hash = "sha256:539b814272e724bfe5e9b7328599978ec753735b383a5c3084617ff6d7cbad9c", size = 3146694, upload-time = "2026-06-03T12:41:57.378Z" },
     { url = "https://files.pythonhosted.org/packages/19/f3/270c8876bb47c9061bb1adf42402218407cffc2008f7db1b9e4c98f99f42/torchcodec-0.14.0-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:0ffda245c6d719631cd40060c162a807d571f909ee8eda00f3b56b88be2356a4", size = 2691858, upload-time = "2026-06-03T12:41:58.829Z" },
     { url = "https://files.pythonhosted.org/packages/0f/ab/9d0b12db982dcafad44b4668fdb0a0a078a9c15ceac434d9b0061c1a5f7d/torchcodec-0.14.0-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:241040305c0c3d9c5f9b923562e5e754818568a973a9ad8bb73a7badf4690dd6", size = 2943402, upload-time = "2026-06-03T12:42:00.248Z" },
+]
+
+[[package]]
+name = "torchcodec"
+version = "0.14.0+cpu"
+source = { registry = "https://download.pytorch.org/whl/cpu" }
+resolution-markers = [
+    "python_full_version >= '3.14' and sys_platform == 'win32' and extra == 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu' and extra == 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-xpu'",
+    "python_full_version >= '3.14' and sys_platform == 'emscripten' and extra == 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu' and extra == 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-xpu'",
+    "python_full_version >= '3.14' and sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu' and extra == 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-xpu'",
+    "python_full_version < '3.14' and sys_platform == 'win32' and extra == 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu' and extra == 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-xpu'",
+    "python_full_version < '3.14' and sys_platform == 'emscripten' and extra == 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu' and extra == 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-xpu'",
+    "python_full_version < '3.14' and sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu' and extra == 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-xpu'",
+    "python_full_version >= '3.14' and extra != 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu'",
+    "python_full_version < '3.14' and extra != 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu'",
+]
+wheels = [
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:5b35e3c1d00a4f715dfc94b6a6ca2d331bb0358b1b634325648ae804ca8b55ca", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:7deaf484f8986d5246d81336faa8b89327192114c33b0f4582737dc0acec52ab", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp313-cp313-win_amd64.whl", hash = "sha256:8bbadadbacb86711f12d9f44c555650956bb1697cb60c024b65d17608e74dcc2", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:d6292c1f38910e8d71f3d81b0d4dc5f22e76f9543b96f4025709c8d246a23a83", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:d277e8425af0ee4dab20e1e09499171f83acbfe2f5be03e5879490279c0dfd2f", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:54d9b57ee11dbcbdd18bc1c0aeab66bd661f404e94fba8dba42738b12e16e077", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:30216522430b59064943509429d64eccd642e78dab6a008f46806e4f98dfd0ee", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp314-cp314-win_amd64.whl", hash = "sha256:16bfc9bacbc1bead1fa23c06c1a70094d685eaad516fd51233bc6aea5f397a6d", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:ef79a35300805ed0e6ccc67dcd3c97b05695a3d8ee60627fc751d6bc1727368e", upload-time = "2026-06-03T12:38:55Z" },
+    { url = "https://download.pytorch.org/whl/cpu/torchcodec-0.14.0%2Bcpu-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:10c84b5c9eaa835c5f4cd988e1b8a4b2faff0c36f39cd9f0ca4c734e5c519a05", upload-time = "2026-06-03T12:38:56Z" },
+]
+
+[[package]]
+name = "torchcodec"
+version = "0.14.0+cu130"
+source = { registry = "https://download.pytorch.org/whl/cu130" }
+resolution-markers = [
+    "python_full_version >= '3.14' and sys_platform == 'win32' and extra != 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu' and extra != 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-xpu'",
+    "python_full_version >= '3.14' and sys_platform == 'emscripten' and extra != 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu' and extra != 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-xpu'",
+    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu' and extra != 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-xpu'",
+    "python_full_version < '3.14' and sys_platform == 'win32' and extra != 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu' and extra != 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-xpu'",
+    "python_full_version < '3.14' and sys_platform == 'emscripten' and extra != 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu' and extra != 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-xpu'",
+    "python_full_version < '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu' and extra != 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-xpu'",
+    "python_full_version >= '3.14' and extra != 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu'",
+    "python_full_version < '3.14' and extra != 'extra-15-anomalib-studio-cpu' and extra != 'extra-15-anomalib-studio-cu130' and extra != 'extra-15-anomalib-studio-xpu'",
+]
+wheels = [
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:7e8bc23f4b20e863788815a48fae54fe13647ec5e9e03921facdfee46f95fd37", upload-time = "2026-06-03T12:39:05Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:e617a1fa40d71541b9677239ec7b7937b3910022b54fe4e98af83ce12295a0da", upload-time = "2026-06-03T12:39:05Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp313-cp313-win_amd64.whl", hash = "sha256:b192bac82652fcc0fcb68cf0ebf291f7eed8b844f279966c4b502d8b9cabee32", upload-time = "2026-06-03T12:39:05Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:e249197b336b097e784d14f160913129064dff3a6e30cf0253b0f9d18baf7d3a", upload-time = "2026-06-03T12:39:05Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:0067feed9b4456e205a71fa4faf4c9c776f2ebd02226f639f7015aae27263c0f", upload-time = "2026-06-03T12:39:05Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:d0a938236825a3b9e970d958466e92d5546cad9c7dcfd580151b20bdf1580df3", upload-time = "2026-06-03T12:39:05Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:e7f2e1c95854e4c0f39f0279d95c71c1810b0bf2e91e820ebc959a103bdb29aa", upload-time = "2026-06-03T12:39:05Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp314-cp314-win_amd64.whl", hash = "sha256:26ed40fc26287e6d6f65268fdaf29017aee803763077e0746aa85fb8cd6a697b", upload-time = "2026-06-03T12:39:05Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:2f293c81d042bb2f88c2242f654bffb2a084b9e3cd32d6a311500dc6ba6bb40c", upload-time = "2026-06-03T12:39:05Z" },
+    { url = "https://download.pytorch.org/whl/cu130/torchcodec-0.14.0%2Bcu130-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:54e282e1b090bf1ea7da4f29317a1eecb3b21ed8d798b5d67601ad20be34c45d", upload-time = "2026-06-03T12:39:05Z" },
 ]
 
 [[package]]
