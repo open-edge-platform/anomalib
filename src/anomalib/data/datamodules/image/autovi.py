@@ -1,8 +1,3 @@
-# Original Code
-# Copyright (C) 2026 Université de Technologie de Compiègne
-# SPDX-License-Identifier: Apache-2.0
-#
-# Modified
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
