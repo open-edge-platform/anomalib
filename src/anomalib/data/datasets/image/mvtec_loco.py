@@ -299,7 +299,7 @@ def make_dataset(
     samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
 
     if split:
-        split = Split(split) if isinstance(split, str) else split
-        samples = samples[samples.split == split.value].reset_index(drop=True)
+        split_value = split.value if isinstance(split, Split) else split
+        samples = samples[samples.split == split_value].reset_index(drop=True)
 
     return samples

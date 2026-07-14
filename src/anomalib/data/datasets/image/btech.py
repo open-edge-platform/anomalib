@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """BTech Dataset.
@@ -158,7 +158,7 @@ def make_btech_dataset(path: Path, split: str | Split | None = None) -> DataFram
 
     # Get the data frame for the split.
     if split:
-        split = Split(split) if isinstance(split, str) else split
-        samples = samples[samples.split == split.value].reset_index(drop=True)
+        split_value = split.value if isinstance(split, Split) else split
+        samples = samples[samples.split == split_value].reset_index(drop=True)
 
     return samples
