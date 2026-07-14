@@ -468,6 +468,40 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
         # BeanTech AD follows the same convention as MVTec AD.
         self._generate_dummy_mvtecad_dataset(normal_dir="ok", abnormal_dir="ko", mask_suffix="")
 
+    def _generate_dummy_autovi_dataset(self) -> None:
+        """Generate dummy AutoVI dataset following the per-category layout on Zenodo.
+
+        Layout::
+
+            <root>/autovi/<category>/train/good/<image>.png
+            <root>/autovi/<category>/test/good/<image>.png
+            <root>/autovi/<category>/test/<defect>/<image>.png
+            <root>/autovi/<category>/ground_truth/<defect>/<image_stem>/0000.png
+        """
+        dataset_category = "engine_wiring"
+
+        # Train + test normal images.
+        for split in ("train", "test"):
+            path = self.dataset_root / dataset_category / split / "good"
+            num_images = self.num_train if split == "train" else self.num_test
+            for i in range(num_images):
+                self.image_generator.generate_image(
+                    label=LabelName.NORMAL,
+                    image_filename=path / f"{i:03}.png",
+                )
+
+        # Abnormal test images with matching per-image mask subdir.
+        abnormal_dir = self.abnormal_category
+        image_path = self.dataset_root / dataset_category / "test" / abnormal_dir
+        mask_root = self.dataset_root / dataset_category / "ground_truth" / abnormal_dir
+        for i in range(self.num_test):
+            stem = f"{i:03}"
+            self.image_generator.generate_image(
+                label=LabelName.ABNORMAL,
+                image_filename=image_path / f"{stem}.png",
+                mask_filename=mask_root / stem / "0000.png",
+            )
+
     def _generate_dummy_mvtec_3d_dataset(self, ground_truth_dir: str = "gt") -> None:
         """Generate dummy MVTec 3D AD dataset in a temporary directory using the same convention as MVTec AD."""
         # MVTec 3D AD has multiple subcategories within the dataset.
