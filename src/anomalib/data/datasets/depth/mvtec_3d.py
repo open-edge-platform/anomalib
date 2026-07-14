@@ -212,6 +212,7 @@ def make_mvtec_3d_dataset(
     samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
 
     if split:
-        samples = samples[samples.split == split].reset_index(drop=True)
+        split = Split(split) if isinstance(split, str) else split
+        samples = samples[samples.split == split.value].reset_index(drop=True)
 
     return samples
