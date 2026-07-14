@@ -138,7 +138,7 @@ class KCenterGreedy:
             self.min_distances.scatter_(0, idx.unsqueeze(0).unsqueeze(1), 0.0)
             selected_coreset_idxs.append(idx)
 
-        return [int(idx.item()) for idx in selected_coreset_idxs]
+        return torch.stack(selected_coreset_idxs).cpu().tolist()
 
     def sample_coreset(self) -> torch.Tensor:
         """Select coreset from the embedding.
