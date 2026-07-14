@@ -1,4 +1,4 @@
-# Copyright (C) 2026 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Utility helpers for model export."""
@@ -50,13 +50,28 @@ def warn_legacy_onnx_exporter_deprecation() -> None:
     )
 
 
-def get_default_dynamic_axes(input_size: tuple[int, int] | None) -> dict[str, dict[int, str]]:
-    """Build default dynamic axes for legacy ONNX export."""
-    return (
-        {"input": {0: "batch_size"}, "output": {0: "batch_size"}}
-        if input_size
-        else {"input": {0: "batch_size", 2: "height", 3: "width"}, "output": {0: "batch_size"}}
-    )
+def get_default_dynamic_axes(
+    input_size: tuple[int, int] | None,
+    input_names: list[str],
+    output_names: list[str],
+) -> dict[str, dict[int, str]]:
+    """Build default dynamic axes for legacy ONNX export.
+
+    Args:
+        input_size (tuple[int, int] | None): Input image dimensions ``(H, W)``.
+            When ``None``, height and width axes are marked dynamic as well.
+        input_names (list[str]): Resolved ONNX input names.
+        output_names (list[str]): Resolved ONNX output names.
+
+    Returns:
+        dict[str, dict[int, str]]: Mapping of tensor name to axis-index/axis-name.
+    """
+    input_name = input_names[0] if input_names else "input"
+    input_axes = {0: "batch_size"} if input_size else {0: "batch_size", 2: "height", 3: "width"}
+    axes: dict[str, dict[int, str]] = {input_name: input_axes}
+    for name in output_names:
+        axes[name] = {0: "batch_size"}
+    return axes
 
 
 def get_dynamic_shapes_from_axes(
@@ -100,8 +115,11 @@ def validate_input_names(input_names: object) -> list[str]:
     raise TypeError(msg)
 
 
-def raise_missing_onnxscript_error() -> None:
+def raise_missing_onnxscript_error(cause: BaseException | None = None) -> None:
     """Raise actionable error for missing ``onnxscript`` dependency.
+
+    Args:
+        cause (BaseException | None): Original exception to chain via ``raise ... from``.
 
     Raises:
         ModuleNotFoundError: If ``onnxscript`` is not installed for dynamo export.
@@ -110,7 +128,7 @@ def raise_missing_onnxscript_error() -> None:
         "ONNX export with `dynamo=True` requires the optional `onnxscript` dependency. "
         "Install `anomalib[openvino]` or `onnxscript`, or export with `dynamo=False`."
     )
-    raise ModuleNotFoundError(msg, name="onnxscript")
+    raise ModuleNotFoundError(msg, name="onnxscript") from cause
 
 
 def create_export_root(export_root: str | Path, export_type: ExportType) -> Path:

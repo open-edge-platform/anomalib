@@ -1,4 +1,4 @@
-# Copyright (C) 2026 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Mixin for exporting anomaly detection models to disk.
@@ -128,7 +128,7 @@ class ExportMixin:
         export_root: Path | str,
         model_file_name: str = "model",
         input_size: tuple[int, int] | None = None,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,  # noqa: ANN401  # passthrough to torch.onnx.export
     ) -> Path:
         """Export model to ONNX format.
 
@@ -140,6 +140,12 @@ class ExportMixin:
             **kwargs: Additional arguments to pass to torch.onnx.export.
                 See https://pytorch.org/docs/stable/onnx.html#torch.onnx.export for details.
                 Common options include:
+                - dynamo (bool): Use the dynamo-based ONNX exporter (requires ``onnxscript``).
+                  Defaults to ``False`` in anomalib; the legacy exporter is deprecated and
+                  will be removed in anomalib 2.7.0.
+                - dynamic_shapes (dict): Dynamo-only. Dynamic shape spec passed to
+                  ``torch.onnx.export`` when ``dynamo=True``. If omitted, derived from
+                  ``dynamic_axes``.
                 - opset_version (int): ONNX opset version to use
                 - do_constant_folding (bool): Whether to optimize constant folding
                 - input_names (list[str]): Names of input tensors
@@ -181,7 +187,7 @@ class ExportMixin:
         assert isinstance(self, LightningModule)  # mypy
         output_names = [name for name, value in self.eval()(input_shape)._asdict().items() if value is not None]
         input_names = validate_input_names(kwargs.pop("input_names", ["input"]))
-        default_dynamic_axes = get_default_dynamic_axes(input_size)
+        default_dynamic_axes = get_default_dynamic_axes(input_size, input_names, output_names)
         dynamo = get_onnx_dynamo_flag(kwargs)
 
         if dynamo:
@@ -196,22 +202,27 @@ class ExportMixin:
             kwargs.pop("dynamic_shapes", None)
             dynamic_shapes = None
 
+        export_kwargs: dict[str, Any] = {
+            "opset_version": kwargs.pop("opset_version", 14),
+            "dynamic_axes": dynamic_axes,
+            "input_names": input_names,
+            "output_names": output_names,
+            "dynamo": dynamo,
+        }
+        if dynamo:
+            export_kwargs["dynamic_shapes"] = dynamic_shapes
+
         try:
             torch.onnx.export(
                 model=self,
                 args=(input_shape.to(self.device),),
                 f=str(onnx_path),
-                opset_version=kwargs.pop("opset_version", 14),
-                dynamic_axes=dynamic_axes,
-                dynamic_shapes=dynamic_shapes,
-                input_names=input_names,
-                output_names=output_names,
-                dynamo=dynamo,
+                **export_kwargs,
                 **kwargs,
             )
         except ModuleNotFoundError as exception:
             if dynamo and (exception.name == "onnxscript" or "onnxscript" in str(exception)):
-                raise_missing_onnxscript_error()
+                raise_missing_onnxscript_error(exception)
             raise
 
         return onnx_path

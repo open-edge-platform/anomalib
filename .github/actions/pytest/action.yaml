@@ -103,6 +103,15 @@ runs:
     - name: Set up uv
       uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
 
+    # Install FFmpeg system libraries required by torchcodec at import time.
+    # The cpu/cuda torchcodec wheels dynamically link libavutil/libavcodec from
+    # the system, so tests import-fail without ffmpeg installed on the runner.
+    - name: Install FFmpeg system libraries
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends ffmpeg
+
     # Create and configure virtual environment
     - name: Configure virtual environment
       id: setup-venv
