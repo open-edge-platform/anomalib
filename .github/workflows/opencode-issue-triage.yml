@@ -7,22 +7,27 @@ on:
   issues:
     types: [opened]
 
-permissions:
-  contents: read
-  issues: write
+permissions: {} # No permissions by default on workflow level
 
 concurrency:
   group: "opencode-issue-triage-${{ github.event.issue.number }}"
 
 jobs:
   triage:
-    # Skip issues from users with no GitHub association (spam protection)
+    # Allow only trusted associations: OWNER, MEMBER, COLLABORATOR.
+    # CONTRIBUTOR / FIRST_TIME_CONTRIBUTOR / FIRST_TIMER / NONE are excluded
+    # because any GitHub user can reach those tiers and trigger this agent on
+    # a self-hosted runner via a crafted issue body (prompt injection).
     if: >-
-      github.event.issue.author_association != 'NONE'
+      contains(fromJson('["OWNER","MEMBER","COLLABORATOR"]'),
+               github.event.issue.author_association)
     runs-on: self-hosted
     timeout-minutes: 20
+    permissions:
+      contents: read # Required to checkout the repository
+      issues: write # Required to label and comment on issues
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           sparse-checkout: |
             .github
@@ -38,7 +43,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
-          OPENCODE_PERMISSION: '{"read":"allow","glob":"allow","grep":"allow","bash":{"*":"deny","gh issue *":"allow","gh search *":"allow","gh label *":"allow","gh api *":"allow","cat *":"allow","find *":"allow","grep *":"allow","head *":"allow"},"edit":"deny"}'
+          OPENCODE_PERMISSION: '{"read":"allow","glob":"allow","grep":"allow","bash":{"*":"deny","gh issue *":"allow","gh search *":"allow","gh label *":"allow","gh api *":"allow"},"edit":"deny"}'
           OPENCODE_CONFIG: .github/opencode.json
         run: |
           opencode run --pure -m ollama/gemma4:31b --agent issue-triage \

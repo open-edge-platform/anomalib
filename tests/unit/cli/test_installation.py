@@ -94,8 +94,8 @@ def test_get_cuda_version_with_nvcc(mocker: MockerFixture) -> None:
 
 def test_update_cuda_version_with_available_torch_cuda_build() -> None:
     """Test that update_cuda_version_with_available_torch_cuda_build returns the expected CUDA version."""
-    assert update_cuda_version_with_available_torch_cuda_build("11.1", "2.6.0") == "11.8"
-    assert update_cuda_version_with_available_torch_cuda_build("11.8", "2.6.0") == "11.8"
+    assert update_cuda_version_with_available_torch_cuda_build("11.1", "2.6.0") == "12.6"
+    assert update_cuda_version_with_available_torch_cuda_build("11.8", "2.6.0") == "12.6"
     assert update_cuda_version_with_available_torch_cuda_build("12.6", "2.7.0") == "12.6"
     assert update_cuda_version_with_available_torch_cuda_build("11.8", "2.8.0") == "12.6"
     assert update_cuda_version_with_available_torch_cuda_build("13.0", "2.9.0") == "13.0"

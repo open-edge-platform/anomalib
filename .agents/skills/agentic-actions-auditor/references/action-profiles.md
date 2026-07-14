@@ -73,15 +73,15 @@ allowed_bots: "dependabot[bot],renovate[bot]"
 **Restrict sandbox:** Use the default or a more restrictive mode:
 
 ```yaml
-sandbox: workspace-write    # default: workspace access only, no network
-sandbox: read-only          # for analysis-only tasks
+sandbox: workspace-write # default: workspace access only, no network
+sandbox: read-only # for analysis-only tasks
 ```
 
 **Restrict safety strategy:** Use the default or a stricter option:
 
 ```yaml
-safety-strategy: drop-sudo          # default: removes sudo privileges
-safety-strategy: unprivileged-user  # stronger: runs as unprivileged user
+safety-strategy: drop-sudo # default: removes sudo privileges
+safety-strategy: unprivileged-user # stronger: runs as unprivileged user
 ```
 
 **Restrict user access:** Remove wildcard or replace with explicit user list:

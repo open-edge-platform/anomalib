@@ -94,14 +94,14 @@ runs:
   steps:
     # Set up Python with pip caching
     - name: Set up Python environment
-      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
       with:
         python-version: ${{ inputs.python-version }}
         cache: ${{ inputs.enable-cache == 'true' && 'pip' || '' }}
         cache-dependency-path: ${{ inputs.enable-cache == 'true' && 'pyproject.toml' || '' }}
 
     - name: Set up uv
-      uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+      uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
 
     # Create and configure virtual environment
     - name: Configure virtual environment

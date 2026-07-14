@@ -59,6 +59,10 @@ dependencies = [
 
 [project.optional-dependencies]
 # Model-specific optional dependencies
+huggingface = [
+    "huggingface_hub",
+    "safetensors"
+]
 openvino = ["openvino>=2024.0", "nncf>=2.10.0", "onnx>=1.16.0", "onnxscript"]
 clip = [
     # NOTE: open-clip-torch throws the following error on v2.26.1
@@ -110,10 +114,6 @@ cpu = [
     "torch>=2.6.0,<=2.8.0",
     "torchvision>=0.21.0",
 ]
-cu118 = [
-    "torch>=2.6.0,<=2.7.1", # CUDA 11.8 support dropped in torch 2.8+
-    "torchvision>=0.21.0,<=0.22.1",
-]
 cu126 = [
     "torch>=2.6.0,<=2.8.0",
     "torchvision>=0.21.0",
@@ -129,11 +129,11 @@ rocm = [
     "pytorch-triton-rocm ; sys_platform == 'linux'",
 ]
 xpu = [
-    "torch>=2.6.0", # Note : Last tested with torch+xpu (2.9.1)
-    "torchvision>=0.21.0",
+    "torch>=2.9.0", # Note : Last tested with torch+xpu (2.9.1)
+    "torchvision>=0.24.0",
     "pytorch-triton-xpu ; sys_platform == 'linux' or sys_platform == 'win32'",
 ]
-full = ["anomalib[clip,datasets,openvino,loggers,notebooks,vlm,video]"]
+full = ["anomalib[clip,datasets,openvino,loggers,notebooks,vlm,video,huggingface]"]
 dev = ["anomalib[full,docs,test]"]
 
 [project.scripts]
@@ -163,7 +163,6 @@ managed = true
 conflicts = [
     [
         { extra = "cpu" },
-        { extra = "cu118" },
         { extra = "cu126" },
         { extra = "cu130" },
         { extra = "rocm" },
@@ -175,11 +174,6 @@ conflicts = [
 [[tool.uv.index]]
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
-explicit = true
-
-[[tool.uv.index]]
-name = "pytorch-cu118"
-url = "https://download.pytorch.org/whl/cu118"
 explicit = true
 
 [[tool.uv.index]]
@@ -206,7 +200,6 @@ explicit = true
 [tool.uv.sources]
 torch = [
     { index = "pytorch-cpu", extra = "cpu" },
-    { index = "pytorch-cu118", extra = "cu118" },
     { index = "pytorch-cu126", extra = "cu126" },
     { index = "pytorch-cu130", extra = "cu130" },
     { index = "pytorch-rocm63", extra = "rocm" },
@@ -214,7 +207,6 @@ torch = [
 ]
 torchvision = [
     { index = "pytorch-cpu", extra = "cpu" },
-    { index = "pytorch-cu118", extra = "cu118" },
     { index = "pytorch-cu126", extra = "cu126" },
     { index = "pytorch-cu130", extra = "cu130" },
     { index = "pytorch-rocm63", extra = "rocm" },
