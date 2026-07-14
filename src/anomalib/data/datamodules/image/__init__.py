@@ -55,7 +55,7 @@ class ImageDataFormat(str, Enum):
 
         The following dataset formats are supported:
 
-    - ``AUTOVI``: AutoVI Dataset for Automotive Visual Defect Inspection    
+    - ``AUTOVI``: AutoVI Dataset for Automotive Visual Defect Inspection
     - ``BMAD``: BMAD Dataset for Medical Anomaly Detection
     - ``BTECH``: BTech Surface Defect Dataset
     - ``DATUMARO``: Dataset in Datumaro format

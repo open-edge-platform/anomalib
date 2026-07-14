@@ -50,10 +50,10 @@ from .dataclasses import (
 from .datamodules.base import AnomalibDataModule
 from .datamodules.depth import ADAM3D, DepthDataFormat, Folder3D, MVTec3D
 from .datamodules.image import (
-    AutoVI,
     BMAD,
     MPDD,
     VAD,
+    AutoVI,
     BTech,
     Datumaro,
     Folder,
@@ -225,4 +225,5 @@ __all__ = [
     "get_datamodule",
     # Exceptions
     "UnknownDatamoduleError",
+    "AutoVIDataset",
 ]
