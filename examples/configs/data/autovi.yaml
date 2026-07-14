@@ -1,0 +1,12 @@
+class_path: anomalib.data.AutoVI
+init_args:
+  root: ./datasets/AutoVI
+  category: engine_wiring
+  train_batch_size: 32
+  eval_batch_size: 32
+  num_workers: 8
+  test_split_mode: predefined
+  test_split_ratio: null
+  val_split_mode: from_dir  
+  val_split_ratio: null
+  seed: null

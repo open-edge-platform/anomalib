@@ -7,6 +7,13 @@ Image datamodules in Anomalib are designed to handle image-based anomaly detecti
 ```{grid} 3
 :gutter: 2
 
+:::{grid-item-card} AutoVI
+:link: anomalib.data.datamodules.image.autovi
+:link-type: doc
+
+AutoVI dataset datamodule for automotive visual defect inspection.
+:::
+
 :::{grid-item-card} BMAD
 :link: anomalib.data.datamodules.image.bmad
 :link-type: doc
@@ -103,7 +110,7 @@ Visual Anomaly dataset.
 
 ```{eval-rst}
 .. automodule:: anomalib.data
-   :members: BMAD, BTech, Datumaro, Folder, Kolektor, MPDD, MVTecAD, MVTecAD2, MVTecLOCO, RealIAD, Tabular, VAD, Visa
+   :members: AutoVI, BMAD, BTech, Datumaro, Folder, Kolektor, MPDD, MVTecAD, MVTecAD2, MVTecLOCO, RealIAD, Tabular, VAD, Visa
    :undoc-members:
    :show-inheritance:
 ```

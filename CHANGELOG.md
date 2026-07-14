@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+🚀 **data**: Add AutoVI Dataset by @julie-bat in https://github.com/open-edge-platform/anomalib/pull/3633
 
 - 🚀 **model**: Add SuperADD by @alexriedel1 in https://github.com/open-edge-platform/anomalib/pull/3628
 

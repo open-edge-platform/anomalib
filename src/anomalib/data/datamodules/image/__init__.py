@@ -6,6 +6,7 @@
 This module contains data modules for loading and processing image datasets for
 anomaly detection. The following data modules are available:
 
+- ``AutoVI``: AutoVI Dataset for Automotive Visual Defect Inspection
 - ``BMAD``: BMAD Dataset for Medical Anomaly Detection
 - ``BTech``: BTech Surface Defect Dataset
 - ``Datumaro``: Dataset in Datumaro format (Intel Geti™ export)
@@ -32,6 +33,7 @@ Example:
 
 from enum import Enum
 
+from .autovi import AutoVI
 from .bmad import BMAD
 from .btech import BTech
 from .datumaro import Datumaro
@@ -53,6 +55,7 @@ class ImageDataFormat(str, Enum):
 
         The following dataset formats are supported:
 
+    - ``AUTOVI``: AutoVI Dataset for Automotive Visual Defect Inspection    
     - ``BMAD``: BMAD Dataset for Medical Anomaly Detection
     - ``BTECH``: BTech Surface Defect Dataset
     - ``DATUMARO``: Dataset in Datumaro format
@@ -72,6 +75,7 @@ class ImageDataFormat(str, Enum):
     """
 
     ADAM_3D = "adam_3d"
+    AUTOVI = "autovi"
     BMAD = "bmad"
     BTECH = "btech"
     DATUMARO = "datumaro"
@@ -92,6 +96,7 @@ class ImageDataFormat(str, Enum):
 
 __all__ = [
     "ADAM_3D",
+    "AutoVI",
     "BMAD",
     "BTech",
     "Datumaro",

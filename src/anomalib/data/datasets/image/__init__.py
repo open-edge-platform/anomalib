@@ -6,6 +6,7 @@
 This module provides dataset implementations for various image anomaly detection
 datasets:
 
+- ``AutoVI``: AutoVI Dataset for Automotive Visual Defect Inspection
 - ``BMADDataset``: BMAD dataset containing medical images
 - ``BTechDataset``: BTech dataset containing industrial objects
 - ``DatumaroDataset``: Dataset in Datumaro format (Intel Geti™ export)
@@ -26,6 +27,7 @@ Example:
     ... )
 """
 
+from .autovi import AutoVIDataset
 from .bmad import BMADDataset
 from .btech import BTechDataset
 from .datumaro import DatumaroDataset
@@ -42,6 +44,7 @@ from .vad import VADDataset
 from .visa import VisaDataset
 
 __all__ = [
+    "AutoVIDataset",
     "BMADDataset",
     "BTechDataset",
     "DatumaroDataset",

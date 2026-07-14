@@ -16,6 +16,7 @@ Depth Datasets:
     - ``ADAM3DDataset``: 3D ADAM dataset with additive manufactured objects
 
 Image Datasets:
+    - ``AutoVI``: AutoVI Dataset for Automotive Visual Defect Inspection
     - ``BTechDataset``: BTech dataset containing industrial objects
     - ``DatumaroDataset``: Dataset in Datumaro format (Intel Geti™ export)
     - ``FolderDataset``: Custom dataset from folder structure
@@ -43,6 +44,7 @@ Example:
 from .base import AnomalibDataset, AnomalibDepthDataset, AnomalibVideoDataset
 from .depth import ADAM3DDataset, Folder3DDataset, MVTec3DDataset
 from .image import (
+    AutoVIDataset,
     BMADDataset,
     BTechDataset,
     DatumaroDataset,
@@ -66,6 +68,7 @@ __all__ = [
     "MVTec3DDataset",
     "ADAM3DDataset",
     # Image
+    "AutoVIDataset",
     "BMADDataset",
     "BTechDataset",
     "DatumaroDataset",
