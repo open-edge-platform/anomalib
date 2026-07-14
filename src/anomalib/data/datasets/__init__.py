@@ -16,7 +16,7 @@ Depth Datasets:
     - ``ADAM3DDataset``: 3D ADAM dataset with additive manufactured objects
 
 Image Datasets:
-    - ``AutoVI``: AutoVI Dataset for Automotive Visual Defect Inspection
+    - ``AutoVIDataset``: AutoVI Dataset for Automotive Visual Defect Inspection
     - ``BTechDataset``: BTech dataset containing industrial objects
     - ``DatumaroDataset``: Dataset in Datumaro format (Intel Geti™ export)
     - ``FolderDataset``: Custom dataset from folder structure
