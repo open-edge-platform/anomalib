@@ -133,9 +133,9 @@ class AutoVI(AnomalibDataModule):
         val_augmentations: Transform | None = None,
         test_augmentations: Transform | None = None,
         augmentations: Transform | None = None,
-        test_split_mode: TestSplitMode = TestSplitMode.FROM_DIR,
+        test_split_mode: TestSplitMode | str = TestSplitMode.FROM_DIR,
         test_split_ratio: float = 0.2,
-        val_split_mode: ValSplitMode = ValSplitMode.SAME_AS_TEST,
+        val_split_mode: ValSplitMode | str = ValSplitMode.SAME_AS_TEST,
         val_split_ratio: float = 0.5,
         seed: int | None = None,
     ) -> None:

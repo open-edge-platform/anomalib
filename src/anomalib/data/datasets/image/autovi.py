@@ -227,8 +227,8 @@ def make_autovi_dataset(
     # collisions across defect folders. Layout: ground_truth/<defect>/<stem>/0000.png
     mask_lookup: dict[tuple[str, str], str] = {
         (f.parent.parent.name, f.parent.name): str(f)
-        for f in root.glob("ground_truth/*/*/0000.png")
-        if f.suffix in extensions
+        for f in root.glob("ground_truth/*/*/0000.*")
+        if f.suffix in extensions and f.stem == "0000"
     }
 
     def lookup_mask(row: Series) -> str:
