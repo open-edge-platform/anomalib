@@ -1,4 +1,9 @@
-# Copyright (C) 2026 -  Université de Technologie de Compiègne
+# Original Code
+# Copyright (C) 2026 Université de Technologie de Compiègne
+# SPDX-License-Identifier: Apache-2.0
+#
+# Modified
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """AutoVI Data Module.
@@ -45,16 +50,15 @@ from pathlib import Path
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datamodules.base.image import AnomalibDataModule
+from anomalib.data.datasets.image.autovi import (
+    CATEGORIES,
+    DOWNLOAD_HASHES,
+    DOWNLOAD_URLS,
+    AutoVIDataset,
+)
 from anomalib.data.utils import Split, TestSplitMode, ValSplitMode
 from anomalib.data.utils.download import DownloadInfo, download_and_extract
 from anomalib.utils.path import get_datasets_dir
-
-from anomalib.data.datasets.image.autovi import (
-    CATEGORIES,
-    DOWNLOAD_URLS,
-    DOWNLOAD_HASHES,
-    AutoVIDataset,
-)
 
 
 class AutoVI(AnomalibDataModule):
@@ -204,12 +208,12 @@ class AutoVI(AnomalibDataModule):
         """
         category_dir = self.root / self.category
         if category_dir.is_dir():
-            return 
+            return
 
         self.root.mkdir(parents=True, exist_ok=True)
 
         download_info = DownloadInfo(
-            name=f"AutoVI – {self.category}",
+            name=f"AutoVI - {self.category}",
             url=DOWNLOAD_URLS[self.category],
             # The zip extracts to a folder named after the category, so we
             # extract directly into `self.root` and end up with

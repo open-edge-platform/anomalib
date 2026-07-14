@@ -1,4 +1,9 @@
-# Copyright (C) 2026 -  Université de Technologie de Compiègne
+# Original Code
+# Copyright (C) 2026 Université de Technologie de Compiègne
+# SPDX-License-Identifier: Apache-2.0
+#
+# Modified
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """AutoVI Dataset.
@@ -71,8 +76,7 @@ CATEGORIES = (
 
 #: Zenodo download URLs for each category zip.
 DOWNLOAD_URLS: dict[str, str] = {
-    cat: f"https://zenodo.org/records/10459003/files/{cat}.zip?download=1"
-    for cat in CATEGORIES
+    cat: f"https://zenodo.org/records/10459003/files/{cat}.zip?download=1" for cat in CATEGORIES
 }
 
 DOWNLOAD_HASHES = {
@@ -81,7 +85,7 @@ DOWNLOAD_HASHES = {
     "pipe_staple": "fb9287f2cc86d660310e9886fdebbe2bd17269e853e29d06d708c6a996df1b18",
     "tank_screw": "48d7193164b36de03cc10c9f7b1b64ea98a0ce7aa57867c8f1d96341c497b4b0",
     "underbody_pipes": "fc1e53336d46fb2317d71e95c011bac012b609f2898fdb02780c920c19a113c7",
-    "underbody_screw": "3e9bf6a43033a22c7c9f927a43c392a3b037d22580a27a48d379d4504d9cc6cf"
+    "underbody_screw": "3e9bf6a43033a22c7c9f927a43c392a3b037d22580a27a48d379d4504d9cc6cf",
 }
 
 
@@ -186,7 +190,6 @@ def make_autovi_dataset(
         RuntimeError: If no valid images are found under ``root``.
         MisMatchError: If anomalous images and masks do not match.
     """
-
     if extensions is None:
         extensions = IMG_EXTENSIONS
 
@@ -199,8 +202,7 @@ def make_autovi_dataset(
     samples_list = [
         (str(root), *f.parts[-3:])
         for f in root.glob("**/*")
-        if f.suffix in extensions
-        and f.parts[-3] in valid_splits  # parts[-3] = split dir name
+        if f.suffix in extensions and f.parts[-3] in valid_splits  # parts[-3] = split dir name
     ]
     if not samples_list:
         msg = f"Found 0 images in {root}"
@@ -213,17 +215,12 @@ def make_autovi_dataset(
 
     # Rebuild absolute image_path
     samples["image_path"] = (
-        samples["path"]
-        + "/"
-        + samples["split"]
-        + "/"
-        + samples["label"]
-        + "/"
-        + samples["image_path"]
+        samples["path"] + "/" + samples["split"] + "/" + samples["label"] + "/" + samples["image_path"]
     )
 
     # Label index: 0 = normal ("good"), 1 = abnormal
     import numpy as np
+
     samples["label_index"] = np.where(
         samples["label"] == "good",
         int(LabelName.NORMAL),
@@ -234,13 +231,11 @@ def make_autovi_dataset(
     # ground_truth/<defect_type>/<image_stem>/0000.png
     # Key: image_stem (the numbered subdir), value: absolute mask path
     mask_lookup: dict[str, str] = {
-        f.parent.name: str(f)
-        for f in root.glob("ground_truth/*/*/0000.png")
-        if f.suffix in extensions
+        f.parent.name: str(f) for f in root.glob("ground_truth/*/*/0000.png") if f.suffix in extensions
     }
 
     # Assign mask paths by matching image stem to ground_truth subdir name
-    def lookup_mask(row: object) -> str:
+    def lookup_mask(row: Series) -> str:
         if row["split"] == "test" and row["label_index"] == LabelName.ABNORMAL:
             stem = Path(row["image_path"]).stem
             return mask_lookup.get(stem, "")
@@ -249,9 +244,7 @@ def make_autovi_dataset(
     samples["mask_path"] = samples.apply(lookup_mask, axis=1)
 
     # Verify all anomalous test images got a mask
-    abnormal_test = samples[
-        (samples["split"] == "test") & (samples["label_index"] == LabelName.ABNORMAL)
-    ]
+    abnormal_test = samples[(samples["split"] == "test") & (samples["label_index"] == LabelName.ABNORMAL)]
     missing = abnormal_test[abnormal_test["mask_path"] == ""]
     if not missing.empty:
         msg = (
@@ -261,11 +254,7 @@ def make_autovi_dataset(
         raise MisMatchError(msg)
 
     # Infer task type
-    samples.attrs["task"] = (
-        "classification"
-        if (samples["mask_path"] == "").all()
-        else "segmentation"
-    )
+    samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
 
     if split:
         samples = samples[samples["split"] == split].reset_index(drop=True)
