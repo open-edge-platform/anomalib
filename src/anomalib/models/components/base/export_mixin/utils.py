@@ -110,7 +110,7 @@ def raise_missing_onnxscript_error() -> None:
         "ONNX export with `dynamo=True` requires the optional `onnxscript` dependency. "
         "Install `anomalib[openvino]` or `onnxscript`, or export with `dynamo=False`."
     )
-    raise ModuleNotFoundError(msg)
+    raise ModuleNotFoundError(msg, name="onnxscript")
 
 
 def create_export_root(export_root: str | Path, export_type: ExportType) -> Path:
