@@ -109,6 +109,7 @@ runs:
     # Self-hosted containers may already ship ffmpeg and run as root without
     # sudo, so skip when ffmpeg is present and only prepend sudo if available.
     - name: Install FFmpeg system libraries
+      if: runner.os == 'Linux'
       shell: bash
       run: |
         if command -v ffmpeg >/dev/null 2>&1; then
