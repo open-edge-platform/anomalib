@@ -60,6 +60,7 @@ from importlib import import_module
 from jsonargparse import Namespace
 from omegaconf import DictConfig, OmegaConf
 
+from anomalib.models import _legacy_compat  # noqa: F401  # registers legacy checkpoint import aliases
 from anomalib.models.components import AnomalibModule
 from anomalib.utils.path import convert_snake_to_pascal_case, convert_to_snake_case, convert_to_title_case
 

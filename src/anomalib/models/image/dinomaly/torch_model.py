@@ -21,16 +21,16 @@ from torch import nn
 
 from anomalib.data import InferenceBatch
 from anomalib.models.components import GaussianBlur2d
-from anomalib.models.components.dinov2 import DinoV2Loader
+from anomalib.models.components.feature_extractors import TimmFeatureExtractor
 from anomalib.models.image.dinomaly.components import CosineHardMiningLoss, DinomalyMLP, LinearAttention
-from anomalib.models.image.dinomaly.components import vision_transformer as dinomaly_vision_transformer
 
 # Encoder architecture configurations for DINOv2 models.
 # The target layers are the
-DINOV2_ARCHITECTURES = {
+DINO_ARCHITECTURES = {
     "small": {"embed_dim": 384, "num_heads": 6, "target_layers": [2, 3, 4, 5, 6, 7, 8, 9]},
     "base": {"embed_dim": 768, "num_heads": 12, "target_layers": [2, 3, 4, 5, 6, 7, 8, 9]},
     "large": {"embed_dim": 1024, "num_heads": 16, "target_layers": [4, 6, 8, 10, 12, 14, 16, 18]},
+    "huge": {"embed_dim": 1280, "num_heads": 20, "target_layers": [3, 9, 12, 15, 18, 21, 24, 27]},
 }
 
 # Default fusion layer configurations
@@ -69,8 +69,8 @@ class DinomalyModel(nn.Module):
 
     Args:
         encoder_name (str): Name of the Vision Transformer encoder to use.
-            Supports DINOv2 variants like "dinov2reg_vit_base_14".
-            Defaults to "dinov2reg_vit_base_14".
+            Supports DINO variants like "vit_base_patch14_reg4_dinov2".
+            Defaults to "vit_base_patch14_reg4_dinov2".
         bottleneck_dropout (float): Dropout rate for the bottleneck MLP layer.
             Defaults to 0.2.
         decoder_depth (int): Number of Vision Transformer decoder layers.
@@ -93,7 +93,7 @@ class DinomalyModel(nn.Module):
 
     Example:
         >>> model = DinomalyModel(
-        ...     encoder_name="dinov2reg_vit_base_14",
+        ...     encoder_name="vit_base_patch14_reg4_dinov2",
         ...     decoder_depth=8,
         ...     bottleneck_dropout=0.2
         ... )
@@ -102,7 +102,7 @@ class DinomalyModel(nn.Module):
 
     def __init__(
         self,
-        encoder_name: str = "dinov2reg_vit_base_14",
+        encoder_name: str = "vit_base_patch14_reg4_dinov2",
         bottleneck_dropout: float = 0.2,
         decoder_depth: int = 8,
         target_layers: list[int] | None = None,
@@ -135,7 +135,16 @@ class DinomalyModel(nn.Module):
         if fuse_layer_decoder is None:
             self.fuse_layer_decoder = DEFAULT_FUSE_LAYERS
 
-        self.encoder = DinoV2Loader(vit_factory=dinomaly_vision_transformer).load(encoder_name)
+        self.encoder = TimmFeatureExtractor(
+            backbone=encoder_name,
+            layers=[f"blocks.{i}" for i in self.target_layers],
+            pre_trained=True,
+            requires_grad=False,
+            output_fmt="NLC",
+            return_class_token=True,
+            norm=False,
+            dynamic_img_size=True,
+        )
 
         # Add validation
         if decoder_depth <= 1:
@@ -212,18 +221,11 @@ class DinomalyModel(nn.Module):
         """
         h_patches = x.shape[2] // self.encoder.patch_size
         w_patches = x.shape[3] // self.encoder.patch_size
-        x = self.encoder.prepare_tokens(x)
-        encoder_features = []
-        decoder_features = []
 
-        for i, block in enumerate(self.encoder.blocks):
-            if i <= self.target_layers[-1]:
-                with torch.no_grad():
-                    x = block(x)
-            else:
-                continue
-            if i in self.target_layers:
-                encoder_features.append(x)
+        # Extract token sequences ([CLS, reg..., patches]) from the target encoder blocks.
+        features = self.encoder(x)
+        encoder_features = [features[f"blocks.{i}"] for i in self.target_layers]
+        decoder_features = []
 
         if self.remove_class_token:
             encoder_features = [e[:, 1 + self.encoder.num_register_tokens :, :] for e in encoder_features]
@@ -381,7 +383,7 @@ class DinomalyModel(nn.Module):
         Returns:
             Dictionary containing embed_dim, num_heads, and target_layers
         """
-        for arch_name, config in DINOV2_ARCHITECTURES.items():
+        for arch_name, config in DINO_ARCHITECTURES.items():
             if arch_name in encoder_name:
                 result = config.copy()
                 # Override target_layers if explicitly provided
@@ -389,7 +391,7 @@ class DinomalyModel(nn.Module):
                     result["target_layers"] = target_layers
                 return result
 
-        msg = f"Architecture not supported. Encoder name must contain one of {list(DINOV2_ARCHITECTURES.keys())}"
+        msg = f"Architecture not supported. Encoder name must contain one of {list(DINO_ARCHITECTURES.keys())}"
         raise ValueError(msg)
 
     def _process_features_for_spatial_output(
