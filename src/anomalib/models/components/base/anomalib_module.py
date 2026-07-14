@@ -171,7 +171,12 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
         )
         return callbacks
 
-    def forward(self, batch: torch.Tensor, *args, **kwargs) -> InferenceBatch:
+    def forward(
+        self,
+        batch: torch.Tensor,
+        image_sensitivity: torch.Tensor | None = None,
+        pixel_sensitivity: torch.Tensor | None = None,
+    ) -> InferenceBatch:
         """Perform forward pass through the model pipeline.
 
         The input batch is passed through:
@@ -181,8 +186,11 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
 
         Args:
             batch (torch.Tensor): Input batch
-            *args: Additional positional arguments (unused)
-            **kwargs: Additional keyword arguments (unused)
+            image_sensitivity (torch.Tensor | None): Optional override for
+                image-level sensitivity. Passed to the post-processor to shift
+                the effective threshold at inference time. Defaults to None.
+            pixel_sensitivity (torch.Tensor | None): Optional override for
+                pixel-level sensitivity. Defaults to None.
 
         Returns:
             InferenceBatch: Processed batch with model predictions
@@ -194,10 +202,11 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
             >>> isinstance(output, InferenceBatch)
             True
         """
-        del args, kwargs  # These variables are not used.
         batch = self.pre_processor(batch) if self.pre_processor else batch
         batch = self.model(batch)
-        return self.post_processor(batch) if self.post_processor else batch
+        if self.post_processor:
+            return self.post_processor(batch, image_sensitivity, pixel_sensitivity)
+        return batch
 
     def predict_step(
         self,

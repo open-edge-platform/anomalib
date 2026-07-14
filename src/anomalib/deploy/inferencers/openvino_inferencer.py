@@ -60,6 +60,7 @@ from PIL.Image import Image as PILImage
 
 from anomalib.data import NumpyImageBatch
 from anomalib.data.utils import read_image
+from anomalib.deploy.metadata import load_metadata
 
 if TYPE_CHECKING:
     from openvino.utils.data_helpers.wrappers import OVDict
@@ -79,6 +80,11 @@ class OpenVINOInferencer:
             Defaults to ``"AUTO"``.
         config (dict | None, optional): OpenVINO configuration parameters.
             Defaults to ``None``.
+        image_sensitivity (float | None, optional): Default image-level
+            sensitivity override. If ``None``, reads from metadata.json or
+            falls back to 0.5. Defaults to ``None``.
+        pixel_sensitivity (float | None, optional): Default pixel-level
+            sensitivity override. Defaults to ``None``.
 
     Example:
         >>> from anomalib.deploy import OpenVINOInferencer
@@ -94,6 +100,8 @@ class OpenVINOInferencer:
         path: str | Path | tuple[bytes, bytes],
         device: str | None = "AUTO",
         config: dict | None = None,
+        image_sensitivity: float | None = None,
+        pixel_sensitivity: float | None = None,
     ) -> None:
         if not module_available("openvino"):
             msg = "OpenVINO is not installed. Please install OpenVINO to use OpenVINOInferencer."
@@ -102,6 +110,22 @@ class OpenVINOInferencer:
         self.device = device
         self.config = config
         self.input_blob, self.output_blob, self.model = self.load_model(path)
+
+        self.metadata = self._load_metadata(path)
+        self._default_image_sensitivity = (
+            image_sensitivity
+            if image_sensitivity is not None
+            else self.metadata.get("postprocess", {}).get("image_sensitivity", 0.5)
+            if self.metadata
+            else 0.5
+        )
+        self._default_pixel_sensitivity = (
+            pixel_sensitivity
+            if pixel_sensitivity is not None
+            else self.metadata.get("postprocess", {}).get("pixel_sensitivity", 0.5)
+            if self.metadata
+            else 0.5
+        )
 
     def load_model(self, path: str | Path | tuple[bytes, bytes]) -> tuple[Any, Any, Any]:
         """Load OpenVINO model from file or bytes.
@@ -193,11 +217,21 @@ class OpenVINOInferencer:
         values = predictions.to_tuple()
         return dict(zip(names, values, strict=False))
 
-    def predict(self, image: str | Path | np.ndarray | PILImage | torch.Tensor) -> NumpyImageBatch:
+    def predict(
+        self,
+        image: str | Path | np.ndarray | PILImage | torch.Tensor,
+        *,
+        image_sensitivity: float | None = None,
+        pixel_sensitivity: float | None = None,
+    ) -> NumpyImageBatch:
         """Run inference on an input image.
 
         Args:
             image (str | Path | np.ndarray | PILImage | torch.Tensor): Input image as file path or array.
+            image_sensitivity (float | None): Per-call image sensitivity override.
+                Defaults to None (uses constructor/metadata default).
+            pixel_sensitivity (float | None): Per-call pixel sensitivity override.
+                Defaults to None (uses constructor/metadata default).
 
         Returns:
             NumpyImageBatch: Batch containing the predictions.
@@ -205,7 +239,6 @@ class OpenVINOInferencer:
         Raises:
             TypeError: If image input is invalid type.
         """
-        # Convert file path or string to image if necessary
         if isinstance(image, str | Path):
             image = read_image(image, as_tensor=False)
         elif isinstance(image, PILImage):
@@ -214,7 +247,36 @@ class OpenVINOInferencer:
             image = image.cpu().numpy()
 
         image = self.pre_process(image)
-        predictions = self.model({self.input_blob.any_name: image})
+
+        img_sens = image_sensitivity if image_sensitivity is not None else self._default_image_sensitivity
+        pix_sens = pixel_sensitivity if pixel_sensitivity is not None else self._default_pixel_sensitivity
+
+        input_names = {inp.any_name for inp in self.model.inputs}
+        feed_dict: dict[str, np.ndarray] = {self.input_blob.any_name: image}
+        if "image_sensitivity" in input_names:
+            feed_dict["image_sensitivity"] = np.array(img_sens, dtype=np.float32)
+        if "pixel_sensitivity" in input_names:
+            feed_dict["pixel_sensitivity"] = np.array(pix_sens, dtype=np.float32)
+        predictions = self.model(feed_dict)
+
         pred_dict = self.post_process(predictions)
 
         return NumpyImageBatch(image=image, **pred_dict)
+
+    @staticmethod
+    def _load_metadata(path: str | Path | tuple[bytes, bytes]) -> dict | None:
+        """Load metadata.json sidecar if it exists next to the model.
+
+        Args:
+            path (str | Path | tuple[bytes, bytes]): Model path.
+
+        Returns:
+            dict | None: Parsed metadata or None if not found.
+        """
+        if isinstance(path, tuple):
+            return None
+        path = Path(path) if not isinstance(path, Path) else path
+        metadata_path = path.parent / "metadata.json"
+        if metadata_path.exists():
+            return load_metadata(metadata_path)
+        return None
