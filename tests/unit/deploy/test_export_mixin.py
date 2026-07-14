@@ -54,7 +54,10 @@ def test_to_onnx_uses_legacy_exporter_by_default(mocker: pytest.MockFixture, tmp
         model.to_onnx(tmp_path, input_size=(32, 32))
 
     assert export_mock.call_args.kwargs["dynamo"] is False
-    assert export_mock.call_args.kwargs["dynamic_axes"] == {"input": {0: "batch_size"}, "output": {0: "batch_size"}}
+    assert export_mock.call_args.kwargs["dynamic_axes"] == {
+        "input": {0: "batch_size"},
+        "pred_score": {0: "batch_size"},
+    }
     assert export_mock.call_args.kwargs["dynamic_shapes"] is None
 
 
@@ -78,7 +81,10 @@ def test_to_onnx_uses_dynamic_shapes_for_dynamo_export(mocker: pytest.MockFixtur
 
     assert export_mock.call_args.kwargs["dynamo"] is True
     assert export_mock.call_args.kwargs["dynamic_shapes"] == ({0: "batch_size"},)
-    assert export_mock.call_args.kwargs["dynamic_axes"] == {"input": {0: "batch_size"}, "output": {0: "batch_size"}}
+    assert export_mock.call_args.kwargs["dynamic_axes"] == {
+        "input": {0: "batch_size"},
+        "pred_score": {0: "batch_size"},
+    }
 
 
 def test_to_onnx_translates_custom_dynamic_axes_for_dynamo_export(
