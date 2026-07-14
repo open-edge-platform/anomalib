@@ -71,7 +71,7 @@ clip = [
     "open-clip-torch>=2.23.0,<2.26.1",
 ]
 vlm = ["ollama>=0.4.0", "openai", "python-dotenv", "transformers"]
-video = ["av>=10.0.0", "requests", "torchcodec>=0.9.0"]
+video = ["av>=10.0.0", "requests"]
 loggers = [
     "comet-ml>=3.31.7",
     "gradio>=4",
@@ -120,6 +120,7 @@ cu126 = [
 ]
 cu130 = [
     "torch>=2.9.0",
+    "torchcodec>=0.9.0",
     "torchvision>=0.24.0",
 ]
 rocm = [
