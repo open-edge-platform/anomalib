@@ -107,12 +107,21 @@ runs:
     - name: Configure virtual environment
       id: setup-venv
       shell: bash
+      env:
+        INPUTS_DEVICE: ${{ inputs.device }}
       run: |
         # Create isolated test environment with uv using the configured Python
         uv venv --python "$(command -v python)" .venv
         source .venv/bin/activate
-        # Install dependencies with dev extras into the uv-managed environment
-        uv pip install ".[dev,cu126]" # TODO(ashwinvaidya17): See issue #3050
+        # Install dependencies with dev extras into the uv-managed environment.
+        # Select the hardware extra matching the runner to avoid pulling CUDA
+        # wheels (torch + nvidia-*) onto CPU-only runners, which breaks
+        # torchcodec at import time. See issue #3050.
+        if [ "$INPUTS_DEVICE" = "cpu" ]; then
+          uv pip install ".[dev,cpu]"
+        else
+          uv pip install ".[dev,cu126]"
+        fi
         uv pip install codecov
 
     # Determine which tests to run based on input
