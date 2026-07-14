@@ -11,10 +11,10 @@
 [Notebooks](examples/notebooks) •
 [License](LICENSE)
 
-[![python](https://img.shields.io/badge/python-3.10%2B-green)]()
-[![pytorch](https://img.shields.io/badge/pytorch-2.6%2B-orange)]()
-[![lightning](https://img.shields.io/badge/lightning-2.2%2B-blue)]()
-[![openvino](https://img.shields.io/badge/openvino-2024.0%2B-purple)]()
+![python](https://img.shields.io/badge/python-3.10%2B-green)
+![pytorch](https://img.shields.io/badge/pytorch-2.6%2B-orange)
+![lightning](https://img.shields.io/badge/lightning-2.2%2B-blue)
+![openvino](https://img.shields.io/badge/openvino-2024.0%2B-purple)
 
 [![Pre-Merge Checks](https://github.com/open-edge-platform/anomalib/actions/workflows/pre_merge.yml/badge.svg)](https://github.com/open-edge-platform/anomalib/actions/workflows/pre_merge.yml)
 [![codecov](https://codecov.io/gh/open-edge-platform/anomalib/branch/main/graph/badge.svg?token=Z6A07N1BZK)](https://codecov.io/gh/open-edge-platform/anomalib)
@@ -94,9 +94,6 @@ uv pip install "anomalib[cu126]"
 
 # CUDA 13.0 support (Linux/Windows with NVIDIA GPU)
 uv pip install "anomalib[cu130]"
-
-# CUDA 11.8 support (Linux/Windows with NVIDIA GPU)
-uv pip install "anomalib[cu118]"
 
 # ROCm support (Linux with AMD GPU)
 uv pip install "anomalib[rocm]"

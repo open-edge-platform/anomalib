@@ -21,9 +21,8 @@ from torch import nn
 
 from anomalib.data import InferenceBatch
 from anomalib.models.components import GaussianBlur2d
-from anomalib.models.components.dinov2 import DinoV2Loader
+from anomalib.models.components.feature_extractors import TimmFeatureExtractor
 from anomalib.models.image.dinomaly.components import DinomalyMLP
-from anomalib.models.image.dinomaly.components import vision_transformer as dinomaly_vision_transformer
 from anomalib.models.image.inp_former.components.layers import AggregationBlock, PrototypeBlock
 from anomalib.models.image.inp_former.components.loss import GlobalCosineHmAdaptiveLoss
 
@@ -72,9 +71,6 @@ class InpFormerModel(nn.Module):
         remove_class_token (bool): If ``True``, the class token is dropped from the
             patch token sequence before INP extraction and reconstruction.
             Defaults to ``False``.
-        encoder_require_grad_layer (list[int]): Indices of encoder layers that should
-            remain trainable; all other encoder layers are frozen. Defaults to ``[]``
-            (fully frozen encoder).
     """
 
     def __init__(
@@ -85,18 +81,23 @@ class InpFormerModel(nn.Module):
         fuse_layer_encoder: list[list[int]] | None = None,
         fuse_layer_decoder: list[list[int]] | None = None,
         remove_class_token: bool = False,
-        encoder_require_grad_layer: list[int] | None = None,
     ) -> None:
         super().__init__()
-        self.encoder_require_grad_layer: list[int] = (
-            encoder_require_grad_layer if encoder_require_grad_layer is not None else []
-        )
         self.remove_class_token = remove_class_token
         self.target_layers = target_layers if target_layers is not None else [2, 3, 4, 5, 6, 7, 8, 9]
         self.fuse_layer_encoder = fuse_layer_encoder if fuse_layer_encoder is not None else DEFAULT_FUSE_LAYERS
         self.fuse_layer_decoder = fuse_layer_decoder if fuse_layer_decoder is not None else DEFAULT_FUSE_LAYERS
 
-        self.encoder = DinoV2Loader(vit_factory=dinomaly_vision_transformer).load(encoder_name)
+        self.encoder = TimmFeatureExtractor(
+            backbone=encoder_name,
+            layers=[f"blocks.{i}" for i in self.target_layers],
+            pre_trained=True,
+            requires_grad=False,
+            output_fmt="NLC",
+            return_class_token=True,
+            norm=False,
+            dynamic_img_size=True,
+        )
 
         # Extract architecture configuration based on the model name
         arch_config = self._get_architecture_config(encoder_name, target_layers)
@@ -195,6 +196,7 @@ class InpFormerModel(nn.Module):
                   and anomaly_map (pixel-level anomaly maps).
 
         """
+        batch = batch.type(self.prototype_token[0].dtype)
         en, de, inp_loss = self.get_encoder_decoder_inploss(batch)
         image_size = (batch.shape[2], batch.shape[3])
 
@@ -318,20 +320,11 @@ class InpFormerModel(nn.Module):
                 - de: List of fused decoder features reshaped to spatial dimensions
                 - inp_loss: INP coherence loss to guide INP Extractor
         """
-        x = self.encoder.prepare_tokens(x)
         batch_size = x.shape[0]
-        en_list = []
-        for i, blk in enumerate(self.encoder.blocks):
-            if i <= self.target_layers[-1]:
-                if i in self.encoder_require_grad_layer:
-                    x = blk(x)
-                else:
-                    with torch.no_grad():
-                        x = blk(x)
-            else:
-                continue
-            if i in self.target_layers:
-                en_list.append(x)
+
+        # Extract token sequences ([CLS, reg..., patches]) from the target encoder blocks.
+        features = self.encoder(x)
+        en_list = [features[f"blocks.{i}"] for i in self.target_layers]
         # Compute spatial side length. DINOv2 produces square patch grids (input is resized to square).
         side = int(math.sqrt(en_list[0].shape[1] - 1 - self.encoder.num_register_tokens))
 

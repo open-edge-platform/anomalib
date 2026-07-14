@@ -32,7 +32,7 @@ Example:
     ...     # Initialize model
     ...     model = AnomalyDINO(
     ...         num_neighbours=1,
-    ...         encoder_name="dinov2_vit_small_14",
+    ...         encoder_name="vit_small_patch14_dinov2",
     ...         masking=mask,
     ...         coreset_subsampling=False,
     ...     )
