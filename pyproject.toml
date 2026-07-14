@@ -112,10 +112,12 @@ test = [
 #   (torch.load weights_only=True RCE, patched in 2.6.0)
 cpu = [
     "torch>=2.6.0",
+    "torchcodec",
     "torchvision>=0.21.0",
 ]
 cu126 = [
     "torch>=2.6.0",
+    "torchcodec",
     "torchvision>=0.21.0",
 ]
 cu130 = [
@@ -125,11 +127,13 @@ cu130 = [
 ]
 rocm = [
     "torch>=2.7.0",
+    "torchcodec",
     "torchvision>=0.22.0",
     "pytorch-triton-rocm ; sys_platform == 'linux'",
 ]
 xpu = [
     "torch>=2.9.0", # Note : Last tested with torch+xpu (2.9.1)
+    "torchcodec",
     "torchvision>=0.24.0",
     "pytorch-triton-xpu ; sys_platform == 'linux' or sys_platform == 'win32'",
 ]

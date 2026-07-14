@@ -316,6 +316,7 @@ dependencies = [
 cpu = [
     { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-cu130') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu')" },
     { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-cu130') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra != 'extra-15-anomalib-studio-xpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra != 'extra-15-anomalib-studio-xpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra != 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra != 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra != 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu')" },
+    { name = "torchcodec" },
     { name = "torchvision", version = "0.28.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-cu130') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu')" },
     { name = "torchvision", version = "0.28.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-cu130') or (extra == 'extra-15-anomalib-studio-cpu' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-15-anomalib-studio-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-15-anomalib-studio-cu130' and extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra != 'extra-15-anomalib-studio-xpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra != 'extra-15-anomalib-studio-xpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra != 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra != 'extra-15-anomalib-studio-cpu' and extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra != 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu')" },
 ]
@@ -333,6 +334,7 @@ openvino = [
 xpu = [
     { name = "pytorch-triton-xpu", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "torch", version = "2.9.1+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" } },
+    { name = "torchcodec" },
     { name = "torchvision", version = "0.24.1+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" } },
 ]
 
@@ -464,7 +466,11 @@ requires-dist = [
     { name = "torch", marker = "extra == 'cu130'", specifier = ">=2.9.0", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "anomalib", extra = "cu130" } },
     { name = "torch", marker = "extra == 'rocm'", specifier = ">=2.7.0", index = "https://download.pytorch.org/whl/rocm6.3", conflict = { package = "anomalib", extra = "rocm" } },
     { name = "torch", marker = "extra == 'xpu'", specifier = ">=2.9.0", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "anomalib", extra = "xpu" } },
+    { name = "torchcodec", marker = "extra == 'cpu'" },
+    { name = "torchcodec", marker = "extra == 'cu126'" },
     { name = "torchcodec", marker = "extra == 'cu130'", specifier = ">=0.9.0" },
+    { name = "torchcodec", marker = "extra == 'rocm'" },
+    { name = "torchcodec", marker = "extra == 'xpu'" },
     { name = "torchmetrics", specifier = ">=1.8.2" },
     { name = "torchvision", marker = "extra == 'cpu'", specifier = ">=0.21.0", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "anomalib", extra = "cpu" } },
     { name = "torchvision", marker = "extra == 'cu126'", specifier = ">=0.21.0", index = "https://download.pytorch.org/whl/cu126", conflict = { package = "anomalib", extra = "cu126" } },
@@ -1126,7 +1132,7 @@ standard = [
 
 [[package]]
 name = "fastapi-cloud-cli"
-version = "0.22.1"
+version = "0.22.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "detect-installer" },
@@ -1139,9 +1145,9 @@ dependencies = [
     { name = "typer" },
     { name = "uvicorn", extra = ["standard"] },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0b/e5/bee77aa542ec66bcc55b458d606f3356a58f5bb9f2c59006f6ff53a3869b/fastapi_cloud_cli-0.22.1.tar.gz", hash = "sha256:50d80de6ce397a4959e6f3509574edac65d0a6998655215c95d077b18ec2f4b1", size = 94501, upload-time = "2026-07-01T22:09:03.358Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/25/f2/36bfe990baa656de89a2b98a77a15dcd018474f7245c8e4a10cada0553c5/fastapi_cloud_cli-0.22.2.tar.gz", hash = "sha256:7ec78c1fed58f578af5eb1fb54ec4b456eba4dc1eaca1c3a93cf499a7cbc7ab3", size = 94480, upload-time = "2026-07-14T09:27:01.349Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/75/0c/9e3069ff571142e571d68156aa4c1ab1d51c0b87f21bbe0f44c10029b19b/fastapi_cloud_cli-0.22.1-py3-none-any.whl", hash = "sha256:4ba307b97b08282d1efb2daef5f1e88af23e02fe2286c25273c1794e399df509", size = 77739, upload-time = "2026-07-01T22:09:02.359Z" },
+    { url = "https://files.pythonhosted.org/packages/ae/25/e01631a63a5213fc783e5b84e8a27eca800f21549aa414644a0a29181045/fastapi_cloud_cli-0.22.2-py3-none-any.whl", hash = "sha256:37c6b05adb94a4c9f59916a559d041c565db36b5f3dddeed420bf0a51182c363", size = 77744, upload-time = "2026-07-14T09:27:02.571Z" },
 ]
 
 [[package]]
