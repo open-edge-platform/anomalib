@@ -25,6 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - 🐞 **export**: Add `dynamic_shapes` support for torch dynamo ONNX/OpenVINO export while keeping the legacy exporter path available during the 2.7.0 transition
 
+- 🐞 **data**: Normalize `Split` enum to string value before DataFrame comparison in dataset loaders for pandas 3.x compatibility by @won-seoop in https://github.com/open-edge-platform/anomalib/pull/3634 and https://github.com/open-edge-platform/anomalib/pull/3659
+
 ## [v2.5.0] - 2026-05-28
 
 ### Added
