@@ -208,9 +208,8 @@ class ExportMixin:
             "input_names": input_names,
             "output_names": output_names,
             "dynamo": dynamo,
+            "dynamic_shapes": dynamic_shapes,
         }
-        if dynamo:
-            export_kwargs["dynamic_shapes"] = dynamic_shapes
 
         try:
             torch.onnx.export(
