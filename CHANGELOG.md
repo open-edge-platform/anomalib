@@ -20,6 +20,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- 🐞 **data**: Normalize `Split` enum to string value before DataFrame comparison in dataset loaders for pandas 3.x compatibility by @won-seoop in https://github.com/open-edge-platform/anomalib/pull/3634 and https://github.com/open-edge-platform/anomalib/pull/3659
+
 ## [v2.5.0] - 2026-05-28
 
 ### Added
