@@ -79,6 +79,7 @@ def test_download_url_reachable(download_info: DownloadInfo) -> None:
                 resp = urllib.request.urlopen(req, timeout=timeout)  # nosemgrep # noqa: S310
             except HTTPError as exc:
                 last_status = exc.code
+                exc.close()
             except URLError:
                 if method == "GET":
                     return last_status

@@ -200,8 +200,8 @@ def safe_extract(tar_file: TarFile, root: Path, members: list[TarInfo]) -> None:
             else:
                 tar_file.extract(member, root)
         if member.isdir():
-            extracted_path = root / member.name
-            if extracted_path.is_dir():
+            extracted_path = (root / member.name).resolve()
+            if extracted_path.is_relative_to(root.resolve()) and extracted_path.is_dir():
                 with contextlib.suppress(OSError):
                     extracted_path.chmod(extracted_path.stat().st_mode | 0o700)
 
