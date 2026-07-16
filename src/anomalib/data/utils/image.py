@@ -30,7 +30,6 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 import tifffile as tiff
 import torch
@@ -396,16 +395,23 @@ def show_image(image: np.ndarray | Figure, title: str = "Image") -> None:
         >>> img = read_image("image.jpg")
         >>> show_image(img, title="My Image")
     """
+    # Inline import exception as it is slow to import matplotlib
+    # also locks the Matplotlib backend before callers can configure it
+    # see https://github.com/open-edge-platform/anomalib/pull/3675#discussion_r3596551713
+    import matplotlib.pyplot as plt
+
     if isinstance(image, Figure):
         image.suptitle(title)
         plt.figure(image)
         plt.show()
+        plt.close(image)
     else:
-        plt.figure()
-        plt.title(title)
-        plt.imshow(image)
-        plt.axis("off")
+        fig, ax = plt.subplots()
+        ax.set_title(title)
+        ax.imshow(image)
+        ax.axis("off")
         plt.show()
+        plt.close(fig)
 
 
 def save_image(filename: Path | str, image: np.ndarray | Figure, root: Path | None = None) -> None:
