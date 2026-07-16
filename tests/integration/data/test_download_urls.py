@@ -65,7 +65,7 @@ def test_download_url_reachable(download_info: DownloadInfo) -> None:
 
     Uses HEAD with a fallback to GET for servers that reject HEAD.
     Retries on transient 5xx responses so momentary server outages do not
-    produce false failures; only genuine 4xx (dead link) responses fail.
+    produce false failures; only 4xx responses (dead link, auth-gated, or rate-limited) fail.
     """
     url = download_info.url
     timeout = 15
