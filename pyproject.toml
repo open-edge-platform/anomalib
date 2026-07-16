@@ -45,7 +45,7 @@ dependencies = [
     "einops>=0.3.2",
     # Image processing and computer vision
     "pillow>=10.1.0",
-    "opencv-python>=4.5.3.56",
+    "opencv-python-headless>=4.5.3.56",
     "scikit-image",
     "tifffile",
     "imagecodecs",

@@ -30,6 +30,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import tifffile as tiff
 import torch
@@ -396,11 +397,14 @@ def show_image(image: np.ndarray | Figure, title: str = "Image") -> None:
         >>> show_image(img, title="My Image")
     """
     if isinstance(image, Figure):
-        image = figure_to_array(image)
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    cv2.imshow(title, image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+        image.suptitle(title)
+        image.show()
+    else:
+        plt.figure()
+        plt.title(title)
+        plt.imshow(image)
+        plt.axis("off")
+        plt.show()
 
 
 def save_image(filename: Path | str, image: np.ndarray | Figure, root: Path | None = None) -> None:
