@@ -27,6 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - 🐞 **data**: Normalize `Split` enum to string value before DataFrame comparison in dataset loaders for pandas 3.x compatibility by @won-seoop in https://github.com/open-edge-platform/anomalib/pull/3634 and https://github.com/open-edge-platform/anomalib/pull/3659
 
+- 🐞 **typing**: Pin mypy `python_version` to 3.10 to fix spurious dataclass `__replace__` incompatibility errors under Python 3.13 by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3674
+
 ## [v2.5.0] - 2026-05-28
 
 ### Added
