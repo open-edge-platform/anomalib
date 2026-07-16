@@ -69,31 +69,32 @@ on:
         description: "Name of the uploaded artifact"
         value: ${{ jobs.build.outputs.artifact-name }}
 
-permissions:
-  contents: read
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # Required to checkout the repository
     outputs:
       artifact-name: ${{ steps.set-artifact-name.outputs.name }}
     steps:
       - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           persist-credentials: false
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: ${{ inputs.python-version }}
       # Cache poisoning mitigation: fork PRs blocked, same-repo PRs allowed; event+branch isolation
       # No cache for build/ or dist/ - Python packaging regenerates them from scratch each time
       - name: Cache pip dependencies
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: |
             ~/.cache/pip
@@ -113,7 +114,7 @@ jobs:
       - name: Set artifact name
         id: set-artifact-name
         run: echo "name=dist-$(date +%s)" >> $GITHUB_OUTPUT
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ${{ steps.set-artifact-name.outputs.name }}
           path: dist/

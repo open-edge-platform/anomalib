@@ -4,7 +4,7 @@
 #------------------------------------------
 # Web UI Build Stage
 #------------------------------------------
-FROM node:24-alpine3.22@sha256:b689d4005875ae167178471a7a622ec2909459a3bbb32277260be1971af7a99f AS web-ui-base
+FROM node:24-alpine3.22@sha256:191c9f0080fcbbc6547a85dc0ff7988072214a355aabdc1d2ec55a7dae5eea8a AS web-ui-base
 
 WORKDIR /home/app/web_ui/
 
@@ -29,7 +29,7 @@ RUN npm run build
 #------------------------------------------
 # Anomalib Studio Base with UI built
 #------------------------------------------
-FROM python:3.13-slim@sha256:a0779d7c12fc20be6ec6b4ddc901a4fd7657b8a6bc9def9d3fde89ed5efe0a3d AS anomalib-studio-base
+FROM python:3.13-slim@sha256:eb43ff125d8d58d7449dcba7d336c23bcac412f526d861db493b9994d8010280 AS anomalib-studio-base
 COPY --from=docker.io/astral/uv:0.9.7@sha256:ba4857bf2a068e9bc0e64eed8563b065908a4cd6bfb66b531a9c424c8e25e142 /uv /uvx /bin/
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 ENV UV_PYTHON_DOWNLOADS=0
@@ -175,7 +175,7 @@ RUN echo "Removing non-redistributable CUDA components per NVIDIA EULA..." && \
     -name "libnvperf_host.so*" -o \
     -name "libnvperf_target.so*" -o \
     -name "libpcsamplingutil.so*" \
-    \) -path "*cupti*" -delete 2>/dev/null || true && \
+    \) -delete 2>/dev/null || true && \
     # Remove cuSolver MG libraries (enterprise feature)
     find $SEARCH_PATHS -name "libcusolverMg.so*" -delete 2>/dev/null || true && \
     # Remove Triton NVIDIA backends (development components)
@@ -238,6 +238,9 @@ WORKDIR /app/application/backend
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --extra xpu
+
+# CUDA EULA Compliance Cleanup
+RUN find /app/application/backend/.venv -type d -path "*/triton/backends/nvidia" -exec rm -rf {} + 2>/dev/null || true
 
 EXPOSE 8000
 

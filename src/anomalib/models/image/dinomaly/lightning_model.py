@@ -47,10 +47,11 @@ from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 from torch.nn.init import trunc_normal_
 from torchvision.transforms.v2 import CenterCrop, Compose, Normalize, Resize
 
-from anomalib import LearningType
+from anomalib import LearningType, PrecisionType
 from anomalib.data import Batch
 from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule
+from anomalib.models.components.base import restore_frozen_encoder_weights
 from anomalib.models.image.dinomaly.components import StableAdamW, WarmCosineScheduler
 from anomalib.models.image.dinomaly.torch_model import DinomalyModel
 from anomalib.post_processing import PostProcessor
@@ -99,7 +100,7 @@ class Dinomaly(AnomalibModule):
     Args:
         encoder_name (str): Name of the Vision Transformer encoder to use.
             Supports DINOv2 variants (small, base, large) with different patch sizes.
-            Defaults to "dinov2reg_vit_base_14".
+            Defaults to "vit_base_patch14_reg4_dinov2".
         bottleneck_dropout (float): Dropout rate for the bottleneck MLP layer.
             Helps prevent overfitting during feature compression. Defaults to 0.2.
         decoder_depth (int): Number of Vision Transformer decoder layers.
@@ -117,6 +118,8 @@ class Dinomaly(AnomalibModule):
             from Dinomaly2. When enabled, the class token is subtracted from patch
             features before reconstruction. Most beneficial in multi-class settings.
             Incompatible with ``remove_class_token=True``. Defaults to False.
+        precision (str | PrecisionType): Numerical precision for model parameters.
+            Supports "float16" and "float32". Defaults to "float32".
         pre_processor (PreProcessor | bool, optional): Pre-processor instance or
             flag to use default. Defaults to ``True``.
         post_processor (PostProcessor | bool, optional): Post-processor instance
@@ -135,7 +138,7 @@ class Dinomaly(AnomalibModule):
         >>>
         >>> # Custom configuration
         >>> model = Dinomaly(
-        ...     encoder_name="dinov2reg_vit_large_14",
+        ...     encoder_name="vit_large_patch14_reg4_dinov2",
         ...     decoder_depth=12,
         ...     bottleneck_dropout=0.1,
         ...     mask_neighbor_size=3
@@ -154,7 +157,7 @@ class Dinomaly(AnomalibModule):
 
     def __init__(
         self,
-        encoder_name: str = "dinov2reg_vit_base_14",
+        encoder_name: str = "vit_base_patch14_reg4_dinov2",
         bottleneck_dropout: float = 0.2,
         decoder_depth: int = 8,
         target_layers: list[int] | None = None,
@@ -162,6 +165,7 @@ class Dinomaly(AnomalibModule):
         fuse_layer_decoder: list[list[int]] | None = None,
         remove_class_token: bool = False,
         use_context_recentering: bool = False,
+        precision: str | PrecisionType = PrecisionType.FLOAT32,
         pre_processor: PreProcessor | bool = True,
         post_processor: PostProcessor | bool = True,
         evaluator: Evaluator | bool = True,
@@ -185,6 +189,18 @@ class Dinomaly(AnomalibModule):
             use_context_recentering=use_context_recentering,
         )
 
+        if isinstance(precision, str):
+            precision = PrecisionType(precision.lower())
+
+        if precision == PrecisionType.FLOAT16:
+            self.model = self.model.to(torch.bfloat16)
+        elif precision == PrecisionType.FLOAT32:
+            self.model = self.model.float()
+        else:
+            msg = f"""Unsupported precision type: {precision}.
+            Supported types are: {PrecisionType.FLOAT16}, {PrecisionType.FLOAT32}."""
+            raise ValueError(msg)
+
         # Set the trainable parameters for the model.
         # Only the bottleneck and decoder parameters are trained.
 
@@ -198,6 +214,19 @@ class Dinomaly(AnomalibModule):
 
         self.trainable_modules = torch.nn.ModuleList([self.model.bottleneck, self.model.decoder])
         self._initialize_trainable_modules(self.trainable_modules)
+
+    def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
+        """Make checkpoints trained before the timm-encoder migration loadable.
+
+        The frozen DINOv2 encoder was migrated from a custom Vision Transformer to a frozen
+        :class:`TimmFeatureExtractor`. The legacy encoder weights are dropped and replaced by the
+        current timm encoder weights so the strict state-dict load still succeeds. See
+        :func:`~anomalib.models.components.base.restore_frozen_encoder_weights`.
+
+        Args:
+            checkpoint (dict[str, Any]): The checkpoint dictionary being loaded, modified in place.
+        """
+        restore_frozen_encoder_weights(self, checkpoint, encoder_key="encoder")
 
     @classmethod
     def configure_pre_processor(

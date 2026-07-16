@@ -2,7 +2,7 @@ name: NPM Audit Fix
 
 on:
   schedule:
-    - cron: "0 3 2,16 * *"
+    - cron: "0 3 * * 6"
   workflow_dispatch:
     inputs:
       force_fix:
@@ -20,18 +20,18 @@ jobs:
 
     steps:
       - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
 
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
           lfs: true
 
       - name: Set up Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version-file: application/ui/.nvmrc
 
@@ -57,11 +57,32 @@ jobs:
         continue-on-error: true
         run: npm audit fix --force || true
 
+      - name: Install dependencies (tauri)
+        working-directory: application/binary/tauri
+        run: npm ci
+
+      - name: Display audit report (tauri)
+        working-directory: application/binary/tauri
+        continue-on-error: true
+        run: |
+          npm audit || true
+
+      - name: Run npm audit fix - safe mode (tauri)
+        if: ${{ github.event_name == 'schedule' || github.event.inputs.force_fix != 'true' }}
+        working-directory: application/binary/tauri
+        continue-on-error: true
+        run: npm audit fix --package-lock-only || echo "Some issues could not be auto-fixed"
+
+      - name: Run npm audit fix - force mode (tauri)
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force_fix == 'true' }}
+        working-directory: application/binary/tauri
+        continue-on-error: true
+        run: npm audit fix --force || true
+
       - name: Check for changes
         id: check-changes
-        working-directory: application/ui
         run: |
-          if git diff --quiet package-lock.json package.json; then
+          if git diff --quiet application/ui/package-lock.json application/ui/package.json application/binary/tauri/package-lock.json application/binary/tauri/package.json; then
             echo "changed=false" >> $GITHUB_OUTPUT
           else
             echo "changed=true" >> $GITHUB_OUTPUT
@@ -71,14 +92,14 @@ jobs:
       - name: Get token
         if: steps.check-changes.outputs.changed == 'true'
         id: get-github-app-token
-        uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           app-id: ${{ secrets.RENOVATE_APP_ID }}
           private-key: ${{ secrets.RENOVATE_APP_PEM }}
 
       - name: Create PR if lockfile changed
         if: steps.check-changes.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8.1.0
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ steps.get-github-app-token.outputs.token }}
           author: oep-renovate[bot] <212772560+oep-renovate[bot]@users.noreply.github.com>
@@ -94,3 +115,5 @@ jobs:
           add-paths: |
             application/ui/package-lock.json
             application/ui/package.json
+            application/binary/tauri/package-lock.json
+            application/binary/tauri/package.json

@@ -52,5 +52,25 @@ terms are listed below.
    SPDX-License-Identifier: MIT
 
 10. GeneralAD model (anomalib.models.image.general_ad)
-    Copyright (c) 2024 @LucStrater, https://github.com/LucStrater/GeneralAD
+   Copyright (c) 2024 @LucStrater, https://github.com/LucStrater/GeneralAD
+   SPDX-License-Identifier: MIT
+
+11. AnomalyVFM model (anomalib.models.image.anomalyvfm)
+   Copyright (c) 2025 @MaticFuc, https://github.com/MaticFuc/AnomalyVFM
+   SPDX-License-Identifier: MIT
+
+12. GLASS Model implementation is based on the original code
+   Copyright (c) 2024 Qiyu Chen, https://github.com/cqylunlun/GLASS
+   SPDX-License-Identifier: MIT
+
+13. Agentic Actions Auditor skill (.agents/skills/agentic-actions-auditor)
+    Copyright (c) Trail of Bits and contributors, https://github.com/trailofbits/skills
+    SPDX-License-Identifier: CC-BY-SA-4.0
+
+14. CFM model (anomalib.models.image.cfm)
+    Copyright (c) 2023 CVLAB-Unibo, https://github.com/CVLAB-Unibo/crossmodal-feature-mapping
+    SPDX-License-Identifier: MIT
+
+15. INP-Former model (anomalib.models.image.inp_former)
+    Copyright (c) 2025 Wei Luo, https://github.com/luow23/INP-Former
     SPDX-License-Identifier: MIT

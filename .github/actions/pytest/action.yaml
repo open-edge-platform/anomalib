@@ -94,25 +94,55 @@ runs:
   steps:
     # Set up Python with pip caching
     - name: Set up Python environment
-      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
       with:
         python-version: ${{ inputs.python-version }}
         cache: ${{ inputs.enable-cache == 'true' && 'pip' || '' }}
         cache-dependency-path: ${{ inputs.enable-cache == 'true' && 'pyproject.toml' || '' }}
 
     - name: Set up uv
-      uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
+      uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+
+    # Install FFmpeg system libraries required by torchcodec at import time.
+    # The cpu/cuda torchcodec wheels dynamically link libavutil/libavcodec from
+    # the system, so tests import-fail without ffmpeg installed on the runner.
+    # Self-hosted containers may already ship ffmpeg and run as root without
+    # sudo, so skip when ffmpeg is present and only prepend sudo if available.
+    - name: Install FFmpeg system libraries
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        if command -v ffmpeg >/dev/null 2>&1; then
+          echo "ffmpeg already present: $(ffmpeg -version | head -n1)"
+          exit 0
+        fi
+        if command -v sudo >/dev/null 2>&1; then
+          SUDO="sudo"
+        else
+          SUDO=""
+        fi
+        $SUDO apt-get update
+        $SUDO apt-get install -y --no-install-recommends ffmpeg
 
     # Create and configure virtual environment
     - name: Configure virtual environment
       id: setup-venv
       shell: bash
+      env:
+        INPUTS_DEVICE: ${{ inputs.device }}
       run: |
         # Create isolated test environment with uv using the configured Python
         uv venv --python "$(command -v python)" .venv
         source .venv/bin/activate
-        # Install dependencies with dev extras into the uv-managed environment
-        uv pip install ".[dev,cu126]" # TODO(ashwinvaidya17): See issue #3050
+        # Install dependencies with dev extras into the uv-managed environment.
+        # Select the hardware extra matching the runner to avoid pulling CUDA
+        # wheels (torch + nvidia-*) onto CPU-only runners, which breaks
+        # torchcodec at import time. See issue #3050.
+        if [ "$INPUTS_DEVICE" = "cpu" ]; then
+          uv pip install ".[dev,cpu]"
+        else
+          uv pip install ".[dev,cu126]"
+        fi
         uv pip install codecov
 
     # Determine which tests to run based on input
@@ -189,7 +219,7 @@ runs:
 
     - name: Upload test results
       if: always() && steps.test-execution.outcome == 'failure'
-      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: pytest-results-${{ inputs.test-type }}
         path: pytest_output.log

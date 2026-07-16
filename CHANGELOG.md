@@ -10,11 +10,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 
+- ⚠️ **deps**: Remove `cu118` install extra by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/3652
+
 ### Changed
+
+- 🔧 **deps**: Bump minimum `torch` and `torchvision` versions for the `xpu` install extra by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/3652
+- 🔧 **deps**: Remove upper bound on `torch` for `cpu`, `cu126`, and `rocm` install extras to unblock Python 3.14 wheel resolution
 
 ### Deprecated
 
+- ⚠️ **export**: Deprecate the legacy ONNX exporter path (`dynamo=False`) ahead of anomalib 2.7.0, where the minimum required PyTorch version will increase to 2.10
+
 ### Fixed
+
+- 🐞 **export**: Add `dynamic_shapes` support for torch dynamo ONNX/OpenVINO export while keeping the legacy exporter path available during the 2.7.0 transition
+
+- 🐞 **data**: Normalize `Split` enum to string value before DataFrame comparison in dataset loaders for pandas 3.x compatibility by @won-seoop in https://github.com/open-edge-platform/anomalib/pull/3634 and https://github.com/open-edge-platform/anomalib/pull/3659
+
+- 🐞 **typing**: Pin mypy `python_version` to 3.10 to fix spurious dataclass `__replace__` incompatibility errors under Python 3.13 by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3674
+
+## [v2.5.0] - 2026-05-28
+
+### Added
+
+- 🚀 **model**: Add INP-Former model by @abc-125 and @alexriedel1 in https://github.com/open-edge-platform/anomalib/pull/3605
+- 🚀 **model**: Add GLASS anomaly detection model by @code-dev05 in https://github.com/open-edge-platform/anomalib/pull/2629
+- 🚀 **model**: Add AnomalyVFM zero-shot anomaly detection model by @MaticFuc in https://github.com/open-edge-platform/anomalib/pull/3559
+- 🚀 **model**: Add CFM (Cross-modal Feature Mapping) model by @Collics in https://github.com/open-edge-platform/anomalib/pull/3588
+
+## [v2.4.2] - 2026-05-15
+
+### Added
+
+- 🚀 **model**: Half precision training for Dinomaly by @alexriedel1 in https://github.com/open-edge-platform/anomalib/pull/3593
 
 ## [v2.4.1] - 2026-05-01
 
