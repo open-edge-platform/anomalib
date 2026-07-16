@@ -1,0 +1,146 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Utility helpers for model export."""
+
+from __future__ import annotations
+
+import warnings
+from collections.abc import Sequence
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from anomalib.deploy.export import ExportType
+
+
+def get_onnx_dynamo_flag(kwargs: dict[str, Any]) -> bool:
+    """Return ONNX exporter dynamo flag.
+
+    Torch 2.9 switches ``torch.onnx.export`` to ``dynamo=True`` by default.
+    anomalib keeps the legacy exporter as the default because the dynamo path
+    requires ``onnxscript`` and is only needed when users opt in explicitly.
+
+    Args:
+        kwargs (dict[str, Any]): Keyword arguments passed to ``torch.onnx.export``.
+
+    Returns:
+        bool: Resolved dynamo flag.
+
+    Raises:
+        TypeError: If ``dynamo`` is not a ``bool`` or ``None``.
+    """
+    dynamo = kwargs.pop("dynamo", False)
+    if dynamo is None:
+        return False
+    if not isinstance(dynamo, bool):
+        msg = f"`dynamo` must be a bool or None, got {type(dynamo).__name__}: {dynamo!r}"
+        raise TypeError(msg)
+    return dynamo
+
+
+def warn_legacy_onnx_exporter_deprecation() -> None:
+    """Warn that the legacy ONNX exporter path is deprecated."""
+    warnings.warn(
+        "The legacy ONNX exporter path (`dynamo=False`) is deprecated and will be removed in anomalib 2.7.0. "
+        "Minimum required PyTorch version will increase to 2.10 in anomalib 2.7.0. Install `anomalib[openvino]` "
+        "and migrate to `dynamo=True`.",
+        FutureWarning,
+        stacklevel=2,
+    )
+
+
+def get_default_dynamic_axes(
+    input_size: tuple[int, int] | None,
+    input_names: list[str],
+    output_names: list[str],
+) -> dict[str, dict[int, str]]:
+    """Build default dynamic axes for legacy ONNX export.
+
+    Args:
+        input_size (tuple[int, int] | None): Input image dimensions ``(H, W)``.
+            When ``None``, height and width axes are marked dynamic as well.
+        input_names (list[str]): Resolved ONNX input names.
+        output_names (list[str]): Resolved ONNX output names.
+
+    Returns:
+        dict[str, dict[int, str]]: Mapping of tensor name to axis-index/axis-name.
+    """
+    input_name = input_names[0] if input_names else "input"
+    input_axes = {0: "batch_size"} if input_size else {0: "batch_size", 2: "height", 3: "width"}
+    axes: dict[str, dict[int, str]] = {input_name: input_axes}
+    for name in output_names:
+        axes[name] = {0: "batch_size"}
+    return axes
+
+
+def get_dynamic_shapes_from_axes(
+    dynamic_axes: dict[str, dict[int, str]] | None,
+    input_names: list[str],
+    output_names: list[str],
+) -> tuple[dict[int, str],] | None:
+    """Translate single-input ``dynamic_axes`` to dynamo ``dynamic_shapes``."""
+    if not dynamic_axes:
+        return None
+
+    input_name = input_names[0] if input_names else "input"
+    input_axes = dynamic_axes.get(input_name)
+    if input_axes is None:
+        input_axes = next((axes for name, axes in dynamic_axes.items() if name not in output_names), None)
+    return (dict(input_axes),) if input_axes else None
+
+
+def validate_input_names(input_names: object) -> list[str]:
+    """Validate ONNX input names.
+
+    Accepts any ``Sequence[str]`` (e.g. list or tuple) and returns a ``list[str]``
+    for downstream use.
+
+    Args:
+        input_names (object): Candidate input names value.
+
+    Returns:
+        list[str]: Validated input names.
+
+    Raises:
+        TypeError: If input names are not a sequence of strings.
+    """
+    if (
+        isinstance(input_names, Sequence)
+        and not isinstance(input_names, (str, bytes))
+        and all(isinstance(name, str) for name in input_names)
+    ):
+        return [str(name) for name in input_names]
+    msg = f"input_names must be a sequence of strings, got {type(input_names).__name__}: {input_names!r}"
+    raise TypeError(msg)
+
+
+def raise_missing_onnxscript_error(cause: BaseException | None = None) -> None:
+    """Raise actionable error for missing ``onnxscript`` dependency.
+
+    Args:
+        cause (BaseException | None): Original exception to chain via ``raise ... from``.
+
+    Raises:
+        ModuleNotFoundError: If ``onnxscript`` is not installed for dynamo export.
+    """
+    msg = (
+        "ONNX export with `dynamo=True` requires the optional `onnxscript` dependency. "
+        "Install `anomalib[openvino]` or `onnxscript`, or export with `dynamo=False`."
+    )
+    raise ModuleNotFoundError(msg, name="onnxscript") from cause
+
+
+def create_export_root(export_root: str | Path, export_type: ExportType) -> Path:
+    """Create directory structure for model export.
+
+    Args:
+        export_root (str | Path): Root directory for exports.
+        export_type (ExportType): Type of export (torch/onnx/openvino).
+
+    Returns:
+        Path: Created directory path.
+    """
+    export_root = Path(export_root) / "weights" / export_type.value
+    export_root.mkdir(parents=True, exist_ok=True)
+    return export_root
