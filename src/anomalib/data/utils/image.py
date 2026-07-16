@@ -398,7 +398,8 @@ def show_image(image: np.ndarray | Figure, title: str = "Image") -> None:
     """
     if isinstance(image, Figure):
         image.suptitle(title)
-        image.show()
+        plt.figure(image)
+        plt.show()
     else:
         plt.figure()
         plt.title(title)
