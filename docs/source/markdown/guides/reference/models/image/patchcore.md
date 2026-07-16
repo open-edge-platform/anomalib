@@ -40,6 +40,7 @@ model = timm.create_model(
     "mobilenetv3_large_100",
     pretrained=False,
     features_only=True,
+    exportable=True,
 )
 
 print([info["module"] for info in model.feature_info.info])
