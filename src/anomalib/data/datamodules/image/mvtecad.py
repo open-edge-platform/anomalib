@@ -60,7 +60,7 @@ logger = logging.getLogger(__name__)
 
 DOWNLOAD_INFO = DownloadInfo(
     name="mvtecad",
-    url="https://www.mydrive.ch/shares/38536/3830184030e49fe74747669442f0f283/"
+    url="https://www.mydrive.ch/shares/150996/b52ecdcbf521176e9db9c731f2304b27/"
     "download/420938113-1629960298/mvtec_anomaly_detection.tar.xz",
     hashsum="cf4313b13603bec67abb49ca959488f7eedce2a9f7795ec54446c649ac98cd3d",
 )

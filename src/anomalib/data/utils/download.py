@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Helper functions for downloading datasets with progress bars and hash verification.
@@ -9,6 +9,7 @@ This module provides utilities for:
 - Safely extracting compressed files
 """
 
+import contextlib
 import hashlib
 import io
 import logging
@@ -198,6 +199,11 @@ def safe_extract(tar_file: TarFile, root: Path, members: list[TarInfo]) -> None:
                 tar_file.extract(member, root, filter="data")
             else:
                 tar_file.extract(member, root)
+        if member.isdir():
+            extracted_path = (root / member.name).resolve()
+            if extracted_path.is_relative_to(root.resolve()) and extracted_path.is_dir():
+                with contextlib.suppress(OSError):
+                    extracted_path.chmod(extracted_path.stat().st_mode | 0o700)
 
 
 def generate_hash(file_path: str | Path, algorithm: str = "sha256") -> str:

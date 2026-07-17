@@ -4,9 +4,9 @@
 """ShanghaiTech Campus Data Module.
 
 This module provides a PyTorch Lightning DataModule for the ShanghaiTech Campus
-dataset. If the dataset is not available locally, it will be downloaded and
-extracted automatically. The video files are also converted to a format readable
-by pyav.
+dataset. The dataset must be downloaded manually from the official project page
+(the original automated mirror is no longer available). The video files are
+converted to a format readable by pyav during preparation.
 
 Example:
     Create a ShanghaiTech datamodule::
@@ -47,24 +47,61 @@ Reference:
 
 import logging
 from pathlib import Path
-from shutil import move
+from textwrap import dedent
 
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datamodules.base.video import AnomalibVideoDataModule
 from anomalib.data.datasets.base.video import VideoTargetFrame
 from anomalib.data.datasets.video.shanghaitech import ShanghaiTechDataset
-from anomalib.data.utils import DownloadInfo, Split, ValSplitMode, download_and_extract
+from anomalib.data.utils import Split, ValSplitMode
 from anomalib.data.utils.video import convert_video
 from anomalib.utils.path import resolve_with_warning
 
 logger = logging.getLogger(__name__)
 
-DATASET_DOWNLOAD_INFO = DownloadInfo(
-    name="ShanghaiTech Dataset",
-    url="http://101.32.75.151:8181/dataset/shanghaitech.tar.gz",
-    hashsum="c13a827043b259ccf8493c9d9130486872992153a9d714fe229e523cd4c94116",
-)
+DATASET_DOWNLOAD_URL = "https://svip-lab.github.io/dataset/campus_dataset.html"
+
+
+def get_download_instructions(root_path: Path) -> str:
+    """Get manual download instructions for the ShanghaiTech Campus dataset.
+
+    The automated mirror originally hosted by the dataset authors is no longer
+    reachable, so the dataset must be downloaded manually from the official
+    project page.
+
+    Args:
+        root_path: Path where the dataset should be placed.
+
+    Returns:
+        str: Formatted download instructions.
+    """
+    return dedent(f"""
+        ShanghaiTech Campus dataset not found in {root_path}
+
+        The dataset must be downloaded manually from the official
+        project page. Follow these steps to download and prepare
+        the dataset:
+        -----------------------
+        a. Visit {DATASET_DOWNLOAD_URL}
+        b. Download the dataset via the OneDrive link on that page
+        c. Extract the contents to: {root_path}
+           If the archive contains a top-level directory (e.g.
+           ``shanghaitech/``), move its contents directly into
+           {root_path} so that ``training/`` and ``testing/``
+           are immediate children.
+
+        Expected directory structure:
+        {root_path}/
+            ├── testing/
+            │   ├── frames/
+            │   ├── test_frame_mask/
+            │   └── test_pixel_mask/
+            └── training/
+                ├── frames/
+                ├── converted_videos/
+                └── videos/
+    """)
 
 
 class ShanghaiTech(AnomalibVideoDataModule):
@@ -165,18 +202,20 @@ class ShanghaiTech(AnomalibVideoDataModule):
         )
 
     def prepare_data(self) -> None:
-        """Download the dataset and convert video files."""
-        training_root = self.root / "training"
-        if training_root.is_dir():
-            logger.info("Found the dataset.")
-        else:
-            download_and_extract(self.root, DATASET_DOWNLOAD_INFO)
+        """Verify that the dataset is available and convert video files.
 
-            # move contents to root
-            extracted_folder = self.root / "shanghaitech"
-            for filename in extracted_folder.glob("*"):
-                move(str(filename), str(self.root / filename.name))
-            extracted_folder.rmdir()
+        The dataset must be downloaded manually. If it is not found, a
+        ``RuntimeError`` is raised with instructions pointing to the
+        official project page.
+
+        Raises:
+            RuntimeError: If the dataset is missing, with instructions for
+                downloading it manually.
+        """
+        training_root = self.root / "training"
+        if not training_root.is_dir():
+            raise RuntimeError(get_download_instructions(self.root).strip())
+        logger.info("Found the dataset.")
 
         # convert images if not done already
         vid_dir = training_root / "videos"
