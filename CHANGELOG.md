@@ -34,7 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - 🔧 **deps**: Replace `opencv-python` with `opencv-python-headless` to support headless environments by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3675
 - 🔧 **deps**: Bump minimum `torch` and `torchvision` versions for the `xpu` install extra by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/3652
-- 🔧 **deps**: Remove upper bound on `torch` for `cpu`, `cu126`, and `rocm` install extras to unblock Python 3.14 wheel resolution
+- 🔧 **deps**: Remove upper bound on `torch` for `cpu`, `cu126`, and `rocm` install extras to unblock Python 3.14 wheel resolution by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3554
 - 🔧 **model**: AnomalyDINO default `encoder_name` changed from `dinov2_vit_small_14` to `vit_small_patch14_dinov2` (timm naming) by @alexriedel1 in https://github.com/open-edge-platform/anomalib/pull/3627
 - 🔧 **model**: Dinomaly, INP-Former, L2BT, PatchFlow encoder parameters updated to use timm backbone names by @alexriedel1 in https://github.com/open-edge-platform/anomalib/pull/3627
 
