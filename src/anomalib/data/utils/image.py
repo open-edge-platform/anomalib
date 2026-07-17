@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Image utilities for reading, writing and processing images.
@@ -385,22 +385,33 @@ def pad_nextpow2(batch: torch.Tensor) -> torch.Tensor:
 
 
 def show_image(image: np.ndarray | Figure, title: str = "Image") -> None:
-    """Display image in window.
+    """Display image using matplotlib.
 
     Args:
         image (np.ndarray | Figure): Image or matplotlib figure to display
-        title (str): Window title. Defaults to "Image"
+        title (str): Title displayed above the plot. Defaults to "Image"
 
     Examples:
         >>> img = read_image("image.jpg")
         >>> show_image(img, title="My Image")
     """
+    # Inline import exception as it is slow to import matplotlib
+    # also locks the Matplotlib backend before callers can configure it
+    # see https://github.com/open-edge-platform/anomalib/pull/3675#discussion_r3596551713
+    import matplotlib.pyplot as plt
+
     if isinstance(image, Figure):
-        image = figure_to_array(image)
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    cv2.imshow(title, image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+        image.suptitle(title)
+        plt.figure(image)
+        plt.show()
+        plt.close(image)
+    else:
+        fig, ax = plt.subplots()
+        ax.set_title(title)
+        ax.imshow(image)
+        ax.axis("off")
+        plt.show()
+        plt.close(fig)
 
 
 def save_image(filename: Path | str, image: np.ndarray | Figure, root: Path | None = None) -> None:
