@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Image utilities for reading, writing and processing images.
@@ -385,11 +385,11 @@ def pad_nextpow2(batch: torch.Tensor) -> torch.Tensor:
 
 
 def show_image(image: np.ndarray | Figure, title: str = "Image") -> None:
-    """Display image in window.
+    """Display image using matplotlib.
 
     Args:
         image (np.ndarray | Figure): Image or matplotlib figure to display
-        title (str): Window title. Defaults to "Image"
+        title (str): Title displayed above the plot. Defaults to "Image"
 
     Examples:
         >>> img = read_image("image.jpg")
