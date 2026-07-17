@@ -31,16 +31,16 @@
 
 ---
 
-> 🌟 **Announcing v2.5.0 Release!** 🌟
+> 🌟 **Announcing v2.5.1 Release!** 🌟
 >
-> This release introduces four new anomaly detection models!
+> This patch release migrates all DINOv2-based models to `timm` feature extraction, adds DINOv3 backbone support, and includes important bug fixes.
 >
 > Key Changes
 >
-> - **INP-Former**: Intrinsic Normal Prototypes for universal anomaly detection.
-> - **GLASS**: A unified anomaly synthesis strategy with gradient ascent for industrial anomaly detection and localization.
-> - **AnomalyVFM**: Zero-shot anomaly detection with Vision Foundation Models.
-> - **CFM**: Cross-modal Feature Mapping for 3D anomaly detection.
+> - **DINOv2 → timm Migration**: All DINOv2-based models (AnomalyDINO, Dinomaly, INP-Former, L2BT, PatchFlow) now use `TimmFeatureExtractor` instead of the custom ViT implementation. This enables **DINOv3 drop-in support** via timm backbone names (e.g. `vit_large_patch16_dinov3.lvd1689m`).
+> - **`TimmFeatureExtractor` NLC mode**: New `output_fmt="NLC"` mode for transformer backbones using timm's `forward_intermediates` API.
+> - **opencv-headless**: Switched to `opencv-python-headless` for headless environment support.
+> - **Bug fixes**: ONNX export with `dynamic_shapes`, pandas 3.x compatibility, MVTec AD download URL updates, and more.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 
