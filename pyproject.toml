@@ -394,7 +394,7 @@ notice-rgx = """
 """
 
 [tool.ruff.lint.per-file-ignores]
-"examples/notebooks/**/*" = ["CPY001"]
+"examples/notebooks/**/*" = ["CPY001", "TD003"]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # MYPY CONFIGURATION.                                                         #
