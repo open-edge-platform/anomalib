@@ -56,5 +56,5 @@ jobs:
             anomalib-studio-cpu
             anomalib-studio-xpu
             anomalib-studio-cuda
-          min-versions-to-keep: ${{ inputs.min_versions_to_keep || 10 }}
-          dry-run: ${{ inputs.dry_run == false && 'false' || 'true' }}
+          min-versions-to-keep: ${{ github.event.inputs.min_versions_to_keep || 10 }}
+          dry-run: ${{ github.event.inputs.dry_run || 'true' }}
