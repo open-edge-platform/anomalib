@@ -1,0 +1,60 @@
+name: Cleanup Old Application Container Images
+
+# Deletes old anomalib-studio-cpu / anomalib-studio-xpu / anomalib-studio-cuda container image versions from GHCR,
+# while always retaining release and release-candidate (RC) images.
+#
+# This workflow delegates to the shared `cleanup-images` composite action in the
+# geti-ci repository. See:
+# https://github.com/open-edge-platform/geti-ci/tree/main/actions/cleanup-images
+#
+# Retention rules:
+# - Release images (tags matching semver "X.Y.Z", e.g. 3.0.0) are NEVER deleted.
+# - Release-candidate images (tags matching "X.Y.ZrcN", e.g. 3.0.0rc0) are
+#   NEVER deleted.
+# - The "latest" tag is NEVER deleted.
+# - Among the remaining versions (dev/daily builds and untagged versions) the
+#   most recent `min_versions_to_keep` are kept; older ones are deleted.
+#
+# Supports a dry-run mode (default) that previews deletions without removing
+# anything.
+
+on:
+  workflow_dispatch:
+    inputs:
+      min_versions_to_keep:
+        description: "Number of most recent non-release image versions to keep per package"
+        required: false
+        type: number
+        default: 10
+      dry_run:
+        description: "Preview deletions without removing image versions"
+        required: false
+        type: boolean
+        default: true
+  schedule:
+    # Run weekly on Sunday at 03:00 UTC.
+    - cron: "0 3 * * 0"
+
+permissions: {} # No permissions by default
+
+jobs:
+  cleanup-old-images:
+    name: Delete old GHCR application images
+    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
+    permissions:
+      packages: write
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Cleanup old container images
+        uses: open-edge-platform/geti-ci/actions/cleanup-images@287abbfdced5c02904ab2f39a0fe944cd402c36f # cleanup-images/v0.1.0
+        with:
+          packages: |
+            anomalib-studio-cpu
+            anomalib-studio-xpu
+            anomalib-studio-cuda
+          min-versions-to-keep: ${{ inputs.min_versions_to_keep || 10 }}
+          dry-run: ${{ inputs.dry_run == false && 'false' || 'true' }}
