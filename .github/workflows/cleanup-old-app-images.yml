@@ -40,7 +40,7 @@ permissions: {} # No permissions by default
 jobs:
   cleanup-old-images:
     name: Delete old GHCR application images
-    runs-on: ${{ github.repository_owner == 'open-edge-platform' && 'overflow' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     permissions:
       packages: write
     steps:
