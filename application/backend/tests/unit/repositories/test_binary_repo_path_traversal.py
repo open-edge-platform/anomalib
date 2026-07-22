@@ -124,6 +124,7 @@ class TestSaveFilePathTraversal:
 
         assert not (tmp_path / "data" / "videos" / "anomalib_pwned.mp4").exists()
 
+
 # ---------------------------------------------------------------------------
 # BinaryRepository.read_file — path traversal must be rejected
 # ---------------------------------------------------------------------------
@@ -149,6 +150,7 @@ class TestReadFilePathTraversal:
             pytest.raises(ValueError),
         ):
             run(repo.read_file(filename=traversal))
+
 
 # ---------------------------------------------------------------------------
 # BinaryRepository.delete_file — path traversal must be rejected
