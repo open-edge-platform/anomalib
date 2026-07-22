@@ -46,7 +46,7 @@ def validate_video_file(file: UploadFile = File(...)) -> UploadFile:
     # Decode percent-encoding (e.g. %00 → \x00, %2F → /) before security checks
     # so that URL-encoded traversal or null-byte payloads are also rejected.
     decoded_filename = unquote(file.filename)
-
+    file.filename = decoded_filename
     # Reject filenames containing path separators, traversal segments, or NUL bytes
     safe_name = os.path.basename(decoded_filename)
     if (

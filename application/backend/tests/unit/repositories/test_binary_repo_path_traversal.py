@@ -35,26 +35,6 @@ TRAVERSAL_FILENAMES = [
 SAFE_FILENAME = "legitimate_video.mp4"
 
 
-@pytest.fixture
-def fxt_project_dir(tmp_path):
-    """A real temporary project directory with the expected layout."""
-    project_dir = tmp_path / "projects" / "test_project_id"
-    project_dir.mkdir(parents=True)
-    return project_dir
-
-
-@pytest.fixture
-def fxt_video_repo(fxt_project_dir):
-    """A VideoBinaryRepository whose project_folder_path points at the temp dir."""
-    repo = VideoBinaryRepository(project_id="test_project_id")
-    # Override the cached property so it uses our isolated temp directory.
-    with patch.object(
-        type(repo),
-        "project_folder_path",
-        new_callable=lambda: property(lambda self: str(fxt_project_dir)),
-    ):
-        yield repo
-
 
 def run(coro):
     """Run a coroutine synchronously."""
