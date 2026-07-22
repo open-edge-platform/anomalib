@@ -35,7 +35,6 @@ TRAVERSAL_FILENAMES = [
 SAFE_FILENAME = "legitimate_video.mp4"
 
 
-
 def run(coro):
     """Run a coroutine synchronously."""
     return asyncio.run(coro)
