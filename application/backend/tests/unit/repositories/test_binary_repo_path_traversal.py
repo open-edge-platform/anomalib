@@ -9,13 +9,11 @@ filenames that resolve outside the project directory boundary.
 
 import asyncio
 import os
-import tempfile
 from unittest.mock import patch
 
 import pytest
 
 from repositories.binary_repo import VideoBinaryRepository
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -77,9 +75,15 @@ class TestSaveFilePathTraversal:
         project_dir.mkdir(parents=True)
         repo = VideoBinaryRepository(project_id="proj")
 
-        with patch.object(type(repo), "project_folder_path", new_callable=lambda: property(lambda self: str(project_dir))):
-            with pytest.raises((ValueError, OSError)):
-                run(repo.save_file(filename=filename, content=b"PWNED"))
+        with (
+            patch.object(
+                type(repo),
+                "project_folder_path",
+                new_callable=lambda: property(lambda self: str(project_dir)),
+            ),
+            pytest.raises((ValueError, OSError)),
+        ):
+            run(repo.save_file(filename=filename, content=b"PWNED"))
 
         # Confirm nothing was written outside the project dir
         assert not (tmp_path / "pwned.mp4").exists()
@@ -91,7 +95,11 @@ class TestSaveFilePathTraversal:
         project_dir.mkdir(parents=True)
         repo = VideoBinaryRepository(project_id="proj")
 
-        with patch.object(type(repo), "project_folder_path", new_callable=lambda: property(lambda self: str(project_dir))):
+        with patch.object(
+            type(repo),
+            "project_folder_path",
+            new_callable=lambda: property(lambda self: str(project_dir)),
+        ):
             saved = run(repo.save_file(filename=SAFE_FILENAME, content=b"OK"))
 
         assert os.path.isfile(saved)
@@ -104,9 +112,15 @@ class TestSaveFilePathTraversal:
         repo = VideoBinaryRepository(project_id="VfQiLbCy9ERHSyRuNpH2mB")
 
         traversal = "../../../../../../../../tmp/anomalib_pwned.mp4"
-        with patch.object(type(repo), "project_folder_path", new_callable=lambda: property(lambda self: str(project_dir))):
-            with pytest.raises((ValueError, OSError)):
-                run(repo.save_file(filename=traversal, content=b"PWNED"))
+        with (
+            patch.object(
+                type(repo),
+                "project_folder_path",
+                new_callable=lambda: property(lambda self: str(project_dir)),
+            ),
+            pytest.raises((ValueError, OSError)),
+        ):
+            run(repo.save_file(filename=traversal, content=b"PWNED"))
 
         assert not (tmp_path / "tmp" / "anomalib_pwned.mp4").exists()
 
@@ -128,9 +142,15 @@ class TestReadFilePathTraversal:
         (tmp_path / "secret.mp4").write_bytes(b"SECRET")
 
         repo = VideoBinaryRepository(project_id="proj")
-        with patch.object(type(repo), "project_folder_path", new_callable=lambda: property(lambda self: str(project_dir))):
-            with pytest.raises((ValueError, OSError, FileNotFoundError)):
-                run(repo.read_file(filename=filename))
+        with (
+            patch.object(
+                type(repo),
+                "project_folder_path",
+                new_callable=lambda: property(lambda self: str(project_dir)),
+            ),
+            pytest.raises((ValueError, OSError, FileNotFoundError)),
+        ):
+            run(repo.read_file(filename=filename))
 
 
 # ---------------------------------------------------------------------------
@@ -150,9 +170,15 @@ class TestDeleteFilePathTraversal:
         target.write_bytes(b"KEEP ME")
 
         repo = VideoBinaryRepository(project_id="proj")
-        with patch.object(type(repo), "project_folder_path", new_callable=lambda: property(lambda self: str(project_dir))):
-            with pytest.raises((ValueError, OSError, FileNotFoundError)):
-                run(repo.delete_file(filename=filename))
+        with (
+            patch.object(
+                type(repo),
+                "project_folder_path",
+                new_callable=lambda: property(lambda self: str(project_dir)),
+            ),
+            pytest.raises((ValueError, OSError, FileNotFoundError)),
+        ):
+            run(repo.delete_file(filename=filename))
 
         # The file outside the project must remain untouched
         assert target.exists()

@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Regression tests for CWE-22 path traversal at the HTTP endpoint layer.
+"""Regression tests for path traversal at the HTTP endpoint layer.
 
 Verifies that validate_video_file() returns HTTP 400 for filenames that contain
 path separators or parent-directory references before the request reaches
@@ -109,9 +109,7 @@ def test_upload_accepts_safe_filename(safe_filename):
     # 201 or 422 are both acceptable here (422 means the mock return value didn't
     # satisfy the response model, which is fine — what matters is that 400 is NOT returned
     # and the service was actually called).
-    assert code != status.HTTP_400_BAD_REQUEST, (
-        f"Safe filename {safe_filename!r} was incorrectly rejected with 400"
-    )
+    assert code != status.HTTP_400_BAD_REQUEST, f"Safe filename {safe_filename!r} was incorrectly rejected with 400"
     mock_upload.assert_called_once()
 
 
