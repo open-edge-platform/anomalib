@@ -6,6 +6,7 @@ import { Dispatch, RefObject, SetStateAction, useCallback, useEffect, useRef, us
 import { $api } from '@anomalib-studio/api';
 import { useProjectIdentifier } from '@anomalib-studio/hooks';
 import { Button, dimensionValue, Flex, toast } from '@geti/ui';
+import { Pause } from '@geti/ui/icons';
 import { clsx } from 'clsx';
 
 import { useStreamConnection } from '../../../components/stream/stream-connection-provider';
@@ -70,7 +71,7 @@ const useSetTargetSizeBasedOnImage = (
 export const Stream = () => {
     const imageRef = useRef<HTMLImageElement>(null);
     const { projectId } = useProjectIdentifier();
-    const { setStatus, status, streamUrl } = useStreamConnection();
+    const { setStatus, status, streamUrl, stop } = useStreamConnection();
     const [hasCaptureAnimation, setHasCaptureAnimation] = useState(false);
     const [size, setSize] = useState({ height: 608, width: 892 });
 
@@ -109,6 +110,10 @@ export const Stream = () => {
         });
     };
 
+    const handleStop = async () => {
+        await stop();
+    };
+
     return (
         <Flex
             position={'relative'}
@@ -135,9 +140,15 @@ export const Stream = () => {
                 />
             </ZoomTransform>
             {status === 'connected' && (
-                <Button onPress={handleCaptureFrame} variant='primary' UNSAFE_className={classes.captureButton}>
-                    Capture
-                </Button>
+                <Flex direction={'row'} gap={'size-100'} UNSAFE_className={classes.captureButtonContainer}>
+                    <Button onPress={handleCaptureFrame} variant='primary'>
+                        Capture
+                    </Button>
+                    <Button onPress={handleStop} variant='secondary' aria-label={'Pause stream'}>
+                        <Pause />
+                        Pause
+                    </Button>
+                </Flex>
             )}
         </Flex>
     );
