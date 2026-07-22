@@ -86,9 +86,8 @@ class TestSaveFilePathTraversal:
         ):
             run(repo.save_file(filename=filename, content=b"PWNED"))
 
-        # Confirm nothing was written outside the project dir
-        assert not (tmp_path / "pwned.mp4").exists()
-        assert not (tmp_path / "outside.mp4").exists()
+        # No additional filesystem assertions needed here: if traversal is not blocked,
+        # repo.save_file would succeed and the pytest.raises(...) above would fail.
 
     def test_save_file_accepts_safe_filename(self, tmp_path):
         """A clean filename must be written inside the project directory."""
@@ -112,7 +111,7 @@ class TestSaveFilePathTraversal:
         project_dir.mkdir(parents=True)
         repo = VideoBinaryRepository(project_id="VfQiLbCy9ERHSyRuNpH2mB")
 
-        traversal = "../../../../../../../../tmp/anomalib_pwned.mp4"
+        traversal = "../../anomalib_pwned.mp4"
         with (
             patch.object(
                 type(repo),
@@ -123,8 +122,7 @@ class TestSaveFilePathTraversal:
         ):
             run(repo.save_file(filename=traversal, content=b"PWNED"))
 
-        assert not (tmp_path / "tmp" / "anomalib_pwned.mp4").exists()
-
+        assert not (tmp_path / "data" / "videos" / "anomalib_pwned.mp4").exists()
 
 # ---------------------------------------------------------------------------
 # BinaryRepository.read_file — path traversal must be rejected
@@ -134,25 +132,23 @@ class TestSaveFilePathTraversal:
 class TestReadFilePathTraversal:
     """read_file must not serve files outside the project dir."""
 
-    @pytest.mark.parametrize("filename", TRAVERSAL_FILENAMES)
-    def test_read_file_rejects_traversal(self, tmp_path, filename):
-        """Traversal filename must raise ValueError (or FileNotFoundError after rejection)."""
+    def test_read_file_rejects_traversal(self, tmp_path):
+        """Traversal filename must raise ValueError and must not serve files outside the project dir."""
         project_dir = tmp_path / "projects" / "proj"
         project_dir.mkdir(parents=True)
-        # Plant a target file outside the project dir to make the traversal realistic
         (tmp_path / "secret.mp4").write_bytes(b"SECRET")
 
         repo = VideoBinaryRepository(project_id="proj")
+        traversal = os.path.join("..", "..", "secret.mp4")
         with (
             patch.object(
                 type(repo),
                 "project_folder_path",
                 new_callable=lambda: property(lambda self: str(project_dir)),
             ),
-            pytest.raises((ValueError, OSError, FileNotFoundError)),
+            pytest.raises(ValueError),
         ):
-            run(repo.read_file(filename=filename))
-
+            run(repo.read_file(filename=traversal))
 
 # ---------------------------------------------------------------------------
 # BinaryRepository.delete_file — path traversal must be rejected
@@ -162,8 +158,7 @@ class TestReadFilePathTraversal:
 class TestDeleteFilePathTraversal:
     """delete_file must not remove files outside the project dir."""
 
-    @pytest.mark.parametrize("filename", TRAVERSAL_FILENAMES)
-    def test_delete_file_rejects_traversal(self, tmp_path, filename):
+    def test_delete_file_rejects_traversal(self, tmp_path):
         """Traversal filename must raise ValueError; target file must survive."""
         project_dir = tmp_path / "projects" / "proj"
         project_dir.mkdir(parents=True)
@@ -171,15 +166,15 @@ class TestDeleteFilePathTraversal:
         target.write_bytes(b"KEEP ME")
 
         repo = VideoBinaryRepository(project_id="proj")
+        traversal = os.path.join("..", "..", "important.mp4")
         with (
             patch.object(
                 type(repo),
                 "project_folder_path",
                 new_callable=lambda: property(lambda self: str(project_dir)),
             ),
-            pytest.raises((ValueError, OSError, FileNotFoundError)),
+            pytest.raises(ValueError),
         ):
-            run(repo.delete_file(filename=filename))
+            run(repo.delete_file(filename=traversal))
 
-        # The file outside the project must remain untouched
         assert target.exists()

@@ -36,13 +36,12 @@ def _validate_filename(filename: str, expected_folder: str) -> str:
     if not filename:
         raise ValueError("Filename cannot be empty")
 
-    # Reject filenames with path separators (both POSIX and Windows) or NUL bytes
-    if (
-        os.path.sep in filename
-        or "\\" in filename
-        or (os.path.altsep and os.path.altsep in filename)
-        or "\x00" in filename
-    ):
+    # Reject filenames with NUL bytes
+    if "\x00" in filename:
+        raise ValueError("Filename cannot contain NUL bytes")
+
+    # Reject filenames with path separators (both POSIX and Windows)
+    if os.path.sep in filename or "\\" in filename or (os.path.altsep and os.path.altsep in filename):
         raise ValueError("Filename cannot contain path separators")
     if filename in {".", ".."}:
         raise ValueError("Filename cannot be a bare directory reference")

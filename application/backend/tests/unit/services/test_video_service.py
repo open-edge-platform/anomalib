@@ -263,7 +263,7 @@ class TestUploadVideoPathTraversal:
         mock_bin_repo.project_folder_path = str(project_dir)
         mock_bin_repo.save_file = AsyncMock()
 
-        traversal = "../../../../../../../../tmp/anomalib_pwned.mp4"
+        traversal = "../../anomalib_pwned.mp4"
         with (
             patch("services.video_service.VideoBinaryRepository", return_value=mock_bin_repo),
             pytest.raises(ValueError),
@@ -276,7 +276,7 @@ class TestUploadVideoPathTraversal:
                 ),
             )
 
-        assert not (tmp_path / "tmp" / "anomalib_pwned.mp4").exists()
+        assert not (tmp_path / "data" / "videos" / "anomalib_pwned.mp4").exists()
         mock_bin_repo.save_file.assert_not_called()
 
     def test_upload_accepts_safe_filename(self, fxt_project, fxt_video_bytes, fxt_temp_dir):
