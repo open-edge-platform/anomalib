@@ -107,9 +107,7 @@ def test_upload_accepts_safe_filename(safe_filename):
         code = _upload(safe_filename)
 
     # A safe filename must pass validation and reach the service, resulting in a successful create.
-    assert code == status.HTTP_201_CREATED, (
-        f"Expected 201 for safe filename {safe_filename!r}, got {code}"
-    )
+    assert code == status.HTTP_201_CREATED, f"Expected 201 for safe filename {safe_filename!r}, got {code}"
     mock_upload.assert_called_once()
 
 
