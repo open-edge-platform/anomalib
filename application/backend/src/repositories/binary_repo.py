@@ -47,7 +47,7 @@ class BinaryRepository(metaclass=abc.ABCMeta):
             ValueError: If the path escapes the project directory.
         """
         project_root = os.path.realpath(self.project_folder_path)
-        if not full_path.startswith(project_root + os.sep):
+        if os.path.commonpath([project_root, full_path]) != project_root:
             raise ValueError("Invalid filename: path traversal detected")
 
     async def read_file(self, filename: str) -> bytes:

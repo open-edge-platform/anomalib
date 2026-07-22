@@ -106,10 +106,10 @@ def test_upload_accepts_safe_filename(safe_filename):
         mock_upload.return_value = mock_video
         code = _upload(safe_filename)
 
-    # 201 or 422 are both acceptable here (422 means the mock return value didn't
-    # satisfy the response model, which is fine — what matters is that 400 is NOT returned
-    # and the service was actually called).
-    assert code != status.HTTP_400_BAD_REQUEST, f"Safe filename {safe_filename!r} was incorrectly rejected with 400"
+    # A safe filename must pass validation and reach the service, resulting in a successful create.
+    assert code == status.HTTP_201_CREATED, (
+        f"Expected 201 for safe filename {safe_filename!r}, got {code}"
+    )
     mock_upload.assert_called_once()
 
 

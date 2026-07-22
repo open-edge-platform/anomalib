@@ -210,6 +210,8 @@ TRAVERSAL_FILENAMES = [
     "subdir/../../outside.mp4",
     "/tmp/absolute.mp4",
     "..\\..\\outside.mp4",
+    # NUL byte injection
+    "video\x00.mp4",
 ]
 
 

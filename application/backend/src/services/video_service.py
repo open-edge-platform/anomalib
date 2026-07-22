@@ -36,18 +36,18 @@ def _validate_filename(filename: str, expected_folder: str) -> str:
     if not filename:
         raise ValueError("Filename cannot be empty")
 
-    # Reject filenames with path separators or parent directory references
-    if os.path.sep in filename or (os.path.altsep and os.path.altsep in filename):
+    # Reject filenames with path separators (both POSIX and Windows) or NUL bytes
+    if os.path.sep in filename or "\\" in filename or (os.path.altsep and os.path.altsep in filename) or "\x00" in filename:
         raise ValueError("Filename cannot contain path separators")
-    if ".." in filename:
-        raise ValueError("Filename cannot contain parent directory references")
+    if filename in {".", ".."}:
+        raise ValueError("Filename cannot be a bare directory reference")
 
     # Build the full path and resolve to absolute path
     full_path = os.path.realpath(os.path.join(expected_folder, filename))
     expected_folder_resolved = os.path.realpath(expected_folder)
 
     # Ensure the resolved path is within the expected folder
-    if not full_path.startswith(expected_folder_resolved + os.path.sep):
+    if os.path.commonpath([expected_folder_resolved, full_path]) != expected_folder_resolved:
         raise ValueError("Invalid filename: path traversal detected")
 
     return full_path

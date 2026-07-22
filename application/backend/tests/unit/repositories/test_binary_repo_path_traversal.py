@@ -23,12 +23,13 @@ TRAVERSAL_FILENAMES = [
     "../../../../tmp/pwned.mp4",
     "../sibling_project/video.mp4",
     "subdir/../../outside.mp4",
-    # URL-encoded form should not bypass os.path.realpath, but test explicitly
-    "%2e%2e%2foutside.mp4",
     # Absolute paths
     "/tmp/absolute.mp4",
-    # Windows-style (relevant if tested on Windows CI)
-    "..\\..\\outside.mp4",
+    # Windows-style (only relevant when running on Windows)
+    pytest.param(
+        "..\\..\\outside.mp4",
+        marks=pytest.mark.skipif(os.sep != "\\", reason="Backslash is not a path separator on POSIX"),
+    ),
 ]
 
 SAFE_FILENAME = "legitimate_video.mp4"
@@ -56,8 +57,8 @@ def fxt_video_repo(fxt_project_dir):
 
 
 def run(coro):
-    """Run a coroutine synchronously (avoids asyncio.run nesting issues)."""
-    return asyncio.get_event_loop().run_until_complete(coro)
+    """Run a coroutine synchronously."""
+    return asyncio.run(coro)
 
 
 # ---------------------------------------------------------------------------

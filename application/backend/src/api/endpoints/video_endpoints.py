@@ -42,9 +42,14 @@ def validate_video_file(file: UploadFile = File(...)) -> UploadFile:
             detail="Video file must have a filename with extension",
         )
 
-    # Reject filenames containing path separators or traversal sequences
+    # Reject filenames containing path separators, traversal segments, or NUL bytes
     safe_name = os.path.basename(file.filename)
-    if safe_name != file.filename or "/" in file.filename or "\\" in file.filename or ".." in safe_name:
+    if (
+        safe_name != file.filename  # contains '/'-separated path components
+        or "\\" in file.filename  # Windows-style separators
+        or safe_name in {".", ".."}
+        or "\x00" in file.filename
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid filename: path components are not allowed",
