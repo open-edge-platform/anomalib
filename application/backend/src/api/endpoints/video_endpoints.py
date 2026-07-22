@@ -5,6 +5,7 @@
 
 import os
 from typing import Annotated
+from urllib.parse import unquote
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 
@@ -42,20 +43,24 @@ def validate_video_file(file: UploadFile = File(...)) -> UploadFile:
             detail="Video file must have a filename with extension",
         )
 
+    # Decode percent-encoding (e.g. %00 → \x00, %2F → /) before security checks
+    # so that URL-encoded traversal or null-byte payloads are also rejected.
+    decoded_filename = unquote(file.filename)
+
     # Reject filenames containing path separators, traversal segments, or NUL bytes
-    safe_name = os.path.basename(file.filename)
+    safe_name = os.path.basename(decoded_filename)
     if (
-        safe_name != file.filename  # contains '/'-separated path components
-        or "\\" in file.filename  # Windows-style separators
+        safe_name != decoded_filename  # contains '/'-separated path components
+        or "\\" in decoded_filename  # Windows-style separators
         or safe_name in {".", ".."}
-        or "\x00" in file.filename
+        or "\x00" in decoded_filename
     ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid filename: path components are not allowed",
         )
 
-    extension = "." + file.filename.rsplit(".", maxsplit=1)[-1].lower()
+    extension = "." + decoded_filename.rsplit(".", maxsplit=1)[-1].lower()
     if extension not in SUPPORTED_VIDEO_EXTENSIONS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
