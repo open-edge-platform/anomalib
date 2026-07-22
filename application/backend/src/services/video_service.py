@@ -122,6 +122,9 @@ class VideoService:
         bin_repo = VideoBinaryRepository(project_id=project_id)
         folder_path = bin_repo.project_folder_path
 
+        # Validate the filename to prevent path traversal attacks
+        _validate_filename(original_filename, folder_path)
+
         # Get unique filename (adds suffix if name already taken)
         filename = VideoService._get_unique_filename(folder_path, original_filename)
 

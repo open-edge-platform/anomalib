@@ -3,6 +3,7 @@
 
 """Endpoints for uploading and managing video files."""
 
+import os
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
@@ -39,6 +40,14 @@ def validate_video_file(file: UploadFile = File(...)) -> UploadFile:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Video file must have a filename with extension",
+        )
+
+    # Reject filenames containing path separators or traversal sequences
+    safe_name = os.path.basename(file.filename)
+    if safe_name != file.filename or "/" in file.filename or "\\" in file.filename or ".." in safe_name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid filename: path components are not allowed",
         )
 
     extension = "." + file.filename.rsplit(".", maxsplit=1)[-1].lower()

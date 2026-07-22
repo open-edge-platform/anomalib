@@ -198,6 +198,103 @@ class TestVideoService:
 
         assert result is None
 
+
+# ---------------------------------------------------------------------------
+# Regression tests - path traversal (upload path)
+# ---------------------------------------------------------------------------
+
+
+TRAVERSAL_FILENAMES = [
+    "../../../../tmp/pwned.mp4",
+    "../sibling_project/video.mp4",
+    "subdir/../../outside.mp4",
+    "/tmp/absolute.mp4",
+    "..\\..\\outside.mp4",
+]
+
+
+class TestUploadVideoPathTraversal:
+    """VideoService.upload_video must reject filenames that escape the project dir.
+
+    Regression tests for path traversal issue
+    Before the fix, _validate_filename() was called on delete/get paths but
+    skipped during upload, allowing arbitrary file writes.
+    """
+
+    @pytest.fixture(autouse=True)
+    def mock_asyncio_to_thread(self):
+        """Run asyncio.to_thread synchronously so the inner closure executes."""
+
+        async def _mock_to_thread(func, *args, **kwargs):
+            return func(*args, **kwargs)
+
+        with patch("asyncio.to_thread", side_effect=_mock_to_thread):
+            yield
+
+    @pytest.mark.parametrize("traversal_filename", TRAVERSAL_FILENAMES)
+    def test_upload_rejects_traversal_filename(self, fxt_project, fxt_video_bytes, fxt_temp_dir, traversal_filename):
+        """upload_video must raise ValueError for traversal filenames, never call save_file."""
+        mock_bin_repo = MagicMock()
+        mock_bin_repo.project_folder_path = fxt_temp_dir
+        mock_bin_repo.save_file = AsyncMock()
+
+        with (
+            patch("services.video_service.VideoBinaryRepository", return_value=mock_bin_repo),
+            pytest.raises(ValueError),
+        ):
+            asyncio.run(
+                VideoService.upload_video(
+                    project_id=fxt_project,
+                    video_bytes=fxt_video_bytes,
+                    original_filename=traversal_filename,
+                ),
+            )
+
+        mock_bin_repo.save_file.assert_not_called()
+
+    def test_upload_bad_payload(self, fxt_project, fxt_video_bytes, tmp_path):
+        """Malformed payload must be rejected."""
+        project_dir = tmp_path / "data" / "videos" / "projects" / str(fxt_project)
+        project_dir.mkdir(parents=True)
+
+        mock_bin_repo = MagicMock()
+        mock_bin_repo.project_folder_path = str(project_dir)
+        mock_bin_repo.save_file = AsyncMock()
+
+        traversal = "../../../../../../../../tmp/anomalib_pwned.mp4"
+        with (
+            patch("services.video_service.VideoBinaryRepository", return_value=mock_bin_repo),
+            pytest.raises(ValueError),
+        ):
+            asyncio.run(
+                VideoService.upload_video(
+                    project_id=fxt_project,
+                    video_bytes=fxt_video_bytes,
+                    original_filename=traversal,
+                ),
+            )
+
+        assert not (tmp_path / "tmp" / "anomalib_pwned.mp4").exists()
+        mock_bin_repo.save_file.assert_not_called()
+
+    def test_upload_accepts_safe_filename(self, fxt_project, fxt_video_bytes, fxt_temp_dir):
+        """A clean filename must reach save_file without raising."""
+        mock_bin_repo = MagicMock()
+        mock_bin_repo.project_folder_path = fxt_temp_dir
+        mock_bin_repo.save_file = AsyncMock(return_value=os.path.join(fxt_temp_dir, "video.mp4"))
+
+        with patch("services.video_service.VideoBinaryRepository", return_value=mock_bin_repo):
+            result = asyncio.run(
+                VideoService.upload_video(
+                    project_id=fxt_project,
+                    video_bytes=fxt_video_bytes,
+                    original_filename="video.mp4",
+                ),
+            )
+
+        mock_bin_repo.save_file.assert_called_once()
+        assert result.filename == "video.mp4"
+
     def test_delete_video_by_filename_success(self, fxt_video_service, fxt_project):
         """Test successful video deletion."""
         mock_bin_repo = MagicMock()
