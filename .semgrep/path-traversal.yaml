@@ -18,7 +18,7 @@ rules:
       If the second argument is user-controlled,
       path traversal sequences (e.g. "../") can escape the intended directory (CWE-22).
       Resolve the joined path using os.path.realpath() (or Path.resolve())
-      and verify it remains under the intended root with os.path.commonpath() 
+      and verify it remains under the intended root with os.path.commonpath()
       before accessing it. This mitigates path traversal and existing symlink escapes.
       If the directory or path components may be modified by an attacker,
       this validation alone is insufficient because it is vulnerable to TOCTOU races;
@@ -70,7 +70,7 @@ rules:
       validation via os.path.realpath(). get_full_path() returns
       os.path.join(project_folder, filename); if filename is attacker-controlled
       it can contain "../" sequences that escape the project directory (CWE-22).
-      Wrap in os.path.realpath() and call _assert_within_project() or similar 
+      Wrap in os.path.realpath() and call _assert_within_project() or similar
       function to check that path remains inside the intended project directory
       before any file operations.
     metadata:

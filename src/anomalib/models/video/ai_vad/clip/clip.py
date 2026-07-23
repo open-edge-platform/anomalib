@@ -97,7 +97,7 @@ def _download(url: str, root: str):
             return download_target
 
         logger.warning("%s exists, but the checksum does not match; re-downloading the file", download_target)
-        os.remove(download_target) # nosemgrep: path-join-without-realpath-validation
+        os.remove(download_target)  # nosemgrep: path-join-without-realpath-validation
 
     response = requests.get(url, stream=True, timeout=10.0)  # Timeout is for bandit security linter
     response.raise_for_status()
@@ -105,7 +105,7 @@ def _download(url: str, root: str):
     total_size = int(response.headers.get("Content-Length", 0))
 
     with (
-        open(download_target, "wb") as file, # nosemgrep: path-join-without-realpath-validation
+        open(download_target, "wb") as file,  # nosemgrep: path-join-without-realpath-validation
         tqdm(total=total_size, ncols=80, unit="iB", unit_scale=True, unit_divisor=1024) as loop,
     ):
         for chunk in response.iter_content(chunk_size=8192):
