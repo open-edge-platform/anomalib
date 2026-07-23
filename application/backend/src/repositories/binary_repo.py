@@ -41,7 +41,7 @@ class BinaryRepository(metaclass=abc.ABCMeta):
         Assert that a resolved path is contained within the project folder.
 
         Args:
-            full_path: Absolute, already-resolved filesystem path to check.
+            full_path (str): Absolute, already-resolved filesystem path to check.
 
         Raises:
             ValueError: If the path escapes the project directory.
