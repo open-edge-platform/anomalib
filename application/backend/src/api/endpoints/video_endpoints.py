@@ -47,10 +47,12 @@ def validate_video_file(file: UploadFile = File(...)) -> UploadFile:
     # so that URL-encoded traversal or null-byte payloads are also rejected.
     decoded_filename = unquote(file.filename)
     file.filename = decoded_filename
-    # Reject filenames containing path separators, traversal segments, or NUL bytes
+    # Reject filenames containing path separators, traversal segments, drive qualifiers, or NUL bytes
     safe_name = os.path.basename(decoded_filename)
+    drive, _ = os.path.splitdrive(decoded_filename)
     if (
         safe_name != decoded_filename  # contains '/'-separated path components
+        or drive  # Windows drive-qualified paths (e.g., C:foo.mp4)
         or "\\" in decoded_filename  # Windows-style separators
         or safe_name in {".", ".."}
         or "\x00" in decoded_filename
