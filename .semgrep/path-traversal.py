@@ -1,5 +1,7 @@
-# Test file for the combined path-traversal ruleset
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 
+# Test file for the combined path-traversal ruleset
 import os
 import pathlib
 import shutil
