@@ -31,7 +31,7 @@ repos:
     hooks:
       # Run the linter.
       - id: ruff
-        exclude: "tests/legacy"
+        exclude: "tests/legacy|^\.semgrep/"
         args: ["--fix"]
       # Run the formatter
       - id: ruff-format
@@ -43,7 +43,7 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies: [types-PyYAML, types-setuptools]
-        exclude: "tests"
+        exclude: "tests|^\.semgrep/"
 
   # add bandit for security checks
   # semgrep does not support Windows, therefore it is not currently used in pre-commit

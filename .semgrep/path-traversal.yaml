@@ -1,0 +1,156 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Custom path-traversal ruleset for the Anomalib Studio backend
+
+rules:
+  # =========================================================================
+  # Rule 1 — Service layer
+  # Source:     os.path.join($BASE, $FILENAME)
+  # Sanitizers: os.path.realpath(...)
+  # =========================================================================
+  - id: path-join-without-realpath-validation
+    mode: taint
+    languages: [python]
+    severity: HIGH
+    message: >
+      os.path.join() result flows into a file-system operation without validation.
+      If the second argument is user-controlled,
+      path traversal sequences (e.g. "../") can escape the intended directory (CWE-22).
+      Resolve the joined path using os.path.realpath() (or Path.resolve())
+      and verify it remains under the intended root with os.path.commonpath() 
+      before accessing it. This mitigates path traversal and existing symlink escapes.
+      If the directory or path components may be modified by an attacker,
+      this validation alone is insufficient because it is vulnerable to TOCTOU races;
+      use file-descriptor-relative APIs (e.g., openat/dir_fd) or
+      other atomic filesystem operations where appropriate.
+    metadata:
+      cwe: "CWE-22: Improper Limitation of a Pathname to a Restricted Directory"
+
+    pattern-sources:
+      - patterns:
+          - pattern: os.path.join($BASE, $FILENAME)
+          - metavariable-pattern:
+              metavariable: $FILENAME
+              patterns:
+                - pattern-not: '"..."' # Exclude hardcoded string literals
+
+    pattern-sinks: &path-traversal-sinks
+      - pattern-either:
+          # Built-in file I/O
+          - pattern: open($PATH, ...)
+          - pattern: os.makedirs($PATH, ...)
+          - pattern: os.remove($PATH)
+          - pattern: shutil.rmtree($PATH)
+          # pathlib I/O
+          - pattern: pathlib.Path($PATH).open(...)
+          - pattern: pathlib.Path($PATH).write_bytes(...)
+          - pattern: pathlib.Path($PATH).write_text(...)
+          # Bulk and rename operations
+          - pattern: shutil.copy(...)
+          - pattern: shutil.copy2(...)
+          - pattern: shutil.move(...)
+          - pattern: os.rename(...)
+          - pattern: os.replace(...)
+
+    pattern-sanitizers:
+      - pattern: $RESULT = os.path.realpath(...)
+
+  # =========================================================================
+  # Rule 2 — Repository layer
+  # Source:     $REPO.get_full_path($FILENAME)
+  # Sanitizers: os.path.realpath(...) + _assert_within_project()
+  # =========================================================================
+  - id: binary-repo-get-full-path-without-realpath
+    mode: taint
+    languages: [python]
+    severity: HIGH
+    message: >
+      $REPO.get_full_path() result flows into a file-system operation without
+      validation via os.path.realpath(). get_full_path() returns
+      os.path.join(project_folder, filename); if filename is attacker-controlled
+      it can contain "../" sequences that escape the project directory (CWE-22).
+      Wrap in os.path.realpath() and call _assert_within_project() or similar 
+      function to check that path remains inside the intended project directory
+      before any file operations.
+    metadata:
+      cwe: "CWE-22: Improper Limitation of a Pathname to a Restricted Directory"
+
+    pattern-sources:
+      - pattern: $REPO.get_full_path($FILENAME)
+
+    pattern-sinks: *path-traversal-sinks
+
+    pattern-sanitizers:
+      - pattern: $RESULT = os.path.realpath(...)
+
+  # =========================================================================
+  # Rule 3 — HTTP upload endpoint
+  # Source:     $UPLOAD.filename  (UploadFile param, direct or Annotated)
+  # Sanitizers: _validate_filename(...)
+  # =========================================================================
+  - id: fastapi-upload-filename-path-traversal
+    mode: taint
+    languages: [python]
+    severity: HIGH
+    message: >
+      User-supplied filename from an HTTP upload ($UPLOAD.filename) reaches a
+      file-system operation without path sanitization.  An attacker can supply
+      "../" sequences to write, read, or delete files outside the intended
+      directory (CWE-22).  Route the value through
+      _validate_filename() or similar validation before any file operations.
+    metadata:
+      cwe: "CWE-22: Improper Limitation of a Pathname to a Restricted Directory"
+
+    pattern-sources:
+      - pattern-either:
+          - patterns:
+              - pattern: $UPLOAD.filename
+              - pattern-inside: |
+                  def $FUNC(..., $UPLOAD: UploadFile, ...):
+                      ...
+          - patterns:
+              - pattern: $UPLOAD.filename
+              - pattern-inside: |
+                  def $FUNC(..., $UPLOAD: Annotated[UploadFile, ...], ...):
+                      ...
+
+    pattern-sinks: *path-traversal-sinks
+
+    pattern-sanitizers:
+      - pattern: $RESULT = _validate_filename(...)
+
+  # =========================================================================
+  # Rule 4 — HTTP Query-parameter endpoint
+  # Source:     $PARAM  (Annotated[str, Query(...)] or str = Query(...))
+  # Sanitizers: _validate_filename(...)
+  # =========================================================================
+  - id: fastapi-query-param-filename-path-traversal
+    mode: taint
+    languages: [python]
+    severity: HIGH
+    message: >
+      A string filename from an HTTP Query parameter reaches a file-system
+      operation without path validation.  An attacker can supply "../" sequences
+      to escape the intended directory (CWE-22). Route the value through
+      _validate_filename() or similar validation before any file operations.
+    metadata:
+      cwe: "CWE-22: Improper Limitation of a Pathname to a Restricted Directory"
+
+    pattern-sources:
+      - pattern-either:
+          - patterns:
+              - pattern: $PARAM
+              - pattern-inside: |
+                  def $FUNC(..., $PARAM: Annotated[str, Query(...)], ...):
+                      ...
+          - patterns:
+              - pattern: $PARAM
+              - pattern-inside: |
+                  def $FUNC(..., $PARAM: str = Query(...), ...):
+                      ...
+
+    pattern-sinks: *path-traversal-sinks
+
+    pattern-sanitizers:
+      - pattern: $RESULT = _validate_filename(...)
