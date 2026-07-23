@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preload" as="image" href="../images/logos/anomalib-icon.png" />
+    <link rel="preload" as="image" href="../images/logos/anomalib-text.png" />
+    <link
+      rel="icon"
+      href="../images/logos/anomalib-favicon.png"
+      type="image/png"
+    />
+    <link rel="apple-touch-icon" href="../images/logos/anomalib-icon.png" />
+    <link rel="modulepreload" href="./assets/manifest-f230b8fc.js" />
+    <link rel="modulepreload" href="./assets/entry.client-CJ6yaQ4I.js" />
+    <link rel="modulepreload" href="./assets/rolldown-runtime-QTnfLwEv.js" />
+    <link rel="modulepreload" href="./assets/recharts-B_ru4ssd.js" />
+    <link rel="modulepreload" href="./assets/jsx-runtime--4Hs_8aE.js" />
+    <link rel="modulepreload" href="./assets/root-CqPbWsdr.js" />
+    <link rel="modulepreload" href="./assets/utils-CczHLZBn.js" />
+    <link rel="modulepreload" href="./assets/ToolbarRootContext-BSNHmvty.js" />
+    <link rel="stylesheet" href="./assets/root-DE5aNoRh.css" />
+    <script src="./benchmark-csv-url.js"></script>
+    <script>
+      (() => {
+        try {
+          const key = "theme";
+          const stored = localStorage.getItem(key);
+          const theme =
+            stored === "light" || stored === "dark" || stored === "system"
+              ? stored
+              : "system";
+          const resolved =
+            theme === "system"
+              ? window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light"
+              : theme;
+          document.documentElement.classList.toggle(
+            "dark",
+            resolved === "dark",
+          );
+          document.documentElement.style.colorScheme = resolved;
+        } catch {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="flex min-h-svh flex-col">
+      <header
+        class="border-b border-border/60 bg-background/80 backdrop-blur-sm"
+      >
+        <div
+          class="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-6"
+        >
+          <a
+            class="flex items-center gap-3 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            href="/"
+            data-discover="true"
+            ><img
+              src="../images/logos/anomalib-icon.png"
+              alt=""
+              width="28"
+              height="28"
+              class="size-7"
+            /><img
+              src="../images/logos/anomalib-text.png"
+              alt="Anomalib"
+              height="22"
+              class="h-[22px] w-auto"
+            /><span class="hidden text-sm text-muted-foreground sm:inline"
+              >Benchmarks</span
+            ></a
+          >
+          <div class="flex items-center gap-3">
+            <div
+              data-orientation="horizontal"
+              role="group"
+              data-slot="toggle-group"
+              data-variant="outline"
+              data-size="sm"
+              data-spacing="2"
+              aria-label="Color theme"
+              class="group/toggle-group flex w-fit flex-row items-center gap-[--spacing(var(--gap))] rounded-lg data-[size=sm]:rounded-[min(var(--radius-md),10px)] data-vertical:flex-col data-vertical:items-stretch"
+              style="--gap: 2"
+            >
+              <button
+                type="button"
+                data-pressed=""
+                aria-disabled="false"
+                tabindex="-1"
+                aria-pressed="true"
+                data-slot="toggle-group-item"
+                data-variant="outline"
+                data-size="sm"
+                data-spacing="2"
+                aria-label="System"
+                title="System"
+                class="shrink-0 group-data-[spacing=0]/toggle-group:rounded-none group-data-[spacing=0]/toggle-group:px-2 focus:z-10 focus-visible:z-10 group-data-[spacing=0]/toggle-group:has-data-[icon=inline-end]:pr-1.5 group-data-[spacing=0]/toggle-group:has-data-[icon=inline-start]:pl-1.5 group-data-horizontal/toggle-group:data-[spacing=0]:first:rounded-l-lg group-data-vertical/toggle-group:data-[spacing=0]:first:rounded-t-lg group-data-horizontal/toggle-group:data-[spacing=0]:last:rounded-r-lg group-data-vertical/toggle-group:data-[spacing=0]:last:rounded-b-lg group-data-horizontal/toggle-group:data-[spacing=0]:data-[variant=outline]:border-l-0 group-data-vertical/toggle-group:data-[spacing=0]:data-[variant=outline]:border-t-0 group-data-horizontal/toggle-group:data-[spacing=0]:data-[variant=outline]:first:border-l group-data-vertical/toggle-group:data-[spacing=0]:data-[variant=outline]:first:border-t group/toggle inline-flex items-center justify-center gap-1 font-medium whitespace-nowrap transition-all outline-none hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-pressed:bg-muted data-[state=on]:bg-muted dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 border border-input bg-transparent hover:bg-muted h-7 min-w-7 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&amp;_svg:not([class*=&#x27;size-&#x27;])]:size-3.5"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  color="currentColor"
+                  class="size-4"
+                >
+                  <path
+                    d="M14 21H16M14 21C13.1716 21 12.5 20.3284 12.5 19.5V17L12 17M14 21H10M10 21H8M10 21C10.8284 21 11.5 20.3284 11.5 19.5V17L12 17M12 17V21"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                  ></path>
+                  <path
+                    d="M16 3H8C5.17157 3 3.75736 3 2.87868 3.87868C2 4.75736 2 6.17157 2 9V11C2 13.8284 2 15.2426 2.87868 16.1213C3.75736 17 5.17157 17 8 17H16C18.8284 17 20.2426 17 21.1213 16.1213C22 15.2426 22 13.8284 22 11V9C22 6.17157 22 4.75736 21.1213 3.87868C20.2426 3 18.8284 3 16 3Z"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                  ></path>
+                </svg></button
+              ><button
+                type="button"
+                aria-disabled="false"
+                tabindex="-1"
+                aria-pressed="false"
+                data-slot="toggle-group-item"
+                data-variant="outline"
+                data-size="sm"
+                data-spacing="2"
+                aria-label="Light"
+                title="Light"
+                class="shrink-0 group-data-[spacing=0]/toggle-group:rounded-none group-data-[spacing=0]/toggle-group:px-2 focus:z-10 focus-visible:z-10 group-data-[spacing=0]/toggle-group:has-data-[icon=inline-end]:pr-1.5 group-data-[spacing=0]/toggle-group:has-data-[icon=inline-start]:pl-1.5 group-data-horizontal/toggle-group:data-[spacing=0]:first:rounded-l-lg group-data-vertical/toggle-group:data-[spacing=0]:first:rounded-t-lg group-data-horizontal/toggle-group:data-[spacing=0]:last:rounded-r-lg group-data-vertical/toggle-group:data-[spacing=0]:last:rounded-b-lg group-data-horizontal/toggle-group:data-[spacing=0]:data-[variant=outline]:border-l-0 group-data-vertical/toggle-group:data-[spacing=0]:data-[variant=outline]:border-t-0 group-data-horizontal/toggle-group:data-[spacing=0]:data-[variant=outline]:first:border-l group-data-vertical/toggle-group:data-[spacing=0]:data-[variant=outline]:first:border-t group/toggle inline-flex items-center justify-center gap-1 font-medium whitespace-nowrap transition-all outline-none hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-pressed:bg-muted data-[state=on]:bg-muted dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 border border-input bg-transparent hover:bg-muted h-7 min-w-7 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&amp;_svg:not([class*=&#x27;size-&#x27;])]:size-3.5"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  color="currentColor"
+                  class="size-4"
+                >
+                  <path
+                    d="M17 12C17 14.7614 14.7614 17 12 17C9.23858 17 7 14.7614 7 12C7 9.23858 9.23858 7 12 7C14.7614 7 17 9.23858 17 12Z"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  ></path>
+                  <path
+                    d="M12 2C11.6227 2.33333 11.0945 3.2 12 4M12 20C12.3773 20.3333 12.9055 21.2 12 22M19.5 4.50271C18.9685 4.46982 17.9253 4.72293 18.0042 5.99847M5.49576 17.5C5.52865 18.0315 5.27555 19.0747 4 18.9958M5.00271 4.5C4.96979 5.03202 5.22315 6.0763 6.5 5.99729M18 17.5026C18.5315 17.4715 19.5747 17.7108 19.4958 18.9168M22 12C21.6667 11.6227 20.8 11.0945 20 12M4 11.5C3.66667 11.8773 2.8 12.4055 2 11.5"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-width="1.5"
+                  ></path>
+                </svg></button
+              ><button
+                type="button"
+                aria-disabled="false"
+                tabindex="-1"
+                aria-pressed="false"
+                data-slot="toggle-group-item"
+                data-variant="outline"
+                data-size="sm"
+                data-spacing="2"
+                aria-label="Dark"
+                title="Dark"
+                class="shrink-0 group-data-[spacing=0]/toggle-group:rounded-none group-data-[spacing=0]/toggle-group:px-2 focus:z-10 focus-visible:z-10 group-data-[spacing=0]/toggle-group:has-data-[icon=inline-end]:pr-1.5 group-data-[spacing=0]/toggle-group:has-data-[icon=inline-start]:pl-1.5 group-data-horizontal/toggle-group:data-[spacing=0]:first:rounded-l-lg group-data-vertical/toggle-group:data-[spacing=0]:first:rounded-t-lg group-data-horizontal/toggle-group:data-[spacing=0]:last:rounded-r-lg group-data-vertical/toggle-group:data-[spacing=0]:last:rounded-b-lg group-data-horizontal/toggle-group:data-[spacing=0]:data-[variant=outline]:border-l-0 group-data-vertical/toggle-group:data-[spacing=0]:data-[variant=outline]:border-t-0 group-data-horizontal/toggle-group:data-[spacing=0]:data-[variant=outline]:first:border-l group-data-vertical/toggle-group:data-[spacing=0]:data-[variant=outline]:first:border-t group/toggle inline-flex items-center justify-center gap-1 font-medium whitespace-nowrap transition-all outline-none hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-pressed:bg-muted data-[state=on]:bg-muted dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 border border-input bg-transparent hover:bg-muted h-7 min-w-7 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&amp;_svg:not([class*=&#x27;size-&#x27;])]:size-3.5"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  color="currentColor"
+                  class="size-4"
+                >
+                  <path
+                    d="M21.5 14.0784C20.3003 14.7189 18.9301 15.0821 17.4751 15.0821C12.7491 15.0821 8.91792 11.2509 8.91792 6.52485C8.91792 5.06986 9.28105 3.69968 9.92163 2.5C5.66765 3.49698 2.5 7.31513 2.5 11.8731C2.5 17.1899 6.8101 21.5 12.1269 21.5C16.6849 21.5 20.503 18.3324 21.5 14.0784Z"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                  ></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+      <div
+        role="note"
+        class="border-b border-amber-500/25 bg-amber-500/10 text-amber-950 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-50"
+      >
+        <p class="mx-auto max-w-6xl px-6 py-3 text-sm leading-relaxed">
+          <span class="font-medium">Internal development benchmarks.</span>
+          <!-- -->These results come from unoptimized default runs and are
+          intended only for relative comparison across models, datasets, and
+          anomalib versions. Tuned configurations may achieve higher scores.
+          Figures are provided without warranty and are not a guarantee,
+          specification, or legally binding performance claim.
+        </p>
+      </div>
+      <main
+        class="flex flex-1 items-center justify-center p-6 text-sm text-muted-foreground"
+      >
+        Loading…
+      </main>
+    </div>
+    <script>
+      window.__reactRouterContext = {
+        basename: "/",
+        future: {
+          unstable_optimizeDeps: false,
+          v8_passThroughRequests: false,
+          unstable_trailingSlashAwareDataRequests: false,
+          unstable_previewServerPrerendering: false,
+          v8_middleware: false,
+          v8_splitRouteModules: false,
+          v8_viteEnvironmentApi: false,
+        },
+        routeDiscovery: { mode: "initial" },
+        ssr: false,
+        isSpaMode: true,
+      };
+      window.__reactRouterContext.stream = new ReadableStream({
+        start(controller) {
+          window.__reactRouterContext.streamController = controller;
+        },
+      }).pipeThrough(new TextEncoderStream());
+    </script>
+    <script type="module" async="">
+      import "./assets/manifest-f230b8fc.js";
+      import * as route0 from "./assets/root-CqPbWsdr.js";
+
+      window.__reactRouterRouteModules = { root: route0 };
+
+      import("./assets/entry.client-CJ6yaQ4I.js");
+    </script>
+    <!--$-->
+    <script>
+      window.__reactRouterContext.streamController.enqueue(
+        '[{"_1":2,"_3":-5,"_4":-5},"loaderData",{},"actionData","errors"]\n',
+      );
+    </script>
+    <!--$-->
+    <script>
+      window.__reactRouterContext.streamController.close();
+    </script>
+    <!--/$--><!--/$-->
+  </body>
+</html>
