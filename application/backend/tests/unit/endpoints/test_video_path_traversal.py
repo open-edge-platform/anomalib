@@ -59,6 +59,7 @@ TRAVERSAL_FILENAMES = [
     "sub/video.mp4",
     # Null byte injection attempt
     "video%00.mp4",
+]
 
 
 @pytest.mark.parametrize("traversal_filename", TRAVERSAL_FILENAMES)
