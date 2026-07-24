@@ -314,6 +314,9 @@ class SuperADDModel(DynamicBufferMixin, nn.Module):
                 )
                 raise ValueError(msg)
         else:
+            if not layers:
+                msg = "`layers` must be a non-empty list of encoder layer indices."
+                raise ValueError(msg)
             self.layers = layers
 
         self.backbone = DinoV3Backbone(backbone, self.layers)
