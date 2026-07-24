@@ -67,7 +67,7 @@ from anomalib.data.datamodules.base.video import AnomalibVideoDataModule
 from anomalib.data.datasets.base.video import VideoTargetFrame
 from anomalib.data.datasets.video.avenue import AvenueDataset
 from anomalib.data.utils import DownloadInfo, Split, ValSplitMode, download_and_extract
-from anomalib.utils.path import resolve_with_warning
+from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
 
@@ -169,8 +169,8 @@ class Avenue(AnomalibVideoDataModule):
             seed=seed,
         )
 
-        root = resolve_with_warning(root, "avenue")
-        gt_dir = resolve_with_warning(gt_dir, "avenue/ground_truth_demo")
+        root = resolve_dataset_root(root, "avenue")
+        gt_dir = resolve_dataset_root(gt_dir, "avenue/ground_truth_demo")
         self.root = Path(root)
         self.gt_dir = Path(gt_dir)
         self.clip_length_in_frames = clip_length_in_frames

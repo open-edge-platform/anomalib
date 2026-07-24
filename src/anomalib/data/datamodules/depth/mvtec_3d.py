@@ -38,7 +38,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.depth.mvtec_3d import MVTec3DDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
-from anomalib.utils.path import resolve_with_warning
+from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +117,7 @@ class MVTec3D(AnomalibDataModule):
             seed=seed,
         )
 
-        root = resolve_with_warning(root, "MVTec3D")
+        root = resolve_dataset_root(root, "MVTec3D")
         self.root = Path(root)
         self.category = category
 

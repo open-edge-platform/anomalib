@@ -3,7 +3,6 @@
 
 """Unit Tests - Kaputt Datamodule."""
 
-import warnings
 from pathlib import Path
 
 import pytest
@@ -15,8 +14,7 @@ from anomalib.data.utils import LabelName, Split, ValSplitMode
 from tests.unit.data.datamodule.base.image import _TestAnomalibImageDatamodule
 
 
-# too-many-public-methods is ignored till v2.6.0. This class will be simplified in v2.6.0.
-class TestKaputt(_TestAnomalibImageDatamodule):  # noqa: PLR0904
+class TestKaputt(_TestAnomalibImageDatamodule):
     """Kaputt Datamodule Unit Tests."""
 
     @pytest.fixture()
@@ -25,6 +23,7 @@ class TestKaputt(_TestAnomalibImageDatamodule):  # noqa: PLR0904
         """Create and return a Kaputt datamodule."""
         datamodule_ = Kaputt(
             root=dataset_path / "kaputt",
+            category=None,
             train_batch_size=4,
             eval_batch_size=4,
             augmentations=Resize((256, 256)),
@@ -40,61 +39,6 @@ class TestKaputt(_TestAnomalibImageDatamodule):  # noqa: PLR0904
     def fxt_data_config_path() -> str:
         """Return the path to the test data config."""
         return "examples/configs/data/kaputt.yaml"
-
-    # ------------------------------------------------------------------
-    # Legacy API tests (backward-compat: string image_type, bool flags)
-    # Deprecated — will be removed in v2.6.0
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def test_use_reference_adds_rows(dataset_path: Path) -> None:
-        """Test that use_reference=True adds reference samples to the dataset."""
-        root = dataset_path / "kaputt"
-        samples_without = make_kaputt_dataset(root, split=Split.TRAIN, use_reference=False)
-        samples_with = make_kaputt_dataset(root, split=Split.TRAIN, use_reference=True)
-
-        assert len(samples_with) > len(samples_without)
-        # All reference rows should be normal
-        added = samples_with[~samples_with["image_path"].isin(samples_without["image_path"])]
-        assert (added["label"] == "normal").all()
-        assert (added["label_index"] == int(LabelName.NORMAL)).all()
-        # Reference paths must point into reference-image/
-        assert added["image_path"].str.contains("reference-image").all()
-
-    @staticmethod
-    def test_image_type_crop_switches_subdirectory(dataset_path: Path) -> None:
-        """Test that image_type='crop' reads from query-crop/ instead of query-image/."""
-        root = dataset_path / "kaputt"
-        samples_image = make_kaputt_dataset(root, split=Split.TRAIN, image_type="image")
-        samples_crop = make_kaputt_dataset(root, split=Split.TRAIN, image_type="crop")
-
-        assert len(samples_image) == len(samples_crop)
-        assert samples_image["image_path"].str.contains("query-image").all()
-        assert samples_crop["image_path"].str.contains("query-crop").all()
-
-    @staticmethod
-    def test_abnormal_samples_have_mask_path(dataset_path: Path) -> None:
-        """Test that abnormal samples have non-empty mask_path and normals do not."""
-        root = dataset_path / "kaputt"
-        samples = make_kaputt_dataset(root, split=Split.VAL)
-
-        abnormal = samples[samples["label_index"] == int(LabelName.ABNORMAL)]
-        normal = samples[samples["label_index"] == int(LabelName.NORMAL)]
-
-        assert len(abnormal) > 0, "Expected abnormal samples in val split"
-        assert len(normal) > 0, "Expected normal samples in val split"
-        assert (abnormal["mask_path"] != "").all(), "All abnormal samples should have a mask_path"
-        assert (normal["mask_path"] == "").all(), "No normal sample should have a mask_path"
-
-    @staticmethod
-    def test_use_reference_crop_paths(dataset_path: Path) -> None:
-        """Test that use_reference=True with image_type='crop' uses reference-crop/."""
-        root = dataset_path / "kaputt"
-        samples = make_kaputt_dataset(root, split=Split.TRAIN, image_type="crop", use_reference=True)
-
-        ref_rows = samples[samples["image_path"].str.contains("reference-")]
-        assert len(ref_rows) > 0
-        assert ref_rows["image_path"].str.contains("reference-crop").all()
 
     # ------------------------------------------------------------------
     # ImageMode enum tests
@@ -136,19 +80,6 @@ class TestKaputt(_TestAnomalibImageDatamodule):  # noqa: PLR0904
         assert (samples["label_index"] == int(LabelName.NORMAL)).all()
 
     @staticmethod
-    def test_image_mode_equivalence_with_legacy(dataset_path: Path) -> None:
-        """Test that new ImageMode values produce identical results to legacy bool flags."""
-        root = dataset_path / "kaputt"
-
-        legacy_without = make_kaputt_dataset(root, split=Split.TRAIN, use_reference=False)
-        new_query_only = make_kaputt_dataset(root, split=Split.TRAIN, image_mode=ImageMode.QUERY_ONLY)
-        assert list(legacy_without["image_path"]) == list(new_query_only["image_path"])
-
-        legacy_with = make_kaputt_dataset(root, split=Split.TRAIN, use_reference=True)
-        new_query_and_ref = make_kaputt_dataset(root, split=Split.TRAIN, image_mode=ImageMode.QUERY_AND_REFERENCE)
-        assert list(legacy_with["image_path"]) == list(new_query_and_ref["image_path"])
-
-    @staticmethod
     def test_image_mode_reference_only_with_crop(dataset_path: Path) -> None:
         """Test REFERENCE_ONLY combined with ImageType.CROP uses reference-crop/."""
         root = dataset_path / "kaputt"
@@ -162,22 +93,58 @@ class TestKaputt(_TestAnomalibImageDatamodule):  # noqa: PLR0904
         assert len(samples) > 0
         assert samples["image_path"].str.contains("reference-crop").all()
 
-    # ------------------------------------------------------------------
-    # ImageType enum tests
-    # ------------------------------------------------------------------
+    @staticmethod
+    def test_query_and_reference_adds_normal_rows(dataset_path: Path) -> None:
+        """Test that QUERY_AND_REFERENCE adds reference samples labeled normal."""
+        root = dataset_path / "kaputt"
+        samples_without = make_kaputt_dataset(root, split=Split.TRAIN, image_mode=ImageMode.QUERY_ONLY)
+        samples_with = make_kaputt_dataset(root, split=Split.TRAIN, image_mode=ImageMode.QUERY_AND_REFERENCE)
+
+        assert len(samples_with) > len(samples_without)
+        added = samples_with[~samples_with["image_path"].isin(samples_without["image_path"])]
+        assert (added["label"] == "normal").all()
+        assert (added["label_index"] == int(LabelName.NORMAL)).all()
+        assert added["image_path"].str.contains("reference-image").all()
 
     @staticmethod
-    def test_image_type_enum_matches_string(dataset_path: Path) -> None:
-        """Test that ImageType enum produces identical results to legacy string."""
+    def test_image_type_crop_switches_subdirectory(dataset_path: Path) -> None:
+        """Test that ImageType.CROP reads from query-crop/ instead of query-image/."""
         root = dataset_path / "kaputt"
+        samples_image = make_kaputt_dataset(root, split=Split.TRAIN, image_type=ImageType.IMAGE)
+        samples_crop = make_kaputt_dataset(root, split=Split.TRAIN, image_type=ImageType.CROP)
 
-        from_string = make_kaputt_dataset(root, split=Split.TRAIN, image_type="image")
-        from_enum = make_kaputt_dataset(root, split=Split.TRAIN, image_type=ImageType.IMAGE)
-        assert list(from_string["image_path"]) == list(from_enum["image_path"])
+        assert len(samples_image) == len(samples_crop)
+        assert samples_image["image_path"].str.contains("query-image").all()
+        assert samples_crop["image_path"].str.contains("query-crop").all()
 
-        from_string_crop = make_kaputt_dataset(root, split=Split.TRAIN, image_type="crop")
-        from_enum_crop = make_kaputt_dataset(root, split=Split.TRAIN, image_type=ImageType.CROP)
-        assert list(from_string_crop["image_path"]) == list(from_enum_crop["image_path"])
+    @staticmethod
+    def test_abnormal_samples_have_mask_path(dataset_path: Path) -> None:
+        """Test that abnormal samples have non-empty mask_path and normals do not."""
+        root = dataset_path / "kaputt"
+        samples = make_kaputt_dataset(root, split=Split.VAL)
+
+        abnormal = samples[samples["label_index"] == int(LabelName.ABNORMAL)]
+        normal = samples[samples["label_index"] == int(LabelName.NORMAL)]
+
+        assert len(abnormal) > 0, "Expected abnormal samples in val split"
+        assert len(normal) > 0, "Expected normal samples in val split"
+        assert (abnormal["mask_path"] != "").all(), "All abnormal samples should have a mask_path"
+        assert (normal["mask_path"] == "").all(), "No normal sample should have a mask_path"
+
+    @staticmethod
+    def test_query_and_reference_crop_paths(dataset_path: Path) -> None:
+        """Test QUERY_AND_REFERENCE with ImageType.CROP uses reference-crop/."""
+        root = dataset_path / "kaputt"
+        samples = make_kaputt_dataset(
+            root,
+            split=Split.TRAIN,
+            image_type=ImageType.CROP,
+            image_mode=ImageMode.QUERY_AND_REFERENCE,
+        )
+
+        ref_rows = samples[samples["image_path"].str.contains("reference-")]
+        assert len(ref_rows) > 0
+        assert ref_rows["image_path"].str.contains("reference-crop").all()
 
     # ------------------------------------------------------------------
     # Category filtering tests
@@ -250,54 +217,3 @@ class TestKaputt(_TestAnomalibImageDatamodule):  # noqa: PLR0904
         assert len(query_rows) > 0
         assert len(ref_rows) > 0
         assert (query_rows["item_material"] == "cardboard").all()
-
-    # ------------------------------------------------------------------
-    # Deprecation warning tests
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def test_use_reference_emits_deprecation_warning(dataset_path: Path) -> None:
-        """Test that passing use_reference emits a DeprecationWarning."""
-        root = dataset_path / "kaputt"
-        with warnings.catch_warnings(record=True) as caught:
-            warnings.simplefilter("always")
-            make_kaputt_dataset(root, split=Split.TRAIN, use_reference=True)
-
-        deprecation_msgs = [w for w in caught if issubclass(w.category, DeprecationWarning)]
-        assert len(deprecation_msgs) >= 1
-        assert "use_reference" in str(deprecation_msgs[0].message)
-
-    @staticmethod
-    def test_reference_only_emits_deprecation_warning(dataset_path: Path) -> None:
-        """Test that passing reference_only emits a DeprecationWarning."""
-        root = dataset_path / "kaputt"
-        with warnings.catch_warnings(record=True) as caught:
-            warnings.simplefilter("always")
-            make_kaputt_dataset(root, split=Split.TRAIN, reference_only=True)
-
-        deprecation_msgs = [w for w in caught if issubclass(w.category, DeprecationWarning)]
-        assert len(deprecation_msgs) >= 1
-        assert "reference_only" in str(deprecation_msgs[0].message)
-
-    @staticmethod
-    def test_string_image_type_emits_deprecation_warning(dataset_path: Path) -> None:
-        """Test that passing image_type as a string emits a DeprecationWarning."""
-        root = dataset_path / "kaputt"
-        with warnings.catch_warnings(record=True) as caught:
-            warnings.simplefilter("always")
-            make_kaputt_dataset(root, split=Split.TRAIN, image_type="crop")
-
-        deprecation_msgs = [w for w in caught if issubclass(w.category, DeprecationWarning)]
-        assert len(deprecation_msgs) >= 1
-        assert "image_type" in str(deprecation_msgs[0].message)
-
-    @staticmethod
-    def test_enum_image_type_no_warning(dataset_path: Path) -> None:
-        """Test that passing ImageType enum does not emit a DeprecationWarning."""
-        root = dataset_path / "kaputt"
-        with warnings.catch_warnings(record=True) as caught:
-            warnings.simplefilter("always")
-            make_kaputt_dataset(root, split=Split.TRAIN, image_type=ImageType.IMAGE)
-
-        deprecation_msgs = [w for w in caught if issubclass(w.category, DeprecationWarning)]
-        assert len(deprecation_msgs) == 0
