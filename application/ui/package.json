@@ -46,7 +46,7 @@
         "react": "^19.1.1",
         "react-aria-components": "^1.10.1",
         "react-dom": "^19.1.1",
-        "react-router": "^6.30.3",
+        "react-router": "^7.0.0",
         "react-router-dom": "^6.30.3",
         "recharts": "^3.8.1",
         "static-path": "^0.0.4"
