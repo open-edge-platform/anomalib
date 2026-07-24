@@ -126,6 +126,7 @@ jobs:
           scan-scope: ${{ inputs.scan-scope }}
           severity: ${{ inputs.severity-level }}
           fail-on-findings: ${{ inputs.fail-on-findings }}
+          config: "p/default p/cwe-top-25 p/trailofbits p/owasp-top-ten .semgrep"
 
   trivy-scan:
     if: contains(inputs.tools, 'trivy-scan')
