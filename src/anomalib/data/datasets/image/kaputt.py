@@ -43,7 +43,6 @@ Dataset URL:
 """
 
 import logging
-import warnings
 from enum import Enum
 from pathlib import Path
 
@@ -103,63 +102,6 @@ class ImageMode(str, Enum):
     REFERENCE_ONLY = "reference_only"
 
 
-def _resolve_image_mode(
-    image_mode: ImageMode,
-    use_reference: bool | None,
-    reference_only: bool | None,
-) -> ImageMode:
-    """Map deprecated use_reference/reference_only booleans to ImageMode.
-
-    When neither deprecated param is provided, returns ``image_mode`` as-is.
-    Emits a ``DeprecationWarning`` when a deprecated param is used.
-
-    Args:
-        image_mode (ImageMode): The new-style enum parameter.
-        use_reference (bool | None): Deprecated boolean flag.
-        reference_only (bool | None): Deprecated boolean flag.
-
-    Returns:
-        ImageMode: Resolved image mode.
-    """
-    if reference_only is not None:
-        warnings.warn(
-            "reference_only is deprecated and will be removed in v2.6.0. "
-            "Use image_mode=ImageMode.REFERENCE_ONLY instead.",
-            DeprecationWarning,
-            stacklevel=3,
-        )
-        return ImageMode.REFERENCE_ONLY if reference_only else ImageMode(image_mode)
-    if use_reference is not None:
-        warnings.warn(
-            "use_reference is deprecated and will be removed in v2.6.0. "
-            "Use image_mode=ImageMode.QUERY_AND_REFERENCE instead.",
-            DeprecationWarning,
-            stacklevel=3,
-        )
-        return ImageMode.QUERY_AND_REFERENCE if use_reference else ImageMode.QUERY_ONLY
-    return ImageMode(image_mode)
-
-
-def _resolve_image_type(image_type: ImageType | str) -> ImageType:
-    """Convert a string ``image_type`` to :class:`ImageType`, warning on raw strings.
-
-    Args:
-        image_type (ImageType | str): Image type as enum or raw string.
-
-    Returns:
-        ImageType: Resolved image type.
-    """
-    if isinstance(image_type, ImageType):
-        return image_type
-    warnings.warn(
-        f"Passing image_type as a string ('{image_type}') is deprecated and "
-        "will be removed in v2.6.0. Use ImageType.IMAGE or ImageType.CROP instead.",
-        DeprecationWarning,
-        stacklevel=3,
-    )
-    return ImageType(image_type)
-
-
 class KaputtDataset(AnomalibDataset):
     """Kaputt dataset class.
 
@@ -181,7 +123,7 @@ class KaputtDataset(AnomalibDataset):
             ``Split.VAL``, or ``Split.TEST``. Defaults to ``None``.
         image_type (ImageType | str): Type of images to use.
             Defaults to ``ImageType.IMAGE``.
-        image_mode (ImageMode): Controls which image sources are used.
+        image_mode (ImageMode | str): Controls which image sources are used.
             Defaults to ``ImageMode.QUERY_ONLY``.
 
     Example:
@@ -219,10 +161,7 @@ class KaputtDataset(AnomalibDataset):
         augmentations: Transform | None = None,
         split: str | Split | None = None,
         image_type: ImageType | str = ImageType.IMAGE,
-        image_mode: ImageMode = ImageMode.QUERY_ONLY,
-        # Deprecated — will be removed in v2.6.0
-        use_reference: bool | None = None,
-        reference_only: bool | None = None,
+        image_mode: ImageMode | str = ImageMode.QUERY_ONLY,
     ) -> None:
         super().__init__(augmentations=augmentations)
 
@@ -231,8 +170,8 @@ class KaputtDataset(AnomalibDataset):
         self.root = Path(root)
         self.category: str | None = category
         self.split = split
-        self.image_type = _resolve_image_type(image_type)
-        self.image_mode = _resolve_image_mode(image_mode, use_reference, reference_only)
+        self.image_type = ImageType(image_type)
+        self.image_mode = ImageMode(image_mode)
         self.samples = make_kaputt_dataset(
             self.root,
             category=self.category,
@@ -247,10 +186,7 @@ def make_kaputt_dataset(
     category: str | None = None,
     split: str | Split | None = None,
     image_type: ImageType | str = ImageType.IMAGE,
-    image_mode: ImageMode = ImageMode.QUERY_ONLY,
-    # Deprecated — will be removed in v2.6.0
-    use_reference: bool | None = None,
-    reference_only: bool | None = None,
+    image_mode: ImageMode | str = ImageMode.QUERY_ONLY,
 ) -> DataFrame:
     """Create Kaputt samples by parsing the Parquet metadata files.
 
@@ -269,12 +205,8 @@ def make_kaputt_dataset(
             Defaults to ``None`` which loads all splits.
         image_type (ImageType | str): Type of images to use.
             Defaults to ``ImageType.IMAGE``.
-        image_mode (ImageMode): Controls which image sources are used.
+        image_mode (ImageMode | str): Controls which image sources are used.
             Defaults to ``ImageMode.QUERY_ONLY``.
-        use_reference (bool | None): Deprecated. Use ``image_mode`` instead.
-            Will be removed in v2.6.0.
-        reference_only (bool | None): Deprecated. Use ``image_mode`` instead.
-            Will be removed in v2.6.0.
 
     Returns:
         DataFrame: Dataset samples with columns:
@@ -300,8 +232,8 @@ def make_kaputt_dataset(
         RuntimeError: If no valid images are found.
     """
     root = validate_path(root)
-    image_type = _resolve_image_type(image_type)
-    image_mode = _resolve_image_mode(image_mode, use_reference, reference_only)
+    image_type = ImageType(image_type)
+    image_mode = ImageMode(image_mode)
 
     # Parquet files use "validation" while anomalib uses "val"
     parquet_splits = {"train": "train", "validation": "val", "test": "test"}

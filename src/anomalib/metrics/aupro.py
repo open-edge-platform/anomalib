@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Area Under Per-Region Overlap (AUPRO) metric.
@@ -42,9 +42,6 @@ Args:
         Defaults to ``None``.
     fpr_limit (float): Limit for the false positive rate.
         Defaults to ``0.3``.
-    num_thresholds (int | None): Number of thresholds to use for computing the
-        ROC curve. When ``None``, uses thresholds from torchmetrics.
-        Defaults to ``None``.
 
 Note:
     The AUPRO score ranges from 0 to 1, with 1 indicating perfect overlap between
@@ -61,18 +58,11 @@ from torchmetrics.utilities.compute import auc
 from torchmetrics.utilities.data import dim_zero_cat
 
 from anomalib.metrics.pro import connected_components_cpu, connected_components_gpu
-from anomalib.utils import deprecate
 
 from .base import AnomalibMetric
 from .utils import plot_metric_curve
 
 
-@deprecate(
-    args={"num_thresholds": None},
-    since="2.1.0",
-    remove="2.6.0",
-    reason="New AUPRO computation does not require number of thresholds",
-)
 class _AUPRO(Metric):
     """Area under per region overlap (AUPRO) Metric.
 
@@ -87,8 +77,6 @@ class _AUPRO(Metric):
             Defaults to ``None``.
         fpr_limit (float): Limit for the false positive rate.
             Defaults to ``0.3``.
-        num_thresholds (int | None): Present for backward compatibility with the
-            old implementation, but ignored in this fast version.
 
     Examples:
         >>> import torch
@@ -113,7 +101,6 @@ class _AUPRO(Metric):
     full_state_update: bool = False
     preds: list[torch.Tensor]
     target: list[torch.Tensor]
-    num_thresholds: int | None
 
     def __init__(
         self,
@@ -121,7 +108,6 @@ class _AUPRO(Metric):
         process_group: Any | None = None,  # noqa: ANN401
         dist_sync_fn: Callable | None = None,
         fpr_limit: float = 0.3,
-        num_thresholds: int | None = None,
     ) -> None:
         super().__init__(
             dist_sync_on_step=dist_sync_on_step,
@@ -132,9 +118,6 @@ class _AUPRO(Metric):
         self.add_state("preds", default=[], dist_reduce_fx="cat")
         self.add_state("target", default=[], dist_reduce_fx="cat")
         self.register_buffer("fpr_limit", torch.tensor(fpr_limit))
-
-        # Kept for API compatibility; ignored by the fast implementation.
-        self.num_thresholds = num_thresholds
 
     def update(self, preds: torch.Tensor, target: torch.Tensor) -> None:
         """Update state with new values.
@@ -205,17 +188,10 @@ class _AUPRO(Metric):
 
         return cca_off
 
-    @deprecate(
-        args={"target": None},
-        since="2.1.0",
-        remove="2.6.0",
-        reason="Compute PRO computes overlap with connected components not target.",
-    )
     def compute_pro(
         self,
         cca: torch.Tensor,
         preds: torch.Tensor,
-        target: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Compute the PRO curve (FPR vs. averaged per-region TPR/overlap).
 
@@ -229,15 +205,12 @@ class _AUPRO(Metric):
             preds (torch.Tensor):
                 Prediction scores of shape (B, H, W). Higher values indicate more
                 anomalous.
-            target (torch.Tensor | None):
-                Unused; accepted only for API compatibility.
 
         Returns:
             tuple[torch.Tensor, torch.Tensor]:
                 (fpr, pro), both 1-D tensors sorted by increasing FPR and clipped
                 at ``self.fpr_limit``.
         """
-        del target
         device = preds.device
 
         # flatten (already on correct device)
