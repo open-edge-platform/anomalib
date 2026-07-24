@@ -227,7 +227,7 @@ class PatchedExecution(nn.Module):
         prediction_rois = itertools.product(prediction_rois_y, prediction_rois_x)
         result_rois = itertools.product(result_rois_y, result_rois_x)
         for i, ((pred_roi_y, pred_roi_x), (res_roi_y, res_roi_x)) in enumerate(
-            zip(prediction_rois, result_rois, strict=False),
+            zip(prediction_rois, result_rois, strict=True),
         ):
             p = prediction[:, :, i, pred_roi_y[0] : pred_roi_y[1], pred_roi_x[0] : pred_roi_x[1]]
             result[:, :, res_roi_y[0] : res_roi_y[1], res_roi_x[0] : res_roi_x[1]] = p
@@ -305,6 +305,14 @@ class SuperADDModel(DynamicBufferMixin, nn.Module):
             for arch_name, target_layers in DINO_TARGET_LAYERS.items():
                 if arch_name in backbone:
                     self.layers = target_layers
+                    break
+            if not hasattr(self, "layers"):
+                msg = (
+                    f"Could not infer target layers for backbone '{backbone}'. "
+                    f"Known backbone keys: {sorted(DINO_TARGET_LAYERS.keys())}. "
+                    "Please pass `layers` explicitly."
+                )
+                raise ValueError(msg)
         else:
             self.layers = layers
 
@@ -514,12 +522,27 @@ class SuperADDModel(DynamicBufferMixin, nn.Module):
                 ``(target_number_of_samples, d)``.
         """
         # perform subsample iteratively on random subsets of the data to speed up the nearest neighbor search
+        if iterations <= 0:
+            msg = f"`iterations` must be a positive integer, got {iterations}."
+            raise ValueError(msg)
+        if target_number_of_samples <= 0:
+            msg = f"`target_number_of_samples` must be positive, got {target_number_of_samples}."
+            raise ValueError(msg)
+
+        # If we already have fewer features than requested, return as-is.
+        if len(features) <= target_number_of_samples:
+            return features
+
         keep_mask_total = torch.zeros(len(features), dtype=torch.bool)
-        size_of_subsets = int(1 / iterations * len(features))  # Size of subsets
-        target_to_keep_subset = target_number_of_samples // iterations  # Target to keep per subset
+        # Guarantee at least 1 to avoid zero-sized subsets / targets on small inputs.
+        size_of_subsets = max(1, len(features) // iterations)
+        target_to_keep_subset = max(1, target_number_of_samples // iterations)
+        number_of_samples = 0
 
         for _ in tqdm(range(iterations), desc="Subsampling embeddings"):
             candidate_indices = torch.where(~keep_mask_total)[0]
+            if len(candidate_indices) == 0:
+                break
             # Randomly select a subset of candidates for this iteration
             n = min(size_of_subsets, len(candidate_indices))
             perm = torch.randperm(len(candidate_indices))[:n]

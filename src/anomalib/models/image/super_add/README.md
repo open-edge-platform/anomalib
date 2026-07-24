@@ -14,9 +14,9 @@ SuperADD extracts multi-layer Vision Transformer token features from a pretraine
 
 ## Usage
 
-`anomalib train --model SuperAdd --data MVTecAD2 --data.category <category>`
+`anomalib train --model SuperADD --data MVTecAD2 --data.category <category>`
 
-The original papers authors use a very high input resolution to the model. To replicate their input stratetgy, scale the MVTecAD2 images by a factor of 0.625 and keep the aspect ratio of your images for better accuracy. Set the models paramters to `patch_size=640` and `patch_overlap=128`. These settings result in a high memory consumption.
+The original papers authors use a very high input resolution to the model. To replicate their input strategy, scale the MVTecAD2 images by a factor of 0.625 and keep the aspect ratio of your images for better accuracy. Set the models parameters to `patch_size=640` and `patch_overlap=128`. These settings result in a high memory consumption.
 
 Also the papers authors use brightness augmentation of the interval [0.8, 1.2]. This can be achieved by using [Data augmentations](https://anomalib.readthedocs.io/en/latest/markdown/guides/how_to/data/transforms.html) in anomalib and adding `ColorJitter` with the respective brightness interval.
 
@@ -25,7 +25,7 @@ Note on thresholding: MVTec AD 2 provides only anomaly-free validation images, s
 Please be aware that the original paper uses additional post-processing steps to achieve the reported results. These steps include:
 
 - Morphological closing using multiple thresholds and filling closed segmented areas
-- Downscaling feature maps for evalutation by a factor of 4
+- Downscaling feature maps for evaluation by a factor of 4
 
 ### Sample Results
 

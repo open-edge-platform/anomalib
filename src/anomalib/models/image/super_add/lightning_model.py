@@ -154,7 +154,7 @@ class SuperADD(MemoryBankMixin, AnomalibModule):
             precision = PrecisionType(precision.lower())
 
         if precision == PrecisionType.FLOAT16:
-            self.model = self.model.bfloat16()
+            self.model = self.model.half()
         elif precision == PrecisionType.FLOAT32:
             self.model = self.model.float()
         else:
@@ -175,7 +175,7 @@ class SuperADD(MemoryBankMixin, AnomalibModule):
 
         Args:
             image_size (tuple[int, int] | None, optional): Target size for
-                resizing. Defaults to ``(256, 256)``.
+                resizing. Defaults to ``(448, 448)``.
             center_crop_size (tuple[int, int] | None, optional): Size for center
                 cropping. Defaults to ``None``.
 
