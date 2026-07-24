@@ -220,7 +220,7 @@ class SuperADD(MemoryBankMixin, AnomalibModule):
         """
         return
 
-    def training_step(self, batch: Batch, *args, **kwargs) -> None:
+    def training_step(self, batch: Batch, *args, **kwargs) -> torch.Tensor:
         """Generate feature embedding of the batch.
 
         Args:
