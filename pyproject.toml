@@ -45,7 +45,7 @@ dependencies = [
     "einops>=0.3.2",
     # Image processing and computer vision
     "pillow>=10.1.0",
-    "opencv-python>=4.5.3.56",
+    "opencv-python-headless>=4.5.3.56",
     "scikit-image",
     "tifffile",
     "imagecodecs",
@@ -111,11 +111,13 @@ test = [
 # NOTE: Minimum torch>=2.6.0 required due to Critical CVE-2025-32434
 #   (torch.load weights_only=True RCE, patched in 2.6.0)
 cpu = [
-    "torch>=2.6.0,<=2.8.0",
+    "torch>=2.6.0",
+    "torchcodec",
     "torchvision>=0.21.0",
 ]
 cu126 = [
-    "torch>=2.6.0,<=2.8.0",
+    "torch>=2.6.0",
+    "torchcodec",
     "torchvision>=0.21.0",
 ]
 cu130 = [
@@ -124,12 +126,14 @@ cu130 = [
     "torchvision>=0.24.0",
 ]
 rocm = [
-    "torch>=2.7.0,<=2.8.0",
+    "torch>=2.7.0",
+    "torchcodec",
     "torchvision>=0.22.0",
     "pytorch-triton-rocm ; sys_platform == 'linux'",
 ]
 xpu = [
     "torch>=2.9.0", # Note : Last tested with torch+xpu (2.9.1)
+    "torchcodec",
     "torchvision>=0.24.0",
     "pytorch-triton-xpu ; sys_platform == 'linux' or sys_platform == 'win32'",
 ]
@@ -211,6 +215,11 @@ torchvision = [
     { index = "pytorch-cu130", extra = "cu130" },
     { index = "pytorch-rocm63", extra = "rocm" },
     { index = "pytorch-xpu", extra = "xpu" },
+]
+torchcodec = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu126", extra = "cu126" },
+    { index = "pytorch-cu130", extra = "cu130" },
 ]
 pytorch-triton-rocm = [
     { index = "pytorch-rocm63", extra = "rocm" },
@@ -385,11 +394,12 @@ notice-rgx = """
 """
 
 [tool.ruff.lint.per-file-ignores]
-"examples/notebooks/**/*" = ["CPY001"]
+"examples/notebooks/**/*" = ["CPY001", "TD003"]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # MYPY CONFIGURATION.                                                         #
 [tool.mypy]
+python_version = "3.10"
 ignore_missing_imports = true
 show_error_codes = true
 
@@ -415,6 +425,7 @@ pythonpath = "src"
 markers = [
     "gpu: marks tests that require GPU",
     "cpu: marks tests that can run on CPU only (default)",
+    "network: marks tests that require network access",
 ]
 
 

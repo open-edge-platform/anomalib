@@ -108,12 +108,12 @@
     },
     "overrides": {
         "esbuild": "0.27.2",
-        "js-yaml": "4.2.0",
+        "js-yaml": "4.3.0",
         "@msw/source": {
             "lodash": "4.18.1"
         },
         "monaco-editor": {
-            "dompurify": "3.4.11"
+            "dompurify": "3.4.12"
         },
         "openapi-typescript": {
             "minimatch": "10.2.5"

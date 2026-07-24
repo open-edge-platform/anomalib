@@ -48,8 +48,8 @@ logger = logging.getLogger(__name__)
 # Download information for MVTec AD 2 dataset
 DOWNLOAD_INFO = DownloadInfo(
     name="mvtecad2",
-    url="https://www.mydrive.ch/shares/121573/7f68fe2c4f7c2ceaa08f463aaeb2f414/download/"
-    "466712769-1743422799/mvtec_ad_2.tar.gz",
+    url="https://www.mydrive.ch/shares/150997/701c90d3aea6588f404936e32a674602/download/"
+    "466712769-1743429042/mvtec_ad_2.tar.gz",
     hashsum="c0ded99ef32bfc8e352d52beb44515e5b292b8598cb963aadfa91ca0763505e4",
 )
 
