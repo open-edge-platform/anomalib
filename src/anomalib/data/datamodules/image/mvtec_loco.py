@@ -51,7 +51,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.mvtec_loco import MVTecLOCODataset
 from anomalib.data.utils import Split, TestSplitMode, ValSplitMode
-from anomalib.utils.path import resolve_with_warning
+from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +153,7 @@ class MVTecLOCO(AnomalibDataModule):
             seed=seed,
         )
 
-        root = resolve_with_warning(root, "MVTec_LOCO")
+        root = resolve_dataset_root(root, "MVTec_LOCO")
         self.root = Path(root)
         self.category = category
 

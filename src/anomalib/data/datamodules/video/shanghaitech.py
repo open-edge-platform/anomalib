@@ -56,7 +56,7 @@ from anomalib.data.datasets.base.video import VideoTargetFrame
 from anomalib.data.datasets.video.shanghaitech import ShanghaiTechDataset
 from anomalib.data.utils import Split, ValSplitMode
 from anomalib.data.utils.video import convert_video
-from anomalib.utils.path import resolve_with_warning
+from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +174,7 @@ class ShanghaiTech(AnomalibVideoDataModule):
             seed=seed,
         )
 
-        root = resolve_with_warning(root, "shanghaitech")
+        root = resolve_dataset_root(root, "shanghaitech")
         self.root = Path(root)
         self.scene = scene
 

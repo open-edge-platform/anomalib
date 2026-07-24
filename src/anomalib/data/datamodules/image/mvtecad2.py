@@ -41,7 +41,7 @@ from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image import MVTecAD2Dataset
 from anomalib.data.datasets.image.mvtecad2 import TestType
 from anomalib.data.utils import DownloadInfo, Split, download_and_extract
-from anomalib.utils.path import resolve_with_warning
+from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
 
@@ -136,7 +136,7 @@ class MVTecAD2(AnomalibDataModule):
             seed=seed,
         )
 
-        root = resolve_with_warning(root, "MVTec_AD_2")
+        root = resolve_dataset_root(root, "MVTec_AD_2")
         self.root = Path(root)
         self.category = category
         self.test_type = TestType(test_type) if isinstance(test_type, str) else test_type

@@ -8,10 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- 🚀 **data**: Add AutoVI Dataset by @julie-bat in https://github.com/open-edge-platform/anomalib/pull/3633
-
-- 🚀 **model**: Add SuperADD by @alexriedel1 in https://github.com/open-edge-platform/anomalib/pull/3628
-
 ### Removed
 
 ### Changed
@@ -19,6 +15,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Deprecated
 
 ### Fixed
+
+## [v2.6.0] - 2026-07-24
+
+### Added
+
+- 🚀 **model**: Add SuperADD VAND4.0 winning method by @alexriedel1 in https://github.com/open-edge-platform/anomalib/pull/3628
+- 🚀 **data**: Add AutoVI Dataset by @julie-bat in https://github.com/open-edge-platform/anomalib/pull/3633
+
+### Removed
+
+- ⚠️ **data**: Remove Kaputt deprecated APIs (`use_reference`, `reference_only`, `category='all'`); use `image_mode=ImageMode.*` and `category=None` / a concrete category (default `book_other`) instead
+- ⚠️ **metric**: Remove deprecated AUPRO `num_thresholds` constructor argument and unused `compute_pro(..., target=...)` parameter
+- ⚠️ **utils**: Remove temporary `resolve_with_warning` / `_is_legacy_default_root` helpers; use `resolve_dataset_root` instead
+
+### Changed
+
+- 🔧 **data**: Kaputt datamodule default `category` is now `book_other` (was the deprecated `all` pseudo-category)
+
+### Deprecated
+
+### Fixed
+
+- 🐞 **data**: Distribute split remainder over subsets to avoid ZeroDivisionError by @prawnsgupta in https://github.com/open-edge-platform/anomalib/pull/3680
+- 🐞 **security**: Fix path traversal by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/3686
+- 🔧 **deps**: Bump `torch` to resolve Dependabot alerts by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/3681
 
 ## [v2.5.1] - 2026-07-17
 

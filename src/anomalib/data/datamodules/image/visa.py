@@ -55,7 +55,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.visa import VisaDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
-from anomalib.utils.path import resolve_with_warning
+from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +132,7 @@ class Visa(AnomalibDataModule):
             seed=seed,
         )
 
-        root = resolve_with_warning(root, "visa")
+        root = resolve_dataset_root(root, "visa")
         self.root = Path(root)
         self.split_root = self.root / "visa_pytorch"
         self.category = category

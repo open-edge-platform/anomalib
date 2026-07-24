@@ -31,16 +31,15 @@
 
 ---
 
-> 🌟 **Announcing v2.5.1 Release!** 🌟
+> 🌟 **Announcing v2.6.0 Release!** 🌟
 >
-> This patch release migrates all DINOv2-based models to `timm` feature extraction, adds DINOv3 backbone support, and includes important bug fixes.
+> This release adds the SuperADD model and AutoVI dataset, and removes APIs that were deprecated through v2.5.x.
 >
 > Key Changes
 >
-> - **DINOv2 → timm Migration**: All DINOv2-based models (AnomalyDINO, Dinomaly, INP-Former, L2BT, PatchFlow) now use `TimmFeatureExtractor` instead of the custom ViT implementation. This enables **DINOv3 drop-in support** via timm backbone names (e.g. `vit_large_patch16_dinov3.lvd1689m`).
-> - **`TimmFeatureExtractor` NLC mode**: New `output_fmt="NLC"` mode for transformer backbones using timm's `forward_intermediates` API.
-> - **opencv-headless**: Switched to `opencv-python-headless` for headless environment support.
-> - **Bug fixes**: ONNX export with `dynamic_shapes`, pandas 3.x compatibility, MVTec AD download URL updates, and more.
+> - **SuperADD**: Training-free class-agnostic anomaly segmentation (CVPR 2026 VAND 4.0 Industrial Track winner) using DINOv3 multi-layer memory banks.
+> - **AutoVI dataset**: Automotive Visual Inspection benchmark with six categories and automatic Zenodo download support.
+> - **Breaking API cleanup**: Removed Kaputt legacy flags (`use_reference` / `reference_only` / `category='all'`), AUPRO `num_thresholds` / `compute_pro(target=...)`, and the temporary `resolve_with_warning` dataset-path helper.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 
