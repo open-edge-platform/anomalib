@@ -314,6 +314,9 @@ anomalib benchmark --config tools/experimental/benchmarking/sample.yaml
 
 # Anomalib Studio
 
+> [!IMPORTANT]
+> Anomalib Studio is currently under active development and should be considered a pre-release. Features may change, and some functionality may be incomplete or unstable. We welcome feedback and contributions as we work towards a stable release.
+
 Anomalib Studio is a low/no-code web application that allows users to train and deploy anomaly detection models. It enables users to leverage Anomalib's features in their operational environment. Users can connect USB and IP cameras, or use a folder of images, as input to the training pipeline. The tool allows direct output to their industrial pipelines through ROS messages, MQTT, etc.
 
 <p align="center">

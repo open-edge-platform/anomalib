@@ -36,6 +36,24 @@ class BinaryRepository(metaclass=abc.ABCMeta):
         self.project_id = str(project_id)
         self.file_type = file_type
 
+    def _assert_within_project(self, full_path: str) -> None:
+        """
+        Assert that a resolved path is contained within the project folder.
+
+        Args:
+            full_path (str): Absolute, already-resolved filesystem path to check.
+
+        Raises:
+            ValueError: If the path escapes the project directory.
+        """
+        project_root = os.path.realpath(self.project_folder_path)
+        try:
+            common = os.path.commonpath([project_root, full_path])
+        except ValueError as exc:
+            raise ValueError("Invalid filename: path traversal detected") from exc
+        if common != project_root:
+            raise ValueError("Invalid filename: path traversal detected")
+
     async def read_file(self, filename: str) -> bytes:
         """
         Read a binary file from the filesystem.
@@ -48,7 +66,8 @@ class BinaryRepository(metaclass=abc.ABCMeta):
         """
 
         def stdlib_read():
-            full_path = self.get_full_path(filename)
+            full_path = os.path.realpath(self.get_full_path(filename))
+            self._assert_within_project(full_path)
             if not os.path.isfile(full_path):
                 raise FileNotFoundError(f"File not found: {full_path}")
             with open(full_path, "rb") as fp:
@@ -88,9 +107,9 @@ class BinaryRepository(metaclass=abc.ABCMeta):
         """
 
         def stdlib_write():
-            full_path = self.get_full_path(filename)
-            folder, _ = full_path.split(filename)
-            os.makedirs(folder, exist_ok=True)
+            full_path = os.path.realpath(self.get_full_path(filename))
+            self._assert_within_project(full_path)
+            os.makedirs(os.path.dirname(full_path), exist_ok=True)
             with open(full_path, "wb") as f:
                 f.write(content)
             return full_path
@@ -110,7 +129,8 @@ class BinaryRepository(metaclass=abc.ABCMeta):
         """
 
         def stdlib_delete():
-            full_path = self.get_full_path(filename)
+            full_path = os.path.realpath(self.get_full_path(filename))
+            self._assert_within_project(full_path)
             if os.path.isfile(full_path):
                 os.remove(full_path)
             else:

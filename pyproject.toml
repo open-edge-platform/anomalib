@@ -355,6 +355,7 @@ exclude = [
     ".pants.d",
     ".pytype",
     ".ruff_cache",
+    ".semgrep",
     ".svn",
     ".tox",
     ".venv",
@@ -402,6 +403,7 @@ notice-rgx = """
 python_version = "3.10"
 ignore_missing_imports = true
 show_error_codes = true
+exclude = "\\.semgrep/"
 
 
 [[tool.mypy.overrides]]
