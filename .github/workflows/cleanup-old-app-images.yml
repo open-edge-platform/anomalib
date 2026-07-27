@@ -16,7 +16,7 @@ name: Cleanup Old Application Container Images
 #   most recent `min_versions_to_keep` are kept; older ones are deleted.
 #
 # Supports a dry-run mode (default) that previews deletions without removing
-# anything.
+# anything for dispatched runs.
 
 on:
   workflow_dispatch:
@@ -49,6 +49,16 @@ jobs:
         with:
           egress-policy: audit
 
+      - name: Evaluate dry-run input
+        id: evaluate-dry-run
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.dry_run }}" == "true" ]]; then
+            DRY_RUN="true"
+          else
+            DRY_RUN="false"
+          fi
+          echo "dry_run=${DRY_RUN}" >> $GITHUB_ENV
+
       - name: Cleanup old container images
         uses: open-edge-platform/geti-ci/actions/cleanup-images@287abbfdced5c02904ab2f39a0fe944cd402c36f # cleanup-images/v0.1.0
         with:
@@ -56,5 +66,5 @@ jobs:
             anomalib-studio-cpu
             anomalib-studio-xpu
             anomalib-studio-cuda
-          min-versions-to-keep: ${{ github.event.inputs.min_versions_to_keep || 10 }}
-          dry-run: ${{ github.event.inputs.dry_run || 'true' }}
+          min-versions-to-keep: ${{ inputs.min_versions_to_keep || 10 }}
+          dry-run: ${{ env.dry_run }}
