@@ -58,7 +58,7 @@ jobs:
           else
             DRY_RUN="false"
           fi
-          echo "dry_run=${DRY_RUN}" >> $GITHUB_ENV
+          echo "dry_run=${DRY_RUN}" >> "$GITHUB_ENV"
 
       - name: Cleanup old container images
         uses: open-edge-platform/geti-ci/actions/cleanup-images@287abbfdced5c02904ab2f39a0fe944cd402c36f # cleanup-images/v0.1.0
