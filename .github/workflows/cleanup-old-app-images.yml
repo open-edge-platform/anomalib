@@ -16,7 +16,7 @@ name: Cleanup Old Application Container Images
 #   most recent `min_versions_to_keep` are kept; older ones are deleted.
 #
 # Supports a dry-run mode (default) that previews deletions without removing
-# anything.
+# anything for dispatched runs.
 
 on:
   workflow_dispatch:
@@ -37,6 +37,11 @@ on:
 
 permissions: {} # No permissions by default
 
+# Ensure only one cleanup runs at a time; queue new runs until the current run completes.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 jobs:
   cleanup-old-images:
     name: Delete old GHCR application images
@@ -56,5 +61,5 @@ jobs:
             anomalib-studio-cpu
             anomalib-studio-xpu
             anomalib-studio-cuda
-          min-versions-to-keep: ${{ github.event.inputs.min_versions_to_keep || 10 }}
-          dry-run: ${{ github.event.inputs.dry_run || 'true' }}
+          min-versions-to-keep: ${{ inputs.min_versions_to_keep || 10 }}
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == true }}
