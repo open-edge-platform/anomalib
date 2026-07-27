@@ -51,8 +51,10 @@ jobs:
 
       - name: Evaluate dry-run input
         id: evaluate-dry-run
+        env:
+          DRY_RUN_INPUT: ${{ inputs.dry_run }}
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.dry_run }}" == "true" ]]; then
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${DRY_RUN_INPUT}" == "true" ]]; then
             DRY_RUN="true"
           else
             DRY_RUN="false"
