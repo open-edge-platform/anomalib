@@ -40,7 +40,7 @@ permissions: {} # No permissions by default
 # Ensure only one cleanup runs at a time; cancel any in-progress run when a new one starts.
 concurrency:
   group: ${{ github.workflow }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   cleanup-old-images:
