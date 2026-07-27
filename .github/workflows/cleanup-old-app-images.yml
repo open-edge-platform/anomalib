@@ -37,7 +37,7 @@ on:
 
 permissions: {} # No permissions by default
 
-# Ensure only one cleanup runs at a time; cancel any in-progress run when a new one starts.
+# Ensure only one cleanup runs at a time; queue new runs until the current run completes.
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
