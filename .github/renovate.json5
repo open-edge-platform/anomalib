@@ -77,7 +77,7 @@
   minimumReleaseAge: "7 days",
 
   // Pin the uv version Renovate uses to regenerate uv.lock so it matches the
-  // version pinned in the GitHub Actions workflows (and the astral/uv image).
+  // version pinned in the GitHub Actions workflows.
   // This prevents uv.lock format/resolver drift between Renovate and CI.
   constraints: {
     uv: "0.9.18",
