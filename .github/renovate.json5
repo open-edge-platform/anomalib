@@ -24,6 +24,11 @@
     enabled: true,
     schedule: ["* * 1,15 * *"], // twice a month
 
+    // lockFileMaintenance defaults to `recreateWhen: "always"`, which the
+    // top-level `recreateWhen: "never"` does NOT override (nested objects keep
+    // their own defaults). Set it here so a closed uv.lock PR is not recreated.
+    recreateWhen: "never",
+
     // FIXME: re-enable automerge once the issue is resolved
     // https://github.com/open-edge-platform/anomalib/issues/3666
     //
