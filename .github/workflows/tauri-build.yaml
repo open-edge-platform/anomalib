@@ -221,7 +221,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0 # zizmor: ignore[cache-poisoning]
         with:
-          version: "latest"
+          version: "0.9.18"
           enable-cache: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
 
       - name: Install Rust
@@ -263,7 +263,7 @@ jobs:
         env:
           MATRIX_ACCELERATOR: ${{ matrix.accelerator }}
         run: |
-          uv sync --no-dev --extra $env:MATRIX_ACCELERATOR
+          uv sync --frozen --no-dev --extra $env:MATRIX_ACCELERATOR
           uv pip install pyinstaller==6.19.0
           .\.venv\Scripts\Activate.ps1
           Push-Location ..\binary\sidecar
