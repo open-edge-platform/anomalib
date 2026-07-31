@@ -24,6 +24,11 @@
     enabled: true,
     schedule: ["* * 1,15 * *"], // twice a month
 
+    // Keep the default `recreateWhen: "always"` (do not inherit the top-level
+    // "never") so a fresh lock PR is opened whenever new lock changes appear.
+    // These PRs are immortal by design; that is acceptable now that the lock
+    // no longer reintroduces blocked CVEs and is mergeable.
+
     // FIXME: re-enable automerge once the issue is resolved
     // https://github.com/open-edge-platform/anomalib/issues/3666
     //
