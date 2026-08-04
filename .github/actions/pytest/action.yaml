@@ -94,14 +94,14 @@ runs:
   steps:
     # Set up Python with pip caching
     - name: Set up Python environment
-      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
       with:
         python-version: ${{ inputs.python-version }}
         cache: ${{ inputs.enable-cache == 'true' && 'pip' || '' }}
         cache-dependency-path: ${{ inputs.enable-cache == 'true' && 'pyproject.toml' || '' }}
 
     - name: Set up uv
-      uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+      uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
     # Install FFmpeg system libraries required by torchcodec at import time.
     # The cpu/cuda torchcodec wheels dynamically link libavutil/libavcodec from
