@@ -304,7 +304,7 @@ dependencies = [
     { name = "scikit-learn", version = "1.9.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu126') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "tifffile", version = "2025.5.10", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu126') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "tifffile", version = "2026.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu126') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
-    { name = "tifffile", version = "2026.7.14", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu126') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
+    { name = "tifffile", version = "2026.7.31", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu126') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "timm" },
     { name = "torchmetrics" },
 ]
@@ -2888,11 +2888,11 @@ wheels = [
 
 [[package]]
 name = "huey"
-version = "3.3.0"
+version = "3.3.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/c4/84/7c4d1a19b1904020c527ce8fcb9c98d8f29da3ae2d6116edb9fbef51c18a/huey-3.3.0.tar.gz", hash = "sha256:e0c2a1542e6c3acb894821cde895cf9dbf72e42deb25f55b2d44096aa30f8f24", size = 611969, upload-time = "2026-07-22T15:45:38.488Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ea/b5/bae403797e8bd33014ba4ec57ec4af80d9866414922966243e8c0b4d629b/huey-3.3.2.tar.gz", hash = "sha256:f8fd7610baec0fdf9359b0e033a02566ccbba9c865139086ba644e03c426e4af", size = 613763, upload-time = "2026-08-01T01:18:33.534Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d7/5f/2d94fdf94829644d7782b1c8c97e6d4c00cb048069d8fa4b71cf366e6f27/huey-3.3.0-py3-none-any.whl", hash = "sha256:a7b1581aaae5f70540faafcf3306d74fa138ec7bad520f81150bb70b224eaddf", size = 121320, upload-time = "2026-07-22T15:45:37.249Z" },
+    { url = "https://files.pythonhosted.org/packages/7d/3c/69bd929aa5b7e8a56bd8adfd739d2f55a415fd1080d6a803f9270d296a68/huey-3.3.2-py3-none-any.whl", hash = "sha256:73e2d4f11b19be0e8d698ba952438588af8cd51d9be19240800b57127cbc82d7", size = 123785, upload-time = "2026-08-01T01:18:32.281Z" },
 ]
 
 [[package]]
@@ -3567,16 +3567,16 @@ wheels = [
 
 [[package]]
 name = "jupyter-builder"
-version = "1.2.0"
+version = "1.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jupyter-core" },
     { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu126') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "traitlets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9c/76/4696d0d0b6903e96ba4f959427c7aad985015dd2726e643eadee2a1eec72/jupyter_builder-1.2.0.tar.gz", hash = "sha256:e62ed4a7e224c73197dd76974754c93070c9f0451ca450a2c81126838b00f866", size = 976342, upload-time = "2026-07-30T07:42:01.151Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3e/f2/b5545d15ebb1611893f3b72cf4cb648479356560620884c529bef1205550/jupyter_builder-1.2.1.tar.gz", hash = "sha256:05772287000a550b6e363812a6f5a197865e758d61833464225e9cfaf5966b56", size = 977454, upload-time = "2026-07-31T16:16:40.293Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4b/05/a0ac568fa8dfff7c697545956990f7aa222f59d6ec50f21a91170e24a69b/jupyter_builder-1.2.0-py3-none-any.whl", hash = "sha256:c8a003714a118ebb590f79b459e1e384dee7dce9aebaa86ace045f5960997fe4", size = 914544, upload-time = "2026-07-30T07:41:59.053Z" },
+    { url = "https://files.pythonhosted.org/packages/ff/bb/f36a244e712e70eb9e5d979e1d5f8c53b265ca97afc2c8bc82c67a0630ce/jupyter_builder-1.2.1-py3-none-any.whl", hash = "sha256:813160d7e3a5ebfce6dabb76a7799774eb562671462223ef160d1aa42abdacd3", size = 915110, upload-time = "2026-07-31T16:16:38.308Z" },
 ]
 
 [[package]]
@@ -5791,7 +5791,7 @@ wheels = [
 
 [[package]]
 name = "openai"
-version = "2.51.0"
+version = "2.52.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -5803,9 +5803,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/75/d8/06fda9685e47d9a8fc177ef57f8af75207938fad49a45ce23bfa7b6a2a5c/openai-2.51.0.tar.gz", hash = "sha256:4d61287c42eba54086d09346e709cbf7f8cec51822efce9cc399450b9385fba5", size = 1083410, upload-time = "2026-07-30T17:43:26.507Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bb/5a/c45fa035cd72c70ebe67c6e079e3adf871492382634f69e3dff62c43597d/openai-2.52.0.tar.gz", hash = "sha256:7c736d592f81471ce1f734838390983c4d8c8aecff23dcd36e600a58e5032d9c", size = 1098876, upload-time = "2026-07-31T15:13:03.228Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/57/6f/c49e21245ad4865e886f6885e95e998bc024335b392c202bd571639e9d50/openai-2.51.0-py3-none-any.whl", hash = "sha256:91db13ce59a670fddc820a6983989650095e43e3acac09288bceb69356a8904e", size = 1652344, upload-time = "2026-07-30T17:43:24.225Z" },
+    { url = "https://files.pythonhosted.org/packages/a1/ac/ceb40c995df49533ad4dcff6c37f0d85cf14446a212363fc9d2f927e60b4/openai-2.52.0-py3-none-any.whl", hash = "sha256:f97e231d9a8fa69ab55897df1080f02d99913fb0a30e3ee56ea16a1eb6c2d434", size = 1659569, upload-time = "2026-07-31T15:13:01.145Z" },
 ]
 
 [[package]]
@@ -6987,15 +6987,14 @@ wheels = [
 
 [[package]]
 name = "python-discovery"
-version = "1.5.0"
+version = "1.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "filelock" },
-    { name = "platformdirs" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f1/51/276f964496a5714ab9f320896195639086881c2b39c03b5ad13de84acbb8/python_discovery-1.5.0.tar.gz", hash = "sha256:3e014c6327154d3dda27939a9a0dc9c5c000439f1906d3f303b48f984bd2ecef", size = 72483, upload-time = "2026-07-21T13:14:14.641Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/04/b7/1581a8103855c43567776aa34135e5ec3c597346c23bfd10c7eb5e0b10a4/python_discovery-1.5.1.tar.gz", hash = "sha256:e2ea8b884cd1701f386eda8cf327b87743f1dc21b7f784470799537d95635384", size = 77200, upload-time = "2026-07-31T22:06:02.48Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c7/7b/14882602ddee241d7984a742fcb423cb4a30fb0d6efc546ac3129fba475a/python_discovery-1.5.0-py3-none-any.whl", hash = "sha256:70c4fc61b4e7404e44f01d6fc44a715c4d685ca6cea83d295922f05891877c98", size = 34205, upload-time = "2026-07-21T13:14:13.398Z" },
+    { url = "https://files.pythonhosted.org/packages/6a/07/a89b539750a159d5101c4eb9fc84e2961f65cefbd5e0b7440b284471c0b0/python_discovery-1.5.1-py3-none-any.whl", hash = "sha256:ac07f44cade589d954e9d6a1e1468539fdddd2cf676beb51da73e0f156b7c932", size = 35752, upload-time = "2026-07-31T22:06:01.116Z" },
 ]
 
 [[package]]
@@ -7948,7 +7947,7 @@ dependencies = [
     { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu126') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "scipy", version = "1.18.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu126') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
     { name = "tifffile", version = "2026.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu126') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
-    { name = "tifffile", version = "2026.7.14", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu126') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
+    { name = "tifffile", version = "2026.7.31", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu126') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a1/b4/2528bb43c67d48053a7a649a9666432dc307d66ba02e3a6d5c40f46655df/scikit_image-0.26.0.tar.gz", hash = "sha256:f5f970ab04efad85c24714321fcc91613fcb64ef2a892a13167df2f3e59199fa", size = 22729739, upload-time = "2025-12-20T17:12:21.824Z" }
 wheels = [
@@ -9272,7 +9271,7 @@ wheels = [
 
 [[package]]
 name = "tifffile"
-version = "2026.7.14"
+version = "2026.7.31"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'win32' and extra != 'extra-8-anomalib-cpu' and extra != 'extra-8-anomalib-cu126' and extra != 'extra-8-anomalib-cu130' and extra != 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu'",
@@ -9306,9 +9305,9 @@ resolution-markers = [
 dependencies = [
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu126') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/20/2f/e5fe51c8f782241d86fdf7251594b195f0d6c2fcf9d389079de212599246/tifffile-2026.7.14.tar.gz", hash = "sha256:ce2703e5ef22c868f1528d5f5b4ef75eefb019cf628a1c9ec0d17e0afeca8ef5", size = 437660, upload-time = "2026-07-14T23:41:31.737Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/21/62/083288b8d6b9ecb2968e7573e60aa0694089e960e203934bc217169acf64/tifffile-2026.7.31.tar.gz", hash = "sha256:79b1f4b1aba3ef3e6b6f1691a32abb62f5d7383faa52a12771c695232ba40bee", size = 442177, upload-time = "2026-08-01T02:28:32.523Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c8/e8/d381de4a3cc4e3682cba0338f43250893508aad0b310af1d0635f7b04413/tifffile-2026.7.14-py3-none-any.whl", hash = "sha256:4eb20372e76edf2c9fed922b1e3a0a0567be3560bd2008336115763bb1f3c034", size = 270614, upload-time = "2026-07-14T23:41:30.078Z" },
+    { url = "https://files.pythonhosted.org/packages/da/ed/75bf4d6ae6fec7233ef466f27dffc99f91fde53a31e69f02640b418317ec/tifffile-2026.7.31-py3-none-any.whl", hash = "sha256:81adfa08012be1c478f99b83cda2f529eef8620cfbdf94fc41eef6f1d7b47dc5", size = 271576, upload-time = "2026-08-01T02:28:31.068Z" },
 ]
 
 [[package]]
