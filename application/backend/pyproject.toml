@@ -62,6 +62,9 @@ xpu = ["anomalib[xpu,openvino] ; sys_platform == 'linux' or sys_platform == 'win
 # Resolve only for the built target platforms (linux + windows). macOS/emscripten
 # aren't built here and their dead xpu branches otherwise pull the CVE-flagged
 # torch 2.6.0+xpu. Combined with the requires-python cap this keeps it out.
+override-dependencies = [
+    "cryptography>=50.0.0",  # CVE-2026-69247; overrides mlflow's <50 upper bound
+]
 environments = [
     "sys_platform == 'linux'",
     "sys_platform == 'win32'",

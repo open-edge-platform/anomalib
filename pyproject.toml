@@ -77,9 +77,9 @@ loggers = [
     "gradio>=4",
     "tensorboard",
     "wandb",
-    "mlflow >=1.0.0",
+    "mlflow >=3.15.0",
 ]
-notebooks = ["gitpython", "ipykernel", "ipywidgets", "notebook>=7.5.6"]
+notebooks = ["gitpython>=3.1.58", "ipykernel", "ipywidgets", "notebook>=7.5.6"]
 # dataset specific dependencies
 datasets = ["pyarrow"]
 # documentation dependencies
@@ -164,6 +164,9 @@ only-include = [
 # UV workspace configuration
 package = true
 managed = true
+override-dependencies = [
+    "cryptography>=50.0.0",  # CVE-2026-69247; overrides mlflow's <50 upper bound
+]
 conflicts = [
     [
         { extra = "cpu" },
