@@ -165,7 +165,10 @@ only-include = [
 package = true
 managed = true
 override-dependencies = [
-    "cryptography>=50.0.0",  # CVE-2026-69247; overrides mlflow's <50 upper bound
+    # FIXME: remove once mlflow releases a version without the cryptography<50 upper bound
+    # mlflow 3.15.1 caps cryptography<50, but CVE-2026-69247 requires >=50.0.0
+    # upstream fix (no source changes, safe to override): https://github.com/mlflow/mlflow/pull/24872
+    "cryptography>=50.0.0",
 ]
 conflicts = [
     [
