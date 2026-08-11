@@ -4,11 +4,13 @@
 """Test Engine Module."""
 
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 import yaml
 from lightning import seed_everything
 
+from anomalib import LearningType
 from anomalib.data import MVTecAD
 from anomalib.engine import Engine
 from anomalib.models import Padim
@@ -122,6 +124,34 @@ class TestEngine:
         engine, model, datamodule = Engine.from_config(config_path=fxt_full_config_path, **override_kwargs)
         assert datamodule.train_batch_size == 1
         assert datamodule.num_workers == 1
+
+    @staticmethod
+    def test_predict_loads_full_checkpoint_state(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Ensure prediction can restore checkpoints containing custom objects."""
+        engine = Engine(default_root_dir=tmp_path)
+        trainer = MagicMock()
+        monkeypatch.setattr(engine, "_trainer", trainer)
+
+        model = MagicMock()
+        model.name = "custom-model"
+        model.trainer_arguments = {}
+        model.learning_type = LearningType.ONE_CLASS
+
+        checkpoint_path = tmp_path / "model.ckpt"
+        expected_predictions = [MagicMock()]
+        trainer.predict.return_value = expected_predictions
+
+        predictions = engine.predict(model=model, ckpt_path=checkpoint_path)
+
+        trainer.predict.assert_called_once_with(
+            model,
+            None,
+            None,
+            None,
+            checkpoint_path.resolve(),
+            weights_only=False,
+        )
+        assert predictions is expected_predictions
 
     @staticmethod
     def test_barebones_mode_metrics_and_checkpointing(tmp_path: Path, dataset_path: Path) -> None:
