@@ -1,12 +1,37 @@
-# Copyright (C) 2024-2026 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Unit tests for RAD torch model."""
+
+from typing import Any
 
 import pytest
 import torch
 
 from anomalib.models.image.rad.torch_model import RadModel
+
+BACKBONE = "vit_small_patch16_dinov3"
+
+
+def _build_model(**kwargs: Any) -> RadModel:  # noqa: ANN401
+    """Create a small RAD model, overriding the fast-test defaults with ``kwargs``."""
+    defaults: dict[str, Any] = {
+        "backbone": BACKBONE,
+        "pre_trained": False,
+        "layers": [3, 11],
+        "k_image": 2,
+    }
+    return RadModel(**(defaults | kwargs))
+
+
+def _fitted_model(image_size: tuple[int, int] = (224, 224), **kwargs: Any) -> RadModel:  # noqa: ANN401
+    """Create a small RAD model with a memory bank built from random images."""
+    model = _build_model(**kwargs)
+    model.train()
+    model(torch.randn(2, 3, *image_size))
+    model.build_memory_bank()
+    model.eval()
+    return model
 
 
 @pytest.fixture(scope="module")
@@ -93,3 +118,87 @@ def test_global_matching() -> None:
 
     assert output.pred_score.shape == (1,)
     assert not torch.isnan(output.pred_score).any()
+
+
+def test_memory_bank_is_checkpointed() -> None:
+    """Test the memory bank survives a state dict round trip and reproduces predictions."""
+    fitted = _fitted_model()
+    state_dict = fitted.state_dict()
+    assert "cls_banks" in state_dict
+    assert "patch_banks" in state_dict
+
+    restored = _build_model()
+    restored.load_state_dict(state_dict)
+    restored.eval()
+
+    query = torch.randn(1, 3, 224, 224)
+    with torch.no_grad():
+        expected = fitted(query)
+        actual = restored(query)
+
+    assert torch.allclose(actual.pred_score, expected.pred_score)
+    assert torch.allclose(actual.anomaly_map, expected.anomaly_map)
+
+
+def test_scoring_without_memory_bank_raises() -> None:
+    """Test inference before fitting fails with an explicit error."""
+    model = _build_model()
+    model.eval()
+
+    with pytest.raises(ValueError, match="Memory bank is empty"), torch.no_grad():
+        model(torch.randn(1, 3, 224, 224))
+
+
+def test_rectangular_input() -> None:
+    """Test non-square images are supported when fit and inference sizes agree."""
+    model = _fitted_model(image_size=(224, 336))
+
+    with torch.no_grad():
+        output = model(torch.randn(1, 3, 224, 336))
+
+    assert output.anomaly_map.shape == (1, 1, 224, 336)
+    assert not torch.isnan(output.anomaly_map).any()
+
+
+def test_positional_grid_mismatch_raises() -> None:
+    """Test position-aware matching rejects a query grid that differs from the bank grid."""
+    model = _fitted_model()
+
+    with pytest.raises(ValueError, match="Position-aware matching"), torch.no_grad():
+        model(torch.randn(1, 3, 224, 336))
+
+
+def test_input_size_must_match_patch_size() -> None:
+    """Test image sizes that do not tile into whole patches are rejected."""
+    model = _fitted_model()
+
+    with pytest.raises(ValueError, match="divisible by the backbone patch size"), torch.no_grad():
+        model(torch.randn(1, 3, 225, 225))
+
+
+def test_max_ratio_zero_uses_max_pooling() -> None:
+    """Test ``max_ratio=0`` scores an image with the maximum anomaly pixel."""
+    model = _fitted_model(max_ratio=0)
+
+    with torch.no_grad():
+        output = model(torch.randn(1, 3, 224, 224))
+
+    assert torch.allclose(output.pred_score, output.anomaly_map.flatten(1).amax(dim=1))
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    [
+        ({"layers": []}, "at least one transformer block"),
+        ({"k_image": 0}, "must be a positive integer"),
+        ({"pos_radius": -1}, "must be non-negative"),
+        ({"max_ratio": 1.5}, r"must lie in the range \[0, 1\]"),
+        ({"layer_weights": [1.0]}, "one entry per layer"),
+        ({"layer_weights": [1.0, -1.0]}, "must be non-negative"),
+        ({"layer_weights": [0.0, 0.0]}, "must sum to a positive value"),
+    ],
+)
+def test_invalid_arguments_raise(kwargs: dict[str, Any], message: str) -> None:
+    """Test invalid constructor arguments fail fast with an actionable message."""
+    with pytest.raises(ValueError, match=message):
+        _build_model(**kwargs)

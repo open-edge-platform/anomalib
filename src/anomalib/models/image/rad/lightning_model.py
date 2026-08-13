@@ -1,4 +1,4 @@
-# Copyright (C) 2024-2026 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """RAD: Retrieval-based Anomaly Detection.
@@ -57,11 +57,13 @@ class Rad(MemoryBankMixin, AnomalibModule):
             Defaults to ``[3, 6, 9, 11]``.
         pre_trained (bool): Whether to use pre-trained backbone weights.
             Defaults to ``True``.
-        k_image (int): Number of nearest-neighbor training images for local
-            patch memory. Defaults to ``150``.
+        k_image (int): Number of nearest-neighbor training images retrieved per test image.
+            The paper uses ``150`` for MVTec-AD, ``900`` for VisA and Real-IAD, and ``48``
+            for 3D-ADAM. Defaults to ``150``.
         use_positional_bank (bool): Enable position-aware patch matching.
             Defaults to ``True``.
-        pos_radius (int): Spatial neighborhood radius (in patch units).
+        pos_radius (int): Spatial neighborhood radius (in patch units). The paper uses ``1``
+            for MVTec-AD and 3D-ADAM, ``2`` for VisA, and ``0`` for Real-IAD.
             Defaults to ``1``.
         max_ratio (float): Fraction of highest anomaly pixels pooled for
             image-level score. ``0`` means use max. Defaults to ``0.01``.
@@ -75,6 +77,10 @@ class Rad(MemoryBankMixin, AnomalibModule):
             Defaults to ``True``.
         visualizer (Visualizer | bool): Visualizer instance or flag.
             Defaults to ``True``.
+
+    Note:
+        RAD is training-free: fitting only fills the memory bank. The bank is stored in the
+        model state, so checkpoints grow with the size of the anomaly-free training set.
 
     Example:
         >>> from anomalib.data import MVTecAD
@@ -167,7 +173,7 @@ class Rad(MemoryBankMixin, AnomalibModule):
         """
         return
 
-    def training_step(self, batch: Batch, *args, **kwargs) -> None:
+    def training_step(self, batch: Batch, *args, **kwargs) -> torch.Tensor:
         """Extract and store features from training batch.
 
         Args:

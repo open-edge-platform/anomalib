@@ -1,4 +1,4 @@
-# Copyright (C) 2024-2026 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """PyTorch model for RAD (Retrieval-based Anomaly Detection).
@@ -35,16 +35,23 @@ class RadModel(DynamicBufferMixin, nn.Module):
             Defaults to ``True``.
         layers (list[int]): Block indices (0-based) to extract features from.
             Defaults to ``[3, 6, 9, 11]``.
-        k_image (int): Number of nearest-neighbor training images for local
-            patch memory. Defaults to ``150``.
+        k_image (int): Number of nearest-neighbor training images retrieved per test image.
+            The paper uses ``150`` for MVTec-AD, ``900`` for VisA and Real-IAD, and ``48``
+            for 3D-ADAM. Defaults to ``150``.
         use_positional_bank (bool): Enable position-aware patch matching.
             Defaults to ``True``.
         pos_radius (int): Spatial neighborhood radius (in patch units) for
-            position-aware matching. Defaults to ``1``.
+            position-aware matching. The paper uses ``1`` for MVTec-AD and 3D-ADAM,
+            ``2`` for VisA, and ``0`` for Real-IAD. Defaults to ``1``.
         max_ratio (float): Fraction of highest anomaly pixels pooled for
             image-level score. ``0`` means use max. Defaults to ``0.01``.
         layer_weights (list[float] | None): Weights for each layer in score
             fusion. ``None`` means uniform. Defaults to ``None``.
+
+    Raises:
+        ValueError: If ``layers`` is empty, ``k_image`` is not positive, ``pos_radius`` is
+            negative, ``max_ratio`` is outside ``[0, 1]``, or ``layer_weights`` is negative,
+            sums to zero, or does not have one entry per layer.
 
     Example:
         >>> model = RadModel()
@@ -69,6 +76,19 @@ class RadModel(DynamicBufferMixin, nn.Module):
         if layers is None:
             layers = [3, 6, 9, 11]
 
+        if not layers:
+            msg = "``layers`` must contain at least one transformer block index."
+            raise ValueError(msg)
+        if k_image < 1:
+            msg = f"``k_image`` must be a positive integer, got {k_image}."
+            raise ValueError(msg)
+        if pos_radius < 0:
+            msg = f"``pos_radius`` must be non-negative, got {pos_radius}."
+            raise ValueError(msg)
+        if not 0.0 <= max_ratio <= 1.0:
+            msg = f"``max_ratio`` must lie in the range [0, 1], got {max_ratio}."
+            raise ValueError(msg)
+
         self.layers = layers
         self.k_image = k_image
         self.use_positional_bank = use_positional_bank
@@ -86,26 +106,57 @@ class RadModel(DynamicBufferMixin, nn.Module):
             norm=True,
             dynamic_img_size=True,
         )
+        self.patch_size = self.feature_extractor.patch_size
 
-        num_layers = len(self.layers)
-        if layer_weights is None:
-            self._layer_weights = [1.0 / num_layers] * num_layers
-        else:
-            s = sum(layer_weights)
-            self._layer_weights = [w / s for w in layer_weights]
+        self._layer_weights = self._normalize_layer_weights(layer_weights, len(self.layers))
 
-        # Memory bank buffers populated during fit
-        # cls_banks[i]: (N, C) - CLS tokens per layer
-        # patch_banks[i]: (N, L, C) - patch tokens per layer
-        self.cls_banks: list[torch.Tensor] = []
-        self.patch_banks: list[torch.Tensor] = []
+        # Banks are stacked over layers and registered as buffers so that they are saved to,
+        # and restored from, checkpoints together with the rest of the model.
+        self.cls_banks: torch.Tensor
+        self.patch_banks: torch.Tensor
+        self.bank_grid: torch.Tensor
+        self.register_buffer("cls_banks", torch.empty(0))
+        self.register_buffer("patch_banks", torch.empty(0))
+        self.register_buffer("bank_grid", torch.zeros(2, dtype=torch.long))
 
         # Stores for accumulating features during training
-        self._cls_store: list[list[torch.Tensor]] = [[] for _ in range(num_layers)]
-        self._patch_store: list[list[torch.Tensor]] = [[] for _ in range(num_layers)]
+        self._cls_store: list[list[torch.Tensor]] = [[] for _ in self.layers]
+        self._patch_store: list[list[torch.Tensor]] = [[] for _ in self.layers]
+        self._train_grid: tuple[int, int] | None = None
 
         # Gaussian smoothing applied to anomaly map
         self.blur = GaussianBlur2d(kernel_size=(5, 5), sigma=(1.0, 1.0), channels=1)
+
+    @staticmethod
+    def _normalize_layer_weights(layer_weights: list[float] | None, num_layers: int) -> list[float]:
+        """Validate the layer fusion weights and normalise them to sum to one.
+
+        Args:
+            layer_weights (list[float] | None): Raw per-layer weights, or ``None`` for uniform.
+            num_layers (int): Number of extracted layers.
+
+        Returns:
+            list[float]: Non-negative weights summing to one.
+
+        Raises:
+            ValueError: If the weights are the wrong length, negative, or sum to zero.
+        """
+        if layer_weights is None:
+            return [1.0 / num_layers] * num_layers
+
+        if len(layer_weights) != num_layers:
+            msg = f"``layer_weights`` must have one entry per layer ({num_layers}), got {len(layer_weights)}."
+            raise ValueError(msg)
+        if any(weight < 0 for weight in layer_weights):
+            msg = f"``layer_weights`` must be non-negative, got {layer_weights}."
+            raise ValueError(msg)
+
+        total = sum(layer_weights)
+        if total <= 0:
+            msg = "``layer_weights`` must sum to a positive value."
+            raise ValueError(msg)
+
+        return [weight / total for weight in layer_weights]
 
     def forward(self, input_tensor: torch.Tensor) -> torch.Tensor | InferenceBatch:
         """Process input through the model.
@@ -121,15 +172,32 @@ class RadModel(DynamicBufferMixin, nn.Module):
             torch.Tensor | InferenceBatch: Embeddings during training, or
                 InferenceBatch with anomaly maps and scores during inference.
         """
+        grid = self._patch_grid(input_tensor.shape[-2], input_tensor.shape[-1])
         features = self._extract_features(input_tensor)
 
         if self.training:
-            for li, (patch_tok, cls_tok) in enumerate(features):
-                self._cls_store[li].append(cls_tok.cpu())
-                self._patch_store[li].append(patch_tok.cpu())
+            self._store_features(features, grid)
             return features[0][1]  # Return CLS for Lightning compatibility
 
-        return self._score(features, input_tensor.shape[-2:])
+        return self._score(features, grid, input_tensor.shape[-2:])
+
+    def _patch_grid(self, height: int, width: int) -> tuple[int, int]:
+        """Return the ``(rows, cols)`` patch layout the backbone produces for an image size.
+
+        Args:
+            height (int): Input image height in pixels.
+            width (int): Input image width in pixels.
+
+        Returns:
+            tuple[int, int]: Number of patch rows and columns.
+
+        Raises:
+            ValueError: If the image size is not divisible by the backbone patch size.
+        """
+        if height % self.patch_size or width % self.patch_size:
+            msg = f"Input size ({height}, {width}) must be divisible by the backbone patch size {self.patch_size}."
+            raise ValueError(msg)
+        return height // self.patch_size, width // self.patch_size
 
     def _extract_features(
         self,
@@ -154,72 +222,91 @@ class RadModel(DynamicBufferMixin, nn.Module):
 
         return result
 
-    def build_memory_bank(self) -> None:
-        """Build memory bank from accumulated training features."""
-        num_layers = len(self.layers)
-        self.cls_banks = []
-        self.patch_banks = []
+    def _store_features(self, features: list[tuple[torch.Tensor, torch.Tensor]], grid: tuple[int, int]) -> None:
+        """Accumulate training features on CPU so large banks do not occupy accelerator memory.
 
-        for li in range(num_layers):
-            cls_bank = torch.cat(self._cls_store[li], dim=0)  # (N, C)
-            patch_bank = torch.cat(self._patch_store[li], dim=0)  # (N, L, C)
-            self.cls_banks.append(cls_bank)
-            self.patch_banks.append(patch_bank)
+        Args:
+            features (list[tuple[torch.Tensor, torch.Tensor]]): Per-layer ``(patch_tokens, cls_token)``.
+            grid (tuple[int, int]): Patch grid of the current batch.
+
+        Raises:
+            ValueError: If training images do not all share the same patch grid.
+        """
+        if self._train_grid is None:
+            self._train_grid = grid
+        elif self._train_grid != grid:
+            msg = (
+                f"All training images must share one patch grid, got {grid} after {self._train_grid}. "
+                "Use a fixed image size for the training set."
+            )
+            raise ValueError(msg)
+
+        for layer_idx, (patch_tokens, cls_token) in enumerate(features):
+            self._cls_store[layer_idx].append(cls_token.detach().cpu())
+            self._patch_store[layer_idx].append(patch_tokens.detach().cpu())
+
+    def build_memory_bank(self) -> None:
+        """Build memory bank from accumulated training features.
+
+        Raises:
+            ValueError: If no training features have been collected.
+        """
+        if self._train_grid is None:
+            msg = "No training features collected. Run a training epoch before building the memory bank."
+            raise ValueError(msg)
+
+        device = next(self.feature_extractor.parameters()).device
+        self.cls_banks = torch.stack([torch.cat(store, dim=0) for store in self._cls_store]).to(device)
+        self.patch_banks = torch.stack([torch.cat(store, dim=0) for store in self._patch_store]).to(device)
+        self.bank_grid = torch.tensor(self._train_grid, dtype=torch.long, device=device)
 
         # Clear stores
-        self._cls_store = [[] for _ in range(num_layers)]
-        self._patch_store = [[] for _ in range(num_layers)]
+        self._cls_store = [[] for _ in self.layers]
+        self._patch_store = [[] for _ in self.layers]
+        self._train_grid = None
 
     @torch.no_grad()
     def _score(
         self,
         features: list[tuple[torch.Tensor, torch.Tensor]],
+        grid: tuple[int, int],
         output_size: tuple[int, int],
     ) -> InferenceBatch:
         """Compute anomaly maps and scores via retrieval-based matching.
 
         Args:
             features: Multi-layer features from test images.
+            grid: Patch grid ``(rows, cols)`` of the query images.
             output_size: Original spatial size (H, W) for upsampling.
 
         Returns:
             InferenceBatch with anomaly_map and pred_score.
+
+        Raises:
+            ValueError: If the memory bank is empty or the token count contradicts the grid.
         """
-        device = features[0][0].device
-        num_layers = len(self.layers)
+        if self.cls_banks.numel() == 0:
+            msg = "Memory bank is empty. Cannot provide anomaly scores."
+            raise ValueError(msg)
 
-        # Move banks to device
-        cls_banks_dev = [cb.to(device) for cb in self.cls_banks]
-        patch_banks_dev = [pb.to(device) for pb in self.patch_banks]
-
-        # Unpack features
-        patch_list = [f[0] for f in features]  # list of (B, L, C)
-        cls_list = [f[1] for f in features]  # list of (B, C)
-
-        batch_size = patch_list[0].shape[0]
-        num_patches = patch_list[0].shape[1]
-        h = w = int(num_patches**0.5)
+        rows, cols = grid
+        patch_list = [feature[0] for feature in features]  # list of (B, L, C)
+        if patch_list[0].shape[1] != rows * cols:
+            msg = f"Expected {rows * cols} patch tokens for grid {grid}, got {patch_list[0].shape[1]}."
+            raise ValueError(msg)
 
         # Image-level retrieval using highest layer CLS
-        cls_query = F.normalize(cls_list[-1], dim=-1)  # (B, C)
-        cls_bank = F.normalize(cls_banks_dev[-1], dim=-1)  # (N, C)
+        cls_query = F.normalize(features[-1][1], dim=-1)  # (B, C)
+        cls_bank = F.normalize(self.cls_banks[-1].to(cls_query.dtype), dim=-1)  # (N, C)
         sim_img = torch.matmul(cls_query, cls_bank.t())  # (B, N)
         k = min(self.k_image, sim_img.shape[1])
-        _, topk_idx = torch.topk(sim_img, k, dim=-1)  # (B, k)
+        topk_idx = torch.topk(sim_img, k, dim=-1).indices  # (B, k)
 
         # Multi-layer patch scoring
-        patch_scores_batch = self._compute_patch_scores(
-            patch_list=patch_list,
-            patch_banks_dev=patch_banks_dev,
-            topk_idx=topk_idx,
-            h=h,
-            w=w,
-            num_layers=num_layers,
-            device=device,
-        )
+        patch_scores_batch = self._compute_patch_scores(patch_list, topk_idx, grid)
 
         # Reshape and upsample to pixel-level
-        patch_maps = patch_scores_batch.view(batch_size, 1, h, w)
+        patch_maps = patch_scores_batch.view(-1, 1, rows, cols)
         anomaly_map = F.interpolate(
             patch_maps,
             size=output_size,
@@ -230,177 +317,131 @@ class RadModel(DynamicBufferMixin, nn.Module):
         # Gaussian smoothing
         anomaly_map = self.blur(anomaly_map)
 
-        # Image-level score
-        if self.max_ratio == 0:
-            pred_score = anomaly_map.flatten(1).max(dim=1)[0]
-        else:
-            amap_flat = anomaly_map.flatten(1)
-            top_k = max(1, int(amap_flat.shape[1] * self.max_ratio))
-            pred_score = torch.sort(amap_flat, dim=1, descending=True)[0][
-                :,
-                :top_k,
-            ].mean(dim=1)
+        return InferenceBatch(pred_score=self._image_score(anomaly_map), anomaly_map=anomaly_map)
 
-        return InferenceBatch(pred_score=pred_score, anomaly_map=anomaly_map)
+    def _image_score(self, anomaly_map: torch.Tensor) -> torch.Tensor:
+        """Pool an anomaly map into an image-level score.
+
+        Args:
+            anomaly_map (torch.Tensor): Pixel-level anomaly map of shape ``(B, 1, H, W)``.
+
+        Returns:
+            torch.Tensor: Image-level anomaly scores of shape ``(B,)``.
+        """
+        flat_map = anomaly_map.flatten(1)
+        if self.max_ratio == 0:
+            return flat_map.amax(dim=1)
+
+        top_k = max(1, int(flat_map.shape[1] * self.max_ratio))
+        return flat_map.topk(top_k, dim=1).values.mean(dim=1)
 
     def _compute_patch_scores(
         self,
         patch_list: list[torch.Tensor],
-        patch_banks_dev: list[torch.Tensor],
         topk_idx: torch.Tensor,
-        h: int,
-        w: int,
-        num_layers: int,
-        device: torch.device,
+        grid: tuple[int, int],
     ) -> torch.Tensor:
         """Compute fused multi-layer patch anomaly scores.
 
+        Retrieval is performed one image at a time so that the candidate features scale with
+        the retrieved set rather than with the batch size.
+
         Args:
             patch_list: Test patch features per layer, each (B, L, C).
-            patch_banks_dev: Memory bank patch features per layer, each (N, L, C).
             topk_idx: Indices of k nearest training images, (B, k).
-            h: Patch grid height.
-            w: Patch grid width.
-            num_layers: Number of layers.
-            device: Computation device.
+            grid: Patch grid ``(rows, cols)``.
 
         Returns:
             Fused patch scores of shape (B, L).
         """
+        rows, cols = grid
         batch_size = patch_list[0].shape[0]
-        num_patches = h * w
+        scores = patch_list[0].new_zeros(batch_size, rows * cols)
 
-        scores_all = torch.zeros(batch_size, num_patches, device=device)
+        for image_idx in range(batch_size):
+            neighbors = topk_idx[image_idx]  # (k,)
+            for layer_idx, patches in enumerate(patch_list):
+                query = F.normalize(patches[image_idx], dim=-1)  # (L, C)
+                bank = self.patch_banks[layer_idx].index_select(0, neighbors).to(query.dtype)
+                bank = F.normalize(bank, dim=-1)  # (k, L_bank, C)
 
-        for li in range(num_layers):
-            weight = self._layer_weights[li]
-            patches_x = F.normalize(patch_list[li], dim=-1)  # (B, L, C)
-            bank = patch_banks_dev[li]  # (N, L_bank, C)
+                layer_scores = (
+                    self._score_positional(query, bank, grid)
+                    if self.use_positional_bank
+                    else self._score_global(query, bank)
+                )
+                scores[image_idx] += self._layer_weights[layer_idx] * layer_scores
 
-            layer_scores = self._score_layer(
-                patches_x=patches_x,
-                bank=bank,
-                topk_idx=topk_idx,
-                h=h,
-                w=w,
-                device=device,
-            )
-            scores_all += weight * layer_scores
-
-        return scores_all
-
-    def _score_layer(
-        self,
-        patches_x: torch.Tensor,
-        bank: torch.Tensor,
-        topk_idx: torch.Tensor,
-        h: int,
-        w: int,
-        device: torch.device,
-    ) -> torch.Tensor:
-        """Score patches for a single layer.
-
-        Args:
-            patches_x: Normalized test patches (B, L, C).
-            bank: Patch bank for this layer (N, L_bank, C).
-            topk_idx: Retrieved image indices (B, k).
-            h: Patch grid height.
-            w: Patch grid width.
-            device: Computation device.
-
-        Returns:
-            Anomaly scores per patch (B, L).
-        """
-        if self.use_positional_bank:
-            return self._score_layer_positional(patches_x, bank, topk_idx, h, w, device)
-
-        # Batched global patch-KNN
-        neigh_feat = F.normalize(bank[topk_idx], dim=-1)  # (B, k, L_bank, C)
-        batch_size, k, l_bank, c = neigh_feat.shape
-        bank_local = neigh_feat.reshape(batch_size, k * l_bank, c)  # (B, k*L_bank, C)
-        sim = torch.bmm(patches_x, bank_local.transpose(1, 2))  # (B, L, k*L_bank)
-        nn_sim = sim.max(dim=-1)[0]  # (B, L)
-        return 1.0 - nn_sim
-
-    def _score_layer_positional(
-        self,
-        patches_x: torch.Tensor,
-        bank: torch.Tensor,
-        topk_idx: torch.Tensor,
-        h: int,
-        w: int,
-        device: torch.device,
-    ) -> torch.Tensor:
-        """Score patches with position-aware matching.
-
-        Each query patch only compares against patches from nearby spatial
-        positions in the memory bank.
-        """
-        batch_size, num_patches, c = patches_x.shape
-
-        # Padded neighborhood indices: (L, K_max) and mask (L, K_max)
-        pos_idx, pos_mask = self._get_positional_indices(h, w, self.pos_radius, device)
-        k_max = pos_idx.shape[1]
-
-        neigh_feat = F.normalize(bank[topk_idx], dim=-1)  # (B, k, L_bank, C)
-        k = neigh_feat.shape[1]
-
-        # Gather neighbor patches for all positions at once
-        # pos_idx: (L, K_max) → expand for (B, k, L*K_max, C)
-        idx_flat = pos_idx.reshape(-1)  # (L*K_max,)
-        neigh_gathered = neigh_feat[:, :, idx_flat, :]  # (B, k, L*K_max, C)
-        neigh_gathered = neigh_gathered.reshape(batch_size, k, num_patches, k_max, c)
-        # → (B, L, k*K_max, C)
-        neigh_gathered = neigh_gathered.permute(0, 2, 1, 3, 4).reshape(batch_size, num_patches, k * k_max, c)
-
-        # Batched similarity: (B, L, 1, C) @ (B, L, C, k*K_max) → (B, L, 1, k*K_max)
-        sim = torch.matmul(patches_x.unsqueeze(2), neigh_gathered.transpose(2, 3)).squeeze(2)  # (B, L, k*K_max)
-
-        # Mask out padded positions (repeat mask across k neighbors)
-        mask_expanded = pos_mask.unsqueeze(0).expand(batch_size, -1, -1)  # (B, L, K_max)
-        mask_expanded = mask_expanded.unsqueeze(2).expand(-1, -1, k, -1)  # (B, L, k, K_max)
-        mask_expanded = mask_expanded.reshape(batch_size, num_patches, k * k_max)  # (B, L, k*K_max)
-
-        sim = sim.masked_fill(~mask_expanded, -1.0)
-        nn_sim = sim.max(dim=-1)[0]  # (B, L)
-        return 1.0 - nn_sim
+        return scores
 
     @staticmethod
-    def _get_positional_indices(
-        h: int,
-        w: int,
-        radius: int,
-        device: torch.device,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        """Precompute padded spatial neighborhood indices for each patch.
+    def _score_global(query: torch.Tensor, bank: torch.Tensor) -> torch.Tensor:
+        """Score patches against all retrieved patches, without a spatial constraint.
 
         Args:
-            h: Grid height.
-            w: Grid width.
-            radius: Neighborhood radius.
-            device: Device for tensors.
+            query: Normalized test patches (L, C).
+            bank: Normalized retrieved patches (k, L_bank, C).
 
         Returns:
-            Tuple of (indices, mask) both of shape (L, K_max).
+            Anomaly scores per patch (L,).
         """
-        k_max = (2 * radius + 1) ** 2
-        num_patches = h * w
-        pos_idx = torch.zeros(num_patches, k_max, dtype=torch.long, device=device)
-        pos_mask = torch.zeros(num_patches, k_max, dtype=torch.bool, device=device)
+        similarity = query @ bank.reshape(-1, bank.shape[-1]).t()  # (L, k*L_bank)
+        return 1.0 - similarity.amax(dim=-1)
 
-        for j in range(num_patches):
-            r = j // w
-            col = j % w
+    def _score_positional(
+        self,
+        query: torch.Tensor,
+        bank: torch.Tensor,
+        grid: tuple[int, int],
+    ) -> torch.Tensor:
+        """Score patches against retrieved patches within a spatial neighborhood.
 
-            r_min = max(0, r - radius)
-            r_max = min(h - 1, r + radius)
-            c_min = max(0, col - radius)
-            c_max = min(w - 1, col + radius)
+        Each neighborhood offset is evaluated as a strided slice over the patch grid, so no
+        per-patch copy of the candidate features is materialized.
 
-            idx_list = [rr * w + cc for rr in range(r_min, r_max + 1) for cc in range(c_min, c_max + 1)]
+        Args:
+            query: Normalized test patches (L, C).
+            bank: Normalized retrieved patches (k, L_bank, C).
+            grid: Patch grid ``(rows, cols)``.
 
-            n = len(idx_list)
-            pos_idx[j, :n] = torch.tensor(idx_list, dtype=torch.long, device=device)
-            pos_mask[j, :n] = True
+        Returns:
+            Anomaly scores per patch (L,).
 
-        return pos_idx, pos_mask
+        Raises:
+            ValueError: If the memory bank grid differs from the query grid.
+        """
+        rows, cols = grid
+        bank_rows, bank_cols = (int(size) for size in self.bank_grid)
+        if (bank_rows, bank_cols) != (rows, cols):
+            msg = (
+                f"Position-aware matching requires the memory bank grid ({bank_rows}, {bank_cols}) to match "
+                f"the query grid ({rows}, {cols}). Use the same image size for fitting and inference, or set "
+                "``use_positional_bank=False``."
+            )
+            raise ValueError(msg)
+
+        channels = query.shape[-1]
+        query_grid = query.view(rows, cols, channels)
+        bank_patches = bank.view(bank.shape[0], rows, cols, channels)
+        best = query.new_full((rows, cols), -1.0)
+
+        for row_shift in range(-self.pos_radius, self.pos_radius + 1):
+            for col_shift in range(-self.pos_radius, self.pos_radius + 1):
+                row_start, row_end = max(0, -row_shift), rows - max(0, row_shift)
+                col_start, col_end = max(0, -col_shift), cols - max(0, col_shift)
+                if row_start >= row_end or col_start >= col_end:
+                    continue
+
+                window = query_grid[row_start:row_end, col_start:col_end]
+                candidates = bank_patches[
+                    :,
+                    row_start + row_shift : row_end + row_shift,
+                    col_start + col_shift : col_end + col_shift,
+                ]
+                similarity = torch.einsum("rcd,krcd->krc", window, candidates).amax(dim=0)
+                best[row_start:row_end, col_start:col_end] = torch.maximum(
+                    best[row_start:row_end, col_start:col_end],
+                    similarity,
+                )
+
+        return (1.0 - best).reshape(-1)
