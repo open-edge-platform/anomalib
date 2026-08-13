@@ -102,17 +102,25 @@ class RadModel(DynamicBufferMixin, nn.Module):
         self.bank_dtype = getattr(torch, bank_dtype) if isinstance(bank_dtype, str) else bank_dtype
 
         layer_names = [f"blocks.{i}" for i in self.layers]
-        self.feature_extractor = TimmFeatureExtractor(
-            backbone=backbone,
-            pre_trained=pre_trained,
-            layers=layer_names,
-            requires_grad=False,
-            output_fmt="NLC",
-            return_class_token=True,
-            norm=True,
-            dynamic_img_size=True,
-        )
-        self.patch_size = self.feature_extractor.patch_size
+        try:
+            self.feature_extractor = TimmFeatureExtractor(
+                backbone=backbone,
+                pre_trained=pre_trained,
+                layers=layer_names,
+                requires_grad=False,
+                output_fmt="NLC",
+                return_class_token=True,
+                norm=True,
+                dynamic_img_size=True,
+            )
+            self.patch_size = self.feature_extractor.patch_size
+        except AttributeError as exc:
+            msg = (
+                "RAD requires a ViT-style timm backbone that exposes patch embeddings and supports "
+                "`forward_intermediates` for token extraction (output_fmt='NLC'). "
+                f"Got backbone={backbone!r}."
+            )
+            raise ValueError(msg) from exc
 
         self._layer_weights = self._normalize_layer_weights(layer_weights, len(self.layers))
 
