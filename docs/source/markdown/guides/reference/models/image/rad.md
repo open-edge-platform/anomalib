@@ -33,6 +33,7 @@ anomalib train \
 | `use_positional_bank` | `True`                    | Enable position-aware patch matching                       |
 | `pos_radius`          | `1`                       | Spatial neighborhood radius for positional matching        |
 | `max_ratio`           | `0.01`                    | Fraction of top anomaly pixels for image-level score       |
+| `bank_dtype`          | `None`                    | Memory bank storage dtype; `float16` halves its size       |
 
 The defaults follow the paper's MVTec-AD configuration. Other datasets use different values:
 `k_image` is 900 for VisA and Real-IAD and 48 for 3D-ADAM, while `pos_radius` is 2 for VisA
@@ -42,6 +43,10 @@ and 0 for Real-IAD.
 Position-aware matching compares patches by their grid position, so the fitting and inference
 image sizes must produce the same patch grid. Set `use_positional_bank=False` if they differ.
 The memory bank is stored in the model state, so checkpoint size grows with the training set.
+Setting `bank_dtype=float16` halves the bank's memory and checkpoint size and speeds up
+scoring, at the cost of a small (order `1e-4`) perturbation of the anomaly scores. The CLS
+bank that drives image retrieval always stays at full precision, so the set of retrieved
+training images is unaffected.
 ```
 
 ```{eval-rst}

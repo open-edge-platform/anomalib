@@ -69,6 +69,10 @@ class Rad(MemoryBankMixin, AnomalibModule):
             image-level score. ``0`` means use max. Defaults to ``0.01``.
         layer_weights (list[float] | None): Per-layer score fusion weights.
             ``None`` means uniform. Defaults to ``None``.
+        bank_dtype (torch.dtype | str | None): Storage dtype of the memory bank. ``None``
+            keeps the backbone dtype. ``torch.float16`` halves bank memory and checkpoint
+            size and speeds up scoring, at the cost of a small perturbation of the scores.
+            Defaults to ``None``.
         pre_processor (PreProcessor | bool): Pre-processor instance or flag.
             Defaults to ``True``.
         post_processor (PostProcessor | bool): Post-processor instance or flag.
@@ -108,6 +112,7 @@ class Rad(MemoryBankMixin, AnomalibModule):
         pos_radius: int = 1,
         max_ratio: float = 0.01,
         layer_weights: list[float] | None = None,
+        bank_dtype: torch.dtype | str | None = None,
         pre_processor: nn.Module | bool = True,
         post_processor: nn.Module | bool = True,
         evaluator: Evaluator | bool = True,
@@ -129,6 +134,7 @@ class Rad(MemoryBankMixin, AnomalibModule):
             pos_radius=pos_radius,
             max_ratio=max_ratio,
             layer_weights=layer_weights,
+            bank_dtype=bank_dtype,
         )
 
     @classmethod

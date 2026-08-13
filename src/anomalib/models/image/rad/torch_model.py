@@ -47,6 +47,10 @@ class RadModel(DynamicBufferMixin, nn.Module):
             image-level score. ``0`` means use max. Defaults to ``0.01``.
         layer_weights (list[float] | None): Weights for each layer in score
             fusion. ``None`` means uniform. Defaults to ``None``.
+        bank_dtype (torch.dtype | str | None): Storage dtype of the memory bank. ``None``
+            keeps the backbone dtype (exact). ``torch.float16`` halves bank memory and
+            checkpoint size and speeds up scoring, at the cost of a small (order ``1e-4``)
+            perturbation of the anomaly scores. Defaults to ``None``.
 
     Raises:
         ValueError: If ``layers`` is empty, ``k_image`` is not positive, ``pos_radius`` is
@@ -70,6 +74,7 @@ class RadModel(DynamicBufferMixin, nn.Module):
         pos_radius: int = 1,
         max_ratio: float = 0.01,
         layer_weights: list[float] | None = None,
+        bank_dtype: torch.dtype | str | None = None,
     ) -> None:
         super().__init__()
 
@@ -94,6 +99,7 @@ class RadModel(DynamicBufferMixin, nn.Module):
         self.use_positional_bank = use_positional_bank
         self.pos_radius = pos_radius
         self.max_ratio = max_ratio
+        self.bank_dtype = getattr(torch, bank_dtype) if isinstance(bank_dtype, str) else bank_dtype
 
         layer_names = [f"blocks.{i}" for i in self.layers]
         self.feature_extractor = TimmFeatureExtractor(
@@ -111,13 +117,19 @@ class RadModel(DynamicBufferMixin, nn.Module):
         self._layer_weights = self._normalize_layer_weights(layer_weights, len(self.layers))
 
         # Banks are stacked over layers and registered as buffers so that they are saved to,
-        # and restored from, checkpoints together with the rest of the model.
+        # and restored from, checkpoints together with the rest of the model. Both banks are
+        # stored L2-normalized, so matching reduces to plain inner products, and ``patch_banks``
+        # is position-major -- ``(layer, position, image, channel)`` -- so that retrieving the
+        # neighbors of a query lands the candidates in the layout the scoring GEMM consumes.
         self.cls_banks: torch.Tensor
         self.patch_banks: torch.Tensor
         self.bank_grid: torch.Tensor
         self.register_buffer("cls_banks", torch.empty(0))
         self.register_buffer("patch_banks", torch.empty(0))
         self.register_buffer("bank_grid", torch.zeros(2, dtype=torch.long))
+
+        # Slice plan for position-aware matching, keyed by ``(grid, pos_radius)``.
+        self._neighborhood_plans: dict[tuple[int, int], list[tuple[int, int, int, int, int, int, int]]] = {}
 
         # Stores for accumulating features during training
         self._cls_store: list[list[torch.Tensor]] = [[] for _ in self.layers]
@@ -246,7 +258,11 @@ class RadModel(DynamicBufferMixin, nn.Module):
             self._patch_store[layer_idx].append(patch_tokens.detach().cpu())
 
     def build_memory_bank(self) -> None:
-        """Build memory bank from accumulated training features.
+        """Build the memory bank from accumulated training features.
+
+        The banks are written into pre-allocated buffers one chunk at a time, and each chunk is
+        released as soon as it has been copied. Concatenating and then stacking instead would
+        hold two full-size copies of the bank at once, doubling the peak memory of fitting.
 
         Raises:
             ValueError: If no training features have been collected.
@@ -256,8 +272,34 @@ class RadModel(DynamicBufferMixin, nn.Module):
             raise ValueError(msg)
 
         device = next(self.feature_extractor.parameters()).device
-        self.cls_banks = torch.stack([torch.cat(store, dim=0) for store in self._cls_store]).to(device)
-        self.patch_banks = torch.stack([torch.cat(store, dim=0) for store in self._patch_store]).to(device)
+        rows, cols = self._train_grid
+        num_images = sum(chunk.shape[0] for chunk in self._cls_store[0])
+        channels = self._cls_store[0][0].shape[-1]
+        cls_dtype = self._cls_store[0][0].dtype
+        dtype = self.bank_dtype or cls_dtype
+
+        # The CLS bank stays at full precision: it is ``num_layers x N x C`` and so negligible
+        # next to the patch bank, while rounding it can reorder the image-level top-k and
+        # change which training images are retrieved at all.
+        cls_banks = torch.empty(len(self.layers), num_images, channels, dtype=cls_dtype, device=device)
+        patch_banks = torch.empty(len(self.layers), rows * cols, num_images, channels, dtype=dtype, device=device)
+
+        for layer_idx in range(len(self.layers)):
+            offset = 0
+            cls_chunks, patch_chunks = self._cls_store[layer_idx], self._patch_store[layer_idx]
+            while cls_chunks:
+                cls_chunk, patch_chunk = cls_chunks.pop(0), patch_chunks.pop(0)
+                size = cls_chunk.shape[0]
+                cls_banks[layer_idx, offset : offset + size] = F.normalize(cls_chunk, dim=-1)
+                # (B, L, C) -> (L, B, C) so the bank is indexed by position first.
+                patch_banks[layer_idx, :, offset : offset + size] = (
+                    F.normalize(patch_chunk, dim=-1).transpose(0, 1).to(dtype)
+                )
+                offset += size
+                del cls_chunk, patch_chunk
+
+        self.cls_banks = cls_banks
+        self.patch_banks = patch_banks
         self.bank_grid = torch.tensor(self._train_grid, dtype=torch.long, device=device)
 
         # Clear stores
@@ -297,7 +339,7 @@ class RadModel(DynamicBufferMixin, nn.Module):
 
         # Image-level retrieval using highest layer CLS
         cls_query = F.normalize(features[-1][1], dim=-1)  # (B, C)
-        cls_bank = F.normalize(self.cls_banks[-1].to(cls_query.dtype), dim=-1)  # (N, C)
+        cls_bank = self.cls_banks[-1].to(cls_query.dtype)  # (N, C)
         sim_img = torch.matmul(cls_query, cls_bank.t())  # (B, N)
         k = min(self.k_image, sim_img.shape[1])
         topk_idx = torch.topk(sim_img, k, dim=-1).indices  # (B, k)
@@ -358,12 +400,18 @@ class RadModel(DynamicBufferMixin, nn.Module):
         batch_size = patch_list[0].shape[0]
         scores = patch_list[0].new_zeros(batch_size, rows * cols)
 
+        if self.use_positional_bank:
+            self._check_bank_grid(grid)
+
+        # Match in the bank's dtype rather than widening it: the candidate block dwarfs the
+        # query, so casting it up would undo the saving a reduced-precision bank is there for.
+        match_dtype = self.patch_banks.dtype
+
         for image_idx in range(batch_size):
             neighbors = topk_idx[image_idx]  # (k,)
             for layer_idx, patches in enumerate(patch_list):
-                query = F.normalize(patches[image_idx], dim=-1)  # (L, C)
-                bank = self.patch_banks[layer_idx].index_select(0, neighbors).to(query.dtype)
-                bank = F.normalize(bank, dim=-1)  # (k, L_bank, C)
+                query = F.normalize(patches[image_idx], dim=-1).to(match_dtype)  # (L, C)
+                bank = self.patch_banks[layer_idx].index_select(1, neighbors)  # (L, k, C)
 
                 layer_scores = (
                     self._score_positional(query, bank, grid)
@@ -380,13 +428,58 @@ class RadModel(DynamicBufferMixin, nn.Module):
 
         Args:
             query: Normalized test patches (L, C).
-            bank: Normalized retrieved patches (k, L_bank, C).
+            bank: Normalized retrieved patches (L_bank, k, C).
 
         Returns:
             Anomaly scores per patch (L,).
         """
-        similarity = query @ bank.reshape(-1, bank.shape[-1]).t()  # (L, k*L_bank)
+        similarity = query @ bank.reshape(-1, bank.shape[-1]).t()  # (L, L_bank*k)
         return 1.0 - similarity.amax(dim=-1)
+
+    def _check_bank_grid(self, grid: tuple[int, int]) -> None:
+        """Verify the memory bank was fitted on the same patch grid as the query.
+
+        Args:
+            grid: Patch grid ``(rows, cols)`` of the query images.
+
+        Raises:
+            ValueError: If the memory bank grid differs from the query grid.
+        """
+        bank_rows, bank_cols = (int(size) for size in self.bank_grid)
+        if (bank_rows, bank_cols) != grid:
+            msg = (
+                f"Position-aware matching requires the memory bank grid ({bank_rows}, {bank_cols}) to match "
+                f"the query grid {grid}. Use the same image size for fitting and inference, or set "
+                "``use_positional_bank=False``."
+            )
+            raise ValueError(msg)
+
+    def _neighborhood_plan(self, grid: tuple[int, int]) -> list[tuple[int, int, int, int, int, int, int]]:
+        """Return the cached slice plan for the position-aware neighborhood.
+
+        Each entry ``(offset_idx, row_shift, col_shift, row_start, row_end, col_start, col_end)``
+        pairs bank positions ``[row_start:row_end, col_start:col_end]`` with the query positions
+        found by subtracting the shift. Entries whose shift leaves the grid are dropped.
+
+        Args:
+            grid: Patch grid ``(rows, cols)``.
+
+        Returns:
+            The slice plan for ``grid`` at the configured ``pos_radius``.
+        """
+        if grid not in self._neighborhood_plans:
+            rows, cols = grid
+            plan = []
+            offset_idx = 0
+            for row_shift in range(-self.pos_radius, self.pos_radius + 1):
+                for col_shift in range(-self.pos_radius, self.pos_radius + 1):
+                    row_start, row_end = max(0, row_shift), rows - max(0, -row_shift)
+                    col_start, col_end = max(0, col_shift), cols - max(0, -col_shift)
+                    if row_start < row_end and col_start < col_end:
+                        plan.append((offset_idx, row_shift, col_shift, row_start, row_end, col_start, col_end))
+                    offset_idx += 1
+            self._neighborhood_plans[grid] = plan
+        return self._neighborhood_plans[grid]
 
     def _score_positional(
         self,
@@ -396,52 +489,43 @@ class RadModel(DynamicBufferMixin, nn.Module):
     ) -> torch.Tensor:
         """Score patches against retrieved patches within a spatial neighborhood.
 
-        Each neighborhood offset is evaluated as a strided slice over the patch grid, so no
-        per-patch copy of the candidate features is materialized.
+        The neighborhood is folded into the query rather than the bank: for every bank position
+        the shifted query patches are gathered into a small ``(L, offsets, C)`` tensor, and all
+        offsets are then matched in a single batched GEMM. This reads the candidate features
+        once instead of once per offset, and replaces the broadcast reduction with BLAS.
 
         Args:
             query: Normalized test patches (L, C).
-            bank: Normalized retrieved patches (k, L_bank, C).
+            bank: Normalized retrieved patches (L_bank, k, C).
             grid: Patch grid ``(rows, cols)``.
 
         Returns:
             Anomaly scores per patch (L,).
-
-        Raises:
-            ValueError: If the memory bank grid differs from the query grid.
         """
         rows, cols = grid
-        bank_rows, bank_cols = (int(size) for size in self.bank_grid)
-        if (bank_rows, bank_cols) != (rows, cols):
-            msg = (
-                f"Position-aware matching requires the memory bank grid ({bank_rows}, {bank_cols}) to match "
-                f"the query grid ({rows}, {cols}). Use the same image size for fitting and inference, or set "
-                "``use_positional_bank=False``."
-            )
-            raise ValueError(msg)
-
         channels = query.shape[-1]
+        plan = self._neighborhood_plan(grid)
+        num_offsets = (2 * self.pos_radius + 1) ** 2
+
         query_grid = query.view(rows, cols, channels)
-        bank_patches = bank.view(bank.shape[0], rows, cols, channels)
+        shifted = query.new_zeros(num_offsets, rows, cols, channels)
+        for offset_idx, row_shift, col_shift, row_start, row_end, col_start, col_end in plan:
+            shifted[offset_idx, row_start:row_end, col_start:col_end] = query_grid[
+                row_start - row_shift : row_end - row_shift,
+                col_start - col_shift : col_end - col_shift,
+            ]
+
+        # (L, offsets, C) x (L, C, k) -> best match per (bank position, offset).
+        similarity = torch.bmm(
+            shifted.permute(1, 2, 0, 3).reshape(rows * cols, num_offsets, channels),
+            bank.transpose(1, 2),
+        ).amax(dim=-1)
+
+        # Fold the bank-indexed maxima back onto the query positions they came from.
+        similarity_grid = similarity.view(rows, cols, num_offsets)
         best = query.new_full((rows, cols), -1.0)
-
-        for row_shift in range(-self.pos_radius, self.pos_radius + 1):
-            for col_shift in range(-self.pos_radius, self.pos_radius + 1):
-                row_start, row_end = max(0, -row_shift), rows - max(0, row_shift)
-                col_start, col_end = max(0, -col_shift), cols - max(0, col_shift)
-                if row_start >= row_end or col_start >= col_end:
-                    continue
-
-                window = query_grid[row_start:row_end, col_start:col_end]
-                candidates = bank_patches[
-                    :,
-                    row_start + row_shift : row_end + row_shift,
-                    col_start + col_shift : col_end + col_shift,
-                ]
-                similarity = torch.einsum("rcd,krcd->krc", window, candidates).amax(dim=0)
-                best[row_start:row_end, col_start:col_end] = torch.maximum(
-                    best[row_start:row_end, col_start:col_end],
-                    similarity,
-                )
+        for offset_idx, row_shift, col_shift, row_start, row_end, col_start, col_end in plan:
+            target = best[row_start - row_shift : row_end - row_shift, col_start - col_shift : col_end - col_shift]
+            torch.maximum(target, similarity_grid[row_start:row_end, col_start:col_end, offset_idx], out=target)
 
         return (1.0 - best).reshape(-1)

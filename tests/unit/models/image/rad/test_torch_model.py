@@ -68,12 +68,43 @@ def test_initialization(model: RadModel) -> None:
 
 
 def test_memory_bank_shapes(model: RadModel) -> None:
-    """Test that memory bank has correct shapes."""
+    """Test that memory bank has correct shapes.
+
+    ``cls_banks`` is ``(layer, image, channel)`` and ``patch_banks`` is position-major,
+    ``(layer, position, image, channel)``.
+    """
+    positions = 224 // model.patch_size * (224 // model.patch_size)
     for i in range(4):
         assert model.cls_banks[i].shape[0] == 4  # 4 training images
-        assert model.patch_banks[i].shape[0] == 4
         assert model.cls_banks[i].ndim == 2
         assert model.patch_banks[i].ndim == 3
+        assert model.patch_banks[i].shape == (positions, 4, model.cls_banks[i].shape[-1])
+
+
+def test_memory_bank_is_normalized(model: RadModel) -> None:
+    """Test the stored banks are unit-norm, as the scoring inner products assume."""
+    for bank in (model.cls_banks, model.patch_banks):
+        norms = bank.float().norm(dim=-1)
+        assert torch.allclose(norms, torch.ones_like(norms), atol=1e-5)
+
+
+def test_fp16_bank_matches_fp32() -> None:
+    """Test a half-precision bank halves storage and tracks the full-precision scores."""
+    query = torch.randn(1, 3, 224, 224)
+    torch.manual_seed(0)
+    fp32 = _fitted_model()
+    torch.manual_seed(0)
+    fp16 = _fitted_model(bank_dtype=torch.float16)
+
+    assert fp16.patch_banks.dtype == torch.float16
+    assert fp16.patch_banks.numel() * fp16.patch_banks.element_size() * 2 == (
+        fp32.patch_banks.numel() * fp32.patch_banks.element_size()
+    )
+
+    with torch.no_grad():
+        expected, actual = fp32(query), fp16(query)
+
+    assert torch.allclose(actual.anomaly_map, expected.anomaly_map, atol=1e-2)
 
 
 def test_forward_eval(model: RadModel, input_tensor: torch.Tensor) -> None:
