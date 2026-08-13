@@ -159,6 +159,13 @@ Towards Total Recall in Industrial Anomaly Detection
 PatchFlow: Leveraging a Flow-Based Model with Patch Features
 :::
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` RAD
+:link: ./rad
+:link-type: doc
+
+RAD: Is Task-Specific Training Necessary for Anomaly Detection?
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` Reverse Distillation
 :link: ./reverse_distillation
 :link-type: doc
@@ -235,6 +242,7 @@ WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation
 ./padim
 ./patchcore
 ./patchflow
+./rad
 ./reverse_distillation
 ./stfpm
 ./supersimplenet

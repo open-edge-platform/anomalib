@@ -43,6 +43,7 @@ Available Models:
     - :class:`Padim`: Patch Distribution Modeling
     - :class:`Patchcore`: Patch Core
     - :class:`Patchflow`: Patch Flow
+    - :class:`Rad`: Retrieval-based Anomaly Detection
     - :class:`ReverseDistillation`: Reverse Knowledge Distillation
     - :class:`Stfpm`: Student-Teacher Feature Pyramid Matching
     - :class:`SuperADD`: Supervised Anomaly Detection with Additive Feature Fusion
@@ -75,6 +76,7 @@ from .l2bt import L2BT
 from .padim import Padim
 from .patchcore import Patchcore
 from .patchflow import Patchflow
+from .rad import Rad
 from .reverse_distillation import ReverseDistillation
 from .stfpm import Stfpm
 from .super_add import SuperADD
@@ -107,6 +109,7 @@ __all__ = [
     "Padim",
     "Patchcore",
     "Patchflow",
+    "Rad",
     "ReverseDistillation",
     "Stfpm",
     "Supersimplenet",
