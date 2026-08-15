@@ -55,11 +55,12 @@ jobs:
           egress-policy: audit
 
       - name: Cleanup old container images
-        uses: open-edge-platform/geti-ci/actions/cleanup-images@287abbfdced5c02904ab2f39a0fe944cd402c36f # cleanup-images/v0.1.0
+        uses: open-edge-platform/geti-ci/actions/cleanup-images@164479fa1091ae69e1fa7c2be65eaecdf7f3cf66 # cleanup-images/v0.1.1
         with:
           packages: |
             anomalib-studio-cpu
             anomalib-studio-xpu
             anomalib-studio-cuda
           min-versions-to-keep: ${{ inputs.min_versions_to_keep || 10 }}
-          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == true }}
+          # Scheduled runs delete for real; manual dispatch previews by default.
+          dry-run: ${{ github.event_name != 'schedule' && inputs.dry_run && 'true' || 'false' }}
