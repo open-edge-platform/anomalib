@@ -53,3 +53,14 @@ class ProjectRepository(BaseRepository):
         """Get the dataset_updated_at timestamp for the given project."""
         result = await self.db.execute(sa.select(self.schema.dataset_updated_at).where(ProjectDB.id == str(project_id)))
         return result.scalar_one()
+
+    async def get_first_project(self) -> Project | None:
+        """Get the first project in a deterministic order.
+
+        Projects are ordered by creation time, then by ID as a stable tie-breaker.
+        """
+        result = await self.db.execute(
+            sa.select(ProjectDB).order_by(ProjectDB.created_at.asc(), ProjectDB.id.asc()).limit(1),
+        )
+        first_project = result.scalars().first()
+        return self.from_schema(first_project) if first_project else None
