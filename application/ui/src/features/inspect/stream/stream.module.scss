@@ -56,11 +56,16 @@
     }
 }
 
-.captureButton {
-    color: var(--spectrum-global-color-gray-50) !important;
-    background: var(--spectrum-global-color-gray-900) !important;
+.captureButtonContainer {
+    position: absolute;
+    bottom: var(--spectrum-global-dimension-size-400);
 
-    &:hover {
-        background: rgba(255, 255, 255, 0.8) !important;
+    & > button {
+        color: var(--spectrum-global-color-gray-50) !important;
+        background: var(--spectrum-global-color-gray-900) !important;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.8) !important;
+        }
     }
 }
