@@ -24,6 +24,11 @@
     enabled: true,
     schedule: ["* * 1,15 * *"], // twice a month
 
+    // Keep the default `recreateWhen: "always"` (do not inherit the top-level
+    // "never") so a fresh lock PR is opened whenever new lock changes appear.
+    // These PRs are immortal by design; that is acceptable now that the lock
+    // no longer reintroduces blocked CVEs and is mergeable.
+
     // FIXME: re-enable automerge once the issue is resolved
     // https://github.com/open-edge-platform/anomalib/issues/3666
     //
@@ -53,6 +58,10 @@
   // `matchBaseBranches` in specific rule
   baseBranches: ["main"],
 
+  // Do not recreate PRs that were closed without merging.
+  // Note: security/vulnerability ("immortal") updates may still be recreated.
+  recreateWhen: "never",
+
   enabledManagers: [
     "github-actions",
     "pep621",
@@ -71,6 +80,13 @@
 
   // Apply a default blanket cooldown of 7 days to all dependencies
   minimumReleaseAge: "7 days",
+
+  // Pin the uv version Renovate uses to regenerate uv.lock so it matches the
+  // version pinned in the GitHub Actions workflows.
+  // This prevents uv.lock format/resolver drift between Renovate and CI.
+  constraints: {
+    uv: "0.9.18",
+  },
 
   packageRules: [
     // Enable pinning for container images

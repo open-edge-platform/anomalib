@@ -2,7 +2,9 @@
 name = "anomalib-studio"
 version = "1.0.0"
 description = "Anomalib Studio server"
-requires-python = ">=3.13"
+# Capped below 3.14: py3.14 has no torch xpu wheels yet, so universal resolution
+# would pull the CVE-flagged torch 2.6.0+xpu fallback. Builds/CI run on 3.13.
+requires-python = ">=3.13,<3.14"
 
 dependencies = [
     "aiofiles==25.1.0",
@@ -57,6 +59,19 @@ cu130 = ["anomalib[cu130,openvino]"]
 xpu = ["anomalib[xpu,openvino] ; sys_platform == 'linux' or sys_platform == 'win32'"]
 
 [tool.uv]
+override-dependencies = [
+    # FIXME: remove once mlflow releases a version without the cryptography<50 upper bound
+    # mlflow 3.15.1 caps cryptography<50, but CVE-2026-69247 requires >=50.0.0
+    # upstream fix (no source changes, safe to override): https://github.com/mlflow/mlflow/pull/24872
+    "cryptography>=50.0.0",
+]
+# Resolve only for the built target platforms (linux + windows). macOS/emscripten
+# aren't built here and their dead xpu branches otherwise pull the CVE-flagged
+# torch 2.6.0+xpu. Combined with the requires-python cap this keeps it out.
+environments = [
+    "sys_platform == 'linux'",
+    "sys_platform == 'win32'",
+]
 conflicts = [
     [
         { extra = "cpu" },
