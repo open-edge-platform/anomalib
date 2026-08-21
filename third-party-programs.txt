@@ -74,3 +74,13 @@ terms are listed below.
 15. INP-Former model (anomalib.models.image.inp_former)
     Copyright (c) 2025 Wei Luo, https://github.com/luow23/INP-Former
     SPDX-License-Identifier: MIT
+
+16. Instrument Serif font files (docs/source/_static/benchmarks/assets)
+    Copyright 2022 The Instrument Serif Project Authors,
+    https://github.com/Instrument/instrument-serif
+    SPDX-License-Identifier: OFL-1.1
+
+17. Nunito Sans font files (docs/source/_static/benchmarks/assets)
+    Copyright 2016 The Nunito Sans Project Authors,
+    https://github.com/Fonthausen/NunitoSans
+    SPDX-License-Identifier: OFL-1.1
