@@ -5,7 +5,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Binary classification curve (numpy-only implementation).
+"""Binary classification curve.
 
 This module provides functionality to compute binary classification matrices at
 multiple thresholds. The thresholds are shared across all instances/images, but
@@ -30,12 +30,9 @@ Example:
     torch.Size([10, 10, 2, 2])
 """
 
-import itertools
 import logging
 from enum import Enum
-from functools import partial
 
-import numpy as np
 import torch
 
 from . import _validate
@@ -57,84 +54,12 @@ class ThresholdMethod(Enum):
     MEAN_FPR_OPTIMIZED = "mean-fpr-optimized"
 
 
-def _binary_classification_curve(scores: np.ndarray, gts: np.ndarray, thresholds: np.ndarray) -> np.ndarray:
-    """Compute binary classification matrices at multiple thresholds.
-
-    This implementation is optimized for CPU performance compared to torchmetrics
-    alternatives when using pre-defined thresholds.
-
-    Note:
-        Arguments must be validated before calling this function.
-
-    Args:
-        scores: Anomaly scores of shape ``(D,)``
-        gts: Binary ground truth of shape ``(D,)``
-        thresholds: Sequence of thresholds in ascending order ``(K,)``
-
-    Returns:
-        Binary classification matrix curve of shape ``(K, 2, 2)``
-        containing TP, FP, FN, TN counts at each threshold
-    """
-    num_th = len(thresholds)
-
-    # POSITIVES
-    scores_positives = scores[gts]
-    # the sorting is very important for the algorithm to work and the speedup
-    scores_positives = np.sort(scores_positives)
-    # variable updated in the loop; start counting with lowest thresh ==>
-    # everything is predicted as positive
-    num_pos = current_count_tp = scores_positives.size
-    tps = np.empty((num_th,), dtype=np.int64)
-
-    # NEGATIVES
-    # same thing but for the negative samples
-    scores_negatives = scores[~gts]
-    scores_negatives = np.sort(scores_negatives)
-    num_neg = current_count_fp = scores_negatives.size
-    fps = np.empty((num_th,), dtype=np.int64)
-
-    def score_less_than_thresh(score: float, thresh: float) -> bool:
-        return score < thresh
-
-    # it will progressively drop the scores that are below the current thresh
-    for thresh_idx, thresh in enumerate(thresholds):
-        # UPDATE POSITIVES
-        # < becasue it is the same as ~(>=)
-        num_drop = sum(1 for _ in itertools.takewhile(partial(score_less_than_thresh, thresh=thresh), scores_positives))
-        scores_positives = scores_positives[num_drop:]
-        current_count_tp -= num_drop
-        tps[thresh_idx] = current_count_tp
-
-        # UPDATE NEGATIVES
-        # same with the negatives
-        num_drop = sum(1 for _ in itertools.takewhile(partial(score_less_than_thresh, thresh=thresh), scores_negatives))
-        scores_negatives = scores_negatives[num_drop:]
-        current_count_fp -= num_drop
-        fps[thresh_idx] = current_count_fp
-
-    # deduce the rest of the matrix counts
-    fns = num_pos * np.ones((num_th,), dtype=np.int64) - tps
-    tns = num_neg * np.ones((num_th,), dtype=np.int64) - fps
-
-    # sequence of dimensions is (thresholds, true class, predicted class)
-    return np.stack(
-        [
-            np.stack([tns, fps], axis=-1),
-            np.stack([fns, tps], axis=-1),
-        ],
-        axis=-1,
-    ).transpose(0, 2, 1)
-
-
 def binary_classification_curve(
     scores_batch: torch.Tensor,
     gts_batch: torch.Tensor,
     thresholds: torch.Tensor,
 ) -> torch.Tensor:
     """Compute binary classification matrices for a batch of images.
-
-    This is a wrapper around :func:`_binary_classification_curve` that handles
-    input validation and batching.
 
     Note:
         Predicted positives are determined by ``score >= thresh``
@@ -168,15 +93,36 @@ def binary_classification_curve(
     _validate.is_gts_batch(gts_batch)
     _validate.is_same_shape(scores_batch, gts_batch)
     _validate.is_valid_threshold(thresholds)
-    # TODO(ashwinvaidya17): this is kept as numpy for now because it is much
-    # faster.
-    # TEMP-0
-    result = np.vectorize(_binary_classification_curve, signature="(n),(n),(k)->(k,2,2)")(
-        scores_batch.detach().cpu().numpy(),
-        gts_batch.detach().cpu().numpy(),
-        thresholds.detach().cpu().numpy(),
-    )
-    return torch.from_numpy(result).to(scores_batch.device)
+
+    n, d = scores_batch.shape
+    k = thresholds.shape[0]
+
+    neg_inf = torch.tensor(-torch.inf, device=scores_batch.device, dtype=scores_batch.dtype)
+
+    pos_scores = torch.where(gts_batch, scores_batch, neg_inf)
+    neg_scores = torch.where(~gts_batch, scores_batch, neg_inf)
+
+    pos_scores_sorted, _ = torch.sort(pos_scores, dim=1)
+    neg_scores_sorted, _ = torch.sort(neg_scores, dim=1)
+
+    thresh_exp = thresholds.unsqueeze(1).expand(k, n).contiguous().T.contiguous()
+
+    pos_idx = torch.searchsorted(pos_scores_sorted, thresh_exp, side="left")
+    neg_idx = torch.searchsorted(neg_scores_sorted, thresh_exp, side="left")
+
+    tps = d - pos_idx
+    fps = d - neg_idx
+
+    total_pos = gts_batch.sum(dim=1, keepdim=True)
+    total_neg = d - total_pos
+
+    fns = total_pos - tps
+    tns = total_neg - fps
+
+    row0 = torch.stack([tns, fps], dim=-1)
+    row1 = torch.stack([fns, tps], dim=-1)
+
+    return torch.stack([row0, row1], dim=2)
 
 
 def _get_linspaced_thresholds(anomaly_maps: torch.Tensor, num_thresholds: int) -> torch.Tensor:
