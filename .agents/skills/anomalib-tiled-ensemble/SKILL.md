@@ -36,8 +36,9 @@ python tools/tiled_ensemble/eval.py  --config tools/tiled_ensemble/ens_config.ya
                                      --root results/Padim/MVTecAD/bottle/v0
 ```
 
-`train.py` runs `TrainTiledEnsemble().run()`; `eval.py` runs `EvalTiledEnsemble` against the results
-directory produced by the training run (`--root` points at that run's output folder).
+`train.py` runs `TrainTiledEnsemble().run()` which includes evaluation after training;
+`eval.py` runs `EvalTiledEnsemble` to **re-run** evaluation against an existing results directory
+(`--root`) — use it only when you want to evaluate again without retraining.
 
 ## Config structure
 
@@ -64,9 +65,11 @@ data:
     train_batch_size: 32
     eval_batch_size: 32
     num_workers: 8
+    val_split_mode: from_test
+    test_split_mode: from_dir
 
 SeamSmoothing:
-  apply: True
+  apply: False
   sigma: 2
   width: 0.1
 
@@ -79,11 +82,14 @@ Key fields:
 
 - `tiling.tile_size` / `tiling.stride` — the core tiling geometry; `stride < tile_size` produces
   overlap that `SeamSmoothing` then blends.
-- `data.class_path` — any `anomalib.data.*` datamodule (see `anomalib-training` /
-  `anomalib-adding-a-datamodule`), including a custom `Folder` datamodule.
-- `TrainModels.model.class_path` — the model class trained per tile; any registered
-  `anomalib.models.*` model works (see `anomalib-adding-a-model`).
-- `SeamSmoothing.apply` — set `False` to skip blending if tiles don't overlap or seams aren't visible.
+- `data.class_path` — any **image** `anomalib.data.*` datamodule that yields `ImageBatch` (see
+  `anomalib-training` / `anomalib-adding-a-datamodule`). Video and depth datamodules are **not
+  supported** — the tiled collater uses `ImageBatch.collate` internally.
+- `TrainModels.model.class_path` — the model class trained per tile; any registered **image**
+  `anomalib.models.*` model works (see `anomalib-adding-a-model`). Video models are not compatible
+  with the image tiler.
+- `SeamSmoothing.apply` — set `True` only when tiles overlap (`stride < tile_size`); smoothing
+  non-overlapping seams has no effect and wastes compute.
 
 For a worked reference invocation with a full config, see
 `tests/integration/pipelines/test_tiled_ensemble.py`.
@@ -98,6 +104,8 @@ For a worked reference invocation with a full config, see
   deterministic single-process runs while debugging a config.
 - Eval (`eval.py`) needs `--root` pointing at the exact output directory produced by the matching
   training run; it does not re-derive this automatically.
+- `data.init_args` **must** include `val_split_mode` and `test_split_mode` — the pipeline reads these
+  directly from the config before datamodule defaults are applied, and will raise `KeyError` if missing.
 
 ## Reviewer / self-check
 

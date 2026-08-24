@@ -49,7 +49,7 @@ benchmark:
     class_path:
       grid: [Padim, Patchcore]
   data:
-    class_path: MVTec
+    class_path: MVTecAD
     init_args:
       category:
         grid:
@@ -83,8 +83,9 @@ you specifically need that script's behavior.
 
 - A `grid` sweep multiplies job count fast — check the Cartesian product size before launching a large
   sweep (e.g. 5 models × 10 categories = 50 full train+test runs).
-- `accelerator: [cuda, cpu]` doesn't mean "try both" per job — it controls which runner/device pool is
-  used; check `Benchmark._setup_runners` behavior if results seem to run on the wrong device.
+- `accelerator: [cuda, cpu]` creates one runner per entry, so **every model/category combination runs
+  once per accelerator** (doubling the total job count). This is not a device-pool selector — if you
+  only want to benchmark on GPU, use `accelerator: [cuda]`.
 - Never hand-write or infer numbers into README/docs benchmark tables — always source them from a
   `results.csv` produced by an actual run of this pipeline.
 

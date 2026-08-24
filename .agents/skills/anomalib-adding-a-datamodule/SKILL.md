@@ -50,7 +50,7 @@ anomalib splits data support into two layers per source, both under `src/anomali
 - `src/anomalib/data/datasets/image/folder.py` — `FolderDataset(AnomalibDataset)`, built via the
   `make_folder_dataset(...)` helper: collects filenames/labels from directories, builds the `samples`
   DataFrame, and attaches mask paths to abnormal samples when `mask_dir` is given.
-- `src/anomalib/data/datamodules/image/folder.py` — `Folder(AnomalibDataModule)` constructor (exact args):
+- `src/anomalib/data/datamodules/image/folder.py` — `Folder(AnomalibDataModule)` constructor (key args):
 
   ```python
   Folder(
@@ -58,18 +58,28 @@ anomalib splits data support into two layers per source, both under `src/anomali
       normal_dir: str | Path | Sequence[str | Path],           # required
       root: str | Path | None = None,
       abnormal_dir: str | Path | Sequence[str | Path] | None = None,
-      normal_test_dir: str | Path | Sequence[str | Path] | None = None,
+      normal_test_dir: str | Path | Sequence[str | Path] | None = None,  # separate normal images for test set
       mask_dir: str | Path | Sequence[str | Path] | None = None,   # for segmentation masks
       normal_split_ratio: float = 0.2,
       extensions: tuple[str] | None = None,
       train_batch_size: int = 32,
       eval_batch_size: int = 32,
       num_workers: int = 8,
-      test_split_mode=TestSplitMode.FROM_DIR,
-      val_split_mode=ValSplitMode.FROM_TEST,
+      train_augmentations: Transform | None = None,
+      val_augmentations: Transform | None = None,
+      test_augmentations: Transform | None = None,
+      augmentations: Transform | None = None,
+      test_split_mode: TestSplitMode = TestSplitMode.FROM_DIR,
+      test_split_ratio: float = 0.2,
+      val_split_mode: ValSplitMode = ValSplitMode.FROM_TEST,
+      val_split_ratio: float = 0.5,
       seed: int | None = None,
   )
   ```
+
+  Note: `test_split_ratio` (inherited from `AnomalibDataModule`) controls the fallback split when
+  `test_split_mode` is not `FROM_DIR`. `normal_split_ratio` is a Folder-specific field for splitting
+  normal images into train/test subsets.
 
 Use `Folder` directly (no new code needed) whenever the data is already laid out as
 `root/normal_dir/*`, `root/abnormal_dir/*`, optionally `root/mask_dir/*`. Only write a brand-new
@@ -89,14 +99,37 @@ class MyDataset(AnomalibDataset):
 
 ```python
 # src/anomalib/data/datamodules/image/my_dataset.py
+from pathlib import Path
+
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.my_dataset import MyDataset
+from anomalib.data.utils import Split
 
 class MyDataModule(AnomalibDataModule):
-    def __init__(self, root="./datasets/MyDataset", train_batch_size=32, eval_batch_size=32,
-                 num_workers=8, **kwargs):
-        super().__init__(train_batch_size=train_batch_size, eval_batch_size=eval_batch_size,
-                          num_workers=num_workers, **kwargs)
+    def __init__(
+        self,
+        root: str | Path = "./datasets/MyDataset",
+        train_batch_size: int = 32,
+        eval_batch_size: int = 32,
+        num_workers: int = 8,
+        train_augmentations=None,
+        val_augmentations=None,
+        test_augmentations=None,
+        augmentations=None,
+        test_split_mode=None,
+        test_split_ratio: float = 0.2,
+        val_split_mode=None,
+        val_split_ratio: float = 0.5,
+        seed: int | None = None,
+    ) -> None:
+        super().__init__(
+            train_batch_size=train_batch_size, eval_batch_size=eval_batch_size,
+            num_workers=num_workers, train_augmentations=train_augmentations,
+            val_augmentations=val_augmentations, test_augmentations=test_augmentations,
+            augmentations=augmentations, test_split_mode=test_split_mode,
+            test_split_ratio=test_split_ratio, val_split_mode=val_split_mode,
+            val_split_ratio=val_split_ratio, seed=seed,
+        )
         self.root = Path(root)
 
     def _setup(self, _stage=None) -> None:
@@ -109,8 +142,11 @@ class MyDataModule(AnomalibDataModule):
 
 ## Registration — how the datamodule becomes discoverable
 
-Add the import and `__all__` entry in `src/anomalib/data/__init__.py`, alongside the existing
-`datamodules.image` import block:
+1. Export from the image (or video/depth) package `__init__.py` —
+   `src/anomalib/data/datamodules/image/__init__.py`: add the import and `__all__` entry there first.
+
+2. Then add the import and `__all__` entry in `src/anomalib/data/__init__.py`, alongside the existing
+   `datamodules.image` import block:
 
 ```python
 from .datamodules.image import (
@@ -135,14 +171,16 @@ Real datasets aren't checked into the repo — tests generate synthetic data on 
 `tests/helpers/data.py`. If your new datamodule corresponds to a new `DataFormat` value (i.e. it isn't
 just `Folder` under another name), you must add a matching generator method:
 
-1. Add the format to `ImageDataFormat` (or `VideoDataFormat`/`DepthDataFormat`) in
-   `src/anomalib/data/datamodules/image/__init__.py`, e.g. `MY_DATASET = "my_dataset"`.
+1. Add the format to `ImageDataFormat` (or `VideoDataFormat`) in
+   `src/anomalib/data/datamodules/image/__init__.py` (or `.../video/__init__.py`),
+   e.g. `MY_DATASET = "my_dataset"`.
 2. Implement `_generate_dummy_my_dataset_dataset(self) -> None` on `DummyImageDatasetGenerator`
-   (`tests/helpers/data.py`) — the method name must be `_generate_dummy_{data_format.value}_dataset`;
+   (`tests/helpers/data.py`) for image datasets, or `DummyVideoDatasetGenerator` for video datasets —
+   the method name must be `_generate_dummy_{data_format.value}_dataset`;
    `DummyDatasetGenerator.generate_dataset()` dispatches to it via `getattr`. Build the on-disk layout
    your datamodule expects using the low-level `DummyImageGenerator`
-   (`tests/helpers/data.py::DummyImageGenerator`), which already handles normal/abnormal image + mask
-   generation:
+   (`tests/helpers/data.py::DummyImageGenerator`) for image datasets, or `DummyVideoGenerator` for
+   video datasets:
 
    ```python
    def _generate_dummy_my_dataset_dataset(self) -> None:
@@ -169,17 +207,16 @@ just `Folder` under another name), you must add a matching generator method:
    two canonical layouts (category-per-split-per-class vs. flat normal/abnormal/mask dirs) — mirror
    whichever matches your real dataset's directory structure.
 
-3. The session-scoped `dataset_path` fixture in `tests/conftest.py` automatically calls
-   `DummyImageDatasetGenerator(data_format=<your_format>).generate_dataset()` for every value in
-   `ImageDataFormat`/`VideoDataFormat` (skipping `folder`/`tabular`, which tests construct manually with
-   custom args) — you do not need to wire your generator into `conftest.py` yourself, only implement the
-   `_generate_dummy_*` method.
+3. The session-scoped `dataset_path` fixture in `tests/conftest.py` dispatches image formats to
+   `DummyImageDatasetGenerator` and video formats to `DummyVideoDatasetGenerator` (skipping `folder`/
+   `tabular`, which tests construct manually) — you only need to implement the `_generate_dummy_*`
+   method on the appropriate generator class.
 4. In your datamodule test, consume the generated data via the shared fixture:
 
    ```python
    @pytest.fixture()
    def datamodule(dataset_path: Path) -> MyDataModule:
-       dm = MyDataModule(root=dataset_path / "my_dataset", category="dummy")
+       dm = MyDataModule(root=dataset_path / "my_dataset")
        dm.prepare_data()
        dm.setup()
        return dm
@@ -198,7 +235,8 @@ construct your datamodule directly against its output directory.
 - Prefer `Folder` over a new dataset class whenever the on-disk layout is a plain normal/abnormal/mask
   directory split — writing a new class is only needed for non-standard parsing.
 - Tests never touch real downloaded datasets. If you add a new `DataFormat`, you must also add a
-  `_generate_dummy_<format>_dataset` method on `DummyImageDatasetGenerator` — otherwise the shared
+  `_generate_dummy_<format>_dataset` method on the appropriate generator (`DummyImageDatasetGenerator`
+  for image formats, `DummyVideoDatasetGenerator` for video formats) — otherwise the shared
   `dataset_path` fixture (`tests/conftest.py`) will raise `NotImplementedError` for that format.
 
 ## Reviewer / self-check before opening a PR

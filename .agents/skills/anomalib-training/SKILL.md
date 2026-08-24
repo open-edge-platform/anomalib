@@ -22,7 +22,7 @@ from anomalib.engine import Engine
 
 datamodule = MVTecAD(root="./datasets/MVTecAD", category="bottle", train_batch_size=32)
 model = Patchcore()
-engine = Engine(max_epochs=3)          # any Lightning Trainer kwarg can go here
+engine = Engine()                      # any Lightning Trainer kwarg can go here
 engine.fit(model=model, datamodule=datamodule)
 results = engine.test(model=model, datamodule=datamodule)
 ```
@@ -56,12 +56,14 @@ datamodule = Folder(
     num_workers=8,
 )
 model = Padim()
-engine = Engine(max_epochs=5)
+engine = Engine()
 engine.fit(model=model, datamodule=datamodule)
 ```
 
 If you only have normal training images and unlabeled/normal-only test images, omit `abnormal_dir`
-and `mask_dir` — `Folder` will still produce a valid train/test split via `normal_split_ratio`.
+and `mask_dir` — `Folder` will still produce a valid train/test split via `test_split_ratio` (fraction
+of normal training images held out for testing). Use `normal_test_dir` if you have a separate directory
+of normal images specifically for the test set.
 
 ## CLI
 
@@ -100,9 +102,11 @@ engine = Engine(strategy=SingleXPUStrategy(), accelerator=XPUAccelerator())
 
 ## Gotchas
 
-- Not every model trains via gradient descent — training-free models (e.g. Padim) still go through
+- Not every model trains via gradient descent — training-free models (e.g. Padim, Patchcore) still go through
   `engine.fit(...)`; `Engine`/`Trainer` handles the single "epoch" needed to build their memory bank.
-  You don't need special-case code for this.
+  You don't need special-case code for this. Note that these models override `max_epochs` via their
+  `trainer_arguments` property (e.g. `max_epochs=1`), so any `max_epochs` you pass to `Engine` will be
+  overwritten for such models.
 - `Folder`'s `mask_dir` is what switches evaluation from image-level (classification) to pixel-level
   (segmentation) metrics — only pass it if you actually have per-pixel ground-truth masks.
 - Results (checkpoints, logs, images) are written under `Engine`'s `default_root_dir` (`"results"` by
