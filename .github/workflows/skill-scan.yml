@@ -34,7 +34,7 @@ jobs:
     outputs:
       report_path: ${{ steps.skill-scan.outputs.report_path }}
     steps:
-      - name: Harden the runner (audit all outbound calls)
+      - name: Harden runner
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
@@ -53,7 +53,7 @@ jobs:
           severity-level: ${{ github.event_name == 'pull_request' && 'HIGH' || github.event.inputs.severity || 'LOW' }}
           fail-on-findings: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
 
-      - name: Upload spector report
+      - name: Upload SkillSpector report
         if: always() && steps.skill-scan.outputs.report_path != ''
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -71,6 +71,11 @@ jobs:
     outputs:
       report_path: ${{ steps.skill-validator.outputs.report_path }}
     steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
