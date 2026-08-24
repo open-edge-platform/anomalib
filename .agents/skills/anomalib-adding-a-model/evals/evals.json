@@ -1,0 +1,67 @@
+{
+  "SPDX-FileCopyrightText": "(C) 2026 Intel Corporation",
+  "SPDX-License-Identifier": "Apache-2.0",
+  "skill_name": "anomalib-adding-a-model",
+  "evals": [
+    {
+      "id": 1,
+      "name": "model-skeleton-structure",
+      "prompt": "I want to add a new anomaly detection model called 'SimpleAE' (a simple autoencoder) to anomalib. What files do I need to create and where do they go?",
+      "expected_output": "Creates files under src/anomalib/models/image/simple_ae/: torch_model.py (nn.Module), lightning_model.py (AnomalibModule subclass), and __init__.py exporting the Lightning class.",
+      "expectations": [
+        "Places model under src/anomalib/models/image/simple_ae/",
+        "Identifies torch_model.py for the nn.Module and lightning_model.py for the AnomalibModule subclass",
+        "Mentions __init__.py that exports only the Lightning class",
+        "References Padim as the minimal reference implementation to follow"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "required-members",
+      "prompt": "What properties and methods must my AnomalibModule subclass implement? Show me the minimal skeleton.",
+      "expected_output": "Shows trainer_arguments property, learning_type property, training_step, validation_step, and configure_optimizers as required members on the AnomalibModule subclass.",
+      "expectations": [
+        "Includes trainer_arguments property returning a dict",
+        "Includes learning_type property returning a LearningType enum value",
+        "Includes training_step accepting a Batch",
+        "Includes validation_step accepting a Batch",
+        "Includes configure_optimizers"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "registration-discovery",
+      "prompt": "I've written my model class. How do I register it so that get_model('SimpleAE') and the CLI can find it?",
+      "expected_output": "Export from src/anomalib/models/image/__init__.py, add to __all__. No separate registry — get_model() discovers via AnomalibModule.__subclasses__() matching case-insensitively.",
+      "expectations": [
+        "Adds export in src/anomalib/models/image/__init__.py",
+        "Updates __all__ in that file",
+        "Explains get_model() uses __subclasses__() with case-insensitive name matching",
+        "States there is no separate name-string registry to update"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "test-requirements",
+      "prompt": "What tests do I need to add for my new anomalib model?",
+      "expected_output": "Add tests/unit/models/image/test_simple_ae.py testing get_model instantiation, trainer_arguments dict, learning_type enum, and synthetic batch through training_step/validation_step.",
+      "expectations": [
+        "Places test under tests/unit/models/image/",
+        "Tests get_model('SimpleAE') returns the correct instance",
+        "Tests trainer_arguments and learning_type properties",
+        "Tests a synthetic batch through training_step/validation_step"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "negative-no-lightning-in-torch-model",
+      "prompt": "Can I put my Lightning callbacks and checkpoint logic directly in torch_model.py for convenience?",
+      "expected_output": "No — torch_model.py must be pure PyTorch (nn.Module) without Lightning dependencies. Training side effects belong in callbacks under src/anomalib/callbacks/.",
+      "expectations": [
+        "States torch_model.py must stay importable without Lightning",
+        "Explains the nn.Module forward contract (train-mode: embeddings, eval-mode: InferenceBatch)",
+        "Directs training side effects to src/anomalib/callbacks/"
+      ]
+    }
+  ]
+}
