@@ -88,8 +88,8 @@ Key fields:
 - `TrainModels.model.class_path` — the model class trained per tile; any registered **image**
   `anomalib.models.*` model works (see `anomalib-adding-a-model`). Video models are not compatible
   with the image tiler.
-- `SeamSmoothing.apply` — set `True` only when tiles overlap (`stride < tile_size`); smoothing
-  non-overlapping seams has no effect and wastes compute.
+- `SeamSmoothing.apply` — set `True` when you want Gaussian smoothing around tile boundaries; it affects
+  both overlapping and non-overlapping tiles (`stride <= tile_size`), so enable it only when desired.
 
 For a worked reference invocation with a full config, see
 `tests/integration/pipelines/test_tiled_ensemble.py`.

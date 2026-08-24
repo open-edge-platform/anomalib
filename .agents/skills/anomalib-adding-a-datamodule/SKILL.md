@@ -22,9 +22,8 @@ anomalib splits data support into two layers per source, both under `src/anomali
 
 - `AnomalibDataset` — `src/anomalib/data/datasets/base/image.py`
   - `__init__(self, augmentations=None)` — call via `super().__init__(...)`.
-  - You must build a `pandas.DataFrame` and assign it to `self.samples`. Required columns include
-    `image_path` and `split`; segmentation datasets also need `mask_path`. Set
-    `samples.attrs["task"]` to `"classification"` or `"segmentation"`.
+- You must build a `pandas.DataFrame` and assign it to `self.samples`. Runtime-required columns include
+  `image_path`, `split`, `label_index`, and `mask_path` (empty for classification); segmentation datasets need valid masks. Set
   - `collate_fn` defaults to `ImageBatch.collate`; override only for non-image batch types.
 - `AnomalibDataModule` — `src/anomalib/data/datamodules/base/image.py`
   - Only abstract method you must implement: `_setup(self, _stage=None) -> None`, where you set

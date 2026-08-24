@@ -71,7 +71,7 @@ fields are held constant across all jobs. `data.class_path` / `model.class_path`
 runs/benchmark/<timestamp>/results.csv
 ```
 
-(`<timestamp>` is generated at run start, e.g. `2026-08-24-10_30_00`.) Each row includes the
+(`<timestamp>` is generated when results are saved, e.g. `2026-08-24-10_30_00`.) Each row includes the
 model/dataset/category combination and the measured metrics — this is the file to consume when
 building or refreshing README/docs benchmark tables.
 

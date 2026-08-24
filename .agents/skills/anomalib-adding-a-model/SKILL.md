@@ -70,7 +70,7 @@ class MyModel(AnomalibModule):
         predictions = self.model(batch.image)
         return batch.update(**predictions._asdict())
 
-    def configure_optimizers(self):
+    def configure_optimizers(self) -> None:
         # Return None for training-free / statistical models (Padim does this).
         return None
 ```
