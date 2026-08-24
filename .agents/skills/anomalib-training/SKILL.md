@@ -74,8 +74,8 @@ anomalib train --model Patchcore --data anomalib.data.MVTecAD
 # Override a datamodule field
 anomalib train --model Patchcore --data anomalib.data.MVTecAD --data.category transistor
 
-# Override a trainer field
-anomalib train --model anomalib.models.Padim --data anomalib.data.MVTecAD --trainer.max_epochs 3
+# Override a trainer field (use a gradient-trained model like Stfpm where max_epochs is meaningful)
+anomalib train --model anomalib.models.Stfpm --data anomalib.data.MVTecAD --trainer.max_epochs 3
 
 # Custom Folder dataset from the CLI
 anomalib train --model Padim --data anomalib.data.Folder \

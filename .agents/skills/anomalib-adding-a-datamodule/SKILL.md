@@ -22,8 +22,10 @@ anomalib splits data support into two layers per source, both under `src/anomali
 
 - `AnomalibDataset` — `src/anomalib/data/datasets/base/image.py`
   - `__init__(self, augmentations=None)` — call via `super().__init__(...)`.
-- You must build a `pandas.DataFrame` and assign it to `self.samples`. Runtime-required columns include
-  `image_path`, `split`, `label_index`, and `mask_path` (empty for classification); segmentation datasets need valid masks. Set
+  - You must build a `pandas.DataFrame` and assign it to `self.samples`. Required columns:
+    `image_path`, `split`, `label_index` (0 for normal, 1 for abnormal); segmentation datasets also
+    need `mask_path` (set to empty string `""` for normal samples). After building the DataFrame, set
+    `samples.attrs["task"]` to `"classification"` or `"segmentation"`.
   - `collate_fn` defaults to `ImageBatch.collate`; override only for non-image batch types.
 - `AnomalibDataModule` — `src/anomalib/data/datamodules/base/image.py`
   - Only abstract method you must implement: `_setup(self, _stage=None) -> None`, where you set
@@ -76,9 +78,11 @@ anomalib splits data support into two layers per source, both under `src/anomali
   )
   ```
 
-  Note: `test_split_ratio` (inherited from `AnomalibDataModule`) controls the fallback split when
-  `test_split_mode` is not `FROM_DIR`. `normal_split_ratio` is a Folder-specific field for splitting
-  normal images into train/test subsets.
+  Note: `test_split_ratio` (inherited from `AnomalibDataModule`) controls the fraction of training
+  images held out for testing when `test_split_mode` triggers a synthetic split. `normal_split_ratio`
+  is stored by `Folder` but used only by `FolderDataset` internally to split normal images between
+  train and test sets when `normal_test_dir` is not provided and test data must come from the normal
+  pool.
 
 Use `Folder` directly (no new code needed) whenever the data is already laid out as
 `root/normal_dir/*`, `root/abnormal_dir/*`, optionally `root/mask_dir/*`. Only write a brand-new
@@ -93,7 +97,10 @@ from anomalib.data.datasets.base import AnomalibDataset
 class MyDataset(AnomalibDataset):
     def __init__(self, root=None, augmentations=None, split=None):
         super().__init__(augmentations=augmentations)
-        self.samples = make_my_dataset_samples(root=root, split=split)  # build the DataFrame yourself
+        samples = make_my_dataset_samples(root=root, split=split)  # build the DataFrame yourself
+        # DataFrame must have columns: image_path, split, label_index (and mask_path for segmentation)
+        samples.attrs["task"] = "segmentation"  # or "classification"
+        self.samples = samples
 ```
 
 ```python

@@ -85,11 +85,13 @@ Key fields:
 - `data.class_path` — any **image** `anomalib.data.*` datamodule that yields `ImageBatch` (see
   `anomalib-training` / `anomalib-adding-a-datamodule`). Video and depth datamodules are **not
   supported** — the tiled collater uses `ImageBatch.collate` internally.
-- `TrainModels.model.class_path` — the model class trained per tile; any registered **image**
-  `anomalib.models.*` model works (see `anomalib-adding-a-model`). Video models are not compatible
-  with the image tiler.
-- `SeamSmoothing.apply` — set `True` when you want Gaussian smoothing around tile boundaries; it affects
-  both overlapping and non-overlapping tiles (`stride <= tile_size`), so enable it only when desired.
+- `TrainModels.model.class_path` — the model class trained per tile; must be a standard **image**
+  model that only requires `batch.image` as input. Models requiring additional inputs (e.g. CFM which
+  needs `point_cloud`/`depth_map`) are not compatible with the tiled collater. Video models are also
+  not compatible.
+- `SeamSmoothing.apply` — when `True`, applies Gaussian blending at tile boundaries. This is most
+  useful when tiles overlap (`stride < tile_size`), but can also smooth hard boundaries between
+  non-overlapping tiles. Set `False` to skip if seam artifacts are not visible.
 
 For a worked reference invocation with a full config, see
 `tests/integration/pipelines/test_tiled_ensemble.py`.

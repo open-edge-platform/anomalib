@@ -41,10 +41,11 @@ from anomalib.data import Batch
 from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule
 from anomalib.post_processing import PostProcessor
+from anomalib.pre_processing import PreProcessor
 from anomalib.visualization import Visualizer
 
 class MyModel(AnomalibModule):
-    def __init__(self, some_param: int = 1, pre_processor: bool = True,
+    def __init__(self, some_param: int = 1, pre_processor: PreProcessor | bool = True,
                  post_processor: PostProcessor | bool = True,
                  evaluator: Evaluator | bool = True,
                  visualizer: Visualizer | bool = True) -> None:
@@ -140,4 +141,4 @@ See `tests/unit/models/test_model_utils.py` for the `get_model()` instantiation 
 - [ ] `get_model("MyModel")` and `anomalib.models.MyModel` both resolve.
 - [ ] Unit tests added under `tests/unit/models/`.
 - [ ] `README.md` added in the model folder.
-- [ ] `prek run --all-files` and `pytest tests/unit/models/ -k my_model` pass.
+- [ ] `pre-commit run --all-files` and `pytest tests/unit/models/ -k my_model` pass.
