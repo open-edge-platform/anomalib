@@ -75,10 +75,12 @@ def fxt_media(fxt_project):
 @pytest.fixture
 def fxt_model(fxt_project):
     """Fixture for a test model."""
+    id = ShortUUID.generate()
     return Model(
-        id=ShortUUID.generate(),
+        id=id,
         project_id=fxt_project.id,
-        name="padim",
+        name=f"padim ({id})",
+        architecture="padim",
         format="openvino",
         is_ready=True,
         export_path="/path/to/model",

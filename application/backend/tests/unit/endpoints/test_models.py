@@ -20,6 +20,7 @@ def fxt_model(fxt_project):
     return Model(
         id=ShortUUID.generate(),
         name="test_model",
+        architecture="padim",
         project_id=fxt_project.id,
         export_path="/path/to/model",
         train_job_id=ShortUUID.generate(),

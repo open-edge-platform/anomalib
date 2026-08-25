@@ -180,10 +180,10 @@ class ModelService:
 
         # Locate checkpoint
         model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model_id)
-        name = f"{model.project_id}-{model.name}"
+        name = f"{model.project_id}-{model.architecture}"
         ckpt_path = (
             Path(model_binary_repo.model_folder_path)
-            / model.name.title()
+            / model.architecture.title()
             / name
             / "latest"
             / "weights"
@@ -216,7 +216,7 @@ class ModelService:
 
                 return await asyncio.to_thread(
                     self._run_export,
-                    model_name=model.name,
+                    architecture=model.architecture,
                     ckpt_path=ckpt_path,
                     export_parameters=export_parameters,
                     export_zip_path=Path(export_zip_path),
@@ -226,7 +226,7 @@ class ModelService:
         # No datamodule needed for other compression types
         return await asyncio.to_thread(
             self._run_export,
-            model_name=model.name,
+            architecture=model.architecture,
             ckpt_path=ckpt_path,
             export_parameters=export_parameters,
             export_zip_path=Path(export_zip_path),
@@ -235,7 +235,7 @@ class ModelService:
 
     @staticmethod
     def _run_export(
-        model_name: str,
+        architecture: str,
         ckpt_path: Path,
         export_parameters: ExportParameters,
         export_zip_path: Path,
@@ -244,7 +244,7 @@ class ModelService:
         """Run the export process in a separate thread."""
         # Setup engine
         engine = Engine()
-        model_module = get_model(model_name)
+        model_module = get_model(architecture)
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)

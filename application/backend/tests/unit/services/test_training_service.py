@@ -291,7 +291,7 @@ class TestTrainingService:
 
         # Verify all components were called correctly
         fxt_mock_anomalib_components["folder_class"].assert_called_once()
-        fxt_mock_anomalib_components["get_model"].assert_called_once_with(model=fxt_model.name, evaluator=ANY)
+        fxt_mock_anomalib_components["get_model"].assert_called_once_with(model=fxt_model.architecture, evaluator=ANY)
 
         # Verify Engine was called with expected parameters
         fxt_mock_anomalib_components["engine_class"].assert_called_once()
