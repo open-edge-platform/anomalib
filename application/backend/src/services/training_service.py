@@ -64,7 +64,7 @@ class TrainingService:
             return await cls._run_training_job(job, job_service)
 
     @classmethod
-    async def _run_training_job(cls, job: Job, job_service: JobService) -> Model | None:  # noqa: PLR0915
+    async def _run_training_job(cls, job: Job, job_service: JobService) -> Model | None:  # noqa: PLR0915, PLR0914
         # Mark job as running
         await job_service.update_job_status(job_id=job.id, status=JobStatus.RUNNING, message="Training started")
         project_id = job.project_id
@@ -77,7 +77,9 @@ class TrainingService:
             )
             return None
         model_id = ShortUUID.generate()
-        model_name = f"{payload.model_name} ({str(model_id)})"
+        model_name_suffix = f" ({str(model_id)})"
+        truncated_model_name = payload.model_name[:(255 - len(model_name_suffix))]
+        model_name = f"{truncated_model_name}{model_name_suffix}"
         device_type = payload.device.type if payload.device else None
         device_index = payload.device.index if payload.device else None
         snapshot_id = ShortUUID(payload.dataset_snapshot_id) if payload.dataset_snapshot_id else None

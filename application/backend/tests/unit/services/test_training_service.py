@@ -173,6 +173,12 @@ class TestTrainingService:
             )
             fxt_mock_model_service.create_model.assert_called_once()
 
+            # Verify the persisted model carries the architecture identifier from the
+            # payload and a name that embeds the generated model ID in the expected format.
+            created_model = mock_to_thread.call_args.kwargs["model"]
+            assert created_model.architecture == fxt_job.payload["model_name"]
+            assert created_model.name == f"{fxt_job.payload['model_name']} ({created_model.id})"
+
     @pytest.mark.parametrize(
         "exception,expected_message",
         [

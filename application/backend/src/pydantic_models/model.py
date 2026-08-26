@@ -23,7 +23,7 @@ class Model(BaseIDNameModel):
     """
 
     architecture: str = Field(
-        description="Model architecture identifier used to resolve the anomalib model (e.g. 'padim')"
+        max_length=64, description="Model architecture identifier used to resolve the anomalib model (e.g. 'padim')"
     )
     format: ExportType = ExportType.OPENVINO
     project_id: ShortUUID
