@@ -11,7 +11,6 @@ import pytest
 import torch
 
 from anomalib.metrics.pimo.binary_classification_curve import (
-    _binary_classification_curve,
     binary_classification_curve,
     per_image_fpr,
     per_image_tpr,
@@ -95,20 +94,6 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
         axis=0,
     ).to(int)
 
-    if metafunc.function is test__binclf_one_curve:
-        metafunc.parametrize(
-            argnames=("pred", "gt", "thresholds", "expected"),
-            argvalues=[
-                (pred, gt_anom, thresholds[:3], expected_anom[:3]),
-                (pred, gt_anom, thresholds, expected_anom),
-                (pred, gt_norm, thresholds, expected_norm),
-                (pred, gt_norm, 10 * thresholds, expected_norm_thresholds_too_high),
-                (pred, gt_anom, 10 * thresholds, expected_anom_thresholds_too_high),
-                (pred, gt_norm, 0.001 * thresholds, expected_norm_thresholds_too_low),
-                (pred, gt_anom, 0.001 * thresholds, expected_anom_thresholds_too_low),
-            ],
-        )
-
     preds = torch.stack([pred, pred], axis=0)
     gts = torch.stack([gt_anom, gt_norm], axis=0)
     binclf_curves = torch.stack([expected_anom, expected_norm], axis=0)
@@ -120,15 +105,6 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
         [expected_anom_thresholds_too_low, expected_norm_thresholds_too_low],
         axis=0,
     )
-
-    if metafunc.function is test__binclf_multiple_curves:
-        metafunc.parametrize(
-            argnames=("preds", "gts", "thresholds", "expecteds"),
-            argvalues=[
-                (preds, gts, thresholds[:3], binclf_curves[:, :3]),
-                (preds, gts, thresholds, binclf_curves),
-            ],
-        )
 
     if metafunc.function is test_binclf_multiple_curves:
         metafunc.parametrize(
@@ -296,35 +272,7 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
 
 
 # ==================================================================================================
-# LOW-LEVEL FUNCTIONS (PYTHON)
-
-
-def test__binclf_one_curve(
-    pred: torch.Tensor,
-    gt: torch.Tensor,
-    thresholds: torch.Tensor,
-    expected: torch.Tensor,
-) -> None:
-    """Test if `_binclf_one_curve()` returns the expected values."""
-    computed = _binary_classification_curve(pred, gt, thresholds)
-    assert computed.shape == (thresholds.numel(), 2, 2)
-    assert (computed == expected.numpy()).all()
-
-
-def test__binclf_multiple_curves(
-    preds: torch.Tensor,
-    gts: torch.Tensor,
-    thresholds: torch.Tensor,
-    expecteds: torch.Tensor,
-) -> None:
-    """Test if `_binclf_multiple_curves()` returns the expected values."""
-    computed = binary_classification_curve(preds, gts, thresholds)
-    assert computed.shape == (preds.shape[0], thresholds.numel(), 2, 2)
-    assert (computed == expecteds).all()
-
-
-# ==================================================================================================
-# API FUNCTIONS (NUMPY)
+# API FUNCTIONS
 
 
 def test_binclf_multiple_curves(
