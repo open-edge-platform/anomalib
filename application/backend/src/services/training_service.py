@@ -78,7 +78,7 @@ class TrainingService:
             return None
         model_id = ShortUUID.generate()
         model_name_suffix = f" ({str(model_id)})"
-        truncated_model_name = payload.model_name[:(255 - len(model_name_suffix))]
+        truncated_model_name = payload.model_name[: (255 - len(model_name_suffix))]
         model_name = f"{truncated_model_name}{model_name_suffix}"
         device_type = payload.device.type if payload.device else None
         device_index = payload.device.index if payload.device else None
