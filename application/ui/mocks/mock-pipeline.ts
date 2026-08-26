@@ -13,7 +13,7 @@ export const getMockedPipeline = (customPipeline?: Partial<SchemaPipeline>): Sch
         },
         model: {
             id: '1',
-            name: 'Object_Detection_TestModel',
+            name: 'Object_Detection_TestModel (1)',
             architecture: 'padim',
             format: 'onnx' as const,
             project_id: '123',

@@ -105,7 +105,7 @@ class TrainingService:
                 dataset_snapshot_id=snapshot_id,
             )
             synchronization_parameters = ProgressSyncParams()
-            logger.info(f"Training model `{payload.model_name}` for job `{job.id}` using snapshot `{snapshot_id}`")
+            logger.info(f"Training model `{model_name}` for job `{job.id}` using snapshot `{snapshot_id}`")
 
             synchronization_task = asyncio.create_task(
                 cls._sync_progress_with_db(
@@ -163,7 +163,7 @@ class TrainingService:
             # update must happen after synchronization task is cancelled to avoid overwriting
             job_ = await job_service.get_job_by_id(job_id=job.id)
             if job_ is not None and job_.is_running:
-                logger.success(f"Successfully trained model: `{payload.model_name}`")
+                logger.success(f"Successfully trained model: `{model_name}`")
                 await job_service.update_job_status(
                     job_id=job.id,
                     status=JobStatus.COMPLETED,

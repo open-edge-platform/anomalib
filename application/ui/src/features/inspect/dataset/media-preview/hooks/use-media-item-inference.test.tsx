@@ -20,7 +20,7 @@ vi.mock('./util', () => ({
 
 const mockedModel = {
     id: 'model-123',
-    name: 'Test Model',
+    name: 'Test Model (model-123)',
     architecture: 'padim',
     format: 'onnx' as const,
     project_id: 'project-123',
