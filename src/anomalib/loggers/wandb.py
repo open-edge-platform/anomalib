@@ -50,7 +50,6 @@ else:
 
 
 if TYPE_CHECKING:
-    from wandb.sdk.lib import RunDisabled
     from wandb.sdk.wandb_run import Run
 
 
@@ -121,7 +120,7 @@ class AnomalibWandbLogger(ImageLoggerBase, WandbLogger):
         anonymous: bool | None = None,
         project: str | None = None,
         log_model: Literal["all"] | bool = False,
-        experiment: "Run | RunDisabled | None" = None,
+        experiment: "Run | None" = None,
         prefix: str = "",
         checkpoint_name: str | None = None,
         **kwargs,
