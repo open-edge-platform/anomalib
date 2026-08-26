@@ -1,0 +1,65 @@
+{
+  "SPDX-FileCopyrightText": "(C) 2026 Intel Corporation",
+  "SPDX-License-Identifier": "Apache-2.0",
+  "skill_name": "anomalib-adding-a-datamodule",
+  "evals": [
+    {
+      "id": 1,
+      "name": "datamodule-skeleton",
+      "prompt": "I have a custom industrial defect dataset with a non-standard directory layout. What classes do I need to implement to add it as a new anomalib datamodule?",
+      "expected_output": "Implement an AnomalibDataset subclass (under datasets/image/) that builds a samples DataFrame, and an AnomalibDataModule subclass (under datamodules/image/) that implements _setup() to create train_data and test_data.",
+      "expectations": [
+        "Creates AnomalibDataset subclass under src/anomalib/data/datasets/image/",
+        "Creates AnomalibDataModule subclass under src/anomalib/data/datamodules/image/",
+        "Dataset subclass builds self.samples as a pandas DataFrame with image_path and split columns",
+        "DataModule subclass implements _setup() setting self.train_data and self.test_data"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "use-folder-instead",
+      "prompt": "My data is organized as root/good/ for normal images and root/defective/ for abnormal images with masks in root/masks/. Do I need to write a new datamodule?",
+      "expected_output": "No — use the existing Folder datamodule directly with normal_dir='good', abnormal_dir='defective', mask_dir='masks'. Only write a new datamodule if the data needs custom parsing logic Folder can't express.",
+      "expectations": [
+        "Recommends using existing Folder datamodule instead of writing new code",
+        "Shows correct Folder constructor args (normal_dir, abnormal_dir, mask_dir)",
+        "States a new datamodule is only needed for non-standard parsing logic"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "registration",
+      "prompt": "How do I export my new datamodule so it works from the CLI with --data?",
+      "expected_output": "Add import and __all__ entry in src/anomalib/data/__init__.py alongside existing datamodules.image imports. Then usable as anomalib.data.MyDataModule from CLI.",
+      "expectations": [
+        "Adds import in src/anomalib/data/__init__.py",
+        "Updates __all__ in that file",
+        "Shows the CLI usage: --data anomalib.data.MyDataModule"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "test-dummy-generator",
+      "prompt": "I added a new DataFormat for my dataset. How do I add tests without checking in real data?",
+      "expected_output": "Add a _generate_dummy_<format>_dataset method to DummyImageDatasetGenerator in tests/helpers/data.py. The session fixture auto-discovers it. Then write a datamodule test consuming the generated path.",
+      "expectations": [
+        "Implements _generate_dummy_<format>_dataset on DummyImageDatasetGenerator in tests/helpers/data.py",
+        "Explains the method name must match _generate_dummy_{data_format.value}_dataset",
+        "States the session-scoped fixture auto-discovers it via getattr",
+        "Shows how to consume generated data in a test fixture"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "samples-dataframe-requirements",
+      "prompt": "What columns and attributes does the self.samples DataFrame need for a segmentation dataset?",
+      "expected_output": "Required columns: image_path and split. For segmentation: also mask_path. Must set samples.attrs['task'] = 'segmentation'. Assign (not mutate) self.samples to trigger validation.",
+      "expectations": [
+        "Lists image_path and split as required columns",
+        "Lists mask_path as required for segmentation datasets",
+        "Requires samples.attrs['task'] = 'segmentation'",
+        "Notes self.samples must be assigned (not mutated in place) to trigger the setter validation"
+      ]
+    }
+  ]
+}

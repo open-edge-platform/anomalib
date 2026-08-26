@@ -1,0 +1,101 @@
+name: Skill Scanner
+
+on:
+  pull_request:
+    paths:
+      - ".agents/skills/**"
+      - ".github/workflows/skill-scan.yml"
+  push:
+    branches: ["main"]
+    paths:
+      - ".agents/skills/**"
+  workflow_dispatch:
+    inputs:
+      severity:
+        description: "SkillSpector severity level (CRITICAL, HIGH, MEDIUM, LOW)"
+        required: false
+        default: "LOW"
+        type: choice
+        options:
+          - CRITICAL
+          - HIGH
+          - MEDIUM
+          - LOW
+
+permissions: {}
+
+jobs:
+  skillspector-scan:
+    name: SkillSpector security scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    outputs:
+      report_path: ${{ steps.skill-scan.outputs.report_path }}
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Run SkillSpector scan
+        id: skill-scan
+        uses: open-edge-platform/geti-ci/actions/skill-scan@0745e2b1612e4c25c3e83eb37bddeba8743a2439 # skill-scan/v0.1.1
+        with:
+          skills-path: .agents/skills/
+          severity-level: ${{ github.event_name == 'pull_request' && 'HIGH' || github.event.inputs.severity || 'LOW' }}
+          fail-on-findings: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
+
+      - name: Upload SkillSpector report
+        if: always() && steps.skill-scan.outputs.report_path != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: skill-spector-report
+          path: ${{ steps.skill-scan.outputs.report_path }}
+          retention-days: 30
+          overwrite: true
+
+  skill-validator-scan:
+    name: skill-validator scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    outputs:
+      report_path: ${{ steps.skill-validator.outputs.report_path }}
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Run skill-validator
+        id: skill-validator
+        uses: open-edge-platform/geti-ci/actions/skill-validator@3fd1ebf48e46ec6584850e20616763e73ddf94e9 # skill-validator/v0.2.2
+        with:
+          skills-path: .agents/skills/
+          strict: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
+          fail-on-findings: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
+          allow-dirs: "evals,example-prompts,benchmark"
+
+      - name: Upload validator report
+        if: always() && steps.skill-validator.outputs.report_path != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: skill-validator-report
+          path: ${{ steps.skill-validator.outputs.report_path }}
+          retention-days: 30
+          overwrite: true
