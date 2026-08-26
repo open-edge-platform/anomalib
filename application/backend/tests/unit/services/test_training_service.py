@@ -5,8 +5,10 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
+from pydantic import ValidationError
 
 from pydantic_models import JobStatus
+from pydantic_models.job import TrainJobPayload
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import TrainingService
 from utils.callbacks import ProgressSyncParams
@@ -367,3 +369,74 @@ class TestTrainingService:
         )
 
         assert result is None
+
+    @pytest.mark.parametrize(
+        "invalid_model_name",
+        [
+            "x" * 65,  # exceeds Model.architecture max_length (64)
+            "",  # empty
+        ],
+    )
+    def test_train_pending_job_invalid_model_name_fails_clearly(
+        self,
+        fxt_job,
+        fxt_mock_job_service_class,
+        fxt_mock_model_service_class,
+        fxt_mock_job_service,
+        fxt_mock_dataset_snapshot_service,
+        invalid_model_name,
+    ):
+        """An invalid model_name must fail the job with a clear payload-validation message.
+
+        The job should fail before any Model/training is constructed, so no snapshot or
+        training work is started.
+        """
+        fxt_job.payload = {"model_name": invalid_model_name}
+        fxt_mock_job_service.get_pending_train_job.return_value = fxt_job
+
+        with patch("services.training_service.asyncio.to_thread") as mock_to_thread:
+            result = asyncio.run(TrainingService.train_pending_job())
+
+        # Job fails cleanly (returns None) without ever running training.
+        assert result is None
+        mock_to_thread.assert_not_called()
+        fxt_mock_dataset_snapshot_service.get_or_create_snapshot.assert_not_called()
+
+        # Status transitions: RUNNING then FAILED with a payload-validation message.
+        fxt_mock_job_service.update_job_status.assert_any_call(
+            job_id=fxt_job.id,
+            status=JobStatus.RUNNING,
+            message="Training started",
+        )
+        failed_calls = [
+            call
+            for call in fxt_mock_job_service.update_job_status.call_args_list
+            if call.kwargs.get("status") == JobStatus.FAILED
+        ]
+        assert len(failed_calls) == 1
+        assert "Failed to validate training job payload" in failed_calls[0].kwargs["message"]
+
+
+class TestTrainJobPayloadValidation:
+    """Validation of TrainJobPayload.model_name (length and semantics)."""
+
+    def test_valid_model_name_is_normalized(self, fxt_project):
+        """A known model name is accepted and surrounding whitespace is stripped."""
+        payload = TrainJobPayload.model_validate(
+            {"project_id": str(fxt_project.id), "model_name": "  padim  "},
+        )
+        assert payload.model_name == "padim"
+
+    def test_model_name_exceeding_max_length_is_rejected(self, fxt_project):
+        """A model name longer than the architecture max length raises a clear error."""
+        with pytest.raises(ValidationError, match="at most 64 characters"):
+            TrainJobPayload.model_validate(
+                {"project_id": str(fxt_project.id), "model_name": "x" * 65},
+            )
+
+    def test_empty_model_name_is_rejected(self, fxt_project):
+        """An empty/whitespace-only model name raises a clear error."""
+        with pytest.raises(ValidationError, match="must not be empty"):
+            TrainJobPayload.model_validate(
+                {"project_id": str(fxt_project.id), "model_name": "   "},
+            )

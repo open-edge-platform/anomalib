@@ -96,9 +96,25 @@ class TrainingDevice(BaseModel):
         return index
 
 
+MAX_MODEL_ARCHITECTURE_LENGTH = 64
+
+
 class TrainJobPayload(BaseModel):
     project_id: ShortUUID = Field(exclude=True)
     model_name: str
     device: TrainingDevice | None = Field(default=None)
     dataset_snapshot_id: str | None = Field(default=None)  # used because UUID is not JSON serializable
     max_epochs: int | None = Field(default=None, ge=1, le=10000)
+
+    @field_validator("model_name")
+    @classmethod
+    def validate_model_name(cls, model_name: str) -> str:
+        normalized = model_name.strip()
+        if not normalized:
+            raise ValueError("model_name must not be empty")
+        if len(normalized) > MAX_MODEL_ARCHITECTURE_LENGTH:
+            raise ValueError(
+                f"model_name must be at most {MAX_MODEL_ARCHITECTURE_LENGTH} characters long, "
+                f"got {len(normalized)} characters",
+            )
+        return normalized
