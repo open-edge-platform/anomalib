@@ -99,6 +99,7 @@ def binary_classification_curve(
 
     neg_inf = torch.tensor(-torch.inf, device=scores_batch.device, dtype=scores_batch.dtype)
 
+    gts_batch = gts_batch.to(device=scores_batch.device)
     pos_scores = torch.where(gts_batch, scores_batch, neg_inf)
     neg_scores = torch.where(~gts_batch, scores_batch, neg_inf)
 
@@ -111,11 +112,11 @@ def binary_classification_curve(
     pos_idx = torch.searchsorted(pos_scores_sorted, thresh_exp, side="left")
     neg_idx = torch.searchsorted(neg_scores_sorted, thresh_exp, side="left")
 
-    tps = d - pos_idx
-    fps = d - neg_idx
-
     total_pos = gts_batch.sum(dim=1, keepdim=True)
     total_neg = d - total_pos
+
+    tps = total_pos - (pos_idx - total_neg).clamp_min(0)
+    fps = total_neg - (neg_idx - total_pos).clamp_min(0)
 
     fns = total_pos - tps
     tns = total_neg - fps
