@@ -272,7 +272,7 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
 
 
 # ==================================================================================================
-# API FUNCTIONS (NUMPY)
+# API FUNCTIONS
 
 
 def test_binclf_multiple_curves(
