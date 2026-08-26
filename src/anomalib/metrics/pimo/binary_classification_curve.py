@@ -105,6 +105,7 @@ def binary_classification_curve(
     pos_scores_sorted, _ = torch.sort(pos_scores, dim=1)
     neg_scores_sorted, _ = torch.sort(neg_scores, dim=1)
 
+    thresholds = thresholds.to(device=scores_batch.device, dtype=scores_batch.dtype)
     thresh_exp = thresholds.unsqueeze(1).expand(k, n).contiguous().T.contiguous()
 
     pos_idx = torch.searchsorted(pos_scores_sorted, thresh_exp, side="left")
