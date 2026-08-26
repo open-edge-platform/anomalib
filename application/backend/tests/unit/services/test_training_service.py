@@ -375,6 +375,10 @@ class TestTrainingService:
         [
             "x" * 65,  # exceeds Model.architecture max_length (64)
             "",  # empty
+            "../x",  # path traversal attempt
+            "foo/bar",  # path separator
+            "foo bar",  # whitespace inside identifier
+            "foo-bar",  # unsupported separator
         ],
     )
     def test_train_pending_job_invalid_model_name_fails_clearly(
@@ -418,12 +422,12 @@ class TestTrainingService:
 
 
 class TestTrainJobPayloadValidation:
-    """Validation of TrainJobPayload.model_name (length and semantics)."""
+    """Validation of TrainJobPayload.model_name (length and safe identifier charset)."""
 
     def test_valid_model_name_is_normalized(self, fxt_project):
-        """A known model name is accepted and surrounding whitespace is stripped."""
+        """A valid model name is accepted, trimmed, and lowercased."""
         payload = TrainJobPayload.model_validate(
-            {"project_id": str(fxt_project.id), "model_name": "  padim  "},
+            {"project_id": str(fxt_project.id), "model_name": "  Padim  "},
         )
         assert payload.model_name == "padim"
 
@@ -440,3 +444,29 @@ class TestTrainJobPayloadValidation:
             TrainJobPayload.model_validate(
                 {"project_id": str(fxt_project.id), "model_name": "   "},
             )
+
+    @pytest.mark.parametrize(
+        "unsafe_model_name",
+        [
+            "../x",  # path traversal attempt
+            "foo/bar",  # path separator
+            "foo\\bar",  # windows path separator
+            "foo bar",  # whitespace inside identifier
+            "foo-bar",  # unsupported separator
+            "foo.bar",  # dot (extension-like)
+            "foo$",  # special character
+        ],
+    )
+    def test_unsafe_model_name_is_rejected(self, fxt_project, unsafe_model_name):
+        """Names containing path separators or unsafe characters raise a clear error."""
+        with pytest.raises(ValidationError, match=r"\[a-z0-9_\]\+"):
+            TrainJobPayload.model_validate(
+                {"project_id": str(fxt_project.id), "model_name": unsafe_model_name},
+            )
+
+    def test_uppercase_model_name_is_lowercased(self, fxt_project):
+        """Mixed-case names are normalized to lowercase rather than rejected."""
+        payload = TrainJobPayload.model_validate(
+            {"project_id": str(fxt_project.id), "model_name": "EfficientAd"},
+        )
+        assert payload.model_name == "efficientad"
