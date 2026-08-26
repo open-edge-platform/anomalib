@@ -37,6 +37,7 @@ describe('Toolbar', () => {
                     model: {
                         id: '1',
                         name: 'test-model',
+                        architecture: 'padim',
                         format: 'onnx',
                         project_id: '123',
                         threshold: 0.5,

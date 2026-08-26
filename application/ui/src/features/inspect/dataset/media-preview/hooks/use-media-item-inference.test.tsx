@@ -21,6 +21,7 @@ vi.mock('./util', () => ({
 const mockedModel = {
     id: 'model-123',
     name: 'Test Model',
+    architecture: 'padim',
     format: 'onnx' as const,
     project_id: 'project-123',
     threshold: 0.5,

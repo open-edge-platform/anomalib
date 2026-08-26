@@ -14,6 +14,7 @@ export const getMockedPipeline = (customPipeline?: Partial<SchemaPipeline>): Sch
         model: {
             id: '1',
             name: 'Object_Detection_TestModel',
+            architecture: 'padim',
             format: 'onnx' as const,
             project_id: '123',
             threshold: 0.5,
