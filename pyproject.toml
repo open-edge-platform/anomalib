@@ -116,26 +116,28 @@ cpu = [
     "torchvision>=0.21.0",
 ]
 cu126 = [
-    "torch>=2.6.0",
-    "torchcodec",
-    "torchvision>=0.21.0",
+    "torch>=2.6.0 ; sys_platform == 'linux' or sys_platform == 'win32'",
+    "torchcodec ; sys_platform == 'linux' or sys_platform == 'win32'",
+    "torchvision>=0.21.0 ; sys_platform == 'linux' or sys_platform == 'win32'",
 ]
 cu130 = [
-    "torch>=2.9.0",
-    "torchcodec>=0.9.0",
-    "torchvision>=0.24.0",
+    "torch>=2.9.0 ; sys_platform == 'linux' or sys_platform == 'win32'",
+    "torchcodec>=0.9.0 ; sys_platform == 'linux' or sys_platform == 'win32'",
+    "torchvision>=0.24.0 ; sys_platform == 'linux' or sys_platform == 'win32'",
 ]
 rocm = [
-    "torch>=2.7.0",
-    "torchcodec",
-    "torchvision>=0.22.0",
+    # FIXME: bump to >=2.10.0 once torch+rocm6.3 wheel is published (CVE-2025-3001 fix)
+    "torch>=2.9.1 ; sys_platform == 'linux'",
+    "torchcodec ; sys_platform == 'linux'",
+    "torchvision>=0.22.0 ; sys_platform == 'linux'",
     "pytorch-triton-rocm ; sys_platform == 'linux'",
 ]
 xpu = [
-    "torch>=2.9.0", # Note : Last tested with torch+xpu (2.9.1)
-    "torchcodec",
-    "torchvision>=0.24.0",
+    "torch>=2.10.0 ; sys_platform == 'linux' or sys_platform == 'win32'", # CVE-2025-3001 fixed in 2.10.0; last tested with 2.9.1+xpu
+    "torchcodec ; sys_platform == 'linux' or sys_platform == 'win32'",
+    "torchvision>=0.24.0 ; sys_platform == 'linux' or sys_platform == 'win32'",
     "pytorch-triton-xpu ; sys_platform == 'linux' or sys_platform == 'win32'",
+    "triton-xpu ; sys_platform == 'linux' or sys_platform == 'win32'",
 ]
 full = ["anomalib[clip,datasets,openvino,loggers,notebooks,vlm,video,huggingface]"]
 dev = ["anomalib[full,docs,test]"]
@@ -164,6 +166,12 @@ only-include = [
 # UV workspace configuration
 package = true
 managed = true
+# Exclude emscripten: no XPU/ROCm wheels exist for WebAssembly
+environments = [
+    "sys_platform == 'linux'",
+    "sys_platform == 'win32'",
+    "sys_platform == 'darwin'",
+]
 override-dependencies = [
     # FIXME: remove once mlflow releases a version without the cryptography<50 upper bound
     # mlflow 3.15.1 caps cryptography<50, but CVE-2026-69247 requires >=50.0.0
@@ -231,6 +239,9 @@ pytorch-triton-rocm = [
     { index = "pytorch-rocm63", extra = "rocm" },
 ]
 pytorch-triton-xpu = [
+    { index = "pytorch-xpu", extra = "xpu" },
+]
+triton-xpu = [
     { index = "pytorch-xpu", extra = "xpu" },
 ]
 
