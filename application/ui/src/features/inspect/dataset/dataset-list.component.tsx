@@ -1,10 +1,10 @@
-import { DialogContainer, Flex, Heading, Selection, Size, View } from '@geti/ui';
+import { DialogContainer, Flex, Heading, Selection, Size, View } from '@geti-ui/ui';
 import { isNil } from 'lodash-es';
 import isEmpty from 'lodash-es/isEmpty';
-import { MediaThumbnail } from 'src/components/media-thumbnail/media-thumbnail.component';
-import { GridMediaItem } from 'src/components/virtualizer-grid-layout/grid-media-item/grid-media-item.component';
-import { VirtualizerGridLayout } from 'src/components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 
+import { MediaThumbnail } from '../../../components/media-thumbnail/media-thumbnail.component';
+import { GridMediaItem } from '../../../components/virtualizer-grid-layout/grid-media-item/grid-media-item.component';
+import { VirtualizerGridLayout } from '../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 import { getThumbnailUrl } from '../utils';
 import { DatasetItemPlaceholder } from './dataset-item-placeholder/dataset-item-placeholder.component';
 import { getPlaceholderItem, getPlaceholderKeys, isPlaceholderItem } from './dataset-item-placeholder/util';
@@ -45,7 +45,7 @@ export const DatasetList = () => {
             setSelectedMediaItemId(itemId);
         }
     };
-
+    console.log('mediaItemsToRender', mediaItemsToRender);
     return (
         <Flex gap='size-200' direction={'column'} height={'100%'}>
             <Heading>Normal images</Heading>

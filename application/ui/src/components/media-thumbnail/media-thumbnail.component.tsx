@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { Skeleton } from '@geti/ui';
+import { Skeleton } from '@geti-ui/ui';
 
 import classes from './media-thumbnail.module.scss';
 

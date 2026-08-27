@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 
 import { $api } from '@anomalib-studio/api';
 import { useProjectIdentifier } from '@anomalib-studio/hooks';
-import { Content, ContextualHelp, Heading, Item, Key, Picker, Text, toast } from '@geti/ui';
+import { Content, ContextualHelp, Heading, Item, Key, Picker, Text } from '@geti-ui/ui';
 import { usePipeline } from 'src/hooks/use-pipeline.hook';
 
+import { toast } from '../../../../utils/toast';
 import { getDeviceLabel } from '../../train-model/utils/device-metadata';
 
 /**

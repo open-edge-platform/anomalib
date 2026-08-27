@@ -15,12 +15,12 @@ import {
     Picker,
     ProgressCircle,
     TextField,
-    toast,
     Tooltip,
     TooltipTrigger,
-} from '@geti/ui';
-import { Copy } from '@geti/ui/icons';
+} from '@geti-ui/ui';
+import { Copy } from '@geti-ui/ui/icons';
 
+import { toast } from '../../../../../utils/toast';
 import { VideoFileSourceConfig } from '../util';
 
 import classes from './video-file-fields.module.scss';

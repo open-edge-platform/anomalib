@@ -1,7 +1,9 @@
 import { $api } from '@anomalib-studio/api';
 import { useProjectIdentifier } from '@anomalib-studio/hooks';
-import { MoreMenu } from '@geti/ui/icons';
-import { ActionButton, Item, Key, Menu, MenuTrigger, toast } from 'packages/ui';
+import { ActionButton, Item, Key, Menu, MenuTrigger } from '@geti-ui/ui';
+import { MoreMenu } from '@geti-ui/ui/icons';
+
+import { toast } from '../../../../../utils/toast';
 
 export interface SourceMenuProps {
     id: string;

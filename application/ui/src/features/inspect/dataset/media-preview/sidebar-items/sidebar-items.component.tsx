@@ -1,4 +1,4 @@
-import { Selection, View } from '@geti/ui';
+import { Selection, View } from '@geti-ui/ui';
 import { GridLayoutOptions } from 'react-aria-components';
 import { getThumbnailUrl, isNonEmptyString } from 'src/features/inspect/utils';
 

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { usePipeline } from '@anomalib-studio/hooks';
-import { dimensionValue, Divider, Flex, View } from '@geti/ui';
+import { dimensionValue, Divider, Flex, View } from '@geti-ui/ui';
 import { isNil } from 'lodash-es';
 
 import { AnomalyMap } from './anomaly-map/anomaly-map.component';

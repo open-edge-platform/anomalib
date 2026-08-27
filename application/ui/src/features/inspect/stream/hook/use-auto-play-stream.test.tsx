@@ -1,4 +1,3 @@
-import { toast } from '@geti/ui';
 import { renderHook, waitFor } from '@testing-library/react';
 import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { HttpResponse } from 'msw';
@@ -9,6 +8,7 @@ import { server } from 'src/msw-node-setup';
 import { TestProviders } from 'src/providers';
 import { queryClient } from 'src/query-client/query-client';
 
+import { toast } from '../../../../utils/toast';
 import { STREAM_ERROR_MESSAGE, useAutoPlayStream } from './use-auto-play-stream.hook';
 
 vi.mock('../../../../components/stream/stream-connection-provider', async () => {
@@ -19,10 +19,8 @@ vi.mock('../../../../components/stream/stream-connection-provider', async () => 
     };
 });
 
-vi.mock('@geti/ui', async () => {
-    const actual = await vi.importActual('@geti/ui');
+vi.mock('../../../../utils/toast', async () => {
     return {
-        ...actual,
         toast: vi.fn(),
     };
 });

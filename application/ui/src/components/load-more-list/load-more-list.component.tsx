@@ -1,7 +1,8 @@
 import { ReactNode } from 'react';
 
-import { Button, dimensionValue, Flex } from '@geti/ui';
-import { useListEnd } from 'src/hooks/use-list-end.hook';
+import { Button, dimensionValue, Flex } from '@geti-ui/ui';
+
+import { useListEnd } from '../../hooks/use-list-end.hook';
 
 type LoadMoreListProps = {
     children: ReactNode;

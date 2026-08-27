@@ -1,6 +1,7 @@
 import { getApiUrl } from '@anomalib-studio/api';
 import { SchemaPredictionResponse } from '@anomalib-studio/api/spec';
-import { DimensionValue, Responsive, View } from '@geti/ui';
+import { DimensionValue, View } from '@geti-ui/ui';
+import type { Responsive } from '@react-types/shared';
 import { clsx } from 'clsx';
 import { motion } from 'motion/react';
 import { ZoomProvider } from 'src/components/zoom/zoom';

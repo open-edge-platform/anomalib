@@ -1,8 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Toast } from '@geti/ui';
-import { ThemeProvider } from '@geti/ui/theme';
+import { ThemeProvider, ToastContainer } from '@geti-ui/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { HttpResponse } from 'msw';
@@ -22,7 +21,7 @@ describe('DeleteMediaItem', () => {
                             <Route path='/projects/:projectId/inspect' element={<DeleteMediaItem {...props} />} />
                         </Routes>
                     </MemoryRouter>
-                    <Toast />
+                    <ToastContainer />
                 </ThemeProvider>
             </QueryClientProvider>
         );

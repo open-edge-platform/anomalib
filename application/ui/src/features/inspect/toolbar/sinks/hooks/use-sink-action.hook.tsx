@@ -1,8 +1,8 @@
 import { useActionState } from 'react';
 
-import { toast } from '@geti/ui';
 import { isFunction } from 'lodash-es';
 
+import { toast } from '../../../../../utils/toast';
 import { SinkConfig } from '../utils';
 import { useSinkMutation } from './use-sink-mutation.hook';
 

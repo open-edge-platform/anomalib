@@ -1,7 +1,8 @@
 import { ReactNode } from 'react';
 
-import { Toast } from '@geti/ui';
-import { ThemeProvider } from '@geti/ui/theme';
+import '@geti-ui/ui/styles.css';
+
+import { ThemeProvider, ToastContainer } from '@geti-ui/ui';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v6';
 import { MemoryRouterProps, RouterProvider } from 'react-router';
@@ -38,7 +39,7 @@ export const TestProviders = ({ children, routerProps }: { children: ReactNode; 
                 <NuqsAdapter>
                     <Router {...routerProps}>
                         <StreamConnectionProvider>{children}</StreamConnectionProvider>
-                        <Toast />
+                        <ToastContainer />
                     </Router>
                 </NuqsAdapter>
             </ThemeProvider>

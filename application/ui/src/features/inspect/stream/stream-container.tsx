@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useProjectIdentifier } from '@anomalib-studio/hooks';
-import { Button, Flex, Loading, Text, View } from '@geti/ui';
-import { Play, Refresh } from '@geti/ui/icons';
+import { Button, Flex, Loading, Text, View } from '@geti-ui/ui';
+import { Play, Refresh } from '@geti-ui/ui/icons';
 import { isEmpty } from 'lodash-es';
 import { useActivatePipeline, usePipeline } from 'src/hooks/use-pipeline.hook';
 

@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useProjectIdentifier } from '@anomalib-studio/hooks';
-import { ActionButton, DialogContainer, toast } from '@geti/ui';
-import { Delete } from '@geti/ui/icons';
+import { ActionButton, DialogContainer } from '@geti-ui/ui';
+import { Delete } from '@geti-ui/ui/icons';
 import { useOverlayTriggerState } from '@react-stately/overlays';
 import { isFunction } from 'lodash-es';
 
 import { $api } from '../../../../api/client';
+import { toast } from '../../../../utils/toast';
 import { AlertDialogContent } from './alert-dialog-content.component';
 
 import classes from './delete-dataset-item.module.scss';

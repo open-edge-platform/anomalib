@@ -3,9 +3,9 @@
 
 import { useActionState } from 'react';
 
-import { toast } from '@geti/ui';
 import { isFunction } from 'lodash-es';
 
+import { toast } from '../../../../../utils/toast';
 import { SourceConfig } from '../util';
 import { useSourceMutation } from './use-source-mutation.hook';
 
