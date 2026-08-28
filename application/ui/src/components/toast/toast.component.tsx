@@ -127,7 +127,7 @@ const CustomToast = ({ message, id, actionButtons, type, hasCloseButton = true, 
                     <Text>{message}</Text>
                     <ToastActionButtons actionButtons={actionButtons} />
                 </Flex>
-                <ToastCloseButton id={id} />
+                {hasCloseButton && <ToastCloseButton id={id} />}
             </Flex>
         </ToastContainer>
     );

@@ -1,3 +1,6 @@
+// Copyright (C) 2025-2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { renderHook, screen, waitFor } from '@testing-library/react';
 import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { HttpResponse } from 'msw';
@@ -8,7 +11,6 @@ import { server } from 'src/msw-node-setup';
 import { TestProviders } from 'src/providers';
 import { queryClient } from 'src/query-client/query-client';
 
-import { toast } from '../../../../components/toast/toast.component';
 import { STREAM_ERROR_MESSAGE, useAutoPlayStream } from './use-auto-play-stream.hook';
 
 vi.mock('../../../../components/stream/stream-connection-provider', async () => {
@@ -161,6 +163,7 @@ describe('useAutoPlayStream', () => {
         mockedPipeline.status = 'active';
         server.use(
             http.post('/api/projects/{project_id}/pipeline:run', () => {
+                // @ts-expect-error -- test intentionally returns error response
                 return HttpResponse.json({ detail: STREAM_ERROR_MESSAGE }, { status: 500 });
             })
         );
