@@ -1,8 +1,9 @@
 import { Suspense } from 'react';
 
-import { IntelBrandedLoading, Toast } from '@geti/ui';
+import { IntelBrandedLoading } from '@geti/ui';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 
+import { Toast } from '../components/toast/toast.component';
 import { $api } from './../api/client';
 import { ErrorPage } from './../components/error-page/error-page';
 import { Inspect } from './inspect/inspect';
@@ -28,7 +29,9 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
         element: (
             <Suspense fallback={<IntelBrandedLoading />}>
-                <Toast />
+                <div data-react-aria-top-layer='true'>
+                    <Toast />
+                </div>
 
                 <Outlet />
             </Suspense>

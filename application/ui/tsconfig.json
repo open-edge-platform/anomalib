@@ -2,6 +2,7 @@
     "extends": "@geti/config/typescript",
     "include": ["src", "rsbuild.config.ts", "vitest.config.ts", "playwright.config.ts"],
     "compilerOptions": {
+        "jsx": "react-jsx",
         "types": ["vitest/globals"],
         "baseUrl": ".",
         "paths": {
