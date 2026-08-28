@@ -36,7 +36,8 @@ describe('Toolbar', () => {
                 pipelineConfig: {
                     model: {
                         id: '1',
-                        name: 'test-model',
+                        name: 'test-model (1)',
+                        architecture: 'padim',
                         format: 'onnx',
                         project_id: '123',
                         threshold: 0.5,

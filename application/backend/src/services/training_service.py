@@ -64,7 +64,7 @@ class TrainingService:
             return await cls._run_training_job(job, job_service)
 
     @classmethod
-    async def _run_training_job(cls, job: Job, job_service: JobService) -> Model | None:  # noqa: PLR0915
+    async def _run_training_job(cls, job: Job, job_service: JobService) -> Model | None:  # noqa: PLR0915, PLR0914
         # Mark job as running
         await job_service.update_job_status(job_id=job.id, status=JobStatus.RUNNING, message="Training started")
         project_id = job.project_id
@@ -76,7 +76,10 @@ class TrainingService:
                 job_id=job.id, status=JobStatus.FAILED, message=f"Failed to validate training job payload: {e}"
             )
             return None
-        model_name = payload.model_name
+        model_id = ShortUUID.generate()
+        model_name_suffix = f" ({str(model_id)})"
+        truncated_model_name = payload.model_name[: (255 - len(model_name_suffix))]
+        model_name = f"{truncated_model_name}{model_name_suffix}"
         device_type = payload.device.type if payload.device else None
         device_index = payload.device.index if payload.device else None
         snapshot_id = ShortUUID(payload.dataset_snapshot_id) if payload.dataset_snapshot_id else None
@@ -94,8 +97,10 @@ class TrainingService:
             snapshot_id = snapshot.id
 
             model = Model(
+                id=model_id,
                 project_id=project_id,
-                name=str(model_name),
+                name=model_name,
+                architecture=payload.model_name,
                 train_job_id=job.id,
                 dataset_snapshot_id=snapshot_id,
             )
@@ -210,7 +215,7 @@ class TrainingService:
 
         model_binary_repo = ModelBinaryRepository(project_id=model.project_id, model_id=model.id)
         model.export_path = model_binary_repo.model_folder_path
-        name = f"{model.project_id}-{model.name}"
+        name = f"{model.project_id}-{model.architecture}"
 
         normal_dir = os.path.join(dataset_root, "normal")
 
@@ -226,7 +231,7 @@ class TrainingService:
 
         # Initialize anomalib model and engine
         anomalib_model = get_model(
-            model=model.name,
+            model=model.architecture,
             evaluator=Evaluator(
                 val_metrics=[AUROC(fields=["anomaly_map", "gt_mask"], prefix="pixel_", strict=False)],
                 test_metrics=[

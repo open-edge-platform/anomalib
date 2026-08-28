@@ -286,6 +286,7 @@ class TestPipelineService:
             id=ShortUUID.generate(),
             project_id=fxt_pipeline.project_id,
             name="new_model",
+            architecture="padim",
             format="openvino",
             train_job_id=ShortUUID.generate(),
             dataset_snapshot_id=ShortUUID.generate(),

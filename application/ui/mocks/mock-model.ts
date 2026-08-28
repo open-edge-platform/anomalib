@@ -4,6 +4,7 @@ import { ModelData } from 'src/hooks/utils';
 export const getMockedModel = (partial: Partial<SchemaModel>): SchemaModel => ({
     id: 'model-1',
     name: 'Model 1',
+    architecture: 'padim',
     format: 'openvino' as const,
     project_id: '123',
     threshold: 0.5,

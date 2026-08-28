@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import re
 from datetime import datetime
 from enum import StrEnum
 from typing import Any
@@ -96,9 +97,31 @@ class TrainingDevice(BaseModel):
         return index
 
 
+MAX_MODEL_NAME_LENGTH = 64
+MODEL_NAME_PATTERN = re.compile(r"^[a-z0-9_]+$")
+
+
 class TrainJobPayload(BaseModel):
     project_id: ShortUUID = Field(exclude=True)
     model_name: str
     device: TrainingDevice | None = Field(default=None)
     dataset_snapshot_id: str | None = Field(default=None)  # used because UUID is not JSON serializable
     max_epochs: int | None = Field(default=None, ge=1, le=10000)
+
+    @field_validator("model_name")
+    @classmethod
+    def validate_model_name(cls, model_name: str) -> str:
+        # Normalize to lowercase so identifiers are case-insensitive and canonical on disk.
+        normalized = model_name.strip().lower()
+        if not normalized:
+            raise ValueError("model_name must not be empty")
+        if len(normalized) > MAX_MODEL_NAME_LENGTH:
+            raise ValueError(
+                f"model_name must be at most {MAX_MODEL_NAME_LENGTH} characters long, got {len(normalized)} characters",
+            )
+        if not MODEL_NAME_PATTERN.fullmatch(normalized):
+            raise ValueError(
+                "model_name may only contain lowercase letters, digits, and underscores "
+                f"(matching [a-z0-9_]+); got '{model_name}'",
+            )
+        return normalized

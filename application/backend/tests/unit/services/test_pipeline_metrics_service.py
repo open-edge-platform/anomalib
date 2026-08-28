@@ -35,6 +35,7 @@ def fxt_model(fxt_project) -> Model:
         id=ShortUUID.generate(),
         project_id=fxt_project.id,
         name="Test Model",
+        architecture="padim",
         train_job_id=ShortUUID.generate(),
         dataset_snapshot_id=ShortUUID.generate(),
     )
