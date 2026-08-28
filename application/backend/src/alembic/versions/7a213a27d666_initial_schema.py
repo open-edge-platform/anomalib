@@ -112,6 +112,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Text(), nullable=False),
         sa.Column("project_id", sa.String(), nullable=False),
         sa.Column("name", sa.String(length=255), nullable=False),
+        sa.Column("architecture", sa.String(length=64), nullable=False),
         sa.Column("format", sa.String(length=64), nullable=False),
         sa.Column("threshold", sa.Float(), nullable=False),
         sa.Column("export_path", sa.Text(), nullable=False),

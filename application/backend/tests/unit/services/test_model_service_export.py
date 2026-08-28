@@ -18,6 +18,7 @@ def mock_model():
         id=ShortUUID.generate(),
         project_id=ShortUUID.generate(),
         name="Padim",
+        architecture="padim",
         format=ExportType.OPENVINO,
         is_ready=True,
         train_job_id=ShortUUID.generate(),

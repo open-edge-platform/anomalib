@@ -56,6 +56,7 @@ class ModelDB(Base):
     id: Mapped[str] = mapped_column(Text, primary_key=True, default=ShortUUID.generate)
     project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"))
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+    architecture: Mapped[str] = mapped_column(String(64), nullable=False)
     format: Mapped[str] = mapped_column(String(64), nullable=False)
     threshold: Mapped[float] = mapped_column(Float, nullable=False)
     export_path: Mapped[str] = mapped_column(Text, nullable=False)

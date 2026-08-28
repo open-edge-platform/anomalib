@@ -22,6 +22,9 @@ class Model(BaseIDNameModel):
     This can be extended by other schemas to include additional fields.
     """
 
+    architecture: str = Field(
+        max_length=64, description="Model architecture identifier used to resolve the anomalib model (e.g. 'padim')"
+    )
     format: ExportType = ExportType.OPENVINO
     project_id: ShortUUID
     threshold: float = Field(default=0.5, ge=0.0, le=1.0, description="Confidence threshold for the model")
@@ -43,7 +46,8 @@ class Model(BaseIDNameModel):
             "example": {
                 "id": "76e07d18-196e-4e33-bf98-ac1d35dca4cb",
                 "project_id": "16e07d18-196e-4e33-bf98-ac1d35dcaaaa",
-                "name": "PatchCore",
+                "name": "PatchCore (76e07d18-196e-4e33-bf98-ac1d35dca4cb)",
+                "architecture": "patchcore",
                 "format": "openvino",
                 "is_ready": True,
                 "export_path": (
