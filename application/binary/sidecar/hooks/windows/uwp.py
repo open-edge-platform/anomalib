@@ -44,10 +44,14 @@ def _main() -> None:
         raise OSError("LOCALAPPDATA environment variable is not set.")
 
     app_data_folder = Path(local_app_data) / "Intel" / "Anomalib"
+    os.makedirs(app_data_folder, exist_ok=True)
+
+    logs_folder = app_data_folder / "logs"
+    os.makedirs(logs_folder, exist_ok=True)
 
     print(f"Setup Hook: Using folder: {app_data_folder}")
     os.environ["DATA_DIR"] = str(app_data_folder)
-    os.environ["LOG_DIR"] = str(app_data_folder)
+    os.environ["LOG_DIR"] = str(logs_folder)
 
     _copy_initial_data(app_data_folder)
 
