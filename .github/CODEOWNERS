@@ -49,11 +49,11 @@
 
 
 # Anomalib Studio
-/application/ui                                             @MarkRedeman @maxxgx
-/application/backend                                        @maxxgx @rajeshgangireddy @MarkRedeman
-/application/backend/uv.lock                                @maxxgx @rajeshgangireddy @MarkRedeman @sys-geti
-/application/docker/Dockerfile                              @maxxgx @rajeshgangireddy @MarkRedeman @sys-geti
-/application/binary/tauri/src-tauri/Cargo.lock              @MarkRedeman @maxxgx  @sys-geti
+/application/ui                                             @ashwinvaidya17
+/application/backend                                        @ashwinvaidya17 @rajeshgangireddy
+/application/backend/uv.lock                                @ashwinvaidya17 @rajeshgangireddy @sys-geti
+/application/docker/Dockerfile                              @ashwinvaidya17 @rajeshgangireddy @sys-geti
+/application/binary/tauri/src-tauri/Cargo.lock              @ashwinvaidya17 @sys-geti
 
 # Tests
 /tests/                                                     @samet-akcay @ashwinvaidya17 @rajeshgangireddy
