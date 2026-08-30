@@ -24,6 +24,7 @@ from api.endpoints.media_endpoints import media_router
 from api.endpoints.model_endpoints import model_router
 from api.endpoints.pipeline_endpoints import router as pipeline_router
 from api.endpoints.project_endpoints import project_router
+from api.endpoints.project_selection_endpoints import router as project_selection_router
 from api.endpoints.sink_endpoints import router as sink_router
 from api.endpoints.snapshot_endpoints import router as snapshot_router
 from api.endpoints.source_endpoints import router as source_router
@@ -56,6 +57,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(project_selection_router)
 app.include_router(project_router)
 app.include_router(job_router)
 app.include_router(media_router)

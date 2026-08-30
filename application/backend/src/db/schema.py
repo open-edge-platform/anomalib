@@ -26,6 +26,21 @@ class ProjectDB(Base):
     pipeline = relationship("PipelineDB", back_populates="project", uselist=False, lazy="joined")
 
 
+class AppStateDB(Base):
+    __tablename__ = "app_state"
+
+    id: Mapped[int] = mapped_column(primary_key=True, default=1)
+    last_used_project_id: Mapped[str | None] = mapped_column(
+        ForeignKey("projects.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+    )
+
+
 class MediaDB(Base):
     __tablename__ = "media"
 

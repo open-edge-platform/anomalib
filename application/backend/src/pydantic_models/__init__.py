@@ -8,6 +8,7 @@ from .metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, TimeWind
 from .model import Model, ModelList, PredictionLabel, PredictionResponse
 from .pipeline import Pipeline, PipelineStatus
 from .project import Project, ProjectList, ProjectUpdate
+from .project_selection import LastUsedProjectUpdate, StartupProjectSelection, StartupProjectSelectionSource
 from .sink import DisconnectedSinkConfig, OutputFormat, Sink, SinkType
 from .source import DisconnectedSourceConfig, Source, SourceType
 from .system import LibraryVersions, SystemInfo
@@ -24,6 +25,7 @@ __all__ = [
     "JobList",
     "JobStatus",
     "JobType",
+    "LastUsedProjectUpdate",
     "LatencyMetrics",
     "LibraryVersions",
     "Media",
@@ -44,6 +46,8 @@ __all__ = [
     "SinkType",
     "Source",
     "SourceType",
+    "StartupProjectSelection",
+    "StartupProjectSelectionSource",
     "SystemInfo",
     "TimeWindow",
     "TrainableModel",
