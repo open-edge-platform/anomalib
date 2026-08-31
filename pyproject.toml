@@ -129,8 +129,7 @@ rocm = [
     "torch>=2.10.0 ; sys_platform == 'linux'",
     "torchcodec ; sys_platform == 'linux'",
     "torchvision>=0.25.0 ; sys_platform == 'linux'",
-    "pytorch-triton-rocm ; sys_platform == 'linux'",
-    "triton-rocm ; sys_platform == 'linux'",
+    "triton-rocm ; sys_platform == 'linux'",  # explicit source needed so uv resolves from rocm7.0 index, not PyPI
 ]
 xpu = [
     "torch>=2.10.0 ; sys_platform == 'linux' or sys_platform == 'win32'", # CVE-2025-3001 fixed in 2.10.0; last tested with 2.9.1+xpu
@@ -234,9 +233,6 @@ torchcodec = [
     { index = "pytorch-cpu", extra = "cpu" },
     { index = "pytorch-cu126", extra = "cu126" },
     { index = "pytorch-cu130", extra = "cu130" },
-]
-pytorch-triton-rocm = [
-    { index = "pytorch-rocm70", extra = "rocm" },
 ]
 triton-rocm = [
     { index = "pytorch-rocm70", extra = "rocm" },
