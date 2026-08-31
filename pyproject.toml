@@ -126,11 +126,11 @@ cu130 = [
     "torchvision>=0.24.0 ; sys_platform == 'linux' or sys_platform == 'win32'",
 ]
 rocm = [
-    # FIXME: bump to >=2.10.0 once torch+rocm6.3 wheel is published (CVE-2025-3001 fix)
-    "torch>=2.9.1 ; sys_platform == 'linux'",
+    "torch>=2.10.0 ; sys_platform == 'linux'",
     "torchcodec ; sys_platform == 'linux'",
-    "torchvision>=0.22.0 ; sys_platform == 'linux'",
+    "torchvision>=0.25.0 ; sys_platform == 'linux'",
     "pytorch-triton-rocm ; sys_platform == 'linux'",
+    "triton-rocm ; sys_platform == 'linux'",
 ]
 xpu = [
     "torch>=2.10.0 ; sys_platform == 'linux' or sys_platform == 'win32'", # CVE-2025-3001 fixed in 2.10.0; last tested with 2.9.1+xpu
@@ -205,8 +205,8 @@ url = "https://download.pytorch.org/whl/cu130"
 explicit = true
 
 [[tool.uv.index]]
-name = "pytorch-rocm63"
-url = "https://download.pytorch.org/whl/rocm6.3"
+name = "pytorch-rocm70"
+url = "https://download.pytorch.org/whl/rocm7.0"
 explicit = true
 
 [[tool.uv.index]]
@@ -220,14 +220,14 @@ torch = [
     { index = "pytorch-cpu", extra = "cpu" },
     { index = "pytorch-cu126", extra = "cu126" },
     { index = "pytorch-cu130", extra = "cu130" },
-    { index = "pytorch-rocm63", extra = "rocm" },
+    { index = "pytorch-rocm70", extra = "rocm" },
     { index = "pytorch-xpu", extra = "xpu" },
 ]
 torchvision = [
     { index = "pytorch-cpu", extra = "cpu" },
     { index = "pytorch-cu126", extra = "cu126" },
     { index = "pytorch-cu130", extra = "cu130" },
-    { index = "pytorch-rocm63", extra = "rocm" },
+    { index = "pytorch-rocm70", extra = "rocm" },
     { index = "pytorch-xpu", extra = "xpu" },
 ]
 torchcodec = [
@@ -236,7 +236,10 @@ torchcodec = [
     { index = "pytorch-cu130", extra = "cu130" },
 ]
 pytorch-triton-rocm = [
-    { index = "pytorch-rocm63", extra = "rocm" },
+    { index = "pytorch-rocm70", extra = "rocm" },
+]
+triton-rocm = [
+    { index = "pytorch-rocm70", extra = "rocm" },
 ]
 pytorch-triton-xpu = [
     { index = "pytorch-xpu", extra = "xpu" },
