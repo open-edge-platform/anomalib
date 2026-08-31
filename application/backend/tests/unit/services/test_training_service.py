@@ -3,6 +3,7 @@
 import asyncio
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
+from uuid import uuid4
 
 import pytest
 from pydantic import ValidationError
@@ -12,7 +13,6 @@ from pydantic_models.job import TrainJobPayload
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import TrainingService
 from utils.callbacks import ProgressSyncParams
-from utils.short_uuid import ShortUUID
 
 
 @pytest.fixture
@@ -108,7 +108,7 @@ def fxt_mock_dataset_snapshot_service():
     with patch("services.training_service.DatasetSnapshotService") as mock_service:
         # Setup default return values
         mock_snapshot = MagicMock()
-        mock_snapshot.id = ShortUUID.generate()
+        mock_snapshot.id = uuid4()
         mock_service.create_snapshot = AsyncMock(return_value=mock_snapshot)
         # Fix: get_or_create_snapshot needs to be awaited
         mock_service.get_or_create_snapshot = AsyncMock(return_value=mock_snapshot)
@@ -179,7 +179,7 @@ class TestTrainingService:
             # payload and a name that embeds the generated model ID in the expected format.
             created_model = mock_to_thread.call_args.kwargs["model"]
             assert created_model.architecture == fxt_job.payload["model_name"]
-            assert created_model.name == f"{fxt_job.payload['model_name']} ({created_model.id})"
+            assert created_model.name == f"{fxt_job.payload['model_name']} ({str(created_model.id).split('-')[0]})"
 
     @pytest.mark.parametrize(
         "exception,expected_message",

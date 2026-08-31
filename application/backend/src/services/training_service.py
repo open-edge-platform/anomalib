@@ -4,6 +4,7 @@ import asyncio
 import os
 import pathlib
 from typing import Any
+from uuid import UUID, uuid4
 
 from anomalib.data import Folder
 from anomalib.data.utils import ValSplitMode
@@ -27,7 +28,6 @@ from services.dataset_snapshot_service import DatasetSnapshotService
 from services.job_service import JobService
 from services.system_service import SystemService
 from utils.callbacks import AnomalibStudioProgressCallback, ProgressSyncParams
-from utils.short_uuid import ShortUUID
 
 
 class TrainingService:
@@ -76,13 +76,13 @@ class TrainingService:
                 job_id=job.id, status=JobStatus.FAILED, message=f"Failed to validate training job payload: {e}"
             )
             return None
-        model_id = ShortUUID.generate()
-        model_name_suffix = f" ({str(model_id)})"
+        model_id = uuid4()
+        model_name_suffix = f" ({str(model_id).split('-')[0]})"
         truncated_model_name = payload.model_name[: (255 - len(model_name_suffix))]
         model_name = f"{truncated_model_name}{model_name_suffix}"
         device_type = payload.device.type if payload.device else None
         device_index = payload.device.index if payload.device else None
-        snapshot_id = ShortUUID(payload.dataset_snapshot_id) if payload.dataset_snapshot_id else None
+        snapshot_id = UUID(payload.dataset_snapshot_id) if payload.dataset_snapshot_id else None
         max_epochs: int = payload.max_epochs if payload.max_epochs is not None else 200
 
         synchronization_task: asyncio.Task[None] | None = None
@@ -339,7 +339,7 @@ class TrainingService:
     async def _sync_progress_with_db(
         cls,
         job_service: JobService,
-        job_id: ShortUUID,
+        job_id: UUID,
         synchronization_parameters: ProgressSyncParams,
     ) -> None:
         try:
