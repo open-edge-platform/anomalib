@@ -1,4 +1,4 @@
-import { Size, Toast } from '@geti/ui';
+import { Size } from '@geti/ui';
 import { ThemeProvider } from '@geti/ui/theme';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -9,6 +9,7 @@ import { http } from 'src/api/utils';
 import { server } from 'src/msw-node-setup';
 
 import { getMockedMediaItem } from '../../../../../../mocks/mock-media-item';
+import { Toast } from '../../../../../components/toast/toast.component';
 import { MediaItem } from '../../types';
 import { SidebarItems } from './sidebar-items.component';
 

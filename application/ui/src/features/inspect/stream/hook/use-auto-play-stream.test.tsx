@@ -1,5 +1,7 @@
-import { toast } from '@geti/ui';
-import { renderHook, waitFor } from '@testing-library/react';
+// Copyright (C) 2025-2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import { renderHook, screen, waitFor } from '@testing-library/react';
 import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { HttpResponse } from 'msw';
 import { SchemaPipeline } from 'src/api/openapi-spec';
@@ -19,8 +21,8 @@ vi.mock('../../../../components/stream/stream-connection-provider', async () => 
     };
 });
 
-vi.mock('@geti/ui', async () => {
-    const actual = await vi.importActual('@geti/ui');
+vi.mock('../../../../components/toast/toast.component', async () => {
+    const actual = await vi.importActual('../../../../components/toast/toast.component');
     return {
         ...actual,
         toast: vi.fn(),
@@ -61,13 +63,14 @@ describe('useAutoPlayStream', () => {
 
     beforeEach(() => {
         queryClient.clear();
+        vi.clearAllMocks();
     });
 
     it('error message', async () => {
         const mockedStart = renderApp({ status: 'failed' });
 
         await waitFor(() => {
-            expect(toast).toHaveBeenCalledWith({ type: 'error', message: STREAM_ERROR_MESSAGE });
+            expect(screen.getByLabelText('toast')).toHaveTextContent(STREAM_ERROR_MESSAGE);
             expect(mockedStart).not.toHaveBeenCalled();
         });
     });
@@ -160,18 +163,18 @@ describe('useAutoPlayStream', () => {
         mockedPipeline.status = 'active';
         server.use(
             http.post('/api/projects/{project_id}/pipeline:run', () => {
-                return HttpResponse.json(
-                    { detail: [{ msg: 'Failed', type: 'error', loc: ['pipeline'] }] },
-                    { status: 500 }
-                );
+                // @ts-expect-error -- test intentionally returns error response
+                return HttpResponse.json({ detail: STREAM_ERROR_MESSAGE }, { status: 500 });
             })
         );
+
         renderApp({
             status: 'connected',
             pipelineConfig: mockedPipeline,
         });
+
         await waitFor(() => {
-            expect(toast).toHaveBeenCalledWith({ type: 'error', message: STREAM_ERROR_MESSAGE });
+            expect(screen.getByLabelText('toast')).toHaveTextContent(STREAM_ERROR_MESSAGE);
         });
     });
 });

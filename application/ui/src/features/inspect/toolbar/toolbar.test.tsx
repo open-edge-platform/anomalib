@@ -37,13 +37,13 @@ describe('Toolbar', () => {
                     model: {
                         id: '1',
                         name: 'test-model (1)',
-                        architecture: 'padim',
                         format: 'onnx',
                         project_id: '123',
                         threshold: 0.5,
                         is_ready: true,
                         train_job_id: 'train-job-1',
                         dataset_snapshot_id: '',
+                        architecture: 'PatchCore',
                     },
                 },
             });
