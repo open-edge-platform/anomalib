@@ -231,7 +231,7 @@ class TestPipelineEndpoints:
         )
         model_id = uuid4()
         model = Model(
-            id=uuid4(),
+            id=model_id,
             project_id=fxt_pipeline.project_id,
             name=f"Test Model ({str(model_id).split('-')[0]})",
             architecture="padim",
@@ -246,7 +246,7 @@ class TestPipelineEndpoints:
             model=model,
             source_id=source.id,
             sink_id=sink.id,
-            model_id=model.id,
+            model_id=model_id,
             status=PipelineStatus.RUNNING,
         )
         # activate_pipeline internally calls get_active_pipeline and update_pipeline

@@ -206,8 +206,8 @@ def get_job_logs_path(job_id: str | UUID) -> str:
         ValueError: If job_id contains invalid characters
 
     Example:
-        >>> get_job_logs_path(job_id="foo-123")
-        'logs/jobs/foo-123'
+        >>> get_job_logs_path(job_id="544bb0ab-de53-4612-b785-3e42ae6e83c1")
+        'logs/jobs/544bb0ab-de53-4612-b785-3e42ae6e83c1'
     """
     job_id = _validate_job_id(job_id)
     jobs_folder = os.path.join(global_log_config.log_folder, "jobs")

@@ -179,7 +179,7 @@ class TestTrainingService:
             # payload and a name that embeds the generated model ID in the expected format.
             created_model = mock_to_thread.call_args.kwargs["model"]
             assert created_model.architecture == fxt_job.payload["model_name"]
-            assert created_model.name == f"{fxt_job.payload['model_name']} ({str(created_model.id).split("-")[0]})"
+            assert created_model.name == f"{fxt_job.payload['model_name']} ({str(created_model.id).split('-')[0]})"
 
     @pytest.mark.parametrize(
         "exception,expected_message",
