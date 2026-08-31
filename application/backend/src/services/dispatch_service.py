@@ -1,13 +1,12 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 from collections.abc import Callable, Sequence
+
+from loguru import logger
 
 from pydantic_models import Sink, SinkType
 from services.dispatchers import Dispatcher, FolderDispatcher, MqttDispatcher, WebhookDispatcher
-
-logger = logging.getLogger(__name__)
 
 
 class DispatchService:
@@ -27,7 +26,7 @@ class DispatchService:
                 raise ValueError(f"Unrecognized sink type: {output_config.sink_type}")
             return factory(output_config)
         except Exception:
-            logger.warning("Failed to initialize dispatcher for sink type: %s", output_config.sink_type, exc_info=True)
+            logger.opt(exception=True).warning(f"Failed to initialize dispatcher for sink type: {output_config.sink_type}")
             return None
 
     @classmethod
