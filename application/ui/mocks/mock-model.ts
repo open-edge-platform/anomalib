@@ -10,6 +10,7 @@ export const getMockedModel = (partial: Partial<SchemaModel>): SchemaModel => ({
     is_ready: true,
     dataset_snapshot_id: 'dataset-1',
     train_job_id: 'job-1',
+    architecture: 'PatchCore',
     ...partial,
 });
 

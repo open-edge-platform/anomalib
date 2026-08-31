@@ -49,7 +49,8 @@
         "react-router": "^7.0.0",
         "react-router-dom": "^6.30.3",
         "recharts": "^3.8.1",
-        "static-path": "^0.0.4"
+        "static-path": "^0.0.4",
+        "uuid": "~14.0.1"
     },
     "devDependencies": {
         "@eslint/compat": "^1.2.8",

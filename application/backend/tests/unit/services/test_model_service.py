@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import uuid4
 
 import numpy as np
 import openvino.properties.hint as ov_hints
@@ -11,7 +12,6 @@ from anomalib.deploy import ExportType, OpenVINOInferencer
 from pydantic_models import PredictionLabel
 from repositories import ModelRepository
 from services import ModelService
-from utils.short_uuid import ShortUUID
 
 
 @pytest.fixture
@@ -163,7 +163,7 @@ class TestModelService:
         """Test that deleting a model also deletes its associated training job."""
         fxt_model_repository.delete_by_id.return_value = None
         fxt_model_repository.get_by_id.return_value = fxt_model
-        fxt_model.train_job_id = ShortUUID.generate()
+        fxt_model.train_job_id = uuid4()
 
         with (
             patch("services.model_service.ModelRepository") as mock_repo_class,
