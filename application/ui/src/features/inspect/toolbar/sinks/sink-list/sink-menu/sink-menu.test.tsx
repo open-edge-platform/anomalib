@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
+import { toast as sonnerToast } from 'sonner';
 import { http } from 'src/api/utils';
 import { server } from 'src/msw-node-setup';
 import { TestProviders } from 'src/providers';
@@ -10,6 +11,10 @@ import { SinkMenu, SinkMenuProps } from './sink-menu.component';
 vi.mock('@anomalib-studio/hooks', () => ({ useProjectIdentifier: () => ({ projectId: '123' }) }));
 
 describe('SinkMenu', () => {
+    // Sonner's toast portal persists on document.body across renders
+    afterEach(() => {
+        sonnerToast.dismiss();
+    });
     const renderApp = ({
         id = 'id-test',
         name = 'name test',

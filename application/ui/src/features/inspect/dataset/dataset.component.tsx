@@ -3,7 +3,7 @@
 
 import { Suspense } from 'react';
 
-import { Flex, Heading, Loading, View } from '@geti/ui';
+import { Flex, Heading, Loading, View } from '@geti-ui/ui';
 
 import { TrainModelButton } from '../train-model/train-model-button.component';
 import { DatasetList } from './dataset-list.component';

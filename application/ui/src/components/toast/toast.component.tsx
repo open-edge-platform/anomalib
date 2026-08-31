@@ -3,8 +3,8 @@
 
 import { ReactElement, ReactNode } from 'react';
 
-import { ActionButton, Divider, Flex, Heading, Text, View } from '@geti/ui';
-import { AcceptCircle, Alert, CloseSmall, CrossCircle, Info } from '@geti/ui/icons';
+import { ActionButton, Divider, Flex, Heading, Text, View } from '@geti-ui/ui';
+import { AcceptCircle, Alert, CloseSmall, CrossCircle, Info } from '@geti-ui/ui/icons';
 import { clsx } from 'clsx';
 import { isEmpty } from 'lodash-es';
 import { toast as soonerToast, Toaster, ToastT } from 'sonner';

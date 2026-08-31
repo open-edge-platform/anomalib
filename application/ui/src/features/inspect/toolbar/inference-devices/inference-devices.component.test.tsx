@@ -1,8 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { toast } from '@geti/ui';
-import { ThemeProvider } from '@geti/ui/theme';
+import { ThemeProvider } from '@geti-ui/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -13,12 +12,12 @@ import { SchemaPipeline } from 'src/api/openapi-spec';
 import { http } from 'src/api/utils';
 import { server } from 'src/msw-node-setup';
 
+import { toast } from '../../../../components/toast/toast.component';
 import { InferenceDevices } from './inference-devices.component';
 
-vi.mock('@geti/ui', async () => {
-    const actual = await vi.importActual('@geti/ui');
-    return { ...actual, toast: vi.fn() };
-});
+vi.mock('../../../../components/toast/toast.component', () => ({
+    toast: vi.fn(),
+}));
 
 type DeviceType = 'cpu' | 'xpu' | 'cuda';
 

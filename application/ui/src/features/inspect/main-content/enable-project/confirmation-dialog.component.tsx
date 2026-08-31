@@ -1,6 +1,6 @@
 import { $api } from '@anomalib-studio/api';
 import { useActivatePipeline, useDisablePipeline } from '@anomalib-studio/hooks';
-import { AlertDialog } from '@geti/ui';
+import { AlertDialog } from '@geti-ui/ui';
 
 interface ConfirmationDialogProps {
     activeProjectId: string;

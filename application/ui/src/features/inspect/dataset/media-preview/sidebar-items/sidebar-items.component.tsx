@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Selection, View } from '@geti/ui';
+import { Selection, View } from '@geti-ui/ui';
 import { GridLayoutOptions } from 'react-aria-components';
 import { getThumbnailUrl, isNonEmptyString } from 'src/features/inspect/utils';
 

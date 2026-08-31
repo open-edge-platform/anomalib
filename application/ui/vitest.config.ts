@@ -25,7 +25,7 @@ export default defineConfig({
         watch: false,
         server: {
             deps: {
-                inline: [/@react-spectrum\/.*/, /@spectrum-icons\/.*/, /@adobe\/react-spectrum\/.*/],
+                inline: [/@react-spectrum\/.*/, /@spectrum-icons\/.*/, /@adobe\/react-spectrum\/.*/, /@geti-ui\/.*/],
             },
         },
     },

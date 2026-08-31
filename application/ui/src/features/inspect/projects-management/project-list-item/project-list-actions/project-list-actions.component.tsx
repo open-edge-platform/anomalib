@@ -2,8 +2,10 @@ import { useState } from 'react';
 
 import { $api } from '@anomalib-studio/api';
 import { useProjectIdentifier } from '@anomalib-studio/hooks';
-import { ActionButton, AlertDialog, DialogContainer, Item, Key, Menu, MenuTrigger, toast } from '@geti/ui';
-import { MoreMenu } from 'packages/ui/icons';
+import { ActionButton, AlertDialog, DialogContainer, Item, Key, Menu, MenuTrigger } from '@geti-ui/ui';
+import { MoreMenu } from '@geti-ui/ui/icons';
+
+import { toast } from '../../../../../components/toast/toast.component';
 
 interface ProjectActionsProps {
     projectId: string;

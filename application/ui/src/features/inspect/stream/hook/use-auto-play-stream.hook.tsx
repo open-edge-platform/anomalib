@@ -4,10 +4,10 @@
 import { useEffect, useRef } from 'react';
 
 import { useProjectIdentifier } from '@anomalib-studio/hooks';
-import { toast } from '@geti/ui';
 import { usePipeline, useRunPipeline } from 'src/hooks/use-pipeline.hook';
 
 import { useStreamConnection } from '../../../../components/stream/stream-connection-provider';
+import { toast } from '../../../../components/toast/toast.component';
 import { isNonEmptyString } from '../../utils';
 
 export const STREAM_ERROR_MESSAGE = 'Failed to connect to the stream';

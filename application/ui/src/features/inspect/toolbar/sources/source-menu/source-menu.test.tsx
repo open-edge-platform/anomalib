@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
+import { toast as sonnerToast } from 'sonner';
 import { http } from 'src/api/utils';
 import { server } from 'src/msw-node-setup';
 import { TestProviders } from 'src/providers';
@@ -10,6 +11,11 @@ import { SourceMenu, SourceMenuProps } from './source-menu.component';
 vi.mock('@anomalib-studio/hooks', () => ({ useProjectIdentifier: () => ({ projectId: '123' }) }));
 
 describe('SourceMenu', () => {
+    // Sonner's toast portal persists on document.body across renders
+    beforeEach(() => {
+        sonnerToast.dismiss();
+    });
+
     const renderApp = ({
         id = 'id-test',
         name = 'name test',

@@ -2,9 +2,10 @@ import { useState } from 'react';
 
 import { $api } from '@anomalib-studio/api';
 import { usePatchPipeline, useProjectIdentifier } from '@anomalib-studio/hooks';
-import { ActionButton, AlertDialog, DialogContainer, Item, Menu, MenuTrigger, toast, type Key } from '@geti/ui';
-import { MoreMenu } from '@geti/ui/icons';
+import { ActionButton, AlertDialog, DialogContainer, Item, Menu, MenuTrigger, type Key } from '@geti-ui/ui';
+import { MoreMenu } from '@geti-ui/ui/icons';
 
+import { toast } from '../../../components/toast/toast.component';
 import type { ModelData } from '../../../hooks/utils';
 import { JobLogsDialog } from '../jobs/show-job-logs.component';
 

@@ -4,6 +4,7 @@
 import { renderHook, screen, waitFor } from '@testing-library/react';
 import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { HttpResponse } from 'msw';
+import { toast as sonnerToast } from 'sonner';
 import { SchemaPipeline } from 'src/api/openapi-spec';
 import { http } from 'src/api/utils';
 import { StreamConnectionStatus, useStreamConnection } from 'src/components/stream/stream-connection-provider';
@@ -18,14 +19,6 @@ vi.mock('../../../../components/stream/stream-connection-provider', async () => 
     return {
         ...actual,
         useStreamConnection: vi.fn(),
-    };
-});
-
-vi.mock('../../../../components/toast/toast.component', async () => {
-    const actual = await vi.importActual('../../../../components/toast/toast.component');
-    return {
-        ...actual,
-        toast: vi.fn(),
     };
 });
 
@@ -62,6 +55,8 @@ describe('useAutoPlayStream', () => {
     };
 
     beforeEach(() => {
+        // Sonner's toast portal persists on document.body across renders
+        sonnerToast.dismiss();
         queryClient.clear();
         vi.clearAllMocks();
     });

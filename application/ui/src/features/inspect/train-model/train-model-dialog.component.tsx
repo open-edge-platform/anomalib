@@ -15,7 +15,7 @@ import {
     RadioGroup,
     Text,
     View,
-} from '@geti/ui';
+} from '@geti-ui/ui';
 import { useSearchParams } from 'react-router-dom';
 import { toast as sonnerToast } from 'sonner';
 

@@ -14,8 +14,8 @@ import {
     Heading,
     Icon,
     Loading,
-} from '@geti/ui';
-import { LogsIcon } from '@geti/ui/icons';
+} from '@geti-ui/ui';
+import { LogsIcon } from '@geti-ui/ui/icons';
 import { queryOptions, experimental_streamedQuery as streamedQuery, useQuery } from '@tanstack/react-query';
 import { fetchSSE } from 'src/api/fetch-sse';
 

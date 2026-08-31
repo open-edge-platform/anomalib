@@ -5,10 +5,11 @@ import { Dispatch, RefObject, SetStateAction, useCallback, useEffect, useRef, us
 
 import { $api } from '@anomalib-studio/api';
 import { useProjectIdentifier } from '@anomalib-studio/hooks';
-import { Button, dimensionValue, Flex, toast } from '@geti/ui';
+import { Button, dimensionValue, Flex } from '@geti-ui/ui';
 import { clsx } from 'clsx';
 
 import { useStreamConnection } from '../../../components/stream/stream-connection-provider';
+import { toast } from '../../../components/toast/toast.component';
 import { ZoomTransform } from '../../../components/zoom/zoom-transform';
 import { useEventListener } from '../../../hooks/event-listener/event-listener.hook';
 import { Fps } from './fps/fps.component';

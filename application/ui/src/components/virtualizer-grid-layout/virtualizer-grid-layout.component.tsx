@@ -3,7 +3,14 @@
 
 import { ComponentProps, ReactNode, useRef } from 'react';
 
-import { AriaComponentsListBox, GridLayout, ListBoxItem, Loading, View, Virtualizer } from '@geti/ui';
+import {
+    AriaComponentsListBox,
+    GridLayout,
+    AriaListBoxItem as ListBoxItem,
+    Loading,
+    View,
+    Virtualizer,
+} from '@geti-ui/ui';
 import { useLoadMore } from '@react-aria/utils';
 import { GridLayoutOptions } from 'react-aria-components';
 

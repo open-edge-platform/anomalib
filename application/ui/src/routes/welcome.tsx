@@ -1,7 +1,7 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Content, Flex, Grid, Heading, IllustratedMessage, Text } from '@geti/ui';
+import { Button, Content, Flex, Grid, Heading, IllustratedMessage, Text } from '@geti-ui/ui';
 import { Navigate, useNavigate } from 'react-router';
 import { v4 as uuid } from 'uuid';
 
