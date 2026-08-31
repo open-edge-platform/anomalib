@@ -52,7 +52,7 @@ def _main() -> None:
     logs_folder = app_data_folder / "logs"
     os.makedirs(logs_folder, exist_ok=True)
 
-    print(f"Setup Hook: Using folder: {app_data_folder} for data and {logs_folder} for logs")
+    print(f"Setup Hook: Using folder: {data_folder} for data and {logs_folder} for logs")
     os.environ["DATA_DIR"] = str(data_folder)
     os.environ["LOG_DIR"] = str(logs_folder)
 
