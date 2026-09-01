@@ -8,6 +8,7 @@ import { isNil } from 'lodash-es';
 import { AnomalyMap } from './anomaly-map/anomaly-map.component';
 import { InferenceDevices } from './inference-devices/inference-devices.component';
 import { PipelineConfiguration } from './pipeline-configuration.component';
+import { TogglePipelineButton } from './toggle-pipeline-button/toggle-pipeline-button.component';
 
 export const Toolbar = () => {
     const { data: pipeline } = usePipeline();
@@ -32,7 +33,10 @@ export const Toolbar = () => {
                     )}
                 </Flex>
 
-                <PipelineConfiguration />
+                <Flex gap={'size-200'}>
+                    <TogglePipelineButton />
+                    <PipelineConfiguration />
+                </Flex>
             </Flex>
         </View>
     );
