@@ -1,12 +1,15 @@
+// Copyright (C) 2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { useActivatePipeline, useDisablePipeline, usePipeline, useProjectIdentifier } from '@anomalib-studio/hooks';
 import { Switch } from 'packages/ui';
 import { toast } from 'src/components/toast/toast.component';
 
 export const TogglePipelineButton = () => {
-    const projectId = useProjectIdentifier();
+    const { projectId } = useProjectIdentifier();
     const pipelineQuery = usePipeline();
     const enablePipelineMutation = useActivatePipeline({});
-    const disablePipelineMutation = useDisablePipeline(projectId.projectId);
+    const disablePipelineMutation = useDisablePipeline(projectId);
 
     const isPending = disablePipelineMutation.isPending || enablePipelineMutation.isPending;
     const isPipelineEnabled = pipelineQuery.data?.status === 'running';
@@ -19,12 +22,15 @@ export const TogglePipelineButton = () => {
                     message: `Pipeline ${isPipelineEnabled ? 'disabled' : 'enabled'} successfully`,
                 });
             },
+            onError: () => {
+                toast({ type: 'error', message: `Failed to toggle pipeline.` });
+            },
         };
 
         if (isPipelineEnabled) {
-            disablePipelineMutation.mutate({ params: { path: { project_id: projectId.projectId } } }, mutationOptions);
+            disablePipelineMutation.mutate({ params: { path: { project_id: projectId } } }, mutationOptions);
         } else {
-            enablePipelineMutation.mutate({ params: { path: { project_id: projectId.projectId } } }, mutationOptions);
+            enablePipelineMutation.mutate({ params: { path: { project_id: projectId } } }, mutationOptions);
         }
     };
 
