@@ -30,7 +30,6 @@ export const UploadImages = () => {
 
             return captureImageMutation.mutateAsync({
                 params: { path: { project_id: projectId } },
-                // @ts-expect-error There is an incorrect type in OpenAPI
                 body: formData,
             });
         });

@@ -1,5 +1,5 @@
-import { clsx } from 'clsx';
 import { Flex, Text } from '@geti-ui/ui';
+import { clsx } from 'clsx';
 
 import classes from './status-tag.module.scss';
 

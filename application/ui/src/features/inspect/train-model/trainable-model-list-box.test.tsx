@@ -1,8 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { RadioGroup } from '@geti-ui/ui';
-import { ThemeProvider } from '@geti-ui/ui';
+import { RadioGroup, ThemeProvider } from '@geti-ui/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
