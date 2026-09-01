@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Content, Flex, Grid, Heading, IllustratedMessage, Text } from '@geti/ui';
-import { Navigate, useNavigate } from 'react-router';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
 
 import { $api } from '../api/client';

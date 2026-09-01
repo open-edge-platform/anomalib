@@ -4,7 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getMockedMediaItem } from 'mocks/mock-media-item';
 import { HttpResponse } from 'msw';
-import { MemoryRouter, Route, Routes, useNavigate } from 'react-router';
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { http } from 'src/api/utils';
 import { server } from 'src/msw-node-setup';
 import { vi } from 'vitest';
@@ -14,8 +14,8 @@ import { Project, ProjectListItem } from './project-list-item.component';
 
 vi.mock('../../../../components/stream/stream-connection-provider');
 
-vi.mock('react-router', async () => {
-    const actual = await vi.importActual('react-router');
+vi.mock('react-router-dom', async () => {
+    const actual = await vi.importActual('react-router-dom');
     return {
         ...actual,
         useNavigate: vi.fn(),

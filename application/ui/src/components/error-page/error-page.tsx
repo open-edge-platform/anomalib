@@ -3,7 +3,7 @@
 
 import { Button, Heading, IllustratedMessage, View } from '@geti/ui';
 import { NotFound } from '@geti/ui/icons';
-import { isRouteErrorResponse, useRouteError } from 'react-router';
+import { isRouteErrorResponse, useRouteError } from 'react-router-dom';
 
 import { paths } from '../../routes/paths';
 import { redirectTo } from '../../routes/utils';
