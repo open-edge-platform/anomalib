@@ -82,7 +82,7 @@ class KMeans:
 
         # Initialize centroids randomly from the data points
         centroid_indices = torch.randint(0, batch_size, (self.n_clusters,))
-        self.cluster_centers_ = inputs[centroid_indices]
+        self.cluster_centers_ = inputs[centroid_indices].clone()
 
         # Run the k-means algorithm for max_iter iterations
         for _ in range(self.max_iter):
@@ -93,10 +93,12 @@ class KMeans:
             self.labels_ = torch.argmin(distances, dim=1)
 
             # Update the centroids to be the mean of the data points assigned
-            for j in range(self.n_clusters):
-                mask = self.labels_ == j
-                if mask.any():
-                    self.cluster_centers_[j] = inputs[mask].mean(dim=0)
+            counts = torch.bincount(self.labels_, minlength=self.n_clusters).to(inputs.dtype)
+            new_centers = torch.zeros_like(self.cluster_centers_)
+            new_centers.index_add_(0, self.labels_, inputs)
+
+            valid_mask = counts > 0
+            self.cluster_centers_[valid_mask] = new_centers[valid_mask] / counts[valid_mask].unsqueeze(1)
 
         return self.labels_, self.cluster_centers_
 
