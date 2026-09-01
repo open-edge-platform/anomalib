@@ -8,7 +8,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { HttpResponse } from 'msw';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { SchemaPipeline } from 'src/api/openapi-spec';
 import { http } from 'src/api/utils';
 import { server } from 'src/msw-node-setup';

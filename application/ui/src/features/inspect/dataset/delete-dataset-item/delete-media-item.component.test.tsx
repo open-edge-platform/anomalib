@@ -5,7 +5,7 @@ import { ThemeProvider } from '@geti/ui/theme';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { HttpResponse } from 'msw';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 
 import { http } from '../../../../api/utils';
 import { Toast } from '../../../../components/toast/toast.component';

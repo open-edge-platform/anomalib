@@ -1,7 +1,7 @@
 import { ThemeProvider } from '@geti/ui/theme';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { SchemaPipeline } from 'src/api/openapi-spec';
 import { http } from 'src/api/utils';
 import { server } from 'src/msw-node-setup';
