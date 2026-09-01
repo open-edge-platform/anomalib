@@ -9,6 +9,7 @@ import tempfile
 from dataclasses import dataclass
 from multiprocessing.synchronize import Event as EventClass
 from pathlib import Path
+from uuid import UUID, uuid4
 
 import anyio
 import cv2
@@ -33,7 +34,6 @@ from services import ResourceNotFoundError
 from services.dataset_snapshot_service import DatasetSnapshotService
 from services.exceptions import DeviceNotFoundError, ResourceType
 from services.system_service import SystemService
-from utils.short_uuid import ShortUUID
 
 DEFAULT_DEVICE = "CPU"
 
@@ -41,7 +41,7 @@ DEFAULT_DEVICE = "CPU"
 @dataclass
 class LoadedModel:
     name: str
-    id: ShortUUID
+    id: UUID
     model: Model
     device: str | None = None
 
@@ -82,7 +82,7 @@ class ModelService:
             return await repo.save(model)
 
     @staticmethod
-    async def get_model_list(project_id: ShortUUID, limit: int, offset: int) -> ModelList:
+    async def get_model_list(project_id: UUID, limit: int, offset: int) -> ModelList:
         async with get_async_db_session_ctx() as session:
             repo = ModelRepository(session, project_id=project_id)
             total = await repo.get_all_count()
@@ -98,13 +98,13 @@ class ModelService:
         )
 
     @staticmethod
-    async def get_model_by_id(project_id: ShortUUID, model_id: ShortUUID) -> Model | None:
+    async def get_model_by_id(project_id: UUID, model_id: UUID) -> Model | None:
         async with get_async_db_session_ctx() as session:
             repo = ModelRepository(session, project_id=project_id)
             return await repo.get_by_id(model_id)
 
     @classmethod
-    async def delete_model(cls, project_id: ShortUUID, model_id: ShortUUID) -> None:
+    async def delete_model(cls, project_id: UUID, model_id: UUID) -> None:
         model = await cls.get_model_by_id(project_id, model_id)
         if not model:
             raise ResourceNotFoundError(resource_id=str(model_id), resource_type=ResourceType.MODEL)
@@ -128,7 +128,7 @@ class ModelService:
                 await job_repo.delete_by_id(train_job_id)
 
     @classmethod
-    async def delete_project_models_db(cls, session: AsyncSession, project_id: ShortUUID, commit: bool = False) -> None:
+    async def delete_project_models_db(cls, session: AsyncSession, project_id: UUID, commit: bool = False) -> None:
         """Delete all models associated with a project from the database."""
         # We still need to handle side effects like snapshot reference counting if possible,
         # but since we are deleting the project, all snapshots will be deleted anyway.
@@ -137,24 +137,22 @@ class ModelService:
         await repo.delete_all(commit=commit)
 
     @classmethod
-    async def cleanup_project_model_files(cls, project_id: ShortUUID) -> None:
+    async def cleanup_project_model_files(cls, project_id: UUID) -> None:
         """Cleanup model files for a project."""
         try:
             # Cleanup project folder (removes all model folders at once)
             # Note: using dummy model_id since we are deleting the entire project folder
-            model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=ShortUUID.generate())
+            model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=uuid4())
             await model_binary_repo.delete_project_folder()
             logger.info(f"Cleaned up model files for project {project_id}")
 
-            model_export_bin_repo = ModelExportBinaryRepository(project_id=project_id, model_id=ShortUUID.generate())
+            model_export_bin_repo = ModelExportBinaryRepository(project_id=project_id, model_id=uuid4())
             await model_export_bin_repo.delete_project_folder()
             logger.info(f"Cleaned up model export files for project {project_id}")
         except Exception as e:
             logger.warning(f"Failed to cleanup model files for project {project_id}: {e}")
 
-    async def export_model(
-        self, project_id: ShortUUID, model_id: ShortUUID, export_parameters: ExportParameters
-    ) -> Path:
+    async def export_model(self, project_id: UUID, model_id: UUID, export_parameters: ExportParameters) -> Path:
         """Export a trained model to a zip file.
 
         Args:
@@ -180,10 +178,10 @@ class ModelService:
 
         # Locate checkpoint
         model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model_id)
-        name = f"{model.project_id}-{model.name}"
+        name = f"{model.project_id}-{model.architecture}"
         ckpt_path = (
             Path(model_binary_repo.model_folder_path)
-            / model.name.title()
+            / model.architecture.title()
             / name
             / "latest"
             / "weights"
@@ -216,7 +214,7 @@ class ModelService:
 
                 return await asyncio.to_thread(
                     self._run_export,
-                    model_name=model.name,
+                    architecture=model.architecture,
                     ckpt_path=ckpt_path,
                     export_parameters=export_parameters,
                     export_zip_path=Path(export_zip_path),
@@ -226,7 +224,7 @@ class ModelService:
         # No datamodule needed for other compression types
         return await asyncio.to_thread(
             self._run_export,
-            model_name=model.name,
+            architecture=model.architecture,
             ckpt_path=ckpt_path,
             export_parameters=export_parameters,
             export_zip_path=Path(export_zip_path),
@@ -235,7 +233,7 @@ class ModelService:
 
     @staticmethod
     def _run_export(
-        model_name: str,
+        architecture: str,
         ckpt_path: Path,
         export_parameters: ExportParameters,
         export_zip_path: Path,
@@ -244,7 +242,7 @@ class ModelService:
         """Run the export process in a separate thread."""
         # Setup engine
         engine = Engine()
-        model_module = get_model(model_name)
+        model_module = get_model(architecture)
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -296,7 +294,7 @@ class ModelService:
         cls,
         model: Model,
         image_bytes: bytes,
-        cached_models: dict[ShortUUID, OpenVINOInferencer] | None = None,
+        cached_models: dict[UUID, OpenVINOInferencer] | None = None,
         device: str | None = None,
     ) -> PredictionResponse:
         """Run prediction on an image using the specified model.

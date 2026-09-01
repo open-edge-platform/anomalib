@@ -106,7 +106,7 @@ class AnomalibWandbLogger(ImageLoggerBase, WandbLogger):
         so the logging step does not increase.
 
     See Also:
-        - `W&B Documentation <https://docs.wandb.ai/integrations/lightning>`_
+        - `W&B Documentation <https://docs.wandb.ai/guides/integrations/lightning>`_
     """
 
     def __init__(
