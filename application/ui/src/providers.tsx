@@ -5,9 +5,8 @@ import { ReactNode } from 'react';
 
 import { ThemeProvider } from '@geti/ui/theme';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { NuqsAdapter } from 'nuqs/adapters/react-router/v6';
-import { MemoryRouterProps, RouterProvider } from 'react-router';
-import { MemoryRouter as Router } from 'react-router-dom';
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v8';
+import { MemoryRouterProps, MemoryRouter as Router, RouterProvider } from 'react-router-dom';
 
 import { StreamConnectionProvider } from './components/stream/stream-connection-provider';
 import { Toast } from './components/toast/toast.component';

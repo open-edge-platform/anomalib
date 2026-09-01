@@ -16,7 +16,7 @@ import {
     Text,
     View,
 } from '@geti/ui';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import { toast as sonnerToast } from 'sonner';
 
 import { TrainableModelListBox } from './trainable-model-list-box.component';

@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getMockedMetrics } from 'mocks/mock-metrics';
 import { HttpResponse } from 'msw';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { SchemaPipeline } from 'src/api/openapi-spec';
 import { http } from 'src/api/utils';
 import { ZoomProvider } from 'src/components/zoom/zoom';
