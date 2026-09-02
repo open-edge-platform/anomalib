@@ -18,11 +18,19 @@ Example:
         ... )
 
 Notes:
-    The Kaputt dataset requires manual download from
-    https://www.kaputt-dataset.com/. Please fill out the form on the website
-    to obtain access to the dataset.
+    The Kaputt dataset is hosted as a gated dataset on Hugging Face at
+    https://huggingface.co/datasets/amazon/kaputt. You need to accept
+    the dataset's Terms of Use on the Hugging Face website before you
+    can download it.
 
-    The expected directory structure after extraction is::
+    Once access is granted, this datamodule downloads and extracts the
+    dataset automatically as long as a Hugging Face token is available,
+    either via the ``HF_TOKEN`` environment variable or a cached login
+    (``hf auth login``). If no token is available, or access has not been
+    granted yet, see ``get_download_instructions`` for manual download
+    steps.
+
+    The expected directory structure after download is::
 
         datasets/kaputt/
         ├── datasets/                         # Parquet metadata files
@@ -55,16 +63,43 @@ Reference:
 """
 
 import logging
+import shutil
 from pathlib import Path
+from textwrap import dedent
+from typing import TYPE_CHECKING
 
+from lightning_utilities.core.imports import module_available
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.kaputt import ImageMode, ImageType, KaputtDataset
 from anomalib.data.utils import Split, TestSplitMode, ValSplitMode
+from anomalib.data.utils.download import extract
 from anomalib.utils.path import resolve_dataset_root
 
+if TYPE_CHECKING or module_available("huggingface_hub"):
+    from huggingface_hub import hf_hub_download
+    from huggingface_hub.utils import GatedRepoError, HfHubHTTPError
+else:
+    hf_hub_download = None
+    GatedRepoError = HfHubHTTPError = Exception
+
 logger = logging.getLogger(__name__)
+
+# Hugging Face repository hosting the Kaputt dataset.
+HF_REPO_ID = "amazon/kaputt"
+
+# Maps each archive under `kaputt-release/` in the Hugging Face repo to the
+# subdirectory it should be extracted into, relative to the dataset root.
+HF_ARCHIVE_TO_SUBDIR = {
+    "datasets.tar.gz": "datasets",
+    "query-image.tar.gz": "query-image",
+    "query-crop.tar.gz": "query-crop",
+    "query-mask.tar.gz": "query-mask",
+    "reference-image.tar.gz": "reference-image",
+    "reference-crop.tar.gz": "reference-crop",
+    "reference-mask.tar.gz": "reference-mask",
+}
 
 
 class Kaputt(AnomalibDataModule):
@@ -136,9 +171,13 @@ class Kaputt(AnomalibDataModule):
             ... )
 
     Note:
-        The Kaputt dataset must be downloaded manually from
-        https://www.kaputt-dataset.com/. This datamodule does not support
-        automatic download due to the dataset's licensing requirements.
+        The Kaputt dataset is gated on Hugging Face
+        (https://huggingface.co/datasets/amazon/kaputt). Once you have
+        requested and been granted access, this datamodule downloads and
+        extracts the dataset automatically using your Hugging Face token
+        (``HF_TOKEN`` env var or a cached ``hf auth login``). If access has
+        not been granted or no token is available, ``prepare_data`` raises
+        with manual download instructions.
     """
 
     def __init__(
@@ -216,14 +255,21 @@ class Kaputt(AnomalibDataModule):
             )
 
     def prepare_data(self) -> None:
-        """Check if the dataset is available.
+        """Check if the dataset is available, downloading it if possible.
 
         This method checks if the specified dataset is available in the file
-        system. Unlike other datasets, Kaputt does not support automatic
-        download due to licensing requirements.
+        system. If it is not, and the ``huggingface_hub`` package is
+        installed, it attempts to automatically download and extract the
+        (gated) dataset from Hugging Face using the token from the
+        ``HF_TOKEN`` environment variable or a cached ``hf auth login``
+        session. Automatic download only succeeds if the user has already
+        requested and been granted access to the dataset on Hugging Face.
 
         Raises:
-            FileNotFoundError: If the dataset is not found at the specified path.
+            FileNotFoundError: If the dataset is not found at the specified
+                path and cannot be downloaded automatically (e.g. access has
+                not been granted, no token is available, or
+                ``huggingface_hub`` is not installed).
 
         Example:
             Assume the dataset is available on the file system::
@@ -251,12 +297,113 @@ class Kaputt(AnomalibDataModule):
 
         if datasets_dir.is_dir() and query_train_parquet.exists():
             logger.info("Found the Kaputt dataset.")
-        else:
-            msg = (
-                f"Kaputt dataset not found at {self.root}. "
-                "Please download the dataset from https://www.kaputt-dataset.com/ "
-                "and extract it to the specified root directory. "
-                "Note: The dataset requires filling out a request form for access. "
-                f"Expected to find: {query_train_parquet}"
-            )
-            raise FileNotFoundError(msg)
+            return
+
+        if not module_available("huggingface_hub"):
+            raise FileNotFoundError(get_download_instructions(self.root))
+
+        logger.info(
+            "Kaputt dataset not found at %s. Attempting to download it from %s.",
+            self.root,
+            f"https://huggingface.co/datasets/{HF_REPO_ID}",
+        )
+        scratch_dir = self.root / ".hf_download"
+        try:
+            for archive_name, subdir in HF_ARCHIVE_TO_SUBDIR.items():
+                target_dir = self.root / subdir
+                if target_dir.exists() and any(target_dir.iterdir()):
+                    continue
+
+                logger.info("Downloading %s from Hugging Face.", archive_name)
+                downloaded_path = Path(
+                    hf_hub_download(
+                        repo_id=HF_REPO_ID,
+                        repo_type="dataset",
+                        filename=f"kaputt-release/{archive_name}",
+                        local_dir=scratch_dir,
+                    ),
+                )
+                target_dir.mkdir(parents=True, exist_ok=True)
+                extract(downloaded_path, target_dir)
+        except (GatedRepoError, HfHubHTTPError) as exc:
+            raise FileNotFoundError(get_download_instructions(self.root)) from exc
+        finally:
+            shutil.rmtree(scratch_dir, ignore_errors=True)
+
+        if not query_train_parquet.exists():
+            raise FileNotFoundError(get_download_instructions(self.root))
+
+
+def get_download_instructions(root_path: Path) -> str:
+    """Get download instructions for the Kaputt dataset.
+
+    Args:
+        root_path: Path where the dataset should be downloaded.
+
+    Returns:
+        str: Formatted download instructions.
+    """
+    return dedent(f"""
+        Kaputt dataset not found in {root_path}
+
+        The Kaputt Defect Dataset (KDD) is a gated dataset hosted on Hugging
+        Face. To get access:
+
+        1. Create a Hugging Face account at https://huggingface.co
+        2. Visit https://huggingface.co/datasets/{HF_REPO_ID}
+        3. Read and accept the dataset's Terms of Use (LICENSE)
+        4. Once access is granted, you have two options to download the dataset:
+
+        Option 1: Using the Hugging Face CLI (Recommended)
+        --------------------------------------------------
+        a. Install the Hugging Face CLI:
+           pip install -U huggingface_hub
+
+        b. Login to Hugging Face:
+           hf auth login
+
+        c. Download the dataset archives:
+           hf download \\
+               --repo-type dataset \\
+               --local-dir {root_path}/kaputt-release {HF_REPO_ID} \\
+               --include="kaputt-release/*.tar.gz"
+
+        d. Extract each archive into its matching subdirectory, e.g.:
+           tar -xzf {root_path}/kaputt-release/datasets.tar.gz -C {root_path}/datasets
+           tar -xzf {root_path}/kaputt-release/query-image.tar.gz -C {root_path}/query-image
+           tar -xzf {root_path}/kaputt-release/query-crop.tar.gz -C {root_path}/query-crop
+           tar -xzf {root_path}/kaputt-release/query-mask.tar.gz -C {root_path}/query-mask
+           tar -xzf {root_path}/kaputt-release/reference-image.tar.gz -C {root_path}/reference-image
+           tar -xzf {root_path}/kaputt-release/reference-crop.tar.gz -C {root_path}/reference-crop
+           tar -xzf {root_path}/kaputt-release/reference-mask.tar.gz -C {root_path}/reference-mask
+
+        Option 2: Manual Download
+        --------------------------
+        a. Visit https://huggingface.co/datasets/{HF_REPO_ID}/tree/main/kaputt-release
+        b. Download each ``*.tar.gz`` archive manually
+        c. Extract each archive as described in step 4 above
+
+        Expected directory structure:
+        {root_path}/
+        ├── datasets/                         # Parquet metadata files
+        │   ├── query-train.parquet
+        │   ├── query-validation.parquet
+        │   ├── query-test.parquet
+        │   ├── reference-train.parquet
+        │   ├── reference-validation.parquet
+        │   └── reference-test.parquet
+        ├── query-image/data/<split>/query-data/image/   # Query images
+        ├── query-crop/data/<split>/query-data/crop/     # Cropped regions
+        ├── query-mask/data/<split>/query-data/mask/     # Segmentation masks
+        ├── reference-image/data/<split>/reference-data/image/
+        ├── reference-crop/data/<split>/reference-data/crop/
+        └── reference-mask/data/<split>/reference-data/mask/
+
+        Note: Replace YOUR_HF_TOKEN with your Hugging Face access token if not
+              already logged in via `hf auth login`.
+              To get your token, visit: https://huggingface.co/settings/tokens
+
+        For more information about the dataset, see:
+        - Paper: https://arxiv.org/abs/2510.05903
+        - Dataset: https://huggingface.co/datasets/{HF_REPO_ID}
+    """)
