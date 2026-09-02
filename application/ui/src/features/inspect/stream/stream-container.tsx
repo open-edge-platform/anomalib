@@ -15,7 +15,7 @@ import classes from './stream-container.module.scss';
 
 const RECONNECT_CLEANUP_DELAY_MS = 300; // Delay to allow stream connection cleanup to complete before reconnecting
 
-export const StreamContainer = () => {
+export const StreamContainer = ({ hasActiveProject }: { hasActiveProject: boolean }) => {
     const { projectId } = useProjectIdentifier();
     const { data: pipeline } = usePipeline();
     const { start, stop, status } = useStreamConnection();
@@ -47,6 +47,22 @@ export const StreamContainer = () => {
             console.error('Failed to reconnect stream:', error);
         }
     };
+
+    if (!hasActiveProject) {
+        return (
+            <Flex
+                gridArea={'canvas'}
+                maxHeight={'100%'}
+                UNSAFE_className={classes.canvasContainer}
+                alignItems={'center'}
+                justifyContent={'center'}
+            >
+                <Button aria-label={'Start stream'} isDisabled UNSAFE_className={classes.playButton}>
+                    <Play width='128px' height='128px' />
+                </Button>
+            </Flex>
+        );
+    }
 
     return (
         <Flex

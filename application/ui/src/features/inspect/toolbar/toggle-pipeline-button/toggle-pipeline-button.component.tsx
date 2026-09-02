@@ -6,8 +6,8 @@ import { Switch } from 'packages/ui';
 import { toast } from 'src/components/toast/toast.component';
 
 export const TogglePipelineButton = () => {
-    const { projectId } = useProjectIdentifier();
     const pipelineQuery = usePipeline();
+    const { projectId } = useProjectIdentifier();
     const enablePipelineMutation = useActivatePipeline({});
     const disablePipelineMutation = useDisablePipeline(projectId);
 
@@ -21,9 +21,6 @@ export const TogglePipelineButton = () => {
                     type: 'success',
                     message: `Pipeline ${isPipelineEnabled ? 'disabled' : 'enabled'} successfully`,
                 });
-            },
-            onError: () => {
-                toast({ type: 'error', message: `Failed to toggle pipeline.` });
             },
         };
 

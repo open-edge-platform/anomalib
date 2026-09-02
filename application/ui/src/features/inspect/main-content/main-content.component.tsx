@@ -3,13 +3,13 @@ import isEmpty from 'lodash-es/isEmpty';
 
 import { StreamContainer } from '../stream/stream-container';
 import { EnableProject } from './enable-project/enable-project.component';
-import { useEnsureActivePipeline } from './hooks/use-ensure-active-pipeline.hook';
+import { useActivePipelineStatus } from './hooks/use-active-pipeline-status.hook';
 import { SourceSinkMessage } from './source-sink-message/source-sink-message.component';
 
 export const MainContent = () => {
     const { data: pipeline } = usePipeline();
     const { projectId } = useProjectIdentifier();
-    const { hasActiveProject, isCurrentProjectActive, activeProjectId } = useEnsureActivePipeline(projectId);
+    const { hasActiveProject, isCurrentProjectActive, activeProjectId } = useActivePipelineStatus(projectId);
 
     if (isEmpty(pipeline.source?.id)) {
         return <SourceSinkMessage />;
@@ -22,8 +22,9 @@ export const MainContent = () => {
             {showEnableProject && (
                 <EnableProject currentProjectId={projectId} activeProjectId={String(activeProjectId)} />
             )}
+
             <div style={{ display: showEnableProject ? 'none' : 'contents' }}>
-                <StreamContainer />
+                <StreamContainer hasActiveProject={hasActiveProject} />
             </div>
         </>
     );

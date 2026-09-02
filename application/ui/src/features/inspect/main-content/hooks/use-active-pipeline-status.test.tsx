@@ -5,17 +5,17 @@ import { server } from 'src/msw-node-setup';
 import { TestProviders } from 'src/providers';
 import { queryClient } from 'src/query-client/query-client';
 
-import { useEnsureActivePipeline } from './use-ensure-active-pipeline.hook';
+import { useActivePipelineStatus } from './use-active-pipeline-status.hook';
 
 vi.mock('../../../../hooks/use-project-identifier.hook', () => ({
     useProjectIdentifier: () => ({ projectId: 'project-id-123' }),
 }));
 
-describe('useEnsureActivePipeline', () => {
+describe('useActivePipelineStatus', () => {
     const mockProjectId = 'project-id-123';
 
     const renderHookWithProviders = (projectId: string) =>
-        renderHook(() => useEnsureActivePipeline(projectId), { wrapper: TestProviders });
+        renderHook(() => useActivePipelineStatus(projectId), { wrapper: TestProviders });
 
     beforeEach(() => {
         vi.clearAllMocks();

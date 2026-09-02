@@ -48,7 +48,10 @@ describe('StreamContainer', () => {
                 <ZoomProvider>
                     <MemoryRouter initialEntries={['/projects/123/inspect/stream']}>
                         <Routes>
-                            <Route path='/projects/:projectId/inspect/stream' element={<StreamContainer />} />
+                            <Route
+                                path='/projects/:projectId/inspect/stream'
+                                element={<StreamContainer hasActiveProject />}
+                            />
                         </Routes>
                     </MemoryRouter>
                 </ZoomProvider>

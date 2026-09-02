@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { toast } from '@geti/ui';
+import { isString } from 'lodash-es';
 
 import { $api } from '../api/client';
 import { useProjectIdentifier } from './use-project-identifier.hook';
@@ -70,7 +71,8 @@ export const useActivatePipeline = ({ onSuccess }: { onSuccess?: () => void }) =
         onSuccess,
         onError: (error) => {
             if (error) {
-                toast({ type: 'error', message: String(error.detail) });
+                const message = isString(error.detail) ? String(error.detail) : String(error);
+                toast({ type: 'error', message });
             }
         },
         meta: {
@@ -84,6 +86,12 @@ export const useActivatePipeline = ({ onSuccess }: { onSuccess?: () => void }) =
 
 export const useDisablePipeline = (project_id: string) => {
     return $api.useMutation('post', '/api/projects/{project_id}/pipeline:disable', {
+        onError: (error) => {
+            if (error) {
+                const message = isString(error.detail) ? String(error.detail) : String(error);
+                toast({ type: 'error', message });
+            }
+        },
         meta: {
             invalidates: [
                 ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id } } }],

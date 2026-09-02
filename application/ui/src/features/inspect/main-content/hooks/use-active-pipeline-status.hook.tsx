@@ -1,7 +1,7 @@
 import { useActivePipeline } from '@anomalib-studio/hooks';
 import isEmpty from 'lodash-es/isEmpty';
 
-export const useEnsureActivePipeline = (projectId: string) => {
+export const useActivePipelineStatus = (projectId: string) => {
     const { data: activeProjectPipeline } = useActivePipeline();
 
     const hasActiveProject = !isEmpty(activeProjectPipeline?.project_id);
