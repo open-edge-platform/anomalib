@@ -4,13 +4,16 @@
 import { usePipeline } from '@anomalib-studio/hooks';
 import { dimensionValue, Divider, Flex, View } from '@geti/ui';
 import { isNil } from 'lodash-es';
+import { useIsPipelineConfigured } from 'src/hooks/use-is-pipeline-configured.hook';
 
 import { AnomalyMap } from './anomaly-map/anomaly-map.component';
 import { InferenceDevices } from './inference-devices/inference-devices.component';
 import { PipelineConfiguration } from './pipeline-configuration.component';
+import { TogglePipelineButton } from './toggle-pipeline-button/toggle-pipeline-button.component';
 
 export const Toolbar = () => {
     const { data: pipeline } = usePipeline();
+    const canEnablePipeline = useIsPipelineConfigured(pipeline);
 
     const hasModel = !isNil(pipeline?.model?.id);
 
@@ -32,7 +35,10 @@ export const Toolbar = () => {
                     )}
                 </Flex>
 
-                <PipelineConfiguration />
+                <Flex gap={'size-200'}>
+                    {canEnablePipeline && <TogglePipelineButton />}
+                    <PipelineConfiguration />
+                </Flex>
             </Flex>
         </View>
     );
