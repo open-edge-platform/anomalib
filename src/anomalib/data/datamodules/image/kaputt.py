@@ -89,17 +89,19 @@ logger = logging.getLogger(__name__)
 # Hugging Face repository hosting the Kaputt dataset.
 HF_REPO_ID = "amazon/kaputt"
 
-# Maps each archive under `kaputt-release/` in the Hugging Face repo to the
-# subdirectory it should be extracted into, relative to the dataset root.
-HF_ARCHIVE_TO_SUBDIR = {
-    "datasets.tar.gz": "datasets",
-    "query-image.tar.gz": "query-image",
-    "query-crop.tar.gz": "query-crop",
-    "query-mask.tar.gz": "query-mask",
-    "reference-image.tar.gz": "reference-image",
-    "reference-crop.tar.gz": "reference-crop",
-    "reference-mask.tar.gz": "reference-mask",
-}
+# Archives under `kaputt-release/` in the Hugging Face repo. Each archive is
+# extracted into a subdirectory named after itself (minus the .tar.gz
+# extension), relative to the dataset root, e.g. `query-image.tar.gz` ->
+# `<root>/query-image/`.
+HF_ARCHIVE_NAMES = (
+    "datasets.tar.gz",
+    "query-image.tar.gz",
+    "query-crop.tar.gz",
+    "query-mask.tar.gz",
+    "reference-image.tar.gz",
+    "reference-crop.tar.gz",
+    "reference-mask.tar.gz",
+)
 
 
 class Kaputt(AnomalibDataModule):
@@ -309,7 +311,8 @@ class Kaputt(AnomalibDataModule):
         )
         scratch_dir = self.root / ".hf_download"
         try:
-            for archive_name, subdir in HF_ARCHIVE_TO_SUBDIR.items():
+            for archive_name in HF_ARCHIVE_NAMES:
+                subdir = archive_name.removesuffix(".tar.gz")
                 target_dir = self.root / subdir
                 if target_dir.exists() and any(target_dir.iterdir()):
                     continue
