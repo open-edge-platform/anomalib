@@ -1,10 +1,13 @@
 import { usePipeline, useProjectIdentifier } from '@anomalib-studio/hooks';
+import { Flex } from '@geti/ui';
 import isEmpty from 'lodash-es/isEmpty';
 
 import { StreamContainer } from '../stream/stream-container';
 import { EnableProject } from './enable-project/enable-project.component';
 import { useActivePipelineStatus } from './hooks/use-active-pipeline-status.hook';
 import { SourceSinkMessage } from './source-sink-message/source-sink-message.component';
+
+import classes from './main-content.module.scss';
 
 export const MainContent = () => {
     const { data: pipeline } = usePipeline();
@@ -23,9 +26,16 @@ export const MainContent = () => {
                 <EnableProject currentProjectId={projectId} activeProjectId={String(activeProjectId)} />
             )}
 
-            <div style={{ display: showEnableProject ? 'none' : 'contents' }}>
+            <Flex
+                gridArea={'canvas'}
+                maxHeight={'100%'}
+                alignItems={'center'}
+                justifyContent={'center'}
+                UNSAFE_className={classes.canvasContainer}
+                UNSAFE_style={{ display: showEnableProject ? 'none' : 'flex' }}
+            >
                 <StreamContainer hasActiveProject={hasActiveProject} />
-            </div>
+            </Flex>
         </>
     );
 };

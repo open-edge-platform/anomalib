@@ -70,16 +70,16 @@ const useSetTargetSizeBasedOnImage = (
 export const Stream = () => {
     const imageRef = useRef<HTMLImageElement>(null);
     const { projectId } = useProjectIdentifier();
-    const { setStatus, status, streamUrl } = useStreamConnection();
-    const [hasCaptureAnimation, setHasCaptureAnimation] = useState(false);
     const [size, setSize] = useState({ height: 608, width: 892 });
+    const [hasCaptureAnimation, setHasCaptureAnimation] = useState(false);
+    const { stop: stopStream, setStatus, status, streamUrl } = useStreamConnection();
 
     useSetTargetSizeBasedOnImage(setSize, imageRef, streamUrl);
     useEventListener('animationend', () => setHasCaptureAnimation(false), imageRef);
 
-    const handleStreamLoad = useCallback(() => {
+    const handleStreamLoad = () => {
         setStatus('connected');
-    }, [setStatus]);
+    };
 
     const handleStreamError = useCallback(() => {
         // Only set failed if we were previously connected or connecting,
@@ -109,6 +109,14 @@ export const Stream = () => {
         });
     };
 
+    const handleStopStream = async () => {
+        // cleanup runs on <img> detach and aborts the MJPEG multipart request,
+        // which browsers otherwise keep streaming even after src is cleared or the element unmounts.
+        imageRef?.current && imageRef.current.setAttribute('src', '');
+
+        await stopStream();
+    };
+
     return (
         <Flex
             position={'relative'}
@@ -121,6 +129,7 @@ export const Stream = () => {
 
             <ZoomTransform target={size}>
                 <img
+                    onClick={handleStopStream}
                     key={streamUrl}
                     ref={imageRef}
                     src={streamUrl ?? undefined}

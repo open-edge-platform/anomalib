@@ -2,16 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useProjectIdentifier } from '@anomalib-studio/hooks';
-import { Button, Flex, Loading, Text, View } from '@geti/ui';
-import { Play, Refresh } from '@geti/ui/icons';
-import { isEmpty } from 'lodash-es';
-import { useActivatePipeline, usePipeline } from 'src/hooks/use-pipeline.hook';
+import { Button, dimensionValue, Flex, Loading, Text, View } from '@geti/ui';
+import { Refresh } from '@geti/ui/icons';
+import { useActivateAndRunPipeline, usePipeline } from 'src/hooks/use-pipeline.hook';
 
 import { useStreamConnection } from '../../../components/stream/stream-connection-provider';
-import { useAutoPlayStream } from './hook/use-auto-play-stream.hook';
+import { PlayStreamButton } from './play-stream-button/play-stream-button.component';
 import { Stream } from './stream';
-
-import classes from './stream-container.module.scss';
 
 const RECONNECT_CLEANUP_DELAY_MS = 300; // Delay to allow stream connection cleanup to complete before reconnecting
 
@@ -19,15 +16,7 @@ export const StreamContainer = ({ hasActiveProject }: { hasActiveProject: boolea
     const { projectId } = useProjectIdentifier();
     const { data: pipeline } = usePipeline();
     const { start, stop, status } = useStreamConnection();
-    const activePipeline = useActivatePipeline({ onSuccess: start });
-
-    useAutoPlayStream();
-
-    const hasSource = !isEmpty(pipeline?.source);
-
-    const handleStart = () => {
-        activePipeline.mutate({ params: { path: { project_id: projectId } } });
-    };
+    const activateAndRunPipeline = useActivateAndRunPipeline({ onSuccess: start });
 
     const handleReconnect = async () => {
         try {
@@ -41,7 +30,7 @@ export const StreamContainer = ({ hasActiveProject }: { hasActiveProject: boolea
             if (pipeline?.status === 'running') {
                 await start();
             } else {
-                activePipeline.mutate({ params: { path: { project_id: projectId } } });
+                await activateAndRunPipeline.mutateAsync(projectId);
             }
         } catch (error) {
             console.error('Failed to reconnect stream:', error);
@@ -49,51 +38,22 @@ export const StreamContainer = ({ hasActiveProject }: { hasActiveProject: boolea
     };
 
     if (!hasActiveProject) {
+        return <PlayStreamButton isDisabled />;
+    }
+
+    if (activateAndRunPipeline.isPending) {
         return (
-            <Flex
-                gridArea={'canvas'}
-                maxHeight={'100%'}
-                UNSAFE_className={classes.canvasContainer}
-                alignItems={'center'}
-                justifyContent={'center'}
-            >
-                <Button aria-label={'Start stream'} isDisabled UNSAFE_className={classes.playButton}>
-                    <Play width='128px' height='128px' />
-                </Button>
-            </Flex>
+            <View backgroundColor={'gray-200'} width='90%' height='90%'>
+                <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
+                    <Loading mode='inline' />
+                </Flex>
+            </View>
         );
     }
 
     return (
-        <Flex
-            gridArea={'canvas'}
-            maxHeight={'100%'}
-            UNSAFE_className={classes.canvasContainer}
-            alignItems={'center'}
-            justifyContent={'center'}
-        >
-            {status === 'idle' && (
-                <View backgroundColor={'gray-200'} width='90%' height='90%'>
-                    <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
-                        <Button
-                            onPress={handleStart}
-                            aria-label={'Start stream'}
-                            isDisabled={!hasSource || activePipeline.isPending}
-                            UNSAFE_className={classes.playButton}
-                        >
-                            <Play width='128px' height='128px' />
-                        </Button>
-                    </Flex>
-                </View>
-            )}
-
-            {(status === 'connecting' || activePipeline.isPending) && (
-                <View backgroundColor={'gray-200'} width='90%' height='90%'>
-                    <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
-                        <Loading mode='inline' />
-                    </Flex>
-                </View>
-            )}
+        <>
+            {status === 'idle' && <PlayStreamButton onStart={start} isDisabled={activateAndRunPipeline.isPending} />}
 
             {(status === 'disconnected' || status === 'failed') && (
                 <View backgroundColor={'gray-200'} width='90%' height='90%'>
@@ -108,10 +68,10 @@ export const StreamContainer = ({ hasActiveProject }: { hasActiveProject: boolea
                         <Button
                             onPress={handleReconnect}
                             aria-label={'Reconnect stream'}
-                            isDisabled={activePipeline.isPending}
+                            isDisabled={activateAndRunPipeline.isPending}
                             variant='primary'
                         >
-                            <Refresh />
+                            <Refresh style={{ marginInlineEnd: dimensionValue('size-100') }} />
                             Reconnect
                         </Button>
                     </Flex>
@@ -119,6 +79,6 @@ export const StreamContainer = ({ hasActiveProject }: { hasActiveProject: boolea
             )}
 
             {(status === 'connecting' || status === 'connected') && <Stream />}
-        </Flex>
+        </>
     );
 };

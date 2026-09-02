@@ -1,0 +1,21 @@
+.container{
+    width: 90%;
+    height: 90%;
+    cursor: pointer;
+}
+
+.disabled {
+    cursor: auto;
+}
+    
+.playButton {
+    gap: var(--spectrum-global-dimension-size-400);
+    padding: var(--spectrum-global-dimension-size-300) !important;
+    display: flex;
+    padding: var(--spectrum-global-dimension-size-1200);
+    position: relative;
+    align-items: center;
+    border-radius: var(--spectrum-alias-border-radius-medium);
+}
+
+

@@ -66,7 +66,6 @@ export const useRunPipeline = ({ onSuccess }: { onSuccess?: () => void }) => {
 
 export const useActivatePipeline = ({ onSuccess }: { onSuccess?: () => void }) => {
     const { projectId } = useProjectIdentifier();
-
     return $api.useMutation('post', '/api/projects/{project_id}/pipeline:activate', {
         onSuccess,
         onError: (error) => {
@@ -82,6 +81,27 @@ export const useActivatePipeline = ({ onSuccess }: { onSuccess?: () => void }) =
             ],
         },
     });
+};
+
+export const useActivateAndRunPipeline = ({ onSuccess }: { onSuccess?: () => void } = {}) => {
+    const activatePipeline = useActivatePipeline({});
+    const runPipeline = useRunPipeline({ onSuccess });
+
+    const mutateAsync = async (projectId: string) => {
+        const params = { params: { path: { project_id: projectId } } };
+
+        await activatePipeline.mutateAsync(params);
+        return runPipeline.mutateAsync(params);
+    };
+
+    return {
+        mutateAsync,
+        isPending: activatePipeline.isPending || runPipeline.isPending,
+        isError: activatePipeline.isError || runPipeline.isError,
+        error: activatePipeline.error ?? runPipeline.error,
+        activatePipeline,
+        runPipeline,
+    };
 };
 
 export const useDisablePipeline = (project_id: string) => {
