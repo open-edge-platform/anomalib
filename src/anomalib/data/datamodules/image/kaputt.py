@@ -89,6 +89,11 @@ logger = logging.getLogger(__name__)
 # Hugging Face repository hosting the Kaputt dataset.
 HF_REPO_ID = "amazon/kaputt"
 
+# Commit SHA of the Hugging Face repo to download from. Pinning a specific
+# revision (instead of e.g. "main") avoids depending on mutable repo content
+# and satisfies Bandit's B615 (huggingface_unsafe_download) check.
+HF_REVISION = "5305ccf4f661d84f19a83de35c782686d79f1c84"
+
 # Archives under `kaputt-release/` in the Hugging Face repo. Each archive is
 # extracted into a subdirectory named after itself (minus the .tar.gz
 # extension), relative to the dataset root, e.g. `query-image.tar.gz` ->
@@ -322,6 +327,7 @@ class Kaputt(AnomalibDataModule):
                     hf_hub_download(
                         repo_id=HF_REPO_ID,
                         repo_type="dataset",
+                        revision=HF_REVISION,
                         filename=f"kaputt-release/{archive_name}",
                         local_dir=scratch_dir,
                     ),
