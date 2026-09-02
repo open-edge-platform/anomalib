@@ -1,12 +1,13 @@
-// Copyright (C) 2022-2025 Intel Corporation
-// LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE
+// Copyright (C) 2020-2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
-import sharedEslintConfig from '@geti/config/lint';
+
+import sharedEslintConfig from './eslint.shared.config.js';
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);

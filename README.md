@@ -295,7 +295,7 @@ Enable logging in your config file to track:
 - Model graphs
 - Test predictions
 
-> 📘 **Note:** For logging setup, see our [Logging Documentation](https://open-edge-platform.github.io/anomalib/tutorials/logging.html).
+> 📘 **Note:** For logging setup, see our [Logging Documentation](https://anomalib.readthedocs.io/en/latest/markdown/guides/reference/loggers/index.html).
 
 # 📊 Benchmarking
 

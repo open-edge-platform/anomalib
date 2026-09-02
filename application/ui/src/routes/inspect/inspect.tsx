@@ -23,11 +23,11 @@ export const Inspect = () => {
                 overflow: 'hidden',
             }}
         >
-            <Toolbar key={projectId} />
+            <Toolbar key={`toolbar-${projectId}`} />
             {/* do not refresh the stream to avoid duplicate connections */}
             <MainContent />
-            <Sidebar key={projectId} />
-            <Footer key={projectId} />
+            <Sidebar key={`sidebar-${projectId}`} />
+            <Footer key={`footer-${projectId}`} />
         </Grid>
     );
 };
