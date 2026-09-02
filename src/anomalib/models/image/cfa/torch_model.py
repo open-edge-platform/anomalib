@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Torch Implementation of the CFA Model.
@@ -240,7 +240,6 @@ class CfaModel(DynamicBufferMixin):
         scale = self.get_scale(batch.shape[-2:])
 
         if self.gamma_c > 1:
-            # CVS-122673
             k_means = KMeans(
                 n_clusters=(scale[0] * scale[1]) // self.gamma_c,
                 max_iter=3000,
