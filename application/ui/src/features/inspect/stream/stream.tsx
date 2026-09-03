@@ -78,7 +78,13 @@ export const Stream = () => {
     useEventListener('animationend', () => setHasCaptureAnimation(false), imageRef);
 
     const handleStreamLoad = () => {
-        setStatus('connected');
+        // Guard against spurious loads (e.g. the `data:,` src swap during stop) that would
+        // otherwise resurrect a `connected` state after the stream was torn down.
+        if (!streamUrl) {
+            return;
+        }
+
+        setStatus((current) => (current === 'connecting' ? 'connected' : current));
     };
 
     const handleStreamError = useCallback(() => {
@@ -134,7 +140,12 @@ export const Stream = () => {
             {status === 'connected' && <Fps projectId={projectId} />}
 
             <ZoomTransform target={size}>
-                <button onClick={handleStopStream} type='button' aria-label='Pause stream' style={{ border: 'none' }}>
+                <button
+                    type='button'
+                    aria-label='Pause stream'
+                    onClick={handleStopStream}
+                    className={classes.pauseStream}
+                >
                     <img
                         key={streamUrl}
                         ref={imageRef}

@@ -22,9 +22,10 @@ export const PlayStreamButton = ({ isDisabled: isDisabledByProp = false, onStart
     return (
         <button
             type='button'
+            onClick={onStart}
+            disabled={isDisabled}
             aria-label={'Start stream'}
             className={clsx(classes.container, { [classes.disabled]: isDisabled })}
-            onClick={onStart}
         >
             <Flex UNSAFE_className={classes.playButton}>
                 <Play width='20px' height='20px' />

@@ -31,7 +31,12 @@ export const ConfirmationDialog = ({ activeProjectId, currentProjectId }: Confir
         params: { path: { project_id: currentProjectId } },
     });
 
-    const isUpdating = activeProject.isLoading || currentProject.isLoading || activateAndRunPipeline.isPending;
+    const isUpdating =
+        activeProject.isLoading ||
+        currentProject.isLoading ||
+        disablePipeline.isPending ||
+        activatePipeline.isPending ||
+        activateAndRunPipeline.isPending;
 
     const handleEnableProject = async () => {
         await disablePipeline.mutateAsync({
