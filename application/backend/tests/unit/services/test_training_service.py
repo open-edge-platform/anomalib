@@ -287,6 +287,7 @@ class TestTrainingService:
         with (
             patch.object(TrainingService, "_compute_export_size", return_value=123),
             patch.object(TrainingService, "_move_artifact") as mock_move_artifact,
+            patch("services.training_service.Path.mkdir"),
         ):
             result = TrainingService._train_model(
                 fxt_model,
