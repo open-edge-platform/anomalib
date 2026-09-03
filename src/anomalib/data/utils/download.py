@@ -194,11 +194,17 @@ def safe_extract(tar_file: TarFile, root: Path, members: list[TarInfo]) -> None:
     for member in members:
         member_path = root / member.name
         # Reject absolute paths and members that would resolve outside of
-        # ``root`` (path traversal via ``..`` segments, symlinks, etc.). This
-        # check is applied on all supported Python versions, since the
-        # ``filter="data"`` protection below is only available on
-        # Python>=3.11.4.
-        if Path(member.name).is_absolute() or not is_within_directory(root, member_path):
+        # ``root`` (path traversal via ``..`` segments, symlinks, etc.). Also
+        # reject non-regular members (symlinks, hardlinks, devices, fifos,
+        # etc.), which the ``filter="data"`` protection below already blocks
+        # on Python>=3.11.4. These checks are applied on all supported
+        # Python versions, since ``filter="data"`` is unavailable on older
+        # ones.
+        if (
+            Path(member.name).is_absolute()
+            or not is_within_directory(root, member_path)
+            or not (member.isfile() or member.isdir())
+        ):
             logger.warning("Skipping potentially unsafe archive member: %s", member.name)
             continue
 

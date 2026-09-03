@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Tests for download utils."""
@@ -90,6 +90,31 @@ class TestExtract:
             extract(archive_path, extract_root)
 
             assert not outside_marker.exists()
+
+    @staticmethod
+    def test_tar_symlink_member_is_blocked() -> None:
+        """Test that non-regular tar members (e.g. symlinks) are not extracted."""
+        with TemporaryDirectory() as tmp_dir:
+            base = Path(tmp_dir)
+            archive_path = base / "malicious_symlink.tar.gz"
+            extract_root = base / "extracted"
+            extract_root.mkdir()
+
+            with tarfile.open(archive_path, "w:gz") as tar:
+                safe_info = tarfile.TarInfo(name="safe.txt")
+                safe_data = b"safe content"
+                safe_info.size = len(safe_data)
+                tar.addfile(safe_info, fileobj=io.BytesIO(safe_data))
+
+                link_info = tarfile.TarInfo(name="evil_link")
+                link_info.type = tarfile.SYMTYPE
+                link_info.linkname = "/etc/passwd"
+                tar.addfile(link_info)
+
+            extract(archive_path, extract_root)
+
+            assert (extract_root / "safe.txt").exists()
+            assert not (extract_root / "evil_link").exists()
 
     @staticmethod
     def test_zip_path_traversal_is_blocked() -> None:
