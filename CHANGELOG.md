@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- 🔄 **data**: Update Kaputt dataset source to the official Hugging Face repository (https://huggingface.co/datasets/amazon/kaputt)
+
 ### Deprecated
 
 ### Fixed
