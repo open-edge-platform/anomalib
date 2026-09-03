@@ -342,12 +342,13 @@ class Kaputt(AnomalibDataModule):
             self.root,
             f"https://huggingface.co/datasets/{HF_REPO_ID}",
         )
+        self.root.mkdir(parents=True, exist_ok=True)
         try:
             with TemporaryDirectory(dir=self.root) as scratch_dir:
                 for archive_name in HF_ARCHIVE_NAMES:
                     subdir = archive_name.removesuffix(".tar.gz")
                     target_dir = self.root / subdir
-                    if target_dir.exists() and any(target_dir.iterdir()):
+                    if target_dir.is_dir() and any(target_dir.iterdir()):
                         continue
 
                     logger.info("Downloading %s from Hugging Face.", archive_name)
@@ -371,7 +372,7 @@ class Kaputt(AnomalibDataModule):
         for archive_name in HF_ARCHIVE_NAMES:
             subdir = archive_name.removesuffix(".tar.gz")
             target_dir = self.root / subdir
-            if not (target_dir.exists() and any(target_dir.iterdir())):
+            if not (target_dir.is_dir() and any(target_dir.iterdir())):
                 logger.error("Expected extracted directory %s is missing or empty.", target_dir)
                 raise FileNotFoundError(get_download_instructions(self.root))
 
