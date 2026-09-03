@@ -3,7 +3,7 @@
 import asyncio
 from pathlib import Path
 from typing import Any
-from unittest.mock import ANY, AsyncMock, MagicMock, patch, call
+from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 from uuid import uuid4
 
 import pytest

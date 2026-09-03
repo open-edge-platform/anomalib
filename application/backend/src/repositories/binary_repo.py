@@ -16,8 +16,6 @@ from settings import get_settings
 if TYPE_CHECKING:
     from uuid import UUID
 
-    from anomalib.deploy import ExportType
-
     from pydantic_models.model import ExportParameters
     from settings import Settings
 
@@ -226,18 +224,17 @@ class ModelBinaryRepository(BinaryRepository):
 
         await asyncio.to_thread(stdlib_delete_folder)
 
-    def get_weights_file_path(self, format: ExportType, name: str) -> str:
+    def get_weights_file_path(self, name: str) -> str:
         """
         Read a weights file from the model folder.
 
         Args:
-            format: Format of the model (e.g., ExportType.OPENVINO).
             name: Name of the weights to read.
 
         Returns:
             path of the weights file.
         """
-        return os.path.join(self.model_folder_path, "weights", format, name)
+        return os.path.join(self.model_folder_path, name)
 
 
 class ModelExportBinaryRepository(BinaryRepository):

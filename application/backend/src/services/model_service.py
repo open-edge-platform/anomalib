@@ -19,6 +19,7 @@ from anomalib.data import AnomalibDataModule, Folder
 from anomalib.deploy import CompressionType, ExportType, OpenVINOInferencer
 from anomalib.engine import Engine
 from anomalib.models import get_model
+from anomalib.utils.path import resolve_versioned_path
 from loguru import logger
 from PIL import Image
 from sqlalchemy.ext.asyncio.session import AsyncSession
@@ -178,6 +179,10 @@ class ModelService:
         # Locate checkpoint
         model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model_id)
         ckpt_path = Path(model_binary_repo.model_folder_path) / "checkpoint" / "model.ckpt"
+
+        # Resolve 'latest' to actual version dir to avoid traversing junction (e.g. WinError 448 on Windows)
+        ckpt_path = resolve_versioned_path(ckpt_path)
+
         if not ckpt_path.exists():
             raise FileNotFoundError(f"Model checkpoint not found at {ckpt_path}")
 
@@ -258,7 +263,7 @@ class ModelService:
             raise NotImplementedError(f"Model format {model.format} is not supported for inference at this moment.")
 
         model_bin_repo = ModelBinaryRepository(project_id=model.project_id, model_id=model.id)
-        model_path = model_bin_repo.get_weights_file_path(format=model.format, name="model.xml")
+        model_path = model_bin_repo.get_weights_file_path(name="model.xml")
         device_name = device or DEFAULT_DEVICE
         try:
             return await asyncio.to_thread(
