@@ -39,7 +39,7 @@ done < <(gh label list --repo "$GITHUB_REPOSITORY" --limit 100 --json name --jq 
 SUGGESTED_LABELS=()
 while IFS= read -r label; do
   [[ -n "$label" ]] && SUGGESTED_LABELS+=("$label")
-done < <(echo "$SUGGESTION" | jq -r '.labels[]? // empty' | head -n "$MAX_LABELS")
+done < <(echo "$SUGGESTION" | jq -r 'try (.labels[]) catch empty' | head -n "$MAX_LABELS")
 
 APPLY_LABELS=()
 for label in "${SUGGESTED_LABELS[@]+"${SUGGESTED_LABELS[@]}"}"; do
@@ -52,7 +52,8 @@ for label in "${SUGGESTED_LABELS[@]+"${SUGGESTED_LABELS[@]}"}"; do
 done
 
 if [[ ${#APPLY_LABELS[@]} -gt 0 ]]; then
-  JOINED_LABELS=$(IFS=,; echo "${APPLY_LABELS[*]}")
+  JOINED_LABELS=$(printf ',%s' "${APPLY_LABELS[@]}")
+  JOINED_LABELS="${JOINED_LABELS#,}"
   echo "Applying labels: $JOINED_LABELS"
   gh issue edit "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --add-label "$JOINED_LABELS"
 else

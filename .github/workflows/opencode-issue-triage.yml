@@ -22,6 +22,16 @@ jobs:
   analyze:
     runs-on: self-hosted
     timeout-minutes: 20
+    # Serialize across ALL issues (not just per-issue) so a burst of issues
+    # opened by untrusted authors can't run many concurrent LLM invocations
+    # on the self-hosted GPU runner at once. Jobs queue instead of piling up
+    # in parallel; `cancel-in-progress: false` so none get silently dropped.
+    # This bounds resource exhaustion; it does not grant any write access —
+    # that boundary is enforced by `permissions` below and by the `apply`
+    # job's independent validation.
+    concurrency:
+      group: "opencode-issue-triage-analyze-queue"
+      cancel-in-progress: false
     permissions:
       contents: read # Required to checkout the repository
       issues: read # Required to read the issue; no write access here
@@ -65,8 +75,9 @@ jobs:
           fi
 
           # Use a random delimiter so untrusted model output can't forge an
-          # end-of-heredoc marker and inject extra job outputs.
-          DELIM="TRIAGE_EOF_$(openssl rand -hex 16)"
+          # end-of-heredoc marker and inject extra job outputs. Bash-only
+          # (no openssl dependency, which ollama-preflight doesn't verify).
+          DELIM="TRIAGE_EOF_${RANDOM}${RANDOM}${RANDOM}_$$"
           {
             echo "suggestion<<${DELIM}"
             cat triage-output.json
@@ -100,4 +111,4 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           SUGGESTION: ${{ needs.analyze.outputs.suggestion }}
-        run: .github/scripts/apply-issue-triage.sh
+        run: bash .github/scripts/apply-issue-triage.sh
