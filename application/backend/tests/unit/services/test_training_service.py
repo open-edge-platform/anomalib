@@ -1,8 +1,9 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
+from pathlib import Path
 from typing import Any
-from unittest.mock import ANY, AsyncMock, MagicMock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, patch, call
 from uuid import uuid4
 
 import pytest
@@ -283,7 +284,10 @@ class TestTrainingService:
         fxt_model_binary_repo.model_folder_path = "/path/to/model"
 
         # Call the method
-        with patch.object(TrainingService, "_compute_export_size", return_value=123):
+        with (
+            patch.object(TrainingService, "_compute_export_size", return_value=123),
+            patch.object(TrainingService, "_move_artifact") as mock_move_artifact,
+        ):
             result = TrainingService._train_model(
                 fxt_model,
                 synchronization_parameters=ProgressSyncParams(),
@@ -304,7 +308,7 @@ class TestTrainingService:
         # Verify Engine was called with expected parameters
         fxt_mock_anomalib_components["engine_class"].assert_called_once()
         call_args = fxt_mock_anomalib_components["engine_class"].call_args
-        assert call_args[1]["default_root_dir"] == "/path/to/model"
+        assert call_args[1]["default_root_dir"] == Path("data") / f"train-workspace-{fxt_model.id}"
         assert "logger" in call_args[1]
         assert len(call_args[1]["logger"]) == 1  # tensorboard
         assert call_args[1]["max_epochs"] == 42
@@ -314,6 +318,48 @@ class TestTrainingService:
             datamodule=fxt_mock_anomalib_components["folder"],
         )
         fxt_mock_anomalib_components["engine"].export.assert_called_once()
+
+        mock_move_artifact.assert_has_calls([
+            call(
+                src_dir=(
+                    Path("data")
+                    / f"train-workspace-{fxt_model.id}"
+                    / "Padim"
+                    / f"{fxt_model.project_id}-padim"
+                    / "latest"
+                    / "weights"
+                    / "openvino"
+                ).resolve(),
+                dest_dir=Path("/path/to/model"),
+                file_name="model.xml",
+            ),
+            call(
+                src_dir=(
+                    Path("data")
+                    / f"train-workspace-{fxt_model.id}"
+                    / "Padim"
+                    / f"{fxt_model.project_id}-padim"
+                    / "latest"
+                    / "weights"
+                    / "openvino"
+                ).resolve(),
+                dest_dir=Path("/path/to/model"),
+                file_name="model.bin",
+            ),
+            call(
+                src_dir=(
+                    Path("data")
+                    / f"train-workspace-{fxt_model.id}"
+                    / "Padim"
+                    / f"{fxt_model.project_id}-padim"
+                    / "latest"
+                    / "weights"
+                    / "lightning"
+                ).resolve(),
+                dest_dir=Path("/path/to/model/checkpoint"),
+                file_name="model.ckpt",
+            ),
+        ])
 
     def test_train_pending_job_cancelled(
         self,
