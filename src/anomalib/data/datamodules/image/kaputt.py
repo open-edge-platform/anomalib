@@ -449,4 +449,4 @@ def get_download_instructions(root_path: Path) -> str:
         For more information about the dataset, see:
         - Paper: https://arxiv.org/abs/2510.05903
         - Dataset: https://huggingface.co/datasets/{HF_REPO_ID}
-    """)
+    """).strip()
