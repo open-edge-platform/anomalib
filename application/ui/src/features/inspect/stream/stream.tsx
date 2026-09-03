@@ -123,25 +123,30 @@ export const Stream = () => {
             direction={'column'}
             alignItems={'center'}
             justifyContent={'center'}
-            UNSAFE_style={{ width: '100%', height: '100%', paddingBlockEnd: dimensionValue('size-400') }}
+            UNSAFE_style={{
+                width: '100%',
+                height: '100%',
+                paddingBlockEnd: dimensionValue('size-400'),
+            }}
         >
             {status === 'connected' && <Fps projectId={projectId} />}
 
             <ZoomTransform target={size}>
-                <img
-                    onClick={handleStopStream}
-                    key={streamUrl}
-                    ref={imageRef}
-                    src={streamUrl ?? undefined}
-                    width={size.width}
-                    height={size.height}
-                    aria-label='stream player'
-                    alt='stream'
-                    onLoad={handleStreamLoad}
-                    onError={handleStreamError}
-                    style={{ background: 'var(--spectrum-global-color-gray-200)' }}
-                    className={clsx({ [classes.takeOldCamera]: hasCaptureAnimation })}
-                />
+                <button onClick={handleStopStream} type='button' aria-label='Pause stream' style={{ border: 'none' }}>
+                    <img
+                        key={streamUrl}
+                        ref={imageRef}
+                        src={streamUrl ?? undefined}
+                        width={size.width}
+                        height={size.height}
+                        aria-label='stream player'
+                        alt='stream'
+                        onLoad={handleStreamLoad}
+                        onError={handleStreamError}
+                        style={{ background: 'var(--spectrum-global-color-gray-200)' }}
+                        className={clsx({ [classes.takeOldCamera]: hasCaptureAnimation })}
+                    />
+                </button>
             </ZoomTransform>
             {status === 'connected' && (
                 <Button onPress={handleCaptureFrame} variant='primary' UNSAFE_className={classes.captureButton}>

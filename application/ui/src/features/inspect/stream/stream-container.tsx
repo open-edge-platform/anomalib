@@ -1,7 +1,6 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useProjectIdentifier } from '@anomalib-studio/hooks';
 import { Button, dimensionValue, Flex, Loading, Text, View } from '@geti/ui';
 import { Refresh } from '@geti/ui/icons';
 import { useActivateAndRunPipeline, usePipeline } from 'src/hooks/use-pipeline.hook';
@@ -13,7 +12,6 @@ import { Stream } from './stream';
 const RECONNECT_CLEANUP_DELAY_MS = 300; // Delay to allow stream connection cleanup to complete before reconnecting
 
 export const StreamContainer = ({ hasActiveProject }: { hasActiveProject: boolean }) => {
-    const { projectId } = useProjectIdentifier();
     const { data: pipeline } = usePipeline();
     const { start, stop, status } = useStreamConnection();
     const activateAndRunPipeline = useActivateAndRunPipeline({ onSuccess: start });
@@ -30,7 +28,7 @@ export const StreamContainer = ({ hasActiveProject }: { hasActiveProject: boolea
             if (pipeline?.status === 'running') {
                 await start();
             } else {
-                await activateAndRunPipeline.mutateAsync(projectId);
+                await activateAndRunPipeline.mutateAsync();
             }
         } catch (error) {
             console.error('Failed to reconnect stream:', error);

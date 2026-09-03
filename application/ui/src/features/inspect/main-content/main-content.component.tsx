@@ -26,16 +26,19 @@ export const MainContent = () => {
                 <EnableProject currentProjectId={projectId} activeProjectId={String(activeProjectId)} />
             )}
 
-            <Flex
-                gridArea={'canvas'}
-                maxHeight={'100%'}
-                alignItems={'center'}
-                justifyContent={'center'}
-                UNSAFE_className={classes.canvasContainer}
-                UNSAFE_style={{ display: showEnableProject ? 'none' : 'flex' }}
-            >
-                <StreamContainer hasActiveProject={hasActiveProject} />
-            </Flex>
+            {!showEnableProject && (
+                <Flex
+                    width={'100%'}
+                    height={'100%'}
+                    gridArea={'canvas'}
+                    maxHeight={'100%'}
+                    alignItems={'center'}
+                    justifyContent={'center'}
+                    UNSAFE_className={classes.canvasContainer}
+                >
+                    <StreamContainer hasActiveProject={hasActiveProject} />
+                </Flex>
+            )}
         </>
     );
 };

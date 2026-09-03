@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { renderHook, waitFor } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { http } from 'src/api/utils';

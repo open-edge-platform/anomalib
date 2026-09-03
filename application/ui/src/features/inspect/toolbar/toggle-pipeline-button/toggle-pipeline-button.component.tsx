@@ -29,7 +29,7 @@ export const TogglePipelineButton = () => {
                 { onSuccess: () => toast({ type: 'success', message: `Pipeline disabled successfully` }) }
             );
         } else {
-            await activateAndRunPipeline.mutateAsync(projectId);
+            await activateAndRunPipeline.mutateAsync();
         }
     };
 

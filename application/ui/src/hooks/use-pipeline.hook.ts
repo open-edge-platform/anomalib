@@ -84,10 +84,11 @@ export const useActivatePipeline = ({ onSuccess }: { onSuccess?: () => void }) =
 };
 
 export const useActivateAndRunPipeline = ({ onSuccess }: { onSuccess?: () => void } = {}) => {
+    const { projectId } = useProjectIdentifier();
     const activatePipeline = useActivatePipeline({});
     const runPipeline = useRunPipeline({ onSuccess });
 
-    const mutateAsync = async (projectId: string) => {
+    const mutateAsync = async () => {
         const params = { params: { path: { project_id: projectId } } };
 
         await activatePipeline.mutateAsync(params);

@@ -15,7 +15,7 @@ interface ConfirmationDialogProps {
 
 export const ConfirmationDialog = ({ activeProjectId, currentProjectId }: ConfirmationDialogProps) => {
     const { data: pipeline } = usePipeline();
-    const activePipeline = useActivatePipeline({});
+    const activatePipeline = useActivatePipeline({});
     const disablePipeline = useDisablePipeline(activeProjectId);
     const canEnablePipeline = useIsPipelineConfigured(pipeline);
 
@@ -39,9 +39,9 @@ export const ConfirmationDialog = ({ activeProjectId, currentProjectId }: Confir
         });
 
         if (canEnablePipeline) {
-            await activateAndRunPipeline.mutateAsync(currentProjectId);
+            await activateAndRunPipeline.mutateAsync();
         } else {
-            await activePipeline.mutateAsync({
+            await activatePipeline.mutateAsync({
                 params: { path: { project_id: currentProjectId } },
             });
         }

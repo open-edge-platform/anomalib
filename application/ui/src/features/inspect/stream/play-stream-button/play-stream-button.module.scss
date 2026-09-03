@@ -1,13 +1,13 @@
-.container{
+.container {
     width: 90%;
     height: 90%;
-    cursor: pointer;
+
+    &:not(.disabled) {
+        cursor: pointer;
+        background: var(--background-inverse);
+    }
 }
 
-.disabled {
-    cursor: auto;
-}
-    
 .playButton {
     gap: var(--spectrum-global-dimension-size-400);
     padding: var(--spectrum-global-dimension-size-300) !important;
@@ -17,5 +17,3 @@
     align-items: center;
     border-radius: var(--spectrum-alias-border-radius-medium);
 }
-
-
