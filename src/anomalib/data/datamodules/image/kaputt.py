@@ -342,6 +342,13 @@ class Kaputt(AnomalibDataModule):
         if not query_train_parquet.exists():
             raise FileNotFoundError(get_download_instructions(self.root))
 
+        for archive_name in HF_ARCHIVE_NAMES:
+            subdir = archive_name.removesuffix(".tar.gz")
+            target_dir = self.root / subdir
+            if not (target_dir.exists() and any(target_dir.iterdir())):
+                logger.error("Expected extracted directory %s is missing or empty.", target_dir)
+                raise FileNotFoundError(get_download_instructions(self.root))
+
 
 def get_download_instructions(root_path: Path) -> str:
     """Get download instructions for the Kaputt dataset.
