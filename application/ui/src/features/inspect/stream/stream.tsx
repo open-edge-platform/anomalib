@@ -70,16 +70,16 @@ const useSetTargetSizeBasedOnImage = (
 export const Stream = () => {
     const imageRef = useRef<HTMLImageElement>(null);
     const { projectId } = useProjectIdentifier();
-    const { setStatus, status, streamUrl } = useStreamConnection();
-    const [hasCaptureAnimation, setHasCaptureAnimation] = useState(false);
     const [size, setSize] = useState({ height: 608, width: 892 });
+    const [hasCaptureAnimation, setHasCaptureAnimation] = useState(false);
+    const { stop: stopStream, setStatus, status, streamUrl } = useStreamConnection();
 
     useSetTargetSizeBasedOnImage(setSize, imageRef, streamUrl);
     useEventListener('animationend', () => setHasCaptureAnimation(false), imageRef);
 
-    const handleStreamLoad = useCallback(() => {
+    const handleStreamLoad = () => {
         setStatus('connected');
-    }, [setStatus]);
+    };
 
     const handleStreamError = useCallback(() => {
         // Only set failed if we were previously connected or connecting,
@@ -109,30 +109,46 @@ export const Stream = () => {
         });
     };
 
+    const handleStopStream = async () => {
+        // cleanup runs on <img> detach and aborts the MJPEG multipart request,
+        // which browsers otherwise keep streaming even after src is cleared or the element unmounts.
+        if (imageRef.current) {
+            imageRef.current.src = 'data:,';
+        }
+
+        await stopStream();
+    };
+
     return (
         <Flex
             position={'relative'}
             direction={'column'}
             alignItems={'center'}
             justifyContent={'center'}
-            UNSAFE_style={{ width: '100%', height: '100%', paddingBlockEnd: dimensionValue('size-400') }}
+            UNSAFE_style={{
+                width: '100%',
+                height: '100%',
+                paddingBlockEnd: dimensionValue('size-400'),
+            }}
         >
             {status === 'connected' && <Fps projectId={projectId} />}
 
             <ZoomTransform target={size}>
-                <img
-                    key={streamUrl}
-                    ref={imageRef}
-                    src={streamUrl ?? undefined}
-                    width={size.width}
-                    height={size.height}
-                    aria-label='stream player'
-                    alt='stream'
-                    onLoad={handleStreamLoad}
-                    onError={handleStreamError}
-                    style={{ background: 'var(--spectrum-global-color-gray-200)' }}
-                    className={clsx({ [classes.takeOldCamera]: hasCaptureAnimation })}
-                />
+                <button onClick={handleStopStream} type='button' aria-label='Pause stream' style={{ border: 'none' }}>
+                    <img
+                        key={streamUrl}
+                        ref={imageRef}
+                        src={streamUrl ?? undefined}
+                        width={size.width}
+                        height={size.height}
+                        aria-label='stream player'
+                        alt='stream'
+                        onLoad={handleStreamLoad}
+                        onError={handleStreamError}
+                        style={{ background: 'var(--spectrum-global-color-gray-200)' }}
+                        className={clsx({ [classes.takeOldCamera]: hasCaptureAnimation })}
+                    />
+                </button>
             </ZoomTransform>
             {status === 'connected' && (
                 <Button onPress={handleCaptureFrame} variant='primary' UNSAFE_className={classes.captureButton}>
