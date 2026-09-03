@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- 🐞 **data**: Random tiling now honours the configured tile width instead of always producing square tiles
+
 ## [v2.6.0] - 2026-07-24
 
 ### Added
