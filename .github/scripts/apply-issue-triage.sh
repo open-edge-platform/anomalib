@@ -26,7 +26,10 @@ if [[ -z "$SUGGESTION" ]]; then
 fi
 
 if ! echo "$SUGGESTION" | jq empty >/dev/null 2>&1; then
-  echo "::warning::Triage suggestion is not valid JSON, discarding: ${SUGGESTION:0:200}"
+  # Don't echo raw SUGGESTION into a workflow command: it's attacker-
+  # influenced and can contain newlines / `::...::` sequences, enabling
+  # workflow-command injection (fake annotations, stop-commands, etc.).
+  echo "::warning::Triage suggestion is not valid JSON, discarding output from analyze job."
   exit 0
 fi
 
@@ -78,12 +81,21 @@ if [[ -n "$DUPLICATE_OF" && "$DUPLICATE_OF" != "null" ]]; then
   if [[ "$DUPLICATE_OF" =~ ^[0-9]+$ ]]; then
     ACTIONABLE=true
   else
-    echo "::warning::Ignoring non-numeric duplicate_of value: $DUPLICATE_OF"
+    # Same injection concern as above: don't echo the raw value.
+    echo "::warning::Ignoring non-numeric duplicate_of value from suggestion."
   fi
 fi
-if [[ -n "$TEMPLATE_MISMATCH" && "$TEMPLATE_MISMATCH" != "null" ]]; then
-  ACTIONABLE=true
-fi
+# template_mismatch is free-form text from the model and must NOT authorize
+# a comment on its own — an injected suggestion could set any non-null
+# string here to force ACTIONABLE=true and post an arbitrary comment. Only
+# allow it to gate a comment when it names one of the known, fixed type
+# labels the agent is allowed to classify issues with (see Step 3 of the
+# agent prompt); anything else is ignored for gating purposes.
+case "$TEMPLATE_MISMATCH" in
+  "🐞bug" | "Feature Request" | "Enhancement" | "Question" | "Documentation" | "Refactor")
+    ACTIONABLE=true
+    ;;
+esac
 
 if [[ "$ACTIONABLE" == "true" && -n "$COMMENT" && "$COMMENT" != "null" ]]; then
   TRIMMED_COMMENT="${COMMENT:0:$MAX_COMMENT_CHARS}"
