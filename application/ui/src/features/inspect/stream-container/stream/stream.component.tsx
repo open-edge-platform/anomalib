@@ -8,10 +8,10 @@ import { useProjectIdentifier } from '@anomalib-studio/hooks';
 import { Button, dimensionValue, Flex, toast } from '@geti/ui';
 import { clsx } from 'clsx';
 
-import { useStreamConnection } from '../../../components/stream/stream-connection-provider';
-import { ZoomTransform } from '../../../components/zoom/zoom-transform';
-import { useEventListener } from '../../../hooks/event-listener/event-listener.hook';
-import { Fps } from './fps/fps.component';
+import { useStreamConnection } from '../../../../components/stream/stream-connection-provider';
+import { ZoomTransform } from '../../../../components/zoom/zoom-transform';
+import { useEventListener } from '../../../../hooks/event-listener/event-listener.hook';
+import { Fps } from '../fps/fps.component';
 
 import classes from './stream.module.scss';
 
@@ -127,15 +127,13 @@ export const Stream = () => {
 
     return (
         <Flex
+            width={'100%'}
+            height={'100%'}
             position={'relative'}
             direction={'column'}
             alignItems={'center'}
             justifyContent={'center'}
-            UNSAFE_style={{
-                width: '100%',
-                height: '100%',
-                paddingBlockEnd: dimensionValue('size-400'),
-            }}
+            UNSAFE_style={{ paddingBlockEnd: dimensionValue('size-400') }}
         >
             {status === 'connected' && <Fps projectId={projectId} />}
 
@@ -152,8 +150,8 @@ export const Stream = () => {
                         src={streamUrl ?? undefined}
                         width={size.width}
                         height={size.height}
-                        aria-label='stream player'
                         alt='stream'
+                        aria-label='stream player'
                         onLoad={handleStreamLoad}
                         onError={handleStreamError}
                         style={{ background: 'var(--spectrum-global-color-gray-200)' }}
@@ -161,6 +159,7 @@ export const Stream = () => {
                     />
                 </button>
             </ZoomTransform>
+
             {status === 'connected' && (
                 <Button onPress={handleCaptureFrame} variant='primary' UNSAFE_className={classes.captureButton}>
                     Capture

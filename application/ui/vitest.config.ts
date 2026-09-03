@@ -25,16 +25,7 @@ export default defineConfig({
         watch: false,
         server: {
             deps: {
-                inline: [
-                    /@react-spectrum\/.*/,
-                    /@spectrum-icons\/.*/,
-                    /@adobe\/react-spectrum\/.*/,
-                    // `@geti-ui/ui` ships ESM that imports React Spectrum's raw `.css`
-                    // files. It must be inlined so Vite's transform handles those CSS
-                    // imports; otherwise Node loads it natively and throws
-                    // `Unknown file extension ".css"`.
-                    /@geti-ui\/.*/,
-                ],
+                inline: [/@react-spectrum\/.*/, /@spectrum-icons\/.*/, /@adobe\/react-spectrum\/.*/],
             },
         },
     },
