@@ -63,7 +63,6 @@ Reference:
 """
 
 import logging
-import shutil
 from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING
@@ -78,11 +77,32 @@ from anomalib.data.utils.download import extract
 from anomalib.utils.path import resolve_dataset_root
 
 if TYPE_CHECKING or module_available("huggingface_hub"):
-    from huggingface_hub import hf_hub_download
-    from huggingface_hub.utils import GatedRepoError, HfHubHTTPError
+    from huggingface_hub import get_token, hf_hub_download
+    from huggingface_hub.utils import (
+        EntryNotFoundError,
+        GatedRepoError,
+        HfHubHTTPError,
+        LocalEntryNotFoundError,
+        RepositoryNotFoundError,
+        RevisionNotFoundError,
+    )
+
+    # Errors that indicate the dataset cannot be downloaded automatically
+    # (e.g. access not granted, repo/revision missing, offline, local I/O
+    # issues) and should fall back to the manual download instructions.
+    HF_DOWNLOAD_ERRORS: tuple[type[Exception], ...] = (
+        GatedRepoError,
+        HfHubHTTPError,
+        RepositoryNotFoundError,
+        RevisionNotFoundError,
+        EntryNotFoundError,
+        LocalEntryNotFoundError,
+        OSError,
+    )
 else:
+    get_token = None
     hf_hub_download = None
-    GatedRepoError = HfHubHTTPError = Exception
+    HF_DOWNLOAD_ERRORS = (Exception,)
 
 logger = logging.getLogger(__name__)
 
@@ -309,12 +329,18 @@ class Kaputt(AnomalibDataModule):
         if not module_available("huggingface_hub"):
             raise FileNotFoundError(get_download_instructions(self.root))
 
+        if not get_token():
+            logger.info(
+                "No Hugging Face token found (HF_TOKEN env var or cached "
+                "``hf auth login`` session). Skipping automatic download.",
+            )
+            raise FileNotFoundError(get_download_instructions(self.root))
+
         logger.info(
             "Kaputt dataset not found at %s. Attempting to download it from %s.",
             self.root,
             f"https://huggingface.co/datasets/{HF_REPO_ID}",
         )
-        scratch_dir = self.root / ".hf_download"
         try:
             for archive_name in HF_ARCHIVE_NAMES:
                 subdir = archive_name.removesuffix(".tar.gz")
@@ -329,15 +355,12 @@ class Kaputt(AnomalibDataModule):
                         repo_type="dataset",
                         revision=HF_REVISION,
                         filename=f"kaputt-release/{archive_name}",
-                        local_dir=scratch_dir,
                     ),
                 )
                 target_dir.mkdir(parents=True, exist_ok=True)
                 extract(downloaded_path, target_dir)
-        except (GatedRepoError, HfHubHTTPError) as exc:
+        except HF_DOWNLOAD_ERRORS as exc:
             raise FileNotFoundError(get_download_instructions(self.root)) from exc
-        finally:
-            shutil.rmtree(scratch_dir, ignore_errors=True)
 
         if not query_train_parquet.exists():
             raise FileNotFoundError(get_download_instructions(self.root))
@@ -415,8 +438,8 @@ def get_download_instructions(root_path: Path) -> str:
         ├── reference-crop/data/<split>/reference-data/crop/
         └── reference-mask/data/<split>/reference-data/mask/
 
-        Note: Replace YOUR_HF_TOKEN with your Hugging Face access token if not
-              already logged in via `hf auth login`.
+        Note: Authenticate first via `hf auth login`, or set the HF_TOKEN
+              environment variable with your access token.
               To get your token, visit: https://huggingface.co/settings/tokens
 
         For more information about the dataset, see:
