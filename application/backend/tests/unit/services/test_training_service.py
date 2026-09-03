@@ -71,6 +71,7 @@ def fxt_mock_anomalib_components():
         mock_folder_class.return_value = mock_folder
 
         mock_anomalib_model = MagicMock()
+        mock_anomalib_model.name = "Padim"
         mock_get_model.return_value = mock_anomalib_model
 
         mock_engine = MagicMock()

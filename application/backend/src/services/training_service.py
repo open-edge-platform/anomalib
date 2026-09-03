@@ -308,9 +308,7 @@ class TrainingService:
 
             if not Path(model.export_path).exists():
                 Path(model.export_path).mkdir(exist_ok=True, parents=True)
-            weights_path = resolve_versioned_path(
-                Path(work_dir) / model.architecture.title() / name / "latest" / "weights"
-            )
+            weights_path = resolve_versioned_path(Path(work_dir) / anomalib_model.name / name / "latest" / "weights")
 
             for file_name in ["model.xml", "model.bin"]:
                 TrainingService._move_artifact(

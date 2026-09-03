@@ -179,12 +179,23 @@ class ModelService:
         # Locate checkpoint
         model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model_id)
         ckpt_path = Path(model_binary_repo.model_folder_path) / "checkpoint" / "model.ckpt"
-
-        # Resolve 'latest' to actual version dir to avoid traversing junction (e.g. WinError 448 on Windows)
-        ckpt_path = resolve_versioned_path(ckpt_path)
-
         if not ckpt_path.exists():
-            raise FileNotFoundError(f"Model checkpoint not found at {ckpt_path}")
+            ckpt_path = (
+                Path(model_binary_repo.model_folder_path)
+                / model.architecture.title()
+                / f"{model.project_id}-{model.architecture}"
+                / "latest"
+                / "weights"
+                / "lightning"
+                / "model.ckpt"
+            )
+            # Resolve 'latest' to actual version dir to avoid traversing junction (e.g. WinError 448 on Windows)
+            ckpt_path = resolve_versioned_path(ckpt_path)
+            if not ckpt_path.exists():
+                # Try alternative path for older structure or if title case isn't used
+                ckpt_path = Path(model_binary_repo.model_folder_path) / "weights" / "lightning" / "model.ckpt"
+                if not ckpt_path.exists():
+                    raise FileNotFoundError(f"Model checkpoint not found at {ckpt_path}")
 
         if export_parameters.compression in {CompressionType.INT8_PTQ, CompressionType.INT8_ACQ}:
             # We need reference images for INT8_PTQ and INT8_ACQ quantization.
