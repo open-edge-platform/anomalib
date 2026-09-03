@@ -112,7 +112,9 @@ export const Stream = () => {
     const handleStopStream = async () => {
         // cleanup runs on <img> detach and aborts the MJPEG multipart request,
         // which browsers otherwise keep streaming even after src is cleared or the element unmounts.
-        imageRef?.current && imageRef.current.setAttribute('src', '');
+        if (imageRef.current) {
+            imageRef.current.src = 'data:,';
+        }
 
         await stopStream();
     };

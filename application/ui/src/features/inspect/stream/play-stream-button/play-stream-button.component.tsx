@@ -1,10 +1,10 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Flex } from '@geti/ui';
+import { Flex } from '@geti/ui';
 import { Play } from '@geti/ui/icons';
 import { clsx } from 'clsx';
-import { isEmpty, noop } from 'lodash-es';
+import { isEmpty } from 'lodash-es';
 import { usePipeline } from 'src/hooks/use-pipeline.hook';
 
 import classes from './play-stream-button.module.scss';
@@ -20,20 +20,15 @@ export const PlayStreamButton = ({ isDisabled: isDisabledByProp = false, onStart
     const isDisabled = isDisabledByProp || isEmpty(pipeline?.source);
 
     return (
-        <div
+        <button
+            type='button'
+            aria-label={'Start stream'}
             className={clsx(classes.container, { [classes.disabled]: isDisabled })}
-            onClick={isDisabled ? noop : onStart}
+            onClick={onStart}
         >
-            <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
-                <Button
-                    onPress={onStart}
-                    aria-label={'Start stream'}
-                    isDisabled={isDisabled}
-                    UNSAFE_className={classes.playButton}
-                >
-                    <Play width='20px' height='20px' />
-                </Button>
+            <Flex UNSAFE_className={classes.playButton}>
+                <Play width='20px' height='20px' />
             </Flex>
-        </div>
+        </button>
     );
 };

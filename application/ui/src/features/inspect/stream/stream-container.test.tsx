@@ -20,9 +20,11 @@ describe('StreamContainer', () => {
     const renderApp = ({
         streamConfig = {},
         pipelineConfig = {},
+        hasActiveProject = true,
     }: {
         streamConfig?: Partial<StreamConnectionState>;
         pipelineConfig?: Partial<SchemaPipeline>;
+        hasActiveProject?: boolean;
     }) => {
         vi.mocked(useStreamConnection).mockReturnValue({
             stop: vi.fn(),
@@ -49,7 +51,7 @@ describe('StreamContainer', () => {
                         <Routes>
                             <Route
                                 path='/projects/:projectId/inspect/stream'
-                                element={<StreamContainer hasActiveProject />}
+                                element={<StreamContainer hasActiveProject={hasActiveProject} />}
                             />
                         </Routes>
                     </MemoryRouter>
@@ -71,6 +73,21 @@ describe('StreamContainer', () => {
             await userEvent.click(button);
 
             expect(mockedStart).toHaveBeenCalled();
+        });
+
+        it('does not start the stream when there is no active project', async () => {
+            const mockedStart = vi.fn();
+
+            renderApp({
+                streamConfig: { status: 'idle', start: mockedStart },
+                pipelineConfig: { status: 'idle' },
+                hasActiveProject: false,
+            });
+
+            const button = await screen.findByRole('button', { name: /Start stream/i });
+            await userEvent.click(button);
+
+            expect(mockedStart).not.toHaveBeenCalled();
         });
     });
 
