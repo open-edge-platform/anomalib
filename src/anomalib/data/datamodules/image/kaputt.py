@@ -64,6 +64,7 @@ Reference:
 
 import logging
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from textwrap import dedent
 from typing import TYPE_CHECKING
 
@@ -342,23 +343,25 @@ class Kaputt(AnomalibDataModule):
             f"https://huggingface.co/datasets/{HF_REPO_ID}",
         )
         try:
-            for archive_name in HF_ARCHIVE_NAMES:
-                subdir = archive_name.removesuffix(".tar.gz")
-                target_dir = self.root / subdir
-                if target_dir.exists() and any(target_dir.iterdir()):
-                    continue
+            with TemporaryDirectory(dir=self.root) as scratch_dir:
+                for archive_name in HF_ARCHIVE_NAMES:
+                    subdir = archive_name.removesuffix(".tar.gz")
+                    target_dir = self.root / subdir
+                    if target_dir.exists() and any(target_dir.iterdir()):
+                        continue
 
-                logger.info("Downloading %s from Hugging Face.", archive_name)
-                downloaded_path = Path(
-                    hf_hub_download(
-                        repo_id=HF_REPO_ID,
-                        repo_type="dataset",
-                        revision=HF_REVISION,
-                        filename=f"kaputt-release/{archive_name}",
-                    ),
-                )
-                target_dir.mkdir(parents=True, exist_ok=True)
-                extract(downloaded_path, target_dir)
+                    logger.info("Downloading %s from Hugging Face.", archive_name)
+                    downloaded_path = Path(
+                        hf_hub_download(
+                            repo_id=HF_REPO_ID,
+                            repo_type="dataset",
+                            revision=HF_REVISION,
+                            filename=f"kaputt-release/{archive_name}",
+                            local_dir=scratch_dir,
+                        ),
+                    )
+                    target_dir.mkdir(parents=True, exist_ok=True)
+                    extract(downloaded_path, target_dir)
         except HF_DOWNLOAD_ERRORS as exc:
             raise FileNotFoundError(get_download_instructions(self.root)) from exc
 
