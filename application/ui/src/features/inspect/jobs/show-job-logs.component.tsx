@@ -26,8 +26,8 @@ const JobLogsDialogContent = ({ jobId }: { jobId: string }) => {
     const query = useQuery(
         queryOptions({
             queryKey: ['get', '/api/jobs/{job_id}/logs', jobId],
-            queryFn: streamedQuery({
-                queryFn: () => fetchSSE<LogEntry>(`/api/jobs/${jobId}/logs`),
+            queryFn: streamedQuery<LogEntry>({
+                streamFn: () => fetchSSE<LogEntry>(`/api/jobs/${jobId}/logs`),
             }),
             staleTime: Infinity,
         })
@@ -35,9 +35,7 @@ const JobLogsDialogContent = ({ jobId }: { jobId: string }) => {
 
     // Filter out any malformed log entries and ensure we have valid LogEntry objects
     const validLogs = useMemo(() => {
-        if (!query.data) return [];
-
-        const entries = query.data as unknown as LogEntry[];
+        const entries = query.data ?? [];
         return entries.filter((entry): entry is LogEntry => {
             return (
                 entry !== null &&

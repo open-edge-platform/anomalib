@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
+import { toast as sonnerToast } from 'sonner';
 import { http } from 'src/api/utils';
 import { server } from 'src/msw-node-setup';
 import { TestProviders } from 'src/providers';
@@ -22,6 +23,10 @@ describe('SinkMenu', () => {
             </TestProviders>
         );
     };
+
+    beforeEach(async () => {
+        sonnerToast.dismiss();
+    });
 
     it('edit', async () => {
         const mockedOnEdit = vi.fn();

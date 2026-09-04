@@ -67,7 +67,6 @@ export const StatusBarProvider = ({ children }: StatusBarProviderProps) => {
 
     useEffect(() => {
         return () => {
-             
             autoRemoveTimers.current.forEach((timer) => clearTimeout(timer));
         };
     }, []);

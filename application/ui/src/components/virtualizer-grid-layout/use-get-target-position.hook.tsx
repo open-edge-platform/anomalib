@@ -43,6 +43,5 @@ export const useGetTargetPosition = ({ gap, delay = 500, ref, scrollToIndex, cal
         return () => {
             timeoutId && clearTimeout(timeoutId);
         };
-         
     }, [scrollToIndex]);
 };
