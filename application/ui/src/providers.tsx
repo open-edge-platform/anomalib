@@ -3,7 +3,7 @@
 
 import { ReactNode } from 'react';
 
-import { ThemeProvider } from '@geti/ui/theme';
+import { ThemeProvider } from '@geti-ui/ui';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v8';
 import { MemoryRouterProps, MemoryRouter as Router, RouterProvider } from 'react-router-dom';

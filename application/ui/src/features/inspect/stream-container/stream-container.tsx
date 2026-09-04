@@ -1,8 +1,8 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, dimensionValue, Flex, Loading, Text, View } from '@geti/ui';
-import { Refresh } from '@geti/ui/icons';
+import { Button, dimensionValue, Flex, Loading, Text, View } from '@geti-ui/ui';
+import { Refresh } from '@geti-ui/ui/icons';
 import { useActivateAndRunPipeline, usePipeline } from 'src/hooks/use-pipeline.hook';
 
 import { useStreamConnection } from '../../../components/stream/stream-connection-provider';

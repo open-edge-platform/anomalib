@@ -1,8 +1,8 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex } from '@geti/ui';
-import { Play } from '@geti/ui/icons';
+import { Flex } from '@geti-ui/ui';
+import { Play } from '@geti-ui/ui/icons';
 import { clsx } from 'clsx';
 import { isEmpty } from 'lodash-es';
 import { usePipeline } from 'src/hooks/use-pipeline.hook';

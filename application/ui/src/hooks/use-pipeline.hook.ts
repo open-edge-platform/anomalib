@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { toast } from '@geti/ui';
+import { toast } from '@anomalib-studio/toast';
 import { isString } from 'lodash-es';
 
 import { $api } from '../api/client';

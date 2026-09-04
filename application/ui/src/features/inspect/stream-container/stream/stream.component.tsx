@@ -5,7 +5,8 @@ import { Dispatch, RefObject, SetStateAction, useCallback, useEffect, useRef, us
 
 import { $api } from '@anomalib-studio/api';
 import { useProjectIdentifier } from '@anomalib-studio/hooks';
-import { Button, dimensionValue, Flex, toast } from '@geti/ui';
+import { toast } from '@anomalib-studio/toast';
+import { Button, dimensionValue, Flex } from '@geti-ui/ui';
 import { clsx } from 'clsx';
 
 import { useStreamConnection } from '../../../../components/stream/stream-connection-provider';

@@ -4,8 +4,8 @@
 import { useState } from 'react';
 
 import { $api } from '@anomalib-studio/api';
-import { Button, Flex, Grid, minmax, repeat } from '@geti/ui';
-import { ChevronDownLight, ChevronUpLight } from '@geti/ui/icons';
+import { Button, Flex, Grid, minmax, repeat } from '@geti-ui/ui';
+import { ChevronDownLight, ChevronUpLight } from '@geti-ui/ui/icons';
 
 import { TrainableModelCard } from './trainable-model-card.component';
 
