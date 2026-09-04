@@ -7,7 +7,7 @@ import { useActivateAndRunPipeline, usePipeline } from 'src/hooks/use-pipeline.h
 
 import { useStreamConnection } from '../../../components/stream/stream-connection-provider';
 import { PlayStreamButton } from './play-stream-button/play-stream-button.component';
-import { Stream } from './stream';
+import { Stream } from './stream/stream.component';
 
 const RECONNECT_CLEANUP_DELAY_MS = 300; // Delay to allow stream connection cleanup to complete before reconnecting
 

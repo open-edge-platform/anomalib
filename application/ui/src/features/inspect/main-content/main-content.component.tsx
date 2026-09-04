@@ -2,7 +2,7 @@ import { usePipeline, useProjectIdentifier } from '@anomalib-studio/hooks';
 import { Flex } from '@geti/ui';
 import isEmpty from 'lodash-es/isEmpty';
 
-import { StreamContainer } from '../stream/stream-container';
+import { StreamContainer } from '../stream-container/stream-container';
 import { EnableProject } from './enable-project/enable-project.component';
 import { useActivePipelineStatus } from './hooks/use-active-pipeline-status.hook';
 import { SourceSinkMessage } from './source-sink-message/source-sink-message.component';
