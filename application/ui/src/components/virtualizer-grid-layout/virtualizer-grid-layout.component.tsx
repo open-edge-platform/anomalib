@@ -13,8 +13,10 @@ import classes from './virtualizer-grid-layout.module.scss';
 
 type AriaComponentsListBoxProps = ComponentProps<typeof AriaComponentsListBox>;
 
-interface VirtualizerGridLayoutProps<T>
-    extends Pick<AriaComponentsListBoxProps, 'selectedKeys' | 'onSelectionChange' | 'disabledKeys'> {
+interface VirtualizerGridLayoutProps<T> extends Pick<
+    AriaComponentsListBoxProps,
+    'selectedKeys' | 'onSelectionChange' | 'disabledKeys'
+> {
     items?: T[];
     ariaLabel: string;
     scrollToIndex?: number;

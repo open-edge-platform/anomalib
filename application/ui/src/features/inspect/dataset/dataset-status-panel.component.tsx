@@ -129,7 +129,9 @@ const TrainingInProgressList = () => {
 
     return (
         <Flex direction={'column'} gap={'size-50'} UNSAFE_style={{ overflowY: 'auto' }}>
-            {jobs?.map((job) => <TrainingInProgress job={job} key={job.id} />)}
+            {jobs?.map((job) => (
+                <TrainingInProgress job={job} key={job.id} />
+            ))}
         </Flex>
     );
 };

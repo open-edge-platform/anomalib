@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
 import { toast as sonnerToast } from 'sonner';
@@ -11,6 +11,10 @@ import { SinkMenu, SinkMenuProps } from './sink-menu.component';
 vi.mock('@anomalib-studio/hooks', () => ({ useProjectIdentifier: () => ({ projectId: '123' }) }));
 
 describe('SinkMenu', () => {
+    beforeEach(() => {
+        cleanup();
+    });
+
     const renderApp = ({
         id = 'id-test',
         name = 'name test',
@@ -63,9 +67,7 @@ describe('SinkMenu', () => {
             await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
             await userEvent.click(screen.getByRole('menuitem', { name: /Remove/i }));
 
-            await expect(await screen.findByLabelText('toast')).toHaveTextContent(
-                `${name} has been removed successfully!`
-            );
+            expect(await screen.findByText(`${name} has been removed successfully!`)).toBeInTheDocument();
             expect(pipelinePatchSpy).not.toHaveBeenCalled();
         });
 
@@ -92,9 +94,7 @@ describe('SinkMenu', () => {
             await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
             await userEvent.click(screen.getByRole('menuitem', { name: /^Connect$/i }));
 
-            await expect(await screen.findByLabelText('toast')).toHaveTextContent(
-                `Successfully connected to "${name}"`
-            );
+            expect(await screen.findByText(`Successfully connected to "${name}"`)).toBeInTheDocument();
         });
 
         it('error', async () => {
@@ -105,7 +105,7 @@ describe('SinkMenu', () => {
             await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
             await userEvent.click(screen.getByRole('menuitem', { name: /^Connect$/i }));
 
-            await expect(await screen.findByLabelText('toast')).toHaveTextContent(`Failed to connect to "${name}"`);
+            expect(await screen.findByText(`Failed to connect to "${name}".`)).toBeInTheDocument();
         });
 
         it('disabled when sink is connected', async () => {
@@ -131,9 +131,7 @@ describe('SinkMenu', () => {
             await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
             await userEvent.click(screen.getByRole('menuitem', { name: /Disconnect/i }));
 
-            await expect(await screen.findByLabelText('toast')).toHaveTextContent(
-                `Successfully disconnected "${name}"`
-            );
+            expect(await screen.findByText(`Successfully disconnected "${name}"`)).toBeInTheDocument();
         });
 
         it('error', async () => {
@@ -144,7 +142,7 @@ describe('SinkMenu', () => {
             await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
             await userEvent.click(screen.getByRole('menuitem', { name: /Disconnect/i }));
 
-            await expect(await screen.findByLabelText('toast')).toHaveTextContent(`Failed to disconnect "${name}".`);
+            expect(await screen.findByText(`Failed to disconnect "${name}".`)).toBeInTheDocument();
         });
 
         it('disabled when sink is not connected', async () => {

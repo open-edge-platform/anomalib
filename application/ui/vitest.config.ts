@@ -22,6 +22,7 @@ const stubBinaryAssets = (): Plugin => ({
 });
 
 export default defineConfig({
+    envPrefix: ['PUBLIC_'],
     plugins: [
         // TODO: Review and assess whether relative paths are necessary
         tsconfigPaths(),
