@@ -14,8 +14,8 @@ import {
     Heading,
     Icon,
     Loading,
-} from '@geti/ui';
-import { LogsIcon } from '@geti/ui/icons';
+} from '@geti-ui/ui';
+import { LogsIcon } from '@geti-ui/ui/icons';
 import { queryOptions, experimental_streamedQuery as streamedQuery, useQuery } from '@tanstack/react-query';
 import { fetchSSE } from 'src/api/fetch-sse';
 
@@ -37,7 +37,8 @@ const JobLogsDialogContent = ({ jobId }: { jobId: string }) => {
     const validLogs = useMemo(() => {
         if (!query.data) return [];
 
-        return query.data.filter((entry): entry is LogEntry => {
+        const entries = query.data as unknown as LogEntry[];
+        return entries.filter((entry): entry is LogEntry => {
             return (
                 entry !== null &&
                 typeof entry === 'object' &&

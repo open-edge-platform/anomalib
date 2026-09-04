@@ -5,7 +5,8 @@ import {
     useDisablePipeline,
     usePipeline,
 } from '@anomalib-studio/hooks';
-import { AlertDialog, toast } from '@geti/ui';
+import { AlertDialog } from '@geti-ui/ui';
+import { toast } from '@anomalib-studio/toast';
 import { useIsPipelineConfigured } from 'src/hooks/use-is-pipeline-configured.hook';
 
 interface ConfirmationDialogProps {

@@ -75,7 +75,7 @@ export const TrainingStatusAdapter = () => {
                 }
             },
         });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, [
         trainingJob?.id,
         trainingJob?.payload.model_name,

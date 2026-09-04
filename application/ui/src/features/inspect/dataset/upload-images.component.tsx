@@ -3,7 +3,8 @@
 
 import { $api } from '@anomalib-studio/api';
 import { useProjectIdentifier } from '@anomalib-studio/hooks';
-import { Button, FileTrigger, toast } from '@geti/ui';
+import { Button, FileTrigger } from '@geti-ui/ui';
+import { toast } from '@anomalib-studio/toast';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { useUploadStatus } from '../footer/status-bar/adapters/use-upload-status';

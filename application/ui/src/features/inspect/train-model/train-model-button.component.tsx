@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 
 import { $api } from '@anomalib-studio/api';
 import { useProjectIdentifier } from '@anomalib-studio/hooks';
-import { Button, DialogTrigger } from '@geti/ui';
+import { Button, DialogTrigger } from '@geti-ui/ui';
 
 import { REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING } from '../dataset/utils';
 import { TrainModelDialog } from './train-model-dialog.component';

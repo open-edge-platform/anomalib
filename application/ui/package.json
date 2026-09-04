@@ -12,7 +12,6 @@
         "build:api:types": "npx openapi-typescript ./src/api/openapi-spec.json -o ./src/api/openapi-spec.d.ts  --root-types && prettier --write src/api/openapi-spec.d.ts",
         "build:api:download": "curl -o ./src/api/openapi-spec.json http://localhost:8000/api/openapi.json && prettier --write src/api/openapi-spec.json",
         "build:api": "npm run build:api:download && npm run build:api:types",
-        "clone-geti-ui-packages": "npx tiged --force --mode=git https://github.com/open-edge-platform/geti_v2.git/web_ui/packages/config#02d99ef600635d3c49ad9a52ca3f7aade829053e packages/config && npx tiged --force --mode=git https://github.com/open-edge-platform/geti_v2.git/web_ui/packages/ui#02d99ef600635d3c49ad9a52ca3f7aade829053e packages/ui",
         "cyclic-deps-check": "npx madge --circular src/**/*.ts*",
         "dev": "concurrently -n Server,UI -c blue,yellow \"npm run server\" \"npm start\"",
         "server": "cd ../backend && ./run.sh",
@@ -21,7 +20,6 @@
         "format:check": "prettier --check --cache \"./src/**/*.{js,ts,jsx,tsx,css,scss,sass}\"",
         "lint": "eslint \"src/**/*.ts*\" --max-warnings 0",
         "lint:fix": "eslint --fix \"./src/**/*.ts*\"",
-        "preinstall": "npm run clone-geti-ui-packages",
         "preview": "rsbuild preview",
         "test:unit": "vitest --config vitest.config.ts",
         "test:unit:watch": "vitest --config vitest.config.ts --reporter=verbose --watch",
@@ -29,8 +27,7 @@
         "type-check": "tsc --noEmit"
     },
     "dependencies": {
-        "@geti/config": "*",
-        "@geti/ui": "*",
+        "@geti-ui/ui": "^1.6.0",
         "@scalar/api-reference-react": "^0.9.20",
         "@tanstack/react-query": "^5.80.10",
         "@tauri-apps/api": "^2",
@@ -49,6 +46,7 @@
         "react-router": "^8.0.0",
         "react-router-dom": "^7.0.0",
         "recharts": "^3.8.1",
+        "sonner": "^2.0.7",
         "static-path": "^0.0.4",
         "uuid": "~14.0.1"
     },
@@ -99,9 +97,6 @@
         "vite-tsconfig-paths": "^5.1.4",
         "vitest": "^3.2.4"
     },
-    "workspaces": [
-        "packages/*"
-    ],
     "msw": {
         "workerDirectory": [
             "public"

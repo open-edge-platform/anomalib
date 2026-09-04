@@ -7,7 +7,7 @@ import {
     usePipeline,
     useProjectIdentifier,
 } from '@anomalib-studio/hooks';
-import { Switch } from 'packages/ui';
+import { Switch } from '@geti-ui/ui';
 import { toast } from 'src/components/toast/toast.component';
 
 export const TogglePipelineButton = () => {
