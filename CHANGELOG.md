@@ -12,9 +12,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- 🔄 **data**: Update Kaputt dataset source to the official Hugging Face repository (https://huggingface.co/datasets/amazon/kaputt)
+
 ### Deprecated
 
 ### Fixed
+
+- 🐞 **data**: Random tiling now honours the configured tile width instead of always producing square tiles
 
 ## [v2.6.0] - 2026-07-24
 
