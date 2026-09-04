@@ -306,9 +306,11 @@ class TrainingService:
                 export_type=export_format,
             )
 
+            if model.export_path is None:
+                raise ValueError("export_path must be set before exporting artifacts")
             if not Path(model.export_path).exists():
                 Path(model.export_path).mkdir(exist_ok=True, parents=True)
-            weights_path = resolve_versioned_path(Path(work_dir) / anomalib_model.name / name / "latest" / "weights")
+            weights_path = resolve_versioned_path(work_dir / anomalib_model.name / name / "latest" / "weights")
 
             for file_name in ["model.xml", "model.bin"]:
                 TrainingService._move_artifact(
