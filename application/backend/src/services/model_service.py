@@ -19,7 +19,6 @@ from anomalib.data import AnomalibDataModule, Folder
 from anomalib.deploy import CompressionType, ExportType, OpenVINOInferencer
 from anomalib.engine import Engine
 from anomalib.models import get_model
-from anomalib.utils.path import resolve_versioned_path
 from loguru import logger
 from PIL import Image
 from sqlalchemy.ext.asyncio.session import AsyncSession
@@ -178,25 +177,9 @@ class ModelService:
 
         # Locate checkpoint
         model_binary_repo = ModelBinaryRepository(project_id=project_id, model_id=model_id)
-        name = f"{model.project_id}-{model.architecture}"
-        ckpt_path = (
-            Path(model_binary_repo.model_folder_path)
-            / model.architecture.title()
-            / name
-            / "latest"
-            / "weights"
-            / "lightning"
-            / "model.ckpt"
-        )
-
-        # Resolve 'latest' to actual version dir to avoid traversing junction (e.g. WinError 448 on Windows)
-        ckpt_path = resolve_versioned_path(ckpt_path)
-
+        ckpt_path = Path(model_binary_repo.model_folder_path) / "checkpoint" / "model.ckpt"
         if not ckpt_path.exists():
-            # Try alternative path for older structure or if title case isn't used
-            ckpt_path = Path(model_binary_repo.model_folder_path) / "weights" / "lightning" / "model.ckpt"
-            if not ckpt_path.exists():
-                raise FileNotFoundError(f"Model checkpoint not found at {ckpt_path}")
+            raise FileNotFoundError(f"Model checkpoint not found at {ckpt_path}")
 
         if export_parameters.compression in {CompressionType.INT8_PTQ, CompressionType.INT8_ACQ}:
             # We need reference images for INT8_PTQ and INT8_ACQ quantization.
@@ -275,7 +258,7 @@ class ModelService:
             raise NotImplementedError(f"Model format {model.format} is not supported for inference at this moment.")
 
         model_bin_repo = ModelBinaryRepository(project_id=model.project_id, model_id=model.id)
-        model_path = model_bin_repo.get_weights_file_path(format=model.format, name="model.xml")
+        model_path = model_bin_repo.get_weights_file_path(name="model.xml")
         device_name = device or DEFAULT_DEVICE
         try:
             return await asyncio.to_thread(
