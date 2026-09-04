@@ -193,7 +193,7 @@ class TrainingService:
 
     @staticmethod
     @CaptureOutput()
-    def _train_model(
+    def _train_model(  # noqa: PLR0915, PLR0912
         model: Model,
         synchronization_parameters: ProgressSyncParams,
         dataset_root: str,
