@@ -327,7 +327,10 @@ class TrainingService:
             return model
         finally:
             # Always remove the temporary training workspace, even if training/export failed.
-            shutil.rmtree(work_dir, ignore_errors=True)
+            try:
+                shutil.rmtree(work_dir)
+            except OSError as exc:
+                logger.warning(f"Failed to delete training workspace {work_dir}: {exc}")
 
     @staticmethod
     async def _handle_job_cancellation(job_service: JobService, job: Job, model: Model) -> None:
