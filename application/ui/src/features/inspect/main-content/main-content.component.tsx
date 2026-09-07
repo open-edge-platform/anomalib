@@ -1,5 +1,5 @@
 import { usePipeline, useProjectIdentifier } from '@anomalib-studio/hooks';
-import { Flex } from '@geti/ui';
+import { Flex } from '@geti-ui/ui';
 import isEmpty from 'lodash-es/isEmpty';
 
 import { StreamContainer } from '../stream-container/stream-container';

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { usePipeline, useProjectIdentifier } from '@anomalib-studio/hooks';
-import { dimensionValue, Divider, Flex, View } from '@geti/ui';
+import { dimensionValue, Divider, Flex, View } from '@geti-ui/ui';
 import { isNil } from 'lodash-es';
 import { useIsPipelineConfigured } from 'src/hooks/use-is-pipeline-configured.hook';
 

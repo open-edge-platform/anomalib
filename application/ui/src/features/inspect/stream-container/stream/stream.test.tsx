@@ -1,8 +1,8 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Toast } from '@geti/ui';
-import { ThemeProvider } from '@geti/ui/theme';
+import { Toast } from '@anomalib-studio/toast';
+import { ThemeProvider } from '@geti-ui/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -157,20 +157,22 @@ describe('Stream', () => {
             window.addEventListener('unhandledrejection', swallow);
             process.on('unhandledRejection', swallow);
 
-            renderStream({ streamOverrides: { status: 'connected', streamUrl: '/api/stream' } });
-            server.use(
-                http.get('/api/projects/{project_id}/capture', () =>
-                    // @ts-expect-error -- test intentionally returns error response
-                    HttpResponse.json({ detail: 'boom' }, { status: 500 })
-                )
-            );
+            try {
+                renderStream({ streamOverrides: { status: 'connected', streamUrl: '/api/stream' } });
+                server.use(
+                    http.get('/api/projects/{project_id}/capture', () =>
+                        // @ts-expect-error -- test intentionally returns error response
+                        HttpResponse.json({ detail: 'boom' }, { status: 500 })
+                    )
+                );
 
-            await userEvent.click(await screen.findByRole('button', { name: /Capture/i }));
+                await userEvent.click(await screen.findByRole('button', { name: /Capture/i }));
 
-            expect(await screen.findByText('Failed to upload 1 item')).toBeVisible();
-
-            window.removeEventListener('unhandledrejection', swallow);
-            process.off('unhandledRejection', swallow);
+                expect(await screen.findByText('Failed to upload 1 item')).toBeVisible();
+            } finally {
+                window.removeEventListener('unhandledrejection', swallow);
+                process.off('unhandledRejection', swallow);
+            }
         });
     });
 });

@@ -1,6 +1,8 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { Suspense } from 'react';
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -35,7 +37,9 @@ describe('PlayStreamButton', () => {
         return render(
             <QueryClientProvider client={new QueryClient()}>
                 <MemoryRouter>
-                    <PlayStreamButton onStart={onStart} isDisabled={isDisabled} />
+                    <Suspense fallback={<div>Loading...</div>}>
+                        <PlayStreamButton onStart={onStart} isDisabled={isDisabled} />
+                    </Suspense>
                 </MemoryRouter>
             </QueryClientProvider>
         );
