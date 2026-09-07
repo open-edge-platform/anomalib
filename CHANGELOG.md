@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
-- 🔒 **security**: Restrict `Tabular.from_file()` to the `csv`, `json` and `parquet` formats by @ashwinvaidya17 in
+- 🔒 **security**: Restrict `Tabular.from_file()` to the `csv`, `json` and `parquet` formats by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3782
 
 ## [v2.6.1] - 2026-09-04
 
