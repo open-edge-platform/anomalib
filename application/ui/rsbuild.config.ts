@@ -35,7 +35,10 @@ export default defineConfig({
     },
     tools: {
         rspack: (config) => {
-            config.module?.rules?.push({
+            config.module ??= {};
+            config.module.rules ??= [];
+
+            config.module.rules.push({
                 test: /@scalar[\\/]api-reference[\\/]dist[\\/]standalone[\\/]lib[\\/]load-plugins-from-urls\.js/,
                 parser: {
                     exprContextCritical: false,
@@ -45,6 +48,8 @@ export default defineConfig({
             config.watchOptions = {
                 ignored: ['**/src-tauri/**'],
             };
+
+            return config;
         },
     },
     server: {

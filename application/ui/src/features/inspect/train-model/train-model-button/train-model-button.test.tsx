@@ -19,12 +19,12 @@ const getMockedMediaItems = (count: number) => {
     );
 };
 
-const mockImages = (count: number) => {
+const mockImages = (count: number, total = count) => {
     server.use(
         http.get('/api/projects/{project_id}/images', () => {
             return HttpResponse.json({
                 media: getMockedMediaItems(count),
-                pagination: { offset: 0, limit: count, count, total: count },
+                pagination: { offset: 0, limit: count, count, total },
             });
         })
     );
@@ -73,5 +73,18 @@ describe('TrainModelButton', () => {
         expect(await screen.findByRole('dialog')).toBeVisible();
         expect(await screen.findByText('PatchCore')).toBeVisible();
         expect(screen.getByRole('button', { name: /start/i })).toBeDisabled();
+    });
+
+    it('enables the train button when pagination total has enough normal images', async () => {
+        mockImages(1, REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING);
+        mockTrainModelDialogResources();
+
+        render(<TrainModelButton />);
+
+        const button = await screen.findByRole('button', { name: /train model/i });
+
+        await waitFor(() => {
+            expect(button).not.toBeDisabled();
+        });
     });
 });
