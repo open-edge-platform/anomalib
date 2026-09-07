@@ -139,7 +139,7 @@ class TestTabularFromFileFormatValidation:
         marker = tmp_path / "PWNED.txt"
         evil_path = tmp_path / "samples.pickle"
         with evil_path.open("wb") as f:
-            pickle.dump(_EvilPicklePayload(marker), f)
+            pickle.dump(_EvilPicklePayload(marker), f)  # nosemgrep
 
         with pytest.raises(ValueError, match="Unsupported file format"):
             Tabular.from_file(name="dummy", file_path=str(evil_path))

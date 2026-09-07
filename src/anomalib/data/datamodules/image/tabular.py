@@ -188,7 +188,7 @@ class Tabular(AnomalibDataModule):
                 especially when logging/saving.
             file_path (str | Path): Path to tabular file containing the datset
                 information.
-            file_format (str): File format of the tabular file. Must be one of
+            file_format (str | None): File format of the tabular file. Must be one of
                 ``csv``, ``json`` or ``parquet`` (case-insensitive).
                 Defaults to ``None`` (inferred from the file suffix).
             pd_kwargs (dict | None): Keyword argument dictionary for the pd.read_* method.
