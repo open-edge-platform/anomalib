@@ -34,10 +34,17 @@ export default defineConfig({
         favicon: './src/assets/icons/build-icon.svg',
     },
     tools: {
-        rspack: {
-            watchOptions: {
+        rspack: (config) => {
+            config.module?.rules?.push({
+                test: /@scalar[\\/]api-reference[\\/]dist[\\/]standalone[\\/]lib[\\/]load-plugins-from-urls\.js/,
+                parser: {
+                    exprContextCritical: false,
+                },
+            });
+
+            config.watchOptions = {
                 ignored: ['**/src-tauri/**'],
-            },
+            };
         },
     },
     server: {

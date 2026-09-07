@@ -8,7 +8,7 @@ import { Button, FileTrigger } from '@geti-ui/ui';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { useUploadStatus } from '../footer/status-bar/adapters/use-upload-status';
-import { TrainModelButton } from '../train-model/train-model-button.component';
+import { TrainModelButton } from '../train-model/train-model-button/train-model-button.component';
 import { REQUIRED_NUMBER_OF_NORMAL_IMAGES_TO_TRIGGER_TRAINING } from './utils';
 
 export const UploadImages = () => {
