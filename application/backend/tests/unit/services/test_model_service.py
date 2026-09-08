@@ -7,7 +7,7 @@ from uuid import uuid4
 import numpy as np
 import openvino.properties.hint as ov_hints
 import pytest
-from anomalib.deploy import ExportType, OpenVINOInferencer
+from anomalib.deploy import OpenVINOInferencer
 
 from pydantic_models import PredictionLabel
 from repositories import ModelRepository
@@ -196,7 +196,6 @@ class TestModelService:
 
                 assert result == fxt_openvino_inferencer
                 mock_bin_repo.get_weights_file_path.assert_called_once_with(
-                    format=ExportType.OPENVINO,
                     name="model.xml",
                 )
                 mock_to_thread.assert_called_once_with(

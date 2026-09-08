@@ -3,7 +3,7 @@
 
 import { $api } from '@anomalib-studio/api';
 import { usePipeline } from '@anomalib-studio/hooks';
-import { dimensionValue, View } from '@geti/ui';
+import { dimensionValue, View } from '@geti-ui/ui';
 import { isEmpty, isNil } from 'lodash-es';
 
 interface FpsProp {

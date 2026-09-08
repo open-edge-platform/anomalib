@@ -109,7 +109,7 @@ jobs:
       - name: Verify package
         if: inputs.verify-package
         run: |
-          python -m pip install twine==6.2.0
+          python -m pip install twine==7.0.0
           twine check dist/*
       - name: Set artifact name
         id: set-artifact-name

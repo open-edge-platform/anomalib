@@ -31,15 +31,15 @@
 
 ---
 
-> 🌟 **Announcing v2.6.0 Release!** 🌟
+> 🌟 **Announcing v2.6.1 Release!** 🌟
 >
-> This release adds the SuperADD model and AutoVI dataset, and removes APIs that were deprecated through v2.5.x.
+> This patch release migrates the Kaputt dataset to Hugging Face and fixes several data-handling and metric bugs.
 >
 > Key Changes
 >
-> - **SuperADD**: Training-free class-agnostic anomaly segmentation (CVPR 2026 VAND 4.0 Industrial Track winner) using DINOv3 multi-layer memory banks.
-> - **AutoVI dataset**: Automotive Visual Inspection benchmark with six categories and automatic Zenodo download support.
-> - **Breaking API cleanup**: Removed Kaputt legacy flags (`use_reference` / `reference_only` / `category='all'`), AUPRO `num_thresholds` / `compute_pro(target=...)`, and the temporary `resolve_with_warning` dataset-path helper.
+> - **Kaputt on Hugging Face**: Dataset now downloads from the official [Hugging Face repository](https://huggingface.co/datasets/amazon/kaputt) instead of requiring a manual request form.
+> - **Security fix**: Archive extraction now blocks tar/zip path traversal on all supported Python versions.
+> - **Bug fixes**: Random tiling now honours the configured tile width, `seed=0` is treated as a valid seed in `random_split`, and the binary classification curve metric is faster.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 

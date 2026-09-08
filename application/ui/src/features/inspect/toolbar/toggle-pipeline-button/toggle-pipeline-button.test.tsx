@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ThemeProvider } from '@geti/ui/theme';
+import { ThemeProvider } from '@geti-ui/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -62,10 +62,15 @@ describe('TogglePipelineButton', () => {
 
     it('calls the activate endpoint and shows a success toast when enabling', async () => {
         const activateSpy = vi.fn();
+        const runSpy = vi.fn();
 
         server.use(
             http.post('/api/projects/{project_id}/pipeline:activate', () => {
                 activateSpy();
+                return HttpResponse.json({}, { status: 204 });
+            }),
+            http.post('/api/projects/{project_id}/pipeline:run', () => {
+                runSpy();
                 return HttpResponse.json({}, { status: 204 });
             })
         );
@@ -75,7 +80,8 @@ describe('TogglePipelineButton', () => {
         await userEvent.click(await screen.findByRole('switch'));
 
         await waitFor(() => {
-            expect(activateSpy).toHaveBeenCalledTimes(1);
+            expect(runSpy).toHaveBeenCalled();
+            expect(activateSpy).toHaveBeenCalled();
         });
 
         await waitFor(() => {

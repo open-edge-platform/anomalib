@@ -39,7 +39,7 @@ Reference:
     In IEEE/CVF International Conference on Computer Vision (ICCV).
 
 Dataset URL:
-    https://www.kaputt-dataset.com/
+    https://huggingface.co/datasets/amazon/kaputt
 """
 
 import logging

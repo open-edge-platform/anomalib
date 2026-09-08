@@ -21,14 +21,6 @@ vi.mock('../../../../components/stream/stream-connection-provider', async () => 
     };
 });
 
-vi.mock('../../../../components/toast/toast.component', async () => {
-    const actual = await vi.importActual('../../../../components/toast/toast.component');
-    return {
-        ...actual,
-        toast: vi.fn(),
-    };
-});
-
 vi.mock('src/hooks/use-project-identifier.hook', () => ({
     useProjectIdentifier: () => ({ projectId: '123' }),
 }));

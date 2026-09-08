@@ -3,7 +3,7 @@
 
 import { Suspense } from 'react';
 
-import { IntelBrandedLoading } from '@geti/ui';
+import { IntelBrandedLoading } from '@geti-ui/ui';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router';
 
 import { Toast } from '../components/toast/toast.component';

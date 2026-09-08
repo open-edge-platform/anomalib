@@ -69,7 +69,7 @@ async def test_export_model_success(
     mock_anyio_path_cls.return_value = mock_anyio_path
 
     # Create dummy checkpoint file
-    ckpt_dir = tmp_path / "weights" / "lightning"
+    ckpt_dir = tmp_path / "checkpoint"
     ckpt_dir.mkdir(parents=True)
     (ckpt_dir / "model.ckpt").touch()
 

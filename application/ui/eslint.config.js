@@ -30,15 +30,15 @@ export default [
                     patterns: [
                         {
                             group: ['@react-spectrum'],
-                            message: 'Use component from the @geti/ui folder instead.',
+                            message: 'Use component from the @geti-ui/ui folder instead.',
                         },
                         {
                             group: ['@react-types/*'],
-                            message: 'Use type from the @geti/ui folder instead.',
+                            message: 'Use type from the @geti-ui/ui folder instead.',
                         },
                         {
                             group: ['@spectrum-icons'],
-                            message: 'Use icons from the @geti/ui/icons folder instead.',
+                            message: 'Use icons from the @geti-ui/ui/icons folder instead.',
                         },
                     ],
                 },

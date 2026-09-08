@@ -14,6 +14,13 @@
             "context": 262144,
             "output": 8192
           }
+        },
+        "gemma4:26b": {
+          "name": "Gemma 4 26B",
+          "limit": {
+            "context": 262144,
+            "output": 8192
+          }
         }
       }
     }
@@ -21,8 +28,8 @@
   "model": "ollama/gemma4:31b",
   "agent": {
     "issue-triage": {
-      "description": "Triages new GitHub issues — classifies type, detects duplicates, requests info",
-      "model": "ollama/gemma4:31b",
+      "description": "Analyzes new GitHub issues and produces a read-only triage suggestion (no write access — a separate validated step applies it)",
+      "model": "ollama/gemma4:26b",
       "prompt": "{file:agents/issue-triage-opencode.md}",
       "temperature": 0.1,
       "steps": 10,
@@ -33,16 +40,15 @@
         "grep": "allow",
         "bash": {
           "*": "deny",
-          "gh issue *": "allow",
-          "gh search *": "allow",
-          "gh label *": "allow",
-          "gh api *": "allow"
+          "gh issue view *": "allow",
+          "gh label list*": "allow",
+          "gh search *": "allow"
         }
       }
     },
     "docs-sync": {
       "description": "Detects documentation drift from recent code changes and opens a PR with fixes",
-      "model": "ollama/gemma4:31b",
+      "model": "ollama/gemma4:26b",
       "prompt": "{file:agents/docs-sync-opencode.md}",
       "temperature": 0.1,
       "steps": 30,
@@ -70,7 +76,7 @@
     },
     "agents-md-sync": {
       "description": "Maintains AGENTS.md knowledge base by reviewing merged PRs and structural changes",
-      "model": "ollama/gemma4:31b",
+      "model": "ollama/gemma4:26b",
       "prompt": "{file:agents/agents-md-sync-opencode.md}",
       "temperature": 0.1,
       "steps": 20,
