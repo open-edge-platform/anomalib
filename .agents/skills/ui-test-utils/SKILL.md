@@ -39,15 +39,15 @@ Keep direct Testing Library rendering only for genuinely provider-free units. Do
 Import the helper using the relative path from the test file to `application/ui/tests/utils.ts`:
 
 ```tsx
-import { screen } from '@testing-library/react';
+import { screen } from "@testing-library/react";
 
-import { render } from '../../../../../tests/utils';
-import { ProjectPanel } from './project-panel.component';
+import { render } from "../../../../../tests/utils";
+import { ProjectPanel } from "./project-panel.component";
 
-it('shows the selected project', () => {
-    render(<ProjectPanel />, { route: '/projects/project-456/inspect' });
+it("shows the selected project", () => {
+  render(<ProjectPanel />, { route: "/projects/project-456/inspect" });
 
-    expect(screen.getByText('Project details')).toBeVisible();
+  expect(screen.getByText("Project details")).toBeVisible();
 });
 ```
 
@@ -55,19 +55,23 @@ Pass `route` when the component needs a specific location or `projectId`. The su
 
 ```tsx
 render(<ProjectSettings />, {
-    path: '/projects/:projectId/settings',
-    route: '/projects/project-456/settings',
+  path: "/projects/:projectId/settings",
+  route: "/projects/project-456/settings",
 });
 ```
 
 Use Testing Library's accessible queries and async helpers after rendering. For server-backed behavior, configure the existing MSW `server` handler before calling `render`.
 
 ```tsx
-server.use(http.get('/api/projects/{project_id}', () => HttpResponse.json(project)));
+server.use(
+  http.get("/api/projects/{project_id}", () => HttpResponse.json(project)),
+);
 
-render(<ProjectPanel />, { route: '/projects/project-456/inspect' });
+render(<ProjectPanel />, { route: "/projects/project-456/inspect" });
 
-expect(await screen.findByRole('heading', { name: project.name })).toBeVisible();
+expect(
+  await screen.findByRole("heading", { name: project.name }),
+).toBeVisible();
 ```
 
 ## Hook Tests
@@ -75,19 +79,23 @@ expect(await screen.findByRole('heading', { name: project.name })).toBeVisible()
 Use the wrapper-enabled helper rather than creating a custom provider wrapper in the test.
 
 ```tsx
-import { waitFor } from '@testing-library/react';
+import { waitFor } from "@testing-library/react";
 
-import { renderHook } from '../../../../../tests/utils';
-import { useActivePipelineStatus } from './use-active-pipeline-status.hook';
+import { renderHook } from "../../../../../tests/utils";
+import { useActivePipelineStatus } from "./use-active-pipeline-status.hook";
 
-it('reports an active project', async () => {
-    server.use(http.get('/api/active-pipeline', () => HttpResponse.json({ project_id: 'project-456' })));
+it("reports an active project", async () => {
+  server.use(
+    http.get("/api/active-pipeline", () =>
+      HttpResponse.json({ project_id: "project-456" }),
+    ),
+  );
 
-    const { result } = renderHook(() => useActivePipelineStatus('project-123'));
+  const { result } = renderHook(() => useActivePipelineStatus("project-123"));
 
-    await waitFor(() => {
-        expect(result.current.hasActiveProject).toBe(true);
-    });
+  await waitFor(() => {
+    expect(result.current.hasActiveProject).toBe(true);
+  });
 });
 ```
 
@@ -96,15 +104,15 @@ The helper accepts the same `route`, `path`, and `queryClient` options as `rende
 ```tsx
 const queryClient = new QueryClient();
 const { result, rerender } = renderHook(
-    ({ projectId }) => useActivePipelineStatus(projectId),
-    {
-        initialProps: { projectId: 'project-123' },
-        queryClient,
-        route: '/projects/project-123/inspect',
-    }
+  ({ projectId }) => useActivePipelineStatus(projectId),
+  {
+    initialProps: { projectId: "project-123" },
+    queryClient,
+    route: "/projects/project-123/inspect",
+  },
 );
 
-rerender({ projectId: 'project-456' });
+rerender({ projectId: "project-456" });
 ```
 
 Provide `queryClient` only when the test must seed, inspect, or deliberately share cache state. Otherwise, use the default isolated client.
