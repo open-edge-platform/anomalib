@@ -1,16 +1,16 @@
 // Copyright (C) 2025-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { renderHook, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { HttpResponse } from 'msw';
 import { SchemaPipeline } from 'src/api/openapi-spec';
 import { http } from 'src/api/utils';
 import { StreamConnectionStatus, useStreamConnection } from 'src/components/stream/stream-connection-provider';
 import { server } from 'src/msw-node-setup';
-import { TestProviders } from 'src/providers';
 import { queryClient } from 'src/query-client/query-client';
 
+import { renderHook } from '../../../../../tests/utils';
 import { STREAM_ERROR_MESSAGE, useAutoPlayStream } from './use-auto-play-stream.hook';
 
 vi.mock('../../../../components/stream/stream-connection-provider', async () => {
@@ -20,10 +20,6 @@ vi.mock('../../../../components/stream/stream-connection-provider', async () => 
         useStreamConnection: vi.fn(),
     };
 });
-
-vi.mock('src/hooks/use-project-identifier.hook', () => ({
-    useProjectIdentifier: () => ({ projectId: '123' }),
-}));
 
 describe('useAutoPlayStream', () => {
     const renderApp = ({
@@ -48,7 +44,7 @@ describe('useAutoPlayStream', () => {
             )
         );
 
-        renderHook(() => useAutoPlayStream(), { wrapper: TestProviders });
+        renderHook(() => useAutoPlayStream(), { route: '/projects/123/inspect' });
 
         return mockedStart;
     };

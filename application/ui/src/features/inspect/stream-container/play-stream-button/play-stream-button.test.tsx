@@ -1,22 +1,15 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense } from 'react';
-
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getMockedPipeline } from 'mocks/mock-pipeline';
-import { MemoryRouter } from 'react-router';
 import { SchemaPipeline } from 'src/api/openapi-spec';
 import { http } from 'src/api/utils';
 import { server } from 'src/msw-node-setup';
 
+import { render } from '../../../../../tests/utils';
 import { PlayStreamButton } from './play-stream-button.component';
-
-vi.mock('src/hooks/use-project-identifier.hook', () => ({
-    useProjectIdentifier: () => ({ projectId: 'project-123' }),
-}));
 
 describe('PlayStreamButton', () => {
     const renderPlayStreamButton = ({
@@ -34,15 +27,7 @@ describe('PlayStreamButton', () => {
             )
         );
 
-        return render(
-            <QueryClientProvider client={new QueryClient()}>
-                <MemoryRouter>
-                    <Suspense fallback={<div>Loading...</div>}>
-                        <PlayStreamButton onStart={onStart} isDisabled={isDisabled} />
-                    </Suspense>
-                </MemoryRouter>
-            </QueryClientProvider>
-        );
+        return render(<PlayStreamButton onStart={onStart} isDisabled={isDisabled} />);
     };
 
     it('calls onStart when clicked', async () => {

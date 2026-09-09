@@ -1,21 +1,16 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { waitFor } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { http } from 'src/api/utils';
 import { server } from 'src/msw-node-setup';
-import { TestProviders } from 'src/providers';
 import { queryClient } from 'src/query-client/query-client';
 
+import { renderHook } from '../../../../../tests/utils';
 import { useEnsureActivePipeline } from './use-ensure-active-pipeline.hook';
-
-vi.mock('../../../../hooks/use-project-identifier.hook', () => ({
-    useProjectIdentifier: () => ({ projectId: 'project-id-123' }),
-}));
 
 describe('useEnsureActivePipeline', () => {
     const mockProjectId = 'project-id-123';
 
-    const renderHookWithProviders = (projectId: string) =>
-        renderHook(() => useEnsureActivePipeline(projectId), { wrapper: TestProviders });
+    const renderHookWithProviders = (projectId: string) => renderHook(() => useEnsureActivePipeline(projectId));
 
     beforeEach(() => {
         vi.clearAllMocks();
