@@ -5,27 +5,72 @@ name: "Issue Triage (OpenCode)"
 
 on:
   issues:
-    types: [opened]
+    types: [labeled]
 
 permissions: {} # No permissions by default on workflow level
 
 concurrency:
   group: "opencode-issue-triage-${{ github.event.issue.number }}"
 
+env:
+  TRIAGE_LABEL: triage
+
 jobs:
-  # Stage 1: analyze the (untrusted) issue body and produce a suggestion.
-  # Runs for EVERY issue author, including first-timers — this job never
-  # holds `issues: write`, so a prompt-injection payload in the issue body
-  # cannot mutate anything on GitHub. It can only steer this job's own
-  # (harmless, read-only) output, which the `apply` job independently
-  # validates before acting on it.
+  # Stage 0: decide whether this issue may enter the pipeline at all.
+  #
+  # Triage is opt-in: a maintainer requests it by applying the `triage`
+  # label. That keeps arbitrary GitHub users from scheduling LLM runs on
+  # the self-hosted GPU runner simply by opening an issue, and gives a
+  # human checkpoint on the untrusted content the agent will read.
+  #
+  # Runs on a hosted runner and read-only, so the decision itself costs no
+  # GPU time and holds no write access.
+  gate:
+    if: github.event.label.name == 'triage'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read # Required to checkout the gate scripts
+      issues: read # Required to read the issue timeline; no write access here
+    outputs:
+      approved: ${{ steps.gate.outputs.approved }}
+      labeled_at: ${{ steps.gate.outputs.labeled_at }}
+      reason: ${{ steps.gate.outputs.reason }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: |
+            .github/scripts
+          sparse-checkout-cone-mode: true
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Check triage request is authorized and current
+        id: gate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          # Passed as env, never interpolated into the script body.
+          SENDER_LOGIN: ${{ github.event.sender.login }}
+        run: bash .github/scripts/check-triage-gate.sh
+
+  # Stage 1: analyze the (maintainer-approved but still untrusted) issue
+  # body and produce a suggestion. A maintainer applying the `triage` label
+  # is a request to look at the issue, not a review of its contents, so the
+  # body is still treated as hostile: this job never holds `issues: write`,
+  # so a prompt-injection payload in it cannot mutate anything on GitHub.
+  # It can only steer this job's own (harmless, read-only) output, which
+  # the `apply` job independently validates before acting on it.
   analyze:
+    needs: gate
+    if: needs.gate.outputs.approved == 'true'
     runs-on: self-hosted
     timeout-minutes: 20
-    # Serialize across ALL issues (not just per-issue) so a burst of issues
-    # opened by untrusted authors can't run many concurrent LLM invocations
-    # on the self-hosted GPU runner at once. Jobs queue instead of piling up
-    # in parallel; `cancel-in-progress: false` so none get silently dropped.
+    # Serialize across ALL issues (not just per-issue) so a burst of triage
+    # requests can't run many concurrent LLM invocations on the self-hosted
+    # GPU runner at once. Jobs queue instead of piling up in parallel;
+    # `cancel-in-progress: false` so none get silently dropped.
     # This bounds resource exhaustion; it does not grant any write access —
     # that boundary is enforced by `permissions` below and by the `apply`
     # job's independent validation.
@@ -84,13 +129,14 @@ jobs:
             echo "${DELIM}"
           } >> "$GITHUB_OUTPUT"
 
-  # Stage 2: apply the suggestion. This is the only job with `issues:
-  # write`. It runs plain, deterministic shell code (not an LLM) that
+  # Stage 2: apply the suggestion. This is the only job that acts on model
+  # output while holding `issues: write`. It runs plain, deterministic
+  # shell code (not an LLM) that re-verifies the issue is unchanged and
   # validates every field of the Stage 1 suggestion against explicit
   # allowlists/limits before calling any mutating `gh` command. See
   # .github/scripts/apply-issue-triage.sh.
   apply:
-    needs: analyze
+    needs: [gate, analyze]
     runs-on: self-hosted
     timeout-minutes: 5
     permissions:
@@ -111,4 +157,29 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           SUGGESTION: ${{ needs.analyze.outputs.suggestion }}
+          LABELED_AT: ${{ needs.gate.outputs.labeled_at }}
         run: bash .github/scripts/apply-issue-triage.sh
+
+  # Cleanup path for rejected requests. Kept separate from `gate` so the
+  # decision stays read-only, and separate from `apply` so this job never
+  # touches model output: it only removes the request label and posts a
+  # fixed, hard-coded string.
+  reject:
+    needs: gate
+    if: needs.gate.outputs.approved == 'false' && needs.gate.outputs.reason == 'stale'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write # Required to remove the label and explain why
+    steps:
+      - name: Withdraw triage request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          set -euo pipefail
+          gh issue edit "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" \
+            --remove-label "$TRIAGE_LABEL"
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" \
+            --body "This issue was edited after the \`$TRIAGE_LABEL\` label was applied, so automated triage was skipped. A maintainer can re-apply the label to run it against the current content."
