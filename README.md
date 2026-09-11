@@ -31,15 +31,13 @@
 
 ---
 
-> 🌟 **Announcing v2.6.1 Release!** 🌟
+> 🌟 **Announcing v2.6.2 Release!** 🌟
 >
-> This patch release migrates the Kaputt dataset to Hugging Face and fixes several data-handling and metric bugs.
+> This patch release hardens `Tabular.from_file()` by restricting it to safe, data-only file formats.
 >
 > Key Changes
 >
-> - **Kaputt on Hugging Face**: Dataset now downloads from the official [Hugging Face repository](https://huggingface.co/datasets/amazon/kaputt) instead of requiring a manual request form.
-> - **Security fix**: Archive extraction now blocks tar/zip path traversal on all supported Python versions.
-> - **Bug fixes**: Random tiling now honours the configured tile width, `seed=0` is treated as a valid seed in `random_split`, and the binary classification curve metric is faster.
+> - **Security / API change**: `Tabular.from_file()` now only accepts `csv`, `json`, and `parquet`. Formats such as `pickle` and `hdf` are rejected because loading them can execute arbitrary code. Load those files yourself and pass a DataFrame to `Tabular(...)`.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 
