@@ -48,6 +48,33 @@ class TestVisaPathConfinement:
             assert not leaked.is_file()
 
 
+class TestMvtecAdPathConfinement:
+    """``make_mvtec_ad_dataset`` must not follow symlinks that escape ``root``."""
+
+    @staticmethod
+    def test_rejects_symlinked_subdir_escape() -> None:
+        """A symlinked category subdirectory must not leak files outside ``root``."""
+        from anomalib.data.datasets.image.mvtecad import make_mvtec_ad_dataset
+
+        with TemporaryDirectory() as tmp_dir:
+            base = Path(tmp_dir)
+            outside = base / "outside"
+            (outside / "good").mkdir(parents=True)
+            (outside / "good" / "000.png").write_bytes(b"x")
+
+            root = base / "candle"
+            (root / "train" / "good").mkdir(parents=True)
+            (root / "train" / "good" / "001.png").write_bytes(b"y")
+
+            # "bad" is a symlink pointing outside root.
+            (root / "train" / "bad").symlink_to(outside / "good")
+
+            samples = make_mvtec_ad_dataset(root, split=Split.TRAIN)
+            assert len(samples) == 1
+            for image_path in samples["image_path"]:
+                assert not str(Path(image_path).resolve()).startswith(str(outside.resolve()))
+
+
 class TestDatumaroPathConfinement:
     """Datumaro JSON image paths must stay under the dataset root."""
 
