@@ -55,7 +55,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.visa import VisaDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
-from anomalib.data.utils.path import resolve_path_under_root, validate_path
+from anomalib.data.utils.path import is_within_directory, resolve_path_under_root, validate_path
 from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
@@ -195,7 +195,8 @@ class Visa(AnomalibDataModule):
                 │   └── ...
                 └── VisA_20220922.tar
         """
-        if (self.split_root / self.category).is_dir():
+        processed_category = self.split_root / self.category
+        if processed_category.is_dir() and is_within_directory(self.root, processed_category):
             # dataset is available, and split has been applied
             logger.info("Found the dataset and train/test split.")
         elif (self.root / self.category).is_dir():
@@ -258,7 +259,7 @@ class Visa(AnomalibDataModule):
                 img_src_path = resolve_path_under_root(self.root, image_path)
                 img_dst_path = validate_path(
                     self.split_root / category / split / label / image_name,
-                    base_dir=self.split_root,
+                    base_dir=self.root,
                     should_exist=False,
                 )
 
@@ -270,7 +271,7 @@ class Visa(AnomalibDataModule):
                     msk_src_path = resolve_path_under_root(self.root, mask_path)
                     msk_dst_path = validate_path(
                         self.split_root / category / "ground_truth" / label / mask_name,
-                        base_dir=self.split_root,
+                        base_dir=self.root,
                         should_exist=False,
                     )
                     mask = cv2.imread(str(msk_src_path))

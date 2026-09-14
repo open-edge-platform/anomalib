@@ -59,6 +59,21 @@ from anomalib.utils.path import get_datasets_dir
 
 logger = logging.getLogger(__name__)
 
+
+def _resolve_relative_path(root: Path, subdir: Path, value: str) -> Path:
+    """Resolve ``value`` relative to ``subdir`` and confine the result to ``root``.
+
+    Args:
+        root: Top-level dataset root that the resolved path must remain under.
+        subdir: Subdirectory that ``value`` is relative to.
+        value: Relative path read from the dataset metadata.
+
+    Returns:
+        Validated absolute path under ``root``.
+    """
+    return resolve_path_under_root(root, subdir / value, should_exist=False)
+
+
 # Material categories in Kaputt dataset (based on item_material field)
 CATEGORIES = (
     "book_other",
@@ -264,8 +279,8 @@ def make_kaputt_dataset(
             image_col = f"query_{image_type.value}"  # "query_image" or "query_crop"
             image_subdir = root / f"query-{image_type.value}"
             mask_subdir = root / "query-mask"
-            resolve_image = partial(resolve_path_under_root, image_subdir, should_exist=False)
-            resolve_mask = partial(resolve_path_under_root, mask_subdir, should_exist=False)
+            resolve_image = partial(_resolve_relative_path, root, image_subdir)
+            resolve_mask = partial(_resolve_relative_path, root, mask_subdir)
 
             samples = DataFrame()
             samples["image_path"] = query_df[image_col].map(resolve_image).astype(str)
@@ -307,11 +322,8 @@ def make_kaputt_dataset(
             if ref_parquet.exists():
                 ref_df = pd.read_parquet(ref_parquet)
                 ref_image_col = f"reference_{image_type.value}"
-                resolve_ref = partial(
-                    resolve_path_under_root,
-                    root / f"reference-{image_type.value}",
-                    should_exist=False,
-                )
+                reference_subdir = root / f"reference-{image_type.value}"
+                resolve_ref = partial(_resolve_relative_path, root, reference_subdir)
 
                 ref_samples = DataFrame()
                 ref_samples["image_path"] = ref_df[ref_image_col].map(resolve_ref).astype(str)

@@ -441,8 +441,19 @@ def save_image(filename: Path | str, image: np.ndarray | Figure, root: Path | No
         root_path = Path(root)
         file_path = validate_path(root_path / file_path, base_dir=root_path, should_exist=False)
 
+    if file_path.is_dir():
+        msg = f"Output path must be a file, not a directory: {file_path}"
+        raise ValueError(msg)
+
     # Make unique file_path if file already exists
     file_path = duplicate_filename(file_path)
+
+    if root:
+        # Re-validate after duplicate selection so the final write target cannot
+        # escape ``root`` (e.g. a filename such as "." or "" that resolved to the
+        # root directory itself, causing ``duplicate_filename`` to return a
+        # sibling path such as ``root_1``).
+        file_path = validate_path(file_path, base_dir=root_path, should_exist=False)
 
     file_path.parent.mkdir(parents=True, exist_ok=True)
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
