@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Custom Tabular Dataset.
@@ -238,12 +238,14 @@ def make_tabular_dataset(
         True,  # split
     ]:
         samples["label"] = samples.apply(
-            lambda x: DirType.NORMAL
-            if (x["label_index"] == LabelName.NORMAL) and (x["split"] == Split.TRAIN.value)
-            else (
-                DirType.NORMAL_TEST
-                if x["label_index"] == LabelName.NORMAL and x["split"] == Split.TEST.value
-                else (DirType.ABNORMAL if x["label_index"] == LabelName.ABNORMAL else None)
+            lambda x: (
+                DirType.NORMAL
+                if (x["label_index"] == LabelName.NORMAL) and (x["split"] == Split.TRAIN.value)
+                else (
+                    DirType.NORMAL_TEST
+                    if x["label_index"] == LabelName.NORMAL and x["split"] == Split.TEST.value
+                    else (DirType.ABNORMAL if x["label_index"] == LabelName.ABNORMAL else None)
+                )
             ),
             axis=1,
         )
