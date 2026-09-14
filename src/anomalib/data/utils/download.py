@@ -25,6 +25,8 @@ from zipfile import ZipFile
 
 from tqdm import tqdm
 
+from anomalib.data.utils.path import is_within_directory
+
 logger = logging.getLogger(__name__)
 
 
@@ -349,19 +351,3 @@ def download_and_extract(root: Path, info: DownloadInfo) -> None:
             raise RuntimeError(msg)
 
     extract(downloaded_file_path, root)
-
-
-def is_within_directory(directory: Path, target: Path) -> bool:
-    """Check if a target path is located within a given directory.
-
-    Args:
-        directory: Path of the parent directory
-        target: Path to check
-
-    Returns:
-        ``True`` if target is within directory, ``False`` otherwise
-    """
-    abs_directory = directory.resolve()
-    abs_target = target.resolve()
-
-    return abs_target.is_relative_to(abs_directory)

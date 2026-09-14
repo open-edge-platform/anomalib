@@ -26,6 +26,7 @@ Example:
     ... )
 """
 
+from functools import partial
 from pathlib import Path
 
 from pandas import DataFrame
@@ -34,6 +35,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datasets.base.image import AnomalibDataset
 from anomalib.data.errors import MisMatchError
 from anomalib.data.utils import DirType, LabelName, Split
+from anomalib.data.utils.path import resolve_path_under_root
 
 
 class TabularDataset(AnomalibDataset):
@@ -266,14 +268,16 @@ def make_tabular_dataset(
     ### Post-processing ###
     #######################
 
-    # Add root to paths
+    # Add root to paths. When ``root`` is set, paths must resolve under it;
+    # absolute paths outside ``root`` are rejected.
     samples["mask_path"] = samples["mask_path"].fillna("")
     if root:
-        samples["image_path"] = samples["image_path"].map(lambda x: Path(root, x))
+        resolve = partial(resolve_path_under_root, root, should_exist=False)
+        samples["image_path"] = samples["image_path"].map(resolve)
         samples.loc[
             samples["mask_path"] != "",
             "mask_path",
-        ] = samples.loc[samples["mask_path"] != "", "mask_path"].map(lambda x: Path(root, x))
+        ] = samples.loc[samples["mask_path"] != "", "mask_path"].map(resolve)
     samples = samples.astype({"image_path": "str", "mask_path": "str", "label": "str"})
 
     # Check if anomalous samples are in training set

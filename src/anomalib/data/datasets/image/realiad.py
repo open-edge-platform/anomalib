@@ -41,6 +41,7 @@ from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datasets.base import AnomalibDataset
 from anomalib.data.utils import LabelName, Split, validate_path
+from anomalib.data.utils.path import resolve_path_under_root
 from anomalib.utils.path import get_datasets_dir
 
 IMG_EXTENSIONS = (".jpg", ".png", ".PNG", ".JPG")
@@ -202,14 +203,10 @@ class RealIADDataset(AnomalibDataset):
         if isinstance(json_path, str):
             json_path = json_path.format(category=category)
 
-        # Resolve JSON path
-        json_file = self.root / json_path
+        # Resolve JSON path and confine under dataset root
+        json_file = resolve_path_under_root(self.root, json_path)
 
         # Load JSON metadata
-        if not json_file.exists():
-            msg = f"JSON metadata file not found at {json_file}"
-            raise FileNotFoundError(msg)
-
         with json_file.open(encoding="utf-8") as f:
             self.metadata = json.load(f)
 
@@ -278,9 +275,13 @@ def make_realiad_dataset(
 
     for sample in samples:
         # Create sample data with only essential columns
+        image_path = resolve_path_under_root(root, sample["image_path"], should_exist=False)
+        mask_path = (
+            resolve_path_under_root(root, sample["mask_path"], should_exist=False) if sample.get("mask_path") else ""
+        )
         sample_data = {
-            "image_path": str(root / sample["image_path"]),
-            "mask_path": str(root / sample["mask_path"]) if sample.get("mask_path") else "",
+            "image_path": str(image_path),
+            "mask_path": str(mask_path) if mask_path else "",
             "label_index": LabelName.NORMAL if sample["anomaly_class"] == "OK" else LabelName.ABNORMAL,
             "split": "train" if sample in metadata.get("train", []) else "test",
         }

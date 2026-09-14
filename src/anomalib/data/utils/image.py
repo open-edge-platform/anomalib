@@ -420,7 +420,8 @@ def save_image(filename: Path | str, image: np.ndarray | Figure, root: Path | No
     Args:
         filename (Path | str): Output filename
         image (np.ndarray | Figure): Image or matplotlib figure to save
-        root (Path | None): Optional root dir to save under. Defaults to None
+        root (Path | None): Optional root dir to save under. Defaults to None.
+            When provided, the final path must resolve under ``root``.
 
     Examples:
         >>> img = read_image("input.jpg")
@@ -437,7 +438,8 @@ def save_image(filename: Path | str, image: np.ndarray | Figure, root: Path | No
     if file_path.is_absolute() and root:
         file_path = Path(*file_path.parts[2:])  # OS-AGNOSTIC
     if root:
-        file_path = root / file_path
+        root_path = Path(root)
+        file_path = validate_path(root_path / file_path, base_dir=root_path, should_exist=False)
 
     # Make unique file_path if file already exists
     file_path = duplicate_filename(file_path)
