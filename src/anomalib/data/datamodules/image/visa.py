@@ -196,7 +196,13 @@ class Visa(AnomalibDataModule):
                 └── VisA_20220922.tar
         """
         processed_category = self.split_root / self.category
-        if processed_category.is_dir() and is_within_directory(self.root, processed_category):
+        if processed_category.is_dir():
+            if not is_within_directory(self.root, processed_category):
+                msg = (
+                    f"Processed category directory {processed_category} resolves outside "
+                    f"the dataset root {self.root}. Refusing to use it."
+                )
+                raise ValueError(msg)
             # dataset is available, and split has been applied
             logger.info("Found the dataset and train/test split.")
         elif (self.root / self.category).is_dir():
@@ -218,6 +224,14 @@ class Visa(AnomalibDataModule):
             ValueError: If CSV fields contain path traversal or unexpected values.
         """
         logger.info("preparing data")
+
+        if not is_within_directory(self.root, self.split_root):
+            msg = (
+                f"Split output directory {self.split_root} resolves outside the dataset "
+                f"root {self.root}. Refusing to create directories there."
+            )
+            raise ValueError(msg)
+
         categories = list(VISA_CATEGORIES)
 
         split_file = self.root / "split_csv" / "1cls.csv"

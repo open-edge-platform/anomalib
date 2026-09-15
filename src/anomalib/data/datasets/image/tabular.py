@@ -273,7 +273,7 @@ def make_tabular_dataset(
     # Add root to paths. When ``root`` is set, paths must resolve under it;
     # absolute paths outside ``root`` are rejected.
     samples["mask_path"] = samples["mask_path"].fillna("")
-    if root:
+    if root is not None:
         resolve = partial(resolve_path_under_root, root, should_exist=False)
         samples["image_path"] = samples["image_path"].map(resolve)
         samples.loc[

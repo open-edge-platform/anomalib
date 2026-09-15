@@ -47,6 +47,45 @@ class TestVisaPathConfinement:
             leaked = root / "visa_pytorch" / "candle" / "train" / "good" / "SECRET_host_file.txt"
             assert not leaked.is_file()
 
+    @staticmethod
+    def test_prepare_data_rejects_symlinked_processed_category() -> None:
+        """A symlinked processed-category dir must not be treated as already-split."""
+        with TemporaryDirectory() as tmp_dir:
+            base = Path(tmp_dir)
+            root = base / "visa"
+            root.mkdir()
+
+            outside_category = base / "outside_candle"
+            outside_category.mkdir()
+
+            split_root = root / "visa_pytorch"
+            split_root.mkdir()
+            (split_root / "candle").symlink_to(outside_category)
+
+            datamodule = Visa(root=root, category="candle")
+            with pytest.raises(ValueError, match="outside"):
+                datamodule.prepare_data()
+
+    @staticmethod
+    def test_apply_cls1_split_rejects_symlinked_split_root() -> None:
+        """``apply_cls1_split`` must not create directories through a symlinked split root."""
+        with TemporaryDirectory() as tmp_dir:
+            base = Path(tmp_dir)
+            root = base / "visa"
+            root.mkdir()
+
+            outside = base / "outside_split_root"
+            outside.mkdir()
+
+            # split_root ("visa_pytorch") is a symlink pointing outside root.
+            (root / "visa_pytorch").symlink_to(outside)
+
+            datamodule = Visa(root=root, category="candle")
+            with pytest.raises(ValueError, match="outside"):
+                datamodule.apply_cls1_split()
+
+            assert not any(outside.iterdir())
+
 
 class TestMvtecAdPathConfinement:
     """``make_mvtec_ad_dataset`` must not follow symlinks that escape ``root``."""
@@ -135,6 +174,29 @@ class TestTabularPathConfinement:
             }
             with pytest.raises(ValueError, match="Access denied"):
                 make_tabular_dataset(samples=samples, root=root)
+
+    @staticmethod
+    def test_rejects_escape_with_empty_string_root() -> None:
+        """An empty-string ``root`` must still confine paths, not be treated as unset."""
+        import os
+
+        with TemporaryDirectory() as tmp_dir:
+            cwd_dir = Path(tmp_dir) / "data"
+            cwd_dir.mkdir()
+            outside = Path(tmp_dir) / "outside.png"
+            outside.write_bytes(b"x")
+            cwd = Path.cwd()
+            os.chdir(cwd_dir)
+            try:
+                samples = {
+                    "image_path": [str(outside)],
+                    "label_index": [LabelName.NORMAL],
+                    "split": [Split.TRAIN],
+                }
+                with pytest.raises(ValueError, match="Access denied"):
+                    make_tabular_dataset(samples=samples, root="")
+            finally:
+                os.chdir(cwd)
 
 
 class TestRealIADPathConfinement:
