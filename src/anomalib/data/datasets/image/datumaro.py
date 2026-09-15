@@ -70,7 +70,10 @@ def make_datumaro_dataset(
         2  path/...   Normal           0  Split.TRAIN
     """
     root = Path(root)
-    annotation_file = root / "annotations" / "default.json"
+    annotation_file = validate_path(
+        root / "annotations" / "default.json",
+        base_dir=root,
+    )
     with annotation_file.open() as f:
         annotations = json.load(f)
 

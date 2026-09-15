@@ -86,6 +86,52 @@ class TestVisaPathConfinement:
 
             assert not any(outside.iterdir())
 
+    @staticmethod
+    def test_apply_cls1_split_rejects_symlinked_leaf_category() -> None:
+        """A symlinked leaf category dir under an in-root split_root must not be used."""
+        with TemporaryDirectory() as tmp_dir:
+            base = Path(tmp_dir)
+            root = base / "visa"
+            (root / "split_csv").mkdir(parents=True)
+            (root / "split_csv" / "1cls.csv").write_text(
+                "category,split,label,image_path,mask_path\n",
+                encoding="utf-8",
+            )
+
+            outside = base / "outside_category"
+            outside.mkdir()
+
+            split_root = root / "visa_pytorch"
+            split_root.mkdir()
+            # "candle" (one of the unselected categories the loop iterates over) is a
+            # dangling symlink pointing outside root.
+            (split_root / "candle").symlink_to(outside)
+
+            datamodule = Visa(root=root, category="capsules")
+            with pytest.raises(ValueError, match="Access denied"):
+                datamodule.apply_cls1_split()
+
+            assert not any(outside.iterdir())
+
+    @staticmethod
+    def test_apply_cls1_split_rejects_symlinked_split_file() -> None:
+        """A symlinked ``split_csv/1cls.csv`` must not be read from outside root."""
+        with TemporaryDirectory() as tmp_dir:
+            base = Path(tmp_dir)
+            root = base / "visa"
+            (root / "split_csv").mkdir(parents=True)
+
+            secret = base / "secret_1cls.csv"
+            secret.write_text(
+                "category,split,label,image_path,mask_path\ncandle,train,normal,foo.png,\n",
+                encoding="utf-8",
+            )
+            (root / "split_csv" / "1cls.csv").symlink_to(secret)
+
+            datamodule = Visa(root=root, category="candle")
+            with pytest.raises(ValueError, match="Access denied"):
+                datamodule.apply_cls1_split()
+
 
 class TestMvtecAdPathConfinement:
     """``make_mvtec_ad_dataset`` must not follow symlinks that escape ``root``."""
@@ -137,6 +183,25 @@ class TestDatumaroPathConfinement:
                 ],
             }
             (root / "annotations" / "default.json").write_text(json.dumps(annotations), encoding="utf-8")
+
+            with pytest.raises(ValueError, match="Access denied"):
+                make_datumaro_dataset(root)
+
+    @staticmethod
+    def test_rejects_symlinked_annotation_file() -> None:
+        """A symlinked ``annotations/default.json`` must not be read from outside root."""
+        with TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir) / "datumaro"
+            (root / "annotations").mkdir(parents=True)
+            (root / "images" / "default").mkdir(parents=True)
+
+            secret_annotations = {
+                "categories": {"label": {"labels": [{"name": "Normal"}]}},
+                "items": [],
+            }
+            secret = Path(tmp_dir) / "secret_default.json"
+            secret.write_text(json.dumps(secret_annotations), encoding="utf-8")
+            (root / "annotations" / "default.json").symlink_to(secret)
 
             with pytest.raises(ValueError, match="Access denied"):
                 make_datumaro_dataset(root)

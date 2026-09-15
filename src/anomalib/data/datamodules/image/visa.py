@@ -234,7 +234,10 @@ class Visa(AnomalibDataModule):
 
         categories = list(VISA_CATEGORIES)
 
-        split_file = self.root / "split_csv" / "1cls.csv"
+        split_file = validate_path(
+            self.root / "split_csv" / "1cls.csv",
+            base_dir=self.root,
+        )
 
         for category in categories:
             train_folder = self.split_root / category / "train"
@@ -246,10 +249,17 @@ class Visa(AnomalibDataModule):
             test_img_bad_folder = test_folder / "bad"
             test_mask_bad_folder = mask_folder / "bad"
 
-            train_img_good_folder.mkdir(parents=True, exist_ok=True)
-            test_img_good_folder.mkdir(parents=True, exist_ok=True)
-            test_img_bad_folder.mkdir(parents=True, exist_ok=True)
-            test_mask_bad_folder.mkdir(parents=True, exist_ok=True)
+            for leaf_folder in (
+                train_img_good_folder,
+                test_img_good_folder,
+                test_img_bad_folder,
+                test_mask_bad_folder,
+            ):
+                # Confine each leaf output directory to self.root before creating it, so a
+                # dangling or unselected-category symlink under split_root cannot cause
+                # mkdir to create directories outside the dataset root.
+                validate_path(leaf_folder, base_dir=self.root, should_exist=False)
+                leaf_folder.mkdir(parents=True, exist_ok=True)
 
         with split_file.open(encoding="utf-8") as file:
             csvreader = csv.reader(file)
