@@ -18,7 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
-- 🐞 **metric**: `AUPR` now computes step-wise average precision, so constant, all-zero and inverted detectors score at the anomaly rate instead of 0.525 by @mateenali66
+- 🐞 **metric**: `AUPR` now computes step-wise average precision, so constant, all-zero and inverted detectors score at the anomaly rate instead of 0.525 by @mateenali66 in https://github.com/open-edge-platform/anomalib/pull/3797
 
 ## [v2.6.2] - 2026-09-11
 
