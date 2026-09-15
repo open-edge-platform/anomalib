@@ -258,8 +258,8 @@ class Visa(AnomalibDataModule):
                 # Confine each leaf output directory to self.root before creating it, so a
                 # dangling or unselected-category symlink under split_root cannot cause
                 # mkdir to create directories outside the dataset root.
-                leaf_folder = validate_path(leaf_folder, base_dir=self.root, should_exist=False)
-                leaf_folder.mkdir(parents=True, exist_ok=True)
+                validated_leaf_folder = validate_path(leaf_folder, base_dir=self.root, should_exist=False)
+                validated_leaf_folder.mkdir(parents=True, exist_ok=True)
 
         with split_file.open(encoding="utf-8") as file:
             csvreader = csv.reader(file)
