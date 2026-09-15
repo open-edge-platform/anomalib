@@ -55,7 +55,6 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.visa import VisaDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
-from anomalib.data.utils.path import is_within_directory, resolve_path_under_root, validate_path
 from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
@@ -65,23 +64,6 @@ DOWNLOAD_INFO = DownloadInfo(
     url="https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar",
     hashsum="2eb8690c803ab37de0324772964100169ec8ba1fa3f7e94291c9ca673f40f362",
 )
-
-VISA_CATEGORIES = (
-    "candle",
-    "capsules",
-    "cashew",
-    "chewinggum",
-    "fryum",
-    "macaroni1",
-    "macaroni2",
-    "pcb1",
-    "pcb2",
-    "pcb3",
-    "pcb4",
-    "pipe_fryum",
-)
-VISA_SPLITS = frozenset({"train", "test"})
-VISA_LABELS = frozenset({"normal", "anomaly"})
 
 
 class Visa(AnomalibDataModule):
@@ -195,14 +177,7 @@ class Visa(AnomalibDataModule):
                 │   └── ...
                 └── VisA_20220922.tar
         """
-        processed_category = self.split_root / self.category
-        if processed_category.is_dir():
-            if not is_within_directory(self.root, processed_category):
-                msg = (
-                    f"Processed category directory {processed_category} resolves outside "
-                    f"the dataset root {self.root}. Refusing to use it."
-                )
-                raise ValueError(msg)
+        if (self.split_root / self.category).is_dir():
             # dataset is available, and split has been applied
             logger.info("Found the dataset and train/test split.")
         elif (self.root / self.category).is_dir():
@@ -219,20 +194,22 @@ class Visa(AnomalibDataModule):
         """Apply the 1-class subset splitting using the fixed split in the csv file.
 
         Adapted from https://github.com/amazon-science/spot-diff.
-
-        Raises:
-            ValueError: If CSV fields contain path traversal or unexpected values.
         """
         logger.info("preparing data")
-
-        if not is_within_directory(self.root, self.split_root):
-            msg = (
-                f"Split output directory {self.split_root} resolves outside the dataset "
-                f"root {self.root}. Refusing to create directories there."
-            )
-            raise ValueError(msg)
-
-        categories = list(VISA_CATEGORIES)
+        categories = [
+            "candle",
+            "capsules",
+            "cashew",
+            "chewinggum",
+            "fryum",
+            "macaroni1",
+            "macaroni2",
+            "pcb1",
+            "pcb2",
+            "pcb3",
+            "pcb4",
+            "pipe_fryum",
+        ]
 
         split_file = self.root / "split_csv" / "1cls.csv"
 
@@ -256,38 +233,17 @@ class Visa(AnomalibDataModule):
             next(csvreader)
             for row in csvreader:
                 category, split, label, image_path, mask_path = row
-                if category not in VISA_CATEGORIES:
-                    msg = f"Unexpected VisA category in split CSV: {category}"
-                    raise ValueError(msg)
-                if split not in VISA_SPLITS:
-                    msg = f"Unexpected VisA split in split CSV: {split}"
-                    raise ValueError(msg)
-                if label not in VISA_LABELS:
-                    msg = f"Unexpected VisA label in split CSV: {label}"
-                    raise ValueError(msg)
-
                 label = "good" if label == "normal" else "bad"
-                image_name = Path(image_path).name
-                mask_name = Path(mask_path).name if mask_path else ""
+                image_name = image_path.split("/")[-1]
+                mask_name = mask_path.split("/")[-1]
 
-                img_src_path = resolve_path_under_root(self.root, image_path)
-                img_dst_path = validate_path(
-                    self.split_root / category / split / label / image_name,
-                    base_dir=self.root,
-                    should_exist=False,
-                )
+                img_src_path = self.root / image_path
+                msk_src_path = self.root / mask_path
+                img_dst_path = self.split_root / category / split / label / image_name
+                msk_dst_path = self.split_root / category / "ground_truth" / label / mask_name
 
                 shutil.copyfile(img_src_path, img_dst_path)
                 if split == "test" and label == "bad":
-                    if not mask_path:
-                        msg = f"Missing mask_path for anomalous test sample: {image_path}"
-                        raise ValueError(msg)
-                    msk_src_path = resolve_path_under_root(self.root, mask_path)
-                    msk_dst_path = validate_path(
-                        self.split_root / category / "ground_truth" / label / mask_name,
-                        base_dir=self.root,
-                        should_exist=False,
-                    )
                     mask = cv2.imread(str(msk_src_path))
 
                     # binarize mask
