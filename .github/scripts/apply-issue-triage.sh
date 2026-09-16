@@ -9,19 +9,47 @@
 # reach it except as inert data inside a JSON field, which is validated
 # against strict allowlists/limits below before any `gh` write command runs.
 #
-# Required env vars: GH_TOKEN, GITHUB_REPOSITORY, ISSUE_NUMBER, SUGGESTION
+# Required env vars: GH_TOKEN, GITHUB_REPOSITORY, ISSUE_NUMBER, SUGGESTION,
+# LABELED_AT
 
 set -euo pipefail
 
 : "${GITHUB_REPOSITORY:?}"
 : "${ISSUE_NUMBER:?}"
+: "${LABELED_AT:?}"
 SUGGESTION="${SUGGESTION:-}"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=.github/scripts/triage-lib.sh
+source "${SCRIPT_DIR}/triage-lib.sh"
 
 MAX_LABELS=3
 MAX_COMMENT_CHARS=2000
 
+# Drop the request label once the pipeline is done with the issue, so a
+# completed (or abandoned) run can't be replayed and re-triage always
+# requires a maintainer to deliberately re-apply the label.
+remove_triage_label() {
+  gh issue edit "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" \
+    --remove-label "$TRIAGE_LABEL" >/dev/null 2>&1 ||
+    echo "::warning::Could not remove the '${TRIAGE_LABEL}' label."
+}
+
+# --- TOCTOU re-check ------------------------------------------------------
+# The `gate` job already verified the issue was unedited when triage was
+# requested, but `analyze` can run for up to 20 minutes after that. An
+# issue edited during that window would mean the maintainer approved one
+# body while the agent read another, so re-verify here — this job holds
+# `issues: write` and is the last point before anything is mutated.
+if triage_is_stale "$LABELED_AT"; then
+  echo "Issue changed after triage was requested; skipping all writes."
+  remove_triage_label
+  exit 0
+fi
+
 if [[ -z "$SUGGESTION" ]]; then
   echo "No suggestion produced by analyze job; nothing to apply."
+  remove_triage_label
   exit 0
 fi
 
@@ -30,6 +58,7 @@ if ! echo "$SUGGESTION" | jq empty >/dev/null 2>&1; then
   # influenced and can contain newlines / `::...::` sequences, enabling
   # workflow-command injection (fake annotations, stop-commands, etc.).
   echo "::warning::Triage suggestion is not valid JSON, discarding output from analyze job."
+  remove_triage_label
   exit 0
 fi
 
@@ -46,6 +75,10 @@ done < <(echo "$SUGGESTION" | jq -r 'try (.labels[]) catch empty' | head -n "$MA
 
 APPLY_LABELS=()
 for label in "${SUGGESTED_LABELS[@]+"${SUGGESTED_LABELS[@]}"}"; do
+  # The request label is control plane, not a classification: never let a
+  # suggestion re-apply it (the run would be replayable) even though it is
+  # a real repository label.
+  [[ "$label" == "$TRIAGE_LABEL" ]] && continue
   for valid in "${VALID_LABELS[@]+"${VALID_LABELS[@]}"}"; do
     if [[ "$label" == "$valid" ]]; then
       APPLY_LABELS+=("$label")
@@ -107,5 +140,7 @@ if [[ "$ACTIONABLE" == "true" && -n "$COMMENT" && "$COMMENT" != "null" ]]; then
 else
   echo "No actionable comment to post."
 fi
+
+remove_triage_label
 
 # NOTE: this script intentionally never closes, locks, or assigns the issue.
