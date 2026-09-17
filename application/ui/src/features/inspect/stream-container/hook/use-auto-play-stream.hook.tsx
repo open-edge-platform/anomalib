@@ -4,7 +4,7 @@
 import { useEffect, useRef } from 'react';
 
 import { useProjectIdentifier } from '@anomalib-studio/hooks';
-import { toast } from '@geti/ui';
+import { toast } from '@anomalib-studio/toast';
 import { usePipeline, useRunPipeline } from 'src/hooks/use-pipeline.hook';
 
 import { useStreamConnection } from '../../../../components/stream/stream-connection-provider';

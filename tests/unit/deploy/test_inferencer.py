@@ -165,7 +165,7 @@ def test_inference_similarity(
     # Set TRUST_REMOTE_CODE environment variable for the test
     monkeypatch.setenv("TRUST_REMOTE_CODE", "1")
 
-    rng = np.random.default_rng()
+    rng = np.random.default_rng(seed=42)
     image = rng.integers(0, 255, (256, 256, 3), dtype=np.uint8)
     image = Image.fromarray(image)
     test_image_path = tmp_path / "test_image.png"

@@ -12,9 +12,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- ⚠️ **security**: When a dataset `root` is set, metadata path columns (Tabular and similar loaders) must resolve under that root; absolute paths outside `root` are rejected by @ashwinvaidya17
+
 ### Deprecated
 
 ### Fixed
+
+## [v2.6.2] - 2026-09-11
+
+### Added
+
+### Removed
+
+### Changed
+
+- ⚠️ **data**: `Tabular.from_file()` now only accepts `csv`, `json`, and `parquet`; `pickle`, `hdf`, and other pandas readers that can execute code are rejected. Load those formats yourself and pass a DataFrame to `Tabular(...)` by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3782
+
+### Deprecated
+
+### Fixed
+
+## [v2.6.1] - 2026-09-04
+
+### Added
+
+### Removed
+
+### Changed
+
+- 🔄 **data**: Update Kaputt dataset source to the official Hugging Face repository (https://huggingface.co/datasets/amazon/kaputt) by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3765
+- 🔧 **metric**: Optimize binary classification curve metric with PyTorch by @andersendsa in https://github.com/open-edge-platform/anomalib/pull/3720
+- 🔧 **model**: Use native padding in FastFlow by @andersendsa in https://github.com/open-edge-platform/anomalib/pull/3742
+- 🔧 **deps**: Bump `torch` by @AlexanderBarabanov in https://github.com/open-edge-platform/anomalib/pull/3722 and https://github.com/open-edge-platform/anomalib/pull/3752
+
+### Deprecated
+
+### Fixed
+
+- 🐞 **data**: Random tiling now honours the configured tile width instead of always producing square tiles by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3772
+- 🐞 **security**: Block tar/zip path traversal on all supported Python versions by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3769
+- 📚 **docs**: Fix broken documentation links by @godarrenw in https://github.com/open-edge-platform/anomalib/pull/3746
+- 🐞 **data**: Treat `seed=0` as a valid seed in `random_split` by @VenishPaneliya in https://github.com/open-edge-platform/anomalib/pull/3738
+- 🔧 **typing**: Remove type-only references to wandb's removed `RunDisabled` class by @dmitryduev in https://github.com/open-edge-platform/anomalib/pull/3739
 
 ## [v2.6.0] - 2026-07-24
 

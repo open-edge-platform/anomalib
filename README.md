@@ -31,15 +31,13 @@
 
 ---
 
-> 🌟 **Announcing v2.6.0 Release!** 🌟
+> 🌟 **Announcing v2.6.2 Release!** 🌟
 >
-> This release adds the SuperADD model and AutoVI dataset, and removes APIs that were deprecated through v2.5.x.
+> This patch release hardens `Tabular.from_file()` by restricting it to safe, data-only file formats.
 >
 > Key Changes
 >
-> - **SuperADD**: Training-free class-agnostic anomaly segmentation (CVPR 2026 VAND 4.0 Industrial Track winner) using DINOv3 multi-layer memory banks.
-> - **AutoVI dataset**: Automotive Visual Inspection benchmark with six categories and automatic Zenodo download support.
-> - **Breaking API cleanup**: Removed Kaputt legacy flags (`use_reference` / `reference_only` / `category='all'`), AUPRO `num_thresholds` / `compute_pro(target=...)`, and the temporary `resolve_with_warning` dataset-path helper.
+> - **Security / API change**: `Tabular.from_file()` now only accepts `csv`, `json`, and `parquet`. Formats such as `pickle` and `hdf` are rejected because loading them can execute arbitrary code. Load those files yourself and pass a DataFrame to `Tabular(...)`.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 
@@ -295,7 +293,7 @@ Enable logging in your config file to track:
 - Model graphs
 - Test predictions
 
-> 📘 **Note:** For logging setup, see our [Logging Documentation](https://open-edge-platform.github.io/anomalib/tutorials/logging.html).
+> 📘 **Note:** For logging setup, see our [Logging Documentation](https://anomalib.readthedocs.io/en/latest/markdown/guides/reference/loggers/index.html).
 
 # 📊 Benchmarking
 

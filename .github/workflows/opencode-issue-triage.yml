@@ -13,19 +13,30 @@ concurrency:
   group: "opencode-issue-triage-${{ github.event.issue.number }}"
 
 jobs:
-  triage:
-    # Allow only trusted associations: OWNER, MEMBER, COLLABORATOR.
-    # CONTRIBUTOR / FIRST_TIME_CONTRIBUTOR / FIRST_TIMER / NONE are excluded
-    # because any GitHub user can reach those tiers and trigger this agent on
-    # a self-hosted runner via a crafted issue body (prompt injection).
-    if: >-
-      contains(fromJson('["OWNER","MEMBER","COLLABORATOR"]'),
-               github.event.issue.author_association)
+  # Stage 1: analyze the (untrusted) issue body and produce a suggestion.
+  # Runs for EVERY issue author, including first-timers — this job never
+  # holds `issues: write`, so a prompt-injection payload in the issue body
+  # cannot mutate anything on GitHub. It can only steer this job's own
+  # (harmless, read-only) output, which the `apply` job independently
+  # validates before acting on it.
+  analyze:
     runs-on: self-hosted
     timeout-minutes: 20
+    # Serialize across ALL issues (not just per-issue) so a burst of issues
+    # opened by untrusted authors can't run many concurrent LLM invocations
+    # on the self-hosted GPU runner at once. Jobs queue instead of piling up
+    # in parallel; `cancel-in-progress: false` so none get silently dropped.
+    # This bounds resource exhaustion; it does not grant any write access —
+    # that boundary is enforced by `permissions` below and by the `apply`
+    # job's independent validation.
+    concurrency:
+      group: "opencode-issue-triage-analyze-queue"
+      cancel-in-progress: false
     permissions:
       contents: read # Required to checkout the repository
-      issues: write # Required to label and comment on issues
+      issues: read # Required to read the issue; no write access here
+    outputs:
+      suggestion: ${{ steps.triage.outputs.suggestion }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -37,14 +48,67 @@ jobs:
           persist-credentials: false
 
       - uses: ./.github/actions/ollama-preflight
+        with:
+          models: "gemma4:26b"
 
-      - name: Triage issue with OpenCode
+      - name: Analyze issue with OpenCode (read-only, untrusted input)
+        id: triage
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
-          OPENCODE_PERMISSION: '{"read":"allow","glob":"allow","grep":"allow","bash":{"*":"deny","gh issue *":"allow","gh search *":"allow","gh label *":"allow","gh api *":"allow"},"edit":"deny"}'
+          # Only read-only gh subcommands are reachable — no `issue edit`,
+          # `issue comment`, `issue close`, `label create`, or raw `api`.
+          OPENCODE_PERMISSION: '{"read":"allow","glob":"allow","grep":"allow","bash":{"*":"deny","gh issue view *":"allow","gh label list*":"allow","gh search *":"allow"},"edit":"deny"}'
           OPENCODE_CONFIG: .github/opencode.json
         run: |
-          opencode run --pure -m ollama/gemma4:31b --agent issue-triage \
-            "Triage issue #${ISSUE_NUMBER} in repository ${GITHUB_REPOSITORY}. The issue number is in the ISSUE_NUMBER environment variable."
+          set -euo pipefail
+          opencode run --pure -m ollama/gemma4:26b --agent issue-triage \
+            "Triage issue #${ISSUE_NUMBER} in repository ${GITHUB_REPOSITORY}. The issue number is in the ISSUE_NUMBER environment variable." \
+            > triage-output.json || true
+
+          # Defense in depth: cap the size of what we expose as a job
+          # output, regardless of what the model tried to produce.
+          if [ "$(wc -c < triage-output.json)" -gt 8192 ]; then
+            echo "::warning::Triage output too large, discarding."
+            echo '{}' > triage-output.json
+          fi
+
+          # Use a random delimiter so untrusted model output can't forge an
+          # end-of-heredoc marker and inject extra job outputs. Bash-only
+          # (no openssl dependency, which ollama-preflight doesn't verify).
+          DELIM="TRIAGE_EOF_${RANDOM}${RANDOM}${RANDOM}_$$"
+          {
+            echo "suggestion<<${DELIM}"
+            cat triage-output.json
+            echo "${DELIM}"
+          } >> "$GITHUB_OUTPUT"
+
+  # Stage 2: apply the suggestion. This is the only job with `issues:
+  # write`. It runs plain, deterministic shell code (not an LLM) that
+  # validates every field of the Stage 1 suggestion against explicit
+  # allowlists/limits before calling any mutating `gh` command. See
+  # .github/scripts/apply-issue-triage.sh.
+  apply:
+    needs: analyze
+    runs-on: self-hosted
+    timeout-minutes: 5
+    permissions:
+      contents: read # Required to checkout the validation script
+      issues: write # Required to label and comment on issues
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: |
+            .github/scripts
+          sparse-checkout-cone-mode: true
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Apply validated triage suggestion
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          SUGGESTION: ${{ needs.analyze.outputs.suggestion }}
+        run: bash .github/scripts/apply-issue-triage.sh

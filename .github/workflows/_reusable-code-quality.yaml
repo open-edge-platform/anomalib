@@ -66,7 +66,7 @@ jobs:
       contents: read # Required to checkout the repository
     steps:
       - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
@@ -75,4 +75,4 @@ jobs:
           fetch-depth: 0
           lfs: true
           persist-credentials: false
-      - uses: j178/prek-action@e98a699c41eb69ab013a45817a0406469a748f8d # v2
+      - uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
