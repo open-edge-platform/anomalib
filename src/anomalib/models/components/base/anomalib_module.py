@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Base Anomaly Module for Training Task.
@@ -48,6 +48,7 @@ from typing import Any
 
 import lightning.pytorch as pl
 import torch
+from lightning.fabric.utilities.types import _MAP_LOCATION_TYPE
 from lightning.pytorch import Callback
 from lightning.pytorch.utilities.types import STEP_OUTPUT
 from torch import nn
@@ -59,6 +60,7 @@ from anomalib.metrics import AUROC, F1Score
 from anomalib.metrics.evaluator import Evaluator
 from anomalib.post_processing import PostProcessor
 from anomalib.pre_processing import PreProcessor
+from anomalib.utils.serialization import anomalib_safe_globals
 from anomalib.visualization import ImageVisualizer, Visualizer
 
 from .export_mixin import ExportMixin
@@ -397,6 +399,63 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
             True
         """
         return ImageVisualizer()
+
+    @classmethod
+    def checkpoint_safe_globals(cls) -> Sequence[Any]:
+        """Model-specific types persisted in ``hyper_parameters``.
+
+        Override in subclasses that save non-shared enums (or similar) into
+        checkpoints. Keep this to small first-party types only; shared enums
+        belong in ``ANOMALIB_SAFE_GLOBALS``.
+
+        Returns:
+            Sequence[Any]: Extra types to allowlist under ``weights_only=True``.
+        """
+        return ()
+
+    @classmethod
+    def load_from_checkpoint(
+        cls: type["AnomalibModule"],
+        checkpoint_path: str | Path,
+        map_location: _MAP_LOCATION_TYPE = None,
+        hparams_file: str | Path | None = None,
+        strict: bool | None = None,
+        weights_only: bool | None = None,
+        **kwargs,
+    ) -> "AnomalibModule":
+        """Load a model from a Lightning checkpoint.
+
+        Wraps :meth:`lightning.pytorch.LightningModule.load_from_checkpoint` so
+        first-party enums in ``hyper_parameters`` can unpickle under
+        ``weights_only=True``. Trainer ``ckpt_path`` restores use
+        ``AnomalibCheckpointIO`` instead of this method.
+
+        Args:
+            checkpoint_path (str | Path): Path to the checkpoint file.
+            map_location (optional): Device mapping passed to ``torch.load``.
+                Defaults to ``None``.
+            hparams_file (str | Path | None, optional): Optional YAML/CSV file of
+                hyperparameters. Defaults to ``None``.
+            strict (bool | None, optional): Whether to strictly enforce state-dict
+                key matching. Defaults to ``None``.
+            weights_only (bool | None, optional): If ``True``, restrict unpickling
+                to tensors and allowlisted types. Defaults to ``None`` (PyTorch
+                default).
+            **kwargs: Extra or overriding hyperparameters passed to the model
+                constructor.
+
+        Returns:
+            AnomalibModule: Model instantiated from the checkpoint.
+        """
+        with anomalib_safe_globals(extra=cls.checkpoint_safe_globals()):
+            return super().load_from_checkpoint(
+                checkpoint_path,
+                map_location=map_location,
+                hparams_file=hparams_file,
+                strict=strict,
+                weights_only=weights_only,
+                **kwargs,
+            )
 
     @property
     def input_size(self) -> tuple[int, int] | None:

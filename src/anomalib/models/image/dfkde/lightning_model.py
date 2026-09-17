@@ -84,6 +84,11 @@ class Dfkde(MemoryBankMixin, AnomalibModule):
         ... )
     """
 
+    @classmethod
+    def checkpoint_safe_globals(cls) -> Sequence[Any]:
+        """Allowlist ``FeatureScalingMethod`` for ``weights_only`` checkpoint loads."""
+        return (FeatureScalingMethod,)
+
     def __init__(
         self,
         backbone: str = "resnet18",

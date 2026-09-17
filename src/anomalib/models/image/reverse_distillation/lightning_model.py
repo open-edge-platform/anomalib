@@ -79,6 +79,11 @@ class ReverseDistillation(AnomalibModule):
             use default. Defaults to ``True``.
     """
 
+    @classmethod
+    def checkpoint_safe_globals(cls) -> Sequence[Any]:
+        """Allowlist ``AnomalyMapGenerationMode`` for ``weights_only`` checkpoint loads."""
+        return (AnomalyMapGenerationMode,)
+
     def __init__(
         self,
         backbone: str = "wide_resnet50_2",
