@@ -93,13 +93,17 @@ class KMeans:
             self.labels_ = torch.argmin(distances, dim=1)
 
             # Update the centroids to be the mean of the data points assigned
-            counts = torch.bincount(self.labels_, minlength=self.n_clusters).to(inputs.dtype)
-            new_centers = torch.zeros_like(self.cluster_centers_)
-            new_centers.index_add_(0, self.labels_, inputs)
+            counts = torch.bincount(self.labels_, minlength=self.n_clusters)
+            accum_dtype = torch.float32 if inputs.dtype in {torch.float16, torch.bfloat16} else inputs.dtype
+            new_centers = torch.zeros_like(self.cluster_centers_, dtype=accum_dtype)
+            new_centers.index_add_(0, self.labels_, inputs.to(accum_dtype))
 
             valid_mask = counts > 0
-            self.cluster_centers_[valid_mask] = new_centers[valid_mask] / counts[valid_mask].unsqueeze(1)
+            denom = counts[valid_mask].unsqueeze(1).to(accum_dtype)
+            self.cluster_centers_[valid_mask] = (new_centers[valid_mask] / denom).to(self.cluster_centers_.dtype)
 
+        distances = torch.cdist(inputs, self.cluster_centers_)
+        self.labels_ = torch.argmin(distances, dim=1)
         return self.labels_, self.cluster_centers_
 
     def predict(self, inputs: torch.Tensor) -> torch.Tensor:
