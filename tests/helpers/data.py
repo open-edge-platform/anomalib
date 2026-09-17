@@ -881,6 +881,34 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
             ref_df.to_parquet(datasets_dir / f"reference-{split}.parquet", index=False)
 
 
+    def _generate_dummy_libad_dataset(
+        self,
+        normal_dir: str = "normal",
+        abnormal_dir: str = "anomaly",
+        image_extension: str = ".tiff",
+    ) -> None:
+        """Generates dummy LIBAD dataset."""
+        dataset_category = "1_wrinkling"
+        modalities = ["A", "B", "L", "X"]
+
+        normal_path = self.dataset_root / dataset_category / normal_dir
+        normal_path.mkdir(parents=True, exist_ok=True)
+        for i in range(self.num_train + self.num_test):
+            label = LabelName.NORMAL
+            sample_id = f"A{i:02}"
+            for mod in modalities:
+                image_filename = normal_path / f"{sample_id}{mod}{image_extension}"
+                self.image_generator.generate_image(label=label, image_filename=image_filename)
+
+        abnormal_path = self.dataset_root / dataset_category / abnormal_dir
+        abnormal_path.mkdir(parents=True, exist_ok=True)
+        for i in range(self.num_test):
+            label = LabelName.ABNORMAL
+            sample_id = f"B{i:02}"
+            for mod in modalities:
+                image_filename = abnormal_path / f"{sample_id}{mod}{image_extension}"
+                self.image_generator.generate_image(label=label, image_filename=image_filename)
+
 class DummyVideoDatasetGenerator(DummyDatasetGenerator):
     """Dummy video dataset generator.
 
@@ -1039,3 +1067,6 @@ class DummyVideoDatasetGenerator(DummyDatasetGenerator):
                 self.video_generator.save_image(image_filename, frame)
             masks_array = np.stack(masks)
             np.save(mask_path, masks_array)
+
+
+        self,
