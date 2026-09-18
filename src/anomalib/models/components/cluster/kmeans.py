@@ -84,6 +84,8 @@ class KMeans:
         centroid_indices = torch.randint(0, batch_size, (self.n_clusters,))
         self.cluster_centers_ = inputs[centroid_indices].clone()
 
+        prev_labels = torch.empty(0, dtype=torch.int64, device=inputs.device)
+
         # Run the k-means algorithm for max_iter iterations
         for _ in range(self.max_iter):
             # Compute the distance between each data point and each centroid
@@ -91,6 +93,11 @@ class KMeans:
 
             # Assign each data point to the closest centroid
             self.labels_ = torch.argmin(distances, dim=1)
+
+            if torch.equal(self.labels_, prev_labels):
+                return self.labels_, self.cluster_centers_
+
+            prev_labels = self.labels_.clone()
 
             # Update the centroids to be the mean of the data points assigned
             counts = torch.bincount(self.labels_, minlength=self.n_clusters)
