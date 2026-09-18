@@ -273,7 +273,7 @@ All dataset contents, metadata files (CSV, JSON, Parquet, XML, TXT), annotation 
 
 - Joins untrusted dataset metadata paths directly to a root via `/` or `os.path.join(...)` without confinement checks (e.g., `self.root / image_path`).
 - Fails to use `resolve_path_under_root(root, path, ...)` or `validate_path(path, base_dir=root, ...)` from `anomalib.data.utils.path` when resolving paths from dataset files or split definitions.
-- Reads, opens, or copies files (`shutil.copyfile`, `shutil.copy`, `open()`, `Path.read_text`, `cv2.imread`, `torch.load`) before verifying that the source path is strictly confined to the expected root directory.
+- Reads, opens, or copies files (`shutil.copyfile`, `shutil.copy`, `open()`, `Path.read_text`, `cv2.imread`, `torch.load`) before verifying that the source path is strictly confined to the expected root directory; archive extraction must also validate every member's resolved destination under the extraction root and reject unsafe links before writing.
 - Constructs destination paths or output directories from untrusted row values (`category`, `split`, `label`, filename) without:
   1. Validating categorical strings against explicit allowlists/enums (e.g., `VISA_CATEGORIES`, `Split`, `LabelName`).
   2. Confining destination directories and files under the expected root (`validate_path(dst_path, base_dir=self.root, should_exist=False)`).
