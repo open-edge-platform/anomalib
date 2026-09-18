@@ -76,6 +76,19 @@ Learn how to develop and contribute to anomalib.
 
 ::::
 
+## {octicon}`meter` Benchmarks
+
+::::{grid}
+
+:::{grid-item-card} {octicon}`graph` Model leaderboard
+:link: markdown/benchmarks
+:link-type: doc
+
+Browse published model and dataset benchmark results.
+:::
+
+::::
+
 ```{toctree}
 :caption: Get Started
 :hidden:
@@ -91,6 +104,13 @@ markdown/get_started/migration
 markdown/guides/reference/index
 markdown/guides/how_to/index
 markdown/guides/developer/index
+```
+
+```{toctree}
+:caption: Benchmarks
+:hidden:
+
+markdown/benchmarks
 ```
 
 ```{toctree}
