@@ -55,6 +55,7 @@ from .image import (
     TabularDataset,
     VADDataset,
     VisaDataset,
+    LIBADDataset,
 )
 from .video import AvenueDataset, ShanghaiTechDataset, UCSDpedDataset
 
@@ -79,6 +80,7 @@ __all__ = [
     "TabularDataset",
     "VADDataset",
     "VisaDataset",
+    "LIBADDataset",
     # Video
     "AvenueDataset",
     "ShanghaiTechDataset",
