@@ -40,6 +40,7 @@ Image Models:
     - PaDiM (:class:`anomalib.models.image.Padim`)
     - PatchCore (:class:`anomalib.models.image.Patchcore`)
     - PatchFlow (:class:`anomalib.models.image.Patchflow`)
+    - RAD (:class:`anomalib.models.image.Rad`)
     - Reverse Distillation (:class:`anomalib.models.image.ReverseDistillation`)
     - STFPM (:class:`anomalib.models.image.Stfpm`)
     - SuperSimpleNet (:class:`anomalib.models.image.Supersimplenet`)
@@ -87,6 +88,7 @@ from .image import (
     Padim,
     Patchcore,
     Patchflow,
+    Rad,
     ReverseDistillation,
     Stfpm,
     SuperADD,
@@ -136,6 +138,7 @@ __all__ = [
     "Padim",
     "Patchcore",
     "Patchflow",
+    "Rad",
     "ReverseDistillation",
     "Stfpm",
     "SuperADD",
@@ -174,7 +177,7 @@ def list_models(case: str = "snake") -> set[str]:
         ['ai_vad', 'anomaly_d_i_n_o', 'cfa', 'cflow', 'csflow', 'dfkde', 'dfm',
          'dinomaly', 'draem', 'dsr', 'efficient_ad', 'fastflow', 'fre', 'fuvas',
          'ganomaly', 'general_a_d', 'l2_b_t', 'padim', 'patchcore', 'patchflow',
-         'reverse_distillation', 'stfpm', 'supersimplenet', 'uflow', 'uni_net',
+         'rad', 'reverse_distillation', 'stfpm', 'supersimplenet', 'uflow', 'uni_net',
          'vlm_ad', 'win_clip']
 
         >>> # Get models in original PascalCase format
@@ -183,7 +186,7 @@ def list_models(case: str = "snake") -> set[str]:
         ['AiVad', 'AnomalyDINO', 'Cfa', 'Cflow', 'Csflow', 'Dfkde', 'Dfm',
          'Dinomaly', 'Draem', 'Dsr', 'EfficientAd', 'Fastflow', 'Fre', 'Fuvas',
          'Ganomaly', 'GeneralAD', 'L2BT', 'Padim', 'Patchcore', 'Patchflow',
-         'ReverseDistillation', 'Stfpm', 'Supersimplenet', 'Uflow', 'UniNet',
+         'Rad', 'ReverseDistillation', 'Stfpm', 'Supersimplenet', 'Uflow', 'UniNet',
          'VlmAd', 'WinClip']
 
         >>> # Get models in title case format
@@ -192,7 +195,7 @@ def list_models(case: str = "snake") -> set[str]:
         ['Ai Vad', 'Anomaly Dino', 'Cfa', 'Cflow', 'Csflow', 'Dfkde', 'Dfm',
          'Dinomaly', 'Draem', 'Dsr', 'Efficient Ad', 'Fastflow', 'Fre', 'Fuvas',
          'Ganomaly', 'General Ad', 'L2BT', 'Padim', 'Patchcore', 'Patchflow',
-         'Reverse Distillation', 'Stfpm', 'Supersimplenet', 'Uflow', 'Uni Net',
+         'Rad', 'Reverse Distillation', 'Stfpm', 'Supersimplenet', 'Uflow', 'Uni Net',
          'Vlm Ad', 'Win Clip']
 
     Note:
