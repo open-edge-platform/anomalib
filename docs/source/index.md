@@ -12,6 +12,8 @@ Anomalib is a deep learning library that aims to collect state-of-the-art anomal
 - A set of inference tools for quick and easy deployment of the standard or custom anomaly detection models.
   :::
 
+(installation)=
+
 ## {octicon}`package;1em` Installation
 
 Anomalib provides two ways to install the library. The first is through PyPI, and the second is through a local installation. PyPI installation is recommended if you want to use the library without making any changes to the source code. If you want to make changes to the library, then a local installation is recommended.
@@ -85,12 +87,20 @@ markdown/get_started/migration
 ```
 
 ```{toctree}
+:caption: Notebooks
+:maxdepth: 1
+
+examples/notebooks/index
+```
+
+```{toctree}
 :caption: Guides
 :hidden:
 
 markdown/guides/reference/index
 markdown/guides/how_to/index
 markdown/guides/developer/index
+anomalib-studio/ui-architecture
 ```
 
 ```{toctree}
