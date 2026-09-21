@@ -267,20 +267,9 @@ engine.train(Stfpm(), datamodule=MVTecAD())
 anomalib train --model Padim --data MVTecAD --trainer.accelerator xpu --trainer.strategy xpu_single
 ```
 
-# ⚙️ Hyperparameter Optimization
-
-Anomalib supports hyperparameter optimization (HPO) using [Weights & Biases](https://wandb.ai/) and [Comet.ml](https://www.comet.com/).
-
-```bash
-# Run HPO with Weights & Biases
-anomalib hpo --backend WANDB --sweep_config tools/hpo/configs/wandb.yaml
-```
-
-> 📘 **Note:** For detailed HPO configuration, check our [HPO Documentation](https://open-edge-platform.github.io/anomalib/tutorials/hyperparameter_optimization.html).
-
 # 🧪 Experiment Management
 
-Track your experiments with popular logging platforms through [PyTorch Lightning loggers](https://pytorch-lightning.readthedocs.io/en/stable/extensions/logging.html):
+Track your experiments with popular logging platforms through [PyTorch Lightning loggers](https://lightning.ai/docs/pytorch/stable/extensions/logging.html):
 
 - 📊 Weights & Biases
 - 📈 Comet.ml
