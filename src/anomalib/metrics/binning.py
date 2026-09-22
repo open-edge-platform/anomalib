@@ -50,6 +50,7 @@ def thresholds_between_min_and_max(
         >>> thresholds
         tensor([0.1000, 0.5000, 0.9000])
     """
+    device = device if device is not None else preds.device
     return linspace(start=preds.min(), end=preds.max(), steps=num_thresholds, device=device)
 
 
