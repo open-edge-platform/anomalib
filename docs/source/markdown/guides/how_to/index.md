@@ -27,6 +27,8 @@ Learn more about image and video models.
 :::
 
 :::{grid-item-card} {octicon}`gear` Engine
+:link: ../reference/engine/index
+:link-type: doc
 
 Learn more about anomalib Engine.
 :::
@@ -46,21 +48,29 @@ Learn more about anomalib visualization
 :::
 
 :::{grid-item-card} {octicon}`graph` Loggers
+:link: ../reference/loggers/index
+:link-type: doc
 
 Learn more about anomalib loggers
 :::
 
 :::{grid-item-card} {octicon}`gear` Callbacks
+:link: ../reference/callbacks/index
+:link-type: doc
 
 Learn more about anomalib callbacks
 :::
 
 :::{grid-item-card} {octicon}`code-square` CLI
+:link: ../reference/cli/index
+:link-type: doc
 
 Learn more about anomalib CLI
 :::
 
 :::{grid-item-card} {octicon}`cpu` Deployment
+:link: ../reference/deploy/index
+:link-type: doc
 
 Learn more about anomalib's deployment capabilities
 :::

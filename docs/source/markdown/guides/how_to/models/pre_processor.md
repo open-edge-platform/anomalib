@@ -321,5 +321,5 @@ model = Padim(pre_processor=pre_processor)
 ```{seealso}
 For more information about transforms:
 - {doc}`Data Transforms Guide <../data/transforms>`
-- {doc}`AnomalibModule Documentation <../../reference/models/base>`
+- {doc}`AnomalibModule Guide <./anomalib_module>`
 ```
