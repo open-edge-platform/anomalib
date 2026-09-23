@@ -15,7 +15,8 @@ from torch.utils.data import DataLoader
 
 from anomalib import LearningType
 from anomalib.data import ImageBatch, ImageItem
-from anomalib.models.image.mh_patchcore import MHPatchcore, torch_model
+from anomalib.models import MHPatchcore, get_model, list_models
+from anomalib.models.image.mh_patchcore import torch_model
 
 
 class MockFeatureExtractor(nn.Module):
@@ -96,6 +97,53 @@ def make_trainer(max_epochs: int, callbacks: list[Callback] | None = None) -> Tr
         enable_model_summary=False,
         enable_progress_bar=False,
     )
+
+
+@pytest.mark.parametrize("name", ["MHPatchcore", "mh_patchcore", "m_h_patchcore"])
+def test_model_discovery(monkeypatch: MonkeyPatch, name: str) -> None:
+    """Public model aliases should resolve to MH-PatchCore."""
+    monkeypatch.setattr(torch_model, "TimmFeatureExtractor", MockFeatureExtractor)
+
+    assert isinstance(get_model(name, pre_trained=False), MHPatchcore)
+
+
+def test_model_listing() -> None:
+    """Public model listings should include MH-PatchCore in each format."""
+    assert "m_h_patchcore" in list_models(case="snake")
+    assert "MHPatchcore" in list_models(case="pascal")
+    assert "Mh Patchcore" in list_models(case="title")
+
+
+def test_cli_construction(monkeypatch: MonkeyPatch) -> None:
+    """The CLI should construct MH-PatchCore with typed overrides."""
+    from anomalib.cli import AnomalibCLI
+
+    monkeypatch.setattr(torch_model, "TimmFeatureExtractor", MockFeatureExtractor)
+    cli = AnomalibCLI(
+        [
+            "fit",
+            "--model",
+            "MHPatchcore",
+            "--model.backbone",
+            "resnet18",
+            "--model.pre_trained",
+            "false",
+            "--model.pca_variance_ratio",
+            "0.1",
+            "--model.memory_bank_size",
+            "8",
+            "--model.local_coreset_size",
+            "4",
+        ],
+        run=False,
+    )
+
+    assert isinstance(cli.model, MHPatchcore)
+    assert cli.model.model.backbone == "resnet18"
+    assert cli.model.model.feature_extractor.pre_trained is False
+    assert cli.model.model.pca.variance_ratio == 0.1
+    assert cli.model.model.memory_bank.memory_bank_size == 8
+    assert cli.model.model.memory_bank.local_coreset_size == 4
 
 
 @pytest.mark.parametrize(
