@@ -44,11 +44,13 @@ def test_numpy_safe_globals_do_not_import_private_numpy_modules() -> None:
 def test_safe_globals_context_allows_precision_type(tmp_path: Path) -> None:
     """weights_only load of PrecisionType succeeds only inside the allowlist context."""
     path = tmp_path / "hparams.pt"
+    # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
     torch.save({"precision": PrecisionType.FLOAT32}, path)
 
     assert "anomalib.PrecisionType" in get_unsafe_globals_in_checkpoint(path)
 
     with anomalib_safe_globals():
+        # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
         loaded = torch.load(path, weights_only=True)
 
     assert loaded["precision"] == PrecisionType.FLOAT32
@@ -57,6 +59,7 @@ def test_safe_globals_context_allows_precision_type(tmp_path: Path) -> None:
 def test_safe_globals_context_allows_numpy_scheduler_leaves(tmp_path: Path) -> None:
     """weights_only load succeeds for numpy scalars/arrays used in LR schedules."""
     path = tmp_path / "scheduler.pt"
+    # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
     torch.save(
         {
             "lr": np.float64(1e-3),
@@ -69,6 +72,7 @@ def test_safe_globals_context_allows_numpy_scheduler_leaves(tmp_path: Path) -> N
     assert any("numpy" in name for name in unsafe)
 
     with anomalib_safe_globals():
+        # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
         loaded = torch.load(path, weights_only=True)
 
     assert loaded["lr"] == np.float64(1e-3)
@@ -78,9 +82,11 @@ def test_safe_globals_context_allows_numpy_scheduler_leaves(tmp_path: Path) -> N
 def test_safe_globals_extra_merges_with_shared_allowlist(tmp_path: Path) -> None:
     """``extra`` types are allowlisted alongside shared ``ANOMALIB_SAFE_GLOBALS``."""
     path = tmp_path / "hparams.pt"
+    # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
     torch.save({"precision": PrecisionType.FLOAT32, "extra": _ExtraEnum.VALUE}, path)
 
     with anomalib_safe_globals(extra=[_ExtraEnum]):
+        # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
         loaded = torch.load(path, weights_only=True)
 
     assert loaded["precision"] == PrecisionType.FLOAT32

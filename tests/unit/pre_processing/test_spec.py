@@ -6,7 +6,10 @@
 import pytest
 from torchvision.transforms import v2
 
-from anomalib.data.transforms import ExportableCenterCrop
+from anomalib.data.transforms import ExportableCenterCrop, SquarePad
+from anomalib.models import __all__ as model_names
+from anomalib.models import get_model
+from anomalib.pre_processing.utils._transform_registry import TRANSFORM_REGISTRY
 from anomalib.pre_processing.utils.spec import spec_to_transform, transform_to_spec
 
 
@@ -20,6 +23,8 @@ from anomalib.pre_processing.utils.spec import spec_to_transform, transform_to_s
         v2.CenterCrop((96, 128)),
         v2.Grayscale(num_output_channels=3),
         ExportableCenterCrop((64, 80)),
+        SquarePad(),
+        v2.Compose([SquarePad(), v2.Resize((224, 224))]),
     ],
 )
 def test_transform_round_trip(transform: v2.Transform) -> None:
@@ -63,3 +68,59 @@ def test_rejects_unregistered_anomalib_transform() -> None:
 
     with pytest.raises(ValueError, match="Unsupported transform class"):
         transform_to_spec(PerlinAnomalyGenerator())
+
+
+def test_first_party_transforms_canonicalize_to_public_export_path() -> None:
+    """First-party transforms serialize to their package export, not their concrete module."""
+    assert transform_to_spec(SquarePad())["class_path"] == "anomalib.data.transforms.SquarePad"
+    assert transform_to_spec(ExportableCenterCrop(64))["class_path"] == "anomalib.data.transforms.ExportableCenterCrop"
+
+
+def test_concrete_module_path_remains_a_readable_alias() -> None:
+    """Specs written with the old concrete-module path still deserialize.
+
+    Guards against a canonical-path change (e.g. moving a first-party
+    transform's registration to its public export path) breaking checkpoints
+    that were already saved under the previous canonical path.
+    """
+    legacy_spec = {
+        "class_path": "anomalib.data.transforms.square_pad.SquarePad",
+        "init_args": {},
+    }
+
+    reconstructed = spec_to_transform(legacy_spec)
+
+    assert isinstance(reconstructed, SquarePad)
+
+
+def test_registry_rejects_unregistered_class_path() -> None:
+    """TRANSFORM_REGISTRY.class_for raises for an unregistered path."""
+    with pytest.raises(ValueError, match="Unsupported transform class"):
+        TRANSFORM_REGISTRY.class_for("os.system")
+
+
+def test_registry_rejects_unregistered_class() -> None:
+    """TRANSFORM_REGISTRY.path_for raises for an unregistered class."""
+
+    class Unregistered(v2.Transform):
+        """Test-only transform that is never registered."""
+
+    with pytest.raises(ValueError, match="Unsupported transform class"):
+        TRANSFORM_REGISTRY.path_for(Unregistered)
+
+
+@pytest.mark.parametrize("model_name", model_names)
+def test_every_model_default_preprocessor_round_trips(model_name: str) -> None:
+    """Every registered model's default preprocessor can be saved and restored.
+
+    Guards against models whose ``configure_pre_processor`` uses a transform
+    outside the safe-serialization registry (e.g. ``SquarePad`` for L2BT),
+    which would otherwise raise ``ValueError`` on every checkpoint save.
+    """
+    model = get_model(model_name)
+    processor = model.pre_processor
+    transform = None if processor is None else processor.transform
+
+    spec = transform_to_spec(transform)
+
+    assert transform_to_spec(spec_to_transform(spec)) == spec
