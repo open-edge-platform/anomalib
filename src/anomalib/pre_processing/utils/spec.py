@@ -16,6 +16,7 @@ can be produced by :func:`spec_to_transform`; see that module for the allowlist.
 from __future__ import annotations
 
 import inspect
+import typing
 from enum import Enum
 from typing import TYPE_CHECKING, TypeAlias, cast, get_type_hints
 
@@ -101,7 +102,7 @@ def spec_to_transform(spec: TransformSpec | None) -> Transform | None:
         if name not in parameters:
             msg = f"Unknown constructor argument {name!r} for {class_path}"
             raise ValueError(msg)
-        args[name] = _decode_value(value, cast("type[Enum] | None", hints.get(name)))
+        args[name] = _decode_value(value, _resolve_enum_annotation(hints.get(name)))
     try:
         return transform_cls(**args)
     except (TypeError, ValueError) as exc:
@@ -121,6 +122,35 @@ def _constructor_params(transform_cls: type[Transform]) -> Mapping[str, inspect.
         for name, parameter in parameters.items()
         if name != "self" and parameter.kind not in {parameter.VAR_POSITIONAL, parameter.VAR_KEYWORD}
     }
+
+
+def _resolve_enum_annotation(annotation: object) -> type[Enum] | None:
+    """Find an ``Enum`` subtype in a constructor parameter's type annotation.
+
+    Torchvision annotates some parameters as a union that includes an enum,
+    for example ``Resize.interpolation: InterpolationMode | int | str``.
+    ``annotation`` itself is then a union object, not the enum class, so a
+    plain ``issubclass`` check on the whole annotation misses it and a
+    serialized enum value round-trips back as its raw string instead of the
+    original enum member.
+
+    Args:
+        annotation: A constructor parameter's type annotation, or ``None``.
+
+    Returns:
+        type[Enum] | None: The first ``Enum`` subtype found in the
+            annotation (including inside a union), or ``None`` if none is
+            present.
+    """
+    if annotation is None:
+        return None
+    if inspect.isclass(annotation) and issubclass(annotation, Enum):
+        return annotation
+    for arg in typing.get_args(annotation):
+        resolved = _resolve_enum_annotation(arg)
+        if resolved is not None:
+            return resolved
+    return None
 
 
 # NOTE: Deliberately a closed `isinstance` chain rather than `functools.singledispatch`.

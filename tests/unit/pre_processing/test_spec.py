@@ -4,11 +4,13 @@
 """Tests for safe pre-processing transform specifications."""
 
 import pytest
+import torch
 from torchvision.transforms import v2
+from torchvision.transforms.v2 import InterpolationMode
 
+import anomalib.models
 from anomalib.data.transforms import ExportableCenterCrop, SquarePad
 from anomalib.models import __all__ as model_names
-from anomalib.models import get_model
 from anomalib.pre_processing.utils._transform_registry import TRANSFORM_REGISTRY
 from anomalib.pre_processing.utils.spec import spec_to_transform, transform_to_spec
 
@@ -109,6 +111,25 @@ def test_registry_rejects_unregistered_class() -> None:
         TRANSFORM_REGISTRY.path_for(Unregistered)
 
 
+def test_enum_in_union_annotation_round_trips() -> None:
+    """An enum constructor argument survives round-trip even inside a union annotation.
+
+    ``Resize.interpolation`` is annotated as ``InterpolationMode | int | str``,
+    not a bare ``InterpolationMode``. A restored transform must still carry a
+    real ``InterpolationMode`` member (not the plain string written to the
+    spec), matching the original transform's behaviour.
+    """
+    original = v2.Resize((64, 64), interpolation=InterpolationMode.BICUBIC)
+
+    restored = spec_to_transform(transform_to_spec(original))
+
+    assert isinstance(restored.interpolation, InterpolationMode)
+    assert restored.interpolation == InterpolationMode.BICUBIC
+
+    image = torch.rand(3, 32, 32)
+    assert torch.equal(original(image), restored(image))
+
+
 @pytest.mark.parametrize("model_name", model_names)
 def test_every_model_default_preprocessor_round_trips(model_name: str) -> None:
     """Every registered model's default preprocessor can be saved and restored.
@@ -116,9 +137,18 @@ def test_every_model_default_preprocessor_round_trips(model_name: str) -> None:
     Guards against models whose ``configure_pre_processor`` uses a transform
     outside the safe-serialization registry (e.g. ``SquarePad`` for L2BT),
     which would otherwise raise ``ValueError`` on every checkpoint save.
+
+    Calls ``configure_pre_processor`` directly on the model *class* rather
+    than instantiating the model (as ``AnomalibModule.__init__`` itself does
+    via ``_resolve_component``, which calls this same classmethod/staticmethod
+    with no arguments). Every model defines this as a classmethod or
+    staticmethod, so this needs no model instance. Instantiating every model
+    would run full constructors, which for some models (e.g. Draem's DTD
+    download, EfficientAd's ImageNet download, timm backbones fetching
+    pretrained weights) do network I/O and are unsuitable for a unit test.
     """
-    model = get_model(model_name)
-    processor = model.pre_processor
+    model_cls = getattr(anomalib.models, model_name)
+    processor = model_cls.configure_pre_processor()
     transform = None if processor is None else processor.transform
 
     spec = transform_to_spec(transform)
