@@ -21,6 +21,48 @@ _FEATURE_DIMENSION = 1024
 _QUERY_CHUNK_SIZE = 1024
 
 
+def _adaptive_avg_pool1d(
+    features: torch.Tensor,
+    input_length: int,
+    output_length: int = _FEATURE_DIMENSION,
+) -> torch.Tensor:
+    """Apply adaptive average pooling with an ONNX-compatible export path.
+
+    Args:
+        features (torch.Tensor): Flattened feature vectors.
+        input_length (int): Number of values in each flattened vector.
+        output_length (int): Number of pooled values. Defaults to ``1024``.
+
+    Returns:
+        torch.Tensor: Pooled feature vectors.
+    """
+    features = features.reshape(features.shape[0], 1, input_length)
+    if not torch.onnx.is_in_onnx_export():
+        return F.adaptive_avg_pool1d(features, output_length).squeeze(1)
+
+    flattened = features.squeeze(1)
+    positions = torch.arange(output_length, device=flattened.device)
+    starts = torch.div(positions * input_length, output_length, rounding_mode="floor")
+    ends = torch.div(
+        (positions + 1) * input_length + output_length - 1,
+        output_length,
+        rounding_mode="floor",
+    )
+    maximum_width = (input_length + output_length - 1) // output_length + 1
+    offsets = torch.arange(maximum_width, device=flattened.device)
+    indices = starts[:, None] + offsets[None, :]
+    valid = indices < ends[:, None]
+    indices = indices.clamp_max(input_length - 1)
+    windows = flattened.index_select(1, indices.flatten()).reshape(
+        flattened.shape[0],
+        output_length,
+        maximum_width,
+    )
+    return (windows * valid.to(dtype=flattened.dtype)).sum(dim=-1) / (ends - starts).to(
+        dtype=flattened.dtype,
+    )
+
+
 def _squared_l2_distance(queries: torch.Tensor, references: torch.Tensor) -> torch.Tensor:
     query_norms = queries.square().sum(dim=1, keepdim=True)
     reference_norms = references.square().sum(dim=1, keepdim=True).T
@@ -170,7 +212,7 @@ class MHPatchcoreModel(nn.Module):
         if self.training:
             return embeddings
 
-        batch_size = len(input_tensor)
+        batch_size = input_tensor.shape[0]
         reference_grid = features[self.layers[0]].shape[-2:]
         embeddings = self.pca(embeddings)
         embeddings = self.covariance(embeddings).to(dtype=self.memory_bank.bank.dtype)
@@ -226,8 +268,11 @@ class MHPatchcoreModel(nn.Module):
         )
 
         aligned_features = [patches.reshape(-1, *patches.shape[-3:]) for patches in aligned_features]
-        mapped_features = [self._map_features(patches) for patches in aligned_features]
-        return self._aggregate_features(torch.stack(mapped_features, dim=1))
+        mapped_features = [
+            self._map_features(patches, channels)
+            for patches, channels in zip(aligned_features, self.feature_extractor.out_dims, strict=True)
+        ]
+        return self._aggregate_features(torch.stack(mapped_features, dim=1), len(mapped_features))
 
     def _patchify(self, features: torch.Tensor) -> tuple[torch.Tensor, tuple[int, int]]:
         batch_size, channels, height, width = features.shape
@@ -279,11 +324,9 @@ class MHPatchcoreModel(nn.Module):
         )
 
     @staticmethod
-    def _map_features(patches: torch.Tensor) -> torch.Tensor:
-        patches = patches.reshape(len(patches), 1, -1)
-        return F.adaptive_avg_pool1d(patches, _FEATURE_DIMENSION).squeeze(1)
+    def _map_features(patches: torch.Tensor, channels: int) -> torch.Tensor:
+        return _adaptive_avg_pool1d(patches, channels * _PATCH_SIZE**2)
 
     @staticmethod
-    def _aggregate_features(features: torch.Tensor) -> torch.Tensor:
-        features = features.reshape(len(features), 1, -1)
-        return F.adaptive_avg_pool1d(features, _FEATURE_DIMENSION).squeeze(1)
+    def _aggregate_features(features: torch.Tensor, num_layers: int) -> torch.Tensor:
+        return _adaptive_avg_pool1d(features, num_layers * _FEATURE_DIMENSION)

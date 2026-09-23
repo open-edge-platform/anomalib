@@ -16,6 +16,7 @@ from anomalib.models.image.mh_patchcore.anomaly_map import AnomalyMapGenerator
 from anomalib.models.image.mh_patchcore.components import CovarianceWhitening, MergeReduceMemoryBank, StreamingPCA
 from anomalib.models.image.mh_patchcore.torch_model import (
     MHPatchcoreModel,
+    _adaptive_avg_pool1d,
     _compute_anomaly_score,
     _nearest_neighbors,
     _squared_l2_distance,
@@ -30,6 +31,7 @@ class MockFeatureExtractor(nn.Module):
         self.backbone = backbone
         self.layers = layers
         self.pre_trained = pre_trained
+        self.out_dims = (1, 1)
 
     def forward(self, input_tensor: torch.Tensor) -> dict[str, torch.Tensor]:  # noqa: PLR6301
         """Return deterministic feature maps for both configured layers."""
@@ -107,18 +109,29 @@ def test_mapping_and_aggregation_preserve_layer_order() -> None:
     second_layer = torch.full((2, 1, 3, 3), 6.0)
     mapped = torch.stack(
         [
-            MHPatchcoreModel._map_features(first_layer),  # noqa: SLF001
-            MHPatchcoreModel._map_features(second_layer),  # noqa: SLF001
+            MHPatchcoreModel._map_features(first_layer, channels=1),  # noqa: SLF001
+            MHPatchcoreModel._map_features(second_layer, channels=1),  # noqa: SLF001
         ],
         dim=1,
     )
 
-    embedding = MHPatchcoreModel._aggregate_features(mapped)  # noqa: SLF001
+    embedding = MHPatchcoreModel._aggregate_features(mapped, num_layers=2)  # noqa: SLF001
 
     assert mapped.shape == (2, 2, 1024)
     assert embedding.shape == (2, 1024)
     torch.testing.assert_close(embedding[:, :512], torch.full((2, 512), 2.0))
     torch.testing.assert_close(embedding[:, 512:], torch.full((2, 512), 6.0))
+
+
+def test_export_pooling_matches_adaptive_average_pooling(monkeypatch: MonkeyPatch) -> None:
+    """The ONNX lowering should preserve non-divisible adaptive pooling."""
+    features = torch.arange(2 * 4608, dtype=torch.float32).reshape(2, 4608)
+    expected = torch.nn.functional.adaptive_avg_pool1d(features.unsqueeze(1), 1024).squeeze(1)
+    monkeypatch.setattr(torch.onnx, "is_in_onnx_export", lambda: True)
+
+    actual = _adaptive_avg_pool1d(features, input_length=4608)
+
+    torch.testing.assert_close(actual, expected)
 
 
 def test_forward_uses_mocked_feature_extractor(model: MHPatchcoreModel) -> None:

@@ -26,6 +26,7 @@ class MockFeatureExtractor(nn.Module):
         self.backbone = backbone
         self.layers = tuple(layers)
         self.pre_trained = pre_trained
+        self.out_dims = (1, 1)
 
     def forward(self, input_tensor: torch.Tensor) -> dict[str, torch.Tensor]:  # noqa: PLR6301
         """Generate deterministic features for each input image."""
