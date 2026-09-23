@@ -60,8 +60,6 @@ from anomalib.metrics import AUROC, F1Score
 from anomalib.metrics.evaluator import Evaluator
 from anomalib.post_processing import PostProcessor
 from anomalib.pre_processing import PreProcessor
-from anomalib.pre_processing.utils.spec import spec_to_transform, transform_to_spec
-from anomalib.pre_processing.utils.transform import get_exportable_transform
 from anomalib.utils.path import paths_to_strings
 from anomalib.utils.serialization import anomalib_safe_globals
 from anomalib.visualization import ImageVisualizer, Visualizer
@@ -182,29 +180,38 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
         """Save safe component configuration and plain-data hyperparameters."""
         super().on_save_checkpoint(checkpoint)
         checkpoint["hyper_parameters"] = paths_to_strings(checkpoint.get("hyper_parameters", {}))
-        checkpoint["anomalib_pre_processor_spec"] = transform_to_spec(
-            self.pre_processor.transform if self.pre_processor is not None else None,
-        )
-        if self.post_processor is not None:
-            checkpoint["anomalib_post_processor_config"] = {
-                "enable_normalization": self.post_processor.enable_normalization,
-                "enable_thresholding": self.post_processor.enable_thresholding,
-                "enable_threshold_matching": self.post_processor.enable_threshold_matching,
-                "image_sensitivity": self.post_processor.image_sensitivity,
-                "pixel_sensitivity": self.post_processor.pixel_sensitivity,
-            }
+        for checkpoint_key, component in self._checkpointable_components().items():
+            if hasattr(component, "checkpoint_config"):
+                checkpoint[checkpoint_key] = component.checkpoint_config()
+            else:
+                logger.debug(
+                    "%s does not implement checkpoint_config(); skipping its configuration in the checkpoint.",
+                    type(component).__name__,
+                )
 
     def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
-        """Restore pre-processing configuration from safe plain data."""
+        """Restore component configuration from safe plain data."""
         super().on_load_checkpoint(checkpoint)
-        if "anomalib_pre_processor_spec" in checkpoint and self.pre_processor is not None:
-            transform = spec_to_transform(checkpoint["anomalib_pre_processor_spec"])
-            self.pre_processor.transform = transform
-            self.pre_processor.export_transform = get_exportable_transform(transform)
-        config = checkpoint.get("anomalib_post_processor_config")
-        if config is not None and self.post_processor is not None:
-            for name, value in config.items():
-                setattr(self.post_processor, name, value)
+        for checkpoint_key, component in self._checkpointable_components().items():
+            config = checkpoint.get(checkpoint_key)
+            if config is not None and hasattr(component, "load_checkpoint_config"):
+                component.load_checkpoint_config(config)
+
+    def _checkpointable_components(self) -> dict[str, nn.Module]:
+        """Map checkpoint keys to components that may implement the safe-config hooks.
+
+        A component is only checkpointed through ``checkpoint_config`` /
+        ``load_checkpoint_config`` if it implements both methods (as
+        ``PreProcessor`` and ``PostProcessor`` do). Custom components that do
+        not (e.g. a bare ``nn.Module``) are skipped rather than raising, since
+        both ``pre_processor`` and ``post_processor`` publicly accept any
+        ``nn.Module``.
+        """
+        components: dict[str, nn.Module | None] = {
+            "anomalib_pre_processor_config": self.pre_processor,
+            "anomalib_post_processor_config": self.post_processor,
+        }
+        return {key: component for key, component in components.items() if component is not None}
 
     def forward(self, batch: torch.Tensor, *args, **kwargs) -> InferenceBatch:
         """Perform forward pass through the model pipeline.

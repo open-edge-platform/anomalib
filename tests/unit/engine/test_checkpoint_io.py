@@ -6,9 +6,11 @@
 from enum import Enum
 from pathlib import Path
 
+import pytest
 import torch
 from lightning.fabric.plugins.io.torch_io import TorchCheckpointIO
 from lightning.pytorch import Trainer
+from torch import nn
 from torchvision.transforms.v2 import Resize
 
 from anomalib import PrecisionType
@@ -20,7 +22,7 @@ from anomalib.models.image.efficient_ad import EfficientAd
 from anomalib.models.image.efficient_ad.torch_model import EfficientAdModelSize
 from anomalib.models.image.vlm_ad import VlmAd
 from anomalib.models.image.vlm_ad.utils import ModelName
-from anomalib.post_processing import PostProcessor
+from anomalib.post_processing import MEBinPostProcessor, PostProcessor
 from anomalib.pre_processing import PreProcessor
 from anomalib.pre_processing.utils.spec import transform_to_spec
 
@@ -115,7 +117,7 @@ def test_custom_preprocessor_round_trips_as_plain_data(tmp_path: Path) -> None:
     checkpoint = AnomalibCheckpointIO().load_checkpoint(checkpoint_path, weights_only=True)
     loaded = Padim.load_from_checkpoint(checkpoint_path, weights_only=True)
 
-    assert checkpoint["anomalib_pre_processor_spec"] == transform_to_spec(transform)
+    assert checkpoint["anomalib_pre_processor_config"] == {"transform": transform_to_spec(transform)}
     assert transform_to_spec(loaded.pre_processor.transform) == transform_to_spec(transform)
 
 
@@ -160,3 +162,108 @@ def test_postprocessor_config_round_trips(tmp_path: Path) -> None:
     assert loaded.post_processor.enable_threshold_matching is False
     assert loaded.post_processor.image_sensitivity == 0.7
     assert loaded.post_processor.pixel_sensitivity == 0.3
+
+
+def test_mebin_post_processor_config_round_trips(tmp_path: Path) -> None:
+    """MEBinPostProcessor's extra configuration survives checkpoint restore.
+
+    MEBinPostProcessor only extends PostProcessor's ``_checkpoint_config_keys``
+    property rather than overriding ``checkpoint_config``/``load_checkpoint_config``,
+    so this also verifies that the base hooks pick up the extension.
+
+    ``load_from_checkpoint`` reconstructs ``Padim`` from its saved
+    hyperparameters, and ``post_processor`` is intentionally excluded from
+    those (see ``AnomalibModule.__init__``), so the default
+    ``configure_post_processor`` would otherwise build a plain
+    ``PostProcessor``. As with a custom pre-processor, the caller must supply
+    a fresh instance of the same custom type at load time; only its
+    *configuration* is restored from the checkpoint, not its class.
+    """
+    processor = MEBinPostProcessor(sample_rate=8, min_interval_len=2, erode=False, kernel_size=3)
+    model = Padim(post_processor=processor)
+    trainer = Trainer(max_epochs=1, logger=False, barebones=True)
+    trainer.strategy.connect(model)
+    checkpoint_path = tmp_path / "mebin.ckpt"
+    trainer.save_checkpoint(checkpoint_path)
+
+    loaded = Padim.load_from_checkpoint(
+        checkpoint_path,
+        weights_only=True,
+        post_processor=MEBinPostProcessor(),
+    )
+
+    assert isinstance(loaded.post_processor, MEBinPostProcessor)
+    assert loaded.post_processor.sample_rate == 8
+    assert loaded.post_processor.min_interval_len == 2
+    assert loaded.post_processor.erode is False
+    assert loaded.post_processor.kernel_size == 3
+
+
+class _BareModulePreProcessor(nn.Module):
+    """A pre-processor that only satisfies the ``nn.Module`` type hint.
+
+    Simulates a user who passes a bare ``nn.Module`` as ``pre_processor``,
+    which the public API allows but which implements neither
+    ``checkpoint_config`` nor ``.transform``.
+    """
+
+
+class _BareModulePostProcessor(nn.Module):
+    """A post-processor that only satisfies the ``nn.Module`` type hint."""
+
+
+@pytest.mark.parametrize(
+    ("kwarg", "component_cls", "checkpoint_key"),
+    [
+        ("pre_processor", _BareModulePreProcessor, "anomalib_pre_processor_config"),
+        ("post_processor", _BareModulePostProcessor, "anomalib_post_processor_config"),
+    ],
+)
+def test_bare_module_component_is_skipped_not_raised(
+    tmp_path: Path,
+    kwarg: str,
+    component_cls: type[nn.Module],
+    checkpoint_key: str,
+) -> None:
+    """A bare ``nn.Module`` component is skipped during checkpointing, not an error.
+
+    Both ``pre_processor`` and ``post_processor`` are documented to accept any
+    ``nn.Module``, so ``on_save_checkpoint`` must not raise ``AttributeError``
+    for a component that doesn't implement the safe-config hooks.
+    """
+    model = Padim(**{kwarg: component_cls()})
+    trainer = Trainer(max_epochs=1, logger=False, barebones=True)
+    trainer.strategy.connect(model)
+    checkpoint_path = tmp_path / "bare_module.ckpt"
+
+    trainer.save_checkpoint(checkpoint_path)
+
+    checkpoint = AnomalibCheckpointIO().load_checkpoint(checkpoint_path, weights_only=True)
+    assert checkpoint_key not in checkpoint
+
+
+def test_preprocessor_subclass_without_super_init_is_skipped() -> None:
+    """A PreProcessor subclass that skips ``super().__init__()`` saves without error.
+
+    Regression test for the documented ``StageSpecificPreProcessor`` pattern
+    (see ``docs/.../pre_processor.md``) before it called ``super().__init__()``.
+    Such a subclass has no ``.transform`` attribute, so ``checkpoint_config``
+    must degrade gracefully via ``getattr(..., None)`` instead of raising.
+
+    Calls ``on_save_checkpoint`` directly rather than going through
+    ``Trainer.save_checkpoint``: an ``nn.Module`` submodule that never called
+    ``nn.Module.__init__()`` also breaks PyTorch's own ``state_dict()`` walk,
+    independently of anything in this checkpoint hook, so routing through the
+    full Trainer pipeline would not isolate the behaviour under test.
+    """
+
+    class _NoSuperPreProcessor(PreProcessor):
+        def __init__(self) -> None:
+            self.train_transform = None
+
+    model = Padim(pre_processor=_NoSuperPreProcessor())
+    checkpoint: dict = {}
+
+    model.on_save_checkpoint(checkpoint)
+
+    assert checkpoint["anomalib_pre_processor_config"] == {"transform": None}

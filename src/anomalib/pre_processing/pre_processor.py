@@ -1,4 +1,4 @@
-# Copyright (C) 2024-2025 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Pre-processing module for anomaly detection pipelines.
@@ -22,6 +22,8 @@ The pre-processor is implemented as both a :class:`torch.nn.Module` and
 workflows.
 """
 
+from typing import Any
+
 import torch
 from lightning import Callback, LightningModule, Trainer
 from torch import nn
@@ -29,6 +31,7 @@ from torchvision.transforms.v2 import Transform
 
 from anomalib.data import Batch
 
+from .utils.spec import spec_to_transform, transform_to_spec
 from .utils.transform import (
     get_exportable_transform,
 )
@@ -142,3 +145,30 @@ class PreProcessor(nn.Module, Callback):
             torch.Tensor: Transformed batch.
         """
         return self.export_transform(batch) if self.export_transform else batch
+
+    def checkpoint_config(self) -> dict[str, Any]:
+        """Get plain-data configuration to persist in a checkpoint.
+
+        Uses ``getattr`` rather than ``self.transform`` directly so that a
+        subclass which does not call ``super().__init__()`` (and therefore has
+        no ``transform`` attribute) can still be checkpointed safely, instead of
+        raising ``AttributeError`` during ``on_save_checkpoint``.
+
+        Override this method (together with :meth:`load_checkpoint_config`) in a
+        subclass that manages additional or different transform state, for
+        example separate per-stage transforms.
+
+        Returns:
+            dict[str, Any]: Plain-data configuration.
+        """
+        return {"transform": transform_to_spec(getattr(self, "transform", None))}
+
+    def load_checkpoint_config(self, config: dict[str, Any]) -> None:
+        """Restore configuration previously returned by :meth:`checkpoint_config`.
+
+        Args:
+            config (dict[str, Any]): Plain-data configuration to restore.
+        """
+        transform = spec_to_transform(config.get("transform"))
+        self.transform = transform
+        self.export_transform = get_exportable_transform(transform)
