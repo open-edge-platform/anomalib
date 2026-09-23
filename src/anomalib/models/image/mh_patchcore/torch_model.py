@@ -11,7 +11,7 @@ from torch.nn import functional as F  # noqa: N812
 
 from anomalib.models.components import TimmFeatureExtractor
 
-from .components import StreamingPCA
+from .components import CovarianceWhitening, StreamingPCA
 
 _PATCH_SIZE = 3
 _PATCH_STRIDE = 1
@@ -30,10 +30,12 @@ class MHPatchcoreModel(nn.Module):
             Defaults to ``True``.
         pca_variance_ratio (float): Fraction of explained variance retained by
             incremental PCA. Defaults to ``0.99``.
+        covariance_shrinkage (float): Fixed covariance shrinkage coefficient.
+            Defaults to ``0.07``.
 
     Raises:
-        ValueError: If ``layers`` is empty or ``pca_variance_ratio`` is outside
-            ``(0, 1]``.
+        ValueError: If ``layers`` is empty, ``pca_variance_ratio`` is outside
+            ``(0, 1]``, or ``covariance_shrinkage`` is outside ``[0, 1]``.
     """
 
     def __init__(
@@ -42,6 +44,7 @@ class MHPatchcoreModel(nn.Module):
         layers: Sequence[str] = ("layer2", "layer3"),
         pre_trained: bool = True,
         pca_variance_ratio: float = 0.99,
+        covariance_shrinkage: float = 0.07,
     ) -> None:
         super().__init__()
         if not layers:
@@ -51,6 +54,7 @@ class MHPatchcoreModel(nn.Module):
         self.backbone = backbone
         self.layers = tuple(layers)
         self.pca = StreamingPCA(variance_ratio=pca_variance_ratio)
+        self.covariance = CovarianceWhitening(shrinkage=covariance_shrinkage)
         self.feature_extractor = TimmFeatureExtractor(
             backbone=backbone,
             layers=self.layers,

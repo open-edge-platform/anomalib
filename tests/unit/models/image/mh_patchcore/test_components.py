@@ -8,7 +8,8 @@ import pytest
 import torch
 from sklearn.decomposition import IncrementalPCA
 
-from anomalib.models.image.mh_patchcore.components import StreamingPCA
+from anomalib.models.image.mh_patchcore import components
+from anomalib.models.image.mh_patchcore.components import CovarianceWhitening, StreamingPCA
 
 
 @pytest.mark.parametrize("variance_ratio", [0.0, -0.1, 1.1, True])
@@ -97,3 +98,128 @@ def test_fitted_state_errors() -> None:
         pca.update(embeddings)
     with pytest.raises(RuntimeError, match="already finalized"):
         pca.finalize()
+
+
+@pytest.mark.parametrize("shrinkage", [-0.1, 1.1, float("nan"), True])
+def test_covariance_shrinkage_validation(shrinkage: float) -> None:
+    """Covariance shrinkage must be finite, numeric, and within its interval."""
+    with pytest.raises(ValueError, match="shrinkage must be"):
+        CovarianceWhitening(shrinkage=shrinkage)
+
+
+def test_streaming_covariance_matches_batch_estimate() -> None:
+    """Stream splitting should not change the unbiased covariance estimate."""
+    embeddings = torch.tensor(
+        [
+            [0.5, 1.0, -1.0],
+            [1.0, 2.0, 0.0],
+            [2.0, 1.5, 1.0],
+            [3.5, 4.0, 2.0],
+            [5.0, 3.0, 4.0],
+            [8.0, 6.0, 5.0],
+        ],
+        dtype=torch.float64,
+    )
+    single_batch = CovarianceWhitening()
+    split_batches = CovarianceWhitening()
+
+    single_batch.update(embeddings)
+    for batch in embeddings.split([1, 2, 3]):
+        split_batches.update(batch)
+
+    expected = torch.cov(embeddings.T)
+    torch.testing.assert_close(single_batch.covariance(), expected, rtol=1e-12, atol=1e-12)
+    torch.testing.assert_close(split_batches.covariance(), expected, rtol=1e-12, atol=1e-12)
+
+    single_batch.finalize()
+    split_batches.finalize()
+    torch.testing.assert_close(split_batches.mean, single_batch.mean, rtol=1e-12, atol=1e-12)
+    torch.testing.assert_close(
+        split_batches.whitening_matrix,
+        single_batch.whitening_matrix,
+        rtol=1e-12,
+        atol=1e-12,
+    )
+
+
+def test_near_singular_whitening_preserves_mahalanobis_geometry() -> None:
+    """Regularized whitening should remain finite for correlated features."""
+    base = torch.arange(1, 9, dtype=torch.float64)
+    embeddings = torch.stack((base, 2 * base, base + 1e-10 * base.square()), dim=1)
+    whitening = CovarianceWhitening(shrinkage=0.0)
+    whitening.update(embeddings[:3])
+    whitening.update(embeddings[3:])
+    covariance = whitening.covariance()
+    regularized = components._regularize_covariance(covariance, whitening.shrinkage)  # noqa: SLF001
+
+    whitening.finalize()
+    transformed = whitening(embeddings)
+    delta = embeddings[0] - embeddings[-1]
+    expected_distance = delta @ torch.linalg.solve(regularized, delta)
+    actual_distance = (transformed[0] - transformed[-1]).square().sum()
+
+    assert whitening.mean.dtype == torch.float64
+    assert whitening.whitening_matrix.dtype == torch.float64
+    assert torch.isfinite(transformed).all()
+    torch.testing.assert_close(actual_distance, expected_distance, rtol=1e-5, atol=1e-6)
+
+
+def test_covariance_persistent_state_restores_transform() -> None:
+    """A state-dict roundtrip should restore only finalized whitening state."""
+    embeddings = torch.tensor(
+        [[0.0, 1.0], [1.0, 3.0], [2.0, 2.0], [4.0, 5.0]],
+        dtype=torch.float64,
+    )
+    whitening = CovarianceWhitening()
+    whitening.update(embeddings)
+    whitening.finalize()
+    expected = whitening(embeddings)
+
+    restored = CovarianceWhitening()
+    restored.load_state_dict(whitening.state_dict())
+
+    assert restored.is_fitted
+    assert restored._running_mean is None  # noqa: SLF001
+    assert restored._m2 is None  # noqa: SLF001
+    torch.testing.assert_close(restored(embeddings), expected)
+
+
+def test_covariance_state_errors() -> None:
+    """Invalid covariance fitting transitions should fail clearly."""
+    whitening = CovarianceWhitening()
+    embeddings = torch.tensor([[0.0, 1.0], [1.0, 2.0]])
+
+    with pytest.raises(RuntimeError, match="finalized before transform"):
+        whitening.transform(embeddings)
+    with pytest.raises(RuntimeError, match="received no embedding batches"):
+        whitening.finalize()
+
+    whitening.update(embeddings[:1])
+    with pytest.raises(RuntimeError, match="at least two samples"):
+        whitening.finalize()
+    with pytest.raises(ValueError, match="previous batches have dimension"):
+        whitening.update(torch.ones(1, 3))
+
+    whitening.update(embeddings[1:])
+    whitening.finalize()
+    with pytest.raises(RuntimeError, match="cannot be updated after finalization"):
+        whitening.update(embeddings)
+    with pytest.raises(RuntimeError, match="already finalized"):
+        whitening.finalize()
+
+
+@pytest.mark.parametrize(
+    "embeddings",
+    [
+        torch.empty(0, 2),
+        torch.empty(2, 0),
+        torch.ones(2),
+        torch.tensor([[0.0, float("inf")]]),
+    ],
+)
+def test_covariance_input_validation(embeddings: torch.Tensor) -> None:
+    """Malformed covariance batches should be rejected without changing state."""
+    whitening = CovarianceWhitening()
+
+    with pytest.raises(ValueError, match="embeddings must"):
+        whitening.update(embeddings)
