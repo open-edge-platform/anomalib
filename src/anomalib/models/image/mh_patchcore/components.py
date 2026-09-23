@@ -181,10 +181,11 @@ class StreamingPCA(DynamicBufferMixin):
             msg = "StreamingPCA produced non-finite fitted state."
             raise RuntimeError(msg)
 
-        self.components = torch.from_numpy(fitted_components.astype(np.float32, copy=True))
-        self.mean = torch.from_numpy(fitted_mean.astype(np.float64, copy=True))
-        self.projected_mean = torch.from_numpy(projected_mean.astype(np.float32, copy=True))
-        self.num_components = torch.tensor(retained_components, dtype=torch.int64)
+        buffer_device = self.components.device
+        self.components = torch.from_numpy(fitted_components.astype(np.float32, copy=True)).to(buffer_device)
+        self.mean = torch.from_numpy(fitted_mean.astype(np.float64, copy=True)).to(buffer_device)
+        self.projected_mean = torch.from_numpy(projected_mean.astype(np.float32, copy=True)).to(buffer_device)
+        self.num_components = torch.tensor(retained_components, dtype=torch.int64, device=buffer_device)
         self._estimator = None
         self._carry = None
         self._pending_batch = None
@@ -375,8 +376,9 @@ class CovarianceWhitening(DynamicBufferMixin):
             msg = "CovarianceWhitening produced non-finite fitted state."
             raise RuntimeError(msg)
 
-        self.mean = self._running_mean.clone()
-        self.whitening_matrix = whitening_matrix
+        buffer_device = self.mean.device
+        self.mean = self._running_mean.clone().to(device=buffer_device)
+        self.whitening_matrix = whitening_matrix.to(device=buffer_device)
         self._sample_count = 0
         self._running_mean = None
         self._m2 = None
@@ -543,7 +545,10 @@ class MergeReduceMemoryBank(DynamicBufferMixin):
 
         candidates = torch.cat([self._levels[level] for level in sorted(self._levels)], dim=0)
         final_size = min(self.memory_bank_size, len(candidates))
-        self.bank = _farthest_first_coreset(candidates, final_size).to(dtype=torch.float32)
+        self.bank = _farthest_first_coreset(candidates, final_size).to(
+            device=self.bank.device,
+            dtype=torch.float32,
+        )
         self._levels.clear()
         self._feature_dimension = None
 

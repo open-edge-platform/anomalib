@@ -4,6 +4,7 @@
 """MH-PatchCore Lightning model."""
 
 from collections.abc import Sequence
+from typing import Any
 
 import torch
 from lightning.pytorch.utilities.types import STEP_OUTPUT
@@ -212,6 +213,28 @@ class MHPatchcore(MemoryBankMixin, AnomalibModule):
         """Finalize the active pass after its training epoch."""
         if not bool(self._is_fitted.item()):
             self.fit()
+
+    def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
+        """Reject checkpoints captured in the middle of a fitting pass.
+
+        Transient PCA, covariance, and merge-reduce accumulators are not
+        serialized. Epoch-boundary and fully fitted checkpoints have a zero
+        stage batch count and can be restored safely.
+
+        Args:
+            checkpoint (dict[str, Any]): Lightning checkpoint to validate.
+
+        Raises:
+            RuntimeError: If the checkpoint was saved after processing one or
+                more batches of an unfinished fitting pass.
+        """
+        stage_batch_count = checkpoint["state_dict"].get("_stage_batch_count")
+        if stage_batch_count is not None and int(stage_batch_count.item()) != 0:
+            msg = (
+                f"Cannot restore a {self.__class__.__name__} checkpoint saved in the middle of a fitting pass. "
+                "Resume from an epoch-boundary or fully fitted checkpoint."
+            )
+            raise RuntimeError(msg)
 
     def validation_step(self, batch: Batch, *args, **kwargs) -> STEP_OUTPUT:
         """Generate anomaly predictions for a validation batch.

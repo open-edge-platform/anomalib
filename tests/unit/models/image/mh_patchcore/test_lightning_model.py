@@ -4,6 +4,7 @@
 """Unit tests for the MH-PatchCore Lightning model."""
 
 from collections.abc import Sequence
+from pathlib import Path
 
 import pytest
 import torch
@@ -183,3 +184,71 @@ def test_invalid_lifecycle_transitions_fail_clearly(monkeypatch: MonkeyPatch) ->
 
     assert model._fitting_stage.item() == 0  # noqa: SLF001
     assert not bool(model._is_fitted.item())  # noqa: SLF001
+
+
+def test_fitted_checkpoint_roundtrip(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+    """A fully fitted checkpoint should reproduce scores and anomaly maps."""
+    model = make_model(monkeypatch)
+    loader = make_loader()
+    trainer = make_trainer(max_epochs=3)
+    trainer.fit(model, train_dataloaders=loader)
+    batch = next(iter(loader))
+    model.eval()
+    with torch.no_grad():
+        expected = model.model(batch.image)
+
+    checkpoint_path = tmp_path / "fitted.ckpt"
+    trainer.save_checkpoint(checkpoint_path)
+    restored = MHPatchcore.load_from_checkpoint(checkpoint_path)
+    restored.eval()
+    with torch.no_grad():
+        actual = restored.model(batch.image)
+
+    assert bool(restored._is_fitted.item())  # noqa: SLF001
+    assert restored._fitting_stage.item() == 3  # noqa: SLF001
+    assert restored._stage_batch_count.item() == 0  # noqa: SLF001
+    torch.testing.assert_close(actual.pred_score, expected.pred_score, rtol=1e-5, atol=1e-6)
+    torch.testing.assert_close(actual.anomaly_map, expected.anomaly_map, rtol=1e-5, atol=1e-6)
+
+
+@pytest.mark.parametrize("completed_epochs", [1, 2])
+def test_epoch_boundary_checkpoint_resume(
+    monkeypatch: MonkeyPatch,
+    tmp_path: Path,
+    completed_epochs: int,
+) -> None:
+    """Checkpoints after PCA or covariance should resume the remaining passes."""
+    initial = make_model(monkeypatch)
+    initial_trainer = make_trainer(max_epochs=completed_epochs)
+    initial_trainer.fit(initial, train_dataloaders=make_loader())
+    assert initial._fitting_stage.item() == completed_epochs  # noqa: SLF001
+    assert initial._stage_batch_count.item() == 0  # noqa: SLF001
+
+    checkpoint_path = tmp_path / f"epoch-{completed_epochs}.ckpt"
+    initial_trainer.save_checkpoint(checkpoint_path)
+    resumed = make_model(monkeypatch)
+    make_trainer(max_epochs=3).fit(
+        resumed,
+        train_dataloaders=make_loader(),
+        val_dataloaders=make_loader(),
+        ckpt_path=checkpoint_path,
+    )
+
+    assert bool(resumed._is_fitted.item())  # noqa: SLF001
+    assert resumed._fitting_stage.item() == 3  # noqa: SLF001
+    assert resumed._stage_batch_count.item() == 0  # noqa: SLF001
+    assert resumed.model.pca.is_fitted
+    assert resumed.model.covariance.is_fitted
+    assert resumed.model.memory_bank.is_fitted
+
+
+def test_mid_pass_checkpoint_is_rejected(monkeypatch: MonkeyPatch) -> None:
+    """Loading a checkpoint with transient fitting progress should fail."""
+    model = make_model(monkeypatch)
+    model.train()
+    model.training_step(next(iter(make_loader())))
+    checkpoint = {"state_dict": model.state_dict()}
+    restored = make_model(monkeypatch)
+
+    with pytest.raises(RuntimeError, match="middle of a fitting pass"):
+        restored.on_load_checkpoint(checkpoint)
