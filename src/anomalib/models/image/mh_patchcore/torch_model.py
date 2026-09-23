@@ -16,6 +16,63 @@ from .components import CovarianceWhitening, MergeReduceMemoryBank, StreamingPCA
 _PATCH_SIZE = 3
 _PATCH_STRIDE = 1
 _FEATURE_DIMENSION = 1024
+_QUERY_CHUNK_SIZE = 1024
+
+
+def _squared_l2_distance(queries: torch.Tensor, references: torch.Tensor) -> torch.Tensor:
+    query_norms = queries.square().sum(dim=1, keepdim=True)
+    reference_norms = references.square().sum(dim=1, keepdim=True).T
+    distances = query_norms + reference_norms - 2 * queries @ references.T
+    return distances.clamp_min(0)
+
+
+def _nearest_neighbors(
+    queries: torch.Tensor,
+    references: torch.Tensor,
+    num_neighbors: int,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    scores: list[torch.Tensor] = []
+    indices: list[torch.Tensor] = []
+    for start in range(0, len(queries), _QUERY_CHUNK_SIZE):
+        distances = _squared_l2_distance(queries[start : start + _QUERY_CHUNK_SIZE], references)
+        if num_neighbors == 1:
+            chunk_scores, chunk_indices = distances.min(dim=1)
+        else:
+            chunk_scores, chunk_indices = distances.topk(k=num_neighbors, largest=False, dim=1)
+        scores.append(chunk_scores)
+        indices.append(chunk_indices)
+    return torch.cat(scores), torch.cat(indices)
+
+
+def _compute_anomaly_score(
+    patch_scores: torch.Tensor,
+    locations: torch.Tensor,
+    embeddings: torch.Tensor,
+    memory_bank: torch.Tensor,
+    num_neighbors: int,
+) -> torch.Tensor:
+    batch_size, num_patches = patch_scores.shape
+    batch_indices = torch.arange(batch_size, device=patch_scores.device)
+    anchor_patch_indices = patch_scores.argmax(dim=1)
+    anchor_scores = patch_scores[batch_indices, anchor_patch_indices]
+    if min(num_neighbors, len(memory_bank)) <= 1:
+        return anchor_scores
+
+    anchor_queries = embeddings.reshape(batch_size, num_patches, -1)[batch_indices, anchor_patch_indices]
+    anchor_bank_indices = locations[batch_indices, anchor_patch_indices]
+    anchor_bank_features = memory_bank[anchor_bank_indices]
+    effective_neighbors = min(num_neighbors, len(memory_bank))
+    _, support_indices = _nearest_neighbors(anchor_bank_features, memory_bank, effective_neighbors)
+
+    support_features = memory_bank[support_indices].to(dtype=torch.float64)
+    anchor_queries = anchor_queries.unsqueeze(1).to(dtype=torch.float64)
+    support_distances = (support_features - anchor_queries).square().sum(dim=2)
+    maximum_distances = support_distances.amax(dim=1)
+    denominator = torch.exp(support_distances - maximum_distances.unsqueeze(1)).sum(dim=1)
+    numerator = torch.exp(anchor_scores.to(dtype=torch.float64) - maximum_distances)
+    valid_denominator = (denominator > 0) & torch.isfinite(denominator)
+    weights = torch.where(valid_denominator, 1 - numerator / denominator, torch.ones_like(denominator))
+    return (weights.clamp(0, 1) * anchor_scores).to(dtype=patch_scores.dtype)
 
 
 class MHPatchcoreModel(nn.Module):
@@ -36,11 +93,13 @@ class MHPatchcoreModel(nn.Module):
             memory bank. Defaults to ``1000``.
         local_coreset_size (int): Maximum number of vectors retained in each
             merge-reduce block. Defaults to ``256``.
+        num_neighbors (int): Number of memory-bank neighbors used for image
+            score reweighting. Defaults to ``9``.
 
     Raises:
         ValueError: If ``layers`` is empty, ``pca_variance_ratio`` is outside
             ``(0, 1]``, ``covariance_shrinkage`` is outside ``[0, 1]``, or a
-            memory-bank size is not a positive integer.
+            memory-bank size or neighbor count is not a positive integer.
     """
 
     def __init__(
@@ -52,14 +111,19 @@ class MHPatchcoreModel(nn.Module):
         covariance_shrinkage: float = 0.07,
         memory_bank_size: int = 1000,
         local_coreset_size: int = 256,
+        num_neighbors: int = 9,
     ) -> None:
         super().__init__()
         if not layers:
             msg = "layers must contain at least one feature layer."
             raise ValueError(msg)
+        if isinstance(num_neighbors, bool) or not isinstance(num_neighbors, int) or num_neighbors <= 0:
+            msg = "num_neighbors must be a positive integer."
+            raise ValueError(msg)
 
         self.backbone = backbone
         self.layers = tuple(layers)
+        self.num_neighbors = num_neighbors
         self.pca = StreamingPCA(variance_ratio=pca_variance_ratio)
         self.covariance = CovarianceWhitening(shrinkage=covariance_shrinkage)
         self.memory_bank = MergeReduceMemoryBank(

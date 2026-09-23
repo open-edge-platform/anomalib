@@ -12,7 +12,12 @@ from torch import nn
 
 from anomalib.models.image.mh_patchcore import torch_model
 from anomalib.models.image.mh_patchcore.components import CovarianceWhitening, MergeReduceMemoryBank, StreamingPCA
-from anomalib.models.image.mh_patchcore.torch_model import MHPatchcoreModel
+from anomalib.models.image.mh_patchcore.torch_model import (
+    MHPatchcoreModel,
+    _compute_anomaly_score,
+    _nearest_neighbors,
+    _squared_l2_distance,
+)
 
 
 class MockFeatureExtractor(nn.Module):
@@ -114,3 +119,70 @@ def test_forward_uses_mocked_feature_extractor(model: MHPatchcoreModel) -> None:
     assert isinstance(model.memory_bank, MergeReduceMemoryBank)
     assert output.shape == (24, 1024)
     assert torch.isfinite(output).all()
+
+
+@pytest.mark.parametrize("num_neighbors", [True, 0, -1, 1.5])
+def test_num_neighbors_validation(monkeypatch: MonkeyPatch, num_neighbors: object) -> None:
+    """Neighbor count should be a positive non-boolean integer."""
+    monkeypatch.setattr(torch_model, "TimmFeatureExtractor", MockFeatureExtractor)
+
+    with pytest.raises(ValueError, match="num_neighbors must be a positive integer"):
+        MHPatchcoreModel(num_neighbors=cast("int", num_neighbors))
+
+
+def test_squared_l2_distance_does_not_take_square_root() -> None:
+    """Pairwise distances should preserve squared Euclidean values."""
+    queries = torch.tensor([[0.0, 0.0], [3.0, 4.0]])
+    references = torch.tensor([[0.0, 4.0], [3.0, 0.0]])
+
+    distances = _squared_l2_distance(queries, references)
+
+    torch.testing.assert_close(distances, torch.tensor([[16.0, 9.0], [9.0, 16.0]]))
+
+
+def test_nearest_neighbors_processes_queries_in_chunks(monkeypatch: MonkeyPatch) -> None:
+    """Chunked queries should retain exact squared distances and indices."""
+    monkeypatch.setattr(torch_model, "_QUERY_CHUNK_SIZE", 2)
+    references = torch.tensor([[0.0, 0.0], [3.0, 0.0], [0.0, 4.0]])
+    queries = torch.tensor([[0.0, 1.0], [2.5, 0.0], [0.0, 3.5], [1.0, 1.0], [2.0, 3.0]])
+
+    scores, indices = _nearest_neighbors(queries, references, num_neighbors=1)
+
+    torch.testing.assert_close(scores, torch.tensor([1.0, 0.25, 0.25, 2.0, 5.0]))
+    torch.testing.assert_close(indices, torch.tensor([0, 1, 2, 0, 2]))
+
+
+def test_anomaly_score_uses_bank_anchor_support() -> None:
+    """Equation 7 support should be centered on the nearest bank vector."""
+    memory_bank = torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.9, 0.0]])
+    embeddings = torch.tensor([[0.1, 0.0], [0.8, 0.0]])
+    nearest_scores, nearest_indices = _nearest_neighbors(embeddings, memory_bank, num_neighbors=1)
+
+    score = _compute_anomaly_score(
+        patch_scores=nearest_scores.reshape(1, 2),
+        locations=nearest_indices.reshape(1, 2),
+        embeddings=embeddings,
+        memory_bank=memory_bank,
+        num_neighbors=2,
+    )
+
+    expected_weight = 1 - torch.exp(torch.tensor(0.64 - 1.64)) / (torch.exp(torch.tensor(0.64 - 1.64)) + 1)
+    torch.testing.assert_close(score, (expected_weight * 0.64).reshape(1))
+
+
+@pytest.mark.parametrize("num_neighbors", [1, 9])
+def test_anomaly_score_handles_single_neighbor(num_neighbors: int) -> None:
+    """A single configured or available neighbor should leave the maximum unweighted."""
+    memory_bank = torch.tensor([[0.0, 0.0]])
+    embeddings = torch.tensor([[0.1, 0.0], [0.8, 0.0]])
+    nearest_scores, nearest_indices = _nearest_neighbors(embeddings, memory_bank, num_neighbors=1)
+
+    score = _compute_anomaly_score(
+        patch_scores=nearest_scores.reshape(1, 2),
+        locations=nearest_indices.reshape(1, 2),
+        embeddings=embeddings,
+        memory_bank=memory_bank,
+        num_neighbors=num_neighbors,
+    )
+
+    torch.testing.assert_close(score, torch.tensor([0.64]))
