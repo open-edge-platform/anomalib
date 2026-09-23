@@ -11,6 +11,8 @@ from torch.nn import functional as F  # noqa: N812
 
 from anomalib.models.components import TimmFeatureExtractor
 
+from .components import StreamingPCA
+
 _PATCH_SIZE = 3
 _PATCH_STRIDE = 1
 _FEATURE_DIMENSION = 1024
@@ -26,9 +28,12 @@ class MHPatchcoreModel(nn.Module):
             extraction. Defaults to ``("layer2", "layer3")``.
         pre_trained (bool): Whether to load pretrained backbone weights.
             Defaults to ``True``.
+        pca_variance_ratio (float): Fraction of explained variance retained by
+            incremental PCA. Defaults to ``0.99``.
 
     Raises:
-        ValueError: If ``layers`` is empty.
+        ValueError: If ``layers`` is empty or ``pca_variance_ratio`` is outside
+            ``(0, 1]``.
     """
 
     def __init__(
@@ -36,6 +41,7 @@ class MHPatchcoreModel(nn.Module):
         backbone: str = "wide_resnet50_2.tv2_in1k",
         layers: Sequence[str] = ("layer2", "layer3"),
         pre_trained: bool = True,
+        pca_variance_ratio: float = 0.99,
     ) -> None:
         super().__init__()
         if not layers:
@@ -44,6 +50,7 @@ class MHPatchcoreModel(nn.Module):
 
         self.backbone = backbone
         self.layers = tuple(layers)
+        self.pca = StreamingPCA(variance_ratio=pca_variance_ratio)
         self.feature_extractor = TimmFeatureExtractor(
             backbone=backbone,
             layers=self.layers,
