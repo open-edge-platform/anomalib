@@ -35,7 +35,7 @@ class AnomalibCheckpointIO(TorchCheckpointIO):
         self,
         path: _PATH,
         map_location: Callable | None = lambda storage, _loc: storage,
-        weights_only: bool | None = None,
+        weights_only: bool = True,
     ) -> dict[str, Any]:
         """Load a checkpoint with anomalib types allowlisted for ``weights_only`` loads.
 
@@ -44,7 +44,7 @@ class AnomalibCheckpointIO(TorchCheckpointIO):
             map_location: Storage remapping callable passed to ``torch.load``.
                 Defaults to identity mapping.
             weights_only: Whether to restrict unpickling to tensors and allowlisted
-                types. Defaults to ``None`` (PyTorch default).
+                types. Defaults to ``True``.
 
         Returns:
             dict[str, Any]: Loaded checkpoint dictionary.
