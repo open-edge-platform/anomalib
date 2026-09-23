@@ -449,3 +449,130 @@ class CovarianceWhitening(DynamicBufferMixin):
             )
             raise ValueError(msg)
         return embeddings.detach().to(device="cpu", dtype=torch.float64).contiguous()
+
+
+def _farthest_first_coreset(embeddings: torch.Tensor, target_size: int) -> torch.Tensor:
+    sample_count = len(embeddings)
+    coreset_size = min(target_size, sample_count)
+    if coreset_size == sample_count:
+        return embeddings.clone()
+
+    mean = embeddings.mean(dim=0, keepdim=True)
+    first_index = int(torch.argmax(torch.linalg.vector_norm(embeddings - mean, dim=1)).item())
+    selected_indices = [first_index]
+    min_distances = torch.linalg.vector_norm(embeddings - embeddings[first_index], dim=1)
+    min_distances[first_index] = 0.0
+
+    while len(selected_indices) < coreset_size:
+        next_index = int(torch.argmax(min_distances).item())
+        selected_indices.append(next_index)
+        distances = torch.linalg.vector_norm(embeddings - embeddings[next_index], dim=1)
+        min_distances = torch.minimum(min_distances, distances)
+        min_distances[next_index] = 0.0
+
+    return embeddings[torch.tensor(selected_indices, dtype=torch.int64)]
+
+
+class MergeReduceMemoryBank(DynamicBufferMixin):
+    """Build a bounded memory bank using deterministic merge-reduce.
+
+    Args:
+        memory_bank_size (int): Maximum number of vectors in the finalized bank.
+            Defaults to ``1000``.
+        local_coreset_size (int): Maximum number of vectors retained in each
+            merge-reduce block. Defaults to ``256``.
+
+    Raises:
+        ValueError: If either size is not a positive integer.
+    """
+
+    def __init__(self, memory_bank_size: int = 1000, local_coreset_size: int = 256) -> None:
+        super().__init__()
+        if isinstance(memory_bank_size, bool) or not isinstance(memory_bank_size, int) or memory_bank_size <= 0:
+            msg = "memory_bank_size must be a positive integer."
+            raise ValueError(msg)
+        if isinstance(local_coreset_size, bool) or not isinstance(local_coreset_size, int) or local_coreset_size <= 0:
+            msg = "local_coreset_size must be a positive integer."
+            raise ValueError(msg)
+
+        self.memory_bank_size = memory_bank_size
+        self.local_coreset_size = local_coreset_size
+        self.register_buffer("bank", torch.empty(0, dtype=torch.float32))
+        self.bank: torch.Tensor
+
+        self._levels: dict[int, torch.Tensor] = {}
+        self._feature_dimension: int | None = None
+
+    @property
+    def is_fitted(self) -> bool:
+        """Return whether the finalized memory bank is available."""
+        return bool(self.bank.numel())
+
+    def update(self, embeddings: torch.Tensor) -> None:
+        """Add a whitened embedding batch to the merge-reduce stream.
+
+        Args:
+            embeddings (torch.Tensor): Whitened embeddings with shape ``[N, D]``.
+
+        Raises:
+            RuntimeError: If the memory bank was already finalized.
+            ValueError: If the embeddings are empty, non-finite, not two-dimensional,
+                or have an inconsistent feature dimension.
+        """
+        if self.is_fitted:
+            msg = "MergeReduceMemoryBank cannot be updated after finalization."
+            raise RuntimeError(msg)
+
+        batch = self._prepare_batch(embeddings)
+        local_size = min(self.memory_bank_size, self.local_coreset_size, len(batch))
+        self._push_block(_farthest_first_coreset(batch, local_size))
+
+    def finalize(self) -> None:
+        """Finalize the merge-reduce stream and persist its memory bank.
+
+        Raises:
+            RuntimeError: If fitting is already finalized or no embedding batches
+                were received.
+        """
+        if self.is_fitted:
+            msg = "MergeReduceMemoryBank is already finalized."
+            raise RuntimeError(msg)
+        if not self._levels:
+            msg = "MergeReduceMemoryBank received no embedding batches."
+            raise RuntimeError(msg)
+
+        candidates = torch.cat([self._levels[level] for level in sorted(self._levels)], dim=0)
+        final_size = min(self.memory_bank_size, len(candidates))
+        self.bank = _farthest_first_coreset(candidates, final_size).to(dtype=torch.float32)
+        self._levels.clear()
+        self._feature_dimension = None
+
+    def _push_block(self, block: torch.Tensor) -> None:
+        candidate = block
+        level = 0
+        while level in self._levels:
+            previous = self._levels.pop(level)
+            merged = torch.cat((previous, candidate), dim=0)
+            reduced_size = min(self.memory_bank_size, self.local_coreset_size, len(merged))
+            candidate = _farthest_first_coreset(merged, reduced_size)
+            level += 1
+        self._levels[level] = candidate
+
+    def _prepare_batch(self, embeddings: torch.Tensor) -> torch.Tensor:
+        if embeddings.ndim != 2 or len(embeddings) == 0 or embeddings.shape[1] == 0:
+            msg = "embeddings must be a non-empty two-dimensional tensor."
+            raise ValueError(msg)
+        if not torch.isfinite(embeddings).all():
+            msg = "embeddings must contain only finite values."
+            raise ValueError(msg)
+
+        feature_dimension = int(embeddings.shape[1])
+        if self._feature_dimension is None:
+            self._feature_dimension = feature_dimension
+        elif feature_dimension != self._feature_dimension:
+            msg = (
+                f"embeddings have feature dimension {feature_dimension}, "
+                f"but previous batches have dimension {self._feature_dimension}."
+            )
+            raise ValueError(msg)
+        return embeddings.detach().to(device="cpu", dtype=torch.float64).contiguous()

@@ -11,7 +11,7 @@ from torch.nn import functional as F  # noqa: N812
 
 from anomalib.models.components import TimmFeatureExtractor
 
-from .components import CovarianceWhitening, StreamingPCA
+from .components import CovarianceWhitening, MergeReduceMemoryBank, StreamingPCA
 
 _PATCH_SIZE = 3
 _PATCH_STRIDE = 1
@@ -32,10 +32,15 @@ class MHPatchcoreModel(nn.Module):
             incremental PCA. Defaults to ``0.99``.
         covariance_shrinkage (float): Fixed covariance shrinkage coefficient.
             Defaults to ``0.07``.
+        memory_bank_size (int): Maximum number of vectors in the finalized
+            memory bank. Defaults to ``1000``.
+        local_coreset_size (int): Maximum number of vectors retained in each
+            merge-reduce block. Defaults to ``256``.
 
     Raises:
         ValueError: If ``layers`` is empty, ``pca_variance_ratio`` is outside
-            ``(0, 1]``, or ``covariance_shrinkage`` is outside ``[0, 1]``.
+            ``(0, 1]``, ``covariance_shrinkage`` is outside ``[0, 1]``, or a
+            memory-bank size is not a positive integer.
     """
 
     def __init__(
@@ -45,6 +50,8 @@ class MHPatchcoreModel(nn.Module):
         pre_trained: bool = True,
         pca_variance_ratio: float = 0.99,
         covariance_shrinkage: float = 0.07,
+        memory_bank_size: int = 1000,
+        local_coreset_size: int = 256,
     ) -> None:
         super().__init__()
         if not layers:
@@ -55,6 +62,10 @@ class MHPatchcoreModel(nn.Module):
         self.layers = tuple(layers)
         self.pca = StreamingPCA(variance_ratio=pca_variance_ratio)
         self.covariance = CovarianceWhitening(shrinkage=covariance_shrinkage)
+        self.memory_bank = MergeReduceMemoryBank(
+            memory_bank_size=memory_bank_size,
+            local_coreset_size=local_coreset_size,
+        )
         self.feature_extractor = TimmFeatureExtractor(
             backbone=backbone,
             layers=self.layers,

@@ -9,7 +9,7 @@ import torch
 from sklearn.decomposition import IncrementalPCA
 
 from anomalib.models.image.mh_patchcore import components
-from anomalib.models.image.mh_patchcore.components import CovarianceWhitening, StreamingPCA
+from anomalib.models.image.mh_patchcore.components import CovarianceWhitening, MergeReduceMemoryBank, StreamingPCA
 
 
 @pytest.mark.parametrize("variance_ratio", [0.0, -0.1, 1.1, True])
@@ -223,3 +223,101 @@ def test_covariance_input_validation(embeddings: torch.Tensor) -> None:
 
     with pytest.raises(ValueError, match="embeddings must"):
         whitening.update(embeddings)
+
+
+@pytest.mark.parametrize(
+    ("argument", "value"),
+    [
+        ("memory_bank_size", 0),
+        ("memory_bank_size", -1),
+        ("memory_bank_size", True),
+        ("memory_bank_size", 1.0),
+        ("local_coreset_size", 0),
+        ("local_coreset_size", -1),
+        ("local_coreset_size", True),
+        ("local_coreset_size", 1.0),
+    ],
+)
+def test_merge_reduce_budget_validation(argument: str, value: object) -> None:
+    """Merge-reduce budgets must be positive integers and reject booleans."""
+    with pytest.raises(ValueError, match=rf"{argument} must be a positive integer"):
+        MergeReduceMemoryBank(**{argument: value})
+
+
+def test_merge_reduce_preserves_order_when_budget_covers_stream() -> None:
+    """A bank covering every candidate should retain the encountered order."""
+    embeddings = torch.tensor([[3.0, 0.0], [1.0, 2.0], [2.0, 1.0]])
+    memory_bank = MergeReduceMemoryBank(memory_bank_size=8, local_coreset_size=8)
+
+    memory_bank.update(embeddings)
+    memory_bank.finalize()
+
+    assert memory_bank.bank.dtype == torch.float32
+    torch.testing.assert_close(memory_bank.bank, embeddings)
+
+
+def test_merge_reduce_levels_are_deterministic_and_persistent() -> None:
+    """Binary merges should preserve canonical ordering and checkpoint state."""
+    batches = [
+        torch.tensor(values, dtype=torch.float64).reshape(-1, 1)
+        for values in ([0, 1, 4], [10, 11, 15], [20, 22, 25], [30, 34, 35], [40, 41, 47], [50, 56, 57], [60, 61, 69])
+    ]
+    memory_bank = MergeReduceMemoryBank(memory_bank_size=3, local_coreset_size=2)
+
+    for batch in batches:
+        memory_bank.update(batch)
+
+    assert sorted(memory_bank._levels) == [0, 1, 2]  # noqa: SLF001
+    torch.testing.assert_close(
+        memory_bank._levels[0].flatten(),  # noqa: SLF001
+        torch.tensor([69.0, 60.0], dtype=torch.float64),
+    )
+    torch.testing.assert_close(
+        memory_bank._levels[1].flatten(),  # noqa: SLF001
+        torch.tensor([40.0, 57.0], dtype=torch.float64),
+    )
+    torch.testing.assert_close(
+        memory_bank._levels[2].flatten(),  # noqa: SLF001
+        torch.tensor([0.0, 35.0], dtype=torch.float64),
+    )
+
+    memory_bank.finalize()
+
+    expected = torch.tensor([[0.0], [69.0], [35.0]])
+    torch.testing.assert_close(memory_bank.bank, expected)
+    source = torch.cat(batches).to(dtype=torch.float32)
+    assert all(bool((source == vector).all(dim=1).any()) for vector in memory_bank.bank)
+
+    repeated = MergeReduceMemoryBank(memory_bank_size=3, local_coreset_size=2)
+    for batch in batches:
+        repeated.update(batch)
+    repeated.finalize()
+    torch.testing.assert_close(repeated.bank, expected)
+
+    restored = MergeReduceMemoryBank(memory_bank_size=3, local_coreset_size=2)
+    restored.load_state_dict(memory_bank.state_dict())
+    assert restored.is_fitted
+    torch.testing.assert_close(restored.bank, expected)
+
+
+def test_merge_reduce_ties_and_state_errors() -> None:
+    """Ties should select the first index and invalid state transitions should fail."""
+    memory_bank = MergeReduceMemoryBank(memory_bank_size=2, local_coreset_size=4)
+    with pytest.raises(RuntimeError, match="received no embedding batches"):
+        memory_bank.finalize()
+    with pytest.raises(ValueError, match="non-empty two-dimensional"):
+        memory_bank.update(torch.empty(0, 2))
+    with pytest.raises(ValueError, match="only finite values"):
+        memory_bank.update(torch.tensor([[0.0, float("inf")]]))
+
+    embeddings = torch.tensor([[-2.0, 0.0], [2.0, 0.0], [0.0, -1.0], [0.0, 1.0]])
+    memory_bank.update(embeddings)
+    with pytest.raises(ValueError, match="previous batches have dimension"):
+        memory_bank.update(torch.ones(1, 3))
+    memory_bank.finalize()
+
+    torch.testing.assert_close(memory_bank.bank, embeddings[:2])
+    with pytest.raises(RuntimeError, match="cannot be updated after finalization"):
+        memory_bank.update(embeddings)
+    with pytest.raises(RuntimeError, match="already finalized"):
+        memory_bank.finalize()

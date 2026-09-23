@@ -11,7 +11,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from torch import nn
 
 from anomalib.models.image.mh_patchcore import torch_model
-from anomalib.models.image.mh_patchcore.components import CovarianceWhitening, StreamingPCA
+from anomalib.models.image.mh_patchcore.components import CovarianceWhitening, MergeReduceMemoryBank, StreamingPCA
 from anomalib.models.image.mh_patchcore.torch_model import MHPatchcoreModel
 
 
@@ -111,5 +111,6 @@ def test_forward_uses_mocked_feature_extractor(model: MHPatchcoreModel) -> None:
     assert extractor.pre_trained is True
     assert isinstance(model.pca, StreamingPCA)
     assert isinstance(model.covariance, CovarianceWhitening)
+    assert isinstance(model.memory_bank, MergeReduceMemoryBank)
     assert output.shape == (24, 1024)
     assert torch.isfinite(output).all()
