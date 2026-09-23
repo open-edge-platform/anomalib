@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- ⚠️ **security**: When a dataset `root` is set, metadata path columns (Tabular and similar loaders) must resolve under that root; absolute paths outside `root` are rejected by @ashwinvaidya17
+
 ### Deprecated
 
 ### Fixed
