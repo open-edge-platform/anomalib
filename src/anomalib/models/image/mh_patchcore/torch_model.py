@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""PyTorch feature embedding pipeline for MH-PatchCore."""
+"""PyTorch implementation of MH-PatchCore."""
 
 from collections.abc import Sequence
 
@@ -9,8 +9,10 @@ import torch
 from torch import nn
 from torch.nn import functional as F  # noqa: N812
 
+from anomalib.data import InferenceBatch
 from anomalib.models.components import TimmFeatureExtractor
 
+from .anomaly_map import AnomalyMapGenerator
 from .components import CovarianceWhitening, MergeReduceMemoryBank, StreamingPCA
 
 _PATCH_SIZE = 3
@@ -130,6 +132,7 @@ class MHPatchcoreModel(nn.Module):
             memory_bank_size=memory_bank_size,
             local_coreset_size=local_coreset_size,
         )
+        self.anomaly_map_generator = AnomalyMapGenerator()
         self.feature_extractor = TimmFeatureExtractor(
             backbone=backbone,
             layers=self.layers,
@@ -141,18 +144,61 @@ class MHPatchcoreModel(nn.Module):
             padding=_PATCH_SIZE // 2,
         )
 
-    def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:
-        """Extract MH-PatchCore embeddings from an image batch.
+    def forward(self, input_tensor: torch.Tensor) -> torch.Tensor | InferenceBatch:
+        """Extract embeddings or return anomaly predictions.
+
+        Training mode returns raw patch embeddings. Evaluation mode applies the
+        fitted projection, whitening, memory-bank scoring, and anomaly-map path.
 
         Args:
             input_tensor (torch.Tensor): Image batch with shape ``[B, C, H, W]``.
 
         Returns:
-            torch.Tensor: Patch embeddings with shape
-                ``[B * H_ref * W_ref, 1024]``.
+            torch.Tensor | InferenceBatch: Raw embeddings during training, or
+                anomaly scores and maps during evaluation.
+
+        Raises:
+            RuntimeError: If evaluation is requested before all fitted state is
+                available.
         """
+        if not self.training:
+            self._validate_inference_state()
+
+        image_size = input_tensor.shape[-2:]
         features = self.feature_extractor(input_tensor)
-        return self.generate_embedding(features)
+        embeddings = self.generate_embedding(features)
+        if self.training:
+            return embeddings
+
+        batch_size = len(input_tensor)
+        reference_grid = features[self.layers[0]].shape[-2:]
+        embeddings = self.pca(embeddings)
+        embeddings = self.covariance(embeddings).to(dtype=self.memory_bank.bank.dtype)
+        patch_scores, locations = _nearest_neighbors(embeddings, self.memory_bank.bank, num_neighbors=1)
+        patch_scores = patch_scores.reshape(batch_size, -1)
+        locations = locations.reshape(batch_size, -1)
+        pred_score = _compute_anomaly_score(
+            patch_scores=patch_scores,
+            locations=locations,
+            embeddings=embeddings,
+            memory_bank=self.memory_bank.bank,
+            num_neighbors=self.num_neighbors,
+        )
+        patch_scores = patch_scores.reshape(batch_size, 1, *reference_grid)
+        anomaly_map = self.anomaly_map_generator(patch_scores, image_size)
+        return InferenceBatch(pred_score=pred_score, anomaly_map=anomaly_map)
+
+    def _validate_inference_state(self) -> None:
+        missing_state: list[str] = []
+        if not self.pca.is_fitted:
+            missing_state.append("PCA")
+        if not self.covariance.is_fitted:
+            missing_state.append("covariance")
+        if not self.memory_bank.is_fitted:
+            missing_state.append("memory bank")
+        if missing_state:
+            msg = "MHPatchcoreModel must be fully fitted before inference; missing " + ", ".join(missing_state) + "."
+            raise RuntimeError(msg)
 
     def generate_embedding(self, features: dict[str | int, torch.Tensor]) -> torch.Tensor:
         """Construct ordered embeddings from hierarchical feature maps.

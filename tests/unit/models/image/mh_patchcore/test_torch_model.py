@@ -10,7 +10,9 @@ import torch
 from _pytest.monkeypatch import MonkeyPatch
 from torch import nn
 
+from anomalib.data import InferenceBatch
 from anomalib.models.image.mh_patchcore import torch_model
+from anomalib.models.image.mh_patchcore.anomaly_map import AnomalyMapGenerator
 from anomalib.models.image.mh_patchcore.components import CovarianceWhitening, MergeReduceMemoryBank, StreamingPCA
 from anomalib.models.image.mh_patchcore.torch_model import (
     MHPatchcoreModel,
@@ -45,6 +47,19 @@ def model(monkeypatch: MonkeyPatch) -> MHPatchcoreModel:
     """Create an MH-PatchCore model without constructing a real backbone."""
     monkeypatch.setattr(torch_model, "TimmFeatureExtractor", MockFeatureExtractor)
     return MHPatchcoreModel()
+
+
+def prepare_fitted_state(model: MHPatchcoreModel) -> None:
+    """Populate a minimal deterministic fitted state for inference tests."""
+    model.pca.components = torch.zeros(2, 1024, dtype=torch.float32)
+    model.pca.components[0, 0] = 1
+    model.pca.components[1, 512] = 1
+    model.pca.mean = torch.zeros(1024, dtype=torch.float64)
+    model.pca.projected_mean = torch.zeros(2, dtype=torch.float32)
+    model.pca.num_components = torch.tensor(2, dtype=torch.int64)
+    model.covariance.mean = torch.zeros(2, dtype=torch.float64)
+    model.covariance.whitening_matrix = torch.eye(2, dtype=torch.float64)
+    model.memory_bank.bank = torch.tensor([[0.0, 0.0], [4.0, 0.0], [0.0, 4.0]], dtype=torch.float32)
 
 
 def test_patchify_preserves_grid_and_order(model: MHPatchcoreModel) -> None:
@@ -109,7 +124,7 @@ def test_mapping_and_aggregation_preserve_layer_order() -> None:
 def test_forward_uses_mocked_feature_extractor(model: MHPatchcoreModel) -> None:
     """Forward should combine both feature layers without downloading weights."""
     extractor = cast("MockFeatureExtractor", model.feature_extractor)
-    output = model(torch.zeros(2, 3, 8, 8))
+    output = cast("torch.Tensor", model(torch.zeros(2, 3, 8, 8)))
 
     assert extractor.backbone == "wide_resnet50_2.tv2_in1k"
     assert extractor.layers == ("layer2", "layer3")
@@ -186,3 +201,48 @@ def test_anomaly_score_handles_single_neighbor(num_neighbors: int) -> None:
     )
 
     torch.testing.assert_close(score, torch.tensor([0.64]))
+
+
+def test_anomaly_map_preserves_geometry_for_small_images() -> None:
+    """Map generation should resize bilinearly and blur without changing geometry."""
+    generator = AnomalyMapGenerator()
+    patch_scores = torch.tensor([[[[0.0, 0.0], [0.0, 1.0]]]])
+
+    resized = generator.resize(patch_scores, image_size=(17, 19))
+    anomaly_map = generator(patch_scores, image_size=(17, 19))
+
+    assert resized.shape == (1, 1, 17, 19)
+    assert anomaly_map.shape == resized.shape
+    assert resized[0, 0, 0, 0] == 0
+    assert resized[0, 0, -1, -1] == 1
+    assert anomaly_map[0, 0, -1, -1] > anomaly_map[0, 0, 0, 0]
+    assert torch.isfinite(anomaly_map).all()
+
+
+def test_inference_requires_complete_fitted_state(model: MHPatchcoreModel) -> None:
+    """Evaluation should fail before feature extraction when fitted state is missing."""
+    model.eval()
+
+    with pytest.raises(RuntimeError, match=r"fully fitted.*PCA, covariance, memory bank"):
+        model(torch.zeros(1, 3, 17, 19))
+
+
+def test_fitted_model_returns_inference_batch(model: MHPatchcoreModel) -> None:
+    """A manually fitted model should return finite batched scores and maps."""
+    prepare_fitted_state(model)
+    model.eval()
+    input_tensor = torch.zeros(2, 3, 17, 19)
+
+    output = model(input_tensor)
+
+    assert isinstance(output, InferenceBatch)
+    assert output.pred_score is not None
+    assert output.anomaly_map is not None
+    assert output.pred_score.shape == (2,)
+    assert output.anomaly_map.shape == (2, 1, 17, 19)
+    assert output.pred_score.dtype == torch.float32
+    assert output.anomaly_map.dtype == torch.float32
+    assert output.pred_score.device == input_tensor.device
+    assert output.anomaly_map.device == input_tensor.device
+    assert torch.isfinite(output.pred_score).all()
+    assert torch.isfinite(output.anomaly_map).all()
