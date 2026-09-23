@@ -14,12 +14,12 @@ from typing_extensions import TypedDict
 
 from anomalib.data.transforms import ExportableCenterCrop
 
-ALLOWED_TRANSFORM_ROOTS = ("torchvision.transforms.", "anomalib.")
 TRANSFORM_CLASSES: dict[str, type[Transform]] = {
     f"torchvision.transforms.v2.{transform.__name__}": transform
     for transform in (CenterCrop, Compose, Grayscale, Normalize, Resize)
 }
-TRANSFORM_CLASSES["anomalib.data.transforms.ExportableCenterCrop"] = ExportableCenterCrop
+TRANSFORM_CLASSES["anomalib.data.transforms.center_crop.ExportableCenterCrop"] = ExportableCenterCrop
+CLASS_TO_PATH = {transform: path for path, transform in TRANSFORM_CLASSES.items()}
 
 SpecValue: TypeAlias = str | int | float | bool | list["SpecValue"] | dict[str, "SpecValue"] | None
 ConstructorValue: TypeAlias = SpecValue | Transform | Enum | list["ConstructorValue"] | dict[str, "ConstructorValue"]
@@ -82,9 +82,9 @@ def spec_to_transform(spec: TransformSpec | None) -> Transform | None:
         raise TypeError(msg)
 
     class_path = spec["class_path"]
-    if not isinstance(class_path, str) or not _is_allowed(class_path):
+    if not isinstance(class_path, str):
         msg = f"Unsupported transform class path: {class_path!r}"
-        raise ValueError(msg)
+        raise TypeError(msg)
     init_args = spec["init_args"]
     if not isinstance(init_args, dict):
         msg = f"Transform init_args must be a dictionary: {class_path}"
@@ -108,18 +108,11 @@ def spec_to_transform(spec: TransformSpec | None) -> Transform | None:
 
 def _class_path(cls: type) -> str:
     """Get a stable public class path for a supported transform."""
-    module = cls.__module__
-    if module.startswith("torchvision.transforms.v2."):
-        return f"torchvision.transforms.v2.{cls.__name__}"
-    path = f"{module}.{cls.__name__}"
-    if not _is_allowed(path):
-        msg = f"Unsupported transform class: {path}"
+    path = CLASS_TO_PATH.get(cls)
+    if path is None:
+        msg = f"Unsupported transform class: {cls.__module__}.{cls.__name__}"
         raise ValueError(msg)
     return path
-
-
-def _is_allowed(class_path: str) -> bool:
-    return class_path.startswith(ALLOWED_TRANSFORM_ROOTS)
 
 
 def _resolve_class(class_path: str) -> type[Transform]:

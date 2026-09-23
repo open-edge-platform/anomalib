@@ -62,6 +62,7 @@ from anomalib.post_processing import PostProcessor
 from anomalib.pre_processing import PreProcessor
 from anomalib.pre_processing.utils.spec import spec_to_transform, transform_to_spec
 from anomalib.pre_processing.utils.transform import get_exportable_transform
+from anomalib.utils.path import paths_to_strings
 from anomalib.utils.serialization import anomalib_safe_globals
 from anomalib.visualization import ImageVisualizer, Visualizer
 
@@ -133,6 +134,8 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
         super().__init__()
         logger.info("Initializing %s model.", self.__class__.__name__)
 
+        # Components are restored from safe checkpoint data below; evaluator and
+        # visualizer configuration is intentionally rebuilt from model defaults.
         self.save_hyperparameters(ignore=["pre_processor", "post_processor", "evaluator", "visualizer"])
         self.model: nn.Module
         self.loss: nn.Module
@@ -176,20 +179,32 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
         return callbacks
 
     def on_save_checkpoint(self, checkpoint: dict[str, Any]) -> None:
-        """Save pre-processing configuration as safe plain data."""
+        """Save safe component configuration and plain-data hyperparameters."""
         super().on_save_checkpoint(checkpoint)
+        checkpoint["hyper_parameters"] = paths_to_strings(checkpoint.get("hyper_parameters", {}))
         checkpoint["anomalib_pre_processor_spec"] = transform_to_spec(
             self.pre_processor.transform if self.pre_processor is not None else None,
         )
+        if self.post_processor is not None:
+            checkpoint["anomalib_post_processor_config"] = {
+                "enable_normalization": self.post_processor.enable_normalization,
+                "enable_thresholding": self.post_processor.enable_thresholding,
+                "enable_threshold_matching": self.post_processor.enable_threshold_matching,
+                "image_sensitivity": self.post_processor.image_sensitivity,
+                "pixel_sensitivity": self.post_processor.pixel_sensitivity,
+            }
 
     def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
         """Restore pre-processing configuration from safe plain data."""
         super().on_load_checkpoint(checkpoint)
-        if "anomalib_pre_processor_spec" not in checkpoint or self.pre_processor is None:
-            return
-        transform = spec_to_transform(checkpoint["anomalib_pre_processor_spec"])
-        self.pre_processor.transform = transform
-        self.pre_processor.export_transform = get_exportable_transform(transform)
+        if "anomalib_pre_processor_spec" in checkpoint and self.pre_processor is not None:
+            transform = spec_to_transform(checkpoint["anomalib_pre_processor_spec"])
+            self.pre_processor.transform = transform
+            self.pre_processor.export_transform = get_exportable_transform(transform)
+        config = checkpoint.get("anomalib_post_processor_config")
+        if config is not None and self.post_processor is not None:
+            for name, value in config.items():
+                setattr(self.post_processor, name, value)
 
     def forward(self, batch: torch.Tensor, *args, **kwargs) -> InferenceBatch:
         """Perform forward pass through the model pipeline.

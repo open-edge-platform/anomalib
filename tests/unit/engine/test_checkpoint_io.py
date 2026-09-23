@@ -20,6 +20,7 @@ from anomalib.models.image.efficient_ad import EfficientAd
 from anomalib.models.image.efficient_ad.torch_model import EfficientAdModelSize
 from anomalib.models.image.vlm_ad import VlmAd
 from anomalib.models.image.vlm_ad.utils import ModelName
+from anomalib.post_processing import PostProcessor
 from anomalib.pre_processing import PreProcessor
 from anomalib.pre_processing.utils.spec import transform_to_spec
 
@@ -116,3 +117,46 @@ def test_custom_preprocessor_round_trips_as_plain_data(tmp_path: Path) -> None:
 
     assert checkpoint["anomalib_pre_processor_spec"] == transform_to_spec(transform)
     assert transform_to_spec(loaded.pre_processor.transform) == transform_to_spec(transform)
+
+
+def test_path_hyperparameters_are_saved_as_strings(tmp_path: Path) -> None:
+    """Path hyperparameters load safely and are reconstructed by constructors."""
+    from anomalib.models import EfficientAd
+
+    model = EfficientAd(imagenet_dir=tmp_path / "imagenette")
+    trainer = Trainer(max_epochs=1, logger=False, barebones=True)
+    trainer.strategy.connect(model)
+    checkpoint_path = tmp_path / "efficientad.ckpt"
+    trainer.save_checkpoint(checkpoint_path)
+
+    loaded_checkpoint = AnomalibCheckpointIO(
+        extra_safe_globals=EfficientAd.checkpoint_safe_globals(),
+    ).load_checkpoint(checkpoint_path, weights_only=True)
+    loaded = EfficientAd.load_from_checkpoint(checkpoint_path, weights_only=True)
+
+    assert loaded_checkpoint["hyper_parameters"]["imagenet_dir"] == str(tmp_path / "imagenette")
+    assert loaded.imagenet_dir == tmp_path / "imagenette"
+
+
+def test_postprocessor_config_round_trips(tmp_path: Path) -> None:
+    """Postprocessor inference configuration survives checkpoint restore."""
+    processor = PostProcessor(
+        enable_normalization=False,
+        enable_thresholding=False,
+        enable_threshold_matching=False,
+        image_sensitivity=0.7,
+        pixel_sensitivity=0.3,
+    )
+    model = Padim(post_processor=processor)
+    trainer = Trainer(max_epochs=1, logger=False, barebones=True)
+    trainer.strategy.connect(model)
+    checkpoint_path = tmp_path / "postprocessor.ckpt"
+    trainer.save_checkpoint(checkpoint_path)
+
+    loaded = Padim.load_from_checkpoint(checkpoint_path, weights_only=True)
+
+    assert loaded.post_processor.enable_normalization is False
+    assert loaded.post_processor.enable_thresholding is False
+    assert loaded.post_processor.enable_threshold_matching is False
+    assert loaded.post_processor.image_sensitivity == 0.7
+    assert loaded.post_processor.pixel_sensitivity == 0.3

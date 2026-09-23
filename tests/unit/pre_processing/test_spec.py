@@ -38,7 +38,7 @@ def test_none_round_trip() -> None:
 
 def test_rejects_unsafe_class_path() -> None:
     """Deserializer rejects imports outside approved namespaces."""
-    with pytest.raises(ValueError, match="Unsupported transform class path"):
+    with pytest.raises(ValueError, match="Unsupported transform class"):
         spec_to_transform({"class_path": "os.system", "init_args": {}})
 
 
@@ -55,3 +55,11 @@ def test_rejects_unsupported_transform() -> None:
 
     with pytest.raises(ValueError, match="Unsupported transform class"):
         transform_to_spec(Unsupported())
+
+
+def test_rejects_unregistered_anomalib_transform() -> None:
+    """Serializer rejects supported-namespace transforms outside the registry."""
+    from anomalib.data.utils.generators.perlin import PerlinAnomalyGenerator
+
+    with pytest.raises(ValueError, match="Unsupported transform class"):
+        transform_to_spec(PerlinAnomalyGenerator())
