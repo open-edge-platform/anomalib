@@ -5,15 +5,21 @@
 
 from __future__ import annotations
 
-import importlib
 import inspect
 from enum import Enum
 from typing import TypeAlias, cast, get_type_hints
 
-from torchvision.transforms.v2 import Transform
+from torchvision.transforms.v2 import CenterCrop, Compose, Grayscale, Normalize, Resize, Transform
 from typing_extensions import TypedDict
 
+from anomalib.data.transforms import ExportableCenterCrop
+
 ALLOWED_TRANSFORM_ROOTS = ("torchvision.transforms.", "anomalib.")
+TRANSFORM_CLASSES: dict[str, type[Transform]] = {
+    f"torchvision.transforms.v2.{transform.__name__}": transform
+    for transform in (CenterCrop, Compose, Grayscale, Normalize, Resize)
+}
+TRANSFORM_CLASSES["anomalib.data.transforms.ExportableCenterCrop"] = ExportableCenterCrop
 
 SpecValue: TypeAlias = str | int | float | bool | list["SpecValue"] | dict[str, "SpecValue"] | None
 ConstructorValue: TypeAlias = SpecValue | Transform | Enum | list["ConstructorValue"] | dict[str, "ConstructorValue"]
@@ -117,14 +123,9 @@ def _is_allowed(class_path: str) -> bool:
 
 
 def _resolve_class(class_path: str) -> type[Transform]:
-    module_name, _, class_name = class_path.rpartition(".")
-    try:
-        cls = getattr(importlib.import_module(module_name), class_name)
-    except (ImportError, AttributeError) as exc:
-        msg = f"Cannot resolve transform class: {class_path}"
-        raise ValueError(msg) from exc
-    if not inspect.isclass(cls) or not issubclass(cls, Transform):
-        msg = f"Not a transform class: {class_path}"
+    cls = TRANSFORM_CLASSES.get(class_path)
+    if cls is None:
+        msg = f"Unsupported transform class: {class_path}"
         raise ValueError(msg)
     return cls
 

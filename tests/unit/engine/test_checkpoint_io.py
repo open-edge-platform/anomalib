@@ -41,6 +41,7 @@ class _ModelWithExtraGlobals(Padim):
 def test_checkpoint_io_loads_precision_type(tmp_path: Path) -> None:
     """AnomalibCheckpointIO can weights_only-load PrecisionType hyperparameters."""
     path = tmp_path / "hparams.pt"
+    # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
     torch.save({"precision": PrecisionType.FLOAT32}, path)
 
     loaded = AnomalibCheckpointIO().load_checkpoint(path, weights_only=True)
@@ -51,6 +52,7 @@ def test_checkpoint_io_loads_precision_type(tmp_path: Path) -> None:
 def test_checkpoint_io_loads_extra_safe_globals(tmp_path: Path) -> None:
     """AnomalibCheckpointIO merges constructor extras into the allowlist."""
     path = tmp_path / "hparams.pt"
+    # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
     torch.save({"extra": _ExtraEnum.VALUE}, path)
 
     loaded = AnomalibCheckpointIO(extra_safe_globals=[_ExtraEnum]).load_checkpoint(
