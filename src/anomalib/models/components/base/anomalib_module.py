@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Base Anomaly Module for Training Task.
@@ -48,6 +48,7 @@ from typing import Any
 
 import lightning.pytorch as pl
 import torch
+from lightning.fabric.utilities.types import _MAP_LOCATION_TYPE
 from lightning.pytorch import Callback
 from lightning.pytorch.utilities.types import STEP_OUTPUT
 from torch import nn
@@ -59,6 +60,8 @@ from anomalib.metrics import AUROC, F1Score
 from anomalib.metrics.evaluator import Evaluator
 from anomalib.post_processing import PostProcessor
 from anomalib.pre_processing import PreProcessor
+from anomalib.utils.path import paths_to_strings
+from anomalib.utils.serialization import anomalib_safe_globals
 from anomalib.visualization import ImageVisualizer, Visualizer
 
 from .export_mixin import ExportMixin
@@ -129,7 +132,9 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
         super().__init__()
         logger.info("Initializing %s model.", self.__class__.__name__)
 
-        self.save_hyperparameters()
+        # Components are restored from safe checkpoint data below; evaluator and
+        # visualizer configuration is intentionally rebuilt from model defaults.
+        self.save_hyperparameters(ignore=["pre_processor", "post_processor", "evaluator", "visualizer"])
         self.model: nn.Module
         self.loss: nn.Module
         self.callbacks: list[Callback]
@@ -170,6 +175,43 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
             if isinstance(component, Callback)
         )
         return callbacks
+
+    def on_save_checkpoint(self, checkpoint: dict[str, Any]) -> None:
+        """Save safe component configuration and plain-data hyperparameters."""
+        super().on_save_checkpoint(checkpoint)
+        checkpoint["hyper_parameters"] = paths_to_strings(checkpoint.get("hyper_parameters", {}))
+        for checkpoint_key, component in self._checkpointable_components().items():
+            if hasattr(component, "checkpoint_config"):
+                checkpoint[checkpoint_key] = component.checkpoint_config()
+            else:
+                logger.debug(
+                    "%s does not implement checkpoint_config(); skipping its configuration in the checkpoint.",
+                    type(component).__name__,
+                )
+
+    def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
+        """Restore component configuration from safe plain data."""
+        super().on_load_checkpoint(checkpoint)
+        for checkpoint_key, component in self._checkpointable_components().items():
+            config = checkpoint.get(checkpoint_key)
+            if config is not None and hasattr(component, "load_checkpoint_config"):
+                component.load_checkpoint_config(config)
+
+    def _checkpointable_components(self) -> dict[str, nn.Module]:
+        """Map checkpoint keys to components that may implement the safe-config hooks.
+
+        A component is only checkpointed through ``checkpoint_config`` /
+        ``load_checkpoint_config`` if it implements both methods (as
+        ``PreProcessor`` and ``PostProcessor`` do). Custom components that do
+        not (e.g. a bare ``nn.Module``) are skipped rather than raising, since
+        both ``pre_processor`` and ``post_processor`` publicly accept any
+        ``nn.Module``.
+        """
+        components: dict[str, nn.Module | None] = {
+            "anomalib_pre_processor_config": self.pre_processor,
+            "anomalib_post_processor_config": self.post_processor,
+        }
+        return {key: component for key, component in components.items() if component is not None}
 
     def forward(self, batch: torch.Tensor, *args, **kwargs) -> InferenceBatch:
         """Perform forward pass through the model pipeline.
@@ -397,6 +439,62 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
             True
         """
         return ImageVisualizer()
+
+    @classmethod
+    def checkpoint_safe_globals(cls) -> Sequence[Any]:
+        """Model-specific types persisted in ``hyper_parameters``.
+
+        Override in subclasses that save non-shared enums (or similar) into
+        checkpoints. Keep this to small first-party types only; shared enums
+        belong in ``ANOMALIB_SAFE_GLOBALS``.
+
+        Returns:
+            Sequence[Any]: Extra types to allowlist under ``weights_only=True``.
+        """
+        return ()
+
+    @classmethod
+    def load_from_checkpoint(
+        cls: type["AnomalibModule"],
+        checkpoint_path: str | Path,
+        map_location: _MAP_LOCATION_TYPE = None,
+        hparams_file: str | Path | None = None,
+        strict: bool | None = None,
+        weights_only: bool = True,
+        **kwargs,
+    ) -> "AnomalibModule":
+        """Load a model from a Lightning checkpoint.
+
+        Wraps :meth:`lightning.pytorch.LightningModule.load_from_checkpoint` so
+        first-party enums in ``hyper_parameters`` can unpickle under
+        ``weights_only=True``. Trainer ``ckpt_path`` restores use
+        ``AnomalibCheckpointIO`` instead of this method.
+
+        Args:
+            checkpoint_path (str | Path): Path to the checkpoint file.
+            map_location (optional): Device mapping passed to ``torch.load``.
+                Defaults to ``None``.
+            hparams_file (str | Path | None, optional): Optional YAML/CSV file of
+                hyperparameters. Defaults to ``None``.
+            strict (bool | None, optional): Whether to strictly enforce state-dict
+                key matching. Defaults to ``None``.
+            weights_only (bool, optional): If ``True``, restrict unpickling
+                to tensors and allowlisted types. Defaults to ``True``.
+            **kwargs: Extra or overriding hyperparameters passed to the model
+                constructor.
+
+        Returns:
+            AnomalibModule: Model instantiated from the checkpoint.
+        """
+        with anomalib_safe_globals(extra=cls.checkpoint_safe_globals()):
+            return super().load_from_checkpoint(
+                checkpoint_path,
+                map_location=map_location,
+                hparams_file=hparams_file,
+                strict=strict,
+                weights_only=weights_only,
+                **kwargs,
+            )
 
     @property
     def input_size(self) -> tuple[int, int] | None:

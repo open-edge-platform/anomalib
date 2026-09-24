@@ -227,6 +227,7 @@ class StageSpecificPreProcessor(PreProcessor):
         val_transform: Transform | None = None,
         test_transform: Transform | None = None,
     ):
+        super().__init__()
         self.train_transform = train_transform
         self.val_transform = val_transform
         self.test_transform = test_transform
@@ -236,7 +237,7 @@ class StageSpecificPreProcessor(PreProcessor):
         if self.train_transform:
             batch.image, batch.gt_mask = self.train_transform(batch.image, batch.gt_mask)
 
-    def on_val_batch_start(self, trainer, pl_module, batch, batch_idx):
+    def on_validation_batch_start(self, trainer, pl_module, batch, batch_idx):
         if self.val_transform:
             batch.image, batch.gt_mask = self.val_transform(batch.image, batch.gt_mask)
 
