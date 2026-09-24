@@ -5,6 +5,7 @@
 
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 import pytest
 import torch
@@ -13,13 +14,14 @@ from lightning.pytorch import Trainer
 from torch import nn
 from torchvision.transforms.v2 import Resize
 
-from anomalib import PrecisionType
+from anomalib import LearningType, PrecisionType
 from anomalib.engine import Engine
 from anomalib.engine.plugins import AnomalibCheckpointIO
 from anomalib.models import Padim
 from anomalib.models.components.base import AnomalibModule
 from anomalib.models.image.efficient_ad import EfficientAd
 from anomalib.models.image.efficient_ad.torch_model import EfficientAdModelSize
+from anomalib.models.image.super_add import SuperADDPostProcessor
 from anomalib.models.image.vlm_ad import VlmAd
 from anomalib.models.image.vlm_ad.utils import ModelName
 from anomalib.post_processing import MEBinPostProcessor, PostProcessor
@@ -39,6 +41,37 @@ class _ModelWithExtraGlobals(Padim):
     @classmethod
     def checkpoint_safe_globals(cls) -> tuple[type[Enum], ...]:
         return (_ExtraEnum,)
+
+
+class _DummyCheckpointModule(AnomalibModule):
+    """Minimal AnomalibModule host for component checkpoint round-trip tests.
+
+    Avoids coupling custom post-processors (MEBin, SuperADD) to an unrelated
+    production model such as Padim. Components default to off so the host stays
+    lightweight when only one of them is under test.
+    """
+
+    def __init__(
+        self,
+        pre_processor: nn.Module | bool = False,
+        post_processor: nn.Module | bool = False,
+        evaluator: bool = False,
+        visualizer: bool = False,
+    ) -> None:
+        super().__init__(
+            pre_processor=pre_processor,
+            post_processor=post_processor,
+            evaluator=evaluator,
+            visualizer=visualizer,
+        )
+
+    @property
+    def trainer_arguments(self) -> dict[str, Any]:
+        return {}
+
+    @property
+    def learning_type(self) -> LearningType:
+        return LearningType.ONE_CLASS
 
 
 def test_checkpoint_io_loads_precision_type(tmp_path: Path) -> None:
@@ -171,22 +204,20 @@ def test_mebin_post_processor_config_round_trips(tmp_path: Path) -> None:
     property rather than overriding ``checkpoint_config``/``load_checkpoint_config``,
     so this also verifies that the base hooks pick up the extension.
 
-    ``load_from_checkpoint`` reconstructs ``Padim`` from its saved
+    ``load_from_checkpoint`` reconstructs the module from its saved
     hyperparameters, and ``post_processor`` is intentionally excluded from
-    those (see ``AnomalibModule.__init__``), so the default
-    ``configure_post_processor`` would otherwise build a plain
-    ``PostProcessor``. As with a custom pre-processor, the caller must supply
-    a fresh instance of the same custom type at load time; only its
-    *configuration* is restored from the checkpoint, not its class.
+    those (see ``AnomalibModule.__init__``). The caller must supply a fresh
+    instance of the same custom type at load time; only its *configuration*
+    is restored from the checkpoint, not its class.
     """
     processor = MEBinPostProcessor(sample_rate=8, min_interval_len=2, erode=False, kernel_size=3)
-    model = Padim(post_processor=processor)
+    model = _DummyCheckpointModule(post_processor=processor)
     trainer = Trainer(max_epochs=1, logger=False, barebones=True)
     trainer.strategy.connect(model)
     checkpoint_path = tmp_path / "mebin.ckpt"
     trainer.save_checkpoint(checkpoint_path)
 
-    loaded = Padim.load_from_checkpoint(
+    loaded = _DummyCheckpointModule.load_from_checkpoint(
         checkpoint_path,
         weights_only=True,
         post_processor=MEBinPostProcessor(),
@@ -197,6 +228,41 @@ def test_mebin_post_processor_config_round_trips(tmp_path: Path) -> None:
     assert loaded.post_processor.min_interval_len == 2
     assert loaded.post_processor.erode is False
     assert loaded.post_processor.kernel_size == 3
+
+
+def test_super_add_post_processor_config_round_trips(tmp_path: Path) -> None:
+    """SuperADDPostProcessor's percentile-based configuration survives checkpoint restore.
+
+    Regression test: SuperADDPostProcessor previously did not override
+    ``_checkpoint_config_keys``, so custom values (e.g. a non-default
+    ``pixel_threshold_factor``) were silently dropped and a reload used the
+    constructor defaults instead.
+    """
+    processor = SuperADDPostProcessor(
+        pixel_threshold_percentile=90.0,
+        pixel_threshold_factor=1.1,
+        image_threshold_percentile=92.0,
+        image_threshold_factor=1.05,
+        samples_per_batch=500,
+    )
+    model = _DummyCheckpointModule(post_processor=processor)
+    trainer = Trainer(max_epochs=1, logger=False, barebones=True)
+    trainer.strategy.connect(model)
+    checkpoint_path = tmp_path / "super_add.ckpt"
+    trainer.save_checkpoint(checkpoint_path)
+
+    loaded = _DummyCheckpointModule.load_from_checkpoint(
+        checkpoint_path,
+        weights_only=True,
+        post_processor=SuperADDPostProcessor(),
+    )
+
+    assert isinstance(loaded.post_processor, SuperADDPostProcessor)
+    assert loaded.post_processor.pixel_threshold_percentile == 90.0
+    assert loaded.post_processor.pixel_threshold_factor == 1.1
+    assert loaded.post_processor.image_threshold_percentile == 92.0
+    assert loaded.post_processor.image_threshold_factor == 1.05
+    assert loaded.post_processor.samples_per_batch == 500
 
 
 class _BareModulePreProcessor(nn.Module):

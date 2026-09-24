@@ -22,6 +22,7 @@ The pre-processor is implemented as both a :class:`torch.nn.Module` and
 workflows.
 """
 
+import logging
 from typing import Any
 
 import torch
@@ -36,6 +37,8 @@ from .utils.transform import (
     get_exportable_transform,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class PreProcessor(nn.Module, Callback):
     """Anomalib pre-processor.
@@ -45,6 +48,20 @@ class PreProcessor(nn.Module, Callback):
 
     Args:
         transform (Transform | None): Transform to apply to the data before passing it to the model.
+
+    Note:
+        ``.transform`` may be any torchvision ``Transform``, but only a closed
+        set of deterministic transforms (see
+        :mod:`anomalib.pre_processing.utils._transform_registry`) can be
+        persisted in a checkpoint. Randomized transforms such as
+        ``RandomHorizontalFlip`` or ``RandomRotation`` belong in dataset
+        *augmentations* (``train_augmentations`` etc.), not in a model's
+        pre-processor; see the
+        :doc:`Transforms guide </markdown/guides/how_to/data/transforms>` for
+        why mixing the two is a common pitfall. An unsupported transform does
+        not raise at construction; instead, ``checkpoint_config`` degrades
+        gracefully (with a warning) so training is not interrupted, but the
+        transform itself is not restored on reload.
 
     Example:
         >>> from torchvision.transforms.v2 import Compose, Resize, ToTensor
@@ -154,6 +171,14 @@ class PreProcessor(nn.Module, Callback):
         no ``transform`` attribute) can still be checkpointed safely, instead of
         raising ``AttributeError`` during ``on_save_checkpoint``.
 
+        ``.transform`` may hold a transform outside the safe-serialization
+        registry (e.g. ``RandomHorizontalFlip``, which anomalib's own docs warn
+        against using as a model-specific transform rather than a dataset
+        augmentation). Rather than aborting the whole checkpoint save, this
+        degrades gracefully: the transform is not persisted, a warning is
+        logged, and the checkpoint still saves. The transform is also not
+        restored on reload; see :meth:`load_checkpoint_config`.
+
         Override this method (together with :meth:`load_checkpoint_config`) in a
         subclass that manages additional or different transform state, for
         example separate per-stage transforms.
@@ -161,7 +186,18 @@ class PreProcessor(nn.Module, Callback):
         Returns:
             dict[str, Any]: Plain-data configuration.
         """
-        return {"transform": transform_to_spec(getattr(self, "transform", None))}
+        transform = getattr(self, "transform", None)
+        try:
+            spec = transform_to_spec(transform)
+        except ValueError:
+            logger.warning(
+                "Cannot persist %s in a checkpoint under weights_only=True; it will not be restored on reload. "
+                "Consider moving it to dataset augmentations (train_augmentations, etc.) instead of the "
+                "model's pre-processor.",
+                type(transform).__name__,
+            )
+            spec = None
+        return {"transform": spec}
 
     def load_checkpoint_config(self, config: dict[str, Any]) -> None:
         """Restore configuration previously returned by :meth:`checkpoint_config`.
