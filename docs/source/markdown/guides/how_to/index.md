@@ -79,7 +79,7 @@ Learn more about anomalib's deployment capabilities
 :link: ./pipelines/index
 :link-type: doc
 
-Learn more about anomalib hpo, sweep and benchmarking pipelines
+Learn more about the tiled ensemble pipeline and how to create your own custom pipeline
 :::
 
 :::{grid-item-card} {octicon}`cpu` Training on Intel GPUs
