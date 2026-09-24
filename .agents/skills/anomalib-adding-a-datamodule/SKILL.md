@@ -245,13 +245,26 @@ construct your datamodule directly against its output directory.
   for image formats, `DummyVideoDatasetGenerator` for video formats) — otherwise the shared
   `dataset_path` fixture (`tests/conftest.py`) will raise `NotImplementedError` for that format.
 
+## Path confinement and data security rules
+
+When writing a datamodule or dataset that parses metadata (split CSVs, JSON, Parquet, annotations, or directory trees):
+
+- **Never trust dataset paths:** Never join path strings from metadata files directly to `root` with `root / path` or `os.path.join`. Always use `resolve_path_under_root(root, path)` or `validate_path(path, base_dir=root)` from `anomalib.data.utils.path`.
+- **Validate categorical metadata:** If categorical fields (`category`, `split`, `label`) from CSV/JSON are used to build directory paths, validate them against explicit allowlists/enums before building paths to prevent directory traversal via metadata fields.
+- **Confine destination directories:** When copying or creating split trees on disk in `prepare_data()`:
+  - Verify that `split_root` is within `root` (`is_within_directory(self.root, self.split_root)`).
+  - Confine leaf folders before creation: `validate_path(folder, base_dir=self.root, should_exist=False).mkdir(...)`.
+  - Confine destination file paths: `validate_path(dest_file, base_dir=self.root, should_exist=False)`.
+- **Add confinement tests:** Any datamodule that reads external split/metadata files must include unit tests asserting that out-of-root paths (e.g. `../` traversal) raise `ValueError` (see `tests/unit/data/utils/test_path_confinement.py`).
+
 ## Reviewer / self-check before opening a PR
 
 - [ ] `AnomalibDataset` subclass sets `self.samples` (DataFrame with required columns + `task` attr).
 - [ ] `AnomalibDataModule` subclass implements `_setup()` only; no unnecessary overrides of
       `train_dataloader`/`val_dataloader`/`test_dataloader`.
+- [ ] Any paths parsed from split files, annotations, or metadata are confined to `root` using `resolve_path_under_root` or `validate_path(..., base_dir=root)`.
 - [ ] Datamodule exported from `src/anomalib/data/__init__.py` and `__all__` updated.
 - [ ] `anomalib.data.MyDataModule` resolves and works from the CLI `--data` flag.
-- [ ] Unit tests added under `tests/unit/data/datamodule/`.
+- [ ] Unit tests added under `tests/unit/data/datamodule/` (including path confinement tests if parsing external metadata).
 - [ ] If a new `DataFormat` was introduced, a matching `_generate_dummy_*_dataset` method was added to
       `DummyImageDatasetGenerator` in `tests/helpers/data.py`.
