@@ -3,6 +3,8 @@
 
 """Unit tests for KMeans clustering."""
 
+from unittest.mock import patch
+
 import torch
 
 from anomalib.models.components.cluster import KMeans
@@ -71,15 +73,14 @@ def test_kmeans_predict_consistency() -> None:
     assert new_predictions[0].item() == expected_label_first_point
     assert new_predictions[1].item() == expected_label_second_point
 
-from unittest.mock import patch
 
 def test_kmeans_early_exit() -> None:
     """Test that KMeans exits early if labels stop changing."""
     n_clusters = 2
     max_iter = 10
-    
+
     kmeans = KMeans(n_clusters=n_clusters, max_iter=max_iter)
-    
+
     # Create easily separable data that will converge quickly
     data = torch.cat(
         [
@@ -90,7 +91,7 @@ def test_kmeans_early_exit() -> None:
 
     with patch("torch.cdist", wraps=torch.cdist) as mock_cdist:
         kmeans.fit(data)
-        
+
         # It should exit early, so the number of iterations (and thus cdist calls)
         # should be less than max_iter + 1 (the final distance calculation)
         assert mock_cdist.call_count < max_iter + 1
