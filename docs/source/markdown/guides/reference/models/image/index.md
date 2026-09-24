@@ -138,6 +138,13 @@ Anomaly Detection Across Domains by Attending to Distorted Features
 Learning to Be a Transformer to Pinpoint Anomalies
 :::
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` MH-PatchCore
+:link: ./mh_patchcore
+:link-type: doc
+
+Covariance-Aware and Streaming-Compatible Industrial Anomaly Detection
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` PaDiM
 :link: ./padim
 :link-type: doc
@@ -239,6 +246,7 @@ WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation
 ./general_ad
 ./inp_former
 ./l2bt
+./mh_patchcore
 ./padim
 ./patchcore
 ./patchflow
