@@ -170,6 +170,8 @@ class TestAPI:
         export_kwargs: dict[str, Any] = {}
         if model_name == "glass":
             export_kwargs["input_size"] = (288, 288)
+        if model_name == "m_h_patchcore":
+            export_kwargs["input_size"] = (224, 224)
         if model_name in {"cfm", "c_f_m"}:
             export_kwargs["input_size"] = (224, 224)
             if export_type in {ExportType.ONNX, ExportType.OPENVINO}:
@@ -208,6 +210,14 @@ class TestAPI:
         extra_args = {}
         if model_name == "dfkde":
             extra_args["n_pca_components"] = 2
+        if model_name == "m_h_patchcore":
+            extra_args.update({
+                "backbone": "resnet18",
+                "pre_trained": False,
+                "pca_variance_ratio": 0.1,
+                "memory_bank_size": 16,
+                "local_coreset_size": 8,
+            })
         if model_name in {"cfm", "c_f_m"}:
             # Keep integration tests lightweight/stable (point ops are memory hungry).
             extra_args["num_group"] = 128
