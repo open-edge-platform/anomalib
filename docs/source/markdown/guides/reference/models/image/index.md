@@ -103,6 +103,13 @@ Exploring Intrinsic Normal Prototypes within a Single Image for Universal Anomal
 FastFlow: Unsupervised Anomaly Detection and Localization via 2D Normalizing Flows
 :::
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` FoundAD
+:link: ./foundad
+:link-type: doc
+
+Foundation Visual Encoders Are Secretly Few-Shot Anomaly Detectors
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` FRE
 :link: ./fre
 :link-type: doc
@@ -233,6 +240,7 @@ WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation
 ./dsr
 ./efficient_ad
 ./fastflow
+./foundad
 ./fre
 ./ganomaly
 ./glass
