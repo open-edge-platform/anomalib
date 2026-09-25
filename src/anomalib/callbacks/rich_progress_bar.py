@@ -34,7 +34,12 @@ except ImportError:
     try:
         from lightning.pytorch.callbacks.progress.rich_progress import RichProgressBar
     except ImportError:
-        RichProgressBar = object  # type: ignore[misc,assignment]
+
+        class RichProgressBar:  # type: ignore[no-redef]
+            """Dummy RichProgressBar class for when rich is not available."""
+
+            def __init__(self, *args, **kwargs) -> None:
+                """Initialize dummy RichProgressBar."""
 
 
 class _FixedRichProgressBar(RichProgressBar):
@@ -46,8 +51,10 @@ class _FixedRichProgressBar(RichProgressBar):
     the estimated total number of epochs derived from ``max_steps / num_training_batches``.
     """
 
-    est_max_epochs: int | None = None
-    val_desc: str = "Validation"
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.est_max_epochs: int | None = None
+        self.val_desc: str = "Validation"
 
     def _get_train_description(self, current_epoch: int) -> str:
         """Get the description for the training progress bar.
@@ -86,9 +93,6 @@ class MaxStepsProgressCallback(Callback):
         del pl_module  # Not used.
 
         if trainer.max_epochs is None or trainer.max_epochs >= 0:
-            return
-
-        if RichProgressBar is object:
             return
 
         progress_bar = getattr(trainer, "progress_bar_callback", None)
