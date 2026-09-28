@@ -56,10 +56,6 @@ def _prepare_efficient_ad_imagenet(project_path: Path) -> Path:
 
     # ImageFolder expects ``root/<class>/*.png``. A handful of solid images is enough
     # for the penultimate-batch ImageNette sampler used during training_step.
-    from PIL import Image
-
-    import numpy as np
-
     for class_name in ("n01440764", "n02102040"):
         class_dir = root / class_name
         class_dir.mkdir(parents=True, exist_ok=True)
