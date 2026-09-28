@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Test API.
@@ -8,22 +8,28 @@ Tests the models using API. The weight paths from the trained models are used fo
 
 import contextlib
 import sys
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from lightning import seed_everything
+from lightning.pytorch.trainer.states import TrainerFn
 
 from anomalib.data import AnomalibDataModule, MVTec3D, MVTecAD
 from anomalib.deploy import ExportType
 from anomalib.engine import Engine
 from anomalib.models import AnomalibModule, get_model, list_models
 
+_FIT_CACHE: dict[str, Path] = {}
 
-def models() -> set[str]:
-    """Return all available models."""
-    return list_models()
+
+def models() -> list[Any]:
+    """Return all available models, marking intentionally heavy cases."""
+    return [
+        pytest.param(name, marks=pytest.mark.slow) if name == "efficient_ad" else name for name in sorted(list_models())
+    ]
 
 
 def export_types() -> list[ExportType]:
@@ -42,113 +48,175 @@ def increased_recursion_limit(limit: int = 10000) -> Generator[None, None, None]
         sys.setrecursionlimit(old_limit)
 
 
+def _make_required_dataset(model_name: str, make_dummy_dataset: Callable[[str], Path]) -> None:
+    """Generate the dummy dataset required by a model."""
+    make_dummy_dataset("mvtecad")
+    if model_name in {"cfm", "c_f_m"}:
+        make_dummy_dataset("mvtec_3d")
+
+
+def _ensure_fit(
+    model_name: str,
+    dataset_path: Path,
+    project_path: Path,
+) -> tuple[AnomalibModule, AnomalibDataModule, Engine, Path]:
+    """Fit a model once and return fresh API objects with its cached checkpoint.
+
+    The module cache is intentionally local to this test file. Stage tests must
+    not delete cached checkpoints because later stages reuse them.
+    """
+    if model_name not in _FIT_CACHE:
+        seed_everything(0, workers=True)
+    model, dataset, engine = TestAPI._get_objects(model_name, dataset_path, project_path)  # noqa: SLF001
+    if model_name not in _FIT_CACHE:
+        engine.fit(model=model, datamodule=dataset)
+        matches = list(
+            project_path.glob(f"{model.name}/{dataset.name}/dummy/*/weights/lightning/model.ckpt"),
+        )
+        if not matches:
+            msg = f"No checkpoint produced for {model_name}"
+            raise FileNotFoundError(msg)
+        _FIT_CACHE[model_name] = matches[0].resolve()
+    return model, dataset, engine, _FIT_CACHE[model_name]
+
+
 class TestAPI:
     """Do sanity check on all models."""
 
     @pytest.mark.parametrize("model_name", models())
-    def test_fit(self, model_name: str, dataset_path: Path, project_path: Path) -> None:
+    @staticmethod
+    def test_fit(
+        model_name: str,
+        dataset_path: Path,
+        project_path: Path,
+        make_dummy_dataset: Callable[[str], Path],
+    ) -> None:
         """Fit the model and save checkpoint.
 
         Args:
             model_name (str): Name of the model.
             dataset_path (Path): Root to dataset from fixture.
             project_path (Path): Path to temporary project folder from fixture.
+            make_dummy_dataset (Callable[[str], Path]): Lazy dummy dataset factory.
         """
-        model, dataset, engine = self._get_objects(
-            model_name=model_name,
-            dataset_path=dataset_path,
-            project_path=project_path,
-        )
-        engine.fit(model=model, datamodule=dataset)
+        _make_required_dataset(model_name, make_dummy_dataset)
+        _ensure_fit(model_name, dataset_path, project_path)
 
     @pytest.mark.parametrize("model_name", models())
-    def test_test(self, model_name: str, dataset_path: Path, project_path: Path) -> None:
+    @staticmethod
+    def test_test(
+        model_name: str,
+        dataset_path: Path,
+        project_path: Path,
+        make_dummy_dataset: Callable[[str], Path],
+    ) -> None:
         """Test model from checkpoint.
 
         Args:
             model_name (str): Name of the model.
             dataset_path (Path): Root to dataset from fixture.
             project_path (Path): Path to temporary project folder from fixture.
+            make_dummy_dataset (Callable[[str], Path]): Lazy dummy dataset factory.
         """
-        model, dataset, engine = self._get_objects(
-            model_name=model_name,
-            dataset_path=dataset_path,
-            project_path=project_path,
-        )
+        _make_required_dataset(model_name, make_dummy_dataset)
+        model, dataset, engine, ckpt = _ensure_fit(model_name, dataset_path, project_path)
         engine.test(
             model=model,
             datamodule=dataset,
-            ckpt_path=f"{project_path}/{model.name}/{dataset.name}/dummy/v0/weights/lightning/model.ckpt",
+            ckpt_path=ckpt,
         )
 
     @pytest.mark.parametrize("model_name", models())
-    def test_train(self, model_name: str, dataset_path: Path, project_path: Path) -> None:
+    @staticmethod
+    def test_train(
+        model_name: str,
+        dataset_path: Path,
+        project_path: Path,
+        make_dummy_dataset: Callable[[str], Path],
+    ) -> None:
         """Train model from checkpoint.
 
         Args:
             model_name (str): Name of the model.
             dataset_path (Path): Root to dataset from fixture.
             project_path (Path): Path to temporary project folder from fixture.
+            make_dummy_dataset (Callable[[str], Path]): Lazy dummy dataset factory.
         """
-        model, dataset, engine = self._get_objects(
-            model_name=model_name,
-            dataset_path=dataset_path,
-            project_path=project_path,
+        _make_required_dataset(model_name, make_dummy_dataset)
+        model, dataset, _, ckpt = _ensure_fit(model_name, dataset_path, project_path)
+        resume_engine = Engine(
+            logger=False,
+            default_root_dir=project_path,
+            max_epochs=1,
+            devices=1,
+            limit_train_batches=1,
+            limit_val_batches=2,
+            limit_test_batches=2,
+            max_steps=70000 if model_name == "efficient_ad" else -1,
         )
-        engine.train(
+        resume_engine.train(
             model=model,
             datamodule=dataset,
-            ckpt_path=f"{project_path}/{model.name}/{dataset.name}/dummy/v0/weights/lightning/model.ckpt",
+            ckpt_path=ckpt,
         )
 
     @pytest.mark.parametrize("model_name", models())
-    def test_validate(self, model_name: str, dataset_path: Path, project_path: Path) -> None:
+    @staticmethod
+    def test_validate(
+        model_name: str,
+        dataset_path: Path,
+        project_path: Path,
+        make_dummy_dataset: Callable[[str], Path],
+    ) -> None:
         """Validate model from checkpoint.
 
         Args:
             model_name (str): Name of the model.
             dataset_path (Path): Root to dataset from fixture.
             project_path (Path): Path to temporary project folder from fixture.
+            make_dummy_dataset (Callable[[str], Path]): Lazy dummy dataset factory.
         """
-        model, dataset, engine = self._get_objects(
-            model_name=model_name,
-            dataset_path=dataset_path,
-            project_path=project_path,
-        )
+        _make_required_dataset(model_name, make_dummy_dataset)
+        model, dataset, engine, ckpt = _ensure_fit(model_name, dataset_path, project_path)
         engine.validate(
             model=model,
             datamodule=dataset,
-            ckpt_path=f"{project_path}/{model.name}/{dataset.name}/dummy/v0/weights/lightning/model.ckpt",
+            ckpt_path=ckpt,
         )
 
     @pytest.mark.parametrize("model_name", models())
-    def test_predict(self, model_name: str, dataset_path: Path, project_path: Path) -> None:
+    @staticmethod
+    def test_predict(
+        model_name: str,
+        dataset_path: Path,
+        project_path: Path,
+        make_dummy_dataset: Callable[[str], Path],
+    ) -> None:
         """Predict using model from checkpoint.
 
         Args:
             model_name (str): Name of the model.
             dataset_path (Path): Root to dataset from fixture.
             project_path (Path): Path to temporary project folder from fixture.
+            make_dummy_dataset (Callable[[str], Path]): Lazy dummy dataset factory.
         """
-        model, datamodule, engine = self._get_objects(
-            model_name=model_name,
-            dataset_path=dataset_path,
-            project_path=project_path,
-        )
+        _make_required_dataset(model_name, make_dummy_dataset)
+        model, datamodule, engine, ckpt = _ensure_fit(model_name, dataset_path, project_path)
         engine.predict(
             model=model,
-            ckpt_path=f"{project_path}/{model.name}/{datamodule.name}/dummy/v0/weights/lightning/model.ckpt",
+            ckpt_path=ckpt,
             datamodule=datamodule,
         )
 
     @pytest.mark.parametrize("model_name", models())
     @pytest.mark.parametrize("export_type", export_types())
+    @staticmethod
     def test_export(
-        self,
         model_name: str,
         export_type: ExportType,
         dataset_path: Path,
         project_path: Path,
+        make_dummy_dataset: Callable[[str], Path],
     ) -> None:
         """Export model from checkpoint.
 
@@ -157,12 +225,10 @@ class TestAPI:
             export_type (ExportType): Framework to export to.
             dataset_path (Path): Root to dataset from fixture.
             project_path (Path): Path to temporary project folder from fixture.
+            make_dummy_dataset (Callable[[str], Path]): Lazy dummy dataset factory.
         """
-        model, dataset, engine = self._get_objects(
-            model_name=model_name,
-            dataset_path=dataset_path,
-            project_path=project_path,
-        )
+        _make_required_dataset(model_name, make_dummy_dataset)
+        model, _, engine, ckpt = _ensure_fit(model_name, dataset_path, project_path)
 
         # Some models require a fixed input size for ONNX export because they
         # use ops (e.g. kornia gaussian_blur2d) that ONNX cannot trace with
@@ -179,7 +245,7 @@ class TestAPI:
         with increased_recursion_limit() if model_name == "csflow" else contextlib.nullcontext():
             engine.export(
                 model=model,
-                ckpt_path=f"{project_path}/{model.name}/{dataset.name}/dummy/v0/weights/lightning/model.ckpt",
+                ckpt_path=ckpt,
                 export_type=export_type,
                 **export_kwargs,
             )
@@ -222,6 +288,9 @@ class TestAPI:
                 # Keep parity with other models (and reduce runtime).
                 train_batch_size=1,
             )
+            dataset.setup(TrainerFn.FITTING)
+            # Papers over NaN mask paths from the dummy generator/path validator until fixed upstream.
+            dataset.train_data.samples["mask_path"] = dataset.train_data.samples["mask_path"].fillna("")
         else:
             # EfficientAd requires that the batch size be lesser than the number of images in the dataset.
             # This is so that the LR step size is not 0.
@@ -243,6 +312,9 @@ class TestAPI:
             default_root_dir=project_path,
             max_epochs=1,
             devices=1,
+            limit_train_batches=2,
+            limit_val_batches=2,
+            limit_test_batches=2,
             # TODO(ashwinvaidya17): Fix these Edge cases
             # https://github.com/open-edge-platform/anomalib/issues/1478
             max_steps=70000 if model_name == "efficient_ad" else -1,
