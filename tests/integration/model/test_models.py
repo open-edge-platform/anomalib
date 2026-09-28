@@ -25,11 +25,9 @@ from anomalib.models import AnomalibModule, get_model, list_models
 _FIT_CACHE: dict[str, Path] = {}
 
 
-def models() -> list[Any]:
-    """Return all available models, marking intentionally heavy cases."""
-    return [
-        pytest.param(name, marks=pytest.mark.slow) if name == "efficient_ad" else name for name in sorted(list_models())
-    ]
+def models() -> set[str]:
+    """Return all available models."""
+    return list_models()
 
 
 def export_types() -> list[ExportType]:
