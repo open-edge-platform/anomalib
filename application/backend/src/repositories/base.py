@@ -1,8 +1,8 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import abc
-from collections.abc import AsyncGenerator, Callable
-from typing import Any, TypeVar
+from collections.abc import AsyncGenerator, AsyncIterator, Callable, Sequence
+from typing import Any, TypeVar, cast
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio.session import AsyncSession
@@ -102,7 +102,7 @@ class BaseRepository[ModelType, SchemaType](metaclass=abc.ABCMeta):
         query = self._get_filter_query(extra_filters=extra_filters, expressions=expressions)
         query = query.limit(limit).offset(offset)
         results = await self.db.execute(query)
-        scalars = results.scalars().all()
+        scalars: Sequence[SchemaType] = results.scalars().all()
         return [self.from_schema(result) for result in scalars]
 
     async def get_all_streaming(
@@ -124,7 +124,7 @@ class BaseRepository[ModelType, SchemaType](metaclass=abc.ABCMeta):
         """
         query = self._get_filter_query(extra_filters=extra_filters, expressions=expressions)
         result = await self.db.stream(query.execution_options(yield_per=batch_size))
-        async for row in result.scalars():
+        async for row in cast(AsyncIterator[SchemaType], result.scalars()):
             yield self.from_schema(row)
 
     async def save(self, item: ModelType) -> ModelType:
