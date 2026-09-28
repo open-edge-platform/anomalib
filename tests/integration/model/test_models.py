@@ -13,9 +13,11 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
 
+import numpy as np
 import pytest
 from lightning import seed_everything
 from lightning.pytorch.trainer.states import TrainerFn
+from PIL import Image
 
 from anomalib.data import AnomalibDataModule, MVTec3D, MVTecAD
 from anomalib.deploy import ExportType
@@ -44,6 +46,27 @@ def increased_recursion_limit(limit: int = 10000) -> Generator[None, None, None]
         yield
     finally:
         sys.setrecursionlimit(old_limit)
+
+
+def _prepare_efficient_ad_imagenet(project_path: Path) -> Path:
+    """Create a tiny ImageFolder tree so EfficientAd skips the ImageNette download."""
+    root = project_path / "efficient_ad_imagenette"
+    if root.is_dir():
+        return root
+
+    # ImageFolder expects ``root/<class>/*.png``. A handful of solid images is enough
+    # for the penultimate-batch ImageNette sampler used during training_step.
+    from PIL import Image
+
+    import numpy as np
+
+    for class_name in ("n01440764", "n02102040"):
+        class_dir = root / class_name
+        class_dir.mkdir(parents=True, exist_ok=True)
+        for index in range(4):
+            image = Image.fromarray(np.full((64, 64, 3), index * 40, dtype=np.uint8))
+            image.save(class_dir / f"{index:03d}.png")
+    return root
 
 
 def _make_required_dataset(model_name: str, make_dummy_dataset: Callable[[str], Path]) -> None:
@@ -272,6 +295,9 @@ class TestAPI:
         extra_args = {}
         if model_name == "dfkde":
             extra_args["n_pca_components"] = 2
+        if model_name == "efficient_ad":
+            # Avoid downloading the multi-GB ImageNette tarball on CI (~50+ min).
+            extra_args["imagenet_dir"] = _prepare_efficient_ad_imagenet(project_path)
         if model_name in {"cfm", "c_f_m"}:
             # Keep integration tests lightweight/stable (point ops are memory hungry).
             extra_args["num_group"] = 128
