@@ -3,7 +3,6 @@
 
 """Fixtures for the entire test suite."""
 
-import shutil
 from collections.abc import Generator
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -29,6 +28,9 @@ def project_path() -> Generator[Path, None, None]:
 
     # Create the temporary directory in the root directory of the project.
     # This is to access the test files in the project directory.
+    # Only remove this session's TemporaryDirectory on exit — never wipe ``tmp/``
+    # wholesale. Nested pytest sessions (e.g. lazy-fixture meta-tests) also create
+    # siblings under ``tmp/``; deleting the parent would erase their (and our) data.
     tmp_dir = root_dir / "tmp"
     tmp_dir.mkdir(exist_ok=True)
 
@@ -37,9 +39,6 @@ def project_path() -> Generator[Path, None, None]:
         # Restrict permissions (read and write for owner only)
         project_path.chmod(0o700)
         yield project_path
-
-    # Clean up the temporary directory.
-    shutil.rmtree(tmp_dir)
 
 
 @pytest.fixture(scope="session", autouse=True)

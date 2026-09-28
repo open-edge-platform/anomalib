@@ -43,8 +43,10 @@ def build_make_dummy_dataset(dataset_path: Path) -> Callable[[str], Path]:
 
     def _make(data_format: str) -> Path:
         key = data_format
-        if key in created:
+        # Regenerate if a prior wipe left the format marked created but missing.
+        if key in created and (dataset_path / key).exists():
             return dataset_path
+        created.discard(key)
 
         if key in _VIDEO_FORMATS or key in {"ucsdped", "avenue", "shanghaitech"}:
             DummyVideoDatasetGenerator(
