@@ -21,8 +21,12 @@ def _dataset_names() -> list[str]:
 
 
 @pytest.fixture(scope="session")
-def project_path() -> Generator[Path, None, None]:
-    """Return a temporary directory path that is used as the project directory for the entire test."""
+def project_path(pytestconfig: pytest.Config) -> Generator[Path, None, None]:
+    """Return a temporary directory path that is used as the project directory for the entire test.
+
+    Each pytest-xdist worker gets its own subdirectory under ``tmp/``. Only that
+    subdirectory is cleaned up so parallel workers do not delete each other's trees.
+    """
     # Get the root directory of the project
     root_dir = Path(__file__).parent.parent
 
@@ -34,7 +38,10 @@ def project_path() -> Generator[Path, None, None]:
     tmp_dir = root_dir / "tmp"
     tmp_dir.mkdir(exist_ok=True)
 
-    with TemporaryDirectory(dir=tmp_dir) as tmp_sub_dir:
+    workerinput = getattr(pytestconfig, "workerinput", None)
+    worker_id = workerinput["workerid"] if workerinput else "master"
+
+    with TemporaryDirectory(prefix=f"anomalib-{worker_id}-", dir=tmp_dir) as tmp_sub_dir:
         project_path = Path(tmp_sub_dir)
         # Restrict permissions (read and write for owner only)
         project_path.chmod(0o700)
@@ -43,7 +50,11 @@ def project_path() -> Generator[Path, None, None]:
 
 @pytest.fixture(scope="session", autouse=True)
 def _limit_torch_threads() -> None:
-    """Limit PyTorch to one thread during tests."""
+    """Limit PyTorch to one thread during tests.
+
+    Avoids CPU oversubscription when pytest-xdist runs many workers, each of which
+    would otherwise spawn many BLAS/OpenMP threads.
+    """
     torch.set_num_threads(1)
 
 
