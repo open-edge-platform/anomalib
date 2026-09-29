@@ -132,8 +132,11 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
         super().__init__()
         logger.info("Initializing %s model.", self.__class__.__name__)
 
-        # Components are restored from safe checkpoint data below; evaluator and
-        # visualizer configuration is intentionally rebuilt from model defaults.
+        # Live module instances are not pickled into hyper_parameters. Enable /
+        # disable flags and PreProcessor / PostProcessor plain-data configs are
+        # restored from the checkpoint below. Evaluator and Visualizer
+        # configuration is intentionally not serialized: pass the same instances
+        # (or ``False``) to ``load_from_checkpoint`` when you need them preserved.
         self.save_hyperparameters(ignore=["pre_processor", "post_processor", "evaluator", "visualizer"])
         self.model: nn.Module
         self.loss: nn.Module
@@ -180,6 +183,12 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
         """Save safe component configuration and plain-data hyperparameters."""
         super().on_save_checkpoint(checkpoint)
         checkpoint["hyper_parameters"] = paths_to_strings(checkpoint.get("hyper_parameters", {}))
+        checkpoint["anomalib_components_enabled"] = {
+            "pre_processor": self.pre_processor is not None,
+            "post_processor": self.post_processor is not None,
+            "evaluator": self.evaluator is not None,
+            "visualizer": self.visualizer is not None,
+        }
         for checkpoint_key, component in self._checkpointable_components().items():
             if hasattr(component, "checkpoint_config"):
                 checkpoint[checkpoint_key] = component.checkpoint_config()
@@ -192,10 +201,30 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
     def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
         """Restore component configuration from safe plain data."""
         super().on_load_checkpoint(checkpoint)
+        self._restore_component_enabled_flags(checkpoint.get("anomalib_components_enabled"))
         for checkpoint_key, component in self._checkpointable_components().items():
             config = checkpoint.get(checkpoint_key)
             if config is not None and hasattr(component, "load_checkpoint_config"):
                 component.load_checkpoint_config(config)
+
+    def _restore_component_enabled_flags(self, flags: dict[str, bool] | None) -> None:
+        """Apply plain-boolean enable/disable flags saved with the checkpoint.
+
+        ``load_from_checkpoint`` rebuilds components from constructor defaults
+        because live instances are excluded from ``hyper_parameters``. Without
+        these flags, a model saved with ``pre_processor=False`` (and likewise
+        for the other components) would come back with every default enabled.
+        """
+        if not flags:
+            return
+        if not flags.get("pre_processor", True):
+            self.pre_processor = None
+        if not flags.get("post_processor", True):
+            self.post_processor = None
+        if not flags.get("evaluator", True):
+            self.evaluator = None
+        if not flags.get("visualizer", True):
+            self.visualizer = None
 
     def _checkpointable_components(self) -> dict[str, nn.Module]:
         """Map checkpoint keys to components that may implement the safe-config hooks.
@@ -205,7 +234,8 @@ class AnomalibModule(ExportMixin, pl.LightningModule, ABC):
         ``PreProcessor`` and ``PostProcessor`` do). Custom components that do
         not (e.g. a bare ``nn.Module``) are skipped rather than raising, since
         both ``pre_processor`` and ``post_processor`` publicly accept any
-        ``nn.Module``.
+        ``nn.Module``. Evaluator and Visualizer are never included here; pass
+        them explicitly to ``load_from_checkpoint`` when non-default.
         """
         components: dict[str, nn.Module | None] = {
             "anomalib_pre_processor_config": self.pre_processor,

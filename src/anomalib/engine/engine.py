@@ -316,12 +316,20 @@ class Engine:
     def _ensure_checkpoint_io_plugin(self, model: AnomalibModule) -> None:
         """Install or refresh ``AnomalibCheckpointIO`` with the model's safe globals.
 
-        When the user has not supplied a ``CheckpointIO``, installs
+        When the user has not supplied a ``CheckpointIO`` (via ``plugins`` or a
+        strategy that already sets ``checkpoint_io``), installs
         ``AnomalibCheckpointIO``. When an ``AnomalibCheckpointIO`` is already
-        present (in cache or on a live trainer), updates its
+        present (in cache, on the strategy, or on a live trainer), updates its
         ``extra_safe_globals`` from ``model.checkpoint_safe_globals()``.
         """
         extras = list(model.checkpoint_safe_globals())
+        strategy_io = self._strategy_checkpoint_io()
+        if strategy_io is not None:
+            # Lightning rejects CheckpointIO set on both strategy and plugins.
+            if isinstance(strategy_io, AnomalibCheckpointIO):
+                strategy_io.extra_safe_globals = extras
+            return
+
         plugins = self._cache.args.get("plugins")
         if plugins is None:
             plugins_list: list[Any] = []
@@ -346,6 +354,18 @@ class Engine:
             live_io = self._trainer.strategy.checkpoint_io
             if isinstance(live_io, AnomalibCheckpointIO):
                 live_io.extra_safe_globals = extras
+
+    def _strategy_checkpoint_io(self) -> CheckpointIO | None:
+        """Return a user-supplied ``CheckpointIO`` on the strategy, if any.
+
+        Lightning strategies expose a default ``checkpoint_io`` via a property
+        even when the caller did not pass one. Inspect the private
+        ``_checkpoint_io`` slot so we only treat an explicitly configured IO as
+        user-supplied (and avoid installing a conflicting plugin).
+        """
+        strategy = self._cache.args.get("strategy")
+        checkpoint_io = getattr(strategy, "_checkpoint_io", None)
+        return checkpoint_io if isinstance(checkpoint_io, CheckpointIO) else None
 
     def _setup_anomalib_callbacks(self) -> None:
         """Set up callbacks for the trainer."""

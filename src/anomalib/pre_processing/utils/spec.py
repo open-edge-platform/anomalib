@@ -76,8 +76,10 @@ def spec_to_transform(spec: TransformSpec | None) -> Transform | None:
         Reconstructed transform, or ``None``.
 
     Raises:
-        ValueError: If the specification is malformed, refers to an
-            unregistered transform, or has invalid constructor arguments.
+        TypeError: If ``spec`` is not a mapping with ``class_path`` /
+            ``init_args``, or those fields have the wrong types.
+        ValueError: If ``class_path`` is unregistered or constructor arguments
+            cannot be decoded for the target transform.
     """
     if spec is None:
         return None

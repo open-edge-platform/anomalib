@@ -11,6 +11,7 @@ import pytest
 import torch
 from lightning.fabric.plugins.io.torch_io import TorchCheckpointIO
 from lightning.pytorch import Trainer
+from lightning.pytorch.strategies import SingleDeviceStrategy
 from torch import nn
 from torchvision.transforms.v2 import Resize
 
@@ -127,6 +128,41 @@ def test_engine_preserves_user_checkpoint_io(tmp_path: Path) -> None:
     assert not isinstance(engine.trainer.strategy.checkpoint_io, AnomalibCheckpointIO)
 
 
+def test_engine_preserves_strategy_checkpoint_io(tmp_path: Path) -> None:
+    """Engine does not install a plugin when the strategy already has CheckpointIO."""
+    user_io = TorchCheckpointIO()
+    engine = Engine(
+        default_root_dir=tmp_path,
+        logger=False,
+        strategy=SingleDeviceStrategy(checkpoint_io=user_io),
+    )
+    engine._setup_trainer(Padim())  # noqa: SLF001
+
+    assert engine.trainer.strategy.checkpoint_io is user_io
+    assert not isinstance(engine.trainer.strategy.checkpoint_io, AnomalibCheckpointIO)
+
+
+def test_disabled_components_round_trip(tmp_path: Path) -> None:
+    """Boolean ``False`` component flags survive ``load_from_checkpoint``."""
+    model = Padim(
+        pre_processor=False,
+        post_processor=False,
+        evaluator=False,
+        visualizer=False,
+    )
+    trainer = Trainer(max_epochs=1, logger=False, barebones=True)
+    trainer.strategy.connect(model)
+    checkpoint_path = tmp_path / "disabled.ckpt"
+    trainer.save_checkpoint(checkpoint_path)
+
+    loaded = Padim.load_from_checkpoint(checkpoint_path, weights_only=True)
+
+    assert loaded.pre_processor is None
+    assert loaded.post_processor is None
+    assert loaded.evaluator is None
+    assert loaded.visualizer is None
+
+
 def test_vlmad_declares_model_name_safe_global() -> None:
     """VlmAd allowlists ModelName for weights_only checkpoint restores."""
     assert ModelName in VlmAd.checkpoint_safe_globals()
@@ -156,8 +192,6 @@ def test_custom_preprocessor_round_trips_as_plain_data(tmp_path: Path) -> None:
 
 def test_path_hyperparameters_are_saved_as_strings(tmp_path: Path) -> None:
     """Path hyperparameters load safely and are reconstructed by constructors."""
-    from anomalib.models import EfficientAd
-
     model = EfficientAd(imagenet_dir=tmp_path / "imagenette")
     trainer = Trainer(max_epochs=1, logger=False, barebones=True)
     trainer.strategy.connect(model)

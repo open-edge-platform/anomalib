@@ -10,6 +10,7 @@ from torchvision.transforms.v2 import InterpolationMode
 
 import anomalib.models
 from anomalib.data.transforms import ExportableCenterCrop, SquarePad
+from anomalib.data.utils.generators.perlin import PerlinAnomalyGenerator
 from anomalib.models import __all__ as model_names
 from anomalib.pre_processing.utils._transform_registry import TRANSFORM_REGISTRY
 from anomalib.pre_processing.utils.spec import spec_to_transform, transform_to_spec
@@ -66,8 +67,6 @@ def test_rejects_unsupported_transform() -> None:
 
 def test_rejects_unregistered_anomalib_transform() -> None:
     """Serializer rejects supported-namespace transforms outside the registry."""
-    from anomalib.data.utils.generators.perlin import PerlinAnomalyGenerator
-
     with pytest.raises(ValueError, match="Unsupported transform class"):
         transform_to_spec(PerlinAnomalyGenerator())
 

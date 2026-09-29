@@ -3,11 +3,11 @@
 
 """Checkpoint IO plugin that allowlists anomalib types for safe loading."""
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from typing import Any
 
 from lightning.fabric.plugins.io.torch_io import TorchCheckpointIO
-from lightning.fabric.utilities.types import _PATH
+from lightning.fabric.utilities.types import _MAP_LOCATION_TYPE, _PATH
 from typing_extensions import override
 
 from anomalib.utils.serialization import anomalib_safe_globals
@@ -34,15 +34,15 @@ class AnomalibCheckpointIO(TorchCheckpointIO):
     def load_checkpoint(
         self,
         path: _PATH,
-        map_location: Callable | None = lambda storage, _loc: storage,
+        map_location: _MAP_LOCATION_TYPE = None,
         weights_only: bool = True,
     ) -> dict[str, Any]:
         """Load a checkpoint with anomalib types allowlisted for ``weights_only`` loads.
 
         Args:
             path: Path to the checkpoint file.
-            map_location: Storage remapping callable passed to ``torch.load``.
-                Defaults to identity mapping.
+            map_location: Device mapping passed to ``torch.load`` (device, string,
+                mapping, or callable). Defaults to ``None``.
             weights_only: Whether to restrict unpickling to tensors and allowlisted
                 types. Defaults to ``True``.
 
