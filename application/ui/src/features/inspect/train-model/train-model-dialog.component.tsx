@@ -19,7 +19,7 @@ import {
 import { useSearchParams } from 'react-router';
 import { toast as sonnerToast } from 'sonner';
 
-import { TrainableModelListBox } from './trainable-model-list-box.component';
+import { TrainableModelListBox } from './trainable-model-list-box/trainable-model-list-box.component';
 import { TrainingDevicePicker, useTrainingDevice } from './training-device-picker.component';
 import { getDeviceKey } from './utils/device-metadata';
 

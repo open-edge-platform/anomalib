@@ -31,15 +31,13 @@
 
 ---
 
-> 🌟 **Announcing v2.6.1 Release!** 🌟
+> 🌟 **Announcing v2.6.2 Release!** 🌟
 >
-> This patch release migrates the Kaputt dataset to Hugging Face and fixes several data-handling and metric bugs.
+> This patch release hardens `Tabular.from_file()` by restricting it to safe, data-only file formats.
 >
 > Key Changes
 >
-> - **Kaputt on Hugging Face**: Dataset now downloads from the official [Hugging Face repository](https://huggingface.co/datasets/amazon/kaputt) instead of requiring a manual request form.
-> - **Security fix**: Archive extraction now blocks tar/zip path traversal on all supported Python versions.
-> - **Bug fixes**: Random tiling now honours the configured tile width, `seed=0` is treated as a valid seed in `random_split`, and the binary classification curve metric is faster.
+> - **Security / API change**: `Tabular.from_file()` now only accepts `csv`, `json`, and `parquet`. Formats such as `pickle` and `hdf` are rejected because loading them can execute arbitrary code. Load those files yourself and pass a DataFrame to `Tabular(...)`.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 
@@ -53,7 +51,7 @@ Anomalib is a deep learning library that aims to collect state-of-the-art anomal
 
 ## Key features
 
-- Simple and modular API and CLI for training, inference, benchmarking, and hyperparameter optimization.
+- Simple and modular API and CLI for training, inference, and benchmarking.
 - The largest public collection of ready-to-use deep learning anomaly detection algorithms and benchmark datasets.
 - [**Lightning**](https://www.lightning.ai/) based model implementations to reduce boilerplate code and limit the implementation efforts to the bare essentials.
 - The majority of models can be exported to [**OpenVINO**](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html) Intermediate Representation (IR) for accelerated inference on Intel hardware.
@@ -269,20 +267,9 @@ engine.train(Stfpm(), datamodule=MVTecAD())
 anomalib train --model Padim --data MVTecAD --trainer.accelerator xpu --trainer.strategy xpu_single
 ```
 
-# ⚙️ Hyperparameter Optimization
-
-Anomalib supports hyperparameter optimization (HPO) using [Weights & Biases](https://wandb.ai/) and [Comet.ml](https://www.comet.com/).
-
-```bash
-# Run HPO with Weights & Biases
-anomalib hpo --backend WANDB --sweep_config tools/hpo/configs/wandb.yaml
-```
-
-> 📘 **Note:** For detailed HPO configuration, check our [HPO Documentation](https://open-edge-platform.github.io/anomalib/tutorials/hyperparameter_optimization.html).
-
 # 🧪 Experiment Management
 
-Track your experiments with popular logging platforms through [PyTorch Lightning loggers](https://pytorch-lightning.readthedocs.io/en/stable/extensions/logging.html):
+Track your experiments with popular logging platforms through [PyTorch Lightning loggers](https://lightning.ai/docs/pytorch/stable/extensions/logging.html):
 
 - 📊 Weights & Biases
 - 📈 Comet.ml

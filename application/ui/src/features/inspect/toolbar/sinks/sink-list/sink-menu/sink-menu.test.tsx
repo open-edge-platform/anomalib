@@ -1,14 +1,12 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
 import { toast as sonnerToast } from 'sonner';
 import { http } from 'src/api/utils';
 import { server } from 'src/msw-node-setup';
-import { TestProviders } from 'src/providers';
 
+import { render } from '../../../../../../../tests/utils';
 import { SinkMenu, SinkMenuProps } from './sink-menu.component';
-
-vi.mock('@anomalib-studio/hooks', () => ({ useProjectIdentifier: () => ({ projectId: '123' }) }));
 
 describe('SinkMenu', () => {
     beforeEach(() => {
@@ -21,11 +19,9 @@ describe('SinkMenu', () => {
         isConnected = false,
         onEdit = vi.fn(),
     }: Partial<SinkMenuProps>) => {
-        render(
-            <TestProviders>
-                <SinkMenu id={id} name={name} isConnected={isConnected} onEdit={onEdit} />
-            </TestProviders>
-        );
+        render(<SinkMenu id={id} name={name} isConnected={isConnected} onEdit={onEdit} />, {
+            route: '/projects/123/inspect',
+        });
     };
 
     beforeEach(async () => {

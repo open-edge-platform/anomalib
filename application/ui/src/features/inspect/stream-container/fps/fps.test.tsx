@@ -1,17 +1,12 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { cloneDeep } from 'lodash-es';
-import { MemoryRouter } from 'react-router';
 import { http } from 'src/api/utils';
 import { server } from 'src/msw-node-setup';
 
 import { getMockedMetrics } from '../../../../../mocks/mock-metrics';
 import { getMockedPipeline } from '../../../../../mocks/mock-pipeline';
+import { render } from '../../../../../tests/utils';
 import { Fps } from './fps.component';
-
-vi.mock('src/hooks/use-project-identifier.hook', () => ({
-    useProjectIdentifier: () => ({ projectId: 'project-123' }),
-}));
 
 describe('Fps', () => {
     const renderFps = ({
@@ -29,13 +24,7 @@ describe('Fps', () => {
                 response(200).json(getMockedPipeline(pipelineConfig ? pipelineConfig : {}))
             )
         );
-        return render(
-            <QueryClientProvider client={new QueryClient()}>
-                <MemoryRouter>
-                    <Fps projectId={'123'} />
-                </MemoryRouter>
-            </QueryClientProvider>
-        );
+        return render(<Fps projectId={'123'} />);
     };
 
     it('renders FPS value when metrics are available', async () => {

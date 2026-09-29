@@ -1,24 +1,19 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { renderHook, waitFor } from '@testing-library/react';
+import { waitFor } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { http } from 'src/api/utils';
 import { server } from 'src/msw-node-setup';
-import { TestProviders } from 'src/providers';
 import { queryClient } from 'src/query-client/query-client';
 
+import { renderHook } from '../../../../../tests/utils';
 import { useActivePipelineStatus } from './use-active-pipeline-status.hook';
-
-vi.mock('../../../../hooks/use-project-identifier.hook', () => ({
-    useProjectIdentifier: () => ({ projectId: 'project-id-123' }),
-}));
 
 describe('useActivePipelineStatus', () => {
     const mockProjectId = 'project-id-123';
 
-    const renderHookWithProviders = (projectId: string) =>
-        renderHook(() => useActivePipelineStatus(projectId), { wrapper: TestProviders });
+    const renderHookWithProviders = (projectId: string) => renderHook(() => useActivePipelineStatus(projectId));
 
     beforeEach(() => {
         vi.clearAllMocks();

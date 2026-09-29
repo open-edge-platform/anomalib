@@ -3,9 +3,8 @@
 
 import { Suspense, useState } from 'react';
 
-import { DialogContainer, ThemeProvider } from '@geti-ui/ui';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { DialogContainer } from '@geti-ui/ui';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { getMockedProject } from 'mocks/mock-project';
@@ -14,11 +13,8 @@ import { http } from 'src/api/utils';
 import { server } from 'src/msw-node-setup';
 import { vi } from 'vitest';
 
+import { render } from '../../../../../tests/utils';
 import { ConfirmationDialog } from './confirmation-dialog.component';
-
-vi.mock('src/hooks/use-project-identifier.hook', () => ({
-    useProjectIdentifier: () => ({ projectId: 'current-project-id' }),
-}));
 
 const ACTIVE_PROJECT_ID = 'active-project-id';
 const CURRENT_PROJECT_ID = 'current-project-id';
@@ -37,13 +33,7 @@ const renderConfirmationDialog = () => {
         );
     };
 
-    return render(
-        <QueryClientProvider client={new QueryClient()}>
-            <ThemeProvider>
-                <Harness />
-            </ThemeProvider>
-        </QueryClientProvider>
-    );
+    return render(<Harness />, { route: `/projects/${CURRENT_PROJECT_ID}/inspect` });
 };
 
 describe('ConfirmationDialog', () => {
