@@ -1,12 +1,14 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Tests for OpenVINO export with different compression types."""
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
+from torchvision.transforms.v2 import Resize
 
 from anomalib.data import MVTecAD
 from anomalib.deploy import CompressionType, ExportType
@@ -20,24 +22,26 @@ class TestOpenVINOExport:
 
     @pytest.fixture()
     @staticmethod
-    def setup_model_and_data(dataset_path: Path, project_path: Path) -> tuple[Padim, MVTecAD, Engine, Path]:
-        """Set up model, datamodule, and engine for testing.
+    def setup_model_and_data(
+        mvtecad_path: Path,
+        project_path: Path,
+        ckpt_path: Callable[[str], Path],
+    ) -> tuple[Padim, MVTecAD, Engine, Path, Path]:
+        """Set up model, datamodule, engine, and checkpoint for testing.
 
         Args:
-            dataset_path: Path to dataset from fixture
+            mvtecad_path: Path to MVTec AD dataset from fixture
             project_path: Path to temporary project folder from fixture
+            ckpt_path: Callable resolving a shared trained model checkpoint
 
         Returns:
-            Tuple of (model, datamodule, engine, export_root)
+            Tuple of (model, datamodule, engine, export_root, checkpoint_path)
         """
         model = Padim()
-        datamodule = MVTecAD(root=dataset_path / "mvtecad", category="dummy")
+        datamodule = MVTecAD(root=mvtecad_path, category="dummy", augmentations=Resize((256, 256)))
         engine = Engine(default_root_dir=project_path)
-
-        engine.fit(model=model, datamodule=datamodule)
-
         export_root = project_path / "exports"
-        return model, datamodule, engine, export_root
+        return model, datamodule, engine, export_root, ckpt_path("Padim")
 
     @staticmethod
     def test_export_openvino_no_compression(setup_model_and_data: tuple) -> None:
@@ -46,12 +50,13 @@ class TestOpenVINOExport:
         Args:
             setup_model_and_data: Fixture providing model, datamodule, engine, and export_root
         """
-        model, _, engine, export_root = setup_model_and_data
+        model, _, engine, export_root, checkpoint_path = setup_model_and_data
 
         exported_path = engine.export(
             model=model,
             export_type=ExportType.OPENVINO,
             export_root=export_root,
+            ckpt_path=checkpoint_path,
             model_file_name="model_no_compression",
             input_size=(256, 256),
         )
@@ -69,12 +74,13 @@ class TestOpenVINOExport:
         Args:
             setup_model_and_data: Fixture providing model, datamodule, engine, and export_root
         """
-        model, _, engine, export_root = setup_model_and_data
+        model, _, engine, export_root, checkpoint_path = setup_model_and_data
 
         exported_path = engine.export(
             model=model,
             export_type=ExportType.OPENVINO,
             export_root=export_root,
+            ckpt_path=checkpoint_path,
             model_file_name="model_fp16",
             input_size=(256, 256),
             compression_type=CompressionType.FP16,
@@ -98,12 +104,13 @@ class TestOpenVINOExport:
         Args:
             setup_model_and_data: Fixture providing model, datamodule, engine, and export_root
         """
-        model, _, engine, export_root = setup_model_and_data
+        model, _, engine, export_root, checkpoint_path = setup_model_and_data
 
         exported_path = engine.export(
             model=model,
             export_type=ExportType.OPENVINO,
             export_root=export_root,
+            ckpt_path=checkpoint_path,
             model_file_name="model_int8",
             input_size=(256, 256),
             compression_type=CompressionType.INT8,
@@ -125,12 +132,13 @@ class TestOpenVINOExport:
         Args:
             setup_model_and_data: Fixture providing model, datamodule, engine, and export_root
         """
-        model, datamodule, engine, export_root = setup_model_and_data
+        model, datamodule, engine, export_root, checkpoint_path = setup_model_and_data
 
         exported_path = engine.export(
             model=model,
             export_type=ExportType.OPENVINO,
             export_root=export_root,
+            ckpt_path=checkpoint_path,
             model_file_name="model_int8_ptq",
             input_size=(256, 256),
             compression_type=CompressionType.INT8_PTQ,
@@ -160,13 +168,14 @@ class TestOpenVINOExport:
         Args:
             setup_model_and_data: Fixture providing model, datamodule, engine, and export_root
         """
-        model, datamodule, engine, export_root = setup_model_and_data
+        model, datamodule, engine, export_root, checkpoint_path = setup_model_and_data
 
         # Test with default metric (should use F1Score automatically)
         exported_path = engine.export(
             model=model,
             export_type=ExportType.OPENVINO,
             export_root=export_root,
+            ckpt_path=checkpoint_path,
             model_file_name="model_int8_acq_default",
             input_size=(256, 256),
             compression_type=CompressionType.INT8_ACQ,
@@ -197,7 +206,7 @@ class TestOpenVINOExport:
         Args:
             setup_model_and_data: Fixture providing model, datamodule, engine, and export_root
         """
-        model, datamodule, engine, export_root = setup_model_and_data
+        model, datamodule, engine, export_root, checkpoint_path = setup_model_and_data
 
         # Test with custom metric
         metric = AUROC(fields=["pred_score", "gt_label"])
@@ -205,6 +214,7 @@ class TestOpenVINOExport:
             model=model,
             export_type=ExportType.OPENVINO,
             export_root=export_root,
+            ckpt_path=checkpoint_path,
             model_file_name="model_int8_acq_custom_metric",
             input_size=(256, 256),
             compression_type=CompressionType.INT8_ACQ,
@@ -235,13 +245,14 @@ class TestOpenVINOExport:
         Args:
             setup_model_and_data: Fixture providing model, datamodule, engine, and export_root
         """
-        model, datamodule, engine, export_root = setup_model_and_data
+        model, datamodule, engine, export_root, checkpoint_path = setup_model_and_data
 
         # Test with custom max_drop
         exported_path = engine.export(
             model=model,
             export_type=ExportType.OPENVINO,
             export_root=export_root,
+            ckpt_path=checkpoint_path,
             model_file_name="model_int8_acq_max_drop",
             input_size=(256, 256),
             compression_type=CompressionType.INT8_ACQ,
@@ -261,13 +272,14 @@ class TestOpenVINOExport:
         Args:
             setup_model_and_data: Fixture providing model, datamodule, engine, and export_root
         """
-        model, _, engine, export_root = setup_model_and_data
+        model, _, engine, export_root, checkpoint_path = setup_model_and_data
 
         with pytest.raises(ValueError, match="Datamodule must be provided"):
             engine.export(
                 model=model,
                 export_type=ExportType.OPENVINO,
                 export_root=export_root,
+                ckpt_path=checkpoint_path,
                 input_size=(256, 256),
                 compression_type=CompressionType.INT8_PTQ,
                 # datamodule not provided
@@ -280,13 +292,14 @@ class TestOpenVINOExport:
         Args:
             setup_model_and_data: Fixture providing model, datamodule, engine, and export_root
         """
-        model, _, engine, export_root = setup_model_and_data
+        model, _, engine, export_root, checkpoint_path = setup_model_and_data
 
         with pytest.raises(ValueError, match="Datamodule must be provided"):
             engine.export(
                 model=model,
                 export_type=ExportType.OPENVINO,
                 export_root=export_root,
+                ckpt_path=checkpoint_path,
                 input_size=(256, 256),
                 compression_type=CompressionType.INT8_ACQ,
                 # datamodule not provided
@@ -303,7 +316,7 @@ class TestOpenVINOExport:
         Args:
             setup_model_and_data: Fixture providing model, datamodule, engine, and export_root
         """
-        model, datamodule, engine, export_root = setup_model_and_data
+        model, datamodule, engine, export_root, checkpoint_path = setup_model_and_data
 
         # Test max_drop > 1
         with pytest.raises(ValueError, match="max_drop must be between 0 and 1"):
@@ -311,6 +324,7 @@ class TestOpenVINOExport:
                 model=model,
                 export_type=ExportType.OPENVINO,
                 export_root=export_root,
+                ckpt_path=checkpoint_path,
                 input_size=(256, 256),
                 compression_type=CompressionType.INT8_ACQ,
                 datamodule=datamodule,
@@ -323,6 +337,7 @@ class TestOpenVINOExport:
                 model=model,
                 export_type=ExportType.OPENVINO,
                 export_root=export_root,
+                ckpt_path=checkpoint_path,
                 input_size=(256, 256),
                 compression_type=CompressionType.INT8_ACQ,
                 datamodule=datamodule,
@@ -339,7 +354,7 @@ class TestOpenVINOExport:
         Args:
             setup_model_and_data: Fixture providing model, datamodule, engine, and export_root
         """
-        model, _, engine, export_root = setup_model_and_data
+        model, _, engine, export_root, checkpoint_path = setup_model_and_data
 
         # Should warn when max_drop is provided but compression type is not INT8_ACQ
         with pytest.warns(UserWarning, match="max_drop parameter is only used for CompressionType.INT8_ACQ"):
@@ -347,6 +362,7 @@ class TestOpenVINOExport:
                 model=model,
                 export_type=ExportType.OPENVINO,
                 export_root=export_root,
+                ckpt_path=checkpoint_path,
                 input_size=(256, 256),
                 compression_type=CompressionType.FP16,
                 max_drop=0.05,  # This should trigger warning
@@ -375,13 +391,14 @@ class TestOpenVINOExport:
             setup_model_and_data: Fixture providing model, datamodule, engine, and export_root
             caplog: Pytest fixture to capture log messages
         """
-        model, datamodule, engine, export_root = setup_model_and_data
+        model, datamodule, engine, export_root, checkpoint_path = setup_model_and_data
 
         # Should warn when max_drop > 0.1
         exported_path = engine.export(
             model=model,
             export_type=ExportType.OPENVINO,
             export_root=export_root,
+            ckpt_path=checkpoint_path,
             model_file_name="model_int8_acq_large_drop",
             input_size=(256, 256),
             compression_type=CompressionType.INT8_ACQ,
@@ -403,12 +420,13 @@ class TestOpenVINOExport:
         Args:
             setup_model_and_data: Fixture providing model, datamodule, engine, and export_root
         """
-        model, _, engine, export_root = setup_model_and_data
+        model, _, engine, export_root, checkpoint_path = setup_model_and_data
 
         exported_path = engine.export(
             model=model,
             export_type=ExportType.OPENVINO,
             export_root=export_root,
+            ckpt_path=checkpoint_path,
             model_file_name="model_with_kwargs",
             input_size=(256, 256),
             ov_kwargs={},  # Custom OpenVINO options

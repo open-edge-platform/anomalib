@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- 🔒 **security**: Checkpoint loading now defaults to `weights_only=True`, blocking arbitrary code execution from untrusted `.ckpt`. Checkpoints saved before this change that pickled live component objects in `hyper_parameters` will fail to load; pass `weights_only=False` once to migrate, or re-save under the new format. Custom `PreProcessor` subclasses and non-default `Evaluator` / `Visualizer` instances are not reconstructed automatically — pass them to `load_from_checkpoint(...)` (and override `checkpoint_config` / `load_checkpoint_config` for custom pre/post-processors) by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3801
+
 ## [v2.6.2] - 2026-09-11
 
 ### Added
