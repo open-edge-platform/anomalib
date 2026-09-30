@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Post-processing module for anomaly detection results.
@@ -17,6 +17,8 @@ Example:
     >>> post_processor = PostProcessor(image_sensitivity=0.5)
     >>> predictions = post_processor(anomaly_maps=anomaly_maps)
 """
+
+from typing import Any
 
 import torch
 from lightning import LightningModule, Trainer
@@ -97,6 +99,53 @@ class PostProcessor(nn.Module, Callback):
         self.image_max: torch.Tensor
         self.pixel_min: torch.Tensor
         self.pixel_max: torch.Tensor
+
+    @property
+    def _checkpoint_config_keys(self) -> tuple[str, ...]:
+        """Attribute names persisted by ``checkpoint_config``/``load_checkpoint_config``.
+
+        Override in a subclass that manages additional configuration (see
+        :class:`~anomalib.post_processing.MEBinPostProcessor`), typically by
+        extending the inherited tuple rather than replacing it.
+
+        Returns:
+            tuple[str, ...]: Attribute names to persist.
+        """
+        return (
+            "enable_normalization",
+            "enable_thresholding",
+            "enable_threshold_matching",
+            "image_sensitivity",
+            "pixel_sensitivity",
+        )
+
+    def checkpoint_config(self) -> dict[str, Any]:
+        """Get plain-data configuration to persist in a checkpoint.
+
+        Uses ``getattr`` rather than direct attribute access so that a subclass
+        which does not call ``super().__init__()`` can still be checkpointed
+        safely, instead of raising ``AttributeError`` during
+        ``on_save_checkpoint``. Threshold and normalization statistics are not
+        included here since they are already persisted via ``register_buffer``.
+
+        Override this method (together with :meth:`load_checkpoint_config`) in a
+        subclass that manages additional configuration, for example
+        :class:`~anomalib.post_processing.MEBinPostProcessor`.
+
+        Returns:
+            dict[str, Any]: Plain-data configuration.
+        """
+        return {key: getattr(self, key, None) for key in self._checkpoint_config_keys}
+
+    def load_checkpoint_config(self, config: dict[str, Any]) -> None:
+        """Restore configuration previously returned by :meth:`checkpoint_config`.
+
+        Args:
+            config (dict[str, Any]): Plain-data configuration to restore.
+        """
+        for key in self._checkpoint_config_keys:
+            if key in config:
+                setattr(self, key, config[key])
 
     def on_validation_batch_end(
         self,
