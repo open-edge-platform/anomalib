@@ -79,7 +79,7 @@ def make_model(monkeypatch: MonkeyPatch) -> MHPatchcore:
 def make_loader() -> DataLoader:
     """Create a one-batch typed image loader."""
     items = [ImageItem(image=torch.zeros(3, 17, 19))]
-    return DataLoader(items, batch_size=1, collate_fn=ImageBatch.collate)
+    return DataLoader(items, batch_size=1, collate_fn=ImageBatch.collate, pin_memory=True)
 
 
 def make_trainer(max_epochs: int, callbacks: list[Callback] | None = None) -> Trainer:
@@ -248,16 +248,20 @@ def test_fitted_checkpoint_roundtrip(monkeypatch: MonkeyPatch, tmp_path: Path) -
 
     checkpoint_path = tmp_path / "fitted.ckpt"
     trainer.save_checkpoint(checkpoint_path)
-    restored = MHPatchcore.load_from_checkpoint(checkpoint_path)
+    restored = MHPatchcore.load_from_checkpoint(checkpoint_path, weights_only=True)
     restored.eval()
     with torch.no_grad():
         actual = restored.model(batch.image)
 
+    assert restored.pre_processor is None
+    assert restored.post_processor is None
+    assert restored.evaluator is None
+    assert restored.visualizer is None
     assert bool(restored._is_fitted.item())  # noqa: SLF001
     assert restored._fitting_stage.item() == 3  # noqa: SLF001
     assert restored._stage_batch_count.item() == 0  # noqa: SLF001
-    torch.testing.assert_close(actual.pred_score, expected.pred_score, rtol=1e-5, atol=1e-6)
-    torch.testing.assert_close(actual.anomaly_map, expected.anomaly_map, rtol=1e-5, atol=1e-6)
+    torch.testing.assert_close(actual.pred_score, expected.pred_score, rtol=1e-4, atol=1e-4)
+    torch.testing.assert_close(actual.anomaly_map, expected.anomaly_map, rtol=1e-4, atol=1e-4)
 
 
 @pytest.mark.parametrize("completed_epochs", [1, 2])

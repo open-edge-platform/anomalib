@@ -215,11 +215,13 @@ class MHPatchcore(MemoryBankMixin, AnomalibModule):
             self.fit()
 
     def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
-        """Reject checkpoints captured in the middle of a fitting pass.
+        """Reject mid-pass checkpoints, then restore shared Anomalib state.
 
         Transient PCA, covariance, and merge-reduce accumulators are not
         serialized. Epoch-boundary and fully fitted checkpoints have a zero
-        stage batch count and can be restored safely.
+        stage batch count and can be restored safely. Calling ``super`` keeps
+        component enable/disable flags and safe post-processor config restore
+        from :class:`~anomalib.models.components.AnomalibModule`.
 
         Args:
             checkpoint (dict[str, Any]): Lightning checkpoint to validate.
@@ -235,6 +237,7 @@ class MHPatchcore(MemoryBankMixin, AnomalibModule):
                 "Resume from an epoch-boundary or fully fitted checkpoint."
             )
             raise RuntimeError(msg)
+        super().on_load_checkpoint(checkpoint)
 
     def validation_step(self, batch: Batch, *args, **kwargs) -> STEP_OUTPUT:
         """Generate anomaly predictions for a validation batch.
