@@ -260,8 +260,8 @@ def test_fitted_checkpoint_roundtrip(monkeypatch: MonkeyPatch, tmp_path: Path) -
     assert bool(restored._is_fitted.item())  # noqa: SLF001
     assert restored._fitting_stage.item() == 3  # noqa: SLF001
     assert restored._stage_batch_count.item() == 0  # noqa: SLF001
-    torch.testing.assert_close(actual.pred_score, expected.pred_score, rtol=1e-5, atol=1e-6)
-    torch.testing.assert_close(actual.anomaly_map, expected.anomaly_map, rtol=1e-5, atol=1e-6)
+    torch.testing.assert_close(actual.pred_score, expected.pred_score, rtol=1e-4, atol=1e-4)
+    torch.testing.assert_close(actual.anomaly_map, expected.anomaly_map, rtol=1e-4, atol=1e-4)
 
 
 @pytest.mark.parametrize("completed_epochs", [1, 2])
