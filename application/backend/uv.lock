@@ -75,8 +75,6 @@ dependencies = [
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/58/d9/22ce5786ac0c1653ae8b6c23bded02c1686d11f0dbb45b31ce128e0df985/aiohttp-3.14.3.tar.gz", hash = "sha256:9491196535a88924a60afd5b5f434b5b203b6cc616250878dbdb223a8f7844bc", size = 7971213, upload-time = "2026-07-23T01:57:27.037Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/57/be/5afd201cc0ab139029aadb75392efe85a293403d9dd3a3226161c21ce00c/aiohttp-3.14.3-cp313-cp313-android_21_arm64_v8a.whl", hash = "sha256:2e9878ae68e4a5f1c0abe4dd497dbc3d51946f5837b56759e2a02e78fa90ef86", size = 506269, upload-time = "2026-07-23T01:54:49.075Z" },
-    { url = "https://files.pythonhosted.org/packages/22/09/dec8189d62b45ade009f6792a2264b942a90cb88aeaf181239933cd72c3c/aiohttp-3.14.3-cp313-cp313-android_21_x86_64.whl", hash = "sha256:f3d2669fe7dec7fc359ecdb5984b29b50d85d5d00f8c1cb61de4f4a24ee42627", size = 515166, upload-time = "2026-07-23T01:54:51.894Z" },
     { url = "https://files.pythonhosted.org/packages/28/24/2854869d29ed8a8b19d74f9ec6629515f7e04d02dd329d9d179201e58e47/aiohttp-3.14.3-cp313-cp313-ios_13_0_arm64_iphoneos.whl", hash = "sha256:cc7cb243a68167172f48c1fd43cee91ec4b1d40cefd190edd43369d1a6bc9c82", size = 486263, upload-time = "2026-07-23T01:54:54.223Z" },
     { url = "https://files.pythonhosted.org/packages/d4/dd/57187c8be2a35aea65eaee3bd2c3dcbbcf0204f5106c89637e3610380cd1/aiohttp-3.14.3-cp313-cp313-ios_13_0_arm64_iphonesimulator.whl", hash = "sha256:78253b573e6ffab5028924fc98bc281aae05445969982a10864bc360dea2016c", size = 492299, upload-time = "2026-07-23T01:54:56.236Z" },
     { url = "https://files.pythonhosted.org/packages/b9/11/06ae6ed8f0d414edf4068861e233d8fe23ee699bfd4b3ceb8663db948a62/aiohttp-3.14.3-cp313-cp313-ios_13_0_x86_64_iphonesimulator.whl", hash = "sha256:7041d52c3a7fa20c9e8c182b534704abb19502c8bdcbde7ab23bfda6f642394f", size = 502235, upload-time = "2026-07-23T01:54:58.377Z" },
@@ -363,7 +361,7 @@ requires-dist = [
     { name = "timm" },
     { name = "torch", marker = "(sys_platform == 'linux' and extra == 'cu126') or (sys_platform == 'win32' and extra == 'cu126')", specifier = ">=2.6.0", index = "https://download.pytorch.org/whl/cu126", conflict = { package = "anomalib", extra = "cu126" } },
     { name = "torch", marker = "(sys_platform == 'linux' and extra == 'cu130') or (sys_platform == 'win32' and extra == 'cu130')", specifier = ">=2.9.0", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "anomalib", extra = "cu130" } },
-    { name = "torch", marker = "sys_platform == 'linux' and extra == 'rocm'", specifier = ">=2.10.0", index = "https://download.pytorch.org/whl/rocm7.0", conflict = { package = "anomalib", extra = "rocm" } },
+    { name = "torch", marker = "sys_platform == 'linux' and extra == 'rocm'", specifier = ">=2.13.0", index = "https://download.pytorch.org/whl/rocm7.2", conflict = { package = "anomalib", extra = "rocm" } },
     { name = "torch", marker = "(sys_platform == 'linux' and extra == 'xpu') or (sys_platform == 'win32' and extra == 'xpu')", specifier = ">=2.10.0", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "anomalib", extra = "xpu" } },
     { name = "torch", marker = "extra == 'cpu'", specifier = ">=2.6.0", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "anomalib", extra = "cpu" } },
     { name = "torchcodec", marker = "(sys_platform == 'linux' and extra == 'cu126') or (sys_platform == 'win32' and extra == 'cu126')", index = "https://download.pytorch.org/whl/cu126", conflict = { package = "anomalib", extra = "cu126" } },
@@ -374,7 +372,7 @@ requires-dist = [
     { name = "torchmetrics", specifier = ">=1.8.2" },
     { name = "torchvision", marker = "(sys_platform == 'linux' and extra == 'cu126') or (sys_platform == 'win32' and extra == 'cu126')", specifier = ">=0.21.0", index = "https://download.pytorch.org/whl/cu126", conflict = { package = "anomalib", extra = "cu126" } },
     { name = "torchvision", marker = "(sys_platform == 'linux' and extra == 'cu130') or (sys_platform == 'win32' and extra == 'cu130')", specifier = ">=0.24.0", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "anomalib", extra = "cu130" } },
-    { name = "torchvision", marker = "sys_platform == 'linux' and extra == 'rocm'", specifier = ">=0.25.0", index = "https://download.pytorch.org/whl/rocm7.0", conflict = { package = "anomalib", extra = "rocm" } },
+    { name = "torchvision", marker = "sys_platform == 'linux' and extra == 'rocm'", specifier = ">=0.28.0", index = "https://download.pytorch.org/whl/rocm7.2", conflict = { package = "anomalib", extra = "rocm" } },
     { name = "torchvision", marker = "(sys_platform == 'linux' and extra == 'xpu') or (sys_platform == 'win32' and extra == 'xpu')", specifier = ">=0.24.0", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "anomalib", extra = "xpu" } },
     { name = "torchvision", marker = "extra == 'cpu'", specifier = ">=0.21.0", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "anomalib", extra = "cpu" } },
     { name = "tox", marker = "extra == 'dev'" },
@@ -382,7 +380,7 @@ requires-dist = [
     { name = "transformers", marker = "extra == 'dev'" },
     { name = "transformers", marker = "extra == 'full'" },
     { name = "transformers", marker = "extra == 'vlm'" },
-    { name = "triton-rocm", marker = "sys_platform == 'linux' and extra == 'rocm'", index = "https://download.pytorch.org/whl/rocm7.0", conflict = { package = "anomalib", extra = "rocm" } },
+    { name = "triton-rocm", marker = "sys_platform == 'linux' and extra == 'rocm'", index = "https://download.pytorch.org/whl/rocm7.2", conflict = { package = "anomalib", extra = "rocm" } },
     { name = "triton-xpu", marker = "(sys_platform == 'linux' and extra == 'xpu') or (sys_platform == 'win32' and extra == 'xpu')", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "anomalib", extra = "xpu" } },
     { name = "wandb", marker = "extra == 'dev'" },
     { name = "wandb", marker = "extra == 'full'" },
@@ -585,8 +583,6 @@ version = "3.5.1"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e5/3f/143b048436775b0f76ac3eec145c019e8173ccc2885c8f20319b996d5e83/charset_normalizer-3.5.1.tar.gz", hash = "sha256:6117b84ea48435e5356dc737f5121485c30920ba43375fa7b434fd753df0eac3", size = 171764, upload-time = "2026-08-15T08:20:44.807Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bc/61/2cb6ad133dbbb449fa2d37ccae973232f4827e799af258d15e589a3d1e9e/charset_normalizer-3.5.1-cp313-cp313-android_24_arm64_v8a.whl", hash = "sha256:4f298bdadb8f0b9e5672877f647d1be9373ef5320c9e2f049795e26cad28b6a9", size = 211584, upload-time = "2026-08-15T08:17:33.597Z" },
-    { url = "https://files.pythonhosted.org/packages/18/57/a305c968be1ca13f3dd1b32f445877e97addf55d80b65c7cb35fac82b777/charset_normalizer-3.5.1-cp313-cp313-android_24_x86_64.whl", hash = "sha256:88ca277405c2d3b71c4e1c2ee0e7966e807bcba86a69d11e19ba199d18ae4491", size = 223359, upload-time = "2026-08-15T08:17:35.022Z" },
     { url = "https://files.pythonhosted.org/packages/09/0a/d3646670292ce8d8f8cc11ac067d44885e697a5591f57a9221128da5e7b3/charset_normalizer-3.5.1-cp313-cp313-ios_13_0_arm64_iphoneos.whl", hash = "sha256:9362dd90aa7dab48c0054a21187791ccf05473f7dba5d92b8033ae62164675e7", size = 194464, upload-time = "2026-08-15T08:17:36.452Z" },
     { url = "https://files.pythonhosted.org/packages/de/93/d51ec556e01042fed6f993ea859311bc7917b466684182fbbceb6ca24762/charset_normalizer-3.5.1-cp313-cp313-ios_13_0_arm64_iphonesimulator.whl", hash = "sha256:977cdbd483a9cff38179bea4fd754289a6f2195c7abd414aba85410b3e66cc5e", size = 197676, upload-time = "2026-08-15T08:17:37.819Z" },
     { url = "https://files.pythonhosted.org/packages/a4/a0/562247944386f7d4ef94467e84876600cc1e0f1b93239aaa9213d2bc3cbd/charset_normalizer-3.5.1-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:e90251c0c7bdd54a100a0dce3c07b7e637278c93af29dbf78ebb89a58c4bac7d", size = 340473, upload-time = "2026-08-15T08:17:39.303Z" },
@@ -1736,7 +1732,6 @@ version = "6.8.0"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/14/95/989c1b5ca17b72128661530cd6e351a0a83cda9a4d6c036e9ed976c18931/multidict-6.8.0.tar.gz", hash = "sha256:5cd4637ce76312ba1e05eb9c5193fec231f64fee0944e135fa1e951242355b37", size = 122412, upload-time = "2026-09-09T13:57:57.967Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/84/1f/d7112c2dd7db02677097be72fb65542f51a5aa73cb472b87ec211ba9e0dd/multidict-6.8.0-cp313-cp313-android_24_x86_64.whl", hash = "sha256:ec0a4d066356054d569a66e0a94691a2058b680be5e710298f61db11a3c4609f", size = 54197, upload-time = "2026-09-09T13:54:20.814Z" },
     { url = "https://files.pythonhosted.org/packages/ae/24/876015abbcb4a179d946579eb77b778eb5a948fc8381bc7928ba895bc051/multidict-6.8.0-cp313-cp313-ios_13_0_arm64_iphoneos.whl", hash = "sha256:714597cb5d5e15a8a449d2ae23c45b486a9e8fa33c462c7a33d7f35b65d92943", size = 47787, upload-time = "2026-09-09T13:54:22.51Z" },
     { url = "https://files.pythonhosted.org/packages/06/c1/ceb7d25f8a567599db2eb19b08cac58d67ff553cff42dcadbea9aba56a20/multidict-6.8.0-cp313-cp313-ios_13_0_arm64_iphonesimulator.whl", hash = "sha256:e0db3a4d1e264e225037a6023888972c25206a96e016021a5bea41c9a939f2a9", size = 48815, upload-time = "2026-09-09T13:54:23.986Z" },
     { url = "https://files.pythonhosted.org/packages/18/e3/e1c6e9c3818c34b782f23ce5fdba3eaa34ec6750dc53078dfac80fa59be7/multidict-6.8.0-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:27747162712e85c84598d364425dbf1714ff335bdb6ba3171c4e5081196e8916", size = 83484, upload-time = "2026-09-09T13:54:25.674Z" },
