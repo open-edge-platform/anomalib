@@ -36,6 +36,7 @@ Available Models:
     - :class:`Dsr`: Deep Spatial Reconstruction
     - :class:`EfficientAd`: Efficient Anomaly Detection
     - :class:`Fastflow`: Fast Flow
+    - :class:`FoundAD`: Foundation Encoder Manifold Projector Anomaly Detection
     - :class:`Fre`: Feature Reconstruction Error
     - :class:`Ganomaly`: Generative Adversarial Networks
     - :class:`GeneralAD`: Attending to Distorted Features
@@ -67,6 +68,7 @@ from .draem import Draem
 from .dsr import Dsr
 from .efficient_ad import EfficientAd
 from .fastflow import Fastflow
+from .foundad import FoundAD
 from .fre import Fre
 from .ganomaly import Ganomaly
 from .general_ad import GeneralAD
@@ -100,6 +102,7 @@ __all__ = [
     "Dsr",
     "EfficientAd",
     "Fastflow",
+    "FoundAD",
     "Fre",
     "Ganomaly",
     "GeneralAD",
