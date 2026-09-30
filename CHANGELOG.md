@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - 🚀 **model**: Add MH-PatchCore by @NickF93 in https://github.com/open-edge-platform/anomalib/pull/3809
 - 🚀 **model**: Add RAD (Retrieval-based Anomaly Detection) model (#3616)
+- 🚀 **model**: Add FoundAD Few Shot Anomaly Detection Model by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3793
 
 ### Removed
 

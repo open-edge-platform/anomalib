@@ -77,4 +77,6 @@ terms are listed below.
 
 16. MH-PatchCore model (anomalib.models.image.mh_patchcore)
     Copyright (c) 2025 Niccolò Ferrari and Oligert Osmani, https://github.com/NickF93/MH-PatchCore
+16. FoundAD model (anomalib.models.image.foundad)
+    Copyright (c) 2026 FoundAD authors, https://github.com/ymxlzgy/FoundAD
     SPDX-License-Identifier: MIT
