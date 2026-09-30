@@ -178,16 +178,22 @@ runs:
         start_time=$(date +%s)
         set -o pipefail
 
-        # Set device-specific pytest arguments
+        # Set device-specific pytest arguments.
+        # Parallelize on CPU with xdist (loadfile keeps a file on one worker so
+        # session fixtures / fit caches stay coherent). Keep GPU sequential to
+        # avoid multi-process device contention.
         if [ "$INPUTS_DEVICE" = "cpu" ]; then
           marker="-m cpu"  # Only run CPU tests
+          xdist_args="--numprocesses=auto --dist=loadfile"
         else
           marker=""  # Run all tests (both CPU and GPU marked tests)
+          xdist_args="--numprocesses=0"
         fi
 
         # Run pytest
+        # shellcheck disable=SC2086 # intentional word-splitting for xdist_args
         PYTHONPATH=src pytest "$STEPS_TEST_SCOPE_OUTPUTS_PATH" \
-          --numprocesses=0 \
+          ${xdist_args} \
           --durations=10 \
           --durations-min=1.0 \
           --timeout="$INPUTS_MAX_TEST_TIME" \
