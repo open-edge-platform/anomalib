@@ -41,6 +41,7 @@ Available Models:
     - :class:`Ganomaly`: Generative Adversarial Networks
     - :class:`GeneralAD`: Attending to Distorted Features
     - :class:`L2BT`: Learning to Be a Transformer to Pinpoint Anomalies
+    - :class:`MHPatchcore`: Mahalanobis PatchCore
     - :class:`Padim`: Patch Distribution Modeling
     - :class:`Patchcore`: Patch Core
     - :class:`Patchflow`: Patch Flow
@@ -75,6 +76,7 @@ from .general_ad import GeneralAD
 from .glass import Glass
 from .inp_former import InpFormer
 from .l2bt import L2BT
+from .mh_patchcore import MHPatchcore
 from .padim import Padim
 from .patchcore import Patchcore
 from .patchflow import Patchflow
@@ -109,6 +111,7 @@ __all__ = [
     "Glass",
     "InpFormer",
     "L2BT",
+    "MHPatchcore",
     "Padim",
     "Patchcore",
     "Patchflow",
