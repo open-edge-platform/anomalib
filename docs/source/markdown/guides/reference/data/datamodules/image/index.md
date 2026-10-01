@@ -62,6 +62,13 @@ MVTecAD AD dataset datamodule for unsupervised anomaly detection.
 
 Visual Anomaly (VisA) dataset datamodule.
 :::
+
+:::{grid-item-card} LIBAD
+:link: libad
+:link-type: doc
+
+LIBAD dataset datamodule for Li-Ion Battery Electrode Manufacturing defects.
+:::
 ```
 
 ```{toctree}
@@ -76,4 +83,5 @@ folder
 kolektor
 mvtec
 visa
+libad
 ```

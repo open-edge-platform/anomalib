@@ -33,21 +33,52 @@ Notes:
             │       ├── ...
 
 License:
-    LIBAD dataset is released under the BSD 3-Clause License.
+    LIBAD dataset is released under the CC-BY-4.0 License.
 
 Reference:
     Wenbo Sui and Daniel Lichau and Harold Phelippeau and Zhao Liu. (2026).
     LIBAD: A Multimodal Anomaly Detection Benchmark for Li-Ion Battery Electrode Manufacturing.
+    https://arxiv.org/abs/2608.07958
 """
 
 import logging
 from pathlib import Path
+from tempfile import TemporaryDirectory
+from typing import TYPE_CHECKING
 
+from lightning_utilities.core.imports import module_available
 from torchvision.transforms.v2 import Transform
+
+if TYPE_CHECKING or module_available("huggingface_hub"):
+    from huggingface_hub import get_token, hf_hub_download
+    from huggingface_hub.utils import (
+        EntryNotFoundError,
+        GatedRepoError,
+        HfHubHTTPError,
+        LocalEntryNotFoundError,
+        RepositoryNotFoundError,
+        RevisionNotFoundError,
+    )
+
+    # Errors that indicate the dataset cannot be downloaded automatically
+    HF_DOWNLOAD_ERRORS = (
+        GatedRepoError,
+        HfHubHTTPError,
+        RepositoryNotFoundError,
+        RevisionNotFoundError,
+        EntryNotFoundError,
+        LocalEntryNotFoundError,
+        OSError,
+    )
+else:
+    get_token = None
+    hf_hub_download = None
+    HF_DOWNLOAD_ERRORS = (Exception,)
 
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.libad import LIBADDataset
-from anomalib.data.utils import Split, TestSplitMode, ValSplitMode, concatenate_datasets, random_split
+from anomalib.data.utils import Split, TestSplitMode, ValSplitMode
+from anomalib.data.utils.download import extract
 from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
@@ -149,44 +180,69 @@ class LIBAD(AnomalibDataModule):
 
     def _setup(self, _stage: str | None = None) -> None:
         # Load the full normal dataset (label_index = 0)
-        full_normal_dataset = LIBADDataset(
+        self.train_data = LIBADDataset(
             split=Split.TRAIN,
             root=self.root,
             category=self.category,
             modality=self.modality,
         )
 
-        # Split the normal images into train and test
-        self.train_data, normal_test_data = random_split(
-            full_normal_dataset,
-            split_ratio=[1 - self.test_split_ratio, self.test_split_ratio],
-            label_aware=True,
-            seed=self.seed,
-        )
-
         # Load the anomalous dataset (label_index = 1)
-        anomaly_dataset = LIBADDataset(
+        self.test_data = LIBADDataset(
             split=Split.TEST,
             root=self.root,
             category=self.category,
             modality=self.modality,
         )
 
-        # Combine normal test and anomalous test data
-        self.test_data = concatenate_datasets([normal_test_data, anomaly_dataset])
-
     def prepare_data(self) -> None:
-        """Inform the user to download the dataset if not available.
+        """Check if the dataset is available, downloading it if possible.
 
-        This dataset is not automatically downloaded.
+        This method checks if the specified dataset is available in the file
+        system. If it is not, and the ``huggingface_hub`` package is
+        installed, it attempts to automatically download and extract the
+        dataset from Hugging Face using the token from the
+        ``HF_TOKEN`` environment variable or a cached ``hf auth login``
+        session. Automatic download only succeeds if the user has already
+        requested and been granted access to the dataset on Hugging Face.
         """
         if (self.root / self.category).is_dir():
             logger.info("Found the dataset.")
-        else:
+            return
+
+        if not module_available("huggingface_hub"):
             logger.error(
-                "Dataset not found in %s. Please download it from Hugging Face "
-                "(https://huggingface.co/datasets/Evenrose/LIBAD) and extract it.",
-                self.root / self.category,
+                "Dataset not found and huggingface_hub is not installed. Please install it or download manually.",
             )
             msg = "LIBAD dataset must be downloaded manually."
             raise FileNotFoundError(msg)
+
+        if not get_token():
+            logger.info(
+                "No Hugging Face token found (HF_TOKEN env var or cached "
+                "``hf auth login`` session). Skipping automatic download.",
+            )
+            msg = "LIBAD dataset must be downloaded manually."
+            raise FileNotFoundError(msg)
+
+        logger.info(
+            "LIBAD dataset not found at %s. Attempting to download it from Hugging Face.",
+            self.root,
+        )
+
+        self.root.mkdir(parents=True, exist_ok=True)
+        try:
+            with TemporaryDirectory(dir=self.root) as scratch_dir:
+                logger.info("Downloading LIBAD.zip from Hugging Face.")
+                downloaded_path = Path(
+                    hf_hub_download(
+                        repo_id="Evenrose/LIBAD",
+                        repo_type="dataset",
+                        filename="LIBAD.zip",
+                        local_dir=scratch_dir,
+                    ),
+                )
+                extract(downloaded_path, self.root)
+        except HF_DOWNLOAD_ERRORS as exc:
+            msg = "Failed to download LIBAD dataset from Hugging Face."
+            raise FileNotFoundError(msg) from exc

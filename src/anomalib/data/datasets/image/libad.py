@@ -13,7 +13,7 @@ distinguished by the suffix of the image filename (e.g. A01A.tiff, A01B.tiff,
 A01X.tiff, A01L.tiff).
 
 License:
-    LIBAD dataset is released under the BSD 3-Clause License.
+    LIBAD dataset is released under the CC-BY-4.0 License.
 
 Reference:
     Wenbo Sui and Daniel Lichau and Harold Phelippeau and Zhao Liu. (2026).
@@ -83,6 +83,14 @@ class LIBADDataset(AnomalibDataset):
         split: str | Split | None = None,
     ) -> None:
         super().__init__(augmentations=augmentations)
+
+        if category not in CATEGORIES:
+            msg = f"Unknown category {category}. Must be one of {CATEGORIES}"
+            raise ValueError(msg)
+
+        if modality is not None and modality not in ("A", "B", "L", "X"):
+            msg = f"Unknown modality {modality}. Must be one of 'A', 'B', 'L', 'X'"
+            raise ValueError(msg)
 
         self.root_category = Path(root) / category
         self.modality = modality

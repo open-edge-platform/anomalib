@@ -1068,5 +1068,3 @@ class DummyVideoDatasetGenerator(DummyDatasetGenerator):
             masks_array = np.stack(masks)
             np.save(mask_path, masks_array)
 
-
-        self,
