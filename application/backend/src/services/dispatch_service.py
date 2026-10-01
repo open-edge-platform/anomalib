@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable, Sequence
@@ -20,13 +20,17 @@ class DispatchService:
 
     @classmethod
     def _get_destination(cls, output_config: Sink) -> Dispatcher | None:
+        factory = cls._dispatcher_registry.get(output_config.sink_type)
+        if factory is None:
+            logger.warning(f"Unrecognized sink type: {output_config.sink_type}")
+            return None
+
         try:
-            factory = cls._dispatcher_registry.get(output_config.sink_type)
-            if factory is None:
-                raise ValueError(f"Unrecognized sink type: {output_config.sink_type}")
             return factory(output_config)
         except Exception:
-            logger.opt(exception=True).warning(f"Failed to initialize dispatcher for sink type: {output_config.sink_type}")
+            logger.opt(exception=True).warning(
+                f"Failed to initialize dispatcher for sink type: {output_config.sink_type}"
+            )
             return None
 
     @classmethod

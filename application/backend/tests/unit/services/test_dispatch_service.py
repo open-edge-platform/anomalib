@@ -1,0 +1,69 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+from unittest.mock import patch
+
+import pytest
+
+from pydantic_models.sink import FolderSinkConfig, SinkType
+from services.dispatch_service import DispatchService
+from utils.short_uuid import ShortUUID
+
+
+@pytest.fixture
+def folder_sink_config() -> FolderSinkConfig:
+    return FolderSinkConfig(
+        id=ShortUUID("Bf8KYoUmuTV3hLdiEaarSA"),
+        project_id=ShortUUID("Bf8KYoUmuTV3hLdiEaarSA"),
+        name="Local Folder",
+        sink_type=SinkType.FOLDER,
+        folder_path="./test_output_folder",
+        output_formats=[],
+        rate_limit=0.2,
+    )
+
+
+def test_get_destinations_filters_failed_dispatchers(folder_sink_config: FolderSinkConfig) -> None:
+    """Test that a dispatcher failing initialization is filtered out and logs a warning."""
+    # We patch the specific registry entry for FOLDER to raise an exception.
+
+    def failing_factory(config):
+        raise RuntimeError("Initialization error")
+
+    with (
+        patch.dict(DispatchService._dispatcher_registry, {SinkType.FOLDER: failing_factory}),
+        patch("services.dispatch_service.logger") as mock_logger,
+    ):
+        destinations = DispatchService.get_destinations([folder_sink_config])
+
+        assert len(destinations) == 0
+        mock_logger.opt.assert_called_with(exception=True)
+        mock_logger.opt().warning.assert_called_once_with(
+            f"Failed to initialize dispatcher for sink type: {SinkType.FOLDER}"
+        )
+
+
+def test_get_destinations_filters_unrecognized_sink() -> None:
+    """Test that an unrecognized sink type is filtered out and logs a warning without an exception."""
+
+    # Create a mock config with a dummy sink type.
+    class DummySinkConfig:
+        sink_type = "unrecognized_type"
+
+    dummy_config = DummySinkConfig()
+
+    with patch("services.dispatch_service.logger") as mock_logger:
+        # get_destinations types expect Sequence[Sink] but for test we bypass with the dummy.
+        destinations = DispatchService.get_destinations([dummy_config])  # type: ignore
+
+        assert len(destinations) == 0
+        mock_logger.warning.assert_called_once_with("Unrecognized sink type: unrecognized_type")
+
+
+def test_get_destinations_returns_valid_dispatcher(folder_sink_config: FolderSinkConfig) -> None:
+    """Test that a valid config returns a dispatcher correctly."""
+    destinations = DispatchService.get_destinations([folder_sink_config])
+
+    assert len(destinations) == 1
+    # We expect a FolderDispatcher instance. Check by class name.
+    assert type(destinations[0]).__name__ == "FolderDispatcher"
