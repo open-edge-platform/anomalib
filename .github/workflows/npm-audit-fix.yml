@@ -96,6 +96,8 @@ jobs:
         with:
           app-id: ${{ secrets.RENOVATE_APP_ID }}
           private-key: ${{ secrets.RENOVATE_APP_PEM }}
+          permission-contents: write
+          permission-pull-requests: write
 
       - name: Create PR if lockfile changed
         if: steps.check-changes.outputs.changed == 'true'
