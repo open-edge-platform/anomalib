@@ -76,10 +76,19 @@ jobs:
         with:
           app-id: ${{ secrets.RENOVATE_APP_ID }}
           private-key: ${{ secrets.RENOVATE_APP_PEM }}
+          # Repository permissions
+          permission-administration: read
+          permission-checks: write
+          permission-statuses: write
           permission-contents: write
-          permission-pull-requests: write
+          permission-vulnerability-alerts: read
           permission-issues: write
+          permission-metadata: read
+          permission-pull-requests: write
           permission-workflows: write
+          # Organization permissions
+          permission-organization-administration: read
+          permission-members: read
 
       - name: Self-hosted Renovate
         uses: renovatebot/github-action@9fea9f0fbf80401026d11d03911d62b1f70fef1f # v46.3.3

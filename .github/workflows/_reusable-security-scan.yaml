@@ -177,8 +177,6 @@ jobs:
           severity-level: ${{ inputs.severity-level }}
           confidence-level: ${{ inputs.confidence-level }}
           fail-on-findings: ${{ inputs.fail-on-findings }}
-          # TODO: Resolve archived-uses issue with https://github.com/pre-commit/mirrors-prettier repository introduced in v1.18.0
-          zizmor-version: v1.18.0
 
   dast-scan:
     if: contains(inputs.tools, 'dast-scan')
