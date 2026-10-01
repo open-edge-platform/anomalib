@@ -80,6 +80,6 @@ jobs:
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Sign Docker image
-        uses: open-edge-platform/geti-ci/actions/sign-image@7d25e47329bbfcde4ee51ab3581aea8613e245e2
+        uses: open-edge-platform/geti-ci/actions/sign-image@3690cbcc173cf90e0e0999b4822c3f8ebab9c137 # sign-image/v0.1.2
         with:
           image-uri: ${{ steps.primary-tag.outputs.tag }}
