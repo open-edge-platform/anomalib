@@ -169,8 +169,7 @@
       matchManagers: ["github-actions"],
       matchPackageNames: ["open-edge-platform/geti-ci"],
       schedule: ["* * 1 * *"], // every month
-      versioning:
-        "regex:^(?<compatibility>[^/]+)/v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$",
+      versioning: "regex:^(?<compatibility>[^/]+)/v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$",
     },
 
     // uv version used in GitHub Actions is updated manually
