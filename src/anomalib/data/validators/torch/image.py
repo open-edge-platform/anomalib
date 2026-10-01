@@ -293,7 +293,8 @@ class ImageValidator:
             >>> validated_path == path
             True
         """
-        return validate_path(mask_path) if mask_path else None
+        if isinstance(mask_path, float) and __import__('math').isnan(mask_path): return None
+        return validate_path(mask_path) if mask_path and str(mask_path).strip() else None
 
     @staticmethod
     def validate_pred_score(
