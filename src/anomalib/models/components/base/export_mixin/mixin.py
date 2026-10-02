@@ -204,7 +204,8 @@ class ExportMixin:
 
         export_kwargs: dict[str, Any] = {
             "opset_version": kwargs.pop("opset_version", 14),
-            "dynamic_axes": dynamic_axes,
+            # dynamo takes ``dynamic_shapes``; passing legacy ``dynamic_axes`` too conflicts with it.
+            "dynamic_axes": None if dynamo else dynamic_axes,
             "input_names": input_names,
             "output_names": output_names,
             "dynamo": dynamo,

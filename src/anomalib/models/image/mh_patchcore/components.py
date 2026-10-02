@@ -204,7 +204,9 @@ class StreamingPCA(DynamicBufferMixin):
             ValueError: If the embeddings are empty, non-finite, not two-dimensional,
                 or have an incompatible feature dimension.
         """
-        if not self.is_fitted:
+        # Value checks are eager-only: dynamo cannot export branches on tensor values.
+        checking = not torch.compiler.is_compiling()
+        if checking and not self.is_fitted:
             msg = "StreamingPCA must be finalized before transform()."
             raise RuntimeError(msg)
         if embeddings.ndim != 2 or len(embeddings) == 0:
@@ -216,7 +218,7 @@ class StreamingPCA(DynamicBufferMixin):
                 f"but fitted PCA expects {self.components.shape[1]}."
             )
             raise ValueError(msg)
-        if not torch.isfinite(embeddings).all():
+        if checking and not torch.isfinite(embeddings).all():
             msg = "embeddings must contain only finite values."
             raise ValueError(msg)
 
@@ -399,7 +401,9 @@ class CovarianceWhitening(DynamicBufferMixin):
             ValueError: If the embeddings are empty, non-finite, not two-dimensional,
                 or have an incompatible feature dimension.
         """
-        if not self.is_fitted:
+        # Value checks are eager-only: dynamo cannot export branches on tensor values.
+        checking = not torch.compiler.is_compiling()
+        if checking and not self.is_fitted:
             msg = "CovarianceWhitening must be finalized before transform()."
             raise RuntimeError(msg)
         if embeddings.ndim != 2 or len(embeddings) == 0 or embeddings.shape[1] == 0:
@@ -411,13 +415,13 @@ class CovarianceWhitening(DynamicBufferMixin):
                 f"but fitted covariance expects {self.mean.shape[0]}."
             )
             raise ValueError(msg)
-        if not torch.isfinite(embeddings).all():
+        if checking and not torch.isfinite(embeddings).all():
             msg = "embeddings must contain only finite values."
             raise ValueError(msg)
 
         embeddings = embeddings.to(device=self.mean.device, dtype=torch.float64)
         whitened = (embeddings - self.mean) @ self.whitening_matrix
-        if not torch.isfinite(whitened).all():
+        if checking and not torch.isfinite(whitened).all():
             msg = "CovarianceWhitening produced non-finite transformed embeddings."
             raise RuntimeError(msg)
         return whitened
