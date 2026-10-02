@@ -25,6 +25,8 @@ from anomalib.engine import Engine
 from anomalib.models import AnomalibModule, get_model, list_models
 
 _FIT_CACHE: dict[str, Path] = {}
+# ONNX files from ``test_export[onnx-*]``, reused by the OpenVINO export tests.
+_ONNX_CACHE: dict[str, Path] = {}
 
 
 def models() -> set[str]:
@@ -263,12 +265,24 @@ class TestAPI:
 
         # Use context manager only for CSFlow
         with increased_recursion_limit() if model_name == "csflow" else contextlib.nullcontext():
-            engine.export(
+            onnx_path = _ONNX_CACHE.get(model_name)
+            if export_type == ExportType.OPENVINO and onnx_path is not None and onnx_path.exists():
+                # ``to_openvino`` is ONNX export + ``ov.convert_model``; reuse this model's ONNX
+                # export instead of repeating it. ``to_openvino`` options are covered in
+                # tests/integration/deploy/test_ov_export.py.
+                import openvino as ov
+
+                ov.save_model(ov.convert_model(onnx_path), project_path / f"{model_name}_reused_onnx.xml")
+                return
+
+            exported_path = engine.export(
                 model=model,
                 ckpt_path=ckpt,
                 export_type=export_type,
                 **export_kwargs,
             )
+            if export_type == ExportType.ONNX and exported_path is not None:
+                _ONNX_CACHE[model_name] = exported_path
 
     @staticmethod
     def _get_objects(
