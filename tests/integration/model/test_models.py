@@ -48,15 +48,16 @@ def increased_recursion_limit(limit: int = 10000) -> Generator[None, None, None]
         sys.setrecursionlimit(old_limit)
 
 
-def _prepare_efficient_ad_imagenet(project_path: Path) -> Path:
-    """Create a tiny ImageFolder tree so EfficientAd skips the ImageNette download."""
-    root = project_path / "efficient_ad_imagenette"
+def _make_image_folder(root: Path, class_names: tuple[str, ...] = ("n01440764", "n02102040")) -> Path:
+    """Create a tiny ``root/<class>/*.png`` tree to stand in for downloaded datasets.
+
+    Used for EfficientAd's ImageNette (ImageFolder layout) and DRAEM's DTD textures
+    (any image under the root), so CI never downloads multi-GB archives.
+    """
     if root.is_dir():
         return root
 
-    # ImageFolder expects ``root/<class>/*.png``. A handful of solid images is enough
-    # for the penultimate-batch ImageNette sampler used during training_step.
-    for class_name in ("n01440764", "n02102040"):
+    for class_name in class_names:
         class_dir = root / class_name
         class_dir.mkdir(parents=True, exist_ok=True)
         for index in range(4):
@@ -303,7 +304,10 @@ class TestAPI:
             })
         if model_name == "efficient_ad":
             # Avoid downloading the multi-GB ImageNette tarball on CI (~50+ min).
-            extra_args["imagenet_dir"] = _prepare_efficient_ad_imagenet(project_path)
+            extra_args["imagenet_dir"] = _make_image_folder(project_path / "efficient_ad_imagenette")
+        if model_name == "draem":
+            # Avoid downloading the DTD texture archive on CI.
+            extra_args["dtd_dir"] = _make_image_folder(project_path / "dtd", class_names=("banded", "dotted"))
         if model_name in {"cfm", "c_f_m"}:
             # Keep integration tests lightweight/stable (point ops are memory hungry).
             extra_args["num_group"] = 128
