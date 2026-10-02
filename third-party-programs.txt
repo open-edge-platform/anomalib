@@ -74,3 +74,7 @@ terms are listed below.
 15. INP-Former model (anomalib.models.image.inp_former)
     Copyright (c) 2025 Wei Luo, https://github.com/luow23/INP-Former
     SPDX-License-Identifier: MIT
+
+16. GRD-Net model (anomalib.models.image.grdnet)
+    Copyright (c) 2024-2026 Niccolò Ferrari, https://github.com/NickF93/GRD-Net
+    SPDX-License-Identifier: MIT

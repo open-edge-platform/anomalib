@@ -36,6 +36,7 @@ Image Models:
     - FRE (:class:`anomalib.models.image.Fre`)
     - GANomaly (:class:`anomalib.models.image.Ganomaly`)
     - GeneralAD (:class:`anomalib.models.image.GeneralAD`)
+    - GRD-Net (:class:`anomalib.models.image.GRDNet`)
     - L2BT (:class:`anomalib.models.image.L2BT`)
     - PaDiM (:class:`anomalib.models.image.Padim`)
     - PatchCore (:class:`anomalib.models.image.Patchcore`)
@@ -83,6 +84,7 @@ from .image import (
     Ganomaly,
     GeneralAD,
     Glass,
+    GRDNet,
     InpFormer,
     Padim,
     Patchcore,
@@ -131,6 +133,7 @@ __all__ = [
     "Ganomaly",
     "GeneralAD",
     "Glass",
+    "GRDNet",
     "InpFormer",
     "L2BT",
     "Padim",
@@ -173,7 +176,7 @@ def list_models(case: str = "snake") -> set[str]:
         >>> print(sorted(list(models)))  # doctest: +NORMALIZE_WHITESPACE
         ['ai_vad', 'anomaly_d_i_n_o', 'cfa', 'cflow', 'csflow', 'dfkde', 'dfm',
          'dinomaly', 'draem', 'dsr', 'efficient_ad', 'fastflow', 'fre', 'fuvas',
-         'ganomaly', 'general_a_d', 'l2_b_t', 'padim', 'patchcore', 'patchflow',
+         'g_r_d_net', 'ganomaly', 'general_a_d', 'l2_b_t', 'padim', 'patchcore', 'patchflow',
          'reverse_distillation', 'stfpm', 'supersimplenet', 'uflow', 'uni_net',
          'vlm_ad', 'win_clip']
 
@@ -182,7 +185,7 @@ def list_models(case: str = "snake") -> set[str]:
         >>> print(sorted(list(models)))  # doctest: +NORMALIZE_WHITESPACE
         ['AiVad', 'AnomalyDINO', 'Cfa', 'Cflow', 'Csflow', 'Dfkde', 'Dfm',
          'Dinomaly', 'Draem', 'Dsr', 'EfficientAd', 'Fastflow', 'Fre', 'Fuvas',
-         'Ganomaly', 'GeneralAD', 'L2BT', 'Padim', 'Patchcore', 'Patchflow',
+         'GRDNet', 'Ganomaly', 'GeneralAD', 'L2BT', 'Padim', 'Patchcore', 'Patchflow',
          'ReverseDistillation', 'Stfpm', 'Supersimplenet', 'Uflow', 'UniNet',
          'VlmAd', 'WinClip']
 
@@ -191,7 +194,7 @@ def list_models(case: str = "snake") -> set[str]:
         >>> print(sorted(list(models)))  # doctest: +NORMALIZE_WHITESPACE
         ['Ai Vad', 'Anomaly Dino', 'Cfa', 'Cflow', 'Csflow', 'Dfkde', 'Dfm',
          'Dinomaly', 'Draem', 'Dsr', 'Efficient Ad', 'Fastflow', 'Fre', 'Fuvas',
-         'Ganomaly', 'General Ad', 'L2BT', 'Padim', 'Patchcore', 'Patchflow',
+         'Ganomaly', 'General Ad', 'Grd Net', 'L2BT', 'Padim', 'Patchcore', 'Patchflow',
          'Reverse Distillation', 'Stfpm', 'Supersimplenet', 'Uflow', 'Uni Net',
          'Vlm Ad', 'Win Clip']
 

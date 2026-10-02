@@ -39,6 +39,7 @@ Available Models:
     - :class:`Fre`: Feature Reconstruction Error
     - :class:`Ganomaly`: Generative Adversarial Networks
     - :class:`GeneralAD`: Attending to Distorted Features
+    - :class:`GRDNet`: GRD-Net
     - :class:`L2BT`: Learning to Be a Transformer to Pinpoint Anomalies
     - :class:`Padim`: Patch Distribution Modeling
     - :class:`Patchcore`: Patch Core
@@ -70,6 +71,7 @@ from .fre import Fre
 from .ganomaly import Ganomaly
 from .general_ad import GeneralAD
 from .glass import Glass
+from .grdnet import GRDNet
 from .inp_former import InpFormer
 from .l2bt import L2BT
 from .padim import Padim
@@ -102,6 +104,7 @@ __all__ = [
     "Ganomaly",
     "GeneralAD",
     "Glass",
+    "GRDNet",
     "InpFormer",
     "L2BT",
     "Padim",
