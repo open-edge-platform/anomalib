@@ -181,7 +181,9 @@ class ExportMixin:
         """
         get_onnx_dynamo_flag(kwargs)  # reject dynamo=False before touching the filesystem or running the model
         export_root = create_export_root(export_root, ExportType.ONNX)
-        input_shape = torch.zeros((1, 3, *input_size)) if input_size else torch.zeros((1, 3, 1, 1))
+        # Dynamo fixes example dimensions of size 0 or 1, so every dynamic axis needs an example
+        # size of at least 2. The pre-processor resizes inside ``forward``, so any spatial size works.
+        input_shape = torch.zeros((2, 3, *input_size)) if input_size else torch.zeros((2, 3, 32, 32))
         input_shape = input_shape.to(self.device)
         onnx_path = export_root / (model_file_name + ".onnx")
         # apply pass through the model to get the output names

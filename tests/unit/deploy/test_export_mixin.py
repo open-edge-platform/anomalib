@@ -140,17 +140,37 @@ def test_to_onnx_raises_actionable_error_for_missing_onnxscript(
     assert "anomalib[openvino]" in str(exception.value)
 
 
-def test_to_onnx_dynamo_export_keeps_batch_dynamic(tmp_path: Path) -> None:
-    """A real dynamo export from a batch-1 example still accepts another batch size."""
+@pytest.mark.parametrize(("input_size", "expected_shape"), [((32, 32), (2, 3, 32, 32)), (None, (2, 3, 32, 32))])
+def test_to_onnx_example_input_avoids_unit_dynamic_dims(
+    mocker: pytest.MockFixture,
+    tmp_path: Path,
+    input_size: tuple[int, int] | None,
+    expected_shape: tuple[int, ...],
+) -> None:
+    """Dynamo fixes example dimensions of size 0/1, so dynamic axes need example sizes of at least 2."""
+    export_mock = mocker.patch("torch.onnx.export")
+
+    DummyExportModel().to_onnx(tmp_path, input_size=input_size)
+
+    assert tuple(export_mock.call_args.kwargs["args"][0].shape) == expected_shape
+
+
+@pytest.mark.parametrize(("input_size", "run_shape"), [((32, 32), (3, 3, 32, 32)), (None, (3, 3, 64, 48))])
+def test_to_onnx_dynamo_export_keeps_axes_dynamic(
+    tmp_path: Path,
+    input_size: tuple[int, int] | None,
+    run_shape: tuple[int, ...],
+) -> None:
+    """A real dynamo export accepts batch sizes (and image sizes, without ``input_size``) other than the example."""
     pytest.importorskip("onnxscript")
     onnx = pytest.importorskip("onnx")
     ov = pytest.importorskip("openvino")
     model = DummyExportModel()
 
-    onnx_path = model.to_onnx(tmp_path, input_size=(32, 32), dynamo=True)
+    onnx_path = model.to_onnx(tmp_path, input_size=input_size, dynamo=True)
 
     batch_dim = onnx.load(onnx_path).graph.input[0].type.tensor_type.shape.dim[0]
     assert batch_dim.dim_param, "batch axis was specialized to a fixed size"
-    images = torch.rand(3, 3, 32, 32)
+    images = torch.rand(*run_shape)
     result = ov.Core().compile_model(str(onnx_path), "CPU", {"INFERENCE_PRECISION_HINT": "f32"})(images.numpy())[0]
     torch.testing.assert_close(torch.from_numpy(result), model(images).pred_score)
