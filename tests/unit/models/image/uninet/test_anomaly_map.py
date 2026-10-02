@@ -32,3 +32,17 @@ def test_score_is_max_of_blurred_map(batch_size: int, output_size: tuple[int, in
     assert score.shape == (batch_size, 1)
     assert anomaly_map.shape == (batch_size, *output_size)
     torch.testing.assert_close(score, _reference_score(outputs, output_size))
+
+
+def test_weighted_decision_mechanism_is_exportable() -> None:
+    """``torch.export`` captures the scoring path without data-dependent guards and matches eager."""
+
+    class Score(torch.nn.Module):
+        @staticmethod
+        def forward(first: torch.Tensor, second: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+            return weighted_decision_mechanism(first.shape[0], [first, second], 0.01, 3e-05, (64, 64))
+
+    inputs = (torch.rand(2, 32, 32), torch.rand(2, 16, 16))
+    exported = torch.export.export(Score(), inputs)
+    for actual, expected in zip(exported.module()(*inputs), Score()(*inputs), strict=True):
+        torch.testing.assert_close(actual, expected)

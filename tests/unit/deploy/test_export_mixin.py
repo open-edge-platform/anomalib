@@ -74,9 +74,10 @@ def test_to_onnx_treats_none_dynamo_as_false(mocker: pytest.MockFixture, tmp_pat
 
 def test_to_onnx_uses_dynamic_shapes_for_dynamo_export(mocker: pytest.MockFixture, tmp_path: Path) -> None:
     """Test that dynamo export receives ``dynamic_shapes`` instead of relying on conversion."""
-    dim_type = torch.export.Dim
+    # ``Dim`` is a factory function on torch<2.7 and a class later; compare against what it returns.
+    dim_type = type(torch.export.Dim("probe"))
     export_mock = mocker.patch("torch.onnx.export")
-    dim_mock = mocker.patch("torch.export.Dim", wraps=dim_type)
+    dim_mock = mocker.patch("torch.export.Dim", wraps=torch.export.Dim)
     model = DummyExportModel()
 
     model.to_onnx(tmp_path, input_size=(32, 32), dynamo=True)
@@ -92,9 +93,10 @@ def test_to_onnx_translates_custom_dynamic_axes_for_dynamo_export(
     tmp_path: Path,
 ) -> None:
     """Test that custom ``dynamic_axes`` are converted to input-only ``dynamic_shapes`` for dynamo."""
-    dim_type = torch.export.Dim
+    # ``Dim`` is a factory function on torch<2.7 and a class later; compare against what it returns.
+    dim_type = type(torch.export.Dim("probe"))
     export_mock = mocker.patch("torch.onnx.export")
-    dim_mock = mocker.patch("torch.export.Dim", wraps=dim_type)
+    dim_mock = mocker.patch("torch.export.Dim", wraps=torch.export.Dim)
     model = DummyExportModel()
 
     model.to_onnx(
@@ -124,3 +126,19 @@ def test_to_onnx_raises_actionable_error_for_missing_onnxscript(
         model.to_onnx(tmp_path, input_size=(32, 32), dynamo=True)
 
     assert "dynamo=False" in str(exception.value)
+
+
+def test_to_onnx_dynamo_export_keeps_batch_dynamic(tmp_path: Path) -> None:
+    """A real dynamo export from a batch-1 example still accepts another batch size."""
+    pytest.importorskip("onnxscript")
+    onnx = pytest.importorskip("onnx")
+    ov = pytest.importorskip("openvino")
+    model = DummyExportModel()
+
+    onnx_path = model.to_onnx(tmp_path, input_size=(32, 32), dynamo=True)
+
+    batch_dim = onnx.load(onnx_path).graph.input[0].type.tensor_type.shape.dim[0]
+    assert batch_dim.dim_param, "batch axis was specialized to a fixed size"
+    images = torch.rand(3, 3, 32, 32)
+    result = ov.Core().compile_model(str(onnx_path), "CPU", {"INFERENCE_PRECISION_HINT": "f32"})(images.numpy())[0]
+    torch.testing.assert_close(torch.from_numpy(result), model(images).pred_score)

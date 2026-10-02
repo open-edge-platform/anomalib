@@ -183,3 +183,17 @@ class TestMakeMasks:
         """Test that an error is raised when the kernel size is larger than the grid size."""
         with pytest.raises(ValueError, match=r"Each dimension of the grid size must be greater than"):
             make_masks(grid_size, kernel_size)
+
+
+def test_harmonic_aggregation_is_exportable() -> None:
+    """``torch.export`` captures the aggregation without data-dependent guards and matches eager."""
+    masks = make_masks((15, 15), 2)
+
+    class Aggregate(torch.nn.Module):
+        @staticmethod
+        def forward(window_scores: torch.Tensor) -> torch.Tensor:
+            return harmonic_aggregation(window_scores, (15, 15), masks)
+
+    window_scores = torch.rand(2, masks.shape[1])
+    exported = torch.export.export(Aggregate(), (window_scores,))
+    torch.testing.assert_close(exported.module()(window_scores), Aggregate()(window_scores))
