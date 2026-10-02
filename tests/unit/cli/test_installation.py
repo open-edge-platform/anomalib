@@ -100,6 +100,11 @@ def test_update_cuda_version_with_available_torch_cuda_build() -> None:
     assert update_cuda_version_with_available_torch_cuda_build("13.0", "2.10.0") == "13.0"
     assert update_cuda_version_with_available_torch_cuda_build("13.0", "2.11.0") == "13.0"
     assert update_cuda_version_with_available_torch_cuda_build("13.2", "2.14.0") == "13.2"
+    # Gaps in the supported list: 12.8 isn't built for torch 2.12, so use the closest lower build.
+    assert update_cuda_version_with_available_torch_cuda_build("12.8", "2.12.0") == "12.6"
+    assert update_cuda_version_with_available_torch_cuda_build("13.1", "2.12.0") == "13.0"
+    # Newer than every build: use the newest; compare numerically, not as strings.
+    assert update_cuda_version_with_available_torch_cuda_build("13.10", "2.12.0") == "13.2"
 
 
 def test_get_cuda_suffix() -> None:

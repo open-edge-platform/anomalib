@@ -70,12 +70,16 @@ def test_to_onnx_treats_none_dynamo_as_true(mocker: pytest.MockFixture, tmp_path
     assert export_mock.call_args.kwargs["dynamo"] is True
 
 
-def test_to_onnx_rejects_legacy_dynamo_false(tmp_path: Path) -> None:
-    """Test that ``dynamo=False`` raises after the legacy exporter removal."""
+def test_to_onnx_rejects_legacy_dynamo_false(mocker: pytest.MockFixture, tmp_path: Path) -> None:
+    """``dynamo=False`` raises before creating the export folder or running the model."""
     model = DummyExportModel()
+    forward = mocker.spy(model, "forward")
 
     with pytest.raises(ValueError, match=r"dynamo=False.*removed"):
         model.to_onnx(tmp_path, input_size=(32, 32), dynamo=False)
+
+    forward.assert_not_called()
+    assert not (tmp_path / "weights").exists()
 
 
 def test_to_onnx_uses_dynamic_shapes_for_dynamo_export(mocker: pytest.MockFixture, tmp_path: Path) -> None:

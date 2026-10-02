@@ -179,6 +179,7 @@ class ExportMixin:
             ... )
             PosixPath('./exports/weights/onnx/model.onnx')
         """
+        get_onnx_dynamo_flag(kwargs)  # reject dynamo=False before touching the filesystem or running the model
         export_root = create_export_root(export_root, ExportType.ONNX)
         input_shape = torch.zeros((1, 3, *input_size)) if input_size else torch.zeros((1, 3, 1, 1))
         input_shape = input_shape.to(self.device)
@@ -188,7 +189,6 @@ class ExportMixin:
         output_names = [name for name, value in self.eval()(input_shape)._asdict().items() if value is not None]
         input_names = validate_input_names(kwargs.pop("input_names", ["input"]))
         default_dynamic_axes = get_default_dynamic_axes(input_size, input_names, output_names)
-        get_onnx_dynamo_flag(kwargs)  # validates / rejects dynamo=False
         dynamic_axes = kwargs.pop("dynamic_axes", default_dynamic_axes)
         dynamic_shapes = kwargs.pop(
             "dynamic_shapes",
