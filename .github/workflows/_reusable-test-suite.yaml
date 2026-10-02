@@ -119,7 +119,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run tests
-        uses: ./.github/actions/pytest
+        uses: $/.github/actions/pytest # nosemgrep: yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag # self-repository syntax has no ref to pin
         with:
           python-version: ${{ inputs.python-version }}
           test-type: ${{ inputs.test-type }}
