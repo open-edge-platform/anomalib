@@ -72,7 +72,8 @@ repos:
         # packages in a different order than the rest of the codebase.
         args: ["--ignore=D100,D407,I001,E402,B018"]
 
-  - repo: https://github.com/pre-commit/mirrors-prettier # zizmor: ignore[archived-uses] archived but read-only/frozen; local-only formatting hook, not used in CI
+  # TODO: Replace this archived mirror when a maintained Prettier hook is available.
+  - repo: https://github.com/pre-commit/mirrors-prettier # zizmor: ignore[archived-uses]
     rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
