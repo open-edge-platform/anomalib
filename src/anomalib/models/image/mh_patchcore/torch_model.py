@@ -203,7 +203,8 @@ class MHPatchcoreModel(nn.Module):
             RuntimeError: If evaluation is requested before all fitted state is
                 available.
         """
-        if not self.training:
+        if not self.training and not torch.compiler.is_compiling():
+            # Eager-only guard: it reads buffer values, which dynamo cannot export.
             self._validate_inference_state()
 
         image_size = input_tensor.shape[-2:]

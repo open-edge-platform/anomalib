@@ -74,17 +74,17 @@ def test_to_onnx_treats_none_dynamo_as_false(mocker: pytest.MockFixture, tmp_pat
 
 def test_to_onnx_uses_dynamic_shapes_for_dynamo_export(mocker: pytest.MockFixture, tmp_path: Path) -> None:
     """Test that dynamo export receives ``dynamic_shapes`` instead of relying on conversion."""
+    dim_type = torch.export.Dim
     export_mock = mocker.patch("torch.onnx.export")
+    dim_mock = mocker.patch("torch.export.Dim", wraps=dim_type)
     model = DummyExportModel()
 
     model.to_onnx(tmp_path, input_size=(32, 32), dynamo=True)
 
     assert export_mock.call_args.kwargs["dynamo"] is True
-    assert export_mock.call_args.kwargs["dynamic_shapes"] == ({0: "batch_size"},)
-    assert export_mock.call_args.kwargs["dynamic_axes"] == {
-        "input": {0: "batch_size"},
-        "pred_score": {0: "batch_size"},
-    }
+    dim_mock.assert_called_once_with("batch_size")
+    assert isinstance(export_mock.call_args.kwargs["dynamic_shapes"][0][0], dim_type)
+    assert export_mock.call_args.kwargs["dynamic_axes"] is None
 
 
 def test_to_onnx_translates_custom_dynamic_axes_for_dynamo_export(
@@ -92,7 +92,9 @@ def test_to_onnx_translates_custom_dynamic_axes_for_dynamo_export(
     tmp_path: Path,
 ) -> None:
     """Test that custom ``dynamic_axes`` are converted to input-only ``dynamic_shapes`` for dynamo."""
+    dim_type = torch.export.Dim
     export_mock = mocker.patch("torch.onnx.export")
+    dim_mock = mocker.patch("torch.export.Dim", wraps=dim_type)
     model = DummyExportModel()
 
     model.to_onnx(
@@ -103,7 +105,10 @@ def test_to_onnx_translates_custom_dynamic_axes_for_dynamo_export(
         dynamic_axes={"image": {0: "batch_size", 2: "height", 3: "width"}, "pred_score": {0: "batch_size"}},
     )
 
-    assert export_mock.call_args.kwargs["dynamic_shapes"] == ({0: "batch_size", 2: "height", 3: "width"},)
+    shapes = export_mock.call_args.kwargs["dynamic_shapes"][0]
+    assert set(shapes) == {0, 2, 3}
+    assert all(isinstance(dim, dim_type) for dim in shapes.values())
+    assert {call.args[0] for call in dim_mock.call_args_list} == {"batch_size", "height", "width"}
 
 
 def test_to_onnx_raises_actionable_error_for_missing_onnxscript(
