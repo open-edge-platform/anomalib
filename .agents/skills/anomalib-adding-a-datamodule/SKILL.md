@@ -34,9 +34,22 @@ anomalib splits data support into two layers per source, both under `src/anomali
   - The base class already implements `setup()`, `train_dataloader()`, `val_dataloader()`,
     `test_dataloader()`, and `from_config()` (jsonargparse subclass integration) — do not override these
     unless the data source genuinely needs custom dataloader construction.
+  - It also already implements `_create_test_split()` / `_create_val_split()` — **don't hand-roll
+    `random_split()` + `concatenate_datasets()` in `_setup()`**; just assign `self.train_data` /
+    `self.test_data` from directory splits and let the base class do the rest (see `MPDD`/`BTech`
+    `_setup()` for the minimal pattern). The two methods trigger differently, though:
+    - `_create_test_split()` samples normal images from `train_data` (via `test_split_ratio`)
+      only when `test_data` lacks normal samples.
+    - `_create_val_split()` is driven purely by `val_split_mode`, not by missing samples: for
+      `FROM_TRAIN`/`FROM_TEST`/`SAME_AS_TEST`/`SYNTHETIC` it auto-derives `val_data`; for
+      `FROM_DIR` it does nothing, so **you must assign `self.val_data` yourself in `_setup()`**
+      if you support `FROM_DIR`.
   - Constructor should accept and forward: `train_batch_size`, `eval_batch_size`, `num_workers`,
     `train_augmentations` / `val_augmentations` / `test_augmentations` / `augmentations`,
     `test_split_mode` / `test_split_ratio`, `val_split_mode` / `val_split_ratio`, `seed`.
+  - Validate dataset-specific params (e.g. `category`, `modality`) against an explicit allowlist and
+    raise a clear `ValueError` listing valid options — see `AutoVI`/`RealIAD`'s `category not in
+    CATEGORIES` check. Without this, a typo just surfaces as a generic "found 0 images" error.
 
 ## Reference: MVTecAD (standard benchmark-style dataset)
 
@@ -87,6 +100,14 @@ anomalib splits data support into two layers per source, both under `src/anomali
 Use `Folder` directly (no new code needed) whenever the data is already laid out as
 `root/normal_dir/*`, `root/abnormal_dir/*`, optionally `root/mask_dir/*`. Only write a brand-new
 dataset/datamodule pair when the data needs custom parsing logic `Folder` can't express.
+
+## Module docstring: License and Reference
+
+Every dataset/datamodule module docstring must include `License:` and `Reference:` sections (see
+`bmad.py`/`kaputt.py` for examples). Verify the license against the **dataset's actual source** (the
+HuggingFace dataset card or the dataset repo's own `LICENSE`), not the paper's code repository — the
+two are often different (e.g. code under BSD/MIT while the data itself is CC BY). Include the arXiv ID
+and/or DOI link in `Reference:`.
 
 ## Writing a brand-new datamodule (skeleton)
 
@@ -146,6 +167,24 @@ class MyDataModule(AnomalibDataModule):
         ...  # optional: download/validate on rank-zero
 ```
 
+### `prepare_data()` — downloading the dataset
+
+Check the dataset's actual license/hosting before picking a pattern — verify anonymous access with a
+HEAD request (so you don't transfer the whole archive just to check the status):
+`curl -s -o /dev/null -w '%{http_code}' -I -L <direct-file-url>`; a `401`/`403` means it's gated and
+the open pattern below won't work.
+
+- **Open dataset** (direct download link, no auth): use `DownloadInfo` + `download_and_extract` from
+  `anomalib.data.utils` — see `BMAD`/`MVTecAD` `prepare_data()`. Define a module-level `DOWNLOAD_INFO`
+  with `name`, `url`, and `hashsum`.
+- **Gated dataset** (e.g. HuggingFace dataset requiring click-through access): use `huggingface_hub`
+  conditionally — check for a token (`HF_TOKEN` env var or cached `hf auth login`), attempt
+  `hf_hub_download` + extract, and raise `FileNotFoundError` with manual-download instructions if no
+  token/`huggingface_hub` is available or the download fails. See `Kaputt.prepare_data()`
+  (`src/anomalib/data/datamodules/image/kaputt.py`) for the full reference implementation.
+- Always fall back to a clear `FileNotFoundError` with manual steps if automatic download isn't
+  possible — never leave the user with just a raw stack trace.
+
 ## Registration — how the datamodule becomes discoverable
 
 1. Export from the image (or video/depth) package `__init__.py` —
@@ -163,6 +202,16 @@ from .datamodules.image import (
 
 Once exported, it is usable as `anomalib.data.MyDataModule`, and from the CLI:
 `anomalib train --model Patchcore --data anomalib.data.MyDataModule --data.root ./datasets/mine`.
+
+3. Add a CLI config at `examples/configs/data/my_dataset.yaml` (see `examples/configs/data/bmad.yaml`
+   for the `class_path`/`init_args` format).
+
+4. Add a docs page under the matching modality's reference folder —
+   `docs/source/markdown/guides/reference/data/datamodules/{image,video,depth}/my_dataset.md`
+   (copy an existing page from that same folder, e.g. `image/bmad.md` — it's just an `automodule`
+   stub) and add a grid card + toctree entry in that folder's `index.md`.
+
+5. Add a `CHANGELOG.md` entry under `## [Unreleased]`.
 
 ## Tests
 
@@ -244,6 +293,12 @@ construct your datamodule directly against its output directory.
   `_generate_dummy_<format>_dataset` method on the appropriate generator (`DummyImageDatasetGenerator`
   for image formats, `DummyVideoDatasetGenerator` for video formats) — otherwise the shared
   `dataset_path` fixture (`tests/conftest.py`) will raise `NotImplementedError` for that format.
+- Dummy generators only ever produce standard 8-bit images, so unit tests can't catch format issues in
+  unusual source data (16-bit, float32, or multi-spectral TIFFs, etc.). If your dataset has non-standard
+  image formats, manually download a few real samples and verify pixel ranges through the actual
+  `anomalib.data.utils.image.read_image()` path before trusting dummy-data tests — e.g.
+  `Image.open(path).convert("RGB")` silently collapses some bit-depths/modes into degenerate all-black
+  or all-white images.
 
 ## Path confinement and data security rules
 
@@ -261,10 +316,20 @@ When writing a datamodule or dataset that parses metadata (split CSVs, JSON, Par
 
 - [ ] `AnomalibDataset` subclass sets `self.samples` (DataFrame with required columns + `task` attr).
 - [ ] `AnomalibDataModule` subclass implements `_setup()` only; no unnecessary overrides of
-      `train_dataloader`/`val_dataloader`/`test_dataloader`.
+      `train_dataloader`/`val_dataloader`/`test_dataloader`, and no hand-rolled split logic that
+      duplicates `_create_test_split()`/`_create_val_split()`.
+- [ ] Dataset-specific params (`category`, `modality`, etc.) are validated with a clear `ValueError`.
 - [ ] Any paths parsed from split files, annotations, or metadata are confined to `root` using `resolve_path_under_root` or `validate_path(..., base_dir=root)`.
+- [ ] `prepare_data()` downloads automatically where possible (open dataset: `DOWNLOAD_INFO`; gated
+      dataset: `huggingface_hub` + token, per `Kaputt`), with a clear manual fallback otherwise.
+- [ ] Module docstring `License:`/`Reference:` match the dataset's actual source (not just the paper's
+      code repo).
 - [ ] Datamodule exported from `src/anomalib/data/__init__.py` and `__all__` updated.
 - [ ] `anomalib.data.MyDataModule` resolves and works from the CLI `--data` flag.
+- [ ] `examples/configs/data/my_dataset.yaml` and a docs reference page added.
+- [ ] `CHANGELOG.md` entry added under `## [Unreleased]`.
 - [ ] Unit tests added under `tests/unit/data/datamodule/` (including path confinement tests if parsing external metadata).
 - [ ] If a new `DataFormat` was introduced, a matching `_generate_dummy_*_dataset` method was added to
       `DummyImageDatasetGenerator` in `tests/helpers/data.py`.
+- [ ] For non-standard image formats (16-bit, float, multi-spectral), verified real sample pixel values
+      through `read_image()` — not just dummy-generated test data.
