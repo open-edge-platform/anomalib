@@ -10,6 +10,8 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import torch
+
 if TYPE_CHECKING:
     from anomalib.deploy.export import ExportType
 
@@ -78,8 +80,11 @@ def get_dynamic_shapes_from_axes(
     dynamic_axes: dict[str, dict[int, str]] | None,
     input_names: list[str],
     output_names: list[str],
-) -> tuple[dict[int, str],] | None:
-    """Translate single-input ``dynamic_axes`` to dynamo ``dynamic_shapes``."""
+) -> tuple[dict[int, Any],] | None:
+    """Translate single-input ``dynamic_axes`` to dynamo ``dynamic_shapes``.
+
+    Dynamo expects ``torch.export.Dim`` objects; axes sharing a name share a ``Dim``.
+    """
     if not dynamic_axes:
         return None
 
@@ -87,7 +92,11 @@ def get_dynamic_shapes_from_axes(
     input_axes = dynamic_axes.get(input_name)
     if input_axes is None:
         input_axes = next((axes for name, axes in dynamic_axes.items() if name not in output_names), None)
-    return (dict(input_axes),) if input_axes else None
+    if not input_axes:
+        return None
+
+    dimensions = {name: torch.export.Dim(name) for name in input_axes.values()}
+    return ({axis: dimensions[name] for axis, name in input_axes.items()},)
 
 
 def validate_input_names(input_names: object) -> list[str]:
