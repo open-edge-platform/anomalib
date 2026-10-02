@@ -22,13 +22,12 @@ from packaging.requirements import Requirement
 from packaging.version import Version
 
 AVAILABLE_TORCH_VERSIONS = {
-    # NOTE: Minimum torch>=2.6.0 required due to Critical CVE-2025-32434
-    #   (torch.load weights_only=True RCE, patched in 2.6.0)
-    "2.6.0": {"torchvision": "0.21.0", "cuda": ("12.6",)},
-    "2.7.0": {"torchvision": "0.22.0", "cuda": ("12.6",)},
-    "2.7.1": {"torchvision": "0.22.1", "cuda": ("12.6",)},
-    "2.8.0": {"torchvision": "0.23.0", "cuda": ("12.6", "12.8")},
-    "2.9.0": {"torchvision": "0.24.0", "cuda": ("12.6", "12.8", "13.0")},
+    # NOTE: Minimum torch>=2.10.0 required as of anomalib 2.7.0 (dynamo ONNX exporter).
+    "2.10.0": {"torchvision": "0.25.0", "cuda": ("12.6", "12.8", "13.0")},
+    "2.11.0": {"torchvision": "0.26.0", "cuda": ("12.6", "12.8", "13.0")},
+    "2.12.0": {"torchvision": "0.27.0", "cuda": ("12.6", "13.0", "13.2")},
+    "2.13.0": {"torchvision": "0.28.0", "cuda": ("12.6", "13.0", "13.2")},
+    "2.14.0": {"torchvision": "0.29.0", "cuda": ("12.6", "13.0", "13.2")},
 }
 
 
@@ -325,19 +324,19 @@ def get_torch_install_args(requirement: str | Requirement) -> list[str]:
 
     Example:
         ```python
-        requirement = "torch>=2.9.0"
+        requirement = "torch>=2.10.0"
         get_torch_install_args(requirement)
         # Returns:
         [
             '--extra-index-url',
             'https://download.pytorch.org/whl/cu130',
-            'torch>=2.9.0',
-            'torchvision>=0.24.0'
+            'torch>=2.10.0',
+            'torchvision>=0.25.0'
         ]
         ```
 
     Test:
-        >>> args = get_torch_install_args("torch>=2.9.0")
+        >>> args = get_torch_install_args("torch>=2.10.0")
         >>> isinstance(args, list)
         True
         >>> all(isinstance(arg, str) for arg in args)

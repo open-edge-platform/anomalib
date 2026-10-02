@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import warnings
 from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -19,37 +18,32 @@ if TYPE_CHECKING:
 def get_onnx_dynamo_flag(kwargs: dict[str, Any]) -> bool:
     """Return ONNX exporter dynamo flag.
 
-    Torch 2.9 switches ``torch.onnx.export`` to ``dynamo=True`` by default.
-    anomalib keeps the legacy exporter as the default because the dynamo path
-    requires ``onnxscript`` and is only needed when users opt in explicitly.
+    The dynamo-based exporter is required as of anomalib 2.7.0. Passing
+    ``dynamo=False`` raises because the legacy exporter path was removed.
 
     Args:
         kwargs (dict[str, Any]): Keyword arguments passed to ``torch.onnx.export``.
 
     Returns:
-        bool: Resolved dynamo flag.
+        bool: Always ``True`` after validating the requested flag.
 
     Raises:
         TypeError: If ``dynamo`` is not a ``bool`` or ``None``.
+        ValueError: If ``dynamo=False`` is requested.
     """
-    dynamo = kwargs.pop("dynamo", False)
+    dynamo = kwargs.pop("dynamo", True)
     if dynamo is None:
-        return False
+        return True
     if not isinstance(dynamo, bool):
         msg = f"`dynamo` must be a bool or None, got {type(dynamo).__name__}: {dynamo!r}"
         raise TypeError(msg)
-    return dynamo
-
-
-def warn_legacy_onnx_exporter_deprecation() -> None:
-    """Warn that the legacy ONNX exporter path is deprecated."""
-    warnings.warn(
-        "The legacy ONNX exporter path (`dynamo=False`) is deprecated and will be removed in anomalib 2.7.0. "
-        "Minimum required PyTorch version will increase to 2.10 in anomalib 2.7.0. Install `anomalib[openvino]` "
-        "and migrate to `dynamo=True`.",
-        FutureWarning,
-        stacklevel=2,
-    )
+    if not dynamo:
+        msg = (
+            "The legacy ONNX exporter path (`dynamo=False`) was removed in anomalib 2.7.0. "
+            "Install `anomalib[openvino]` (provides `onnxscript`) and use `dynamo=True` (the default)."
+        )
+        raise ValueError(msg)
+    return True
 
 
 def get_default_dynamic_axes(
@@ -57,7 +51,7 @@ def get_default_dynamic_axes(
     input_names: list[str],
     output_names: list[str],
 ) -> dict[str, dict[int, str]]:
-    """Build default dynamic axes for legacy ONNX export.
+    """Build default dynamic axes for ONNX export.
 
     Args:
         input_size (tuple[int, int] | None): Input image dimensions ``(H, W)``.
@@ -133,10 +127,7 @@ def raise_missing_onnxscript_error(cause: BaseException | None = None) -> None:
     Raises:
         ModuleNotFoundError: If ``onnxscript`` is not installed for dynamo export.
     """
-    msg = (
-        "ONNX export with `dynamo=True` requires the optional `onnxscript` dependency. "
-        "Install `anomalib[openvino]` or `onnxscript`, or export with `dynamo=False`."
-    )
+    msg = "ONNX export requires the optional `onnxscript` dependency. Install `anomalib[openvino]` or `onnxscript`."
     raise ModuleNotFoundError(msg, name="onnxscript") from cause
 
 

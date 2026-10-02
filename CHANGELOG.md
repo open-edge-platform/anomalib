@@ -14,6 +14,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 
+- ⚠️ **export**: Remove the legacy ONNX exporter path (`dynamo=False`); ONNX export now requires the dynamo exporter (`dynamo=True`, the default) and `onnxscript` (via `anomalib[openvino]`)
+- ⚠️ **model**: Remove `restore_frozen_encoder_weights` and per-model legacy encoder checkpoint migration; checkpoints trained before the timm-encoder migration are no longer loadable — retrain or re-export under a current release
+- ⚠️ **deps**: Raise minimum PyTorch to `>=2.10.0` (and matching `torchvision>=0.25.0` for cpu/cu/xpu extras) as announced with the ONNX exporter deprecation; ROCm extra remains `torch>=2.13.0`
+
 ### Changed
 
 - ⚠️ **security**: When a dataset `root` is set, metadata path columns (Tabular and similar loaders) must resolve under that root; absolute paths outside `root` are rejected by @ashwinvaidya17

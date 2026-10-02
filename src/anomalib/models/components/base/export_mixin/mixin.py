@@ -58,7 +58,6 @@ from .utils import (
     get_onnx_dynamo_flag,
     raise_missing_onnxscript_error,
     validate_input_names,
-    warn_legacy_onnx_exporter_deprecation,
 )
 
 if TYPE_CHECKING:
@@ -140,17 +139,18 @@ class ExportMixin:
             **kwargs: Additional arguments to pass to torch.onnx.export.
                 See https://pytorch.org/docs/stable/onnx.html#torch.onnx.export for details.
                 Common options include:
-                - dynamo (bool): Use the dynamo-based ONNX exporter (requires ``onnxscript``).
-                  Defaults to ``False`` in anomalib; the legacy exporter is deprecated and
-                  will be removed in anomalib 2.7.0.
-                - dynamic_shapes (dict): Dynamo-only. Dynamic shape spec passed to
-                  ``torch.onnx.export`` when ``dynamo=True``. If omitted, derived from
-                  ``dynamic_axes``.
+                - dynamo (bool): Must be ``True`` (default). The legacy exporter
+                  (``dynamo=False``) was removed in anomalib 2.7.0. Requires ``onnxscript``.
+                - dynamic_shapes (dict | tuple | list): Shape specification matching
+                  the positional model inputs. For this single-input model, use a
+                  tuple containing an axis-to-``torch.export.Dim`` mapping. If omitted,
+                  derived from ``dynamic_axes``.
                 - opset_version (int): ONNX opset version to use
                 - do_constant_folding (bool): Whether to optimize constant folding
                 - input_names (list[str]): Names of input tensors
                 - output_names (list[str]): Names of output tensors
-                - dynamic_axes (dict): Dynamic axes configuration
+                - dynamic_axes (dict): Dynamic axes configuration (also used to derive
+                  ``dynamic_shapes`` when the latter is omitted)
                 - custom_opsets (dict): Custom opset versions
                 - export_modules_as_functions (bool): Export modules as functions
                 - verify (bool): Verify the exported model
@@ -188,27 +188,18 @@ class ExportMixin:
         output_names = [name for name, value in self.eval()(input_shape)._asdict().items() if value is not None]
         input_names = validate_input_names(kwargs.pop("input_names", ["input"]))
         default_dynamic_axes = get_default_dynamic_axes(input_size, input_names, output_names)
-        dynamo = get_onnx_dynamo_flag(kwargs)
-
-        if dynamo:
-            dynamic_axes = kwargs.pop("dynamic_axes", default_dynamic_axes)
-            dynamic_shapes = kwargs.pop(
-                "dynamic_shapes",
-                get_dynamic_shapes_from_axes(dynamic_axes, input_names, output_names),
-            )
-        else:
-            warn_legacy_onnx_exporter_deprecation()
-            dynamic_axes = kwargs.pop("dynamic_axes", default_dynamic_axes)
-            kwargs.pop("dynamic_shapes", None)
-            dynamic_shapes = None
+        get_onnx_dynamo_flag(kwargs)  # validates / rejects dynamo=False
+        dynamic_axes = kwargs.pop("dynamic_axes", default_dynamic_axes)
+        dynamic_shapes = kwargs.pop(
+            "dynamic_shapes",
+            get_dynamic_shapes_from_axes(dynamic_axes, input_names, output_names),
+        )
 
         export_kwargs: dict[str, Any] = {
             "opset_version": kwargs.pop("opset_version", 14),
-            # dynamo takes ``dynamic_shapes``; passing legacy ``dynamic_axes`` too conflicts with it.
-            "dynamic_axes": None if dynamo else dynamic_axes,
             "input_names": input_names,
             "output_names": output_names,
-            "dynamo": dynamo,
+            "dynamo": True,
             "dynamic_shapes": dynamic_shapes,
         }
 
@@ -221,7 +212,7 @@ class ExportMixin:
                 **kwargs,
             )
         except ModuleNotFoundError as exception:
-            if dynamo and (exception.name == "onnxscript" or "onnxscript" in str(exception)):
+            if exception.name == "onnxscript" or "onnxscript" in str(exception):
                 raise_missing_onnxscript_error(exception)
             raise
 
