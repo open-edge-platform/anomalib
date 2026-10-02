@@ -5,6 +5,7 @@
 
 import pytest
 import torch
+from tests.helpers.export import assert_exportable
 
 from anomalib.models.components.filters import GaussianBlur2d
 from anomalib.models.image.uninet.components import weighted_decision_mechanism
@@ -18,6 +19,11 @@ def _reference_score(output_list: list[torch.Tensor], output_size: tuple[int, in
         for o in output_list
     )
     return torch.stack([blur(image[None, None]).max() for image in summed]).unsqueeze(1)
+
+
+def _score_two_outputs(first: torch.Tensor, second: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    """Score two output maps; tensor-only signature for ``assert_exportable``."""
+    return weighted_decision_mechanism(first.shape[0], [first, second], 0.01, 3e-05, (64, 64))
 
 
 @pytest.mark.parametrize("batch_size", [1, 3])
@@ -36,13 +42,4 @@ def test_score_is_max_of_blurred_map(batch_size: int, output_size: tuple[int, in
 
 def test_weighted_decision_mechanism_is_exportable() -> None:
     """``torch.export`` captures the scoring path without data-dependent guards and matches eager."""
-
-    class Score(torch.nn.Module):
-        @staticmethod
-        def forward(first: torch.Tensor, second: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-            return weighted_decision_mechanism(first.shape[0], [first, second], 0.01, 3e-05, (64, 64))
-
-    inputs = (torch.rand(2, 32, 32), torch.rand(2, 16, 16))
-    exported = torch.export.export(Score(), inputs)
-    for actual, expected in zip(exported.module()(*inputs), Score()(*inputs), strict=True):
-        torch.testing.assert_close(actual, expected)
+    assert_exportable(_score_two_outputs, torch.rand(2, 32, 32), torch.rand(2, 16, 16))

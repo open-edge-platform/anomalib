@@ -3,8 +3,11 @@
 
 """Unit tests for WinCLIP utils."""
 
+from functools import partial
+
 import pytest
 import torch
+from tests.helpers.export import assert_exportable
 
 from anomalib.models.image.winclip.utils import (
     class_scores,
@@ -188,12 +191,4 @@ class TestMakeMasks:
 def test_harmonic_aggregation_is_exportable() -> None:
     """``torch.export`` captures the aggregation without data-dependent guards and matches eager."""
     masks = make_masks((15, 15), 2)
-
-    class Aggregate(torch.nn.Module):
-        @staticmethod
-        def forward(window_scores: torch.Tensor) -> torch.Tensor:
-            return harmonic_aggregation(window_scores, (15, 15), masks)
-
-    window_scores = torch.rand(2, masks.shape[1])
-    exported = torch.export.export(Aggregate(), (window_scores,))
-    torch.testing.assert_close(exported.module()(window_scores), Aggregate()(window_scores))
+    assert_exportable(partial(harmonic_aggregation, output_size=(15, 15), masks=masks), torch.rand(2, masks.shape[1]))
