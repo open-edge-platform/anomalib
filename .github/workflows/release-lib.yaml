@@ -97,7 +97,7 @@ jobs:
 
   quality:
     needs: [version-check]
-    uses: ./.github/workflows/_reusable-code-quality.yaml
+    uses: $/.github/workflows/_reusable-code-quality.yaml
     permissions:
       contents: read # Required by the called workflow to checkout the repository
     with:
@@ -105,7 +105,7 @@ jobs:
 
   unit-tests:
     needs: [version-check]
-    uses: ./.github/workflows/_reusable-test-suite.yaml
+    uses: $/.github/workflows/_reusable-test-suite.yaml
     permissions:
       contents: read # Required by the called workflow to checkout the repository
     with:
@@ -118,7 +118,7 @@ jobs:
 
   integration-tests:
     needs: [version-check]
-    uses: ./.github/workflows/_reusable-test-suite.yaml
+    uses: $/.github/workflows/_reusable-test-suite.yaml
     permissions:
       contents: read # Required by the called workflow to checkout the repository
     with:
@@ -131,7 +131,7 @@ jobs:
 
   security:
     needs: [version-check]
-    uses: ./.github/workflows/_reusable-security-scan.yaml
+    uses: $/.github/workflows/_reusable-security-scan.yaml
     permissions:
       security-events: write # Required to upload SARIF scan results to the Security tab
       packages: read
@@ -147,7 +147,7 @@ jobs:
     if: |
       !inputs.dry_run &&
       !failure() && !cancelled()
-    uses: ./.github/workflows/_reusable-artifact-builder.yaml
+    uses: $/.github/workflows/_reusable-artifact-builder.yaml
     permissions:
       contents: read # Required by the called workflow to checkout the repository
     with:

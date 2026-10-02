@@ -119,7 +119,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run tests
-        uses: ./.github/actions/pytest
+        uses: $/.github/actions/pytest
         with:
           python-version: ${{ inputs.python-version }}
           test-type: ${{ inputs.test-type }}

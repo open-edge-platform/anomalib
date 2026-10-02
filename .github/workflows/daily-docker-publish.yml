@@ -61,7 +61,7 @@ jobs:
             type=raw,value=${{ github.ref_name }}
 
       - name: Build and push Docker image
-        uses: ./.github/actions/docker-build
+        uses: $/.github/actions/docker-build
         with:
           device: ${{ matrix.device }}
           push: "true"
