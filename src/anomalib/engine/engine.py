@@ -154,15 +154,16 @@ class Engine:
 
     def __init__(
         self,
+        model: AnomalibModule | None = None,
         callbacks: list[Callback] | None = None,
         logger: Logger | Iterable[Logger] | bool | None = None,
         default_root_dir: str | Path = "results",
         **kwargs,
     ) -> None:
-        # TODO(ashwinvaidya17): Add model argument to engine constructor
-        # https://github.com/open-edge-platform/anomalib/issues/1639
         if callbacks is None:
             callbacks = []
+
+        self._model = model
 
         # Cache the Lightning Trainer arguments.
         logger = False if logger is None else logger
@@ -174,16 +175,18 @@ class Engine:
         )
 
         self._trainer: Trainer | None = None
+        if self._model is not None:
+            self._setup_trainer(self._model)
 
     @property
     def trainer(self) -> Trainer:
         """Property to get the trainer.
 
-        Raises:
-            UnassignedError: When the trainer is not assigned yet.
-
         Returns:
             Trainer: Lightning Trainer.
+
+        Raises:
+            UnassignedError: When the trainer is not assigned yet.
         """
         if not self._trainer:
             msg = "``self.trainer`` is not assigned yet."
@@ -194,16 +197,18 @@ class Engine:
     def model(self) -> AnomalibModule:
         """Property to get the model.
 
-        Raises:
-            UnassignedError: When the model is not assigned yet.
-
         Returns:
             AnomalibModule: Anomaly model.
+
+        Raises:
+            UnassignedError: When the model is not assigned yet.
         """
-        if not self.trainer.lightning_module:
-            msg = "Trainer does not have a model assigned yet."
-            raise UnassignedError(msg)
-        return self.trainer.lightning_module
+        if self._model is not None:
+            return self._model
+        if self._trainer is not None and self._trainer.lightning_module is not None:
+            return self._trainer.lightning_module
+        msg = "Trainer does not have a model assigned yet."
+        raise UnassignedError(msg)
 
     @property
     def checkpoint_callback(self) -> ModelCheckpoint | None:
@@ -229,7 +234,7 @@ class Engine:
 
     def _setup_workspace(
         self,
-        model: AnomalibModule,
+        model: AnomalibModule | None = None,
         train_dataloaders: TRAIN_DATALOADERS | None = None,
         val_dataloaders: EVAL_DATALOADERS | None = None,
         test_dataloaders: EVAL_DATALOADERS | None = None,
@@ -244,7 +249,7 @@ class Engine:
         other artifacts will be saved in this directory.
 
         Args:
-            model (AnomalibModule): Input model.
+            model (AnomalibModule | None, optional): Input model. Defaults to None.
             train_dataloaders (TRAIN_DATALOADERS | None, optional): Train dataloaders.
                 Defaults to ``None``.
             val_dataloaders (EVAL_DATALOADERS | None, optional): Validation dataloaders.
@@ -261,6 +266,7 @@ class Engine:
         Raises:
             TypeError: If the dataloader type is unknown.
         """
+        model = model or self.model
         # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
         # 1. Get the dataset name and category from the dataloaders, datamodule, or dataset.
         dataset_name: str = ""
@@ -365,7 +371,7 @@ class Engine:
 
     def fit(
         self,
-        model: AnomalibModule,
+        model: AnomalibModule | None = None,
         train_dataloaders: TRAIN_DATALOADERS | None = None,
         val_dataloaders: EVAL_DATALOADERS | None = None,
         datamodule: AnomalibDataModule | None = None,
@@ -374,7 +380,7 @@ class Engine:
         """Fit the model using the trainer.
 
         Args:
-            model (AnomalibModule): Model to be trained.
+            model (AnomalibModule | None, optional): Model to be trained. Defaults to None.
             train_dataloaders (TRAIN_DATALOADERS | None, optional): Train dataloaders.
                 Defaults to None.
             val_dataloaders (EVAL_DATALOADERS | None, optional): Validation dataloaders.
@@ -402,6 +408,7 @@ class Engine:
         if ckpt_path:
             ckpt_path = Path(ckpt_path).resolve()
 
+        model = model or self.model
         self._setup_workspace(
             model=model,
             train_dataloaders=train_dataloaders,
@@ -464,10 +471,13 @@ class Engine:
                 anomalib validate --config <config_file_path>
                 ```
         """
+        model = model or self.model
         if ckpt_path:
             ckpt_path = Path(ckpt_path).resolve()
         if model:
             self._setup_trainer(model)
+
+        model = model or self.model
         return self.trainer.validate(model, dataloaders, ckpt_path, verbose, datamodule, weights_only=False)
 
     def test(
@@ -551,6 +561,7 @@ class Engine:
         if ckpt_path:
             ckpt_path = Path(ckpt_path).resolve()
 
+        model = model or self.model
         self._setup_workspace(model=model or self.model, datamodule=datamodule, test_dataloaders=dataloaders)
 
         if model:
@@ -559,7 +570,7 @@ class Engine:
             msg = "`Engine.test()` requires an `AnomalibModule` when it hasn't been passed in a previous run."
             raise RuntimeError(msg)
 
-        if self._should_run_validation(model or self.model, ckpt_path):
+        if self._should_run_validation(model, ckpt_path):
             logger.info("Running validation before testing to collect normalization metrics and/or thresholds.")
             self.trainer.validate(model, dataloaders, None, verbose=False, datamodule=datamodule)
 
@@ -652,6 +663,7 @@ class Engine:
         if ckpt_path:
             ckpt_path = Path(ckpt_path).resolve()
 
+        model = model or self.model
         self._setup_workspace(model=model or self.model, datamodule=datamodule, test_dataloaders=dataloaders)
 
         if model:
@@ -675,7 +687,7 @@ class Engine:
             dataloaders.append(DataLoader(dataset, collate_fn=dataset.collate_fn, pin_memory=True))
         dataloaders = dataloaders or None
 
-        if self._should_run_validation(model or self.model, ckpt_path):
+        if self._should_run_validation(model, ckpt_path):
             logger.info("Running validation before predicting to collect normalization metrics and/or thresholds.")
             self.trainer.validate(
                 model,
@@ -690,7 +702,7 @@ class Engine:
 
     def train(
         self,
-        model: AnomalibModule,
+        model: AnomalibModule | None = None,
         train_dataloaders: TRAIN_DATALOADERS | None = None,
         val_dataloaders: EVAL_DATALOADERS | None = None,
         test_dataloaders: EVAL_DATALOADERS | None = None,
@@ -700,7 +712,7 @@ class Engine:
         """Fits the model and then calls test on it.
 
         Args:
-            model (AnomalibModule): Model to be trained.
+            model (AnomalibModule | None, optional): Model to be trained. Defaults to None.
             train_dataloaders (TRAIN_DATALOADERS | None, optional): Train dataloaders.
                 Defaults to None.
             val_dataloaders (EVAL_DATALOADERS | None, optional): Validation dataloaders.
@@ -727,24 +739,32 @@ class Engine:
                 anomalib train --config <config_file_path>
                 ```
         """
+        model = model or self.model
         if ckpt_path:
             ckpt_path = Path(ckpt_path).resolve()
+
+        if model is not None:
+            self._setup_trainer(model)
+
+        resolved_model = model or self.model
         self._setup_workspace(
-            model,
+            resolved_model,
             train_dataloaders,
             val_dataloaders,
             test_dataloaders,
             datamodule,
             versioned_dir=True,
         )
-        self._setup_trainer(model)
-        if model.learning_type in {LearningType.ZERO_SHOT, LearningType.FEW_SHOT}:
+
+        if resolved_model.learning_type in {LearningType.ZERO_SHOT, LearningType.FEW_SHOT}:
             # if the model is zero-shot or few-shot, we only need to run validate for normalization and thresholding
-            self.trainer.validate(model, val_dataloaders, None, verbose=False, datamodule=datamodule)
+            self.trainer.validate(resolved_model, val_dataloaders, None, verbose=False, datamodule=datamodule)
         else:
-            self.trainer.fit(model, train_dataloaders, val_dataloaders, datamodule, ckpt_path, weights_only=False)
+            self.trainer.fit(
+                resolved_model, train_dataloaders, val_dataloaders, datamodule, ckpt_path, weights_only=False
+            )
         return self.trainer.test(
-            model,
+            resolved_model,
             test_dataloaders,
             ckpt_path=ckpt_path,
             datamodule=datamodule,
@@ -753,8 +773,8 @@ class Engine:
 
     def export(
         self,
-        model: AnomalibModule,
-        export_type: ExportType | str,
+        model: AnomalibModule | None = None,
+        export_type: ExportType | str = ExportType.OPENVINO,
         export_root: str | Path | None = None,
         model_file_name: str = "model",
         input_size: tuple[int, int] | None = None,
@@ -770,7 +790,7 @@ class Engine:
         r"""Export the model in PyTorch, ONNX or OpenVINO format.
 
         Args:
-            model (AnomalibModule): Trained model.
+            model (AnomalibModule | None, optional): Trained model. Defaults to None.
             export_type (ExportType): Export type.
             export_root (str | Path | None, optional): Path to the output directory. If it is not set, the model is
                 exported to trainer.default_root_dir. Defaults to None.
@@ -850,17 +870,21 @@ class Engine:
             else:
                 ov_kwargs = ov_args
 
+        model = model or self.model
         export_type = ExportType(export_type)
-        self._setup_trainer(model)
+        if model is not None:
+            self._setup_trainer(model)
+
+        resolved_model = model or self.model
         if ckpt_path:
             ckpt_path = Path(ckpt_path).resolve()
-            model = model.__class__.load_from_checkpoint(ckpt_path, weights_only=False)
+            resolved_model = resolved_model.__class__.load_from_checkpoint(ckpt_path, weights_only=False)
 
         if export_root is None:
             export_root = Path(self.trainer.default_root_dir)
 
         # Warn if max_drop is provided but not used
-        if max_drop != 0.01 and compression_type != CompressionType.INT8_ACQ:
+        if not __import__("math").isclose(max_drop, 0.01) and compression_type != CompressionType.INT8_ACQ:
             warnings.warn(
                 f"max_drop parameter is only used for CompressionType.INT8_ACQ but got {compression_type}. "
                 "The parameter will be ignored.",
@@ -880,19 +904,19 @@ class Engine:
 
         exported_model_path: Path | None = None
         if export_type == ExportType.TORCH:
-            exported_model_path = model.to_torch(
+            exported_model_path = resolved_model.to_torch(
                 export_root=export_root,
                 model_file_name=model_file_name,
             )
         elif export_type == ExportType.ONNX:
-            exported_model_path = model.to_onnx(
+            exported_model_path = resolved_model.to_onnx(
                 export_root=export_root,
                 model_file_name=model_file_name,
                 input_size=input_size,
                 **(onnx_kwargs or {}),
             )
         elif export_type == ExportType.OPENVINO:
-            exported_model_path = model.to_openvino(
+            exported_model_path = resolved_model.to_openvino(
                 export_root=export_root,
                 model_file_name=model_file_name,
                 input_size=input_size,
