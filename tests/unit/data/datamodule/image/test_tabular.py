@@ -29,11 +29,11 @@ class TestTabular(_TestAnomalibImageDatamodule):
     """Tabular Datamodule Unit Tests."""
 
     @staticmethod
-    def get_samples_dataframe(dataset_path: Path) -> pd.DataFrame:
+    def get_samples_dataframe(mvtecad_path: Path) -> pd.DataFrame:
         """Create samples DataFrame using the Folder datamodule."""
         datamodule_ = Folder(
             name="dummy",
-            root=dataset_path / "mvtecad" / "dummy",
+            root=mvtecad_path / "dummy",
             normal_dir="train/good",
             abnormal_dir="test/bad",
             normal_test_dir="test/good",
@@ -65,9 +65,9 @@ class TestTabular(_TestAnomalibImageDatamodule):
 
     @pytest.fixture()
     @staticmethod
-    def datamodule(dataset_path: Path, columns_to_drop: list | None) -> Tabular:
+    def datamodule(mvtecad_path: Path, columns_to_drop: list | None) -> Tabular:
         """Create and return a Tabular datamodule."""
-        samples = TestTabular.get_samples_dataframe(dataset_path)
+        samples = TestTabular.get_samples_dataframe(mvtecad_path)
         if columns_to_drop:
             samples = samples.drop(columns_to_drop, axis="columns")
         datamodule_ = Tabular(
@@ -96,9 +96,9 @@ class TestTabularFromFile(TestTabular):
 
     @pytest.fixture()
     @staticmethod
-    def datamodule(dataset_path: Path) -> Tabular:
+    def datamodule(mvtecad_path: Path) -> Tabular:
         """Create and return a Tabular datamodule."""
-        samples = TestTabular.get_samples_dataframe(dataset_path)
+        samples = TestTabular.get_samples_dataframe(mvtecad_path)
         with tempfile.NamedTemporaryFile(suffix=".csv") as samples_file:
             samples.to_csv(samples_file)
             samples_file.seek(0)
