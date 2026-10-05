@@ -188,7 +188,7 @@ jobs:
             type=raw,value=${{ needs.validate.outputs.rc_version }}
 
       - name: Build and push Docker image
-        uses: ./.github/actions/docker-build
+        uses: open-edge-platform/anomalib/.github/actions/docker-build@ec87c2162f08572b47eb1fea55ed819fd1a39b08
         with:
           device: ${{ matrix.device }}
           push: "true"

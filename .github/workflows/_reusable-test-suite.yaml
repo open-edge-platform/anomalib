@@ -119,7 +119,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run tests
-        uses: ./.github/actions/pytest
+        uses: open-edge-platform/anomalib/.github/actions/pytest@1f503a6c3614e2637472cdb6d9ca21054c83ac26
         with:
           python-version: ${{ inputs.python-version }}
           test-type: ${{ inputs.test-type }}
