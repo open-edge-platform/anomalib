@@ -15,13 +15,6 @@ if TYPE_CHECKING:
     from anomalib.deploy.export import ExportType
 
 DEFAULT_EXPORT_SPATIAL_SIZE = (32, 32)
-_DYNAMIC_DIM_TYPE = type(torch.export.Dim("_anomalib_example"))
-_STATIC_DIM = getattr(torch.export.Dim, "STATIC", None)
-_DYNAMIC_DIM_HINTS = tuple(
-    hint
-    for hint in (getattr(torch.export.Dim, "AUTO", None), getattr(torch.export.Dim, "DYNAMIC", None))
-    if hint is not None
-)
 
 
 def get_onnx_dynamo_flag(kwargs: dict[str, Any]) -> bool:
@@ -124,34 +117,43 @@ def get_example_input(
     height, width = input_size or DEFAULT_EXPORT_SPATIAL_SIZE
     shape = [1, 3, height, width]
 
-    def input_dimensions(specification: object) -> dict[int, object]:
-        """Resolve one tensor's dimension spec from positional or named argument forms."""
+    specification = dynamic_shapes
+    while True:
         if isinstance(specification, Mapping):
             if not specification or all(isinstance(axis, int) for axis in specification):
-                return {axis: dimension for axis, dimension in specification.items() if isinstance(axis, int)}
+                axes = {axis: dimension for axis, dimension in specification.items() if isinstance(axis, int)}
+                break
             # This API exports one positional image tensor; named mappings wrap its spec.
             if len(specification) == 1:
-                return input_dimensions(next(iter(specification.values())))
-            return {}
+                specification = next(iter(specification.values()))
+                continue
+            # Exporter reports unsupported multi-input specifications for this single-input API.
+            axes = {}
+            break
         if isinstance(specification, Sequence) and not isinstance(specification, (str, bytes)):
             if len(specification) == 1 and (
                 specification[0] is None or isinstance(specification[0], (Mapping, Sequence))
             ):
-                return input_dimensions(specification[0])
+                specification = specification[0]
+                continue
             # A sequence at the tensor-spec level describes dimensions by position.
-            return dict(enumerate(specification))
-        return {}
-
-    axes = input_dimensions(dynamic_shapes)
+            axes = dict(enumerate(specification))
+            break
+        axes = {}
+        break
 
     for axis, dimension in axes.items():
-        if dimension is None or dimension is _STATIC_DIM:
+        if dimension is None or dimension is torch.export.Dim.STATIC:
             continue
         if isinstance(dimension, int) and not isinstance(dimension, bool):
             shape[axis] = dimension
-        elif isinstance(dimension, _DYNAMIC_DIM_TYPE) or any(dimension is hint for hint in _DYNAMIC_DIM_HINTS):
-            minimum = getattr(dimension, "min", None)
-            maximum = getattr(dimension, "max", None)
+        elif dimension is torch.export.Dim.AUTO or dimension is torch.export.Dim.DYNAMIC:
+            shape[axis] = max(shape[axis], 2)
+        else:
+            try:
+                minimum, maximum = dimension.min, dimension.max
+            except AttributeError:
+                minimum, maximum = 0, None
             size = max(2, minimum) if isinstance(minimum, int) else 2
             shape[axis] = min(size, maximum) if isinstance(maximum, int) else size
     return torch.zeros(shape)
