@@ -70,7 +70,14 @@ clip = [
     #   'aten::_native_multi_head_attention' to ONNX opset version 14 is not supported
     "open-clip-torch>=2.23.0,<2.26.1",
 ]
-vlm = ["ollama>=0.4.0", "openai", "python-dotenv", "transformers"]
+vlm = [
+    "ollama>=0.4.0",
+    "openai",
+    "python-dotenv",
+    # Floor stops resolvers backtracking to transformers 4.12 (no huggingface-hub cap),
+    # whose tokenizers 0.10.3 has no wheels and fails to build from source.
+    "transformers>=4.40",
+]
 video = ["av>=10.0.0", "requests"]
 loggers = [
     "comet-ml>=3.31.7",
