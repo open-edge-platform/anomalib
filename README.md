@@ -31,13 +31,15 @@
 
 ---
 
-> 🌟 **Announcing v2.6.2 Release!** 🌟
+> 🌟 **Announcing v2.7.0 Release!** 🌟
 >
-> This patch release hardens `Tabular.from_file()` by restricting it to safe, data-only file formats.
+> This minor release adds new models and hardens checkpoint and path handling, while removing APIs scheduled for 2.7.0.
 >
 > Key Changes
 >
-> - **Security / API change**: `Tabular.from_file()` now only accepts `csv`, `json`, and `parquet`. Formats such as `pickle` and `hdf` are rejected because loading them can execute arbitrary code. Load those files yourself and pass a DataFrame to `Tabular(...)`.
+> - **New models**: MH-PatchCore, RAD (retrieval-based), and FoundAD (few-shot).
+> - **Security / API**: Checkpoint loading defaults to `weights_only=True`. When a dataset `root` is set, metadata paths must resolve under that root.
+> - **Removals**: Legacy ONNX exporter (`dynamo=False`) is gone — use `dynamo=True` (default) with `anomalib[openvino]`. Pre-timm ViT checkpoint migration is no longer supported. Minimum PyTorch is 2.10+ (ROCm 2.13+).
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 
