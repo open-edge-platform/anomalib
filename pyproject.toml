@@ -70,7 +70,9 @@ clip = [
     #   'aten::_native_multi_head_attention' to ONNX opset version 14 is not supported
     "open-clip-torch>=2.23.0,<2.26.1",
 ]
-vlm = ["ollama>=0.4.0", "openai", "python-dotenv", "transformers"]
+# lower bound prevents resolver backtracking to ancient transformers releases
+# whose pinned tokenizers version fails to build on current Rust toolchains
+vlm = ["ollama>=0.4.0", "openai", "python-dotenv", "transformers>=4.30"]
 video = ["av>=10.0.0", "requests"]
 loggers = [
     "comet-ml>=3.31.7",
