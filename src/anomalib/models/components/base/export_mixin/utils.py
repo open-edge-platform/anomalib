@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -13,6 +13,15 @@ import torch
 
 if TYPE_CHECKING:
     from anomalib.deploy.export import ExportType
+
+DEFAULT_EXPORT_SPATIAL_SIZE = (32, 32)
+_DYNAMIC_DIM_TYPE = type(torch.export.Dim("_anomalib_example"))
+_STATIC_DIM = getattr(torch.export.Dim, "STATIC", None)
+_DYNAMIC_DIM_HINTS = tuple(
+    hint
+    for hint in (getattr(torch.export.Dim, "AUTO", None), getattr(torch.export.Dim, "DYNAMIC", None))
+    if hint is not None
+)
 
 
 def get_onnx_dynamo_flag(kwargs: dict[str, Any]) -> bool:
@@ -95,27 +104,56 @@ def get_dynamic_shapes_from_axes(
 
 def get_example_input(
     input_size: tuple[int, int] | None,
-    dynamic_shapes: Sequence[dict[int, Any] | None] | None,
+    dynamic_shapes: object,
 ) -> torch.Tensor:
-    """Build the example image batch used to capture the model for export.
+    """Build example image input matching static dimensions in ``dynamic_shapes``.
 
-    Dynamo fixes example dimensions of size 0 or 1, so axes marked dynamic get an
-    example size of 2. Static axes keep the size the exported model must accept:
-    batch 1, and ``input_size`` (or 32x32, since the pre-processor resizes) spatially.
+    Dynamo specializes example dimensions of size 0 or 1. Use size 2 for symbolic
+    dimensions while honoring explicit static sizes, ``None``, and ``Dim.STATIC``.
+    Supports positional specs (tuple/list), named argument mappings, and a direct
+    axis-to-dimension mapping for this single-image input.
 
     Args:
         input_size (tuple[int, int] | None): Fixed ``(H, W)``, or ``None``.
-        dynamic_shapes (Sequence[dict[int, Any] | None] | None): Dynamo shape spec for the
-            positional inputs; only the first (image) entry is used.
+        dynamic_shapes (object): Dynamo shape specification passed through to ``torch.onnx.export``.
+            Only the specification for the single image input is used to select example sizes.
 
     Returns:
         torch.Tensor: Zero tensor of shape ``(B, 3, H, W)``.
     """
-    dynamic_axes = set((dynamic_shapes[0] or {}) if dynamic_shapes else {})
-    height, width = input_size or (32, 32)
+    height, width = input_size or DEFAULT_EXPORT_SPATIAL_SIZE
     shape = [1, 3, height, width]
-    for axis in dynamic_axes:
-        shape[axis] = max(shape[axis], 2)
+
+    def input_dimensions(specification: object) -> dict[int, object]:
+        """Resolve one tensor's dimension spec from positional or named argument forms."""
+        if isinstance(specification, Mapping):
+            if not specification or all(isinstance(axis, int) for axis in specification):
+                return {axis: dimension for axis, dimension in specification.items() if isinstance(axis, int)}
+            # This API exports one positional image tensor; named mappings wrap its spec.
+            if len(specification) == 1:
+                return input_dimensions(next(iter(specification.values())))
+            return {}
+        if isinstance(specification, Sequence) and not isinstance(specification, (str, bytes)):
+            if len(specification) == 1 and (
+                specification[0] is None or isinstance(specification[0], (Mapping, Sequence))
+            ):
+                return input_dimensions(specification[0])
+            # A sequence at the tensor-spec level describes dimensions by position.
+            return dict(enumerate(specification))
+        return {}
+
+    axes = input_dimensions(dynamic_shapes)
+
+    for axis, dimension in axes.items():
+        if dimension is None or dimension is _STATIC_DIM:
+            continue
+        if isinstance(dimension, int) and not isinstance(dimension, bool):
+            shape[axis] = dimension
+        elif isinstance(dimension, _DYNAMIC_DIM_TYPE) or any(dimension is hint for hint in _DYNAMIC_DIM_HINTS):
+            minimum = getattr(dimension, "min", None)
+            maximum = getattr(dimension, "max", None)
+            size = max(2, minimum) if isinstance(minimum, int) else 2
+            shape[axis] = min(size, maximum) if isinstance(maximum, int) else size
     return torch.zeros(shape)
 
 

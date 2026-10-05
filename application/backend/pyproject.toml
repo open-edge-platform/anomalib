@@ -2,8 +2,8 @@
 name = "anomalib-studio"
 version = "1.0.0"
 description = "Anomalib Studio server"
-# Capped below 3.14: py3.14 has no torch xpu wheels yet, so the xpu extra can't be
-# resolved there. Builds/CI run on 3.13.
+# Capped below 3.14: Studio pins OpenVINO 2025.4.1, which has no Python 3.14 wheels.
+# Builds/CI currently run on 3.13.
 requires-python = ">=3.13,<3.14"
 
 dependencies = [

@@ -217,8 +217,8 @@ def update_cuda_version_with_available_torch_cuda_build(cuda_version: str, torch
 
     Example:
         ```python
-        update_cuda_version_with_available_torch_cuda_build("12.1", "2.0.1")
-        # Returns: "11.8"  # PyTorch 2.0.1 only supports up to CUDA 11.8
+        update_cuda_version_with_available_torch_cuda_build("12.8", "2.14.0")
+        # Returns: "12.6"  # PyTorch 2.14.0 has no cu128 wheel; cu126 is nearest below.
         ```
     """
     supported = sorted(AVAILABLE_TORCH_VERSIONS[torch_version]["cuda"], key=Version)

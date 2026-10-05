@@ -18,6 +18,7 @@ import pytest
 from lightning import seed_everything
 from lightning.pytorch.trainer.states import TrainerFn
 from PIL import Image
+from pytest_mock import MockerFixture
 
 from anomalib.data import AnomalibDataModule, MVTec3D, MVTecAD
 from anomalib.deploy import ExportType
@@ -237,6 +238,7 @@ class TestAPI:
         dataset_path: Path,
         project_path: Path,
         make_dummy_dataset: Callable[[str], Path],
+        mocker: MockerFixture,
     ) -> None:
         """Export model from checkpoint.
 
@@ -246,6 +248,7 @@ class TestAPI:
             dataset_path (Path): Root to dataset from fixture.
             project_path (Path): Path to temporary project folder from fixture.
             make_dummy_dataset (Callable[[str], Path]): Lazy dummy dataset factory.
+            mocker (MockerFixture): Pytest mock fixture.
         """
         _make_required_dataset(model_name, make_dummy_dataset)
         model, _, engine, ckpt = _ensure_fit(model_name, dataset_path, project_path)
@@ -267,22 +270,15 @@ class TestAPI:
         with increased_recursion_limit() if model_name == "csflow" else contextlib.nullcontext():
             onnx_path = _ONNX_CACHE.get(model_name)
             if export_type == ExportType.OPENVINO and onnx_path is not None and onnx_path.exists():
-                # ``to_openvino`` is ONNX export + ``ov.convert_model``; reuse this model's ONNX
-                # export instead of repeating it. ``to_openvino`` options are covered in
-                # tests/integration/deploy/test_ov_export.py.
-                import openvino as ov
-
-                ov.save_model(
-                    ov.convert_model(onnx_path),
-                    project_path / f"{model_name}_reused_onnx.xml",
-                    compress_to_fp16=False,  # match ``to_openvino`` without ``compression_type``
-                )
-                return
+                pytest.importorskip("openvino")
+                # Reuse the ONNX graph while retaining coverage of Engine.export/to_openvino.
+                mocker.patch.object(type(model), "to_onnx", return_value=onnx_path)
 
             exported_path = engine.export(
                 model=model,
                 ckpt_path=ckpt,
                 export_type=export_type,
+                model_file_name=model_name,
                 **export_kwargs,
             )
             if export_type == ExportType.ONNX and exported_path is not None:

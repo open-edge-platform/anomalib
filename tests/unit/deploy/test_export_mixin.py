@@ -124,6 +124,33 @@ def test_to_onnx_translates_custom_dynamic_axes_for_dynamo_export(
     assert "dynamic_axes" not in export_mock.call_args.kwargs
 
 
+@pytest.mark.parametrize(
+    ("input_size", "dynamic_shapes", "expected_shape"),
+    [
+        (None, {"batch": {0: torch.export.Dim("batch_size")}}, (2, 3, 32, 32)),
+        (None, ([torch.export.Dim("batch_size"), None, None, None],), (2, 3, 32, 32)),
+        (None, ({0: None},), (1, 3, 32, 32)),
+        (None, ({0: 1},), (1, 3, 32, 32)),
+        (None, ({0: torch.export.Dim.STATIC},), (1, 3, 32, 32)),
+        ((40, 48), {}, (1, 3, 40, 48)),
+    ],
+)
+def test_to_onnx_example_input_respects_dynamic_shape_forms(
+    mocker: pytest.MockFixture,
+    tmp_path: Path,
+    input_size: tuple[int, int] | None,
+    dynamic_shapes: object,
+    expected_shape: tuple[int, ...],
+) -> None:
+    """Named, positional, sequence and static specs select compatible example dimensions."""
+    export_mock = mocker.patch("torch.onnx.export")
+
+    DummyExportModel().to_onnx(tmp_path, input_size=input_size, dynamic_shapes=dynamic_shapes)
+
+    assert tuple(export_mock.call_args.kwargs["args"][0].shape) == expected_shape
+    assert export_mock.call_args.kwargs["dynamic_shapes"] == dynamic_shapes
+
+
 def test_to_onnx_raises_actionable_error_for_missing_onnxscript(
     mocker: pytest.MockFixture,
     tmp_path: Path,
@@ -144,11 +171,24 @@ def test_to_onnx_raises_actionable_error_for_missing_onnxscript(
     ("export_kwargs", "expected_shape"),
     [
         ({"input_size": (40, 40)}, (2, 3, 40, 40)),
-        ({}, (2, 3, 32, 32)),
+        ({}, (2, 3, 2, 2)),
         # Static exports keep batch 1, so the exported model accepts single images.
         ({"input_size": (40, 40), "dynamic_axes": None}, (1, 3, 40, 40)),
         ({"input_size": (40, 40), "dynamic_axes": {}}, (1, 3, 40, 40)),
         ({"input_size": (40, 40), "dynamic_shapes": ({},)}, (1, 3, 40, 40)),
+        ({"dynamic_shapes": ({0: None},)}, (1, 3, 32, 32)),
+        ({"dynamic_shapes": ({0: 1},)}, (1, 3, 32, 32)),
+        ({"dynamic_shapes": ({0: torch.export.Dim.STATIC},)}, (1, 3, 32, 32)),
+        (
+            {
+                "dynamic_shapes": {"batch": {0: torch.export.Dim("batch")}},
+            },
+            (2, 3, 32, 32),
+        ),
+        (
+            {"dynamic_shapes": ([torch.export.Dim("batch"), None, None, None],)},
+            (2, 3, 32, 32),
+        ),
     ],
 )
 def test_to_onnx_example_input_matches_shape_spec(

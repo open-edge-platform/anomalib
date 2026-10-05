@@ -142,10 +142,10 @@ class ExportMixin:
                 Common options include:
                 - dynamo (bool): Must be ``True`` (default). The legacy exporter
                   (``dynamo=False``) was removed in anomalib 2.7.0. Requires ``onnxscript``.
-                - dynamic_shapes (dict | tuple | list): Shape specification matching
-                  the positional model inputs. For this single-input model, use a
-                  tuple containing an axis-to-``torch.export.Dim`` mapping. If omitted,
-                  derived from ``dynamic_axes``.
+                - dynamic_shapes (dict | tuple | list): Shape specification matching the
+                  single model input. Accepts a parameter-name mapping, a positional
+                  tuple/list, or an axis-to-dimension mapping / per-dimension sequence.
+                  If omitted, derived from ``dynamic_axes``.
                 - opset_version (int): ONNX opset version to use
                 - do_constant_folding (bool): Whether to optimize constant folding
                 - input_names (list[str]): Names of input tensors
@@ -185,7 +185,7 @@ class ExportMixin:
         onnx_path = export_root / (model_file_name + ".onnx")
         # apply pass through the model to get the output names
         assert isinstance(self, LightningModule)  # mypy
-        probe = torch.zeros((1, 3, *(input_size or (32, 32))), device=self.device)
+        probe = get_example_input(input_size, dynamic_shapes=None).to(self.device)
         output_names = [name for name, value in self.eval()(probe)._asdict().items() if value is not None]
         input_names = validate_input_names(kwargs.pop("input_names", ["input"]))
         default_dynamic_axes = get_default_dynamic_axes(input_size, input_names, output_names)
