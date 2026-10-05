@@ -18,6 +18,7 @@ import pytest
 from lightning import seed_everything
 from lightning.pytorch.trainer.states import TrainerFn
 from PIL import Image
+from pytest_mock import MockerFixture
 
 from anomalib.data import AnomalibDataModule, MVTec3D, MVTecAD
 from anomalib.deploy import ExportType
@@ -25,6 +26,8 @@ from anomalib.engine import Engine
 from anomalib.models import AnomalibModule, get_model, list_models
 
 _FIT_CACHE: dict[str, Path] = {}
+# ONNX files from ``test_export[onnx-*]``, reused by the OpenVINO export tests.
+_ONNX_CACHE: dict[str, Path] = {}
 
 
 def models() -> set[str]:
@@ -235,6 +238,7 @@ class TestAPI:
         dataset_path: Path,
         project_path: Path,
         make_dummy_dataset: Callable[[str], Path],
+        mocker: MockerFixture,
     ) -> None:
         """Export model from checkpoint.
 
@@ -244,6 +248,7 @@ class TestAPI:
             dataset_path (Path): Root to dataset from fixture.
             project_path (Path): Path to temporary project folder from fixture.
             make_dummy_dataset (Callable[[str], Path]): Lazy dummy dataset factory.
+            mocker (MockerFixture): Pytest mock fixture.
         """
         _make_required_dataset(model_name, make_dummy_dataset)
         model, _, engine, ckpt = _ensure_fit(model_name, dataset_path, project_path)
@@ -263,12 +268,21 @@ class TestAPI:
 
         # Use context manager only for CSFlow
         with increased_recursion_limit() if model_name == "csflow" else contextlib.nullcontext():
-            engine.export(
+            onnx_path = _ONNX_CACHE.get(model_name)
+            if export_type == ExportType.OPENVINO and onnx_path is not None and onnx_path.exists():
+                pytest.importorskip("openvino")
+                # Reuse the ONNX graph while retaining coverage of Engine.export/to_openvino.
+                mocker.patch.object(type(model), "to_onnx", return_value=onnx_path)
+
+            exported_path = engine.export(
                 model=model,
                 ckpt_path=ckpt,
                 export_type=export_type,
+                model_file_name=model_name,
                 **export_kwargs,
             )
+            if export_type == ExportType.ONNX and exported_path is not None:
+                _ONNX_CACHE[model_name] = exported_path
 
     @staticmethod
     def _get_objects(
