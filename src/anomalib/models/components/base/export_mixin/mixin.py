@@ -55,6 +55,7 @@ from .utils import (
     create_export_root,
     get_default_dynamic_axes,
     get_dynamic_shapes_from_axes,
+    get_example_input,
     get_onnx_dynamo_flag,
     raise_missing_onnxscript_error,
     validate_input_names,
@@ -181,14 +182,11 @@ class ExportMixin:
         """
         get_onnx_dynamo_flag(kwargs)  # reject dynamo=False before touching the filesystem or running the model
         export_root = create_export_root(export_root, ExportType.ONNX)
-        # Dynamo fixes example dimensions of size 0 or 1, so every dynamic axis needs an example
-        # size of at least 2. The pre-processor resizes inside ``forward``, so any spatial size works.
-        input_shape = torch.zeros((2, 3, *input_size)) if input_size else torch.zeros((2, 3, 32, 32))
-        input_shape = input_shape.to(self.device)
         onnx_path = export_root / (model_file_name + ".onnx")
         # apply pass through the model to get the output names
         assert isinstance(self, LightningModule)  # mypy
-        output_names = [name for name, value in self.eval()(input_shape)._asdict().items() if value is not None]
+        probe = torch.zeros((1, 3, *(input_size or (32, 32))), device=self.device)
+        output_names = [name for name, value in self.eval()(probe)._asdict().items() if value is not None]
         input_names = validate_input_names(kwargs.pop("input_names", ["input"]))
         default_dynamic_axes = get_default_dynamic_axes(input_size, input_names, output_names)
         dynamic_axes = kwargs.pop("dynamic_axes", default_dynamic_axes)
@@ -196,6 +194,7 @@ class ExportMixin:
             "dynamic_shapes",
             get_dynamic_shapes_from_axes(dynamic_axes, input_names, output_names),
         )
+        input_shape = get_example_input(input_size, dynamic_shapes).to(self.device)
 
         export_kwargs: dict[str, Any] = {
             "opset_version": kwargs.pop("opset_version", 14),

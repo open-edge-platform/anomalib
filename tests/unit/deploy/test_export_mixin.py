@@ -140,17 +140,27 @@ def test_to_onnx_raises_actionable_error_for_missing_onnxscript(
     assert "anomalib[openvino]" in str(exception.value)
 
 
-@pytest.mark.parametrize(("input_size", "expected_shape"), [((32, 32), (2, 3, 32, 32)), (None, (2, 3, 32, 32))])
-def test_to_onnx_example_input_avoids_unit_dynamic_dims(
+@pytest.mark.parametrize(
+    ("export_kwargs", "expected_shape"),
+    [
+        ({"input_size": (40, 40)}, (2, 3, 40, 40)),
+        ({}, (2, 3, 32, 32)),
+        # Static exports keep batch 1, so the exported model accepts single images.
+        ({"input_size": (40, 40), "dynamic_axes": None}, (1, 3, 40, 40)),
+        ({"input_size": (40, 40), "dynamic_axes": {}}, (1, 3, 40, 40)),
+        ({"input_size": (40, 40), "dynamic_shapes": ({},)}, (1, 3, 40, 40)),
+    ],
+)
+def test_to_onnx_example_input_matches_shape_spec(
     mocker: pytest.MockFixture,
     tmp_path: Path,
-    input_size: tuple[int, int] | None,
+    export_kwargs: dict,
     expected_shape: tuple[int, ...],
 ) -> None:
-    """Dynamo fixes example dimensions of size 0/1, so dynamic axes need example sizes of at least 2."""
+    """Dynamic axes get example size 2 (dynamo fixes 0/1-sized examples); static axes keep their real size."""
     export_mock = mocker.patch("torch.onnx.export")
 
-    DummyExportModel().to_onnx(tmp_path, input_size=input_size)
+    DummyExportModel().to_onnx(tmp_path, **export_kwargs)
 
     assert tuple(export_mock.call_args.kwargs["args"][0].shape) == expected_shape
 

@@ -93,6 +93,32 @@ def get_dynamic_shapes_from_axes(
     return ({axis: dimensions[name] for axis, name in input_axes.items()},)
 
 
+def get_example_input(
+    input_size: tuple[int, int] | None,
+    dynamic_shapes: Sequence[dict[int, Any] | None] | None,
+) -> torch.Tensor:
+    """Build the example image batch used to capture the model for export.
+
+    Dynamo fixes example dimensions of size 0 or 1, so axes marked dynamic get an
+    example size of 2. Static axes keep the size the exported model must accept:
+    batch 1, and ``input_size`` (or 32x32, since the pre-processor resizes) spatially.
+
+    Args:
+        input_size (tuple[int, int] | None): Fixed ``(H, W)``, or ``None``.
+        dynamic_shapes (Sequence[dict[int, Any] | None] | None): Dynamo shape spec for the
+            positional inputs; only the first (image) entry is used.
+
+    Returns:
+        torch.Tensor: Zero tensor of shape ``(B, 3, H, W)``.
+    """
+    dynamic_axes = set((dynamic_shapes[0] or {}) if dynamic_shapes else {})
+    height, width = input_size or (32, 32)
+    shape = [1, 3, height, width]
+    for axis in dynamic_axes:
+        shape[axis] = max(shape[axis], 2)
+    return torch.zeros(shape)
+
+
 def validate_input_names(input_names: object) -> list[str]:
     """Validate ONNX input names.
 

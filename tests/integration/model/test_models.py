@@ -272,7 +272,11 @@ class TestAPI:
                 # tests/integration/deploy/test_ov_export.py.
                 import openvino as ov
 
-                ov.save_model(ov.convert_model(onnx_path), project_path / f"{model_name}_reused_onnx.xml")
+                ov.save_model(
+                    ov.convert_model(onnx_path),
+                    project_path / f"{model_name}_reused_onnx.xml",
+                    compress_to_fp16=False,  # match ``to_openvino`` without ``compression_type``
+                )
                 return
 
             exported_path = engine.export(
