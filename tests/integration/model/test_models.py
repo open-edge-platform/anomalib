@@ -11,10 +11,11 @@ import sys
 from collections.abc import Callable, Generator
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+import timm
 from lightning import seed_everything
 from lightning.pytorch.trainer.states import TrainerFn
 from PIL import Image
@@ -28,6 +29,13 @@ from anomalib.models import AnomalibModule, get_model, list_models
 _FIT_CACHE: dict[str, Path] = {}
 # ONNX files from ``test_export[onnx-*]``, reused by the OpenVINO export tests.
 _ONNX_CACHE: dict[str, Path] = {}
+_REAL_TIMM_CREATE_MODEL = timm.create_model
+
+
+def _timm_create_model_offline(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
+    """Call timm.create_model with pretrained weights disabled."""
+    kwargs["pretrained"] = False
+    return _REAL_TIMM_CREATE_MODEL(*args, **kwargs)
 
 
 def models() -> set[str]:
@@ -261,6 +269,11 @@ class TestAPI:
             export_kwargs["input_size"] = (288, 288)
         if model_name == "m_h_patchcore":
             export_kwargs["input_size"] = (224, 224)
+        if model_name == "rad":
+            # Positional bank is fitted on the 448x448 preprocessor crop.
+            export_kwargs["input_size"] = (448, 448)
+        if model_name == "found_a_d":
+            export_kwargs["input_size"] = (224, 224)
         if model_name in {"cfm", "c_f_m"}:
             export_kwargs["input_size"] = (224, 224)
             if export_type in {ExportType.ONNX, ExportType.OPENVINO}:
@@ -316,6 +329,25 @@ class TestAPI:
                 "memory_bank_size": 16,
                 "local_coreset_size": 8,
             })
+        if model_name == "rad":
+            # Avoid downloading the multi-GB DINOv3 checkpoint on CI.
+            extra_args.update({
+                "backbone": "vit_small_patch16_dinov3",
+                "pre_trained": False,
+                "layers": [3, 11],
+                "k_image": 2,
+            })
+        if model_name == "found_a_d":
+            # Keep the run small; pretrained download is blocked via patch below.
+            # image_size must stay divisible by the encoder patch size (14).
+            extra_args.update({
+                "encoder_name": "dinov2_vit_small_14",
+                "image_size": 224,
+                "pred_depth": 2,
+                "n_layer": 1,
+                "top_k": 2,
+                "use_few_shot_augmentation": False,
+            })
         if model_name == "efficient_ad":
             # Avoid downloading the multi-GB ImageNette tarball on CI (~50+ min).
             extra_args["imagenet_dir"] = _make_image_folder(project_path / "efficient_ad_imagenette")
@@ -349,7 +381,18 @@ class TestAPI:
                 train_batch_size=1 if model_name == "efficient_ad" else 2,
             )
 
-        model = get_model(model_name, **extra_args)
+        # FoundAD hard-codes pretrained=True in its encoder loader; force offline
+        # construction for CI without adding a public API knob.
+        foundad_offline = (
+            patch(
+                "anomalib.models.image.foundad.components.encoder_loader.timm.create_model",
+                side_effect=_timm_create_model_offline,
+            )
+            if model_name == "found_a_d"
+            else contextlib.nullcontext()
+        )
+        with foundad_offline:
+            model = get_model(model_name, **extra_args)
 
         if model_name == "vlm_ad":
             model.vlm_backend = MagicMock()

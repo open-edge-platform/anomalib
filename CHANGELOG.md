@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
-## [v2.7.0] - 2026-10-05
+## [v2.7.0] - 2026-10-06
 
 ### Added
 
@@ -26,9 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 
-- ⚠️ **export**: Remove the legacy ONNX exporter path (`dynamo=False`); ONNX export now requires the dynamo exporter (`dynamo=True`, the default) and `onnxscript` (via `anomalib[openvino]`) by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3826
-- ⚠️ **model**: Remove `restore_frozen_encoder_weights` and per-model legacy encoder checkpoint migration; checkpoints trained before the timm-encoder migration are no longer loadable — retrain or re-export under a current release by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3826
-- ⚠️ **deps**: Raise minimum PyTorch to `>=2.10.0` (and matching `torchvision>=0.25.0` for cpu/cu/xpu extras) as announced with the ONNX exporter deprecation; ROCm extra remains `torch>=2.13.0` by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3826
+- ⚠️ **breaking**: Remove APIs scheduled for 2.7.0 — legacy ONNX exporter (`dynamo=False`; dynamo/`onnxscript` via `anomalib[openvino]` now required), `restore_frozen_encoder_weights` / pre-timm ViT checkpoint migration (retrain or re-export), and raise minimum PyTorch to `>=2.10.0` (`torchvision>=0.25.0` for cpu/cu/xpu; ROCm remains `torch>=2.13.0`) by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3826
 
 ### Changed
 
