@@ -191,7 +191,7 @@ def list_models(case: str = "snake") -> set[str]:
         >>> print(sorted(list(models)))  # doctest: +NORMALIZE_WHITESPACE
         ['AiVad', 'AnomalyDINO', 'Cfa', 'Cflow', 'Csflow', 'Dfkde', 'Dfm',
          'Dinomaly', 'Draem', 'Dsr', 'EfficientAd', 'Fastflow', 'FoundAD', 'Fre', 'Fuvas',
-         'Ganomaly', 'GeneralAD', 'L2BT', MHPatchcore', 'Padim', 'Patchcore', 'Patchflow',
+         'Ganomaly', 'GeneralAD', 'L2BT', 'MHPatchcore', 'Padim', 'Patchcore', 'Patchflow',
          'Rad', 'ReverseDistillation', 'Stfpm', 'Supersimplenet', 'Uflow', 'UniNet',
          'VlmAd', 'WinClip']
 
