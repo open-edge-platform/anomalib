@@ -11,13 +11,15 @@ import sys
 from collections.abc import Callable, Generator
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+import timm
 from lightning import seed_everything
 from lightning.pytorch.trainer.states import TrainerFn
 from PIL import Image
+from pytest_mock import MockerFixture
 
 from anomalib.data import AnomalibDataModule, MVTec3D, MVTecAD
 from anomalib.deploy import ExportType
@@ -25,6 +27,15 @@ from anomalib.engine import Engine
 from anomalib.models import AnomalibModule, get_model, list_models
 
 _FIT_CACHE: dict[str, Path] = {}
+# ONNX files from ``test_export[onnx-*]``, reused by the OpenVINO export tests.
+_ONNX_CACHE: dict[str, Path] = {}
+_REAL_TIMM_CREATE_MODEL = timm.create_model
+
+
+def _timm_create_model_offline(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
+    """Call timm.create_model with pretrained weights disabled."""
+    kwargs["pretrained"] = False
+    return _REAL_TIMM_CREATE_MODEL(*args, **kwargs)
 
 
 def models() -> set[str]:
@@ -48,15 +59,16 @@ def increased_recursion_limit(limit: int = 10000) -> Generator[None, None, None]
         sys.setrecursionlimit(old_limit)
 
 
-def _prepare_efficient_ad_imagenet(project_path: Path) -> Path:
-    """Create a tiny ImageFolder tree so EfficientAd skips the ImageNette download."""
-    root = project_path / "efficient_ad_imagenette"
+def _make_image_folder(root: Path, class_names: tuple[str, ...] = ("n01440764", "n02102040")) -> Path:
+    """Create a tiny ``root/<class>/*.png`` tree to stand in for downloaded datasets.
+
+    Used for EfficientAd's ImageNette (ImageFolder layout) and DRAEM's DTD textures
+    (any image under the root), so CI never downloads multi-GB archives.
+    """
     if root.is_dir():
         return root
 
-    # ImageFolder expects ``root/<class>/*.png``. A handful of solid images is enough
-    # for the penultimate-batch ImageNette sampler used during training_step.
-    for class_name in ("n01440764", "n02102040"):
+    for class_name in class_names:
         class_dir = root / class_name
         class_dir.mkdir(parents=True, exist_ok=True)
         for index in range(4):
@@ -234,6 +246,7 @@ class TestAPI:
         dataset_path: Path,
         project_path: Path,
         make_dummy_dataset: Callable[[str], Path],
+        mocker: MockerFixture,
     ) -> None:
         """Export model from checkpoint.
 
@@ -243,6 +256,7 @@ class TestAPI:
             dataset_path (Path): Root to dataset from fixture.
             project_path (Path): Path to temporary project folder from fixture.
             make_dummy_dataset (Callable[[str], Path]): Lazy dummy dataset factory.
+            mocker (MockerFixture): Pytest mock fixture.
         """
         _make_required_dataset(model_name, make_dummy_dataset)
         model, _, engine, ckpt = _ensure_fit(model_name, dataset_path, project_path)
@@ -253,6 +267,13 @@ class TestAPI:
         export_kwargs: dict[str, Any] = {}
         if model_name == "glass":
             export_kwargs["input_size"] = (288, 288)
+        if model_name == "m_h_patchcore":
+            export_kwargs["input_size"] = (224, 224)
+        if model_name == "rad":
+            # Positional bank is fitted on the 448x448 preprocessor crop.
+            export_kwargs["input_size"] = (448, 448)
+        if model_name == "found_a_d":
+            export_kwargs["input_size"] = (224, 224)
         if model_name in {"cfm", "c_f_m"}:
             export_kwargs["input_size"] = (224, 224)
             if export_type in {ExportType.ONNX, ExportType.OPENVINO}:
@@ -260,12 +281,21 @@ class TestAPI:
 
         # Use context manager only for CSFlow
         with increased_recursion_limit() if model_name == "csflow" else contextlib.nullcontext():
-            engine.export(
+            onnx_path = _ONNX_CACHE.get(model_name)
+            if export_type == ExportType.OPENVINO and onnx_path is not None and onnx_path.exists():
+                pytest.importorskip("openvino")
+                # Reuse the ONNX graph while retaining coverage of Engine.export/to_openvino.
+                mocker.patch.object(type(model), "to_onnx", return_value=onnx_path)
+
+            exported_path = engine.export(
                 model=model,
                 ckpt_path=ckpt,
                 export_type=export_type,
+                model_file_name=model_name,
                 **export_kwargs,
             )
+            if export_type == ExportType.ONNX and exported_path is not None:
+                _ONNX_CACHE[model_name] = exported_path
 
     @staticmethod
     def _get_objects(
@@ -291,9 +321,39 @@ class TestAPI:
         extra_args = {}
         if model_name == "dfkde":
             extra_args["n_pca_components"] = 2
+        if model_name == "m_h_patchcore":
+            extra_args.update({
+                "backbone": "resnet18",
+                "pre_trained": False,
+                "pca_variance_ratio": 0.1,
+                "memory_bank_size": 16,
+                "local_coreset_size": 8,
+            })
+        if model_name == "rad":
+            # Avoid downloading the multi-GB DINOv3 checkpoint on CI.
+            extra_args.update({
+                "backbone": "vit_small_patch16_dinov3",
+                "pre_trained": False,
+                "layers": [3, 11],
+                "k_image": 2,
+            })
+        if model_name == "found_a_d":
+            # Keep the run small; pretrained download is blocked via patch below.
+            # image_size must stay divisible by the encoder patch size (14).
+            extra_args.update({
+                "encoder_name": "dinov2_vit_small_14",
+                "image_size": 224,
+                "pred_depth": 2,
+                "n_layer": 1,
+                "top_k": 2,
+                "use_few_shot_augmentation": False,
+            })
         if model_name == "efficient_ad":
             # Avoid downloading the multi-GB ImageNette tarball on CI (~50+ min).
-            extra_args["imagenet_dir"] = _prepare_efficient_ad_imagenet(project_path)
+            extra_args["imagenet_dir"] = _make_image_folder(project_path / "efficient_ad_imagenette")
+        if model_name == "draem":
+            # Avoid downloading the DTD texture archive on CI.
+            extra_args["dtd_dir"] = _make_image_folder(project_path / "dtd", class_names=("banded", "dotted"))
         if model_name in {"cfm", "c_f_m"}:
             # Keep integration tests lightweight/stable (point ops are memory hungry).
             extra_args["num_group"] = 128
@@ -321,7 +381,18 @@ class TestAPI:
                 train_batch_size=1 if model_name == "efficient_ad" else 2,
             )
 
-        model = get_model(model_name, **extra_args)
+        # FoundAD hard-codes pretrained=True in its encoder loader; force offline
+        # construction for CI without adding a public API knob.
+        foundad_offline = (
+            patch(
+                "anomalib.models.image.foundad.components.encoder_loader.timm.create_model",
+                side_effect=_timm_create_model_offline,
+            )
+            if model_name == "found_a_d"
+            else contextlib.nullcontext()
+        )
+        with foundad_offline:
+            model = get_model(model_name, **extra_args)
 
         if model_name == "vlm_ad":
             model.vlm_backend = MagicMock()
