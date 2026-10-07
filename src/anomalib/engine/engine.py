@@ -27,6 +27,7 @@ Example:
 """
 
 import logging
+import math
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -939,7 +940,7 @@ class Engine:
             export_root = Path(self.trainer.default_root_dir)
 
         # Warn if max_drop is provided but not used
-        if not __import__("math").isclose(max_drop, 0.01) and compression_type != CompressionType.INT8_ACQ:
+        if not math.isclose(max_drop, 0.01) and compression_type != CompressionType.INT8_ACQ:
             warnings.warn(
                 f"max_drop parameter is only used for CompressionType.INT8_ACQ but got {compression_type}. "
                 "The parameter will be ignored.",
