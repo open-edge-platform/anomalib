@@ -43,7 +43,7 @@ runs:
   using: composite
   steps:
     - name: Cleanup runner
-      uses: open-edge-platform/geti-ci/actions/cleanup-runner@7d25e47329bbfcde4ee51ab3581aea8613e245e2
+      uses: open-edge-platform/geti-ci/actions/cleanup-runner@6f29a1ff715a9770e024317f30db57bdc0e16418 # cleanup-runner/v0.1.0
       with:
         type: all
 

@@ -343,7 +343,10 @@ class PostProcessor(nn.Module, Callback):
         Returns:
             torch.Tensor | None: Thresholded predictions or None if input is None.
         """
-        if preds is None or threshold.isnan():
+        if preds is None:
+            return preds
+        # Keep eager NaN behavior without introducing a data-dependent export guard.
+        if not torch.compiler.is_compiling() and torch.isnan(threshold).item():
             return preds
         return preds > threshold
 
@@ -365,12 +368,18 @@ class PostProcessor(nn.Module, Callback):
         Returns:
             torch.Tensor | None: Normalized predictions or None if input is None.
         """
-        if preds is None or norm_min.isnan() or norm_max.isnan():
+        if preds is None:
             return preds
-        if threshold.isnan():
-            threshold = (norm_max + norm_min) / 2
-        preds = ((preds - threshold) / (norm_max - norm_min)) + 0.5
-        return preds.clamp(min=0, max=1)
+
+        threshold = torch.where(torch.isnan(threshold), (norm_max + norm_min) / 2, threshold)
+        value_range = norm_max - norm_min
+        zero_range = value_range == 0
+        safe_range = torch.where(zero_range, torch.ones_like(value_range), value_range)
+        normalized = (((preds - threshold) / safe_range) + 0.5).clamp(min=0, max=1)
+        degenerate = torch.where(preds > threshold, 1.0, torch.where(preds < threshold, 0.0, 0.5))
+        normalized = torch.where(zero_range, degenerate, normalized)
+        has_range = ~torch.isnan(norm_min) & ~torch.isnan(norm_max)
+        return torch.where(has_range, normalized, preds)
 
     @property
     def image_threshold(self) -> torch.Tensor:
@@ -379,9 +388,12 @@ class PostProcessor(nn.Module, Callback):
         Returns:
             float: Image-level threshold value.
         """
-        if not self._image_threshold.isnan():
-            return self._image_threshold
-        return self._pixel_threshold if self.enable_threshold_matching else torch.tensor(float("nan"))
+        fallback = (
+            self._pixel_threshold
+            if self.enable_threshold_matching
+            else torch.full_like(self._image_threshold, float("nan"))
+        )
+        return torch.where(torch.isnan(self._image_threshold), fallback, self._image_threshold)
 
     @property
     def pixel_threshold(self) -> torch.Tensor:
@@ -392,9 +404,12 @@ class PostProcessor(nn.Module, Callback):
         Returns:
             float: Pixel-level threshold value.
         """
-        if not self._pixel_threshold.isnan():
-            return self._pixel_threshold
-        return self._image_threshold if self.enable_threshold_matching else torch.tensor(float("nan"))
+        fallback = (
+            self._image_threshold
+            if self.enable_threshold_matching
+            else torch.full_like(self._pixel_threshold, float("nan"))
+        )
+        return torch.where(torch.isnan(self._pixel_threshold), fallback, self._pixel_threshold)
 
     @property
     def normalized_image_threshold(self) -> torch.Tensor:

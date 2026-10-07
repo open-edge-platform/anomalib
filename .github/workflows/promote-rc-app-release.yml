@@ -259,7 +259,7 @@ jobs:
           docker push "${TARGET_IMAGE}"
 
       - name: Sign Docker image
-        uses: open-edge-platform/geti-ci/actions/sign-image@7d25e47329bbfcde4ee51ab3581aea8613e245e2
+        uses: open-edge-platform/geti-ci/actions/sign-image@3690cbcc173cf90e0e0999b4822c3f8ebab9c137 # sign-image/v0.1.2
         with:
           image-uri: ghcr.io/open-edge-platform/anomalib-studio-${{ matrix.device }}:${{ needs.validate.outputs.docker_patch_tag }}
 
