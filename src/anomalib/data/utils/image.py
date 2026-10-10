@@ -31,7 +31,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-import tifffile as tiff
+import tifffile
 import torch
 from matplotlib.figure import Figure
 from PIL import Image
@@ -316,6 +316,29 @@ def read_image(path: str | Path, as_tensor: bool = False) -> torch.Tensor | np.n
         >>> type(image)
         <class 'torch.Tensor'>
     """
+    path = Path(path)
+    if path.suffix.lower() in {".tiff", ".tif"}:
+        image_np = tifffile.imread(path)
+        if image_np.ndim == 2:
+            image_np = cv2.cvtColor(image_np, cv2.COLOR_GRAY2RGB)
+        elif image_np.ndim == 3 and image_np.shape[-1] == 4:
+            image_np = cv2.cvtColor(image_np, cv2.COLOR_RGBA2RGB)
+
+        # Determine scale factor based on dtype to normalize to [0, 1]
+        scale_val = 1.0
+        if image_np.dtype == np.uint8:
+            scale_val = 255.0
+        elif image_np.dtype == np.uint16:
+            scale_val = 65535.0
+        else:
+            scale_val = float(np.max(image_np)) if np.max(image_np) > 1.0 else 1.0
+
+        image_np = image_np.astype(np.float32) / scale_val
+
+        if as_tensor:
+            return torch.from_numpy(image_np).permute(2, 0, 1)
+        return image_np
+
     image = Image.open(path).convert("RGB")
     return to_dtype(to_image(image), torch.float32, scale=True) if as_tensor else np.array(image) / 255.0
 
@@ -358,7 +381,7 @@ def read_depth_image(path: str | Path) -> np.ndarray:
         <class 'numpy.ndarray'>
     """
     path = path if isinstance(path, str) else str(path)
-    return tiff.imread(path)
+    return tifffile.imread(path)
 
 
 def pad_nextpow2(batch: torch.Tensor) -> torch.Tensor:

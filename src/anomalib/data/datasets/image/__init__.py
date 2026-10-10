@@ -42,6 +42,7 @@ from .realiad import RealIADDataset
 from .tabular import TabularDataset
 from .vad import VADDataset
 from .visa import VisaDataset
+from .libad import LIBADDataset
 
 __all__ = [
     "AutoVIDataset",
@@ -59,4 +60,5 @@ __all__ = [
     "TabularDataset",
     "VADDataset",
     "VisaDataset",
+    "LIBADDataset",
 ]
