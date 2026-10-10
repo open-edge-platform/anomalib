@@ -3,6 +3,7 @@
 
 """Unit Tests - LIBAD Datamodule."""
 
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -17,8 +18,9 @@ class TestLIBAD(_TestAnomalibImageDatamodule):
 
     @pytest.fixture()
     @staticmethod
-    def datamodule(dataset_path: Path) -> LIBAD:
+    def datamodule(dataset_path: Path, make_dummy_dataset: Callable[[str], Path]) -> LIBAD:
         """Create and return a LIBAD datamodule."""
+        make_dummy_dataset("libad")
         datamodule_ = LIBAD(
             root=dataset_path / "libad",
             category="1_wrinkling",

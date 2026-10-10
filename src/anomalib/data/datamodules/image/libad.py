@@ -77,7 +77,7 @@ else:
 
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.libad import LIBADDataset
-from anomalib.data.utils import Split, TestSplitMode, ValSplitMode
+from anomalib.data.utils import TestSplitMode, ValSplitMode
 from anomalib.data.utils.download import extract
 from anomalib.utils.path import resolve_dataset_root
 
@@ -179,21 +179,16 @@ class LIBAD(AnomalibDataModule):
         self.modality = modality
 
     def _setup(self, _stage: str | None = None) -> None:
-        # Load the full normal dataset (label_index = 0)
-        self.train_data = LIBADDataset(
-            split=Split.TRAIN,
+        dataset = LIBADDataset(
+            split=None,
             root=self.root,
             category=self.category,
             modality=self.modality,
         )
 
-        # Load the anomalous dataset (label_index = 1)
-        self.test_data = LIBADDataset(
-            split=Split.TEST,
-            root=self.root,
-            category=self.category,
-            modality=self.modality,
-        )
+        from anomalib.data.utils.split import split_by_label
+
+        self.train_data, self.test_data = split_by_label(dataset)
 
     def prepare_data(self) -> None:
         """Check if the dataset is available, downloading it if possible.
@@ -242,7 +237,18 @@ class LIBAD(AnomalibDataModule):
                         local_dir=scratch_dir,
                     ),
                 )
-                extract(downloaded_path, self.root)
+                extract(downloaded_path, scratch_dir)
+                import shutil
+
+                extracted_dir = Path(scratch_dir) / "LIBAD"
+                if extracted_dir.is_dir():
+                    for item in extracted_dir.iterdir():
+                        shutil.move(str(item), str(self.root / item.name))
+                else:
+                    for item in Path(scratch_dir).iterdir():
+                        if item.is_dir() and item.name != "LIBAD.zip":
+                            shutil.move(str(item), str(self.root / item.name))
+
         except HF_DOWNLOAD_ERRORS as exc:
             msg = "Failed to download LIBAD dataset from Hugging Face."
             raise FileNotFoundError(msg) from exc

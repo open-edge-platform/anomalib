@@ -141,8 +141,8 @@ def make_libad_dataset(path: Path, modality: str = "A", split: str | Split | Non
 
     samples = pd.DataFrame(samples_list, columns=["path", "label", "image_path"])
 
-    # Set split to train for normal, test for anomaly by default
-    samples["split"] = samples["label"].apply(lambda x: "train" if x == "normal" else "test")
+    # Set split to None by default so the datamodule handles train/test splitting
+    samples["split"] = None
 
     # Create mask_path column (LIBAD does not have masks)
     samples["mask_path"] = ""
