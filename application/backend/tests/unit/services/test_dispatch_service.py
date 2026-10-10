@@ -1,6 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -11,20 +12,20 @@ from utils.short_uuid import ShortUUID
 
 
 @pytest.fixture
-def folder_sink_config() -> FolderSinkConfig:
+def folder_sink_config(tmp_path: Path) -> FolderSinkConfig:
     return FolderSinkConfig(
         id=ShortUUID("Bf8KYoUmuTV3hLdiEaarSA"),
         project_id=ShortUUID("Bf8KYoUmuTV3hLdiEaarSA"),
         name="Local Folder",
         sink_type=SinkType.FOLDER,
-        folder_path="./test_output_folder",
+        folder_path=str(tmp_path),
         output_formats=[],
         rate_limit=0.2,
     )
 
 
 def test_get_destinations_filters_failed_dispatchers(folder_sink_config: FolderSinkConfig) -> None:
-    """Test that a dispatcher failing initialization is filtered out and logs a warning."""
+    """Test that a dispatcher failing initialization raises an error to allow retries."""
     # We patch the specific registry entry for FOLDER to raise an exception.
 
     def failing_factory(config):
@@ -33,14 +34,14 @@ def test_get_destinations_filters_failed_dispatchers(folder_sink_config: FolderS
     with (
         patch.dict(DispatchService._dispatcher_registry, {SinkType.FOLDER: failing_factory}),
         patch("services.dispatch_service.logger") as mock_logger,
+        pytest.raises(RuntimeError, match="Failed to initialize dispatcher: Initialization error"),
     ):
-        destinations = DispatchService.get_destinations([folder_sink_config])
+        DispatchService.get_destinations([folder_sink_config])
 
-        assert len(destinations) == 0
-        mock_logger.opt.assert_called_with(exception=True)
-        mock_logger.opt().warning.assert_called_once_with(
-            f"Failed to initialize dispatcher for sink type: {SinkType.FOLDER}"
-        )
+    mock_logger.opt.assert_called_with(exception=True)
+    mock_logger.opt().error.assert_called_once_with(
+        f"Failed to initialize dispatcher for sink type: {SinkType.FOLDER}"
+    )
 
 
 def test_get_destinations_filters_unrecognized_sink() -> None:

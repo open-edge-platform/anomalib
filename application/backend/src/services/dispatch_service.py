@@ -27,11 +27,11 @@ class DispatchService:
 
         try:
             return factory(output_config)
-        except Exception:
-            logger.opt(exception=True).warning(
+        except Exception as e:
+            logger.opt(exception=True).error(
                 f"Failed to initialize dispatcher for sink type: {output_config.sink_type}"
             )
-            return None
+            raise RuntimeError(f"Failed to initialize dispatcher: {e}") from e
 
     @classmethod
     def get_destinations(cls, output_configs: Sequence[Sink]) -> list[Dispatcher]:
