@@ -25,7 +25,7 @@ def folder_sink_config(tmp_path: Path) -> FolderSinkConfig:
 
 
 def test_get_destinations_filters_failed_dispatchers(folder_sink_config: FolderSinkConfig) -> None:
-    """Test that a dispatcher failing initialization raises an error to allow retries."""
+    """Test that a dispatcher failing initialization is skipped and logged."""
     # We patch the specific registry entry for FOLDER to raise an exception.
 
     def failing_factory(config):
@@ -34,12 +34,13 @@ def test_get_destinations_filters_failed_dispatchers(folder_sink_config: FolderS
     with (
         patch.dict(DispatchService._dispatcher_registry, {SinkType.FOLDER: failing_factory}),
         patch("services.dispatch_service.logger") as mock_logger,
-        pytest.raises(RuntimeError, match="Failed to initialize dispatcher: Initialization error"),
     ):
-        DispatchService.get_destinations([folder_sink_config])
+        destinations = DispatchService.get_destinations([folder_sink_config])
 
-    mock_logger.opt.assert_called_with(exception=True)
-    mock_logger.opt().error.assert_called_once_with(
+    assert destinations == []
+
+    mock_logger.opt.assert_called_once_with(exception=True)
+    mock_logger.opt.return_value.warning.assert_called_once_with(
         f"Failed to initialize dispatcher for sink type: {SinkType.FOLDER}"
     )
 
