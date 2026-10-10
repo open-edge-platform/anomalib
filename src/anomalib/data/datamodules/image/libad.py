@@ -42,6 +42,7 @@ Reference:
 """
 
 import logging
+import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
@@ -77,7 +78,7 @@ else:
 
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.libad import LIBADDataset
-from anomalib.data.utils import TestSplitMode, ValSplitMode
+from anomalib.data.utils import TestSplitMode, ValSplitMode, split_by_label
 from anomalib.data.utils.download import extract
 from anomalib.utils.path import resolve_dataset_root
 
@@ -186,8 +187,6 @@ class LIBAD(AnomalibDataModule):
             modality=self.modality,
         )
 
-        from anomalib.data.utils.split import split_by_label
-
         self.train_data, self.test_data = split_by_label(dataset)
 
     def prepare_data(self) -> None:
@@ -238,7 +237,6 @@ class LIBAD(AnomalibDataModule):
                     ),
                 )
                 extract(downloaded_path, scratch_dir)
-                import shutil
 
                 extracted_dir = Path(scratch_dir) / "LIBAD"
                 if extracted_dir.is_dir():
