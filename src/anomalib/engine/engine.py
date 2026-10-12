@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import Any
 
 from lightning.fabric.plugins.io.checkpoint_io import CheckpointIO
-from lightning.pytorch.callbacks import Callback
+from lightning.pytorch.callbacks import Callback, LearningRateMonitor
 from lightning.pytorch.loggers import Logger
 from lightning.pytorch.trainer import Trainer
 from lightning.pytorch.utilities.types import _EVALUATE_OUTPUT, _PREDICT_OUTPUT, EVAL_DATALOADERS, TRAIN_DATALOADERS
@@ -385,6 +385,12 @@ class Engine:
 
         callbacks.append(TimerCallback())
         callbacks.append(MaxStepsProgressCallback())
+
+        # Add LearningRateMonitor if a logger is configured and barebones is not enabled.
+        if self._cache.args.get("logger") and not is_barebones:
+            has_lr_monitor = any(isinstance(c, LearningRateMonitor) for c in self._cache.args["callbacks"])
+            if not has_lr_monitor:
+                callbacks.append(LearningRateMonitor(logging_interval="step"))
 
         # Combine the callbacks, and update the trainer callbacks.
         self._cache.args["callbacks"] = callbacks + self._cache.args["callbacks"]
