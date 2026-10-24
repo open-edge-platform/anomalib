@@ -11,8 +11,8 @@ characters, oversized names, or symlinks escaping the dataset directory.
 Each mutated byte input is decoded with UTF-8 surrogate escaping and exercised as
 a relative, dataset-rooted, and outside-rooted path, with and without extension
 restrictions. Accepted paths must remain within the dataset root according to an
-independent `os.path.commonpath` oracle. Valid paths must succeed; traversal,
-sibling-prefix, and symlink escapes must fail. Only validation and OS path errors
+independent `os.path.commonpath` oracle after resolving the returned path. Valid
+paths must succeed; traversal, sibling-prefix, and symlink escapes must fail. Only validation and OS path errors
 are expected rejections; unexpected exceptions and failed invariants stop fuzzing.
 
 The target instruments the production path functions and the callback explicitly,
@@ -48,8 +48,10 @@ uv run --no-sync python tests/fuzz/fuzz_path.py fuzz-artifacts/crashes/crash-HAS
 ## Retain regressions
 
 Fuzzing starts with an empty corpus, which Atheris expands during each run.
-Ordinary pytest runs check that the oracle accepts valid paths and detects
-weakened confinement, symlink escapes, and always-rejecting behavior:
+Ordinary pytest runs check empty, valid, malformed, and oversized inputs, and verify
+that the oracle detects weakened confinement, unresolved traversal, symlink escapes,
+and always-rejecting behavior. Empty input must work because Atheris exercises it
+at startup, before mutating the corpus:
 
 ```bash
 uv run --no-sync pytest tests/unit/data/utils/test_path_fuzz.py

@@ -35,13 +35,13 @@ def fuzz_path(data: bytes, root: Path) -> None:
             except (ValueError, OSError):
                 continue
             # Check containment independently of the production helper.
-            assert os.path.commonpath([root, result]) == str(root)
+            assert os.path.commonpath([root, result.resolve()]) == str(root)
             assert result.is_absolute()
             if extensions:
                 assert result.suffix in extensions
 
     # An always-rejecting implementation must fail too.
-    relative = Path("images") / f"{data[:32].hex()}.png"
+    relative = Path("images") / f"image-{data[:32].hex()}.png"
     expected = root / relative
     assert path_utils.resolve_path_under_root(root, relative, should_exist=False, extensions=(".png",)) == expected
     assert path_utils.resolve_path_under_root(root, expected, should_exist=False) == expected

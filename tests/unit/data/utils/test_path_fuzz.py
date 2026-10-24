@@ -19,9 +19,10 @@ def dataset_root(tmp_path: Path) -> Path:
     return root
 
 
-def test_fuzzer_accepts_valid_paths(dataset_root: Path) -> None:
-    """Verify the oracle accepts valid paths without requiring Atheris."""
-    fuzz_path(b"images/image.png", dataset_root)
+@pytest.mark.parametrize("data", [b"", b"images/image.png", b"../outside.png", b"\x00", b"\xff", b"a" * 1024])
+def test_fuzzer_accepts_expected_outcomes(dataset_root: Path, data: bytes) -> None:
+    """Accept valid paths and expected input rejections without requiring Atheris."""
+    fuzz_path(data, dataset_root)
 
 
 def test_fuzzer_rejects_symlink_escape(dataset_root: Path) -> None:
@@ -42,6 +43,21 @@ def test_fuzzer_detects_escape(dataset_root: Path, monkeypatch: pytest.MonkeyPat
     monkeypatch.setattr(path_utils, "is_within_directory", lambda *_: True)
     with pytest.raises(AssertionError):
         fuzz_path(b"../outside.png", dataset_root)
+
+
+def test_fuzzer_detects_unresolved_escape(dataset_root: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Detect an escape even if the resolver returns an unnormalized path."""
+    resolve = path_utils.resolve_path_under_root
+    traversal = "images/../../outside.png"
+
+    def unresolved(root: Path, path: str | Path, **kwargs: object) -> Path:
+        if path == traversal:
+            return root / path
+        return resolve(root, path, **kwargs)
+
+    monkeypatch.setattr(path_utils, "resolve_path_under_root", unresolved)
+    with pytest.raises(AssertionError):
+        fuzz_path(traversal.encode(), dataset_root)
 
 
 def test_fuzzer_requires_valid_paths(dataset_root: Path, monkeypatch: pytest.MonkeyPatch) -> None:
