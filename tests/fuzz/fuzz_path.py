@@ -63,7 +63,7 @@ def fuzz_path(data: bytes, root: Path) -> None:
 def main() -> None:
     """Instrument the path boundary and run Atheris with a stable filesystem."""
     if atheris is None:
-        msg = "Atheris is required to run fuzzing. Install the fuzz extra on Linux or macOS."
+        msg = "Atheris is required to run fuzzing. Install the fuzz extra on Linux x86-64 with CPython 3.12-3.14."
         raise ImportError(msg)
 
     # Instrument only the boundary, avoiding unrelated ML imports and native code.

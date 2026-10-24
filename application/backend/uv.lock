@@ -242,7 +242,7 @@ xpu = [
 
 [package.metadata]
 requires-dist = [
-    { name = "atheris", marker = "(sys_platform == 'darwin' and extra == 'fuzz') or (sys_platform == 'linux' and extra == 'fuzz')", specifier = "==3.1.0" },
+    { name = "atheris", marker = "python_full_version >= '3.12' and python_full_version < '3.15' and implementation_name == 'cpython' and platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'fuzz'", specifier = "==3.1.0" },
     { name = "av", marker = "extra == 'dev'", specifier = ">=10.0.0" },
     { name = "av", marker = "extra == 'full'", specifier = ">=10.0.0" },
     { name = "av", marker = "extra == 'video'", specifier = ">=10.0.0" },

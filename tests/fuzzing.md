@@ -23,8 +23,12 @@ concurrent symlink replacement.
 
 ## Run and reproduce
 
-Atheris requires Linux or macOS; CI uses Linux and Python 3.12. From the repository
-root, install dependencies with uv:
+This integration pins Atheris 3.1.0 and uses its prebuilt wheels for glibc-based
+Linux x86-64 with CPython 3.12-3.14. CI uses Ubuntu and CPython 3.12. The fuzz extra
+does not install Atheris on macOS, Windows, other architectures, or unsupported
+Python versions. Use a compatible Linux environment to run the harness.
+
+From the repository root, install dependencies with uv:
 
 ```bash
 uv sync --locked --python 3.12 --extra test --extra cpu --extra fuzz

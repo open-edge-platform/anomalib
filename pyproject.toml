@@ -101,7 +101,9 @@ docs = [
     "sphinx_design",
 ]
 # testing dependencies
-fuzz = ["atheris==3.1.0 ; sys_platform == 'linux' or sys_platform == 'darwin'"]
+fuzz = [
+    "atheris==3.1.0 ; sys_platform == 'linux' and platform_machine == 'x86_64' and implementation_name == 'cpython' and python_version >= '3.12' and python_version < '3.15'",
+]
 test = [
     "prek",
     "pytest",
