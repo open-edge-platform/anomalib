@@ -36,18 +36,15 @@ Example:
 """
 
 import torch
-import torchvision
 from einops import rearrange
 from torch import nn
-from torch.fx.graph_module import GraphModule
 from torch.nn import functional as F  # noqa: N812
 from torch.nn.common_types import _size_2_t
 from torch.utils.data import DataLoader
-from torchvision.models.feature_extraction import create_feature_extractor
 from tqdm import tqdm
 
 from anomalib.data import InferenceBatch
-from anomalib.models.components import DynamicBufferMixin
+from anomalib.models.components import DynamicBufferMixin, TimmFeatureExtractor
 from anomalib.models.components.cluster.kmeans import KMeans
 from anomalib.models.components.feature_extractors import dryrun_find_featuremap_dims
 
@@ -63,12 +60,12 @@ def get_return_nodes(backbone: str) -> list[str]:
         backbone (str): Name of the backbone CNN. Must be one of
             ``{"resnet18", "wide_resnet50_2", "vgg19_bn", "efficientnet_b5"}``.
 
+    Returns:
+        list[str]: List of layer names to extract features from.
+
     Raises:
         NotImplementedError: If ``backbone`` is "efficientnet_b5".
         ValueError: If ``backbone`` is not one of the supported backbones.
-
-    Returns:
-        list[str]: List of layer names to extract features from.
 
     Example:
         >>> nodes = get_return_nodes("resnet18")
@@ -88,36 +85,6 @@ def get_return_nodes(backbone: str) -> list[str]:
         msg = f"Backbone {backbone} is not supported. Supported backbones are {SUPPORTED_BACKBONES}."
         raise ValueError(msg)
     return return_nodes
-
-
-# TODO(samet-akcay): Replace this with the new torchfx feature extractor.
-# CVS-122673
-def get_feature_extractor(backbone: str, return_nodes: list[str]) -> GraphModule:
-    """Create a feature extractor from a backbone CNN.
-
-    Args:
-        backbone (str): Name of the backbone CNN network.
-        return_nodes (list[str]): List of layer names to extract features from.
-
-    Raises:
-        NotImplementedError: When ``backbone`` is efficientnet_b5.
-        ValueError: When ``backbone`` is not supported.
-
-    Returns:
-        GraphModule: Feature extractor module.
-
-    Example:
-        >>> nodes = ["layer1", "layer2", "layer3"]
-        >>> extractor = get_feature_extractor("resnet18", nodes)
-        >>> x = torch.randn(1, 3, 224, 224)
-        >>> features = extractor(x)
-    """
-    weights = torchvision.models.get_model_weights(backbone).DEFAULT
-    model = getattr(torchvision.models, backbone)(weights=weights)
-    feature_extractor = create_feature_extractor(model=model, return_nodes=return_nodes)
-    feature_extractor.eval()
-
-    return feature_extractor
 
 
 class CfaModel(DynamicBufferMixin):
@@ -169,7 +136,12 @@ class CfaModel(DynamicBufferMixin):
 
         self.backbone = backbone
         return_nodes = get_return_nodes(backbone)
-        self.feature_extractor = get_feature_extractor(backbone, return_nodes)
+        self.feature_extractor = TimmFeatureExtractor(
+            backbone=backbone,
+            layers=return_nodes,
+            pre_trained=True,
+            requires_grad=False,
+        )
 
         self.descriptor = Descriptor(self.gamma_d, backbone)
         self.radius = torch.ones(1, requires_grad=True) * radius
@@ -284,12 +256,12 @@ class CfaModel(DynamicBufferMixin):
         Args:
             input_tensor (torch.Tensor): Input image tensor.
 
-        Raises:
-            ValueError: When the memory bank is not initialized.
-
         Returns:
             torch.Tensor | InferenceBatch: During training, returns distance
                 tensor. During inference, returns anomaly predictions.
+
+        Raises:
+            ValueError: When the memory bank is not initialized.
 
         Example:
             >>> model = CfaModel(...)
