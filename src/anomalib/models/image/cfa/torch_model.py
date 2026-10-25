@@ -60,12 +60,12 @@ def get_return_nodes(backbone: str) -> list[str]:
         backbone (str): Name of the backbone CNN. Must be one of
             ``{"resnet18", "wide_resnet50_2", "vgg19_bn", "efficientnet_b5"}``.
 
-    Returns:
-        list[str]: List of layer names to extract features from.
-
     Raises:
         NotImplementedError: If ``backbone`` is "efficientnet_b5".
         ValueError: If ``backbone`` is not one of the supported backbones.
+
+    Returns:
+        list[str]: List of layer names to extract features from.
 
     Example:
         >>> nodes = get_return_nodes("resnet18")
@@ -256,12 +256,12 @@ class CfaModel(DynamicBufferMixin):
         Args:
             input_tensor (torch.Tensor): Input image tensor.
 
+        Raises:
+            ValueError: When the memory bank is not initialized.
+
         Returns:
             torch.Tensor | InferenceBatch: During training, returns distance
                 tensor. During inference, returns anomaly predictions.
-
-        Raises:
-            ValueError: When the memory bank is not initialized.
 
         Example:
             >>> model = CfaModel(...)
