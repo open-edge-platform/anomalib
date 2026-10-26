@@ -97,7 +97,7 @@ uv pip install "anomalib[cu130]"
 # ROCm support (Linux with AMD GPU)
 uv pip install "anomalib[rocm]"
 
-# Intel XPU support (Linux with Intel GPU)
+# Intel XPU support (Linux/Windows with Intel GPU)
 uv pip install "anomalib[xpu]"
 ```
 

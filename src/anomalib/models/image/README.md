@@ -17,7 +17,7 @@ This feature allows the application of the same models and techniques to video d
 ## 💡 Examples
 
 <details>
-<summary>Using the EfficientAD model on an Image Dataset such as Visa</summary>
+<summary>Using the EfficientAd model on an Image Dataset such as Visa</summary>
 
 ```python
 # Import the necessary modules
@@ -26,7 +26,8 @@ from anomalib.models import EfficientAd
 from anomalib.engine import Engine
 
 # Load the ViSA dataset, model and engine.
-datamodule = Visa()
+# EfficientAd requires a training batch size of 1.
+datamodule = Visa(train_batch_size=1)
 model = EfficientAd()
 engine = Engine()
 
@@ -37,7 +38,7 @@ engine.train(model, datamodule)
 </details>
 
 <details>
-<summary>Using the EfficientAD model on a Video Dataset such as Avenue</summary>
+<summary>Using the EfficientAd model on a Video Dataset such as Avenue</summary>
 
 To use an image model to train on a video dataset, we need to convert the video dataset to a frame-based image dataset. To do this, we could use `clip_length_in_frames=1` when loading the dataset.
 
@@ -50,7 +51,8 @@ from anomalib.engine import Engine
 # Load the folder, model and engine.
 # Set the clip_length_in_frames to 1 to convert the video dataset to a
 #   frame-based image dataset.
-datamodule = Avenue(clip_length_in_frames=1)
+# EfficientAd requires a training batch size of 1.
+datamodule = Avenue(clip_length_in_frames=1, train_batch_size=1)
 model = EfficientAd()
 engine = Engine()
 

@@ -114,15 +114,15 @@ The `get_exportable_transform` function supports conversion of several commonly 
 After training a model, we can export our model to ONNX format, and our custom set of transforms automatically gets applied when running the model in onnxruntime.
 
 ```python
-# Export model with pre-processing included
 from anomalib.deploy import ExportType
 from anomalib.engine import Engine
 
+# Export model with pre-processing included
 engine = Engine()
-engine.export(model, export_type=ExportType.ONNX)
+engine.export(model, export_type=ExportType.ONNX, export_root="exported_models")
 
 # During deployment - no manual pre-processing needed
-deployed_model = onnxruntime.InferenceSession("results/weights/onnx/model.onnx")
+deployed_model = onnxruntime.InferenceSession("exported_models/weights/onnx/model.onnx")
 raw_image = cv2.imread("test.jpg")  # Any size, unnormalized
 prediction = deployed_model.run(None, {"input": raw_image})
 ```
