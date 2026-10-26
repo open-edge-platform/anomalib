@@ -38,7 +38,10 @@ const test = testBase.extend<Fixtures>({
                 });
             }),
             http.get('/api/projects/{project_id}/images', ({ response }) => {
-                return response(200).json({ media: [] });
+                return response(200).json({
+                    media: [],
+                    pagination: { offset: 0, limit: 20, count: 0, total: 0 },
+                });
             }),
             http.get('/api/system/devices/inference', ({ response }) => {
                 return response(200).json([
