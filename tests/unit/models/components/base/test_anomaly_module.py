@@ -52,10 +52,17 @@ class TestAnomalibModule:
             "uflow",
         ],
     )
-    def test_from_config(self, model_name: str) -> None:
+    def test_from_config(self, model_name: str, tmp_path: Path) -> None:
         """Test AnomalibModule.from_config."""
         config_path = Path(self.model_config_folder_path) / f"{model_name}.yaml"
-        model = AnomalibModule.from_config(config_path=config_path)
+        overrides: dict[str, str] = {}
+        if model_name == "draem":
+            # Draem downloads the DTD texture dataset when dtd_dir is missing.
+            # Use an empty local directory so config loading stays offline.
+            dtd_dir = tmp_path / "dtd"
+            dtd_dir.mkdir()
+            overrides["model.init_args.dtd_dir"] = str(dtd_dir)
+        model = AnomalibModule.from_config(config_path=config_path, **overrides)
         assert model is not None
         assert isinstance(model, AnomalibModule)
 
