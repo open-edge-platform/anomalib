@@ -47,7 +47,7 @@ pre_processor = PreProcessor(transform=transform)
 The newly created pre-processor is fully compatible with Anomalib. It can be used it in an Anomalib workflow by passing it to the model using the `pre_processor` argument. Let's try this with a Fastflow model.
 
 ```python
-from anomalib.models import FastFlow
+from anomalib.models import Fastflow
 
 model = Fastflow(pre_processor=pre_processor)
 ```
@@ -115,10 +115,14 @@ After training a model, we can export our model to ONNX format, and our custom s
 
 ```python
 # Export model with pre-processing included
-model.export("model.onnx")
+from anomalib.deploy import ExportType
+from anomalib.engine import Engine
+
+engine = Engine()
+engine.export(model, export_type=ExportType.ONNX)
 
 # During deployment - no manual pre-processing needed
-deployed_model = onnxruntime.InferenceSession("model.onnx")
+deployed_model = onnxruntime.InferenceSession("results/weights/onnx/model.onnx")
 raw_image = cv2.imread("test.jpg")  # Any size, unnormalized
 prediction = deployed_model.run(None, {"input": raw_image})
 ```

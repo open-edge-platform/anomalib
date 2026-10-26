@@ -145,10 +145,9 @@ Exported OpenVINO models can be run using the optimized `OpenVINOInferencer`:
 :sync: label-2
 
 ```bash
-anomalib predict \
-    --model Patchcore \
-    --data anomalib.data.MVTecAD \
-    --ckpt_path results/Patchcore/MVTecAD/weights/openvino/model.bin
+python tools/inference/openvino_inference.py \
+    --weights path/to/model.bin \
+    --input path/to/image.png
 ```
 
 :::
@@ -192,7 +191,7 @@ Or configure via YAML:
 
 Anomalib provides a benchmarking tool to evaluate the performance of the anomaly detection models on a given dataset. The benchmarking tool can be used to evaluate the performance of the models on a given dataset, or to compare the performance of multiple models on a given dataset.
 
-Each model in anomalib is benchmarked on a set of datasets, and the results are available in `src/anomalib/models/<model_name>README.md`. For example, the MVTecAD AD results for the Patchcore model are available in the corresponding [README.md](https://github.com/open-edge-platform/anomalib/tree/main/src/anomalib/models/image/patchcore#mvtec-ad-dataset) file.
+Each model in anomalib is benchmarked on a set of datasets, and the results are available in that model's README, for example `src/anomalib/models/image/patchcore/README.md`. The MVTec AD results for Patchcore are in the corresponding [README.md](https://github.com/open-edge-platform/anomalib/tree/main/src/anomalib/models/image/patchcore#mvtec-ad-dataset) file.
 
 ::::{tab-set}
 
@@ -209,10 +208,11 @@ To run the benchmarking tool, run the following command:
 :::{tab-item} API
 
 ```python
-from anomalib.pipelines.benchmark import Benchmark
+from jsonargparse import Namespace
 
-benchmark = Benchmark(config="tools/experimental/benchmarking/sample.yaml")
-benchmark.run()
+from anomalib.pipelines import Benchmark
+
+Benchmark().run(Namespace(config="tools/experimental/benchmarking/sample.yaml"))
 ```
 
 :::

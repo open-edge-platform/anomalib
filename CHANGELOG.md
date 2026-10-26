@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- 📚 **docs**: Correct CLI flags, checkpoint paths, export and benchmark examples, and public class names so the docs match the current API
+
 ## [v2.7.0] - 2026-10-06
 
 ### Added
