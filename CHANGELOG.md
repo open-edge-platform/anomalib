@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - 🚀 **data**: Add LIBAD dataset by @andersendsa in https://github.com/open-edge-platform/anomalib/pull/3800
+- 🚀 **model**: Add GRD-Net with optional training-only ROI supervision, configurable contextual-loss coefficients, generator plateau scheduling, rotation and smoothing, and the model-local GRDNetFolder datamodule by @NickF93 in https://github.com/open-edge-platform/anomalib/pull/3812
 
 ### Removed
 
