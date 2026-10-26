@@ -35,22 +35,13 @@ anomalib predict \
     --data.init_args.abnormal_dir "defect"
 
 echo -e "\n4. Inference with Return Predictions"
-echo "# Return predictions instead of saving to disk"
+echo "# Request prediction batches; visualizations are still saved"
 anomalib predict \
     --model EfficientAd \
     --ckpt_path "./results/EfficientAd/MVTecAD/bottle/latest/weights/lightning/model.ckpt" \
     --data path/to/image.jpg \
     --return_predictions true
 
-echo -e "\n=== Example Output ==="
-echo '
-GPU available: True (cuda), used: True
-TPU available: False, using: 0 TPU cores
-IPU available: False, using: 0 IPUs
-HPU available: False, using: 0 HPUs
-[2024-01-01 12:00:00][INFO][anomalib][predict]: Loading model from ./results/Patchcore/my_dataset/latest/weights/lightning/model.ckpt
-[2024-01-01 12:00:01][INFO][anomalib][predict]: Prediction started
-[2024-01-01 12:00:02][INFO][anomalib][predict]: Predictions saved to ./results/my_dataset/predictions'
-
 echo -e "\nNote: Replace paths according to your setup."
-echo "The predictions will be saved in the results directory by default unless --return_predictions true is used."
+echo "Visualizations are saved in the experiment's images directory by default, independently of --return_predictions."
+echo "Use --model.visualizer false to disable visualization saving."
