@@ -13,44 +13,35 @@ echo -e "\n1. Basic Inference with Checkpoint Path"
 echo "# Predict using a model checkpoint"
 anomalib predict \
     --model EfficientAd \
-    --ckpt_path "./results/efficient_ad/mvtecad/bottle/weights/model.ckpt" \
+    --ckpt_path "./results/EfficientAd/MVTecAD/bottle/latest/weights/lightning/model.ckpt" \
     --data path/to/image.jpg
 
 echo -e "\n2. Inference with Directory Path"
 echo "# Predict on all images in a directory"
 anomalib predict \
     --model EfficientAd \
-    --ckpt_path "./results/efficient_ad/mvtecad/bottle/weights/model.ckpt" \
-    --data "./datasets/mvtecad/bottle/test"
+    --ckpt_path "./results/EfficientAd/MVTecAD/bottle/latest/weights/lightning/model.ckpt" \
+    --data "./datasets/MVTecAD/bottle/test"
 
 echo -e "\n3. Inference with Datamodule"
 echo "# Use a datamodule for inference"
 anomalib predict \
     --model Patchcore \
-    --ckpt_path "./results/my_dataset/weights/model.ckpt" \
-    --data anomalib.data.Folder \
-    --data.name "my_dataset" \
-    --data.root "./datasets/my_dataset" \
-    --data.normal_dir "good" \
-    --data.abnormal_dir "defect"
+    --ckpt_path "./results/Patchcore/my_dataset/latest/weights/lightning/model.ckpt" \
+    --data.class_path anomalib.data.Folder \
+    --data.init_args.name "my_dataset" \
+    --data.init_args.root "./datasets/my_dataset" \
+    --data.init_args.normal_dir "good" \
+    --data.init_args.abnormal_dir "defect"
 
 echo -e "\n4. Inference with Return Predictions"
-echo "# Return predictions instead of saving to disk"
+echo "# Request prediction batches; visualizations are still saved"
 anomalib predict \
     --model EfficientAd \
-    --ckpt_path "./results/efficient_ad/mvtecad/bottle/weights/model.ckpt" \
+    --ckpt_path "./results/EfficientAd/MVTecAD/bottle/latest/weights/lightning/model.ckpt" \
     --data path/to/image.jpg \
-    --return_predictions
-
-echo -e "\n=== Example Output ==="
-echo '
-GPU available: True (cuda), used: True
-TPU available: False, using: 0 TPU cores
-IPU available: False, using: 0 IPUs
-HPU available: False, using: 0 HPUs
-[2024-01-01 12:00:00][INFO][anomalib][predict]: Loading model from ./results/my_dataset/weights/model.ckpt
-[2024-01-01 12:00:01][INFO][anomalib][predict]: Prediction started
-[2024-01-01 12:00:02][INFO][anomalib][predict]: Predictions saved to ./results/my_dataset/predictions'
+    --return_predictions true
 
 echo -e "\nNote: Replace paths according to your setup."
-echo "The predictions will be saved in the results directory by default unless --return_predictions is used."
+echo "Visualizations are saved in the experiment's images directory by default, independently of --return_predictions."
+echo "Use --model.visualizer false to disable visualization saving."

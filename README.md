@@ -125,17 +125,17 @@ uv pip install "anomalib[full,cpu]"
 
 Here is a list of available optional dependency groups:
 
-| Extra           | Description                              | Purpose                                     |
-| :-------------- | :--------------------------------------- | :------------------------------------------ |
-| `[openvino]`    | Intel OpenVINO optimization              | For accelerated inference on Intel hardware |
-| `[clip]`        | Vision-language models                   | `winclip`                                   |
-| `[vlm]`         | Vision-language model backends           | Advanced VLM features                       |
-| `[video]`       | Video I/O dependencies                   | Video datamodules and models                |
-| `[huggingface]` | Hugging Face Hub / safetensors           | Hub-backed model and weight loading         |
-| `[datasets]`    | Dataset-specific extras                  | e.g. tabular/pyarrow-backed datasets        |
-| `[loggers]`     | Experiment tracking (wandb, comet, etc.) | For experiment management                   |
-| `[notebooks]`   | Jupyter notebook support                 | For running example notebooks               |
-| `[full]`        | All optional dependencies                | All optional features                       |
+| Extra           | Description                              | Purpose                                                                               |
+| :-------------- | :--------------------------------------- | :------------------------------------------------------------------------------------ |
+| `[openvino]`    | Intel OpenVINO optimization              | For accelerated inference on Intel hardware                                           |
+| `[clip]`        | Vision-language models                   | `winclip`                                                                             |
+| `[vlm]`         | Vision-language model backends           | Advanced VLM features                                                                 |
+| `[loggers]`     | Experiment tracking (wandb, comet, etc.) | For experiment management                                                             |
+| `[notebooks]`   | Jupyter notebook support                 | For running example notebooks                                                         |
+| `[video]`       | Video decoding                           | Video datasets such as Avenue                                                         |
+| `[huggingface]` | Hugging Face Hub and safetensors         | Hub-backed models and checkpoints                                                     |
+| `[datasets]`    | Dataset storage extras                   | Formats such as those that need `pyarrow`                                             |
+| `[full]`        | Optional feature dependencies            | `clip`, `datasets`, `openvino`, `loggers`, `notebooks`, `vlm`, `video`, `huggingface` |
 
 </details>
 
@@ -239,7 +239,7 @@ anomalib predict --model anomalib.models.Patchcore \
 anomalib predict --model anomalib.models.Patchcore \
                  --data anomalib.data.MVTecAD \
                  --ckpt_path path/to/model.ckpt \
-                 --return_predictions
+                 --return_predictions true
 ```
 
 > 📘 **Note:** For advanced inference options including Gradio and OpenVINO, check our [Inference Documentation](https://anomalib.readthedocs.io).
