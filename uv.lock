@@ -340,6 +340,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+fuzz = [
+    { name = "atheris", marker = "python_full_version >= '3.12' and python_full_version < '3.15' and implementation_name == 'cpython' and platform_machine == 'x86_64' and sys_platform == 'linux'" },
+]
 clip = [
     { name = "open-clip-torch", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32' or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu126') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cpu' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-cu130') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu126' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-rocm') or (extra == 'extra-8-anomalib-cu130' and extra == 'extra-8-anomalib-xpu') or (extra == 'extra-8-anomalib-rocm' and extra == 'extra-8-anomalib-xpu')" },
 ]
@@ -530,6 +533,7 @@ xpu = [
 
 [package.metadata]
 requires-dist = [
+    { name = "atheris", marker = "python_full_version >= '3.12' and python_full_version < '3.15' and implementation_name == 'cpython' and platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'fuzz'", specifier = "==3.1.0" },
     { name = "av", marker = "extra == 'dev'", specifier = ">=10.0.0" },
     { name = "av", marker = "extra == 'full'", specifier = ">=10.0.0" },
     { name = "av", marker = "extra == 'video'", specifier = ">=10.0.0" },
@@ -677,7 +681,7 @@ requires-dist = [
     { name = "wandb", marker = "extra == 'full'" },
     { name = "wandb", marker = "extra == 'loggers'" },
 ]
-provides-extras = ["clip", "cpu", "cu126", "cu130", "datasets", "dev", "docs", "full", "huggingface", "loggers", "notebooks", "openvino", "rocm", "test", "video", "vlm", "xpu"]
+provides-extras = ["clip", "cpu", "cu126", "cu130", "datasets", "dev", "docs", "full", "fuzz", "huggingface", "loggers", "notebooks", "openvino", "rocm", "test", "video", "vlm", "xpu"]
 
 [[package]]
 name = "anyio"
@@ -815,6 +819,16 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/a5/ae/136395dfbfe00dfc94da3f3e136d0b13f394cba8f4841120e34226265780/async_timeout-5.0.1.tar.gz", hash = "sha256:d9321a7a3d5a6a5e187e824d2fa0793ce379a202935782d555d6e9d2735677d3", size = 9274, upload-time = "2024-11-06T16:41:39.6Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/fe/ba/e2081de779ca30d473f21f5b30e0e737c438205440784c7dfc81efc2b029/async_timeout-5.0.1-py3-none-any.whl", hash = "sha256:39e3809566ff85354557ec2398b55e096c8364bacac9405a7a1fa429e77fe76c", size = 6233, upload-time = "2024-11-06T16:41:37.9Z" },
+]
+
+[[package]]
+name = "atheris"
+version = "3.1.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0a/88/fd6ad595dafa9c7ce56dbfcaff0c7244988dac3af86c771166c6516ccf6b/atheris-3.1.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:ec5e11f21a4c197fe91f7aea2b2de88e623c73a21fc07b105ac6329a1588457b", size = 36875908, upload-time = "2026-06-17T00:04:01.104Z" },
+    { url = "https://files.pythonhosted.org/packages/4e/18/e19718c384fd7d801d0da7485407daef9af6194b6d8c8818175bec5efec6/atheris-3.1.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:f8a9f51ce8369026e8eb7b7174835e8c4c85a1a6db5d9add36c15100779d2a39", size = 36800563, upload-time = "2026-06-17T00:04:04.559Z" },
+    { url = "https://files.pythonhosted.org/packages/c3/ff/ae7a5bfe99033e510bea4ed09934e636d93777317a48147369bc0dc2b71f/atheris-3.1.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:315a0b5c819852b1ffe1ca72efc389c7724881f2c33e4aacb8c6bcec49bd5011", size = 36772569, upload-time = "2026-06-17T00:04:07.702Z" },
 ]
 
 [[package]]
