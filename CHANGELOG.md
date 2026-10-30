@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - 🐞 **model**: Keep PatchCore's batch size dynamic when exporting by @varunikarai in https://github.com/open-edge-platform/anomalib/pull/3853
+- 🐞 **model**: Keep antialiasing in exported pre-processing, so Torch and ONNX exports score images larger than the model input like `Engine.predict` by @varunikarai in https://github.com/open-edge-platform/anomalib/pull/3882
 - 📚 **docs**: Correct CLI flags, checkpoint paths, export and benchmark examples, and public class names so the docs match the current API
 
 ## [v2.7.0] - 2026-10-06
