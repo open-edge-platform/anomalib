@@ -94,7 +94,7 @@ print(pre_processor.transform)
 # )
 print(pre_processor.export_transform)
 # Compose(
-#       Resize(size=[256, 256], interpolation=InterpolationMode.BILINEAR, antialias=False)
+#       Resize(size=[256, 256], interpolation=InterpolationMode.BILINEAR, antialias=True)
 #       ExportableCenterCrop(size=[224, 224])
 #       Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], inplace=False)
 # )
@@ -105,6 +105,8 @@ print(exportable_transform == pre_processor.export_transform)  # True
 
 ```{note}
 The exportable transform that is infused in the model graph uses slightly different operations compared to the standard transform that is used during training and evaluation. This may cause small differences in the final model predictions between the standard model and the exported model. When encountering unexpected behaviour of your exported model, a good first step may be to confirm that the exported transforms are working as intended.
+
+Antialiasing is kept in the exported transform, so Torch and ONNX exports resize images exactly like `Engine.predict`. This needs `onnxscript>=0.7.1`. OpenVINO's CPU plugin does not yet apply antialiasing correctly for linear and cubic resizing, so an OpenVINO model can still score images larger than the model input differently.
 ```
 
 ```{note}
@@ -142,7 +144,7 @@ print(model.pre_processor)
 #         Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], inplace=False)
 #   )
 #   (export_transform): Compose(
-#         Resize(size=[256, 256], interpolation=InterpolationMode.BILINEAR, antialias=False)
+#         Resize(size=[256, 256], interpolation=InterpolationMode.BILINEAR, antialias=True)
 #         Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], inplace=False)
 #   )
 # )
@@ -160,7 +162,7 @@ print(Padim.configure_pre_processor())
 #         Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], inplace=False)
 #   )
 #   (export_transform): Compose(
-#         Resize(size=[256, 256], interpolation=InterpolationMode.BILINEAR, antialias=False)
+#         Resize(size=[256, 256], interpolation=InterpolationMode.BILINEAR, antialias=True)
 #         Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], inplace=False)
 #   )
 # )
