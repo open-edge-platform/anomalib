@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- 🐞 **model**: Fix constant WinCLIP zero-shot anomaly maps with batch-first open_clip transformers (open_clip>=2.26)
 - 🐞 **model**: Keep PatchCore's batch size dynamic when exporting by @varunikarai in https://github.com/open-edge-platform/anomalib/pull/3853
 - 📚 **docs**: Correct CLI flags, checkpoint paths, export and benchmark examples, and public class names so the docs match the current API
 

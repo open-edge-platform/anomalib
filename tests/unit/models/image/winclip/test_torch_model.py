@@ -49,6 +49,17 @@ class TestSetupWinClipModel:
         assert getattr(model, "visual_embeddings", None) is not None
 
     @staticmethod
+    def test_window_embeddings_differ_across_windows() -> None:
+        """Test that each sliding window gets its own embedding and the zero-shot anomaly map is not constant."""
+        torch.manual_seed(0)
+        model = WinClipModel(class_name="item")
+        batch = torch.rand(1, 3, 240, 240)
+        _, window_embeddings, _ = model.encode_image(batch)
+        for embeddings in window_embeddings:
+            assert not torch.allclose(embeddings[0, 0], embeddings[0, -1])
+        assert model(batch).anomaly_map.std() > 0
+
+    @staticmethod
     def test_raises_error_when_not_initialized() -> None:
         """Test if an error is raised when trying to access un-initialized attributes."""
         model = WinClipModel()
