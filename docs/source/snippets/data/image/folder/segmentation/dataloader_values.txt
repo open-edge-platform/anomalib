@@ -1,11 +1,8 @@
 _, train_data = next(enumerate(datamodule.train_dataloader()))
-print(train_data.gt_mask is not None)
-# True
+print(train_data.gt_mask is not None)  # False for normal-only synthetic data
 
 _, val_data = next(enumerate(datamodule.val_dataloader()))
-print(val_data.gt_mask is not None)
-# True
+print(val_data.gt_mask is not None)  # True: masks are available
 
 _, test_data = next(enumerate(datamodule.test_dataloader()))
-print(test_data.gt_mask is not None)
-# True
+print(test_data.gt_mask is not None)  # True: masks are available

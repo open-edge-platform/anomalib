@@ -285,12 +285,12 @@ the following command:
 :language: python
 ```
 
-We could check the shape of the images and masks using the following
-commands:
+The training split contains only normal images, so its `gt_mask` is `None`.
+Check the generated test batch for synthetic masks:
 
 ```python
-print(train_data.image.shape)  # (N, C, H, W)
-print(train_data.gt_mask.shape)  # (N, H, W)
+print(test_data.image.shape)  # (N, C, H, W)
+print(test_data.gt_mask.shape)  # (N, H, W)
 ```
 
 :::

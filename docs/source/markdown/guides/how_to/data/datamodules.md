@@ -149,6 +149,9 @@ datamodule = MVTec3D(
     train_batch_size=32,
 )
 
+# Setup creates the datasets
+datamodule.setup()
+
 # Access RGB-D batches
 batch = next(iter(datamodule.train_dataloader()))
 print(batch.image.shape)
