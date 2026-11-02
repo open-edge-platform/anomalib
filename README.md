@@ -13,7 +13,7 @@
 
 ![python](https://img.shields.io/badge/python-3.10%2B-green)
 ![pytorch](https://img.shields.io/badge/pytorch-2.10%2B-orange)
-![lightning](https://img.shields.io/badge/lightning-2.2%2B-blue)
+![lightning](https://img.shields.io/badge/lightning-2.6%2B-blue)
 ![openvino](https://img.shields.io/badge/openvino-2024.0%2B-purple)
 
 [![Pre-Merge Checks](https://github.com/open-edge-platform/anomalib/actions/workflows/pre_merge.yml/badge.svg)](https://github.com/open-edge-platform/anomalib/actions/workflows/pre_merge.yml)

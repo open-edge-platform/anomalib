@@ -148,7 +148,7 @@ Exported OpenVINO models can be run using the optimized `OpenVINOInferencer`:
 anomalib predict \
     --model Patchcore \
     --data anomalib.data.MVTecAD \
-    --ckpt_path results/Patchcore/MVTecAD/weights/openvino/model.bin
+    --ckpt_path results/Patchcore/MVTecAD/bottle/latest/weights/openvino/model.xml
 ```
 
 :::

@@ -152,9 +152,7 @@ datamodule = MVTec3D(
 # Access RGB-D batches
 batch = next(iter(datamodule.train_dataloader()))
 print(batch.image.shape)
-# torch.Size([32, 3, 256, 256])
-data["depth_map"].shape
-# torch.Size([32, 1, 256, 256])
+print(batch.depth_map.shape)
 ```
 
 ## Creating Custom DataModules
