@@ -35,20 +35,26 @@ from anomalib.models.image.efficient_ad.lightning_model import IMAGENETTE_DOWNLO
 from anomalib.models.image.efficient_ad.lightning_model import WEIGHTS_DOWNLOAD_INFO as EFFICIENTAD_WEIGHTS_INFO
 from anomalib.models.image.glass.lightning_model import DTD_DOWNLOAD_INFO as GLASS_DTD_INFO
 
+# TODO(ashwinvaidya17): Re-enable MVTec URL checks when resolved.
+# https://github.com/open-edge-platform/anomalib/issues/3892
+MVTEC_DOWNLOAD_UNAVAILABLE = pytest.mark.skip(
+    reason="MVTec download URLs return HTTP 404: https://github.com/open-edge-platform/anomalib/issues/3892",
+)
+
 ALL_DOWNLOAD_INFOS = [
     pytest.param(ADAM3D_INFO, id="adam_3d"),
-    pytest.param(MVTEC3D_INFO, id="mvtec_3d"),
+    pytest.param(MVTEC3D_INFO, id="mvtec_3d", marks=MVTEC_DOWNLOAD_UNAVAILABLE),
     pytest.param(BMAD_INFO, id="bmad"),
     pytest.param(BTECH_INFO, id="btech"),
     pytest.param(KOLEKTOR_INFO, id="kolektor"),
-    pytest.param(MVTECAD_INFO, id="mvtecad"),
-    pytest.param(MVTECAD2_INFO, id="mvtecad2"),
+    pytest.param(MVTECAD_INFO, id="mvtecad", marks=MVTEC_DOWNLOAD_UNAVAILABLE),
+    pytest.param(MVTECAD2_INFO, id="mvtecad2", marks=MVTEC_DOWNLOAD_UNAVAILABLE),
     pytest.param(VAD_INFO, id="vad"),
     pytest.param(VISA_INFO, id="visa"),
     pytest.param(AVENUE_DATASET_INFO, id="avenue_dataset"),
     pytest.param(AVENUE_ANNOTATIONS_INFO, id="avenue_annotations"),
     pytest.param(UCSD_INFO, id="ucsd_ped"),
-    pytest.param(MVTEC_LOCO_INFO, id="mvtec_loco"),
+    pytest.param(MVTEC_LOCO_INFO, id="mvtec_loco", marks=MVTEC_DOWNLOAD_UNAVAILABLE),
     pytest.param(POINTMAE_DOWNLOAD_INFO, id="pointmae_weights"),
     pytest.param(DRAEM_DTD_INFO, id="draem_dtd"),
     pytest.param(DSR_WEIGHTS_INFO, id="dsr_weights"),
