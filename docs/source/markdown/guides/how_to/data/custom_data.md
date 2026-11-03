@@ -45,7 +45,7 @@ custom datamodule:
 ```
 
 ```{note}
-As can be seen above, we only need to specify the ``task`` argument to ``classification``. We could have also use ``TaskType.CLASSIFICATION`` instead of ``classification``.
+Leave out ``mask_dir``. Folder then stores empty mask paths, and the dataset task is classification.
 ```
 
 The [Folder](../../reference/data/datamodules/image/folder.md) datamodule will create training, validation, test and
@@ -53,9 +53,8 @@ prediction datasets and dataloaders for us. We can access the datasets
 and dataloaders by following the same approach as in the segmentation
 task.
 
-When we check the samples from the dataloaders, we will see that the
-`mask` key is not present in the samples. This is because we do not need
-the masks for the classification task.
+When we check the samples from the dataloaders, `gt_mask` is `None`.
+Classification datasets do not load masks.
 
 ```{literalinclude} ../../../../snippets/data/image/folder/classification/dataloader_values.txt
 :language: python
@@ -83,11 +82,11 @@ Here is the dataset config to create the same custom datamodule:
 Assume that we have saved the above config file as `classification.yaml`. We could run the following CLI command to train a Patchcore model on above dataset:
 
 ```bash
-anomalib train --data classification.yaml --model anomalib.models.Patchcore --task CLASSIFICATION
+anomalib train --data classification.yaml --model anomalib.models.Patchcore
 ```
 
 ```{note}
-As can be seen above, we also need to specify the ``task`` argument to ``CLASSIFICATION`` to explicitly tell anomalib that we want to train a classification model. This is because the default `task` is `SEGMENTATION` within `Engine`.
+There is no ``--task`` flag. This config has no ``mask_dir``, so the dataset task is classification.
 ```
 
 :::
@@ -153,11 +152,11 @@ Here is the CLI command to create the same custom datamodule with only normal im
 Assume that we have saved the above config file as `normal.yaml`. We could run the following CLI command to train a Patchcore model on above dataset:
 
 ```bash
-anomalib train --data normal.yaml --model anomalib.models.Patchcore --task CLASSIFICATION
+anomalib train --data normal.yaml --model anomalib.models.Patchcore
 ```
 
 ```{note}
-As shown in the previous classification example, we, again, need to specify the ``task`` argument to ``CLASSIFICATION`` to explicitly tell anomalib that we want to train a classification model. This is because the default `task` is `SEGMENTATION` within `Engine`.
+Synthetic anomalies include masks, so this setup is a segmentation task. ``Engine`` does not take a ``task`` argument.
 ```
 
 :::
@@ -206,11 +205,8 @@ We could check the shape of the images and masks using the following
 commands:
 
 ```python
-print(train_data["image"].shape)
-# torch.Size([32, 3, 256, 256])
-
-print(train_data["mask"].shape)
-# torch.Size([32, 256, 256])
+print(train_data.image.shape)  # (N, C, H, W)
+print(train_data.gt_mask.shape)  # (N, H, W)
 ```
 
 Training the model is as simple as running the following command:
@@ -289,15 +285,12 @@ the following command:
 :language: python
 ```
 
-We could check the shape of the images and masks using the following
-commands:
+The training split contains only normal images, so its `gt_mask` is `None`.
+Check the generated test batch for synthetic masks:
 
 ```python
-print(train_data["image"].shape)
-# torch.Size([32, 3, 256, 256])
-
-print(train_data["mask"].shape)
-# torch.Size([32, 256, 256])
+print(test_data.image.shape)  # (N, C, H, W)
+print(test_data.gt_mask.shape)  # (N, H, W)
 ```
 
 :::
