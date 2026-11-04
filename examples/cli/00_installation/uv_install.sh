@@ -1,10 +1,24 @@
 #!/bin/bash
 
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-# Install uv if you haven't already
-curl -LsSf https://astral.sh/uv/install.sh | sh
+set -euo pipefail
+
+# Verify the pinned standalone installer before running it.
+uv_installer=$(mktemp)
+trap 'rm -f "$uv_installer"' EXIT
+curl -LsSf https://github.com/astral-sh/uv/releases/download/0.13.7/uv-installer.sh \
+    -o "$uv_installer"
+uv_installer_sha256=d263ee68314cf5bea36b08e6bd9e2c4563240d7adb73756cf33af5c199b92db4
+if command -v sha256sum >/dev/null 2>&1; then
+    printf '%s  %s\n' "$uv_installer_sha256" "$uv_installer" | sha256sum -c -
+else
+    printf '%s  %s\n' "$uv_installer_sha256" "$uv_installer" | shasum -a 256 -c -
+fi
+sh "$uv_installer"
+rm -f "$uv_installer"
+trap - EXIT
 
 # Quick install (uses default PyTorch from PyPI)
 uv pip install anomalib

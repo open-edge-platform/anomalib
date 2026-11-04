@@ -28,7 +28,7 @@ To ensure compatibility with your hardware, you can specify a backend during ins
 
 ```{literalinclude} ../../../../examples/cli/00_installation/uv_install.sh
 :language: bash
-:lines: 10-30
+:lines: 24-44
 ```
 
 **Using `pip`:**
