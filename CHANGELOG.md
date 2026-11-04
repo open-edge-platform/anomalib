@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- **data**: Scale XYXY bounding box coordinates by width and height when resizing non-uniformly.
+
 - 🐞 **model**: Keep PatchCore's batch size dynamic when exporting by @varunikarai in https://github.com/open-edge-platform/anomalib/pull/3853
 - 📚 **docs**: Align custom-data, export, benchmark, and Lightning examples with current APIs
 
