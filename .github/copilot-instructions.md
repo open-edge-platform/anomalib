@@ -128,10 +128,11 @@ For detailed topic-specific policy, consult the `.agents/skills/` files referenc
 - Require a change-type emoji (for example, `🐞` for a bug fix), bold scope, user-facing summary, author attribution, and the actual PR URL:
 
   ```markdown
-  - 🐞 **data**: Fix bounding box scaling during non-uniform resizing by @A-P-S-Bhaidav in https://github.com/open-edge-platform/anomalib/pull/3897
+  - 🐞 **data**: Describe the user-facing fix by @github-user in https://github.com/open-edge-platform/anomalib/pull/1234
   ```
 
 - Verify author and PR reference against PR metadata; do not invent them. Grouped entries may credit multiple authors and PRs.
+- The example uses placeholders; replace `@github-user` and PR number `1234` with the actual metadata.
 - Review added or modified entries, not unrelated historical formatting. Keep neighboring bullets contiguous without an extra blank line.
 - Flag missing fields with a concrete corrected entry even when code and tests are otherwise correct. Optional emojis in PR titles do not make changelog emojis optional.
 
