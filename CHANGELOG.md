@@ -20,7 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - 🐞 **model**: Keep PatchCore's batch size dynamic when exporting by @varunikarai in https://github.com/open-edge-platform/anomalib/pull/3853
 - 📚 **docs**: Align custom-data, export, benchmark, and Lightning examples with current APIs
-- Fall back to a text pointer for versioned output on Windows when symlinks are unavailable and directory names are rejected by junction command validation.
+- 🐞 **utils**: Fall back to a text pointer for versioned output on Windows when symlinks are unavailable and directory names are rejected by junction command validation by @A-P-S-Bhaidav in https://github.com/open-edge-platform/anomalib/pull/3889
 
 ## [v2.7.0] - 2026-10-06
 
