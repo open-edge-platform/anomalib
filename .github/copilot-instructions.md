@@ -39,6 +39,8 @@ For `application/`, note that Anomalib Studio has some separate tooling and conf
 
 Prioritize **correctness and architectural fit** over style. Do not comment on formatting or import ordering unless they create a functional problem. Ruff, pydocstyle, and pre-commit handle style enforcement automatically.
 
+Exception: changelog structure and entry format are release requirements. Review them explicitly; linters do not verify scope, attribution, or PR references.
+
 For detailed topic-specific policy, consult the `.agents/skills/` files referenced in each section below.
 
 ### Review Tone
@@ -117,7 +119,21 @@ For detailed topic-specific policy, consult the `.agents/skills/` files referenc
 - Has a docstring with a vague or inaccurate summary line.
 - Leaves arguments, returns, or intentionally raised exceptions undocumented.
 - Makes a significant user-facing change without a `CHANGELOG.md` entry under `## [Unreleased]`.
+- Adds or edits a changelog entry without the required format below; checking only that an entry exists is insufficient.
 - Updates APIs, CLI behavior, or config structure without updating the nearest documentation surface (README, `docs/source/markdown/`, model README, examples).
+
+**Changelog format:**
+
+- Place regular PR entries under `## [Unreleased]` and the appropriate existing heading: `Added`, `Removed`, `Changed`, `Deprecated`, or `Fixed`. Release-preparation PRs may move entries into a versioned section.
+- Require a change-type emoji (for example, `🐞` for a bug fix), bold scope, user-facing summary, author attribution, and the actual PR URL:
+
+  ```markdown
+  - 🐞 **data**: Fix bounding box scaling during non-uniform resizing by @A-P-S-Bhaidav in https://github.com/open-edge-platform/anomalib/pull/3897
+  ```
+
+- Verify author and PR reference against PR metadata; do not invent them. Grouped entries may credit multiple authors and PRs.
+- Review added or modified entries, not unrelated historical formatting. Keep neighboring bullets contiguous without an extra blank line.
+- Flag missing fields with a concrete corrected entry even when code and tests are otherwise correct. Optional emojis in PR titles do not make changelog emojis optional.
 
 **Docstring structure (required order):**
 

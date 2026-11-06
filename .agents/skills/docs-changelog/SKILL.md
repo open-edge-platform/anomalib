@@ -16,6 +16,7 @@ Use this skill when code changes may affect user-visible documentation, examples
 - user-facing behavior changes without matching docs updates;
 - public APIs change without docstring or reference-doc updates;
 - a significant user-facing change is missing a `CHANGELOG.md` entry under `## [Unreleased]`;
+- a new or modified changelog entry is missing its change-type emoji, bold scope, summary, author attribution, or PR URL;
 - examples or README usage snippets no longer match the actual API.
 
 ## Docstrings
@@ -35,6 +36,17 @@ Use this skill when code changes may affect user-visible documentation, examples
 
 - Significant user-facing changes should update `CHANGELOG.md` under `## [Unreleased]`.
 - Use the existing Keep a Changelog section headings already present in the repo: `Added`, `Removed`, `Changed`, `Deprecated`, `Fixed`.
+- Release-preparation PRs may move entries into a versioned section; regular PRs use `Unreleased`.
+- Check the entry format, not only its presence. Changelog format is a release requirement, not a style nit to skip because linters run.
+- Require a change-type emoji (for example, `🐞` for a bug fix), bold scope, user-facing summary, author attribution, and the actual PR URL:
+
+  ```markdown
+  - 🐞 **data**: Fix bounding box scaling during non-uniform resizing by @A-P-S-Bhaidav in https://github.com/open-edge-platform/anomalib/pull/3897
+  ```
+
+- Verify attribution and PR references against PR metadata; do not invent them. Grouped entries may credit multiple authors and PRs.
+- Keep neighboring bullets contiguous without an extra blank line. Review added or modified entries without demanding unrelated historical rewrites.
+- Flag missing fields with a corrected example even when the implementation and tests are correct. PR title emoji rules are separate from changelog entry rules.
 - Purely internal changes may not need a changelog entry, but reviewers should call out missing entries for behavior, API, docs, or user workflow changes.
 
 ## Repo-grounded review anchors
@@ -56,4 +68,5 @@ Use this skill when code changes may affect user-visible documentation, examples
 - Check docstrings for public APIs.
 - Check README, docs, and examples for user-facing changes.
 - Check `CHANGELOG.md` for significant changes.
+- Check new or modified entries for the correct heading, emoji, bold scope, summary, author attribution, and PR URL.
 - Check that docs match the current API and workflow.
