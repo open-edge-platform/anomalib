@@ -5,6 +5,8 @@
 
 This module provides a PyTorch Lightning DataModule for the MVTec 3D-AD dataset.
 The dataset contains RGB and depth image pairs for anomaly detection tasks.
+Automatic downloads are temporarily unavailable because the upstream links are
+broken. Download and extract the dataset manually before use.
 
 Example:
     Create a MVTec3D datamodule::
@@ -37,7 +39,7 @@ from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.depth.mvtec_3d import MVTec3DDataset
-from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
+from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode
 from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
@@ -140,8 +142,20 @@ class MVTec3D(AnomalibDataModule):
         )
 
     def prepare_data(self) -> None:
-        """Download the dataset if not available."""
+        """Check that the manually downloaded dataset is available.
+
+        Raises:
+            FileNotFoundError: If the requested category directory is missing.
+        """
         if (self.root / self.category).is_dir():
             logger.info("Found the dataset.")
         else:
-            download_and_extract(self.root, DOWNLOAD_INFO)
+            # TODO(ashwinvaidya17): Restore autodownload once upstream links work.
+            # https://github.com/open-edge-platform/anomalib/issues/3892
+            msg = (
+                "MVTec 3D-AD automatic download is temporarily unavailable because upstream links are broken. "
+                "Download the dataset from https://www.mvtec.com/research-teaching/datasets/mvtec-3d-ad "
+                f"and extract it so that '{self.root / self.category}' exists. "
+                "See https://github.com/open-edge-platform/anomalib/issues/3892."
+            )
+            raise FileNotFoundError(msg)

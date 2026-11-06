@@ -146,7 +146,7 @@ Exported OpenVINO models can be run using the optimized `OpenVINOInferencer`:
 
 ```bash
 python tools/inference/openvino_inference.py \
-    --weights path/to/model.bin \
+    --weights results/Patchcore/MVTecAD/bottle/latest/weights/openvino/model.xml \
     --input path/to/image.png \
     --output ./outputs
 ```
