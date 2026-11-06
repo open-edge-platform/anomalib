@@ -242,6 +242,7 @@ xpu = [
 
 [package.metadata]
 requires-dist = [
+    { name = "atheris", marker = "python_full_version >= '3.12' and python_full_version < '3.15' and implementation_name == 'cpython' and platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'fuzz'", specifier = "==3.1.0" },
     { name = "av", marker = "extra == 'dev'", specifier = ">=10.0.0" },
     { name = "av", marker = "extra == 'full'", specifier = ">=10.0.0" },
     { name = "av", marker = "extra == 'video'", specifier = ">=10.0.0" },
@@ -389,7 +390,7 @@ requires-dist = [
     { name = "wandb", marker = "extra == 'full'" },
     { name = "wandb", marker = "extra == 'loggers'" },
 ]
-provides-extras = ["clip", "cpu", "cu126", "cu130", "datasets", "dev", "docs", "full", "huggingface", "loggers", "notebooks", "openvino", "rocm", "test", "video", "vlm", "xpu"]
+provides-extras = ["clip", "cpu", "cu126", "cu130", "datasets", "dev", "docs", "full", "fuzz", "huggingface", "loggers", "notebooks", "openvino", "rocm", "test", "video", "vlm", "xpu"]
 
 [[package]]
 name = "anomalib-studio"
