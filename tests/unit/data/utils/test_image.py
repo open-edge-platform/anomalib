@@ -31,6 +31,25 @@ class TestGetImageFilenames:
         assert set(image_filenames) == set(expected_filenames)
 
     @staticmethod
+    @pytest.mark.parametrize("directory_name", ["nested.png", "nested.JPG"])
+    def test_image_extension_directory(tmp_path: Path, directory_name: str) -> None:
+        """Only return image files inside a directory with an image extension."""
+        directory = tmp_path / directory_name
+        directory.mkdir()
+        image_path = directory / "image.png"
+        Image.new("RGB", (2, 2)).save(image_path)
+
+        assert get_image_filenames(tmp_path) == [image_path]
+
+    @staticmethod
+    def test_empty_image_extension_directory(tmp_path: Path) -> None:
+        """Reject a directory containing no image files despite an image-named subdirectory."""
+        (tmp_path / "empty.png").mkdir()
+
+        with pytest.raises(ValueError, match="Found 0 images"):
+            get_image_filenames(tmp_path)
+
+    @staticmethod
     def test_nonexistent_image_file() -> None:
         """Test ``get_image_filenames`` raises FileNotFoundError for a nonexistent image file."""
         with pytest.raises(FileNotFoundError):
