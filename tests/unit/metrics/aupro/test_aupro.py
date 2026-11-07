@@ -64,3 +64,35 @@ def test_aupro(labels: torch.Tensor, preds: torch.Tensor, fpr_limit: float, expe
     tolerance = 0.001
     assert torch.allclose(computed_aupro, expected_aupro, atol=tolerance)
     assert torch.allclose(computed_aupro, ref_aupro, atol=tolerance)
+
+
+@pytest.mark.parametrize("fpr_limit", [0.05, 0.3, 1.0])
+def test_aupro_matches_reference_on_random_maps(fpr_limit: float) -> None:
+    """AUPRO is normalized by ``fpr_limit`` and matches the MVTec reference implementation.
+
+    Regression test for https://github.com/open-edge-platform/anomalib/issues/3718.
+    """
+    generator = torch.Generator().manual_seed(0)
+    labels = torch.zeros(4, 32, 32, dtype=torch.long)
+    labels[0, 4:12, 4:12] = 1
+    labels[1, 20:30, 2:6] = 1
+    labels[2, 10:14, 10:30] = 1
+    labels[2, 25:28, 25:28] = 1
+    preds = torch.rand(4, 1, 32, 32, generator=generator)
+    preds[:, 0][labels > 0] += 0.3
+
+    aupro = AUPRO(fpr_limit=fpr_limit)
+    aupro.update(preds, labels)
+    computed_aupro = aupro.compute()
+
+    fpr, _ = aupro._compute()  # noqa: SLF001
+    assert torch.isclose(fpr[-1], torch.tensor(fpr_limit))
+    assert 0.0 <= computed_aupro <= 1.0
+
+    ref_aupro, _ = calculate_au_pro(
+        [label.numpy() for label in labels],
+        [pred.squeeze(0).numpy() for pred in preds],
+        integration_limit=fpr_limit,
+        num_thresholds=2000,
+    )
+    assert torch.isclose(computed_aupro, torch.tensor(ref_aupro, dtype=torch.float), atol=0.01)
