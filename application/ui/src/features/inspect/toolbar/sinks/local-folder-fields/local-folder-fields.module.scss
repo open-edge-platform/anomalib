@@ -1,0 +1,47 @@
+.folderIcon {
+    width: var(--spectrum-global-dimension-size-400);
+    min-width: auto;
+    border-radius: 4px;
+    padding: 0px;
+    background-color: var(--spectrum-accent-background-color-default);
+
+    svg {
+        stroke: var(--spectrum-global-color-gray-50);
+    }
+
+    &:hover {
+        background-color: var(var(--spectrum-accent-background-color-hover));
+    }
+}
+
+.folderPathLabel {
+    display: block;
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    color: var(--spectrum-global-color-gray-700);
+    margin-bottom: var(--spectrum-global-dimension-size-50);
+}
+
+.folderPrefix {
+    height: var(--spectrum-global-dimension-size-400);
+    display: flex;
+    align-items: center;
+    border: var(--spectrum-global-dimension-size-10) solid var(--spectrum-global-color-gray-400);
+    border-right: none;
+    white-space: nowrap;
+}
+
+.folderPrefixText {
+    font-size: var(--spectrum-global-dimension-font-size-100);
+    color: var(--spectrum-global-color-gray-600);
+    user-select: none;
+}
+
+.folderSuffixField {
+    flex: 1;
+
+    // Remove left border radius to connect with prefix
+    input {
+        border-start-start-radius: 0 !important;
+        border-end-start-radius: 0 !important;
+    }
+}

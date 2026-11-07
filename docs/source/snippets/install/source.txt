@@ -1,0 +1,10 @@
+# Clone the repository
+git clone https://github.com/open-edge-platform/anomalib.git
+cd anomalib
+
+# Create virtual environment and install dependencies with uv
+uv venv
+uv sync --extra cpu
+
+# Or for development with all dependencies
+uv sync --extra dev --extra cpu

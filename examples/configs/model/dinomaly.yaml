@@ -1,0 +1,16 @@
+model:
+  class_path: anomalib.models.Dinomaly
+  init_args:
+    encoder_name: vit_base_patch14_reg4_dinov2
+    bottleneck_dropout: 0.2
+    decoder_depth: 8
+    use_context_recentering: false # Dinomaly2 Context-Aware Recentering
+
+trainer:
+  max_steps: 5000
+  callbacks:
+    - class_path: lightning.pytorch.callbacks.EarlyStopping
+      init_args:
+        patience: 20
+        monitor: image_AUROC
+        mode: max

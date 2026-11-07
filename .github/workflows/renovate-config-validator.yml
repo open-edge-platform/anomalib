@@ -1,0 +1,59 @@
+# Renovate configuration validator
+#
+# This workflow validates changes proposed into Renovate configuration file,
+# located .github/renovate.json5.
+#
+# Key Features:
+# - Validate changes and prevent non-valid configuration to be used by Renovate.
+#
+# Process Stages:
+# Configuration validation:
+#    - Runs on PR into .github/renovate.json5 and validate changes.
+#
+# Required Secrets:
+# - None
+#
+# Example Usage:
+# Automatically triggered on:
+# - Pull requests to .github/renovate.json5.
+#
+# Note: None.
+
+name: Validate Renovate configuration
+
+on:
+  pull_request:
+    paths:
+      - ".github/renovate.json5"
+      - ".github/workflows/renovate.yml"
+      - ".github/workflows/renovate-config-validator.yml"
+
+permissions: {} # No permissions by default on workflow level
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.after }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Required to checkout the repository
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout configuration
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate configuration
+        run: |
+          # renovate: datasource=docker
+          export RENOVATE_IMAGE=ghcr.io/renovatebot/renovate:43.160.2@sha256:e977df2dbd4b978cc301a0b4d8e0162ec4ce08bd205422c02c4cf55f52b67336
+          docker run --rm --entrypoint "renovate-config-validator" \
+          -v "${{ github.workspace }}/.github/renovate.json5":"/renovate.json5" \
+          ${RENOVATE_IMAGE} "/renovate.json5"

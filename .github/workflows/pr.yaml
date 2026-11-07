@@ -1,0 +1,266 @@
+# Pull Request Workflow
+#
+# This workflow orchestrates quality checks, tests, and security scans for
+# pull requests using reusable workflows.
+#
+# Key Features:
+# - PR title validation (conventional commits)
+# - Code quality validation
+# - Test suite execution
+# - Security scanning
+# - Concurrent execution handling
+# - Automated feedback
+#
+# Process Stages:
+# Jobs are grouped by scope and always-run vs path-gated:
+#
+# [Always run on every non-draft PR]
+# 1. PR Title Validation:
+#    - Conventional commit format verification
+#    - Ensures proper changelog generation
+#
+# 2. Quality Checks:
+#    - Covers library (src/) and application/ via prek workspace mode
+#    - Code style, type checking, pre-commit hooks
+#
+# 3. Security:
+#    - Changed files scanning
+#    - Vulnerability detection
+#    - Security report generation
+#
+# [Library path-gated: src/, tests/, examples/, tools/, pyproject.toml, ...]
+# 4. Testing:
+#    - Unit test execution
+#    - Integration testing
+#    - Coverage reporting
+#
+# [Application path-gated: application/**, .github/**]
+# 5. Docker Image Build:
+#    - Determines if docker images need to be built based on event type and changed paths
+#    - Builds and uploads docker images as artifacts
+#
+# Required Secrets:
+# - CODECOV_TOKEN: Coverage reporting token
+#
+# Example Usage:
+# Automatically triggered on:
+# 1. Pull requests to main branch
+# 2. Pull requests to feature/* branches
+# 3. Merge group events
+#
+# Note:
+# - PR title validation only runs on actual pull requests
+# - Individual commit messages are not validated (since PRs are squash merged)
+# - Other checks run in parallel with PR title validation for faster feedback
+# - PR title can be fixed later while tests are already running
+# - Configured to cancel outdated runs when new commits are pushed
+
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: ["main", "feature/**", "release/**"]
+  merge_group:
+    branches: [main]
+
+permissions: {} # No permissions by default on workflow level
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # PR title validation - only runs on actual pull requests, not merge groups
+  pr-title-check:
+    if: github.event_name == 'pull_request'
+    uses: $/.github/workflows/_reusable-pr-title-check.yaml
+    permissions:
+      contents: read # Required by the called workflow to checkout the repository
+    with:
+      python-version: "3.10"
+
+  # Code quality - covers both library (src/) and application/ via prek workspace mode
+  quality:
+    if: github.event.pull_request.draft != true
+    uses: $/.github/workflows/_reusable-code-quality.yaml
+    permissions:
+      contents: read # Required by the called workflow to checkout the repository
+    with:
+      python-version: "3.10"
+
+  # Security scanning
+  security:
+    if: github.event.pull_request.draft != true
+    uses: $/.github/workflows/_reusable-security-scan.yaml
+    permissions:
+      security-events: write # needed to upload results
+      contents: read
+      packages: read # needed to pull images for scanning
+    with:
+      tools: "semgrep,bandit,zizmor" # Security tools to run
+      scan-scope: "changed" # Only scan changed files
+      severity-level: "LOW" # Minimum severity to report
+      confidence-level: "HIGH" # High confidence to report
+      fail-on-findings: true # explicitly set
+
+  # Determines if test suite should run based on changed paths
+  check-library-paths:
+    name: Check if tests should run
+    runs-on: ubuntu-latest
+    outputs:
+      run_library: ${{ steps.check-library-paths.outputs.run }}
+    permissions:
+      contents: read # Required to checkout the repository
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check paths
+        id: check-library-paths
+        uses: open-edge-platform/geti-ci/actions/check-paths@2ed3ce382d1dbd6db52c7c6b93ffdae280a1c06f # check-paths/v0.1.0
+        with:
+          files_yaml: |
+            test:
+              - src/**
+              - tests/**
+              - examples/**
+              - tools/**
+              - pyproject.toml
+              - uv.lock
+              - .pre-commit-config.yaml
+              - tox.ini
+              - .github/actions/pytest/**
+              - .github/workflows/pr.yaml
+              - .github/workflows/_reusable-code-quality.yaml
+              - .github/workflows/_reusable-test-suite.yaml
+
+  unit-tests:
+    needs: check-library-paths
+    if: needs.check-library-paths.outputs.run_library == 'true' && github.event.pull_request.draft != true
+    uses: $/.github/workflows/_reusable-test-suite.yaml
+    permissions:
+      contents: read # Required by the called workflow to checkout the repository
+    with:
+      test-type: "unit"
+      runner: "ubuntu-latest"
+      timeout: 30
+      enable-cache: "true"
+    secrets:
+      codecov-token: ${{ secrets.CODECOV_TOKEN }}
+
+  integration-tests:
+    needs: check-library-paths
+    if: needs.check-library-paths.outputs.run_library == 'true' && github.event.pull_request.draft != true
+    uses: $/.github/workflows/_reusable-test-suite.yaml
+    permissions:
+      contents: read # Required by the called workflow to checkout the repository
+    with:
+      test-type: "integration"
+      runner: "self-hosted"
+      timeout: 60
+      enable-cache: "false"
+    secrets:
+      codecov-token: ${{ secrets.CODECOV_TOKEN }}
+
+  # NOTE: When we have e2e or other tests, we can add them here.
+
+  library-checks-status:
+    name: Library checks status
+    needs:
+      - check-library-paths
+      - quality
+      - unit-tests
+      - integration-tests
+    runs-on: ubuntu-latest
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    if: always() && !cancelled()
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Check jobs results
+        run: |
+          for check in ${CHECKS}; do
+            echo "::notice::check=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error::Library checks failed. They must succeed before this pull request can be merged."
+              exit 1
+            fi
+          done
+
+  # Determines if docker images must be built based on event type and changed paths
+  # If push or workflow_dispatch -> always run
+  # If PR or merge_group -> run only if files in specified paths changed
+  check-paths:
+    name: Check if docker build job should run
+    runs-on: ubuntu-latest
+    outputs:
+      run_build: ${{ steps.check-paths.outputs.run }}
+    permissions:
+      contents: read # Required to checkout the repository
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check paths
+        id: check-paths
+        uses: open-edge-platform/geti-ci/actions/check-paths@2ed3ce382d1dbd6db52c7c6b93ffdae280a1c06f # check-paths/v0.1.0
+        with:
+          files_yaml: |
+            test:
+              - application/**
+              - .github/**
+
+  # Docker image build job using reusable workflow
+  docker-build:
+    name: Build and upload docker image
+    needs: check-paths
+    if: needs.check-paths.outputs.run_build == 'true' && github.event.pull_request.draft != true
+    uses: $/.github/workflows/_reusable-docker-build.yaml
+    permissions:
+      contents: read
+      # write permissions are required to update PR comments with image sizes
+      pull-requests: write
+
+  docker-build-status:
+    name: Docker build status check
+    needs:
+      - check-paths
+      - docker-build
+    runs-on: ubuntu-latest
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    if: always() && !cancelled()
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Check jobs results
+        run: |
+          for check in ${CHECKS}; do
+            echo "::notice::check=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error::Build docker image status checks failed. They must succeed before this pull request can be merged."
+              exit 1
+            fi
+          done

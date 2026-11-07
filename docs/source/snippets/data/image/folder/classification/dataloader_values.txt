@@ -1,0 +1,11 @@
+train_batch = next(iter(datamodule.train_dataloader()))
+print(train_batch.gt_mask)
+# None
+
+val_batch = next(iter(datamodule.val_dataloader()))
+print(val_batch.gt_mask)
+# None
+
+test_batch = next(iter(datamodule.test_dataloader()))
+print(test_batch.gt_mask)
+# None

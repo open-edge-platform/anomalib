@@ -1,0 +1,6 @@
+class_path: anomalib.data.Folder
+init_args:
+  name: hazelnut_toy
+  root: datasets/hazelnut_toy
+  normal_dir: good
+  test_split_mode: synthetic

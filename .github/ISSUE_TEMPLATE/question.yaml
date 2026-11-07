@@ -1,0 +1,30 @@
+name: "❓ Question"
+description: Ask a question about the project
+title: "❓ <title>"
+labels: ["question", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Have a question?**
+
+        We'd love to help! However, to keep our issue tracker focused on bugs and feature requests, we ask that you please use our [Q&A Discussion Forum](https://github.com/open-edge-platform/anomalib/discussions/categories/q-a).
+
+        You'll be more likely to get a quick answer there.
+
+        If you're certain this is not a question and should be an issue, you can still create it, but please consider using the forum first.
+  - type: textarea
+    id: question-description
+    attributes:
+      label: Your Question
+      description: "Please describe your question in detail. If you've already checked the discussion forum, let us know."
+    validations:
+      required: true
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Forum Check
+      description: "Please confirm you have searched for an answer on our discussion forum."
+      options:
+        - label: I have searched the discussions forum for an answer to my question.
+          required: true

@@ -1,0 +1,379 @@
+# Reusable Security Scan Workflow
+#
+# This reusable workflow orchestrates multiple security scanning tools to provide
+# comprehensive security analysis of the codebase.
+#
+# Key Features:
+# - Parallel security tool execution
+# - Configurable tool selection
+# - Optional DAST scan against deployed container API and UI endpoints
+# - Comprehensive result aggregation
+# - Artifact preservation
+# - Customizable failure thresholds
+#
+# Process Stages:
+# 1. Tool Selection and Configuration
+# 2. Parallel Security Scans
+# 3. Result Aggregation
+# 4. Report Generation
+#
+# Required Inputs:
+# - tools: Comma-separated list of tools to run
+# - scan-scope: Scope of scanning
+# - severity-level: Minimum severity threshold
+# - confidence-level: Minimum confidence threshold
+# - fail-on-findings: Whether to fail on security findings
+#
+# Security Tools:
+# - Bandit: Python security linter
+# - Semgrep: Static Application Security Testing (SAST)
+# - Trivy: Vulnerability, secret, and config scanning
+# - Zizmor: GitHub Actions workflow security scanner
+# - DAST scan: Runtime scanning via ZAP and Schemathesis
+#
+# Outputs:
+# - has-findings: Boolean indicating if security issues were found
+#
+# Example Usage:
+#   jobs:
+#     security:
+#       uses: ./.github/workflows/_reusable-security-scan.yaml
+#       with:
+#         tools: "bandit,semgrep"
+#         scan-scope: "changed"
+#         severity-level: "MEDIUM"
+#         confidence-level: "HIGH"
+#         fail-on-findings: true
+#
+# Note: Different security tools may require specific permissions
+# or configurations.
+
+name: Reusable Security Scan
+
+on:
+  workflow_call:
+    inputs:
+      tools:
+        description: "Security tools to run (comma-separated: bandit,semgrep,trivy-scan,zizmor,dast-scan,trivy-image-scan)"
+        type: string
+        default: "bandit,semgrep"
+      scan-scope:
+        description: "Scan scope (all/changed)"
+        type: string
+        default: "changed"
+      severity-level:
+        description: "Minimum severity level (LOW/MEDIUM/HIGH)"
+        type: string
+        default: "LOW"
+      confidence-level:
+        description: "Minimum confidence level (LOW/MEDIUM/HIGH)"
+        type: string
+        default: "LOW"
+      fail-on-findings:
+        description: "Fail workflow if issues found"
+        type: boolean
+        default: true
+    outputs:
+      has-findings:
+        description: "Whether any security issues were found"
+        value: ${{ jobs.summarize.outputs.has_findings }}
+
+permissions: {} # No permissions by default on workflow level
+
+jobs:
+  bandit:
+    if: contains(inputs.tools, 'bandit')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # needed by nested workflows to upload results
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Run Bandit scan
+        uses: open-edge-platform/geti-ci/actions/bandit@b9abdfc0ecbe989816a7f2cf582af771f9abbb87 # bandit/v0.1.3
+        with:
+          scan-scope: ${{ inputs.scan-scope }}
+          severity-level: ${{ inputs.severity-level }}
+          confidence-level: ${{ inputs.confidence-level }}
+          fail-on-findings: ${{ inputs.fail-on-findings }}
+
+  semgrep:
+    if: contains(inputs.tools, 'semgrep')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # needed by nested workflows to upload results
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Run Semgrep scan
+        uses: open-edge-platform/geti-ci/actions/semgrep@7d25e47329bbfcde4ee51ab3581aea8613e245e2
+        with:
+          scan-scope: ${{ inputs.scan-scope }}
+          severity: ${{ inputs.severity-level }}
+          fail-on-findings: ${{ inputs.fail-on-findings }}
+          config: "p/default p/cwe-top-25 p/trailofbits p/owasp-top-ten .semgrep"
+
+  trivy-scan:
+    if: contains(inputs.tools, 'trivy-scan')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # needed by nested workflows to upload results
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Run Trivy scan
+        uses: open-edge-platform/geti-ci/actions/trivy@7d25e47329bbfcde4ee51ab3581aea8613e245e2
+        with:
+          scan_type: "fs"
+          scan-scope: ${{ inputs.scan-scope }}
+          severity: ${{ inputs.severity-level }}
+          scanners: "secret,config"
+          format: "sarif"
+          timeout: "15m"
+          ignore_unfixed: "false"
+
+  zizmor:
+    if: contains(inputs.tools, 'zizmor')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # needed by nested workflows to upload results
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Run Zizmor scan
+        uses: open-edge-platform/geti-ci/actions/zizmor@27a17d738348699840c32f98edc9947f21278154 # zizmor/v0.1.5
+        with:
+          scan-scope: ${{ inputs.scan-scope }}
+          severity-level: ${{ inputs.severity-level }}
+          confidence-level: ${{ inputs.confidence-level }}
+          fail-on-findings: ${{ inputs.fail-on-findings }}
+
+  dast-scan:
+    if: contains(inputs.tools, 'dast-scan')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    strategy:
+      matrix:
+        ai-device: [xpu]
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Pull container image for ${{ matrix.ai-device }}
+        env:
+          DEVICE: ${{ matrix.ai-device }}
+        run: |
+          IMAGE_NAME="ghcr.io/open-edge-platform/anomalib-studio-${DEVICE}:main"
+          echo "Pulling image: $IMAGE_NAME"
+          docker pull "$IMAGE_NAME"
+
+      - name: Run the docker image
+        env:
+          DEVICE: ${{ matrix.ai-device }}
+        run: |
+          CONTAINER_NAME="anomalib-studio-${DEVICE}"
+          IMAGE_NAME="ghcr.io/open-edge-platform/anomalib-studio-${DEVICE}:main"
+
+          # Start the container in detached mode.
+          docker run -d \
+            --name "$CONTAINER_NAME" \
+            -e HOST=0.0.0.0 \
+            -p 8000:8000 \
+            "$IMAGE_NAME"
+
+          TEST_URL="localhost:8000"
+          # Wait for container to be ready (max 60 seconds).
+          echo "Waiting for container to be ready..."
+          HEALTH_OK=false
+          for i in {1..12}; do
+              if curl -sf $TEST_URL/health > /dev/null 2>&1; then
+                  echo "Health check passed"
+                  HEALTH_OK=true
+                  break
+              fi
+              echo "Attempt $i/12 - waiting 5 seconds..."
+              sleep 5
+          done
+
+          if [[ "$HEALTH_OK" != "true" ]]; then
+              echo "Health check failed after 60 seconds"
+              exit 1
+          fi
+
+          echo "CONTAINER_NAME=${CONTAINER_NAME}" >> $GITHUB_ENV
+
+      - name: Run ZAP API Scan
+        uses: zaproxy/action-api-scan@5158fe4d9d8fcc75ea204db81317cce7f9e5453d # v0.10.0
+        with:
+          target: "http://localhost:8000/api/openapi.json"
+          format: "openapi"
+          cmd_options: "-a"
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: zapapi
+
+      - name: Run ZAP Full Scan
+        uses: zaproxy/action-full-scan@3c58388149901b9a03b7718852c5ba889646c27c # v0.13.0
+        with:
+          target: "http://localhost:8000"
+          cmd_options: "-a -j"
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: zapfull
+
+      - name: Run Schemathesis Scan
+        uses: schemathesis/action@806cace2053cbbac93188e1281ff7da415643160 # v3
+        continue-on-error: true
+        with:
+          schema: "http://localhost:8000/api/openapi.json"
+          args: >-
+            --continue-on-failure
+            --report-dir schemathesis-report
+            --report junit
+            --report-junit-path schemathesis-report/junit.xml
+
+      - name: Upload Schemathesis report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: schemathesis-report-${{ matrix.ai-device }}
+          path: schemathesis-report/junit.xml
+
+      - name: Re-check container health after testing
+        if: always()
+        run: |
+          TEST_URL="localhost:8000"
+
+          echo "Running post-scan health check..."
+          if curl -sf $TEST_URL/health > /dev/null 2>&1; then
+              echo "Post-scan health check passed"
+          else
+              echo "Post-scan health check failed"
+              echo "=== Container logs ==="
+              docker logs "$CONTAINER_NAME" || true
+              exit 1
+          fi
+
+      - name: Save container logs to file
+        if: always()
+        run: |
+          mkdir -p dast-scan-logs
+          if [ -n "$CONTAINER_NAME" ]; then
+            echo "Saving logs for container $CONTAINER_NAME"
+            docker logs "$CONTAINER_NAME" > dast-scan-logs/container-$CONTAINER_NAME.log 2>&1 || true
+          else
+            echo "CONTAINER_NAME not set" > dast-scan-logs/container-lookup.log
+          fi
+
+      - name: Upload container logs
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: container-logs
+          path: dast-scan-logs/
+
+      - name: Stop and cleanup container
+        if: always()
+        run: |
+          if [ -n "${CONTAINER_NAME}" ]; then
+            echo "Stopping container ${CONTAINER_NAME}..."
+            docker stop "${CONTAINER_NAME}" || true
+          fi
+
+  trivy-image-scan:
+    if: contains(inputs.tools, 'trivy-image-scan')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        ai-device: [cpu, cuda, xpu]
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Run container image scan (${{ matrix.ai-device }})
+        uses: open-edge-platform/geti-ci/actions/trivy@7d25e47329bbfcde4ee51ab3581aea8613e245e2
+        with:
+          artifact-name: "trivy-scan-container-${{ matrix.ai-device }}"
+          scan_type: "image"
+          scan_target: "ghcr.io/open-edge-platform/anomalib-studio-${{ matrix.ai-device }}:main"
+          scan-scope: ${{ inputs.scan-scope }}
+          severity: "LOW"
+          scanners: "vuln,secret,config"
+          format: "table"
+          timeout: "15m"
+          ignore_unfixed: "true"
+
+  summarize:
+    needs: [bandit, semgrep, trivy-scan, zizmor, dast-scan, trivy-image-scan]
+    runs-on: ubuntu-latest
+    if: ${{ always() && !cancelled() }}
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    outputs:
+      has_findings: ${{ steps.check-results.outputs.has_findings }}
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Check security scan results
+        id: check-results
+        run: |
+          has_findings=false
+
+          for check in ${CHECKS}; do
+            echo "::notice::Security scan result=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error::Security scan checks failed. One or more scans detected issues."
+              has_findings=true
+            fi
+          done
+
+          echo "has_findings=$has_findings" >> $GITHUB_OUTPUT
+
+          if [[ "$has_findings" == "true" ]]; then
+            exit 1
+          fi

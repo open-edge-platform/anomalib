@@ -1,0 +1,1045 @@
+# Copyright (C) 2023-2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Test helpers for datasets.
+
+Generator defaults preserve their public test API. Shared fixtures pass 64x64
+shapes explicitly to keep the test suite lightweight.
+"""
+
+from __future__ import annotations
+
+import json
+import shutil
+from contextlib import ContextDecorator
+from pathlib import Path
+from tempfile import mkdtemp
+
+import cv2
+import numpy as np
+import pandas as pd
+import tifffile as tiff
+from scipy.io import savemat
+from skimage import img_as_ubyte
+from skimage.io import imsave
+
+from anomalib.data import DataFormat
+from anomalib.data.utils import LabelName
+from anomalib.data.utils.generators.perlin import PerlinAnomalyGenerator
+
+
+class DummyImageGenerator:
+    """Dummy image generator.
+
+    Args:
+        image_shape (tuple[int, int], optional): Image shape. Defaults to (256, 256).
+
+    Examples:
+        To generate a normal image, use the ``generate_normal_image`` method.
+        >>> generator = DummyImageGenerator()
+        >>> image, mask = generator.generate_normal_image()
+
+        To generate an abnormal image, use the ``generate_abnormal_image`` method.
+        >>> generator = DummyImageGenerator()
+        >>> image, mask = generator.generate_abnormal_image()
+
+        To generate an image with a specific label, use the ``generate_image`` method.
+        >>> generator = DummyImageGenerator()
+        >>> image, mask = generator.generate_image(label=LabelName.ABNORMAL)
+
+        or,
+        >>> generator = DummyImageGenerator()
+        >>> image, mask = generator.generate_image(label=LabelName.NORMAL)
+    """
+
+    def __init__(self, image_shape: tuple[int, int] = (256, 256), rng: np.random.Generator | None = None) -> None:
+        self.image_shape = image_shape
+        self.augmenter = PerlinAnomalyGenerator()
+        self.rng = rng if rng else np.random.default_rng()
+
+    def generate_normal_image(self) -> tuple[np.ndarray, np.ndarray]:
+        """Generate a normal image."""
+        image = np.zeros([*self.image_shape, 3]).astype(np.uint8)
+        image[...] = self.rng.integers(low=0, high=255, size=[3])
+        mask = np.zeros(self.image_shape).astype(np.uint8)
+
+        return image, mask
+
+    def generate_abnormal_image(self, beta: float = 0.2) -> tuple[np.ndarray, np.ndarray]:
+        """Generate an abnormal image.
+
+        Args:
+            beta (float, optional): beta value for superimposing perturbation on image. Defaults to 0.2.
+
+        Returns:
+            tuple[np.ndarray, np.ndarray]: Abnormal image and mask.
+        """
+        # Generate a random image.
+        image, _ = self.generate_normal_image()
+
+        # Generate perturbation.
+        perturbation, mask = self.augmenter.generate_perturbation(height=self.image_shape[0], width=self.image_shape[1])
+        perturbation = perturbation.cpu().numpy()
+        mask = mask.cpu().numpy()
+
+        # Superimpose perturbation on image ``img``.
+        abnormal_image = (image * (1 - mask) + (beta) * perturbation + (1 - beta) * image * (mask)).astype(np.uint8)
+
+        return abnormal_image, mask.squeeze()
+
+    def generate_image(
+        self,
+        label: LabelName = LabelName.NORMAL,
+        image_filename: Path | str | None = None,
+        mask_filename: Path | str | None = None,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Generate a random image.
+
+        Args:
+            label (LabelName, optional): Image label (NORMAL - 0 or ABNORMAL - 1). Defaults to 0.
+            image_filename (Path | str | None, optional): Image filename to save to filesytem. Defaults to None.
+            mask_filename (Path | str | None, optional): Mask filename to save to filesystem. Defaults to None.
+
+        Returns:
+            tuple[np.ndarray, np.ndarray]: Image and mask.
+        """
+        func = self.generate_normal_image if label == LabelName.NORMAL else self.generate_abnormal_image
+        image, mask = func()
+
+        if image_filename:
+            self.save_image(filename=image_filename, image=image)
+
+        if mask_filename:
+            self.save_image(filename=mask_filename, image=img_as_ubyte(mask))
+
+        return image, mask
+
+    def generate_organized_point_cloud(self) -> np.ndarray:
+        """Generate a dummy organized point cloud (H, W, 3).
+
+        CFM and other 3D models expect non-zero XYZ values. Using random values in
+        (0, 1) avoids the common ``(0, 0, 0)`` padding pattern that gets filtered out.
+        """
+        h, w = self.image_shape
+        return self.rng.random((h, w, 3), dtype=np.float32)
+
+    @staticmethod
+    def save_organized_point_cloud(filename: Path | str, point_cloud: np.ndarray) -> None:
+        """Save an organized point cloud to a TIFF file."""
+        filename = Path(filename)
+        filename.parent.mkdir(parents=True, exist_ok=True)
+        tiff.imwrite(filename, point_cloud)
+
+    @staticmethod
+    def save_image(filename: Path | str, image: np.ndarray, check_contrast: bool = False) -> None:
+        """Save image to filesystem.
+
+        Args:
+            filename (Path | str): Filename to save image to.
+            image (np.ndarray): Image to save.
+            check_contrast (bool, optional): Check for low contrast and print warning. Defaults to False.
+        """
+        filename = Path(filename)
+        filename.parent.mkdir(parents=True, exist_ok=True)
+        imsave(fname=filename, arr=image, check_contrast=check_contrast)
+
+
+class DummyVideoGenerator(DummyImageGenerator):
+    """Dummy video generator.
+
+    Args:
+        num_frames (int, optional): Length of the video. Defaults to 32.
+        frame_shape (tuple[int, int], optional): Shape of the video frames. Defaults to (256, 256).
+
+    Examples:
+        To generate a video with a random sequence of normal and abnormal frames, use the ``generate_video`` method.
+        >>> generator = DummyVideoGenerator()
+        >>> frames, masks = generator.generate_video()
+
+        It is possible to specify the length of the video
+        >>> generator = DummyVideoGenerator()
+        >>> frames, masks = generator.generate_video(length=64)
+
+        It is possible to specify the first frame label (normal or abnormal)
+        >>> generator = DummyVideoGenerator()
+        >>> frames, masks = generator.generate_video(first_label=LabelName.ABNORMAL)
+
+        It is possible to specify the probability of switching between normal and abnormal frames
+        >>> generator = DummyVideoGenerator()
+        >>> frames, masks = generator.generate_video(p_state_switch=0.5)
+    """
+
+    def __init__(self, num_frames: int = 32, frame_shape: tuple[int, int] = (256, 256)) -> None:
+        super().__init__(frame_shape)
+        self.num_frames = num_frames
+
+    def generate_video(
+        self,
+        length: int = 32,
+        first_label: LabelName = LabelName.NORMAL,
+        p_state_switch: float = 0.2,
+    ) -> tuple[list[np.ndarray], list[np.ndarray]]:
+        """Generate video clip with a random sequence of anomalous frames.
+
+        Args:
+            length (int): Length of the video sequence in number of frames.
+            first_label (LabelName): Label of the first frame (normal or abnormal).
+            p_state_switch (float): Probability of transitioning between normal and anomalous in consecutive frames.
+
+        Returns:
+            tuple[list[np.ndarray], list[np.ndarray]]: List of frames and list of masks.
+        """
+        frames: list[np.ndarray] = []
+        masks: list[np.ndarray] = []
+        state = 1 if first_label == LabelName.NORMAL else -1
+        for _ in range(length):
+            state = state * -1 if self.rng.random() < p_state_switch else state
+            label = LabelName.NORMAL if state == 1 else LabelName.ABNORMAL
+            frame, mask = self.generate_image(label=label)
+            frames.append(frame)
+            masks.append(mask)
+        return frames, masks
+
+    def save_frame(self, filename: Path | str, frame: np.ndarray, check_contrast: bool = False) -> None:
+        """Save frame to filesystem.
+
+        Args:
+            filename (Path | str): Filename to save image to.
+            frame (np.ndarray): Frame to save.
+            check_contrast (bool, optional): Check for low contrast and print warning. Defaults to False.
+        """
+        self.save_image(filename=filename, image=frame, check_contrast=check_contrast)
+
+
+class DummyDatasetGenerator(ContextDecorator):
+    """Base dummy dataset generator class to be implemented by Image and Video generators.
+
+    Args:
+        data_format (DataFormat): Data format of the dataset.
+        root (Path | str | None, optional): Root directory to save the dataset. Defaults to None.
+        dataset_name (str, optional): Name of the dataset. Defaults to None.
+        num_train (int, optional): Number of training images to generate. Defaults to 5.
+        num_test (int, optional): Number of testing images to generate per category. Defaults to 5.
+        seed (int, optional): Fixes seed if any number greater than 0 is provided. 0 means no seed. Defaults to 0.
+
+    Examples:
+        >>> with DummyDatasetGenerator(num_train=10, num_test=10) as dataset_path:
+        >>>     some_function()
+
+        Alternatively, you can use it as a standalone class.
+        This will create a temporary directory with the dataset.
+
+        >>> generator = DummyDatasetGenerator(num_train=10, num_test=10)
+        >>> generator.generate_dataset()
+
+        If you want to use a specific directory, you can pass it as an argument.
+
+        >>> generator = DummyDatasetGenerator(root="./datasets/dummy")
+        >>> generator.generate_dataset()
+    """
+
+    def __init__(
+        self,
+        data_format: DataFormat | str,
+        root: Path | str | None = None,
+        num_train: int = 5,
+        num_test: int = 5,
+        seed: int | None = None,
+    ) -> None:
+        if isinstance(data_format, str):
+            data_format = DataFormat(data_format)
+
+        if data_format not in list(DataFormat):
+            message = f"Invalid data format {data_format}. Valid options are {list(DataFormat)}."
+            raise ValueError(message)
+
+        self.data_format = data_format
+        self.root = Path(mkdtemp() if root is None else root)
+        self.dataset_root = self.root / self.data_format.value
+        self.num_train = num_train
+        self.num_test = num_test
+        self.rng = np.random.default_rng(seed)
+
+    def generate_dataset(self) -> None:
+        """Generate dataset."""
+        # get dataset specific ``generate_dataset`` function based on string.
+
+        if hasattr(self, f"_generate_dummy_{self.data_format.value}_dataset"):
+            method_name = f"_generate_dummy_{self.data_format.value}_dataset"
+            method = getattr(self, method_name)
+            method()
+        else:
+            message = f"``generate_dummy_{self.data_format.value}_dataset`` not implemented."
+            raise NotImplementedError(message)
+
+    def __enter__(self) -> Path:
+        """Creates the dataset in temp folder."""
+        self.generate_dataset()
+        return self.dataset_root
+
+    def __exit__(self, _exc_type, _exc_value, _exc_traceback) -> None:  # noqa: ANN001
+        """Cleanup the directory."""
+        shutil.rmtree(self.dataset_root)
+
+
+class DummyImageDatasetGenerator(DummyDatasetGenerator):
+    r"""Context for generating dummy shapes dataset.
+
+    Args:
+        data_format (DataFormat): Data format of the dataset.
+        root (Path | str, optional): Path to the root directory. Defaults to None.
+        num_train (int, optional): Number of training images to generate. Defaults to 1000.
+        num_test (int, optional): Number of testing images to generate per category. Defaults to 100.
+        img_height (int, optional): Height of the image. Defaults to 128.
+        img_width (int, optional): Width of the image. Defaults to 128.
+        max_size (Optional[int], optional): Maximum size of the test shapes. Defaults to 10.
+        train_shapes (List[str], optional): List of good shapes. Defaults to ["circle", "rectangle"].
+        test_shapes (List[str], optional): List of anomalous shapes. Defaults to ["triangle", "ellipse"].
+        seed (int, optional): Fixes seed if any number greater than 0 is provided. 0 means no seed. Defaults to 0.
+
+    Examples:
+        To create an MVTecAD dataset with 10 training images and 10 testing images per category, use the following code.
+        >>> dataset_generator = DummyImageDatasetGenerator(data_format="mvtecad", num_train=10, num_test=10)
+        >>> dataset_generator.generate_dataset()
+
+        In order to provide a specific directory to save the dataset, use the ``root`` argument.
+        >>> dataset_generator = DummyImageDatasetGenerator(data_format="mvtecad", root="./datasets/dummy")
+        >>> dataset_generator.generate_dataset()
+
+        It is also possible to use the generator as a context manager.
+        >>> with DummyImageDatasetGenerator(data_format="mvtecad", num_train=10, num_test=10) as dataset_path:
+        >>>     some_function()
+
+        To get the list of available image datasets, use the ``ImageDataFormat`` enum.
+        >>> from anomalib.data import ImageDataFormat
+        >>> print(list(ImageDataFormat))
+
+        Then you can use the ``ImageDataFormat`` enum to generate the dataset.
+        >>> dataset_generator = DummyImageDatasetGenerator(data_format="btech", num_train=10, num_test=10)
+    """
+
+    def __init__(
+        self,
+        data_format: DataFormat | str = "mvtecad",
+        root: Path | str | None = None,
+        normal_category: str = "good",
+        abnormal_category: str = "bad",
+        num_train: int = 5,
+        num_test: int = 5,
+        image_shape: tuple[int, int] = (256, 256),
+        num_channels: int = 3,
+        min_size: int = 64,
+        seed: int | None = None,
+    ) -> None:
+        super().__init__(
+            data_format=data_format,
+            root=root,
+            num_train=num_train,
+            num_test=num_test,
+            seed=seed,
+        )
+        self.normal_category = normal_category
+        self.abnormal_category = abnormal_category
+        self.image_shape = image_shape
+        self.num_channels = num_channels
+        self.min_size = min_size
+        self.image_generator = DummyImageGenerator(image_shape=image_shape, rng=self.rng)
+
+    def _generate_dummy_datumaro_dataset(self) -> None:
+        """Generates dummy Datumaro dataset in a temporary directory."""
+        # generate images
+        image_root = self.dataset_root / "images" / "default"
+        image_root.mkdir(parents=True, exist_ok=True)
+
+        file_names: list[str] = []
+
+        # Create normal images
+        for i in range(self.num_train + self.num_test):
+            label = LabelName.NORMAL
+            image_filename = image_root / f"normal_{i:03}.png"
+            file_names.append(image_filename)
+            self.image_generator.generate_image(label, image_filename)
+
+        # Create abnormal images
+        for i in range(self.num_test):
+            label = LabelName.ABNORMAL
+            image_filename = image_root / f"abnormal_{i:03}.png"
+            file_names.append(image_filename)
+            self.image_generator.generate_image(label, image_filename)
+
+        # create annotation file
+        annotation_file = self.dataset_root / "annotations" / "default.json"
+        annotation_file.parent.mkdir(parents=True, exist_ok=True)
+        annotations = {
+            "categories": {"label": {"labels": [{"name": "Normal"}, {"name": "Anomalous"}]}},
+            "items": [],
+        }
+        for file_name in file_names:
+            annotations["items"].append({
+                "annotations": [{"label_id": 1 if "abnormal" in str(file_name) else 0}],
+                "image": {"path": file_name.name},
+            })
+        with annotation_file.open("w") as f:
+            json.dump(annotations, f)
+
+    def _generate_dummy_mvtecad_dataset(
+        self,
+        normal_dir: str = "good",
+        abnormal_dir: str | None = None,
+        image_extension: str = ".png",
+        mask_suffix: str = "_mask",
+        mask_extension: str = ".png",
+    ) -> None:
+        """Generates dummy MVTecAD dataset in a temporary directory using the same convention as MVTec AD."""
+        # MVTec has multiple subcategories within the dataset.
+        dataset_category = "dummy"
+
+        # Create normal images.
+        for split in ("train", "test"):
+            path = self.dataset_root / dataset_category / split / normal_dir
+            num_images = self.num_train if split == "train" else self.num_test
+            for i in range(num_images):
+                label = LabelName.NORMAL
+                image_filename = path / f"{i:03}{image_extension}"
+                self.image_generator.generate_image(label=label, image_filename=image_filename)
+
+        # Create abnormal test images and masks.
+        abnormal_dir = abnormal_dir or self.abnormal_category
+        path = self.dataset_root / dataset_category / "test" / abnormal_dir
+        mask_path = self.dataset_root / dataset_category / "ground_truth" / abnormal_dir
+
+        for i in range(self.num_test):
+            label = LabelName.ABNORMAL
+            image_filename = path / f"{i:03}{image_extension}"
+            mask_filename = mask_path / f"{i:03}{mask_suffix}{mask_extension}"
+            self.image_generator.generate_image(label, image_filename, mask_filename)
+
+    def _generate_dummy_folder_dataset(self) -> None:
+        """Generate dummy folder dataset in a temporary directory."""
+        # folder names
+        normal_dir = self.root / self.normal_category
+        abnormal_dir = self.root / self.abnormal_category
+        mask_dir = self.root / "masks"
+
+        # generate images
+        for i in range(self.num_train):
+            label = LabelName.NORMAL
+            image_filename = normal_dir / f"{self.normal_category}_{i:03}.png"
+            self.image_generator.generate_image(label, image_filename)
+
+        for i in range(self.num_test):
+            label = LabelName.ABNORMAL
+            image_filename = abnormal_dir / f"{self.abnormal_category}_{i:03}.png"
+            mask_filename = mask_dir / image_filename.name
+            self.image_generator.generate_image(label, image_filename, mask_filename)
+
+    def _generate_dummy_tabular_dataset(self) -> None:
+        """Generate dummy folder structure for tabular dataset in a temporary directory."""
+        self._generate_dummy_folder_dataset()
+
+    def _generate_dummy_bmad_dataset(self) -> None:
+        """Generate dummy BMAD dataset in directory."""
+        dataset_category = "dummy"
+        # train split. Images are in train/good
+        split_path = self.dataset_root / dataset_category / "train" / self.normal_category
+        for i in range(self.num_train):
+            label = LabelName.NORMAL
+            image_filename = split_path / f"{i:03}.png"
+            self.image_generator.generate_image(label=label, image_filename=image_filename)
+        # Good images are in subset/normal_category/img/i000.png
+        for split in ("test", "valid"):
+            split_path = self.dataset_root / dataset_category / split / self.normal_category / "img"
+            for i in range(self.num_test):
+                label = LabelName.NORMAL
+                image_filename = split_path / f"{i:03}.png"
+                self.image_generator.generate_image(label=label, image_filename=image_filename)
+        # Abnormal images are in subset/abnormal_category/img/i000.png
+        # and subset/abnormal_category/label/i000.png
+        for split in ("test", "valid"):
+            split_path = self.dataset_root / dataset_category / split / self.abnormal_category
+            for i in range(self.num_test):
+                label = LabelName.ABNORMAL
+                image_filename = split_path / "img" / f"{i:03}.png"
+                mask_filename = split_path / "label" / f"{i:03}.png"
+                self.image_generator.generate_image(
+                    label=label,
+                    image_filename=image_filename,
+                    mask_filename=mask_filename,
+                )
+
+    def _generate_dummy_btech_dataset(self) -> None:
+        """Generate dummy BeanTech dataset in directory using the same convention as BeanTech AD."""
+        # BeanTech AD follows the same convention as MVTec AD.
+        self._generate_dummy_mvtecad_dataset(normal_dir="ok", abnormal_dir="ko", mask_suffix="")
+
+    def _generate_dummy_autovi_dataset(self) -> None:
+        """Generate dummy AutoVI dataset following the per-category layout on Zenodo.
+
+        Layout::
+
+            <root>/autovi/<category>/train/good/<image>.png
+            <root>/autovi/<category>/test/good/<image>.png
+            <root>/autovi/<category>/test/<defect>/<image>.png
+            <root>/autovi/<category>/ground_truth/<defect>/<image_stem>/0000.png
+        """
+        dataset_category = "engine_wiring"
+
+        # Train + test normal images.
+        for split in ("train", "test"):
+            path = self.dataset_root / dataset_category / split / "good"
+            num_images = self.num_train if split == "train" else self.num_test
+            for i in range(num_images):
+                self.image_generator.generate_image(
+                    label=LabelName.NORMAL,
+                    image_filename=path / f"{i:03}.png",
+                )
+
+        # Abnormal test images with matching per-image mask subdir.
+        abnormal_dir = self.abnormal_category
+        image_path = self.dataset_root / dataset_category / "test" / abnormal_dir
+        mask_root = self.dataset_root / dataset_category / "ground_truth" / abnormal_dir
+        for i in range(self.num_test):
+            stem = f"{i:03}"
+            self.image_generator.generate_image(
+                label=LabelName.ABNORMAL,
+                image_filename=image_path / f"{stem}.png",
+                mask_filename=mask_root / stem / "0000.png",
+            )
+
+    def _generate_dummy_mvtec_3d_dataset(self, ground_truth_dir: str = "gt") -> None:
+        """Generate dummy MVTec 3D AD dataset in a temporary directory using the same convention as MVTec AD."""
+        # MVTec 3D AD has multiple subcategories within the dataset.
+        dataset_category = "dummy"
+
+        # Create training and validation images.
+        for split in ("train", "validation"):
+            split_path = self.dataset_root / dataset_category / split / self.normal_category
+            for i in range(self.num_train):
+                label = LabelName.NORMAL
+                image, _ = self.image_generator.generate_image(label=label)
+                self.image_generator.save_image(split_path / "rgb" / f"{i:03}.png", image)
+                self.image_generator.save_organized_point_cloud(
+                    split_path / "xyz" / f"{i:03}.tiff",
+                    self.image_generator.generate_organized_point_cloud(),
+                )
+
+        ## Create test images.
+        test_path = self.dataset_root / dataset_category / "test"
+        for category in (self.normal_category, self.abnormal_category):
+            label = LabelName.NORMAL if category == "good" else LabelName.ABNORMAL
+            for i in range(self.num_test):
+                # Generate image and mask.
+                image, mask = self.image_generator.generate_image(label=label)
+
+                self.image_generator.save_image(test_path / category / "rgb" / f"{i:03}.png", image)
+                self.image_generator.save_organized_point_cloud(
+                    test_path / category / "xyz" / f"{i:03}.tiff",
+                    self.image_generator.generate_organized_point_cloud(),
+                )
+                self.image_generator.save_image(
+                    test_path / category / ground_truth_dir / f"{i:03}.png",
+                    img_as_ubyte(mask),
+                )
+
+    def _generate_dummy_adam_3d_dataset(self) -> None:
+        """Generates dummy 3D-ADAM dataset in a temporary directory using the same convention as 3D-ADAM."""
+        self._generate_dummy_mvtec_3d_dataset(ground_truth_dir="ground_truth")
+
+    def _generate_dummy_mvtec_loco_dataset(self) -> None:
+        """Generates dummy MVTec LOCO AD dataset in a temporary directory using the same convention as MVTec LOCO AD."""
+        # MVTec LOCO has multiple subcategories within the dataset.
+        dataset_category = "dummy"
+
+        extension = ".png"
+
+        # Create normal images.
+        for split in ("train", "validation", "test"):
+            path = self.dataset_root / dataset_category / split / "good"
+            if split == "train":
+                num_images = self.num_train
+            elif split == "val":
+                num_images = self.num_val
+            else:
+                num_images = self.num_test
+
+            for i in range(num_images):
+                label = LabelName.NORMAL
+                image_filename = path / f"{i:03}{extension}"
+                self.image_generator.generate_image(label=label, image_filename=image_filename)
+
+        # Create abnormal test images and masks.
+        for abnormal_dir in ("logical_anomalies", "structural_anomalies"):
+            path = self.dataset_root / dataset_category / "test" / abnormal_dir
+            mask_path = self.dataset_root / dataset_category / "ground_truth" / abnormal_dir
+
+            for i in range(self.num_test):
+                label = LabelName.ABNORMAL
+                image_filename = path / f"{i:03}{extension}"
+                # Here, only one ground-truth mask for each abnormal image is generated
+                # the structure follows the same convention as MVTec LOCO AD, e.g., image_filename/000.png
+                mask_filename = mask_path / f"{i:03}/000{extension}"
+                self.image_generator.generate_image(label, image_filename, mask_filename)
+
+    def _generate_dummy_kolektor_dataset(self) -> None:
+        """Generate dummy Kolektor dataset in directory using the same convention as Kolektor AD."""
+        # Emulating the first two categories of Kolektor dataset.
+        for category in ("kos01", "kos02"):
+            for i in range(self.num_train * 2):
+                # Half of the images are normal, while the rest are abnormal.
+                label = LabelName.NORMAL if i > self.num_train // 2 else LabelName.ABNORMAL
+                image_filename = self.dataset_root / category / f"Part{i}.jpg"
+                mask_filename = self.dataset_root / category / f"Part{i}_label.bmp"
+                self.image_generator.generate_image(label, image_filename, mask_filename)
+
+    def _generate_dummy_mpdd_dataset(self) -> None:
+        """Generate dummy MPDD dataset in directory using the same convention as MVTec AD."""
+        # MPDD dataset follows the same convention as MVTec AD.
+        self._generate_dummy_mvtecad_dataset(normal_dir="good", abnormal_dir="bad", image_extension=".png")
+
+    def _generate_dummy_realiad_dataset(self) -> None:
+        """Generate dummy RealIAD dataset in directory using the same convention as RealIAD."""
+        import json
+
+        # Create the resolution directory
+        resolution_dir = self.dataset_root / "realiad_256"
+        resolution_dir.mkdir(parents=True, exist_ok=True)
+
+        # Create category directory
+        category = "audiojack"
+        category_dir = resolution_dir / category
+        category_dir.mkdir(parents=True, exist_ok=True)
+
+        # Create jsons directory structure
+        jsons_dir = self.dataset_root / "realiad_jsons" / "realiad_jsons"
+        jsons_dir.mkdir(parents=True, exist_ok=True)
+
+        # Generate images and create metadata
+        metadata = {"train": [], "test": []}
+        image_generator = DummyImageGenerator(image_shape=self.image_shape, rng=self.rng)
+
+        # Generate normal train images
+        for i in range(self.num_train):
+            image, _ = image_generator.generate_normal_image()
+            filename = f"{category}_{i:04d}_OK_C0_0000.png"
+            image_path = category_dir / filename
+            image_generator.save_image(image_path, image)
+
+            # Add to metadata - note: these are relative paths from category dir
+            metadata["train"].append({
+                "image_path": filename,
+                "mask_path": "",
+                "anomaly_class": "OK",
+                "camera_view": "C0",
+                "timestamp": "0000",
+            })
+
+        # Generate abnormal test images with masks
+        for i in range(self.num_test):
+            image, mask = image_generator.generate_abnormal_image()
+
+            # Save abnormal images
+            filename = f"{category}_{i:04d}_NG_C0_0000.png"
+            mask_filename = f"{category}_{i:04d}_NG_C0_0000_mask.png"
+
+            image_path = category_dir / filename
+            mask_path = category_dir / mask_filename
+
+            image_generator.save_image(image_path, image)
+
+            # Convert mask to uint8 before saving
+            # Ensure mask is in range [0, 255]
+            mask = (mask * 255).astype(np.uint8)
+            image_generator.save_image(mask_path, mask)
+
+            # Add to metadata - note: these are relative paths from category dir
+            metadata["test"].append({
+                "image_path": filename,
+                "mask_path": mask_filename,
+                "anomaly_class": "NG",
+                "camera_view": "C0",
+                "timestamp": "0000",
+            })
+
+        # Save metadata JSON file
+        json_path = jsons_dir / f"{category}.json"
+        with json_path.open("w") as f:
+            json.dump(metadata, f, indent=2)
+
+    def _generate_dummy_mvtecad2_dataset(
+        self,
+        normal_dir: str = "good",
+        abnormal_dir: str = "bad",
+        image_extension: str = ".png",
+        mask_suffix: str = "_mask",
+        mask_extension: str = ".png",
+    ) -> None:
+        """Generate a dummy MVTec AD 2 dataset.
+
+        Args:
+            normal_dir (str, optional): Name of the normal directory. Defaults to "good".
+            abnormal_dir (str, optional): Name of the abnormal directory. Defaults to "bad".
+            image_extension (str, optional): Extension of the image files. Defaults to ".png".
+            mask_suffix (str, optional): Suffix to append to mask filenames. Defaults to "_mask".
+            mask_extension (str, optional): Extension of the mask files. Defaults to ".png".
+        """
+        # MVTec AD 2 has multiple subcategories within the dataset
+        dataset_category = "dummy"
+        category_root = self.dataset_root / dataset_category
+
+        # Create train directory with normal images
+        train_path = category_root / "train" / normal_dir
+        for i in range(self.num_train):
+            image_path = train_path / f"{i:03d}_regular{image_extension}"
+            self.image_generator.generate_image(label=LabelName.NORMAL, image_filename=image_path)
+
+        # Create validation directory with normal images
+        val_path = category_root / "validation" / normal_dir
+        for i in range(self.num_test):
+            image_path = val_path / f"{i:03d}_regular{image_extension}"
+            self.image_generator.generate_image(label=LabelName.NORMAL, image_filename=image_path)
+
+        # Create public test directory with normal and abnormal images
+        test_public_path = category_root / "test_public"
+
+        # Normal test images
+        test_normal_path = test_public_path / normal_dir
+        for i in range(self.num_test):
+            image_path = test_normal_path / f"{i:03d}_regular{image_extension}"
+            self.image_generator.generate_image(label=LabelName.NORMAL, image_filename=image_path)
+
+        # Abnormal test images with masks
+        test_abnormal_path = test_public_path / abnormal_dir
+        test_mask_path = test_public_path / "ground_truth" / abnormal_dir
+        for i in range(self.num_test):
+            image_path = test_abnormal_path / f"{i:03d}_regular{image_extension}"
+            mask_path = test_mask_path / f"{i:03d}_regular{mask_suffix}{mask_extension}"
+            self.image_generator.generate_image(
+                label=LabelName.ABNORMAL,
+                image_filename=image_path,
+                mask_filename=mask_path,
+            )
+
+        # Create private test directory with unknown images
+        test_private_path = category_root / "test_private"
+        for i in range(self.num_test):
+            image_path = test_private_path / f"{i:03d}_regular{image_extension}"
+            self.image_generator.generate_image(label=LabelName.NORMAL, image_filename=image_path)
+
+        # Create private mixed test directory with unknown images
+        test_private_mixed_path = category_root / "test_private_mixed"
+        for i in range(self.num_test):
+            image_path = test_private_mixed_path / f"{i:03d}_regular{image_extension}"
+            self.image_generator.generate_image(label=LabelName.NORMAL, image_filename=image_path)
+
+    def _generate_dummy_vad_dataset(self) -> None:
+        """Generate dummy VAD dataset in directory using the same convention as MVTec AD."""
+        # VAD dataset follows the same convention as MVTec AD.
+        self._generate_dummy_mvtecad_dataset(normal_dir="good", abnormal_dir="bad", image_extension=".png")
+
+    def _generate_dummy_visa_dataset(self) -> None:
+        """Generate dummy Visa dataset in directory using the same convention as Visa AD."""
+        # Visa dataset on anomalib follows the same convention as MVTec AD.
+        # The only difference is that the root directory has a subdirectory called "visa_pytorch".
+        self.dataset_root = self.dataset_root.parent / "visa_pytorch"
+        self._generate_dummy_mvtecad_dataset(normal_dir="good", abnormal_dir="bad", image_extension=".jpg")
+
+    def _generate_dummy_kaputt_dataset(self) -> None:
+        """Generate dummy Kaputt dataset with Parquet metadata files.
+
+        The Kaputt dataset structure matches the real Kaputt parquet schema:
+        - Query parquets have columns: capture_id, item_material, item_identifier,
+          defect, major_defect, defect_types, query_image, query_crop, query_mask
+        - Reference parquets have columns: item_identifier, reference_image,
+          reference_crop, reference_mask
+        - Image/crop/mask directories:
+            query-image/data/<split>/query-data/image/
+            query-crop/data/<split>/query-data/crop/
+            query-mask/data/<split>/query-data/mask/
+            reference-image/data/<split>/reference-data/image/
+            reference-crop/data/<split>/reference-data/crop/
+            reference-mask/data/<split>/reference-data/mask/
+        """
+        # Splits to generate
+        splits = ["train", "validation", "test"]
+
+        for split in splits:
+            query_samples = []
+            reference_samples = []
+
+            # Generate normal query images
+            for i in range(self.num_train if split == "train" else self.num_test):
+                capture_id = f"normal_{split}_{i:03d}"
+                item_identifier = f"item_{split}_{i:03d}"
+
+                # Relative paths as stored in real parquets
+                rel_image = f"data/{split}/query-data/image/{capture_id}.jpg"
+                rel_crop = f"data/{split}/query-data/crop/{capture_id}.jpg"
+                rel_mask = f"data/{split}/query-data/mask/{capture_id}.png"
+
+                # Create full-size image
+                image_path = self.dataset_root / "query-image" / rel_image
+                self.image_generator.generate_image(
+                    label=LabelName.NORMAL,
+                    image_filename=image_path,
+                )
+
+                # Create crop image (same content for dummy)
+                crop_path = self.dataset_root / "query-crop" / rel_crop
+                self.image_generator.generate_image(
+                    label=LabelName.NORMAL,
+                    image_filename=crop_path,
+                )
+
+                query_samples.append({
+                    "capture_id": capture_id,
+                    "item_material": "cardboard",
+                    "item_identifier": item_identifier,
+                    "defect": False,
+                    "major_defect": False,
+                    "defect_types": "",
+                    "query_image": rel_image,
+                    "query_crop": rel_crop,
+                    "query_mask": rel_mask,
+                })
+
+            # Generate abnormal query images (only for validation and test)
+            if split in {"validation", "test"}:
+                for i in range(self.num_test):
+                    capture_id = f"abnormal_{split}_{i:03d}"
+                    item_identifier = f"item_abn_{split}_{i:03d}"
+
+                    # Relative paths as stored in real parquets
+                    rel_image = f"data/{split}/query-data/image/{capture_id}.jpg"
+                    rel_crop = f"data/{split}/query-data/crop/{capture_id}.jpg"
+                    rel_mask = f"data/{split}/query-data/mask/{capture_id}.png"
+
+                    # Create full-size image
+                    image_path = self.dataset_root / "query-image" / rel_image
+                    mask_path = self.dataset_root / "query-mask" / rel_mask
+                    self.image_generator.generate_image(
+                        label=LabelName.ABNORMAL,
+                        image_filename=image_path,
+                        mask_filename=mask_path,
+                    )
+
+                    # Create crop image
+                    crop_path = self.dataset_root / "query-crop" / rel_crop
+                    crop_mask_path = self.dataset_root / "query-mask" / rel_mask
+                    self.image_generator.generate_image(
+                        label=LabelName.ABNORMAL,
+                        image_filename=crop_path,
+                        mask_filename=crop_mask_path,
+                    )
+
+                    query_samples.append({
+                        "capture_id": capture_id,
+                        "item_material": "plastic",
+                        "item_identifier": item_identifier,
+                        "defect": True,
+                        "major_defect": True,
+                        "defect_types": "damage",
+                        "query_image": rel_image,
+                        "query_crop": rel_crop,
+                        "query_mask": rel_mask,
+                    })
+
+            # Generate reference images (always normal)
+            for i in range(self.num_train if split == "train" else self.num_test):
+                ref_id = f"ref_{split}_{i:03d}"
+                item_identifier = f"item_{split}_{i:03d}"
+
+                # Relative paths as stored in real parquets
+                rel_image = f"data/{split}/reference-data/image/{ref_id}.jpg"
+                rel_crop = f"data/{split}/reference-data/crop/{ref_id}.jpg"
+                rel_mask = f"data/{split}/reference-data/mask/{ref_id}.png"
+
+                # Create full-size image
+                image_path = self.dataset_root / "reference-image" / rel_image
+                self.image_generator.generate_image(
+                    label=LabelName.NORMAL,
+                    image_filename=image_path,
+                )
+
+                # Create crop image
+                crop_path = self.dataset_root / "reference-crop" / rel_crop
+                self.image_generator.generate_image(
+                    label=LabelName.NORMAL,
+                    image_filename=crop_path,
+                )
+
+                reference_samples.append({
+                    "item_identifier": item_identifier,
+                    "reference_image": rel_image,
+                    "reference_crop": rel_crop,
+                    "reference_mask": rel_mask,
+                })
+
+            # Create parquet files
+            datasets_dir = self.dataset_root / "datasets"
+            datasets_dir.mkdir(parents=True, exist_ok=True)
+
+            query_df = pd.DataFrame(query_samples)
+            query_df.to_parquet(datasets_dir / f"query-{split}.parquet", index=False)
+
+            ref_df = pd.DataFrame(reference_samples)
+            ref_df.to_parquet(datasets_dir / f"reference-{split}.parquet", index=False)
+
+
+class DummyVideoDatasetGenerator(DummyDatasetGenerator):
+    """Dummy video dataset generator.
+
+    Args:
+        data_format (DataFormat): Data format of the dataset.
+        root (Path | str | None, optional): Root directory to save the dataset. Defaults to None.
+        dataset_name (str, optional): Name of the dataset. Defaults to "ucsdped1".
+        num_frames (int, optional): Number of frames to generate the video. Defaults to 32.
+        frame_shape (tuple[int, int], optional): Shape of individual frames. Defaults to (256, 256).
+        num_train (int, optional): Number of training images to generate. Defaults to 5.
+        num_test (int, optional): Number of testing images to generate per category. Defaults to 5.
+        seed (int, optional): Fixes seed if any number greater than 0 is provided. 0 means no seed. Defaults to 0.
+
+    Examples:
+        To create a UCSDped1 dataset with 10 training videos and 10 testing videos, use the following code.
+        >>> dataset_generator = DummyVideoDatasetGenerator(data_format="ucsdped", num_train=10, num_test=10)
+        >>> dataset_generator.generate_dataset()
+
+        In order to provide a specific directory to save the dataset, use the ``root`` argument.
+        >>> dataset_generator = DummyVideoDatasetGenerator(data_format="ucsdped", root="./datasets/dummy")
+        >>> dataset_generator.generate_dataset()
+
+        It is also possible to use the generator as a context manager.
+        >>> with DummyVideoDatasetGenerator(data_format="ucsdped", num_train=10, num_test=10) as dataset_path:
+        >>>     some_function()
+
+        To get the list of available datasets, use the ``VideoDataFormat`` enum.
+        >>> from anomalib.data import VideoDataFormat
+        >>> print(list(VideoDataFormat))
+
+        Based on the enum, you can generate the dataset.
+        >>> dataset_generator = DummyVideoDatasetGenerator(data_format="avenue", num_train=10, num_test=10)
+        >>> dataset_generator.generate_dataset()
+    """
+
+    def __init__(
+        self,
+        data_format: DataFormat,
+        root: Path | str | None = None,
+        num_frames: int = 32,
+        frame_shape: tuple[int, int] = (256, 256),
+        num_train: int = 5,
+        num_test: int = 5,
+        seed: int | None = None,
+    ) -> None:
+        super().__init__(
+            data_format=data_format,
+            root=root,
+            num_train=num_train,
+            num_test=num_test,
+            seed=seed,
+        )
+        self.video_length = num_frames
+        self.frame_shape = frame_shape
+        self.video_generator = DummyVideoGenerator(num_frames=num_frames, frame_shape=frame_shape)
+
+    def _generate_dummy_ucsdped_dataset(self, train_dir: str = "Train", test_dir: str = "Test") -> None:
+        """Generate dummy UCSD dataset."""
+        # generate training data
+        dataset_category = "dummy"
+        train_path = self.dataset_root / dataset_category / train_dir
+        for clip_idx in range(self.num_train):
+            clip_name = train_path / f"Train{clip_idx:03}"
+            frames, _ = self.video_generator.generate_video(
+                length=self.video_length,
+                first_label=LabelName.NORMAL,
+                p_state_switch=0,
+            )
+            for frame_idx, frame in enumerate(frames):
+                filename = clip_name / f"{frame_idx:03}.tif"
+                self.video_generator.save_frame(filename, frame)
+
+        # generate test data
+        test_path = self.dataset_root / dataset_category / test_dir
+        for clip_idx in range(self.num_test):
+            clip_path = test_path / f"Test{clip_idx:03}"
+            mask_path = test_path / f"Test{clip_idx:03}_gt"
+            frames, masks = self.video_generator.generate_video(length=self.video_length, p_state_switch=0.2)
+            for frame_idx, (frame, mask) in enumerate(zip(frames, masks, strict=True)):
+                filename_frame = clip_path / f"{frame_idx:03}.tif"
+                filename_mask = mask_path / f"{frame_idx:03}.bmp"
+                self.video_generator.save_frame(filename_frame, frame)
+                self.video_generator.save_frame(filename_mask, (mask * 255).astype(np.uint8))
+
+    def _generate_dummy_avenue_dataset(
+        self,
+        train_dir: str = "training_videos",
+        test_dir: str = "testing_videos",
+        ground_truth_dir: str = "ground_truth_demo",
+    ) -> None:
+        """Generate dummy Avenue dataset."""
+        # generate training data
+        train_path = self.dataset_root / train_dir
+        train_path.mkdir(exist_ok=True, parents=True)
+        for clip_idx in range(self.num_train):
+            clip_path = train_path / f"{clip_idx + 1:02}.avi"
+            frames, _ = self.video_generator.generate_video(length=32, first_label=LabelName.NORMAL, p_state_switch=0)
+            fourcc = cv2.VideoWriter_fourcc("F", "M", "P", "4")
+            writer = cv2.VideoWriter(str(clip_path), fourcc, 30, self.frame_shape)
+            for _, frame in enumerate(frames):
+                writer.write(frame)
+            writer.release()
+
+        # generate test data
+        test_path = self.dataset_root / test_dir
+        test_path.mkdir(exist_ok=True, parents=True)
+        gt_path = self.dataset_root / ground_truth_dir / "testing_label_mask"
+
+        for clip_idx in range(self.num_test):
+            clip_path = test_path / f"{clip_idx + 1:02}.avi"
+            mask_path = gt_path / f"{clip_idx + 1}_label"
+            mask_path.mkdir(exist_ok=True, parents=True)
+            frames, masks = self.video_generator.generate_video(length=32, p_state_switch=0.2)
+            fourcc = cv2.VideoWriter_fourcc("F", "M", "P", "4")
+            writer = cv2.VideoWriter(str(clip_path), fourcc, 30, self.frame_shape)
+            for frame_idx, (frame, mask) in enumerate(zip(frames, masks, strict=True)):
+                writer.write(frame)
+                mask_filename = mask_path / f"{frame_idx:04}.png"
+                self.video_generator.save_image(mask_filename, (mask).astype(np.uint8))
+            masks_array = np.stack(masks)
+            mat_filename = mask_path.with_suffix(".mat")
+            savemat(mat_filename, {"data": masks_array})
+
+    def _generate_dummy_shanghaitech_dataset(
+        self,
+        train_dir: str = "training",
+        test_dir: str = "testing",
+    ) -> None:
+        """Generate dummy ShanghaiTech dataset."""
+        # generate training data
+        path = self.dataset_root / train_dir / "converted_videos"
+        path.mkdir(exist_ok=True, parents=True)
+        num_clips = self.num_train
+        for clip_idx in range(num_clips):
+            clip_path = path / f"01_{clip_idx:03}.avi"
+            frames, _ = self.video_generator.generate_video(length=32, first_label=LabelName.NORMAL, p_state_switch=0)
+            fourcc = cv2.VideoWriter_fourcc("F", "M", "P", "4")
+            writer = cv2.VideoWriter(str(clip_path), fourcc, 30, self.frame_shape)
+            for _, frame in enumerate(frames):
+                writer.write(frame)
+            writer.release()
+
+        # generate test data
+        test_path = self.dataset_root / test_dir / "frames"
+        test_path.mkdir(exist_ok=True, parents=True)
+        gt_path = self.dataset_root / test_dir / "test_pixel_mask"
+        gt_path.mkdir(exist_ok=True, parents=True)
+
+        for clip_idx in range(self.num_test):
+            clip_path = test_path / f"01_{clip_idx:04}"
+            clip_path.mkdir(exist_ok=True, parents=True)
+            mask_path = gt_path / f"01_{clip_idx:04}.npy"
+            frames, masks = self.video_generator.generate_video(length=32, p_state_switch=0.2)
+            for frame_idx, frame in enumerate(frames):
+                image_filename = clip_path / f"{frame_idx:03}.jpg"
+                self.video_generator.save_image(image_filename, frame)
+            masks_array = np.stack(masks)
+            np.save(mask_path, masks_array)

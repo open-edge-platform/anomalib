@@ -1,0 +1,65 @@
+name: "📋 Task"
+description: A specific piece of work to be completed
+title: "📋 [TASK] "
+labels: ["task"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: "## 📋 Task Description"
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the task
+      description: Provide a clear and concise description of the task to be completed
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: List the specific criteria that must be met for this task to be considered complete
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - Low
+        - Medium
+        - High
+    validations:
+      required: true
+  - type: input
+    id: epic-link
+    attributes:
+      label: Related Epic
+      description: If this task is part of an epic, provide the epic's issue number (e.g., #123)
+    validations:
+      required: false
+  - type: input
+    id: estimated-time
+    attributes:
+      label: Estimated Time
+      description: Provide an estimate of how long this task will take (e.g., 2h, 1d)
+    validations:
+      required: false
+  - type: dropdown
+    id: status
+    attributes:
+      label: Current Status
+      options:
+        - Not Started
+        - In Progress
+        - Blocked
+        - Ready for Review
+    validations:
+      required: true
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: Any other relevant details or context for this task
+    validations:
+      required: false

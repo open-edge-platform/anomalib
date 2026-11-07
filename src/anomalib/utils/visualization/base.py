@@ -1,0 +1,69 @@
+# Copyright (C) 2024-2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Base visualization generator for anomaly detection.
+
+This module provides the base visualization interface and common functionality used
+across different visualization types. The key components include:
+
+    - ``GeneratorResult``: Dataclass for standardized visualization outputs
+    - ``VisualizationStep``: Enum for controlling when visualizations are generated
+    - ``Visualizer``: Abstract base class defining the visualization interface
+
+Example:
+    >>> from anomalib.utils.visualization import Visualizer
+    >>> # Create custom visualizer
+    >>> class CustomVisualizer(Visualizer):
+    ...     def generate(self, **kwargs):
+    ...         # Generate visualization
+    ...         yield GeneratorResult(image=img)
+    >>> # Use visualizer
+    >>> vis = CustomVisualizer(visualize_on="batch")
+    >>> results = vis.generate(image=input_img)
+
+The module ensures consistent visualization behavior and output formats across
+different visualization implementations.
+"""
+
+from abc import ABC, abstractmethod
+from collections.abc import Iterator
+from dataclasses import dataclass
+from enum import Enum
+from pathlib import Path
+
+import numpy as np
+
+
+@dataclass
+class GeneratorResult:
+    """Generator result.
+
+    All visualization generators are expected to return this object.
+    It is to ensure that the result is consistent across all generators.
+    """
+
+    image: np.ndarray
+    file_name: str | Path | None = None
+
+
+class VisualizationStep(str, Enum):
+    """Identify step on which to generate images."""
+
+    BATCH = "batch"
+    STAGE_END = "stage_end"
+
+
+class Visualizer(ABC):
+    """Base visualization generator."""
+
+    def __init__(self, visualize_on: VisualizationStep) -> None:
+        self.visualize_on = visualize_on
+
+    @abstractmethod
+    def generate(self, **kwargs) -> Iterator[GeneratorResult]:
+        """Generate images and return them as an iterator."""
+        raise NotImplementedError
+
+    def __call__(self, **kwargs) -> Iterator[GeneratorResult]:
+        """Call generate method."""
+        return self.generate(**kwargs)

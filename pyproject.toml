@@ -1,0 +1,552 @@
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# SETUP CONFIGURATION.                                                        #
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "anomalib"
+dynamic = ["version"]
+readme = "README.md"
+description = "anomalib - Anomaly Detection Library"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Intel OpenVINO" }]
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# REQUIREMENTS                                                                #
+dependencies = [
+    # CLI requirements
+    "omegaconf>=2.1.1",
+    "rich>=13.5.2",
+    "jsonargparse[signatures]>=4.27.7,<4.47.0",
+    "docstring_parser",     # CLI help-formatter
+    "rich_argparse",        # CLI help-formatter
+    # Torch and Lightning dependencies
+    "lightning>=2.6,!=2.6.2,!=2.6.3",  # Malicious supply chain attack (Shai-Hulud)
+    "torchmetrics>=1.8.2",
+    "lightning-utilities",
+    # Deep learning models and utilities
+    "timm",
+    "freia>=0.2",
+    "einops>=0.3.2",
+    # Image processing and computer vision
+    "pillow>=10.1.0",
+    "opencv-python-headless>=4.5.3.56",
+    "scikit-image",
+    "tifffile",
+    "imagecodecs",
+    "kornia>=0.6.6",
+    # Data science and analysis
+    "pandas>=1.1.0",
+    "matplotlib>=3.4.3",
+    "scikit-learn",
+    "platformdirs>=4.9.4",
+]
+
+[project.optional-dependencies]
+# Model-specific optional dependencies
+huggingface = [
+    "huggingface_hub",
+    "safetensors"
+]
+openvino = ["openvino>=2024.0", "nncf>=2.10.0", "onnx>=1.16.0", "onnxscript"]
+clip = [
+    # NOTE: open-clip-torch throws the following error on v2.26.1
+    #   torch.onnx.errors.UnsupportedOperatorError: Exporting the operator
+    #   'aten::_native_multi_head_attention' to ONNX opset version 14 is not supported
+    "open-clip-torch>=2.23.0,<2.26.1",
+]
+vlm = [
+    "ollama>=0.4.0",
+    "openai",
+    "python-dotenv",
+    # Floor stops resolvers backtracking to transformers 4.12 (no huggingface-hub cap),
+    # whose tokenizers 0.10.3 has no wheels and fails to build from source.
+    "transformers>=4.40",
+]
+video = ["av>=10.0.0", "requests"]
+loggers = [
+    "comet-ml>=3.31.7",
+    "gradio>=4",
+    "tensorboard",
+    "wandb",
+    "mlflow >=3.15.0",
+]
+notebooks = ["gitpython>=3.1.58", "ipykernel", "ipywidgets", "notebook>=7.5.6"]
+# dataset specific dependencies
+datasets = ["pyarrow"]
+# documentation dependencies
+docs = [
+    "myst-parser[linkify]",
+    "nbsphinx",
+    "pandoc",
+    "sphinx",
+    "sphinx_autodoc_typehints",
+    "sphinx_book_theme",
+    "sphinx-copybutton",
+    "sphinx_design",
+]
+# testing dependencies
+test = [
+    "prek",
+    "pytest",
+    "pytest-cov",
+    "pytest-xdist",
+    "pytest-mock",
+    "pytest-sugar",
+    "pytest-timeout",
+    "pytest-json-report",
+    "coverage[toml]",
+    "tox",
+    "commitizen",
+]
+# PyTorch dependency groups
+# NOTE: Minimum torch>=2.10.0 required as of anomalib 2.7.0 (dynamo ONNX exporter;
+#   also covers CVE-2025-32434 / torch.load weights_only and related fixes).
+cpu = [
+    "torch>=2.10.0",
+    "torchcodec",
+    "torchvision>=0.25.0",
+]
+cu126 = [
+    "torch>=2.10.0 ; sys_platform == 'linux' or sys_platform == 'win32'",
+    "torchcodec ; sys_platform == 'linux' or sys_platform == 'win32'",
+    "torchvision>=0.25.0 ; sys_platform == 'linux' or sys_platform == 'win32'",
+]
+cu130 = [
+    "torch>=2.10.0 ; sys_platform == 'linux' or sys_platform == 'win32'",
+    "torchcodec>=0.9.0 ; sys_platform == 'linux' or sys_platform == 'win32'",
+    "torchvision>=0.25.0 ; sys_platform == 'linux' or sys_platform == 'win32'",
+]
+rocm = [
+    "torch>=2.13.0 ; sys_platform == 'linux'",
+    "torchcodec ; sys_platform == 'linux'",
+    "torchvision>=0.28.0 ; sys_platform == 'linux'",
+    "triton-rocm ; sys_platform == 'linux'",  # explicit source needed so uv resolves from rocm7.2 index, not PyPI
+]
+xpu = [
+    "torch>=2.10.0 ; sys_platform == 'linux' or sys_platform == 'win32'", # CVE-2025-3001 fixed in 2.10.0
+    "torchcodec ; sys_platform == 'linux' or sys_platform == 'win32'",
+    "torchvision>=0.25.0 ; sys_platform == 'linux' or sys_platform == 'win32'",
+    "pytorch-triton-xpu ; sys_platform == 'linux' or sys_platform == 'win32'",
+    "triton-xpu ; sys_platform == 'linux' or sys_platform == 'win32'",
+]
+full = ["anomalib[clip,datasets,openvino,loggers,notebooks,vlm,video,huggingface]"]
+dev = ["anomalib[full,docs,test]"]
+
+[project.scripts]
+anomalib = "anomalib.cli.cli:main"
+
+[tool.hatch.version]
+path = "src/anomalib/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+only-include = [
+    "CHANGELOG.md",
+    "CITATION.cff",
+    "LICENSE",
+    "MANIFEST.in",
+    "pyproject.toml",
+    "README.md",
+    "src/",
+    "third-party-programs.txt",
+]
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# UV CONFIGURATION                                                            #
+[tool.uv]
+# UV workspace configuration
+package = true
+managed = true
+# Exclude emscripten: no XPU/ROCm wheels exist for WebAssembly
+environments = [
+    "sys_platform == 'linux'",
+    "sys_platform == 'win32'",
+    "sys_platform == 'darwin'",
+]
+override-dependencies = [
+    # FIXME: remove once mlflow releases a version without the cryptography<50 upper bound
+    # mlflow 3.15.1 caps cryptography<50, but CVE-2026-69247 requires >=50.0.0
+    # upstream fix (no source changes, safe to override): https://github.com/mlflow/mlflow/pull/24872
+    "cryptography>=50.0.0",
+]
+conflicts = [
+    [
+        { extra = "cpu" },
+        { extra = "cu126" },
+        { extra = "cu130" },
+        { extra = "rocm" },
+        { extra = "xpu" },
+    ],
+]
+
+# PyTorch index configuration
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-rocm72"
+url = "https://download.pytorch.org/whl/rocm7.2"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-xpu"
+url = "https://download.pytorch.org/whl/xpu"
+explicit = true
+
+# PyTorch sources configuration
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu126", extra = "cu126" },
+    { index = "pytorch-cu130", extra = "cu130" },
+    { index = "pytorch-rocm72", extra = "rocm" },
+    { index = "pytorch-xpu", extra = "xpu" },
+]
+torchvision = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu126", extra = "cu126" },
+    { index = "pytorch-cu130", extra = "cu130" },
+    { index = "pytorch-rocm72", extra = "rocm" },
+    { index = "pytorch-xpu", extra = "xpu" },
+]
+torchcodec = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu126", extra = "cu126" },
+    { index = "pytorch-cu130", extra = "cu130" },
+]
+triton-rocm = [
+    { index = "pytorch-rocm72", extra = "rocm" },
+]
+pytorch-triton-xpu = [
+    { index = "pytorch-xpu", extra = "xpu" },
+]
+triton-xpu = [
+    { index = "pytorch-xpu", extra = "xpu" },
+]
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# RUFF CONFIGURATION                                                          #
+[tool.ruff]
+# Enable preview features
+preview = true
+
+# Enable rules
+lint.select = [
+    "F",    # Pyflakes (`F`)
+    "E",    # pycodestyle error (`E`)
+    "W",    # pycodestyle warning (`W`)
+    "C90",  # mccabe (`C90`)
+    "I",    # isort (`I`)
+    "N",    # pep8-naming (`N`)
+    "D",    # pydocstyle (`D`)
+    "UP",   # pyupgrade (`UP`)
+    "YTT",  # flake8-2020 (`YTT`)
+    "ANN",  # flake8-annotations (`ANN`)
+    "S",    # flake8-bandit (`S`)
+    "BLE",  # flake8-blind-except (`BLE`)
+    "FBT",  # flake8-boolean-trap (`FBT`)
+    "B",    # flake8-bugbear (`B`)
+    "A",    # flake8-builtins (`A`)
+    "COM",  # flake8-commas (`COM`)
+    "CPY",  # flake8-copyright (`CPY`)
+    "C4",   # flake8-comprehensions (`C4`)
+    "DTZ",  # flake8-datatimez (`DTZ`)
+    "T10",  # flake8-debugger (`T10`)
+    "EM",   # flake8-errmsg (`EM`)
+    "FA",   # flake8-future-annotations (`FA`)
+    "ISC",  # flake8-implicit-str-concat (`ISC`)
+    "ICN",  # flake8-import-conventions (`ICN`)
+    "PIE",  # flake8-pie (`PIE`)
+    "PT",   # flake8-pytest-style (`PT`)
+    "RSE",  # flake8-raise (`RSE`)
+    "RET",  # flake8-return (`RET`)
+    "SLF",  # flake8-self (`SLF`)
+    "SIM",  # flake8-simplify (`SIM`)
+    "TID",  # flake8-tidy-imports (`TID`)
+    "TC",   # flake8-type-checking (`TC`)
+    "INT",  # flake8-gettext (`INT`)
+    "ARG",  # flake8-unsused-arguments (`ARG`)
+    "PTH",  # flake8-use-pathlib (`PTH`)
+    "TD",   # flake8-todos (`TD`)
+    "FIX",  # flake8-fixme (`FIX`)
+    "ERA",  # eradicate (`ERA`)
+    "PD",   # pandas-vet (`PD`)
+    "PGH",  # pygrep-hooks (`PGH`)
+    "PL",   # pylint (`PL`)
+    "TRY",  # tryceratos (`TRY`)
+    "FLY",  # flynt (`FLY`)
+    "NPY",  # NumPy-specific rules (`NPY`)
+    "PERF", # Perflint (`PERF`)
+    "RUF",  # Ruff-specific rules (`RUF`)
+    # "FURB", # refurb (`FURB`) - ERROR: Unknown rule selector: `FURB`
+    # "LOG",  # flake8-logging (`LOG`) - ERROR: Unknown rule selector: `LOG`
+]
+
+lint.ignore = [
+    # pydocstyle
+    "D107", # Missing docstring in __init__
+
+    # pylint
+    "PLR0913", # Too many arguments to function call
+    "PLR2004", # consider replacing with a constant variable
+    "PLR0912", # Too many branches
+    "PLR0915", # Too many statements
+
+    # NOTE: Disable the following rules for now.
+    "A004", # import is shadowing a Python built-in
+    "A005", # Module is shadowing a Python built-in
+    "B909", # Mutation to loop iterable during iteration
+    "PLC2701", # Private name import
+    "PLC0415", # import should be at the top of the file
+    "PLR0917", # Too many positional arguments
+    "E226", # Missing whitespace around arithmetic operator
+    "E266", # Too many leading `#` before block comment
+
+    "F822", # Undefined name `` in `__all__`
+
+    "PGH004", # Use specific rule codes when using 'ruff: noqa'
+    "PT001", # Use @pytest.fixture over @pytest.fixture()
+    "PLR6104", # Use `*=` to perform an augmented assignment directly
+    "PLR0914", # Too many local variables
+    "PLC0206", # Extracting value from dictionary without calling `.items()`
+    "PLC1901", # can be simplified
+
+    "RUF021", # Parenthesize the `and` subexpression
+    "RUF022", # Apply an isort-style sorting to '__all__'
+    "S404", # `subprocess` module is possibly insecure
+    # End of disable rules
+
+    # flake8-annotations
+    "ANN002", # Missing type annotation for *args
+    "ANN003", # Missing type annotation for **kwargs
+
+    # flake8-bandit (`S`)
+    "S101", # Use of assert detected.
+
+    # flake8-boolean-trap (`FBT`)
+    "FBT001", # Boolean positional arg in function definition
+    "FBT002", # Boolean default value in function definition
+
+    # flake8-datatimez (`DTZ`)
+    "DTZ005", # The use of `datetime.datetime.now()` without `tz` argument is not allowed
+
+    # flake8-fixme (`FIX`)
+    "FIX002", # Line contains TODO, consider resolving the issue
+]
+
+# Allow autofix for all enabled rules (when `--fix`) is provided.
+lint.fixable = ["ALL"]
+lint.unfixable = []
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".semgrep",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+
+# Same as Black.
+line-length = 120
+
+# Allow unused variables when underscore-prefixed.
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Assume Python 3.10.
+target-version = "py310"
+
+# Allow imports relative to the "src" and "tests" directories.
+src = ["src", "tests"]
+
+[tool.ruff.lint.mccabe]
+# Unlike Flake8, default to a complexity level of 10.
+max-complexity = 15
+
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-copyright]
+notice-rgx = """
+# Copyright \\(C\\) (\\d{4}(-\\d{4})?) Intel Corporation
+# SPDX-License-Identifier: Apache-2\\.0
+"""
+
+[tool.ruff.lint.per-file-ignores]
+"examples/notebooks/**/*" = ["CPY001", "TD003"]
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# MYPY CONFIGURATION.                                                         #
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+show_error_codes = true
+exclude = "\\.semgrep/"
+
+
+[[tool.mypy.overrides]]
+module = ["torch.*", "wandb.*", "openvino.*"]
+follow_imports = "skip"
+follow_imports_for_stubs = true
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# BANDIT CONFIGURATION                                                        #
+[tool.bandit]
+skips = ["B101"]
+exclude_dirs = ["tests"]
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# PYTEST CONFIGURATION                                                        #
+[tool.pytest.ini_options]
+addopts = ["--strict-markers", "--strict-config", "--showlocals", "-ra"]
+testpaths = "tests"
+pythonpath = "src"
+markers = [
+    "gpu: marks tests that require GPU",
+    "cpu: marks tests that can run on CPU only (default)",
+    "network: marks tests that require network access",
+]
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# COVERAGE CONFIGURATION                                                      #
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+    "pass",
+    "raise ImportError",
+    "raise ValueError",
+    "except ImportError:",
+]
+
+[tool.coverage.paths]
+source = ["src", ".tox/*/site-packages"]
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# NBQA CONFIGURATION                                                          #
+[tool.nbqa.addopts]
+ruff = ["--ignore=E402"]
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# LINK CHECKER CONFIGURATION                                                  #
+[tool.md_dead_link_check]
+exclude_links = [
+    "https://github.com/open-edge-platform/anomalib/settings/actions/runners/new",
+    "https://open-edge-platform.github.io/anomalib/*", # Remove it after publish documentation
+]
+exclude_files = ["docs/*"]
+force_get_requests_for_links = ["https://secure.ethicspoint.com/*"]
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# COMMITIZEN CONFIGURATION                                                    #
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "v$version"
+version_scheme = "semver"
+version_provider = "pep621"
+update_changelog_on_bump = true
+changelog_file = "CHANGELOG.md"
+changelog_format = "## $version ($date)"
+major_version_zero = true
+types = [
+    "feat",
+    "fix",
+    "docs",
+    "style",
+    "refactor",
+    "perf",
+    "test",
+    "build",
+    "ci",
+    "chore",
+]
+scopes = [
+    "data",
+    "model",
+    "metric",
+    "utils",
+    "cli",
+    "docs",
+    "ci",
+    "engine",
+    "visualization",
+    "benchmarking",
+    "logger",
+    "openvino",
+    "notebooks"
+]
+
+# Conventional commit rules
+[tool.commitizen.rules]
+scope-enum = [2, "always", [
+    "data",
+    "model",
+    "metric",
+    "utils",
+    "cli",
+    "docs",
+    "ci",
+    "engine",
+    "visualization",
+    "benchmarking",
+    "logger",
+    "openvino",
+    "notebooks"
+]]
+scope-empty = [0]
+subject-case = [2, "never", ["sentence-case", "start-case", "pascal-case", "upper-case"]]
+subject-empty = [2, "never"]
+subject-full-stop = [2, "never", "."]
+type-case = [2, "always", "lower-case"]
+type-empty = [2, "never"]
