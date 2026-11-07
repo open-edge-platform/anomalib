@@ -92,8 +92,12 @@ class BaseProcessWorker(mp.Process, StoppableMixin, ABC):
         # Logging needs to be re-setup in child processes because settings are non-pickable.
         # Only required when multiprocessing uses "spawn" mode (Windows/MacOS)
         from core.logging import setup_logging  # noqa: PLC0415
+        from utils.system_certs import use_system_certificate_store  # noqa: PLC0415
 
         setup_logging()
+        # Spawned workers (e.g. training) download pretrained weights and do not
+        # inherit the parent's patched ``ssl`` module.
+        use_system_certificate_store()
 
     @abstractmethod
     async def run_loop(self) -> None:
