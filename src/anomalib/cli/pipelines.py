@@ -21,30 +21,25 @@ logger = logging.getLogger(__name__)
 class _PipelineRegistry(dict):
     """Lazy dictionary for pipeline classes to defer importing heavy dependencies."""
 
-    _MAPPING: ClassVar[dict[str, tuple[str, str]]] = {
-        "benchmark": ("anomalib.pipelines.benchmark", "Benchmark"),
-    }
+    _SUBCOMMANDS: ClassVar[tuple[str, ...]] = ("benchmark",)
 
     @classmethod
     def registered_subcommands(cls) -> list[str]:
         """Return list of registered pipeline subcommands."""
-        return list(cls._MAPPING.keys())
+        return list(cls._SUBCOMMANDS)
 
     def __getitem__(self, key: str) -> Any:  # noqa: ANN401
         if dict.__contains__(self, key):
             return super().__getitem__(key)
-        if key in self._MAPPING:
-            import importlib
+        if key == "benchmark":
+            from anomalib.pipelines.benchmark import Benchmark
 
-            module_name, class_name = self._MAPPING[key]
-            mod = importlib.import_module(module_name)
-            cls = getattr(mod, class_name)
-            self[key] = cls
-            return cls
+            self[key] = Benchmark
+            return Benchmark
         raise KeyError(key)
 
     def __contains__(self, key: object) -> bool:
-        return key in self._MAPPING
+        return key in self._SUBCOMMANDS or dict.__contains__(self, key)
 
     def get(self, key: str, default: Any = None) -> Any:  # noqa: ANN401
         try:
