@@ -15,6 +15,7 @@ from core.logging import setup_logging, setup_uvicorn_logging
 from core.scheduler import Scheduler
 from db import MigrationManager
 from settings import get_settings
+from utils.system_certs import use_system_certificate_store
 from webrtc.manager import WebRTCManager, WebRTCSettings
 from webrtc.sdp_handler import SDPHandler
 
@@ -25,6 +26,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     # Startup
     setup_logging()
     setup_uvicorn_logging()
+    use_system_certificate_store()
 
     settings = get_settings()
     app.state.settings = settings
