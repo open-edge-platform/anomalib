@@ -45,7 +45,17 @@ Args:
 
 Note:
     The AUPRO score ranges from 0 to 1, with 1 indicating perfect overlap between
-    predictions and ground truth regions.
+    predictions and ground truth regions. The area under the PRO curve is
+    normalized by ``fpr_limit``, matching the MVTec AD reference evaluation.
+
+Note:
+    Anomalib v0.3 to v2.2.x normalized the area by the last FPR value of the
+    averaged per-region curve instead of by ``fpr_limit``. When that value fell
+    short of the limit, the reported AUPRO was biased (in either direction compared
+    with the reference implementation) and could exceed 1. AUPRO scores computed
+    with those versions are not directly comparable with scores from v2.3.0 or
+    later and should be recomputed. See
+    https://github.com/open-edge-platform/anomalib/issues/3718.
 """
 
 from collections.abc import Callable
@@ -314,7 +324,11 @@ class _AUPRO(Metric):
         fpr, tpr = self._compute()
 
         aupro = auc(fpr, tpr, reorder=True)
-        return aupro / fpr[-1]  # normalize the area
+        # Normalize by the integration limit, as in the MVTec AD reference implementation.
+        # ``compute_pro`` clips the curve exactly at ``fpr_limit``, so this is the width of
+        # the integration interval. (Anomalib <= v2.2.x divided by the last point of the
+        # averaged per-region FPR curve instead, which could inflate scores, see #3718.)
+        return aupro / self.fpr_limit
 
     def generate_figure(self) -> tuple[Figure, str]:
         """Generate a figure containing the PRO curve and the AUPRO.
