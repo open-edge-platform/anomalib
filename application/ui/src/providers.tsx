@@ -8,6 +8,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v8';
 import { MemoryRouterProps, MemoryRouter as Router, RouterProvider } from 'react-router-dom';
 
+import { BackendReadyGate } from './components/backend-ready-gate/backend-ready-gate.component';
 import { StreamConnectionProvider } from './components/stream/stream-connection-provider';
 import { Toast } from './components/toast/toast.component';
 import { ZoomProvider } from './components/zoom/zoom';
@@ -19,15 +20,17 @@ export const Providers = () => {
     return (
         <QueryClientProvider client={queryClient}>
             <ThemeProvider router={router}>
-                <StreamConnectionProvider>
-                    <ZoomProvider>
-                        <NuqsAdapter>
-                            <StatusBarProvider>
-                                <RouterProvider router={router} />
-                            </StatusBarProvider>
-                        </NuqsAdapter>
-                    </ZoomProvider>
-                </StreamConnectionProvider>
+                <BackendReadyGate>
+                    <StreamConnectionProvider>
+                        <ZoomProvider>
+                            <NuqsAdapter>
+                                <StatusBarProvider>
+                                    <RouterProvider router={router} />
+                                </StatusBarProvider>
+                            </NuqsAdapter>
+                        </ZoomProvider>
+                    </StreamConnectionProvider>
+                </BackendReadyGate>
             </ThemeProvider>
         </QueryClientProvider>
     );
