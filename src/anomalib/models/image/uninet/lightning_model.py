@@ -1,12 +1,12 @@
 """Lightning model for UniNet."""
 
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from typing import Any
 
 import torch
-from lightning.pytorch.utilities.types import STEP_OUTPUT
+from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 from torch.optim.lr_scheduler import MultiStepLR
 
 from anomalib import LearningType
@@ -73,11 +73,11 @@ class UniNet(AnomalibModule):
         predictions = self.model(batch.image)
         return batch.update(**predictions._asdict())
 
-    def configure_optimizers(self) -> tuple[torch.optim.Optimizer, torch.optim.Optimizer]:
+    def configure_optimizers(self) -> OptimizerLRScheduler:
         """Configure optimizers for training.
 
         Returns:
-            tuple[torch.optim.Optimizer, torch.optim.Optimizer]: Optimizers for student and target teacher.
+            OptimizerLRScheduler: Dictionary containing optimizer for student and target teacher.
         """
         optimizer = torch.optim.AdamW(
             [
@@ -92,11 +92,19 @@ class UniNet(AnomalibModule):
             eps=1e-10,
             amsgrad=True,
         )
+        is_step_based = self.trainer.max_steps is not None and self.trainer.max_steps > 0
         milestones = [
-            int(self.trainer.max_steps * 0.8) if self.trainer.max_steps != -1 else (self.trainer.max_epochs * 0.8),
+            int(self.trainer.max_steps * 0.8) if is_step_based else int(self.trainer.max_epochs * 0.8),
         ]
         scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.2)
-        return [optimizer], [scheduler]
+        interval = "step" if is_step_based else "epoch"
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "interval": interval,
+            },
+        }
 
     @property
     def trainer_arguments(self) -> dict[str, Any]:
