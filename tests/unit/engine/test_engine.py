@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 import yaml
+from lightning.pytorch.callbacks import LearningRateMonitor
+from lightning.pytorch.loggers import CSVLogger
 
 from anomalib.data import MVTecAD
 from anomalib.engine import Engine
@@ -115,3 +117,15 @@ class TestEngine:
         _, _, datamodule = Engine.from_config(config_path=fxt_full_config_path, **override_kwargs)
         assert datamodule.train_batch_size == 1
         assert datamodule.num_workers == 1
+
+    @staticmethod
+    def test_learning_rate_monitor_callback(tmp_path: Path) -> None:
+        """Test that LearningRateMonitor is automatically added when a logger is configured."""
+        model = Padim()
+        engine_no_logger = Engine(logger=False)
+        engine_no_logger._setup_trainer(model)  # noqa: SLF001
+        assert not any(isinstance(c, LearningRateMonitor) for c in engine_no_logger.trainer.callbacks)
+
+        engine_with_logger = Engine(logger=CSVLogger(save_dir=str(tmp_path)))
+        engine_with_logger._setup_trainer(model)  # noqa: SLF001
+        assert any(isinstance(c, LearningRateMonitor) for c in engine_with_logger.trainer.callbacks)
