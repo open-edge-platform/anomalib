@@ -6,7 +6,7 @@
 import pytest
 import torch
 
-from anomalib.data import ImageBatch
+from anomalib.data import ImageBatch, InferenceBatch
 from anomalib.post_processing import PostProcessor
 
 
@@ -92,6 +92,65 @@ class TestPostProcessor:
         preds = torch.tensor([0.2, 0.8])
         result = PostProcessor._apply_threshold(preds, torch.tensor(float("nan")))  # noqa: SLF001
         assert torch.equal(result, preds)
+
+    @staticmethod
+    def _fit_without_normalization() -> PostProcessor:
+        """Return a post-processor that learned thresholds of 8 on raw scores."""
+        scores = torch.tensor([3.0, 4.0, 8.0, 9.0])
+        batch = ImageBatch(
+            image=torch.rand(4, 3, 4, 4),
+            pred_score=scores,
+            gt_label=torch.tensor([0, 0, 1, 1]),
+            anomaly_map=scores.reshape(4, 1, 1) * torch.ones(4, 4, 4),
+            gt_mask=torch.tensor([0, 0, 1, 1]).reshape(4, 1, 1) * torch.ones(4, 4, 4, dtype=torch.long),
+        )
+        post_processor = PostProcessor(enable_normalization=False)
+        post_processor.on_validation_batch_end(None, None, batch)
+        post_processor.on_validation_epoch_end(None, None)
+        return post_processor
+
+    def test_learned_threshold_applied_to_batch_without_normalization(self) -> None:
+        """Raw scores are compared with the learned threshold, not with the normalized one."""
+        post_processor = self._fit_without_normalization()
+        scores = torch.tensor([3.0, 4.0, 8.5, 9.0])
+        batch = ImageBatch(
+            image=torch.rand(4, 3, 4, 4),
+            pred_score=scores,
+            anomaly_map=scores.reshape(4, 1, 1) * torch.ones(4, 4, 4),
+        )
+        post_processor.post_process_batch(batch)
+        assert batch.pred_label.tolist() == [False, False, True, True]
+        assert batch.pred_mask.reshape(4, -1).all(dim=1).tolist() == [False, False, True, True]
+
+    def test_learned_threshold_applied_in_forward_without_normalization(self) -> None:
+        """Forward labels raw scores with the learned threshold."""
+        scores = torch.tensor([3.0, 4.0, 8.5, 9.0])
+        anomaly_map = scores.reshape(4, 1, 1) * torch.ones(4, 4, 4)
+        predictions = self._fit_without_normalization()(InferenceBatch(pred_score=scores, anomaly_map=anomaly_map))
+        assert predictions.pred_label.tolist() == [False, False, True, True]
+        assert predictions.pred_mask.reshape(4, -1).all(dim=1).tolist() == [False, False, True, True]
+
+    def test_forward_derives_score_from_map_without_normalization(self) -> None:
+        """The score derived from the anomaly map is kept when normalization is disabled."""
+        anomaly_map = torch.tensor([3.0, 9.0]).reshape(2, 1, 1) * torch.ones(2, 4, 4)
+        predictions = self._fit_without_normalization()(InferenceBatch(anomaly_map=anomaly_map))
+        assert predictions.pred_score.tolist() == [3.0, 9.0]
+        assert predictions.pred_label.tolist() == [False, True]
+
+    @staticmethod
+    def test_unlearned_threshold_keeps_normalized_scale_without_normalization() -> None:
+        """Without a learned threshold the sensitivity-based threshold is still used."""
+        post_processor = PostProcessor(enable_normalization=False, image_sensitivity=0.25)
+        assert post_processor.image_decision_threshold == pytest.approx(0.75)
+
+    @staticmethod
+    def test_decision_threshold_is_normalized_with_normalization() -> None:
+        """With normalization enabled the decision threshold stays on the normalized scale."""
+        post_processor = PostProcessor(image_sensitivity=0.25, pixel_sensitivity=0.4)
+        post_processor._image_threshold.fill_(8.0)  # noqa: SLF001
+        post_processor._pixel_threshold.fill_(8.0)  # noqa: SLF001
+        assert post_processor.image_decision_threshold == pytest.approx(0.75)
+        assert post_processor.pixel_decision_threshold == pytest.approx(0.6)
 
     @staticmethod
     def test_thresholds_computed() -> None:
