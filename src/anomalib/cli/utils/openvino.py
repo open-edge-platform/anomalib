@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """OpenVINO CLI utilities.
@@ -10,15 +10,8 @@ It handles the integration of OpenVINO Model Optimizer parameters into the comma
 import logging
 
 from jsonargparse import ArgumentParser
-from lightning_utilities.core.imports import module_available
 
 logger = logging.getLogger(__name__)
-
-
-if module_available("openvino"):
-    from openvino.tools.ovc.cli_parser import get_common_cli_parser
-else:
-    get_common_cli_parser = None
 
 
 def add_openvino_export_arguments(parser: ArgumentParser) -> None:
@@ -59,6 +52,11 @@ def add_openvino_export_arguments(parser: ArgumentParser) -> None:
         - OpenVINO Model Optimizer docs: https://docs.openvino.ai/latest/openvino_docs_MO_DG_Deep_Learning_Model_Optimizer_DevGuide.html
         - OpenVINO Python API: https://docs.openvino.ai/latest/api/python_api.html
     """
+    try:
+        from openvino.tools.ovc.cli_parser import get_common_cli_parser
+    except ImportError:
+        get_common_cli_parser = None
+
     if get_common_cli_parser is not None:
         group = parser.add_argument_group("OpenVINO Model Optimizer arguments (optional)")
         ov_parser = get_common_cli_parser()
