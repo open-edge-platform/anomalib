@@ -24,6 +24,7 @@ dependencies = [
     "sqlalchemy[asyncio]~=2.0",
     "sse-starlette~=3.0",
     "tensorboard",
+    "truststore>=0.10.0",
     "uvicorn~=0.17",
     "uvloop==0.22.1 ; sys_platform != 'win32'",
     "watchdog==6.0.0",
