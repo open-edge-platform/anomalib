@@ -216,6 +216,8 @@ class Tiler:
 
         if stride is not None:
             self.stride_h, self.stride_w = self.validate_size_type(stride)
+        else:
+            self.stride_h, self.stride_w = self.tile_size_h, self.tile_size_w
 
         self.remove_border_count = remove_border_count
         self.overlapping = not (self.stride_h == self.tile_size_h and self.stride_w == self.tile_size_w)

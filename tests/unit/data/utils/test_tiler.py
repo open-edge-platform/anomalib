@@ -48,6 +48,24 @@ def test_size_types_should_be_int_tuple_or_list_config(tile_size: tuple, stride:
     assert isinstance(tiler.stride_w, int)
 
 
+@pytest.mark.parametrize("tile_size", [256, (128, 256)])
+def test_default_stride_is_tile_size(tile_size: int | tuple) -> None:
+    """Without a stride the tiles must not overlap, as the docstring says."""
+    tiler = Tiler(tile_size=tile_size)
+    expected_h, expected_w = (tile_size, tile_size) if isinstance(tile_size, int) else tile_size
+    assert (tiler.stride_h, tiler.stride_w) == (expected_h, expected_w)
+    assert not tiler.overlapping
+
+
+def test_default_stride_tiles_and_untiles_without_overlap() -> None:
+    """Tiling and untiling with the default stride returns the original image."""
+    tiler = Tiler(tile_size=256)
+    image = torch.rand(1, 3, 512, 768)
+    tiles = tiler.tile(image)
+    assert tiles.shape == torch.Size([6, 3, 256, 256])
+    assert torch.equal(tiler.untile(tiles), image)
+
+
 @pytest.mark.parametrize(("image_size", "tile_size", "stride", "shape", "use_random_tiling"), tile_data)
 def test_tiler_handles_single_image_without_batch_dimension(
     image_size: tuple,
