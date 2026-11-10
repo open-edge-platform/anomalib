@@ -17,6 +17,7 @@ from pathlib import Path
 from types import MethodType
 from typing import TYPE_CHECKING, Any
 
+import yaml
 from jsonargparse import ActionConfigFile, ArgumentParser, Namespace
 from rich import traceback
 
@@ -101,22 +102,56 @@ TRAINER_DESCRIPTIONS: dict[str, str] = {
 }
 
 
+def _subcommand_from_config(path_str: str, known_subcommands: set[str]) -> str | None:
+    """Read a configuration file and extract the active subcommand if present."""
+    path = Path(path_str)
+    if not path.is_file():
+        return None
+    try:
+        with path.open("r", encoding="utf-8") as f:
+            cfg = yaml.safe_load(f)
+    except (OSError, yaml.YAMLError) as exc:
+        logger.debug("Failed to read config file '%s' for subcommand discovery: %s", path_str, exc)
+        return None
+
+    if not isinstance(cfg, dict):
+        return None
+
+    if "subcommand" in cfg and cfg["subcommand"] in known_subcommands:
+        return str(cfg["subcommand"])
+    for sub in known_subcommands:
+        if sub in cfg and isinstance(cfg[sub], dict):
+            return sub
+    return None
+
+
 def _extract_subcommand(args: Sequence[str] | None, known_subcommands: set[str]) -> str | None:
-    """Find the active subcommand from command line arguments without triggering full parsing."""
+    """Find the active subcommand from command line arguments or config files without triggering full parsing."""
     if args is None:
         args = sys.argv[1:]
     skip_next = False
-    for arg in args:
+    config_paths: list[str] = []
+    for i, arg in enumerate(args):
         if skip_next:
             skip_next = False
             continue
         if arg in {"-c", "--config"}:
             skip_next = True
+            if i + 1 < len(args) and not args[i + 1].startswith("-"):
+                config_paths.append(args[i + 1])
+            continue
+        if arg.startswith(("--config=", "-c=")):
+            config_paths.append(arg.split("=", 1)[1])
             continue
         if arg.startswith("-"):
             continue
         if arg in known_subcommands:
             return arg
+
+    for path_str in config_paths:
+        sub = _subcommand_from_config(path_str, known_subcommands)
+        if sub is not None:
+            return sub
     return None
 
 
@@ -176,7 +211,7 @@ class AnomalibCLI:
         self.add_subcommands(active_subcommand=active_subcommand)
         self.config = self.parser.parse_args(args=args)
         self.subcommand = self.config.get("subcommand")
-        if _LIGHTNING_AVAILABLE and self.subcommand is not None:
+        if _LIGHTNING_AVAILABLE and self.subcommand not in {None, "install"}:
             self.before_instantiate_classes()
             self.instantiate_classes()
         if run and self.subcommand is not None:
@@ -415,6 +450,8 @@ class AnomalibCLI:
     def before_instantiate_classes(self) -> None:
         """Modify the configuration to properly instantiate classes and sets up tiler."""
         subcommand = self.config.get("subcommand")
+        if subcommand in {None, "install"}:
+            return
         if subcommand in {*self.subcommands(), "train", "predict"}:
             _LazyImports.load()
             self.config[subcommand] = _LazyImports.update_config(self.config[subcommand])
@@ -426,6 +463,9 @@ class AnomalibCLI:
         But for subcommands we do not want to instantiate any trainer specific classes such as datamodule, model, etc
         This is because the subcommand is responsible for instantiating and executing code based on the passed config
         """
+        subcommand = self.config.get("subcommand")
+        if subcommand in {None, "install"}:
+            return
         _LazyImports.load()
         if self.config["subcommand"] in {*self.subcommands(), "predict"}:  # trainer commands
             # since all classes are instantiated, the LightningCLI also creates an unused ``Trainer`` object.
