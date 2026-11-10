@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - 🐞 **model**: Keep PatchCore's batch size dynamic when exporting by @varunikarai in https://github.com/open-edge-platform/anomalib/pull/3853
+- 🐞 **post_processing**: Use an explicit `None` check for `pred_score` in `OneClassPostProcessor` so batches no longer raise by @Viranshul-P in https://github.com/open-edge-platform/anomalib/pull/3912
 - 📚 **docs**: Align custom-data, export, benchmark, and Lightning examples with current APIs
 
 ## [v2.7.0] - 2026-10-06
