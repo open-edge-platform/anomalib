@@ -324,13 +324,9 @@ jobs:
       image: mcr.microsoft.com/playwright:v1.62.1-jammy@sha256:75d2d72c89da49d06aa7f6e623987392019aebbc52c09fd8cd6e2c94c7c7d71d
     steps:
       # harden-runner action is not used here due to container-job constraints
-      - name: Install git lfs
-        run: apt-get update && apt-get install git-lfs
-
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          lfs: true
           persist-credentials: false
 
       # npm caching: fork PRs blocked to mitigate cache poisoning, same-repo PRs allowed
