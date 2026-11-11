@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Video utilities for processing video data in anomaly detection.
@@ -140,7 +140,8 @@ def convert_video(input_path: Path, output_path: Path, codec: str = "MP4V") -> N
     """Convert a video file to use a different codec.
 
     Creates the output directory if it doesn't exist. Reads the input video
-    frame by frame and writes to a new file using the specified codec.
+    frame by frame and configures the output writer with the specified codec
+    and the source video's reported frame rate.
 
     Args:
         input_path: Path to the input video file
@@ -157,7 +158,7 @@ def convert_video(input_path: Path, output_path: Path, codec: str = "MP4V") -> N
     fourcc = cv2.VideoWriter_fourcc(*codec)
     frame_width = int(video_reader.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(video_reader.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fps = int(video_reader.get(cv2.CAP_PROP_FPS))
+    fps = video_reader.get(cv2.CAP_PROP_FPS)
     video_writer = cv2.VideoWriter(
         str(output_path),
         fourcc,
