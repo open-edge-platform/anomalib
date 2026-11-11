@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- 🚀 **data**: Add MAD-Sim dataset with 20 categories, official splits, and segmentation masks by @andersendsa (issue [#3910](https://github.com/open-edge-platform/anomalib/issues/3910)).
+
 ### Removed
 
 ### Changed
