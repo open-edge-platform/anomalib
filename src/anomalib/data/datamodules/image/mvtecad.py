@@ -3,9 +3,9 @@
 
 """MVTec AD Data Module.
 
-This module provides a PyTorch Lightning DataModule for the MVTec AD dataset. If
-the dataset is not available locally, it will be downloaded and extracted
-automatically.
+This module provides a PyTorch Lightning DataModule for the MVTec AD dataset.
+Automatic downloads are temporarily unavailable because the upstream links are
+broken. Download and extract the dataset manually before use.
 
 Example:
     Create a MVTec AD datamodule::
@@ -17,8 +17,8 @@ Example:
         ... )
 
 Notes:
-    The dataset will be automatically downloaded and converted to the required
-    format when first used. The directory structure after preparation will be::
+    Download the dataset from https://www.mvtec.com/research-teaching/datasets/mvtec-ad
+    and extract it under ``root``. The expected directory structure is::
 
         datasets/
         └── MVTecAD/
@@ -52,7 +52,7 @@ from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.mvtecad import MVTecADDataset
-from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
+from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode
 from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
@@ -191,30 +191,20 @@ class MVTecAD(AnomalibDataModule):
         )
 
     def prepare_data(self) -> None:
-        """Download the dataset if not available.
+        """Check that the manually downloaded dataset is available.
 
-        This method checks if the specified dataset is available in the file
-        system. If not, it downloads and extracts the dataset into the
-        appropriate directory.
-
-        Example:
-            Assume the dataset is not available on the file system::
-
-                >>> datamodule = MVTecAD(
-                ...     root="./datasets/MVTecAD",
-                ...     category="bottle"
-                ... )
-                >>> datamodule.prepare_data()
-
-            Directory structure after download::
-
-                datasets/
-                └── MVTecAD/
-                    ├── bottle/
-                    ├── cable/
-                    └── ...
+        Raises:
+            FileNotFoundError: If the requested category directory is missing.
         """
         if (self.root / self.category).is_dir():
             logger.info("Found the dataset.")
         else:
-            download_and_extract(self.root, DOWNLOAD_INFO)
+            # TODO(ashwinvaidya17): Restore autodownload once upstream links work.
+            # https://github.com/open-edge-platform/anomalib/issues/3892
+            msg = (
+                "MVTec AD automatic download is temporarily unavailable because upstream links are broken. "
+                "Download the dataset from https://www.mvtec.com/research-teaching/datasets/mvtec-ad "
+                f"and extract it so that '{self.root / self.category}' exists. "
+                "See https://github.com/open-edge-platform/anomalib/issues/3892."
+            )
+            raise FileNotFoundError(msg)
