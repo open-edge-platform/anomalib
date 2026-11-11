@@ -4,7 +4,7 @@
 """MAD-Sim Data Module.
 
 This module provides a PyTorch Lightning DataModule for the MAD-Sim dataset.
-Download the archive from the project's Google Drive link and extract it manually.
+The dataset is downloaded from the project's Google Drive link when missing.
 
 Example:
     Create a MAD-Sim datamodule::
@@ -45,14 +45,23 @@ Reference:
 """
 
 from pathlib import Path
+from tempfile import TemporaryDirectory
+from urllib.error import URLError
 
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.mad_sim import CATEGORIES, MADSimDataset
-from anomalib.data.utils import Split, TestSplitMode, ValSplitMode
+from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
 from anomalib.data.utils.path import resolve_path_under_root
 from anomalib.utils.path import resolve_dataset_root
+
+DOWNLOAD_INFO = DownloadInfo(
+    name="MAD-Sim",
+    url="https://drive.usercontent.google.com/download?id=1XlW5v_PCXMH49RSKICkskKjd2A5YDMQq&export=download&confirm=t",
+    hashsum="22bff12030d0d53a0f6b698e5dd93080511afed3e1d135c5aaefcdf87725dd78",
+    filename="MAD-Sim.zip",
+)
 
 
 class MADSim(AnomalibDataModule):
@@ -155,19 +164,36 @@ class MADSim(AnomalibDataModule):
         )
 
     def prepare_data(self) -> None:
-        """Check local data and explain how to obtain the Google Drive archive.
+        """Download and extract the dataset when the selected category is missing.
 
         Raises:
-            FileNotFoundError: If the selected category's split folders are absent.
+            FileNotFoundError: If an existing or downloaded category is incomplete.
         """
         category_root = resolve_path_under_root(self.root, self.category, should_exist=False)
-        if not all((category_root / folder).is_dir() for folder in ("train/good", "test", "ground_truth")):
-            msg = (
-                f"MAD-Sim category {self.category!r} not found or incomplete at {category_root}. "
-                "Download MAD-Sim.zip from "
-                "https://drive.google.com/file/d/1XlW5v_PCXMH49RSKICkskKjd2A5YDMQq/view "
-                f"and extract it so that {category_root}/train/good, test, and ground_truth exist. "
-                "Google Drive requires a large-file download confirmation. "
-                "Dataset details and license: https://github.com/EricLee0224/PAD#23-mad-simulated-dataset"
-            )
-            raise FileNotFoundError(msg)
+        required = ("train/good", "test", "ground_truth")
+        if category_root.exists():
+            if not all((category_root / folder).is_dir() for folder in required):
+                msg = f"MAD-Sim category is incomplete at {category_root}. Restore its missing folders manually."
+                raise FileNotFoundError(msg)
+            return
+
+        self.root.mkdir(parents=True, exist_ok=True)
+        with TemporaryDirectory(dir=self.root) as temporary_dir:
+            try:
+                download_and_extract(Path(temporary_dir), DOWNLOAD_INFO)
+            except (URLError, TimeoutError) as exc:
+                msg = (
+                    "Could not download MAD-Sim. Download the archive manually from "
+                    "https://drive.google.com/file/d/1XlW5v_PCXMH49RSKICkskKjd2A5YDMQq/view "
+                    f"and extract its category directories into {self.root}."
+                )
+                raise FileNotFoundError(msg) from exc
+            extracted_root = Path(temporary_dir) / "MAD-Sim"
+            if not all((extracted_root / self.category / folder).is_dir() for folder in required):
+                msg = f"Downloaded MAD-Sim archive is missing required folders for {self.category}."
+                raise FileNotFoundError(msg)
+            for category in CATEGORIES:
+                source = resolve_path_under_root(extracted_root, category, should_exist=False)
+                destination = resolve_path_under_root(self.root, category, should_exist=False)
+                if source.is_dir() and not destination.exists():
+                    source.rename(destination)

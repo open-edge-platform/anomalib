@@ -3,15 +3,21 @@
 
 """Tests for MAD-Sim splits, exact mask matching, and public datamodule API."""
 
+import hashlib
+import shutil
 from collections.abc import Callable
 from pathlib import Path
+from urllib.error import URLError
+from zipfile import ZipFile
 
 import pytest
 from torchvision.transforms.v2 import Resize
 
 from anomalib.data import MADSim, MADSimDataset
+from anomalib.data.datamodules.image import mad_sim
 from anomalib.data.datasets.image.mad_sim import CATEGORIES, make_mad_sim_dataset
-from anomalib.data.utils import ValSplitMode
+from anomalib.data.utils import DownloadInfo, ValSplitMode
+from anomalib.data.utils import download as download_utils
 from tests.helpers.data import DummyImageDatasetGenerator
 from tests.unit.data.datamodule.base.image import _TestAnomalibImageDatamodule
 
@@ -137,10 +143,81 @@ def test_invalid_split(category_root: Path) -> None:
         make_mad_sim_dataset(category_root, "val")
 
 
-def test_missing_data(tmp_path: Path) -> None:
-    """Missing data gives actionable download instructions."""
-    with pytest.raises(FileNotFoundError, match=r"Download MAD-Sim\.zip"):
+def test_download_to_custom_root(category_root: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Download and extract the nested archive without replacing other categories."""
+    archive = tmp_path / "source.zip"
+    with ZipFile(archive, "w") as zip_file:
+        for path in category_root.rglob("*"):
+            if path.is_file():
+                zip_file.write(path, Path("MAD-Sim") / "01Gorilla" / path.relative_to(category_root))
+        zip_file.writestr("MAD-Sim/02Unicorn/test.txt", "new")
+
+    def copy_archive(url: str, filename: Path, reporthook: Callable) -> None:
+        assert url == "https://example.com/archive"
+        assert callable(reporthook)
+        shutil.copyfile(archive, filename)
+
+    monkeypatch.setattr(download_utils, "urlretrieve", copy_archive)
+    monkeypatch.setattr(
+        mad_sim,
+        "DOWNLOAD_INFO",
+        DownloadInfo(
+            "MAD-Sim",
+            "https://example.com/archive",
+            hashlib.sha256(archive.read_bytes()).hexdigest(),
+            "data.zip",
+        ),
+    )
+    root = tmp_path / "custom-root"
+    existing = root / "02Unicorn" / "test.txt"
+    existing.parent.mkdir(parents=True)
+    existing.write_text("keep", encoding="utf-8")
+    datamodule = MADSim(root=root, num_workers=0)
+    datamodule.prepare_data()
+    datamodule.setup()
+    assert len(datamodule.train_data) == 2
+    assert len(datamodule.test_data) == 48
+    assert existing.read_text(encoding="utf-8") == "keep"
+    assert not (root / "MAD-Sim").exists()
+    monkeypatch.setattr(mad_sim, "download_and_extract", lambda *_args: pytest.fail("Unexpected download"))
+    datamodule.prepare_data()
+
+
+def test_incomplete_category_is_not_overwritten(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Existing partial data remains untouched and does not trigger a download."""
+    category = tmp_path / "01Gorilla"
+    category.mkdir()
+    marker = category / "keep.txt"
+    marker.write_text("keep", encoding="utf-8")
+    monkeypatch.setattr(mad_sim, "download_and_extract", lambda *_args: pytest.fail("Unexpected download"))
+    with pytest.raises(FileNotFoundError, match="incomplete"):
         MADSim(root=tmp_path).prepare_data()
+    assert marker.read_text(encoding="utf-8") == "keep"
+
+
+def test_download_failure_gives_manual_instructions(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Network failures provide the official manual download link."""
+
+    def fail_download(*_args: object) -> None:
+        msg = "offline"
+        raise URLError(msg)
+
+    monkeypatch.setattr(mad_sim, "download_and_extract", fail_download)
+    with pytest.raises(FileNotFoundError, match="Download the archive manually"):
+        MADSim(root=tmp_path).prepare_data()
+
+
+def test_download_integrity_failure_is_not_hidden(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Checksum errors remain visible and do not replace existing data."""
+
+    def fail_download(*_args: object) -> None:
+        msg = "checksum mismatch"
+        raise ValueError(msg)
+
+    monkeypatch.setattr(mad_sim, "download_and_extract", fail_download)
+    with pytest.raises(ValueError, match="checksum mismatch"):
+        MADSim(root=tmp_path).prepare_data()
+    assert not (tmp_path / "01Gorilla").exists()
 
 
 def test_no_validation_directory() -> None:

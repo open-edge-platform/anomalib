@@ -6,8 +6,8 @@
 This module provides a PyTorch Dataset implementation for the MAD-Sim dataset.
 The dataset contains 20 LEGO object categories with normal training images,
 normal and anomalous test images, and pixel-level segmentation masks for
-Burrs, Missing, and Stains defects. Download and extract the dataset from
-https://github.com/EricLee0224/PAD#23-mad-simulated-dataset before loading it.
+Burrs, Missing, and Stains defects. The MADSim datamodule downloads the dataset
+from https://github.com/EricLee0224/PAD#23-mad-simulated-dataset if needed.
 
 License:
     The dataset is distributed under CC BY-NC-SA 4.0, as documented in the
