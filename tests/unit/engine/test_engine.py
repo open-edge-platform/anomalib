@@ -121,7 +121,7 @@ class TestEngine:
     @staticmethod
     def test_learning_rate_monitor_callback(tmp_path: Path) -> None:
         """Test that LearningRateMonitor is automatically added when a logger is configured."""
-        model = Padim()
+        model = Padim(pre_trained=False)
         engine_no_logger = Engine(logger=False)
         engine_no_logger._setup_trainer(model)  # noqa: SLF001
         assert not any(isinstance(c, LearningRateMonitor) for c in engine_no_logger.trainer.callbacks)
