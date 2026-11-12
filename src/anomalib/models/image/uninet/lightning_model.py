@@ -93,9 +93,8 @@ class UniNet(AnomalibModule):
             amsgrad=True,
         )
         is_step_based = self.trainer.max_steps is not None and self.trainer.max_steps > 0
-        milestones = [
-            int(self.trainer.max_steps * 0.8) if is_step_based else int(self.trainer.max_epochs * 0.8),
-        ]
+        total = self.trainer.max_steps if is_step_based else self.trainer.max_epochs
+        milestones = [max(1, int(total * 0.8))]
         scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.2)
         interval = "step" if is_step_based else "epoch"
         return {
