@@ -3,9 +3,11 @@
 
 """Test the PreProcessor class."""
 
+from pathlib import Path
+
 import pytest
 import torch
-from torchvision.transforms.v2 import Compose, Resize, ToDtype, ToImage
+from torchvision.transforms.v2 import Compose, InterpolationMode, Resize, ToDtype, ToImage
 from torchvision.tv_tensors import Image, Mask
 
 from anomalib.data import ImageBatch
@@ -36,3 +38,26 @@ class TestPreProcessor:
         processed_batch = pre_processor(self.dummy_batch.image)
         assert isinstance(processed_batch, torch.Tensor)
         assert processed_batch.shape == (1, 3, 256, 256)
+
+    @staticmethod
+    @pytest.mark.parametrize("interpolation", [InterpolationMode.BILINEAR, InterpolationMode.BICUBIC])
+    @pytest.mark.parametrize("input_size", [(160, 200), (40, 48)])
+    def test_onnx_export_matches_predict_transform(
+        tmp_path: Path,
+        interpolation: InterpolationMode,
+        input_size: tuple[int, int],
+    ) -> None:
+        """The exported pre-processing resizes like the transform used by ``Engine.predict``."""
+        onnx = pytest.importorskip("onnx")
+        pytest.importorskip("onnxscript")
+        from onnx.reference import ReferenceEvaluator
+
+        pre_processor = PreProcessor(transform=Resize((64, 64), interpolation=interpolation, antialias=True))
+        image = torch.rand(1, 3, *input_size)
+        onnx_path = tmp_path / "pre_processor.onnx"
+        torch.onnx.export(pre_processor, (image,), onnx_path, dynamo=True)
+
+        model = onnx.load(onnx_path)
+        exported = ReferenceEvaluator(model).run(None, {model.graph.input[0].name: image.numpy()})[0]
+        expected = pre_processor.transform(image)
+        torch.testing.assert_close(torch.from_numpy(exported), expected, atol=1e-5, rtol=1e-5)
