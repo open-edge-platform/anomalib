@@ -51,9 +51,6 @@ class GaussianKDE(DynamicBufferMixin):
     def __init__(self, dataset: torch.Tensor | None = None) -> None:
         super().__init__()
 
-        if dataset is not None:
-            self.fit(dataset)
-
         self.register_buffer("bw_transform", torch.empty(0))
         self.register_buffer("dataset", torch.empty(0))
         self.register_buffer("norm", torch.empty(0))
@@ -61,6 +58,9 @@ class GaussianKDE(DynamicBufferMixin):
         self.bw_transform = torch.empty(0)
         self.dataset = torch.empty(0)
         self.norm = torch.empty(0)
+
+        if dataset is not None:
+            self.fit(dataset)
 
     def forward(self, features: torch.Tensor) -> torch.Tensor:
         """Compute KDE estimates for the input features.
@@ -143,5 +143,5 @@ class GaussianKDE(DynamicBufferMixin):
             torch.Size([5, 5])
         """
         mean = torch.mean(tensor, dim=1)
-        tensor -= mean[:, None]
+        tensor = tensor - mean[:, None]
         return torch.matmul(tensor, tensor.T) / (tensor.size(1) - 1)
