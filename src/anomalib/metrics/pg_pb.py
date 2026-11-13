@@ -93,7 +93,7 @@ class _PGn(Metric):
             raise ValueError(msg)
 
         self.fnr = torch.tensor(fnr, dtype=torch.float32)
-        self.name = "PG" + str(int(fnr * 100))
+        self.name = "PG" + str(round(fnr * 100))
 
         self.add_state("preds", default=[], dist_reduce_fx="cat")
         self.add_state("target", default=[], dist_reduce_fx="cat")
@@ -115,12 +115,15 @@ class _PGn(Metric):
             torch.Tensor: PGn score value.
 
         Raises:
-            ValueError: If no negative samples are found.
+            ValueError: If no positive or no negative samples are found.
         """
         preds = dim_zero_cat(self.preds)
         target = dim_zero_cat(self.target)
 
         pos_scores = preds[target == 1]
+        if pos_scores.numel() == 0:
+            msg = "No positive samples found. Cannot compute PGn score."
+            raise ValueError(msg)
         thr_accept = torch.quantile(pos_scores, self.fnr)
 
         neg_scores = preds[target == 0]
@@ -170,7 +173,7 @@ class _PBn(Metric):
             raise ValueError(msg)
 
         self.fpr = torch.tensor(fpr, dtype=torch.float32)
-        self.name = "PB" + str(int(fpr * 100))
+        self.name = "PB" + str(round(fpr * 100))
 
         self.add_state("preds", default=[], dist_reduce_fx="cat")
         self.add_state("target", default=[], dist_reduce_fx="cat")
@@ -192,12 +195,15 @@ class _PBn(Metric):
             torch.Tensor: PBn score value.
 
         Raises:
-            ValueError: If no positive samples are found.
+            ValueError: If no positive or no negative samples are found.
         """
         preds = dim_zero_cat(self.preds)
         target = dim_zero_cat(self.target)
 
         neg_scores = preds[target == 0]
+        if neg_scores.numel() == 0:
+            msg = "No negative samples found. Cannot compute PBn score."
+            raise ValueError(msg)
         thr_accept = torch.quantile(neg_scores, 1 - self.fpr)
 
         pos_scores = preds[target == 1]
