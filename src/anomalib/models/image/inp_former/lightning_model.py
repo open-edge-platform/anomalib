@@ -327,7 +327,7 @@ class InpFormer(AnomalibModule):
         configuration, supporting both max_steps and max_epochs settings.
 
         Returns:
-            OptimizerLRScheduler: Tuple containing optimizer and scheduler configurations.
+            OptimizerLRScheduler: Dictionary containing optimizer and scheduler configurations.
 
         Raises:
             ValueError: If neither max_epochs nor max_steps is defined.
@@ -368,7 +368,13 @@ class InpFormer(AnomalibModule):
 
         lr_scheduler = WarmCosineScheduler(optimizer, **scheduler_config)
 
-        return [optimizer], [lr_scheduler]
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": lr_scheduler,
+                "interval": "step",
+            },
+        }
 
     @property
     def learning_type(self) -> LearningType:

@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- 🚀 **engine**: Automatically attach `LearningRateMonitor` callback when a logger is configured by @jrusbo in https://github.com/open-edge-platform/anomalib/pull/3879
+
 ### Removed
 
 ### Changed
@@ -20,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - 🐞 **model**: Keep PatchCore's batch size dynamic when exporting by @varunikarai in https://github.com/open-edge-platform/anomalib/pull/3853
 - 📚 **docs**: Align custom-data, export, benchmark, and Lightning examples with current APIs
+- 🐞 **model**: Set step interval on learning rate schedulers for EfficientAd, Dinomaly, InpFormer, Uflow, and UniNet by @jrusbo in https://github.com/open-edge-platform/anomalib/pull/3879
 
 ## [v2.7.0] - 2026-10-06
 
