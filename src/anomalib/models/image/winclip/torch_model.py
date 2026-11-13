@@ -283,9 +283,14 @@ class WinClipModel(DynamicBufferMixin, BufferListMixin, nn.Module):
         masked = self.clip.visual.patch_dropout(masked)
         masked = self.clip.visual.ln_pre(masked)
 
-        masked = masked.permute(1, 0, 2)  # NLD -> LND
-        masked = self.clip.visual.transformer(masked)
-        masked = masked.permute(1, 0, 2)  # LND -> NLD
+        # open_clip>=2.26 uses a batch-first transformer that expects NLD inputs. Permuting in that case would make
+        # attention mix tokens across windows, so that all windows end up with the same embedding.
+        if getattr(self.clip.visual.transformer, "batch_first", False):
+            masked = self.clip.visual.transformer(masked)
+        else:
+            masked = masked.permute(1, 0, 2)  # NLD -> LND
+            masked = self.clip.visual.transformer(masked)
+            masked = masked.permute(1, 0, 2)  # LND -> NLD
 
         masked = self.clip.visual.ln_post(masked)
         pooled, _ = self.clip.visual._global_pool(masked)  # noqa: SLF001
