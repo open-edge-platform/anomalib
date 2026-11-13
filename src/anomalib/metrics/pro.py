@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Implementation of PRO metric based on TorchMetrics.
@@ -127,8 +127,9 @@ def pro_score(
     """Calculate the PRO score for a batch of predictions.
 
     Args:
-        predictions (torch.Tensor): Predicted anomaly masks of shape
-            ``(B, 1, H, W)``
+        predictions (torch.Tensor): Anomaly scores or binary masks of shape
+            ``(B, 1, H, W)``. Floating-point scores are thresholded, and
+            nonzero entries in boolean or integer masks are foreground.
         comps (torch.Tensor): Labeled connected components of shape ``(B, H, W)``.
             Components should be labeled from 0 to N
         threshold (float, optional): Threshold for binarizing float predictions.
@@ -142,15 +143,14 @@ def pro_score(
         >>> score = pro_score(predictions, components, threshold=0.5)
         >>> print(f"PRO Score: {score:.4f}")
     """
-    if predictions.dtype == torch.float:
-        predictions = predictions > threshold
+    foreground = predictions > threshold if predictions.is_floating_point() else predictions.bool()
 
     n_comps = len(comps.unique())
 
     preds = comps.clone()
     # match the shapes in case one of the tensors is N1HW
     preds = preds.reshape(predictions.shape)
-    preds[~predictions] = 0
+    preds[~foreground] = 0
     if n_comps == 1:  # only background
         return torch.tensor([1.0])
 
