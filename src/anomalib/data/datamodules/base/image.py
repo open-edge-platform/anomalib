@@ -300,6 +300,9 @@ class AnomalibDataModule(LightningDataModule, ABC):
         This handles splitting normal/anomalous samples and optionally creating
         synthetic anomalies.
         """
+        if self.test_split_mode == TestSplitMode.NONE:
+            return
+
         if self.test_data.has_normal:
             # split test data into normal and anomalous
             normal_test_data, self.test_data = split_by_label(self.test_data)

@@ -40,6 +40,7 @@ from .datumaro import Datumaro
 from .folder import Folder
 from .kaputt import Kaputt
 from .kolektor import Kolektor
+from .mad_sim import MADSim
 from .mpdd import MPDD
 from .mvtec_loco import MVTecLOCO
 from .mvtecad import MVTecAD
@@ -83,6 +84,7 @@ class ImageDataFormat(str, Enum):
     FOLDER_3D = "folder_3d"
     KAPUTT = "kaputt"
     KOLEKTOR = "kolektor"
+    MAD_SIM = "mad_sim"
     MPDD = "mpdd"
     MVTEC_AD = "mvtecad"
     MVTEC_AD_2 = "mvtecad2"
@@ -103,6 +105,7 @@ __all__ = [
     "Folder",
     "Kaputt",
     "Kolektor",
+    "MADSim",
     "MPDD",
     "MVTecAD",
     "MVTecAD2",
