@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - 🐞 **model**: Keep PatchCore's batch size dynamic when exporting by @varunikarai in https://github.com/open-edge-platform/anomalib/pull/3853
+- 🐞 **data**: Use the tile size as the default `Tiler` stride instead of raising `AttributeError` by @Viranshul-P in https://github.com/open-edge-platform/anomalib/pull/3911
 - 📚 **docs**: Align custom-data, export, benchmark, and Lightning examples with current APIs
 
 ## [v2.7.0] - 2026-10-06
