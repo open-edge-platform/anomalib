@@ -4,8 +4,8 @@
 """MVTec 3D-AD Datamodule.
 
 This module provides PyTorch Dataset, Dataloader and PyTorch Lightning DataModule for
-the MVTec 3D-AD dataset. If the dataset is not available locally, it will be
-downloaded and extracted automatically.
+the MVTec 3D-AD dataset. Download and extract the dataset manually before use;
+automatic downloads are temporarily unavailable because the upstream links are broken.
 
 License:
     MVTec 3D-AD dataset is released under the Creative Commons
@@ -179,6 +179,7 @@ def make_mvtec_3d_dataset(
         mask_samples.path + "/" + samples.split + "/" + samples.label + "/" + "gt/" + samples.file_name
     )
     samples = samples.dropna(subset=["image_path"])
+    samples["mask_path"] = samples["mask_path"].fillna("")
     samples = samples.astype({"image_path": "str", "mask_path": "str", "depth_path": "str"})
 
     # assert that the right mask files are associated with the right test images

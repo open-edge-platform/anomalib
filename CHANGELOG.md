@@ -15,9 +15,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- 🔧 **data**: Temporarily disable MVTec dataset automatic downloads because upstream URLs return HTTP 404; use manually downloaded datasets until [#3892](https://github.com/open-edge-platform/anomalib/issues/3892) is resolved by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3893
+
 ### Deprecated
 
 ### Fixed
+
+- 🐞 **model**: Keep PatchCore's batch size dynamic when exporting by @varunikarai in https://github.com/open-edge-platform/anomalib/pull/3853
+- 📚 **docs**: Align custom-data, export, benchmark, and Lightning examples with current APIs
 
 ## [v2.7.0] - 2026-10-06
 
