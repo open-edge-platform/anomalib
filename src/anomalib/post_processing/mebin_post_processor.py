@@ -172,7 +172,7 @@ class MEBinPostProcessor(PostProcessor):
         # --- Image-level label uses the standard global threshold ---
         pred_label: torch.Tensor | None = None
         if self.enable_thresholding:
-            pred_label = self._apply_threshold(pred_score, self.normalized_image_threshold)
+            pred_label = self._apply_threshold(pred_score, self.image_decision_threshold)
 
         return InferenceBatch(
             pred_label=pred_label,
@@ -200,7 +200,7 @@ class MEBinPostProcessor(PostProcessor):
             batch.pred_label = (
                 batch.pred_label
                 if batch.pred_label is not None
-                else self._apply_threshold(batch.pred_score, self.normalized_image_threshold)
+                else self._apply_threshold(batch.pred_score, self.image_decision_threshold)
             )
 
         # 3. Pixel-level mask via MEBin.
