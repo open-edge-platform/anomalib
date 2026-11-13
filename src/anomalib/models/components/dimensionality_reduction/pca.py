@@ -86,20 +86,19 @@ class PCA(DynamicBufferMixin):
             torch.Size([10])
         """
         mean = dataset.mean(dim=0)
-        dataset -= mean
 
-        _, sig, v_h = torch.linalg.svd(dataset.double(), full_matrices=False)
+        _, sig, v_h = torch.linalg.svd((dataset - mean).double(), full_matrices=False)
         num_components: int
-        if self.n_components <= 1:
+        if isinstance(self.n_components, float) and self.n_components <= 1:
             variance_ratios = torch.cumsum(sig * sig, dim=0) / torch.sum(sig * sig)
-            num_components = torch.nonzero(variance_ratios >= self.n_components)[0]
+            num_components = int(torch.nonzero(variance_ratios >= self.n_components)[0]) + 1
         else:
             num_components = int(self.n_components)
 
         self.num_components = torch.tensor([num_components], device=dataset.device)
 
-        self.singular_vectors = v_h.transpose(-2, -1)[:, :num_components].float()
-        self.singular_values = sig[:num_components].float()
+        self.singular_vectors = v_h.transpose(-2, -1)[:, :num_components].to(dataset.dtype)
+        self.singular_values = sig[:num_components].to(dataset.dtype)
         self.mean = mean
 
     def fit_transform(self, dataset: torch.Tensor) -> torch.Tensor:
@@ -120,16 +119,8 @@ class PCA(DynamicBufferMixin):
             >>> print(transformed.shape)
             torch.Size([100, 3])
         """
-        mean = dataset.mean(dim=0)
-        dataset -= mean
-        num_components = int(self.n_components)
-        self.num_components = torch.tensor([num_components], device=dataset.device)
-
-        v_h = torch.linalg.svd(dataset)[-1]
-        self.singular_vectors = v_h.transpose(-2, -1)[:, :num_components]
-        self.mean = mean
-
-        return torch.matmul(dataset, self.singular_vectors)
+        self.fit(dataset)
+        return self.transform(dataset)
 
     def transform(self, features: torch.Tensor) -> torch.Tensor:
         """Transform features using the fitted PCA model.
@@ -151,8 +142,7 @@ class PCA(DynamicBufferMixin):
             >>> print(transformed.shape)
             torch.Size([50, 3])
         """
-        features -= self.mean
-        return torch.matmul(features, self.singular_vectors)
+        return torch.matmul(features - self.mean, self.singular_vectors)
 
     def inverse_transform(self, features: torch.Tensor) -> torch.Tensor:
         """Inverse transform features back to original space.
@@ -173,7 +163,7 @@ class PCA(DynamicBufferMixin):
             >>> print(reconstructed.shape)
             torch.Size([100, 10])
         """
-        return torch.matmul(features, self.singular_vectors.transpose(-2, -1))
+        return torch.matmul(features, self.singular_vectors.transpose(-2, -1)) + self.mean
 
     def forward(self, features: torch.Tensor) -> torch.Tensor:
         """Transform features (alias for transform method).
