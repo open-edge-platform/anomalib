@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- 🐞 **model**: Fix DFM with score_type nll crashing at the end of training by @sohailshk in https://github.com/open-edge-platform/anomalib/pull/3926
 - 🐞 **model**: Keep PatchCore's batch size dynamic when exporting by @varunikarai in https://github.com/open-edge-platform/anomalib/pull/3853
 - 📚 **docs**: Align custom-data, export, benchmark, and Lightning examples with current APIs
 
