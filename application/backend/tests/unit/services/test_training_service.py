@@ -1,6 +1,7 @@
 # Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
+import sys
 from pathlib import Path
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
@@ -321,43 +322,31 @@ class TestTrainingService:
         )
         fxt_mock_anomalib_components["engine"].export.assert_called_once()
 
+        expected_weights = (
+            Path("data")
+            / f"train-workspace-{fxt_model.id}"
+            / "Padim"
+            / f"{fxt_model.project_id}-padim"
+            / "latest"
+            / "weights"
+        )
+        # Windows keeps the relative path when no version directory exists.
+        if sys.platform != "win32":
+            expected_weights = expected_weights.resolve()
+
         mock_move_artifact.assert_has_calls([
             call(
-                src_dir=(
-                    Path("data")
-                    / f"train-workspace-{fxt_model.id}"
-                    / "Padim"
-                    / f"{fxt_model.project_id}-padim"
-                    / "latest"
-                    / "weights"
-                    / "openvino"
-                ).resolve(),
+                src_dir=expected_weights / "openvino",
                 dest_dir=Path("/path/to/model"),
                 file_name="model.xml",
             ),
             call(
-                src_dir=(
-                    Path("data")
-                    / f"train-workspace-{fxt_model.id}"
-                    / "Padim"
-                    / f"{fxt_model.project_id}-padim"
-                    / "latest"
-                    / "weights"
-                    / "openvino"
-                ).resolve(),
+                src_dir=expected_weights / "openvino",
                 dest_dir=Path("/path/to/model"),
                 file_name="model.bin",
             ),
             call(
-                src_dir=(
-                    Path("data")
-                    / f"train-workspace-{fxt_model.id}"
-                    / "Padim"
-                    / f"{fxt_model.project_id}-padim"
-                    / "latest"
-                    / "weights"
-                    / "lightning"
-                ).resolve(),
+                src_dir=expected_weights / "lightning",
                 dest_dir=Path("/path/to/model/checkpoint"),
                 file_name="model.ckpt",
             ),
