@@ -31,6 +31,7 @@ from services.job_service import JobService
 from services.system_service import SystemService
 from settings import Settings, get_settings
 from utils.callbacks import AnomalibStudioProgressCallback, ProgressSyncParams
+from utils.pre_processing import without_center_crop
 
 settings: Settings = get_settings()
 
@@ -258,6 +259,9 @@ class TrainingService:
                 ],
             ),
         )
+        # Anomaly maps of center-cropped inputs only cover the middle of the image, which
+        # misaligns the heatmap overlay in the UI. Resize to the crop size instead.
+        anomalib_model.pre_processor = without_center_crop(anomalib_model.pre_processor)
 
         tensorboard = AnomalibTensorBoardLogger(save_dir=global_log_config.tensorboard_log_path, name=name)
         kwargs: dict[str, Any] = {}
