@@ -12,14 +12,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+### Deprecated
+
+### Fixed
+
+## [v2.7.1] - 2026-11-16
+
+### Added
+
+### Removed
+
+### Changed
+
+- 🔧 **lib**: Prepare the v2.7.1 development version by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3841
+- 🔧 **deps**: Refresh root and Studio lockfiles by @oep-renovate[bot] in https://github.com/open-edge-platform/anomalib/pull/3821 and https://github.com/open-edge-platform/anomalib/pull/3848
+- 🔧 **ci**: Update GitHub Actions dependencies by @oep-renovate[bot] in https://github.com/open-edge-platform/anomalib/pull/3887
+- 🔒 **deps**: Update MLflow to 3.17.2 for a security fix by @oep-renovate[bot] in https://github.com/open-edge-platform/anomalib/pull/3876
+- 🔒 **deps**: Update Pillow to 13.0.0 for a security fix by @oep-renovate[bot] in https://github.com/open-edge-platform/anomalib/pull/3919
 - 🔧 **data**: Temporarily disable MVTec dataset automatic downloads because upstream URLs return HTTP 404; use manually downloaded datasets until [#3892](https://github.com/open-edge-platform/anomalib/issues/3892) is resolved by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3893
 
 ### Deprecated
 
 ### Fixed
 
+- 🐞 **sampling**: Avoid duplicate coreset indices when feature embeddings repeat by @llllgt in https://github.com/open-edge-platform/anomalib/pull/3838
+- 🐞 **data**: Fix missing-mask path casting and enum split filtering by @andersendsa in https://github.com/open-edge-platform/anomalib/pull/3852
 - 🐞 **model**: Keep PatchCore's batch size dynamic when exporting by @varunikarai in https://github.com/open-edge-platform/anomalib/pull/3853
-- 📚 **docs**: Align custom-data, export, benchmark, and Lightning examples with current APIs
+- 📚 **docs**: Expand dataset contribution guidance by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3830
+- 📚 **docs**: Align public API examples and references with current behavior by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3867, https://github.com/open-edge-platform/anomalib/pull/3880, and https://github.com/open-edge-platform/anomalib/pull/3890
+- 📚 **docs**: Clarify changelog entry review requirements by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3899
 
 ## [v2.7.0] - 2026-10-06
 
