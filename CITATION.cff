@@ -31,7 +31,7 @@ authors:
     affiliation: Intel
 version: 2.7.1
 doi: https://doi.org/10.48550/arXiv.2202.08341
-date-released: '2026-11-16'
+date-released: "2026-11-16"
 references:
   - type: article
     authors:
