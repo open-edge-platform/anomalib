@@ -8,7 +8,6 @@ datamodule = Folder(
     root="datasets/hazelnut_toy",
     normal_dir="good",
     test_split_mode=TestSplitMode.SYNTHETIC,
-    task="classification",
 )
 
 # Setup the datamodule

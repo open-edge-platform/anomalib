@@ -4,8 +4,9 @@
 """MVTec AD 2 Lightning Data Module.
 
 This module implements a PyTorch Lightning DataModule for the MVTec AD 2 dataset.
-The module handles downloading, loading, and preprocessing of the dataset for
-training and evaluation.
+The module handles loading and preprocessing of the dataset for training and
+evaluation. Automatic downloads are temporarily unavailable because the upstream
+links are broken. Download and extract the dataset manually before use.
 
 The dataset provides three different test sets:
     - Public test set (test_public/): Contains both normal and anomalous samples with ground truth masks
@@ -40,7 +41,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image import MVTecAD2Dataset
 from anomalib.data.datasets.image.mvtecad2 import TestType
-from anomalib.data.utils import DownloadInfo, Split, download_and_extract
+from anomalib.data.utils import DownloadInfo, Split
 from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
@@ -142,33 +143,23 @@ class MVTecAD2(AnomalibDataModule):
         self.test_type = TestType(test_type) if isinstance(test_type, str) else test_type
 
     def prepare_data(self) -> None:
-        """Download the dataset if not available.
+        """Check that the manually downloaded dataset is available.
 
-        This method checks if the specified dataset is available in the file
-        system. If not, it downloads and extracts the dataset into the
-        appropriate directory.
-
-        Example:
-            Assume the dataset is not available on the file system::
-
-                >>> datamodule = MVTecAD2(
-                ...     root="./datasets/MVTecAD2",
-                ...     category="can"
-                ... )
-                >>> datamodule.prepare_data()
-
-            Directory structure after download::
-
-                datasets/
-                └── MVTecAD2/
-                    ├── can/
-                    ├── fabric/
-                    └── ...
+        Raises:
+            FileNotFoundError: If the requested category directory is missing.
         """
         if (self.root / self.category).is_dir():
             logger.info("Found the dataset.")
         else:
-            download_and_extract(self.root, DOWNLOAD_INFO)
+            # TODO(ashwinvaidya17): Restore autodownload once upstream links work.
+            # https://github.com/open-edge-platform/anomalib/issues/3892
+            msg = (
+                "MVTec AD 2 automatic download is temporarily unavailable because upstream links are broken. "
+                "Download the dataset from https://www.mvtec.com/research-teaching/datasets/mvtec-ad-2 "
+                f"and extract it so that '{self.root / self.category}' exists. "
+                "See https://github.com/open-edge-platform/anomalib/issues/3892."
+            )
+            raise FileNotFoundError(msg)
 
     def _setup(self, _stage: str | None = None) -> None:
         """Set up the datasets and perform train/validation/test split.

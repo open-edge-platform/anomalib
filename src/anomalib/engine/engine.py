@@ -772,7 +772,7 @@ class Engine:
         CLI Usage:
             1. you can pick a model, and you can run through the MVTec dataset.
                 ```python
-                anomalib train --model anomalib.models.Padim --data MVTec
+                anomalib train --model anomalib.models.Padim --data MVTecAD
                 ```
             2. Of course, you can override the various values with commands.
                 ```python
@@ -879,12 +879,12 @@ class Engine:
             3. To export as an OpenVINO ``.xml`` and ``.bin`` file you can run the following command.
                 ```python
                 anomalib export --model Padim --export_type openvino --ckpt_path <PATH_TO_CHECKPOINT> \
-                --input_size "[256,256] --compression_type FP16
+                --input_size "[256,256]" --compression_type FP16
                 ```
             4. You can also quantize OpenVINO model with the following.
                 ```python
                 anomalib export --model Padim --export_type openvino --ckpt_path <PATH_TO_CHECKPOINT> \
-                --input_size "[256,256]" --compression_type INT8_PTQ --data MVTec
+                --input_size "[256,256]" --compression_type INT8_PTQ --data MVTecAD
                 ```
         """
         import warnings

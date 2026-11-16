@@ -42,16 +42,7 @@ file has been updated to include new parameters and remove deprecated parameters
 In addition, some parameters have been moved to different sections of the
 configuration.
 
-Anomalib provides a python script to update the configuration file from 0.\* to 1.0.
-To update the configuration file, run the following command:
-
-```bash
-python tools/upgrade/config.py \
-    --input_config <path_to_0.*_config> \
-    --output_config <path_to_1.0_config>
-```
-
-This script will ensure that the configuration file is updated to the 1.0 format.
+The 0.\* to 1.0 config converter is not in this tree. Update a 0.\* file by hand using the mapping below.
 
 In the following sections, we will discuss the changes to the configuration file
 in more detail.

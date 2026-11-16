@@ -89,7 +89,7 @@ jobs:
       security-events: write # needed by nested workflows to upload results
     steps:
       - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -112,7 +112,7 @@ jobs:
       security-events: write # needed by nested workflows to upload results
     steps:
       - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -136,7 +136,7 @@ jobs:
       security-events: write # needed by nested workflows to upload results
     steps:
       - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -163,7 +163,7 @@ jobs:
       security-events: write # needed by nested workflows to upload results
     steps:
       - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -189,7 +189,7 @@ jobs:
         ai-device: [xpu]
     steps:
       - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -260,7 +260,7 @@ jobs:
           artifact_name: zapfull
 
       - name: Run Schemathesis Scan
-        uses: schemathesis/action@806cace2053cbbac93188e1281ff7da415643160 # v3
+        uses: schemathesis/action@b0cacf86f25caaa79ac110cc2077afd70fdd67ff # v3
         continue-on-error: true
         with:
           schema: "http://localhost:8000/api/openapi.json"
@@ -271,7 +271,7 @@ jobs:
             --report-junit-path schemathesis-report/junit.xml
 
       - name: Upload Schemathesis report
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
           name: schemathesis-report-${{ matrix.ai-device }}
@@ -304,7 +304,7 @@ jobs:
           fi
 
       - name: Upload container logs
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
           name: container-logs
@@ -328,7 +328,7 @@ jobs:
         ai-device: [cpu, cuda, xpu]
     steps:
       - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -355,7 +355,7 @@ jobs:
       has_findings: ${{ steps.check-results.outputs.has_findings }}
     steps:
       - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 

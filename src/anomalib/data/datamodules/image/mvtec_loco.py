@@ -21,8 +21,9 @@ Example:
         ... )
 
 Notes:
-    The dataset will be automatically downloaded and converted to the required
-    format when first used. The directory structure after preparation will be::
+    Download the dataset from https://www.mvtec.com/research-teaching/datasets/mvtec-loco-ad
+    and extract it under ``root``. Automatic downloads are unavailable.
+    The expected directory structure is::
 
         datasets/
         └── MVTec_LOCO/
@@ -156,6 +157,25 @@ class MVTecLOCO(AnomalibDataModule):
         root = resolve_dataset_root(root, "MVTec_LOCO")
         self.root = Path(root)
         self.category = category
+
+    def prepare_data(self) -> None:
+        """Check that the manually downloaded dataset is available.
+
+        Raises:
+            FileNotFoundError: If the requested category directory is missing.
+        """
+        if (self.root / self.category).is_dir():
+            logger.info("Found the dataset.")
+        else:
+            # TODO(ashwinvaidya17): Enable autodownload once upstream links work.
+            # https://github.com/open-edge-platform/anomalib/issues/3892
+            msg = (
+                "MVTec LOCO AD automatic download is unavailable because upstream links are broken. "
+                "Download the dataset from https://www.mvtec.com/research-teaching/datasets/mvtec-loco-ad "
+                f"and extract it so that '{self.root / self.category}' exists. "
+                "See https://github.com/open-edge-platform/anomalib/issues/3892."
+            )
+            raise FileNotFoundError(msg)
 
     def _setup(self, _stage: str | None = None) -> None:
         """Set up the datasets and perform dynamic subset splitting.
