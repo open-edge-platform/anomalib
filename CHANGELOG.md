@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - 🐞 **model**: Keep PatchCore's batch size dynamic when exporting by @varunikarai in https://github.com/open-edge-platform/anomalib/pull/3853
+- 🐞 **application**: Align Anomalib Studio heatmaps with the frame for models that center-crop their input (e.g. Dinomaly) by @blessedefe4real in https://github.com/open-edge-platform/anomalib/pull/3904
 - 📚 **docs**: Align custom-data, export, benchmark, and Lightning examples with current APIs
 
 ## [v2.7.0] - 2026-10-06
