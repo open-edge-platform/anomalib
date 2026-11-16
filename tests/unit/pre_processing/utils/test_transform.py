@@ -22,7 +22,7 @@ def test_get_exportable_transform() -> None:
     resize = Resize((224, 224), antialias=True)
     exportable_resize = get_exportable_transform(resize)
     assert isinstance(exportable_resize, Resize)
-    assert not exportable_resize.antialias
+    assert exportable_resize.antialias
 
     # Test with CenterCrop transform
     center_crop = CenterCrop((224, 224))
@@ -34,7 +34,7 @@ def test_get_exportable_transform() -> None:
     exportable_compose = get_exportable_transform(compose)
     assert isinstance(exportable_compose, Compose)
     assert isinstance(exportable_compose.transforms[0], Resize)
-    assert not exportable_compose.transforms[0].antialias
+    assert exportable_compose.transforms[0].antialias
     assert isinstance(exportable_compose.transforms[1], ExportableCenterCrop)
 
 

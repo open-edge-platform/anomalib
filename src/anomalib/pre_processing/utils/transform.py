@@ -18,10 +18,11 @@ def get_exportable_transform(transform: Transform | None) -> Transform | None:
     """Get an exportable version of a transform.
 
     This function converts a torchvision transform into a format that is compatible with
-    ONNX and OpenVINO export. It handles two main compatibility issues:
+    ONNX and OpenVINO export. It converts ``CenterCrop`` to ``ExportableCenterCrop``.
 
-    1. Disables antialiasing in ``Resize`` transforms
-    2. Converts ``CenterCrop`` to ``ExportableCenterCrop``
+    Antialiasing in ``Resize`` transforms is kept, so the exported model resizes images
+    the same way as ``Engine.predict``. The dynamo ONNX exporter maps an antialiased
+    resize to an ONNX ``Resize`` with ``antialias=1`` (opset 18).
 
     Args:
         transform (Transform | None): The transform to convert. If ``None``, returns
@@ -48,7 +49,6 @@ def get_exportable_transform(transform: Transform | None) -> Transform | None:
     if transform is None:
         return None
     transform = copy.deepcopy(transform)
-    transform = disable_antialiasing(transform)
     return convert_center_crop_transform(transform)
 
 
@@ -56,8 +56,8 @@ def disable_antialiasing(transform: Transform) -> Transform:
     """Disable antialiasing in Resize transforms.
 
     This function recursively disables antialiasing in any ``Resize`` transforms found
-    within the provided transform or transform composition. This is necessary because
-    antialiasing is not supported during ONNX export.
+    within the provided transform or transform composition. ``get_exportable_transform``
+    no longer calls it, since the dynamo ONNX exporter supports antialiasing.
 
     Args:
         transform (Transform): Transform or composition of transforms to process.
