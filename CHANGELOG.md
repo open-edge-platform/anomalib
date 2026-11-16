@@ -24,8 +24,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- 🔧 **release**: Prepare library v2.7.1 by @anomalibbot in https://github.com/open-edge-platform/anomalib/pull/3930
-- 🔧 **lib**: Prepare the v2.7.1 development version by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3841
 - 🔧 **deps**: Refresh root and Studio lockfiles by @oep-renovate[bot] in https://github.com/open-edge-platform/anomalib/pull/3821 and https://github.com/open-edge-platform/anomalib/pull/3848
 - 🔧 **ci**: Update GitHub Actions dependencies by @oep-renovate[bot] in https://github.com/open-edge-platform/anomalib/pull/3887
 - 🔒 **deps**: Update MLflow to 3.17.2 for a security fix by @oep-renovate[bot] in https://github.com/open-edge-platform/anomalib/pull/3876
