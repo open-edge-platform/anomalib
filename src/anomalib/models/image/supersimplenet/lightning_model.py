@@ -124,7 +124,7 @@ class Supersimplenet(AnomalibModule):
         """Perform the training step input and return the loss.
 
         Args:
-            batch (batch: dict[str, str | torch.Tensor]): Input batch
+            batch (Batch): Input batch
             args: Additional arguments.
             kwargs: Additional keyword arguments.
 
@@ -146,7 +146,7 @@ class Supersimplenet(AnomalibModule):
         """Perform the validation step and return the anomaly map and anomaly score.
 
         Args:
-            batch (dict[str, str | torch.Tensor]): Input batch
+            batch (Batch): Input batch
             args: Additional arguments.
             kwargs: Additional keyword arguments.
 
