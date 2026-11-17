@@ -31,15 +31,15 @@
 
 ---
 
-> 🌟 **Announcing v2.7.0 Release!** 🌟
+> 🌟 **Announcing v2.7.1 Release!** 🌟
 >
-> This minor release adds new models and hardens checkpoint and path handling, while removing APIs scheduled for 2.7.0.
+> This patch release fixes data loading and sampling edge cases, restores dynamic PatchCore export batches, and updates security-sensitive dependencies. MVTec datasets currently need to be downloaded manually because upstream download URLs return 404.
 >
 > Key Changes
 >
-> - **New models**: MH-PatchCore, RAD (retrieval-based), and FoundAD (few-shot).
-> - **Security / API**: Checkpoint loading defaults to `weights_only=True`. When a dataset `root` is set, metadata paths must resolve under that root.
-> - **Removals**: Legacy ONNX exporter (`dynamo=False`) is gone — use `dynamo=True` (default) with `anomalib[openvino]`. Pre-timm ViT checkpoint migration is no longer supported. Minimum PyTorch is 2.10+ (ROCm 2.13+).
+> - **Fixes**: Avoid duplicate coreset selections, handle missing mask paths and dataset split enums correctly, and keep PatchCore export batch sizes dynamic.
+> - **Data**: MVTec AD, AD 2, 3D-AD, and LOCO AD can still use local datasets; automatic downloads are temporarily disabled while upstream URLs are unavailable.
+> - **Security**: Update MLflow and Pillow dependencies to address published advisories.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 
