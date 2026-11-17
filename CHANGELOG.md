@@ -40,6 +40,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 📚 **docs**: Expand dataset contribution guidance by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3830
 - 📚 **docs**: Align public API examples and references with current behavior by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3867, https://github.com/open-edge-platform/anomalib/pull/3880, and https://github.com/open-edge-platform/anomalib/pull/3890
 - 📚 **docs**: Clarify changelog entry review requirements by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3899
+- 📚 **docs**: Correct batch types and stale optimizer argument in Lightning step docstrings by @VenishPaneliya in https://github.com/open-edge-platform/anomalib/pull/3929
 
 ## [v2.7.0] - 2026-10-06
 
