@@ -48,6 +48,7 @@ from lightning.pytorch import LightningModule
 from lightning_utilities.core.imports import module_available
 from torch import nn
 
+from anomalib import TaskType
 from anomalib.data import AnomalibDataModule, ImageBatch
 from anomalib.deploy.export import CompressionType, ExportType
 
@@ -65,9 +66,9 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from pathlib import Path
 
+    import numpy as np
+    from numpy.typing import NDArray
     from torchmetrics import Metric
-
-    from anomalib import TaskType
 
     if module_available("nncf"):
         from nncf import IgnoredScope, ModelType
@@ -476,10 +477,15 @@ class ExportMixin:
             )
 
         calibration_dataset = nncf.Dataset(dataloader, lambda x: x["image"])
-        validation_dataset = nncf.Dataset(datamodule.test_dataloader())
+        validation_dataset = nncf.Dataset(datamodule.test_dataloader(), lambda x: x["image"])
 
-        def val_fn(nncf_model: CompiledModel, validation_data: Iterable) -> float:
+        def val_fn(
+            nncf_model: CompiledModel,
+            validation_data: Iterable[ImageBatch],
+        ) -> tuple[float, list[list[NDArray[np.float32]]]]:
             metric.reset()
+            ranking_outputs: list[list[NDArray[np.float32]]] = []
+            ranking_name = "pred_score" if task == TaskType.CLASSIFICATION else "anomaly_map"
             for batch in validation_data:
                 ov_model_output = nncf_model(batch["image"])
                 result_batch = ImageBatch(
@@ -493,11 +499,14 @@ class ExportMixin:
                     pred_mask=torch.from_numpy(ov_model_output["pred_mask"])
                     if "pred_mask" in ov_model_output
                     else None,
-                    gt_mask=batch["gt_mask"][:, None, :, :] if "gt_mask" in batch else None,
+                    gt_mask=batch.gt_mask,
                 )
                 metric.update(result_batch)
+                ranking_outputs.append([ov_model_output[ranking_name].copy()])
 
-            return metric.compute()
+            # Image-level AUROC cannot rank single images. Return continuous task
+            # outputs for NNCF's output-based ranking instead.
+            return float(metric.compute()), ranking_outputs
 
         return nncf.quantize_with_accuracy_control(
             model,

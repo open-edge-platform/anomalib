@@ -286,6 +286,7 @@ def main() -> None:
         "activation_quantization": {
             "model_type": "TRANSFORMER",
             "floating_point_postprocessing": ["Interpolate", "Gaussian smoothing"],
+            "accuracy_control_ranking": "continuous_task_outputs",
         },
         "timing_protocol": {
             "device": "CPU",
