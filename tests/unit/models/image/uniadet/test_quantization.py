@@ -65,6 +65,10 @@ def test_openvino_compressions(
     compiled = ov.Core().compile_model(path, "CPU", {"INFERENCE_PRECISION_HINT": "f32"})
     if quantize is not None:
         assert quantize.call_args.kwargs["model_type"] == nncf.ModelType.TRANSFORMER
+        graph = ov.Core().read_model(path)
+        for node in graph.get_ordered_ops():
+            if node.get_type_name() == "Interpolate":
+                assert node.input_value(0).get_node().get_type_name() != "FakeQuantize"
     for batch_size in (1, 3):
         images = torch.stack([item.image for item in samples[:batch_size]])
         with torch.no_grad():

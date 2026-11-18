@@ -218,21 +218,24 @@ class UniADet(AnomalibModule):
         task: TaskType | None = None,
         max_drop: float = 0.01,
     ) -> "OVModel":
-        """Use transformer-aware quantization and keep fixed Gaussian smoothing in floating point."""
+        """Use transformer-aware quantization with floating-point map resizing and smoothing."""
         if compression_type not in {CompressionType.INT8_PTQ, CompressionType.INT8_ACQ}:
             return super()._compress_ov_model(model, compression_type, datamodule, metric, task, max_drop)
         import nncf
 
-        # Quantizing the fixed smoothing convolution can alter shared score-fusion
-        # scales in NNCF. It is not a learned layer and offers negligible INT8 benefit.
-        smoothing = [
+        # Auxiliary-domain ranges can clip unseen-domain anomaly maps when NNCF
+        # quantizes fixed resizing or smoothing. Neither operation has learned weights.
+        postprocessing = [
             node.friendly_name
             for node in model.get_ordered_ops()
-            if node.get_type_name() == "Convolution"
-            and node.input(1).get_partial_shape().is_static
-            and list(node.input(1).get_shape())[:2] == [1, 1]
+            if node.get_type_name() == "Interpolate"
+            or (
+                node.get_type_name() == "Convolution"
+                and node.input(1).get_partial_shape().is_static
+                and list(node.input(1).get_shape())[:2] == [1, 1]
+            )
         ]
-        ignored_scope = nncf.IgnoredScope(names=smoothing)
+        ignored_scope = nncf.IgnoredScope(names=postprocessing)
         if compression_type == CompressionType.INT8_PTQ:
             return self._post_training_quantization_ov(
                 model,

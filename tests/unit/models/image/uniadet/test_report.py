@@ -18,7 +18,7 @@ def benchmark_run(tmp_path: Path) -> Path:
     """Create synthetic all-category records, only for testing report aggregation."""
     manifest = {
         "complete": True,
-        "training": {"complete_recipe": True, "backbone": "dinov2"},
+        "training": {"complete_recipe": True, "backbone": "dinov2", "recipe_version": 2},
         "target_dataset": "mvtec",
         "categories": list(CATEGORIES),
         "shots": [1],
@@ -42,6 +42,17 @@ def test_macro_summary_and_seed_variation(benchmark_run: Path) -> None:
     for row in summarize_run(benchmark_run):
         assert row["measured_mean"] == pytest.approx(70)
         assert row["measured_std"] == pytest.approx(10)
+
+
+@pytest.mark.parametrize("version", [None, 1])
+def test_reject_outdated_training_recipe(benchmark_run: Path, version: int | None) -> None:
+    """Initial-recipe measurements cannot masquerade as corrected author-parameter runs."""
+    path = benchmark_run / "evaluation.json"
+    manifest = json.loads(path.read_text())
+    manifest["training"]["recipe_version"] = version
+    path.write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="complete full-training"):
+        summarize_run(benchmark_run)
 
 
 @pytest.mark.parametrize("corruption", ["missing", "duplicate", "nonfinite"])

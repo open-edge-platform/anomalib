@@ -35,6 +35,7 @@ def summarize_run(directory: Path) -> list[dict[str, str | int | float]]:
     if (
         not manifest["complete"]
         or not manifest["training"]["complete_recipe"]
+        or manifest["training"].get("recipe_version") != 2
         or set(manifest["categories"]) != expected
     ):
         msg = f"{directory} is not a complete full-training, all-category benchmark."

@@ -32,8 +32,8 @@ class LabeledImages(Dataset):
         """Return a fresh item so in-place augmentation cannot leak across samples."""
         mask = torch.zeros(30, 30)
         if index:
-            mask[5:25, 5:25] = 1
-        return ImageItem(image=torch.full((3, 30, 30), float(index)), gt_mask=mask, gt_label=index)
+            mask[3:23, 5:25] = 1
+        return ImageItem(image=mask.expand(3, -1, -1).clone(), gt_mask=mask, gt_label=index)
 
 
 @pytest.mark.parametrize("grid", [2, 3])
@@ -61,6 +61,34 @@ def test_calibration_splits_are_disjoint() -> None:
     assert set(data.calibration.indices).isdisjoint(data.validation.indices)
     with pytest.raises(ValueError, match="disjoint"):
         CalibrationData(LabeledImages(), subset_size=2)
+
+
+def test_training_transforms_preserve_masks_and_leave_calibration_raw(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Photometric and geometric training transforms run even when class-aware augmentation is skipped."""
+    monkeypatch.setattr("tools.uniadet.data.MVTecADDataset", lambda **_kwargs: LabeledImages())
+    dataset = AuxiliaryDataset(tmp_path, "mvtec", 30)
+    monkeypatch.setattr(dataset, "_mosaic", lambda item, _category, _grid: item)
+    monkeypatch.setattr(dataset, "_crop", lambda item, _grid: item)
+    source = dataset.datasets[0][1]
+    changed_photometry = False
+    changed_geometry = False
+    for seed in range(12):
+        torch.manual_seed(seed)
+        item = dataset[1]
+        intensity = item.image.mean(dim=0)
+        foreground = intensity > (intensity.min() + intensity.max()) / 2
+        assert torch.equal(foreground, item.gt_mask.bool())
+        assert item.gt_label == source.gt_label
+        changed_photometry |= not torch.all((item.image == 0) | (item.image == 1))
+        changed_geometry |= not torch.equal(item.gt_mask, source.gt_mask)
+    assert changed_photometry
+    assert changed_geometry
+    dataset.augmentation = False
+    torch.testing.assert_close(dataset[1].image, source.image)
+    torch.testing.assert_close(dataset[1].gt_mask, source.gt_mask)
 
 
 @pytest.mark.usefixtures("tiny_backbone")

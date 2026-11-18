@@ -8,7 +8,18 @@ from pathlib import Path
 import torch
 from torch.utils.data import DataLoader, Dataset, Subset
 from torchvision import tv_tensors
-from torchvision.transforms.v2 import Resize
+from torchvision.transforms.v2 import (
+    ColorJitter,
+    Compose,
+    RandomApply,
+    RandomChannelPermutation,
+    RandomChoice,
+    RandomGrayscale,
+    RandomHorizontalFlip,
+    RandomRotation,
+    RandomVerticalFlip,
+    Resize,
+)
 
 from anomalib.data import AnomalibDataModule, ImageBatch, ImageItem
 from anomalib.data.datasets.image.mvtecad import CATEGORIES as MVTEC_CATEGORIES
@@ -28,7 +39,7 @@ class AuxiliaryDataset(Dataset):
         root (Path): MVTec root or VisA's prepared ``visa_pytorch`` directory.
         dataset (str): ``"mvtec"`` or ``"visa"``.
         image_size (int): Square resize resolution.
-        augmentation (bool): Enable grid mosaic/cropping with probability 0.5.
+        augmentation (bool): Enable training color/geometric transforms and grid mosaic/cropping with probability 0.5.
 
     Raises:
         ValueError: If the dataset name is unsupported.
@@ -48,6 +59,14 @@ class AuxiliaryDataset(Dataset):
         self.indices = [(category, index) for category, data in enumerate(self.datasets) for index in range(len(data))]
         self.normal_indices = [data.samples.index[data.samples.label_index == 0].tolist() for data in self.datasets]
         self.augmentation = augmentation
+        self.augmentations = Compose([
+            RandomApply([ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1)], p=0.5),
+            RandomApply([RandomChoice([RandomRotation((angle, angle)) for angle in (0, 90, 180, 270)])], p=0.5),
+            RandomApply([RandomChannelPermutation()], p=0.25),
+            RandomGrayscale(p=0.25),
+            RandomHorizontalFlip(p=0.5),
+            RandomVerticalFlip(p=0.5),
+        ])
 
     def __len__(self) -> int:
         """Return the number of auxiliary test images."""
@@ -64,12 +83,14 @@ class AuxiliaryDataset(Dataset):
         """
         category, local_index = self.indices[index]
         item = self._load_item(category, local_index)
-        if not self.augmentation or torch.rand(()) >= 0.5:
+        if not self.augmentation:
             return item
-        grid = int(torch.randint(2, 4, ()))
         if torch.rand(()) < 0.5:
-            return self._mosaic(item, category, grid)
-        return self._crop(item, grid)
+            grid = int(torch.randint(2, 4, ()))
+            item = self._mosaic(item, category, grid) if torch.rand(()) < 0.5 else self._crop(item, grid)
+        image, mask = self._supervision(item)
+        image, mask = self.augmentations(tv_tensors.Image(image), tv_tensors.Mask(mask))
+        return ImageItem(image=image, gt_mask=mask, gt_label=item.gt_label)
 
     def _load_item(self, category: int, index: int) -> ImageItem:
         item = self.datasets[category][index]

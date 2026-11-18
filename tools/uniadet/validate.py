@@ -17,11 +17,13 @@ import statistics
 import time
 from collections.abc import Callable
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import onnxruntime as ort
 import openvino as ov
 import torch
+from lightning.pytorch import Callback
 from torch.utils.data import DataLoader
 from torchvision.transforms.v2 import Resize
 
@@ -38,6 +40,9 @@ from anomalib.metrics import AUROC
 from anomalib.models import UniADet
 
 from .data import AuxiliaryDataset, CalibrationData
+
+if TYPE_CHECKING:
+    from lightning.pytorch import LightningModule, Trainer
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +122,64 @@ def _prediction_arrays(prediction: ImageBatch) -> dict[str, np.ndarray]:
     }
 
 
+class _PredictionCapture(Callback):
+    """Capture raw Engine test outputs without replacing its inference lifecycle."""
+
+    def __init__(self) -> None:
+        self.predictions: list[dict[str, np.ndarray]] = []
+
+    def on_test_batch_end(
+        self,
+        trainer: "Trainer",
+        pl_module: "LightningModule",
+        outputs: ImageBatch,
+        batch: ImageBatch,
+        batch_idx: int,
+        dataloader_idx: int = 0,
+    ) -> None:
+        """Retain scores and maps for independent numerical comparison."""
+        del trainer, pl_module, batch, batch_idx, dataloader_idx
+        self.predictions.append(_prediction_arrays(outputs))
+
+
+def _engine_predictions(
+    model: UniADet,
+    batches: dict[int, torch.Tensor],
+    output: Path,
+) -> tuple[dict[int, dict[str, np.ndarray]], dict[int, dict[str, np.ndarray]]]:
+    """Collect independent Engine predict/test results after saving and restoring a local checkpoint."""
+    capture = _PredictionCapture()
+    engine = Engine(
+        accelerator="cpu",
+        devices=1,
+        logger=False,
+        callbacks=[ModelCheckpoint(save_top_k=0), capture],
+        enable_progress_bar=False,
+        default_root_dir=output,
+    )
+    images = batches[max(batches)]
+    samples = [ImageItem(image=image, gt_label=index > 0) for index, image in enumerate(images)]
+    loader = DataLoader(samples, batch_size=1, collate_fn=ImageBatch.collate)
+    engine.fit(model, val_dataloaders=loader)
+    checkpoint = output / "engine.ckpt"
+    engine.trainer.save_checkpoint(checkpoint)
+    predictions, test_predictions = {}, {}
+    for size in batches:
+        loader = DataLoader(samples[:size], batch_size=size, collate_fn=ImageBatch.collate)
+        result = engine.predict(model, dataloaders=loader, ckpt_path=checkpoint, return_predictions=True)
+        if not result:
+            msg = "Engine returned no predictions."
+            raise RuntimeError(msg)
+        predictions[size] = _prediction_arrays(result[0])
+        capture.predictions.clear()
+        engine.test(model, dataloaders=loader, ckpt_path=checkpoint)
+        if len(capture.predictions) != 1:
+            msg = "Engine.test did not return exactly one batch for numerical comparison."
+            raise RuntimeError(msg)
+        test_predictions[size] = capture.predictions[0]
+    return predictions, test_predictions
+
+
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--weights", type=Path, required=True)
@@ -166,6 +229,9 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO)
     torch.set_num_threads(4)
     manifest = json.loads((args.weights.parent / "training.json").read_text())
+    if manifest.get("recipe_version") != 2:
+        msg = "Retrain with corrected recipe version 2 before collecting final deployment measurements."
+        raise ValueError(msg)
     if manifest["source_dataset"] == args.target:
         msg = "Calibration source and target dataset must differ."
         raise ValueError(msg)
@@ -208,6 +274,7 @@ def main() -> None:
     report = {
         "backbone": manifest["backbone"],
         "head_sha256": manifest["head_sha256"],
+        "training_recipe_version": manifest["recipe_version"],
         "complete_training_recipe": manifest["complete_recipe"],
         "target": args.target,
         "category": args.category,
@@ -216,6 +283,10 @@ def main() -> None:
         "calibration_source": manifest["source_dataset"],
         "calibration_size": args.calibration_size,
         "quantized_max_drop": 0.01,
+        "activation_quantization": {
+            "model_type": "TRANSFORMER",
+            "floating_point_postprocessing": ["Interpolate", "Gaussian smoothing"],
+        },
         "timing_protocol": {
             "device": "CPU",
             "threads": 4,
@@ -254,30 +325,28 @@ def main() -> None:
             for size, batch in batches.items():
                 prediction = inferencer.predict(batch[0] if size == 1 else batch)
                 outputs[size] = _prediction_arrays(prediction)
+            file_start = time.perf_counter()
+            file_prediction = inferencer.predict(Path(target_data.samples.iloc[selected[0]].image_path))
+            report["results"]["torch_file"] = {
+                "duration_seconds": time.perf_counter() - file_start,
+                "batches": {
+                    1: compare_outputs(
+                        baselines[1],
+                        _prediction_arrays(file_prediction),
+                        TOLERANCES["torch_inferencer"],
+                    ),
+                },
+            }
             timing = _measure_latency(inferencer.predict, batches)
             del inferencer
         elif format_name == "engine":
-            engine = Engine(
-                accelerator="cpu",
-                devices=1,
-                logger=False,
-                callbacks=[ModelCheckpoint(save_top_k=0)],
-                enable_progress_bar=False,
-                default_root_dir=args.output,
-            )
-            samples = [ImageItem(image=image, gt_label=index > 0) for index, image in enumerate(images)]
-            loader = DataLoader(samples, batch_size=1, collate_fn=ImageBatch.collate)
-            engine.fit(model, val_dataloaders=loader)
-            checkpoint = args.output / "engine.ckpt"
-            engine.trainer.save_checkpoint(checkpoint)
-            for size in batches:
-                loader = DataLoader(samples[:size], batch_size=size, collate_fn=ImageBatch.collate)
-                predictions = engine.predict(model, dataloaders=loader, ckpt_path=checkpoint, return_predictions=True)
-                if not predictions:
-                    msg = "Engine returned no predictions."
-                    raise RuntimeError(msg)
-                prediction = predictions[0]
-                outputs[size] = _prediction_arrays(prediction)
+            outputs, test_predictions = _engine_predictions(model, batches, args.output)
+            report["results"]["engine_test"] = {
+                "batches": {
+                    size: compare_outputs(baselines[size], test_predictions[size], TOLERANCES["engine"])
+                    for size in batches
+                },
+            }
         elif format_name == "onnx":
             path = model.to_onnx(args.output / format_name, input_size=(model.image_size,) * 2, opset_version=18)
             options = ort.SessionOptions()

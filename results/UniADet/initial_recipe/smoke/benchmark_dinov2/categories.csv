@@ -1,0 +1,3 @@
+backbone,source_dataset,target_dataset,category,shots,seed,image_AUROC,image_AUPR,pixel_AUROC,pixel_AUPR
+dinov2,visa,mvtec,bottle,0,10,0.8357142806053162,0.9466162919998169,0.43154749274253845,0.04871150478720665
+dinov2,visa,mvtec,bottle,1,10,0.9928572177886963,0.9977327585220337,0.9866946935653687,0.8392257690429688

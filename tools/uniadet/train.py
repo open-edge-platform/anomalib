@@ -85,7 +85,7 @@ def main() -> None:
     parser.add_argument("--epochs", type=int, default=15)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument("--seed", type=int, default=1015)
+    parser.add_argument("--seed", type=int, default=10)
     parser.add_argument("--device", type=int, default=0)
     parser.add_argument("--max-steps", type=int, default=-1, help="Smoke-run limit; not a paper reproduction.")
     parser.add_argument("--resume", type=Path)
@@ -125,6 +125,7 @@ def main() -> None:
     detector.model.save_head(head_path)
     manifest = {
         "implementation": "independent-paper",
+        "recipe_version": 2,
         "source_dataset": args.dataset,
         "source_split": "test",
         "backbone": args.backbone,
@@ -137,9 +138,26 @@ def main() -> None:
         "seed": args.seed,
         "optimizer": {"name": "Adam", "lr": 0.001, "betas": [0.5, 0.999]},
         "caa": {"probability": 0.5, "grids": [2, 3], "mosaic_probability": 0.5},
+        "augmentation": {
+            "library": "torchvision",
+            "color_jitter": {"brightness": 0.4, "contrast": 0.4, "saturation": 0.4, "hue": 0.1, "probability": 0.5},
+            "rotate90_probability": 0.5,
+            "channel_shuffle_probability": 0.25,
+            "grayscale_probability": 0.25,
+            "horizontal_flip_probability": 0.5,
+            "vertical_flip_probability": 0.5,
+        },
         "temperature": detector.model.head.temperature,
+        "prototype_initialization_std": 0.02,
+        "loss": {
+            "focal_gamma": 2.0,
+            "focal_smoothing": 1e-5,
+            "dice_smoothing": 1.0,
+            "dice_denominator": "linear",
+            "resize_probabilities": True,
+        },
         "duration_seconds": time.perf_counter() - start,
-        "complete_recipe": args.epochs == 15 and args.batch_size == 16 and args.max_steps == -1,
+        "complete_recipe": args.epochs == 15 and args.batch_size == 16 and args.max_steps == -1 and args.seed == 10,
         "head_sha256": hashlib.sha256(head_path.read_bytes()).hexdigest(),
         "torch": torch.__version__,
         "timm": timm.__version__,

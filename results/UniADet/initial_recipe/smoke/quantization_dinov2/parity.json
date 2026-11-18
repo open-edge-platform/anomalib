@@ -1,0 +1,100 @@
+{
+  "backbone": "dinov2",
+  "head_sha256": "a6676d389d398445f40ae67a159809941eadb15577d74a141a8527cea1464f70",
+  "complete_training_recipe": false,
+  "target": "mvtec",
+  "category": "bottle",
+  "shots": 0,
+  "images": [
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/good/000.png",
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/broken_large/000.png",
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/broken_large/001.png"
+  ],
+  "calibration_source": "visa",
+  "calibration_size": 8,
+  "quantized_max_drop": 0.01,
+  "results": {
+    "int8": {
+      "duration_seconds": 46.47068233368918,
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.0003159046173095703,
+            "mean_absolute_error": 0.0003159046173095703,
+            "rmse": 0.0003159046173095703,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.00559157133102417,
+            "mean_absolute_error": 0.0013960222713649273,
+            "rmse": 0.0016609099693596363,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.0008451938629150391,
+            "mean_absolute_error": 0.0005348126287572086,
+            "rmse": 0.0005804303218610585,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.009282171726226807,
+            "mean_absolute_error": 0.001482514082454145,
+            "rmse": 0.0017771385610103607,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "int8_ptq": {
+      "duration_seconds": 93.46585325431079,
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.020653486251831055,
+            "mean_absolute_error": 0.020653486251831055,
+            "rmse": 0.020653486251831055,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.15179461240768433,
+            "mean_absolute_error": 0.04005452245473862,
+            "rmse": 0.04922199621796608,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": false
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.0310976505279541,
+            "mean_absolute_error": 0.02309040166437626,
+            "rmse": 0.02380884438753128,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.17885378003120422,
+            "mean_absolute_error": 0.04056438431143761,
+            "rmse": 0.05047507956624031,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": false
+          }
+        }
+      }
+    }
+  }
+}

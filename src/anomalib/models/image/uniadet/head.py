@@ -23,6 +23,8 @@ class MSDCSHead(nn.Module):
     """Multi-scale decoupled classification and segmentation prototypes.
 
     Each layer has separate normal/anomaly prototypes for image and patch tokens.
+    Prototypes start with standard deviation ``0.02``; their scale affects optimizer
+    updates even though cosine scoring normalizes them.
 
     Args:
         feature_dim (int): Token dimension.
@@ -39,8 +41,8 @@ class MSDCSHead(nn.Module):
             msg = "feature_dim, num_layers, and temperature must be positive."
             raise ValueError(msg)
         self.temperature = temperature
-        self.image_prototypes = nn.Parameter(torch.randn(num_layers, 2, feature_dim))
-        self.pixel_prototypes = nn.Parameter(torch.randn(num_layers, 2, feature_dim))
+        self.image_prototypes = nn.Parameter(torch.randn(num_layers, 2, feature_dim) * 0.02)
+        self.pixel_prototypes = nn.Parameter(torch.randn(num_layers, 2, feature_dim) * 0.02)
 
     def forward(self, features: HierarchicalFeatures, grid_size: int) -> UniADetLogits:
         """Compute independent cosine logits for every scale.

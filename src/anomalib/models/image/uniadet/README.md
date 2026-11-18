@@ -83,33 +83,30 @@ uv run python -m tools.uniadet.report \
   --output results/UniADet/comparison.csv
 ```
 
-The report helper rejects partial category/seed coverage, smoke-trained heads, duplicated rows, and nonfinite scores.
+The report helper rejects partial category/seed coverage, smoke-trained heads, obsolete training recipes,
+duplicated rows, and nonfinite scores.
 It averages categories within each seed before reporting seed mean/population standard deviation, and computes
 signed percentage-point gaps to the explicitly attributed paper Tables 2/5/10/11.
 
 **This is not yet a verified reproduction of the authors' executable implementation.** The paper specifies fusion
 weights of 0.5, whereas the released demo documentation gives different weights and source-side score recalibration.
 This implementation follows the paper equations. It uses torchvision/timm rather than the authors' vendored encoders
-and Albumentations pipeline. Temperature (0.07), prototype initialization, loss details, and augmentation sampling are
-explicit implementation choices; matching the published headline numbers is not asserted.
+and Albumentations pipeline. The corrected recipe uses temperature 0.07, Gaussian prototype standard deviation 0.02,
+training seed 10, focal exponent 2 with smoothing 1e-5, and linear-denominator two-class Dice with smoothing 1.
+These factual parameters were checked against the authors' published declarations; no upstream code was copied.
+Training also enables color jitter (brightness/contrast/saturation 0.4, hue 0.1, probability 0.5),
+right-angle rotation (0.5), channel shuffle/grayscale (0.25 each), and horizontal/vertical flips (0.5 each).
+Backbone implementations, augmentation sampling and score processing can still differ; matching headline numbers
+is not asserted.
 
 Full training/evaluation and real-backbone export measurements are being collected under `results/UniADet/`.
-Both DINOv2-R directions are complete, covering all 15 MVTec AD and 12 VisA categories and every default shot/seed setting.
-Selected macro category means are percentages:
-
-| Encoder  | Target   | Shots | Image AUROC | Pixel AUROC | Image AP | Pixel AP |
-| -------- | -------- | ----- | ----------- | ----------- | -------- | -------- |
-| DINOv2-R | MVTec AD | 0     | 89.70       | 91.09       | 94.44    | 42.24    |
-| DINOv2-R | MVTec AD | 4     | 96.05       | 96.62       | 97.96    | 54.71    |
-| DINOv2-R | VisA     | 0     | 87.61       | 95.35       | 90.67    | 28.60    |
-| DINOv2-R | VisA     | 4     | 95.16       | 97.56       | 96.40    | 36.33    |
-
-The paper reports image/pixel AUROC of 93.5/92.4 for zero-shot and 98.7/97.7 for four-shot in this direction.
-For VisA, the corresponding paper AUROC pairs are 91.3/95.9 and 96.9/98.6.
-These measured results are below the paper, particularly for pixel AP; they do not establish author-level reproduction.
-See [comparison.csv](/results/UniADet/comparison.csv) for every shot count, seed variability, attributed paper
-comparators, and signed gaps. CLIP and DINOv3 combinations are still running, not inferred from these rows.
-No paper numbers or smoke-run outputs are presented as measured reproduction results.
+All six auxiliary runs are being restarted from scratch with corrected **recipe version 2**.
+Initial-recipe measurements are archived under `results/UniADet/initial_recipe/`, with explicit deviations in
+[provenance.json](/results/UniADet/initial_recipe/provenance.json): prototype standard deviation 1 instead of 0.02,
+seed 1015 instead of 10, a different Dice/interpolation convention, and missing color/geometric transforms.
+Cosine normalization does not cancel the initialization scale's effect on Adam's angular updates.
+Those initial measurements must not be used as corrected-recipe or paper-reproduction results.
+No corrected-recipe benchmark numbers are claimed until the complete replacement sweeps finish.
 Real-IAD data support and benchmarks are reserved for a separate follow-up PR.
 
 ## Deployment
@@ -128,17 +125,20 @@ uv run python -m tools.uniadet.validate \
 ```
 
 This checks TorchInferencer, Engine, ONNX Runtime, and OpenVINO FP32/FP16/INT8/INT8_PTQ/INT8_ACQ for batches 1 and 3.
+It additionally checks a raw-resolution image path through TorchInferencer and both Engine predict/test APIs.
 `parity.json` records maximum/mean absolute error and RMSE for scores and maps. Tolerances are fixed before comparison:
 `1e-5` for Torch/Engine, `1e-4` for ONNX/FP32, `0.005` for FP16, and `0.05` for INT8 variants.
 Quantization is approximate, not bit-identical; conversion success alone does not establish accuracy.
 The same report records CPU latency with four threads, one warmup and three measured repetitions per batch size.
 These shared-host timings include in-model preprocessing/postprocessing, but exclude image decoding and compilation.
+The CPU checks request FP32 floating-point execution: FP16 denotes compressed stored weights, not a native FP16
+CPU-kernel benchmark. INT8 denotes weight-only compression; PTQ/ACQ also quantize activations.
 
 PTQ and ACQ use disjoint auxiliary-domain calibration and validation subsets (300 images each by default).
 ACQ uses image AUROC with maximum drop 0.01; metric state is reset between candidates. Both paths use NNCF's
 transformer-aware recipe, including SmoothQuant, rather than generic convolutional-network quantization.
-The fixed Gaussian smoothing
-filter remains floating point because quantizing it can alter shared score-fusion scales. This is not a fully integer
+Fixed map resizing and Gaussian smoothing remain floating point: calibrating these operations on the auxiliary domain
+can clip unseen-domain anomaly maps. This is not a fully integer
 graph. Final target-dataset accuracy still needs separate measurement.
 
 The legacy TorchInferencer requires `TRUST_REMOTE_CODE=1` for locally generated full-model exports. Never enable this
@@ -156,18 +156,10 @@ custom Meta license; see each publisher's model card before use or redistributio
 Source/head-weight licensing clarification remains a gate before an upstream PR.
 
 MVTec AD is CC BY-NC-SA 4.0; VisA's dataset license is CC BY 4.0. Training on public datasets does not remove their
-use restrictions. No dataset images or checkpoints are committed as part of this integration.
+use restrictions. No raw dataset files or checkpoints are committed. Documentation panels are separately attributed
+derived VisA assets.
 
 ## Sample results
 
-The following VisA examples use the completed MVTec-trained DINOv2-R head with four normal references
-(seed 10). Each panel shows the input, ground-truth mask, and raw anomaly-map overlay on a fixed 0-to-1 scale.
-They are qualitative examples, not evidence that the paper's accuracy is reproduced.
-Other candidates with distracting false-positive regions were excluded; only two validated examples are published.
-Run provenance is in [sample_images.json](/results/UniADet/sample_images.json).
-
-![VisA chewing-gum anomaly](/docs/source/images/uniadet/results/0.png)
-![VisA PCB missing-pin anomaly](/docs/source/images/uniadet/results/1.png)
-
-Photographs/masks: VisA, Zou et al. (2022), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/);
-resized and overlaid with model outputs. See the [asset notice](/docs/source/images/uniadet/results/LICENSE).
+Sample panels will be regenerated from completed corrected-recipe checkpoints and visually inspected before use.
+Earlier panels came from the initial recipe; their provenance remains archived and they are not current-model examples.

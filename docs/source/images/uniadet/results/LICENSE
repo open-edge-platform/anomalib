@@ -13,4 +13,4 @@ Changes: resized photographs and masks, added independently computed UniADet
 anomaly-map overlays, labels, and color bars. These composite panels are
 distributed under CC BY 4.0, not anomalib's source-code Apache-2.0 license.
 
-Run provenance and numerical checks: results/UniADet/sample_images.json
+Initial-recipe provenance: results/UniADet/initial_recipe/sample_images.json

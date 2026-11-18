@@ -3,6 +3,7 @@
 
 """Offline tests for UniADet prototype learning, reference memory, and checkpoints."""
 
+import math
 from pathlib import Path
 
 import pytest
@@ -11,7 +12,7 @@ import torch
 from anomalib import LearningType
 from anomalib.models import UniADet, get_model
 from anomalib.models.image.uniadet.backbones import HierarchicalFeatures, UniADetBackbone
-from anomalib.models.image.uniadet.head import MSDCSHead
+from anomalib.models.image.uniadet.head import MSDCSHead, UniADetLogits
 from anomalib.models.image.uniadet.loss import UniADetLoss
 from anomalib.models.image.uniadet.torch_model import UniADetModel
 
@@ -43,6 +44,36 @@ def test_auxiliary_loss_trains_both_heads() -> None:
     assert model.head.image_prototypes.grad.abs().sum() > 0
     assert model.head.pixel_prototypes.grad.abs().sum() > 0
     assert all(parameter.grad is None for parameter in model.backbone.parameters())
+
+
+def test_head_learns_supervised_prototypes() -> None:
+    """The configured Adam steps must rotate both prototype tasks enough to learn auxiliary classes."""
+    torch.manual_seed(7)
+    head = MSDCSHead(64, 1)
+    tokens = torch.eye(64)[:2]
+    features = HierarchicalFeatures([tokens], [tokens.unsqueeze(1)])
+    labels = torch.tensor([0, 1])
+    masks = labels.reshape(2, 1, 1)
+    loss_function = UniADetLoss()
+    optimizer = torch.optim.Adam(head.parameters(), lr=0.001, betas=(0.5, 0.999))
+    for _ in range(25):
+        optimizer.zero_grad()
+        loss = loss_function(head(features, 1), labels, masks)
+        loss.backward()
+        optimizer.step()
+    assert loss_function(head(features, 1), labels, masks) < 0.05
+
+
+def test_auxiliary_loss_uses_linear_soft_dice() -> None:
+    """A two-class probability example distinguishes linear Dice from the squared-denominator variant."""
+    probabilities = torch.tensor([[0.75, 0.25], [0.25, 0.75]])
+    logits = probabilities.log()
+    prediction = UniADetLogits([logits], [logits.reshape(2, 2, 1, 1)])
+    labels = torch.tensor([0, 1])
+    actual = UniADetLoss()(prediction, labels, labels.reshape(2, 1, 1))
+    smoothed_probability = 0.750005
+    expected = -math.log(0.75) - (1 - smoothed_probability) ** 2 * math.log(smoothed_probability) + 16 / 55
+    assert float(actual) == pytest.approx(expected, abs=1e-6)
 
 
 @pytest.mark.usefixtures("tiny_backbone")

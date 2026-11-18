@@ -48,6 +48,9 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO)
     torch.set_num_threads(4)
     manifest = json.loads((args.weights.parent / "training.json").read_text())
+    if manifest.get("recipe_version") != 2:
+        msg = "Retrain with corrected recipe version 2 before running a paper-protocol benchmark."
+        raise ValueError(msg)
     if manifest["source_dataset"] == args.dataset:
         msg = "Auxiliary and target datasets must differ; same-dataset evaluation would leak test labels."
         raise ValueError(msg)

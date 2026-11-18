@@ -1,0 +1,223 @@
+{
+  "backbone": "clip",
+  "head_sha256": "a9a3c2bf09e1b75451677a028fe3a10b63f2131426f844ede4814e95a0d309b6",
+  "complete_training_recipe": false,
+  "target": "mvtec",
+  "category": "bottle",
+  "shots": 4,
+  "images": [
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/good/000.png",
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/broken_large/000.png",
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/broken_large/001.png"
+  ],
+  "calibration_source": "visa",
+  "calibration_size": 8,
+  "quantized_max_drop": 0.01,
+  "results": {
+    "torch_inferencer": {
+      "duration_seconds": 19.456268166191876,
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "engine": {
+      "duration_seconds": 34.198736981954426,
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "onnx": {
+      "duration_seconds": 68.6424988550134,
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 7.152557373046875e-07,
+            "mean_absolute_error": 7.152557373046875e-07,
+            "rmse": 7.152557373046875e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.00011470913887023926,
+            "mean_absolute_error": 1.0576519571259269e-06,
+            "rmse": 4.012609224446351e-06,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": false
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 2.980232238769531e-07,
+            "mean_absolute_error": 1.1920928955078125e-07,
+            "rmse": 1.7547132813433564e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 6.0677528381347656e-05,
+            "mean_absolute_error": 4.2275519263057504e-07,
+            "rmse": 1.6973567653622013e-06,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "fp32": {
+      "duration_seconds": 46.19968841178343,
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 5.960464477539063e-08,
+            "mean_absolute_error": 5.960464477539063e-08,
+            "rmse": 5.960464477539063e-08,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 2.1755695343017578e-05,
+            "mean_absolute_error": 2.7861236162607383e-07,
+            "rmse": 6.175123417051509e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 1.1920928955078125e-07,
+            "mean_absolute_error": 5.960464477539063e-08,
+            "rmse": 7.694926296153426e-08,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 2.1755695343017578e-05,
+            "mean_absolute_error": 2.6208621761725226e-07,
+            "rmse": 5.865085199729947e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "fp16": {
+      "duration_seconds": 52.7007869631052,
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 4.1604042053222656e-05,
+            "mean_absolute_error": 4.1604042053222656e-05,
+            "rmse": 4.1604042053222656e-05,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0038038790225982666,
+            "mean_absolute_error": 6.683001993224025e-05,
+            "rmse": 0.0001565037528052926,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 4.380941390991211e-05,
+            "mean_absolute_error": 3.594160079956055e-05,
+            "rmse": 3.7204074033070356e-05,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0038038790225982666,
+            "mean_absolute_error": 6.51139416731894e-05,
+            "rmse": 0.00013711917563341558,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    }
+  }
+}

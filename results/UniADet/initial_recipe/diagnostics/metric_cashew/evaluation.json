@@ -1,0 +1,108 @@
+{
+  "implementation": "independent-paper",
+  "training": {
+    "implementation": "independent-paper",
+    "source_dataset": "mvtec",
+    "source_split": "test",
+    "backbone": "dinov2",
+    "layers": [
+      12,
+      15,
+      18,
+      21,
+      24
+    ],
+    "image_size": 518,
+    "epochs": 15,
+    "completed_steps": 1620,
+    "samples": 1725,
+    "batch_size": 16,
+    "seed": 1015,
+    "optimizer": {
+      "name": "Adam",
+      "lr": 0.001,
+      "betas": [
+        0.5,
+        0.999
+      ]
+    },
+    "caa": {
+      "probability": 0.5,
+      "grids": [
+        2,
+        3
+      ],
+      "mosaic_probability": 0.5
+    },
+    "temperature": 0.07,
+    "duration_seconds": 2767.782561978791,
+    "complete_recipe": true,
+    "head_sha256": "4df6622b726fb56077e5e8b17a551581145ea1d14ad13c31d50469577813b0d6",
+    "torch": "2.14.0+cu130",
+    "timm": "1.0.29",
+    "lightning": "2.6.6",
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "peak_gpu_bytes": 3188972032
+  },
+  "target_dataset": "visa",
+  "categories": [
+    "cashew"
+  ],
+  "shots": [
+    0,
+    1,
+    2,
+    4
+  ],
+  "seeds": [
+    10,
+    20,
+    30
+  ],
+  "duration_seconds": 108.1301574963145,
+  "pixel_resolution": 256,
+  "few_shot_weight": 0.5,
+  "image_score_weight": 0.5,
+  "complete": true,
+  "references": {
+    "cashew/1/10": [
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/486.JPG"
+    ],
+    "cashew/1/20": [
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/478.JPG"
+    ],
+    "cashew/1/30": [
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/161.JPG"
+    ],
+    "cashew/2/10": [
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/486.JPG",
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/158.JPG"
+    ],
+    "cashew/2/20": [
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/478.JPG",
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/444.JPG"
+    ],
+    "cashew/2/30": [
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/161.JPG",
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/452.JPG"
+    ],
+    "cashew/4/10": [
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/486.JPG",
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/158.JPG",
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/251.JPG",
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/343.JPG"
+    ],
+    "cashew/4/20": [
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/478.JPG",
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/444.JPG",
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/020.JPG",
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/283.JPG"
+    ],
+    "cashew/4/30": [
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/161.JPG",
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/452.JPG",
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/191.JPG",
+      "/home/devuser/workspace/code/Anomalib/anomalib/datasets/visa/visa_pytorch/cashew/train/good/353.JPG"
+    ]
+  }
+}
