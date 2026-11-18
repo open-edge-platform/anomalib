@@ -88,7 +88,7 @@ duplicated rows, and nonfinite scores.
 It averages categories within each seed before reporting seed mean/population standard deviation, and computes
 signed percentage-point gaps to the explicitly attributed paper Tables 2/5/10/11.
 
-**This is not yet a verified reproduction of the authors' executable implementation.** The paper specifies fusion
+**This independent implementation does not reproduce the paper's overall headline accuracy.** The paper specifies fusion
 weights of 0.5, whereas the released demo documentation gives different weights and source-side score recalibration.
 This implementation follows the paper equations. It uses torchvision/timm rather than the authors' vendored encoders
 and Albumentations pipeline. The corrected recipe uses temperature 0.07, Gaussian prototype standard deviation 0.02,
@@ -99,14 +99,15 @@ right-angle rotation (0.5), channel shuffle/grayscale (0.25 each), and horizonta
 Backbone implementations, augmentation sampling and score processing can still differ; matching headline numbers
 is not asserted.
 
-Full training/evaluation and real-backbone export measurements are being collected under `results/UniADet/`.
-Replacement runs train from scratch with corrected **recipe version 2**.
+All six full auxiliary runs and cross-dataset evaluations are complete under `results/UniADet/`.
+Remaining activation-export measurements are still being collected.
+Every replacement head was trained from scratch with corrected **recipe version 2**.
 Initial-recipe measurements are archived under `results/UniADet/initial_recipe/`, with explicit deviations in
 [provenance.json](/results/UniADet/initial_recipe/provenance.json): prototype standard deviation 1 instead of 0.02,
 seed 1015 instead of 10, a different Dice/interpolation convention, and missing color/geometric transforms.
 Cosine normalization does not cancel the initialization scale's effect on Adam's angular updates.
 Those initial measurements must not be used as corrected-recipe or paper-reproduction results.
-Both corrected CLIP and DINOv2-R directions are complete, covering all 15 MVTec AD and 12 VisA categories
+Both corrected directions for all three encoders are complete, covering all 15 MVTec AD and 12 VisA categories
 and every default shot/seed setting.
 Selected macro category means are percentages:
 
@@ -120,13 +121,51 @@ Selected macro category means are percentages:
 | DINOv2-R | MVTec AD | 4     | 94.73       | 97.09       | 97.70    | 55.93    |
 | DINOv2-R | VisA     | 0     | 89.08       | 95.86       | 91.36    | 31.87    |
 | DINOv2-R | VisA     | 4     | 94.41       | 97.81       | 95.94    | 37.12    |
+| DINOv3   | MVTec AD | 0     | 91.75       | 91.62       | 95.79    | 49.85    |
+| DINOv3   | MVTec AD | 4     | 94.28       | 97.30       | 97.54    | 59.47    |
+| DINOv3   | VisA     | 0     | 87.80       | 96.34       | 90.12    | 32.65    |
+| DINOv3   | VisA     | 4     | 93.45       | 97.79       | 94.75    | 37.32    |
 
 Some zero-shot VisA metrics match or exceed the paper: CLIP image AUROC is 88.04 versus 88.0.
 Other gaps remain substantial: four-shot MVTec image AUROC is 94.25/94.73 for CLIP/DINOv2-R,
 versus the paper's 97.7/98.7. Reproducing its overall headline accuracy is not claimed.
-All shot counts, reference-seed variability and attributed paper gaps are in
-[comparison.csv](/results/UniADet/comparison.csv). Other corrected sweeps are still running, not inferred from these rows.
+All 96 metric/shot/dataset/encoder comparisons, reference-seed variability and attributed paper gaps are in
+[comparison.csv](/results/UniADet/comparison.csv). No partial category or seed coverage is presented as complete.
 Real-IAD data support and benchmarks are reserved for a separate follow-up PR.
+
+### Training resources
+
+Each complete 15-epoch FP32 run uses one RTX 3090 and batch size 16. One auxiliary head covers all target categories;
+these are whole-run times, not per-category training. Runs share a development host, so this is not a hardware-matched
+comparison with the authors' training timings. Peak memory means PyTorch allocated memory, not total device usage.
+
+| Encoder  | VisA training (min) | MVTec training (min) | Peak allocated GPU (GiB) |
+| -------- | ------------------- | -------------------- | ------------------------ |
+| CLIP     | 42.29               | 45.42                | 2.890                    |
+| DINOv2-R | 40.95               | 46.34                | 2.810                    |
+| DINOv3   | 31.86               | 31.76                | 2.575                    |
+
+Exact durations, step counts, sample counts, head hashes and hardware are in
+[training_summary.csv](/results/UniADet/training_summary.csv) and the six source training manifests.
+
+### GPU inference
+
+FP32 inference on one RTX 3090, without autocast, compilation or TF32, uses five warmups and 30 synchronized
+CUDA-event repetitions. Inputs are already resized to the encoder resolution. Timings include model preprocessing,
+the encoder, scoring and map postprocessing, but exclude image decoding, initial CPU resizing and checkpoint loading.
+Task-owned GPU training and category evaluation had finished; the development host remains shared.
+
+| Encoder  | Shots | Batch 1 (ms) | Batch 3 total (ms) | Batch 3 images/s |
+| -------- | ----- | ------------ | ------------------ | ---------------- |
+| CLIP     | 0     | 81.97        | 218.16             | 13.75            |
+| CLIP     | 4     | 85.33        | 227.96             | 13.16            |
+| DINOv2-R | 0     | 78.04        | 209.10             | 14.35            |
+| DINOv2-R | 4     | 82.83        | 223.25             | 13.44            |
+| DINOv3   | 0     | 61.84        | 162.14             | 18.50            |
+| DINOv3   | 4     | 64.67        | 169.18             | 17.73            |
+
+Values are median batch latencies. Full protocol, head hashes and memory measurements are in
+[gpu_inference.json](/results/UniADet/gpu_inference.json). These are not end-to-end file-serving latencies.
 
 ## Deployment
 
@@ -145,13 +184,19 @@ uv run python -m tools.uniadet.validate \
 
 This checks TorchInferencer, Engine, ONNX Runtime, and OpenVINO FP32/FP16/INT8/INT8_PTQ/INT8_ACQ for batches 1 and 3.
 It additionally checks a raw-resolution image path through TorchInferencer and both Engine predict/test APIs.
-Corrected CLIP and DINOv2-R zero-/four-shot file/tensor Torch, Engine predict/test, ONNX, FP32, FP16 and weight-only
-INT8 checks pass. DINOv3 and activation PTQ/ACQ measurements remain in progress.
+Corrected CLIP, DINOv2-R and DINOv3 zero-/four-shot file/tensor Torch, Engine predict/test, ONNX, FP32, FP16 and
+weight-only INT8 checks pass. Activation PTQ/ACQ measurements remain in progress.
+Separate real CUDA checks also pass file/tensor TorchInferencer and checkpoint-restored Engine predict/test for
+all six encoder/shot cases and batches 1/3. Same-device API tolerance is `1e-5`; CPU/CUDA FP32 tolerance is `1e-4`.
+The largest observed CPU/CUDA map difference is `3.61e-5`. See
+[gpu_inference_api.json](/results/UniADet/gpu_inference_api.json).
 `parity.json` records maximum/mean absolute error and RMSE for scores and maps. Tolerances are fixed before comparison:
 `1e-5` for Torch/Engine, `1e-4` for ONNX/FP32, `0.005` for FP16, and `0.05` for INT8 variants.
 Quantization is approximate, not bit-identical; conversion success alone does not establish accuracy.
 The same report records CPU latency with four threads, one warmup and three measured repetitions per batch size.
 These shared-host timings include in-model preprocessing/postprocessing, but exclude image decoding and compilation.
+Conversion-time CPU measurements were collected under concurrent calibration load and are not a fair speed ranking.
+Controlled CPU timing is scheduled separately after the task-owned activation jobs finish.
 The CPU checks request FP32 floating-point execution: FP16 denotes compressed stored weights, not a native FP16
 CPU-kernel benchmark. INT8 denotes weight-only compression; PTQ/ACQ also quantize activations.
 

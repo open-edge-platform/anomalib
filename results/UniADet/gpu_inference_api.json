@@ -1,0 +1,1071 @@
+{
+  "complete": true,
+  "device": "NVIDIA GeForce RTX 3090",
+  "precision": "FP32, no autocast, no torch.compile",
+  "same_device_api_tolerance": 1e-05,
+  "cross_device_fp32_tolerance": 0.0001,
+  "cases": {
+    "clip_mvtec_0": {
+      "head_sha256": "c3eb37752561a4e0d41275de1f3246cc4decad4737386586767530b8c0362438",
+      "results": {
+        "cpu_cuda_fp32": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 5.364418029785156e-07,
+              "mean_absolute_error": 5.364418029785156e-07,
+              "rmse": 5.364418029785156e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 1.5497207641601562e-06,
+              "mean_absolute_error": 2.9496364462033853e-08,
+              "rmse": 8.955191077575364e-08,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 8.940696716308594e-07,
+              "mean_absolute_error": 6.556510925292969e-07,
+              "rmse": 7.044116046017734e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 4.1425228118896484e-06,
+              "mean_absolute_error": 6.260736995500338e-08,
+              "rmse": 2.0801891764676839e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "torch_inferencer": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "torch_file": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "engine_predict": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "engine_test": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        }
+      }
+    },
+    "clip_mvtec_4": {
+      "head_sha256": "c3eb37752561a4e0d41275de1f3246cc4decad4737386586767530b8c0362438",
+      "results": {
+        "cpu_cuda_fp32": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 1.1920928955078125e-07,
+              "mean_absolute_error": 1.1920928955078125e-07,
+              "rmse": 1.1920928955078125e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 3.0454248189926147e-05,
+              "mean_absolute_error": 1.9157144492965017e-07,
+              "rmse": 9.606977755538537e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 2.384185791015625e-07,
+              "mean_absolute_error": 1.986821445143505e-07,
+              "rmse": 2.0065913020061998e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 3.6075711250305176e-05,
+              "mean_absolute_error": 1.7277973540785752e-07,
+              "rmse": 6.801179210924602e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "torch_inferencer": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "torch_file": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "engine_predict": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "engine_test": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        }
+      }
+    },
+    "dinov2_mvtec_0": {
+      "head_sha256": "5bcb0ee1f7d0f9a6e5813153c81e653347cdf80929b2ae5032b53548c7529d08",
+      "results": {
+        "cpu_cuda_fp32": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 1.1920928955078125e-07,
+              "mean_absolute_error": 1.1920928955078125e-07,
+              "rmse": 1.1920928955078125e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 1.2069940567016602e-06,
+              "mean_absolute_error": 3.6688014404262503e-08,
+              "rmse": 8.092587933106188e-08,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 3.5762786865234375e-07,
+              "mean_absolute_error": 3.178914482759865e-07,
+              "rmse": 3.1913077691569924e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 2.4437904357910156e-06,
+              "mean_absolute_error": 6.79431479966297e-08,
+              "rmse": 1.7652953943070315e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "torch_inferencer": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "torch_file": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "engine_predict": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "engine_test": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        }
+      }
+    },
+    "dinov2_mvtec_4": {
+      "head_sha256": "5bcb0ee1f7d0f9a6e5813153c81e653347cdf80929b2ae5032b53548c7529d08",
+      "results": {
+        "cpu_cuda_fp32": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 1.4901161193847656e-07,
+              "mean_absolute_error": 1.4901161193847656e-07,
+              "rmse": 1.4901161193847656e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 1.7043203115463257e-06,
+              "mean_absolute_error": 7.484577935201742e-08,
+              "rmse": 1.4000013948134438e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 3.8743019104003906e-07,
+              "mean_absolute_error": 2.4835267709022446e-07,
+              "rmse": 2.671148422450642e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 2.3506581783294678e-06,
+              "mean_absolute_error": 1.0147633133783529e-07,
+              "rmse": 1.8172121940551733e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "torch_inferencer": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "torch_file": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "engine_predict": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "engine_test": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        }
+      }
+    },
+    "dinov3_mvtec_0": {
+      "head_sha256": "45f99be67668acfb182eb91243acf937d7c3b50689e5562736d86f6abe2eb2d9",
+      "results": {
+        "cpu_cuda_fp32": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 2.980232238769531e-07,
+              "mean_absolute_error": 2.980232238769531e-07,
+              "rmse": 2.980232238769531e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 6.854534149169922e-07,
+              "mean_absolute_error": 1.6667517144242083e-08,
+              "rmse": 4.385408303164695e-08,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 4.76837158203125e-07,
+              "mean_absolute_error": 3.2782554626464844e-07,
+              "rmse": 3.6943663417332573e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 2.086162567138672e-06,
+              "mean_absolute_error": 4.685270837967437e-08,
+              "rmse": 1.4769051404073252e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "torch_inferencer": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "torch_file": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "engine_predict": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "engine_test": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        }
+      }
+    },
+    "dinov3_mvtec_4": {
+      "head_sha256": "45f99be67668acfb182eb91243acf937d7c3b50689e5562736d86f6abe2eb2d9",
+      "results": {
+        "cpu_cuda_fp32": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 2.2351741790771484e-07,
+              "mean_absolute_error": 2.2351741790771484e-07,
+              "rmse": 2.2351741790771484e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 1.3373792171478271e-06,
+              "mean_absolute_error": 5.921666357266986e-08,
+              "rmse": 1.0142881734509501e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 4.172325134277344e-07,
+              "mean_absolute_error": 3.079573218656151e-07,
+              "rmse": 3.287273955265846e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 1.296401023864746e-06,
+              "mean_absolute_error": 7.441533256269395e-08,
+              "rmse": 1.310127117903903e-07,
+              "tolerance": 0.0001,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "torch_inferencer": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "torch_file": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "engine_predict": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        },
+        "engine_test": {
+          "1": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          },
+          "3": {
+            "pred_score": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            },
+            "anomaly_map": {
+              "max_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "rmse": 0.0,
+              "tolerance": 1e-05,
+              "finite": true,
+              "passed": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

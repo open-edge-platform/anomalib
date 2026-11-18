@@ -117,8 +117,8 @@ def _prediction_arrays(prediction: ImageBatch) -> dict[str, np.ndarray]:
         msg = "Inference returned no scores or maps."
         raise RuntimeError(msg)
     return {
-        "pred_score": prediction.pred_score.detach().numpy(),
-        "anomaly_map": prediction.anomaly_map.detach().unsqueeze(1).numpy(),
+        "pred_score": prediction.pred_score.detach().cpu().numpy(),
+        "anomaly_map": prediction.anomaly_map.detach().cpu().unsqueeze(1).numpy(),
     }
 
 
