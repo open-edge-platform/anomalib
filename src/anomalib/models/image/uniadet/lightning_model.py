@@ -218,7 +218,7 @@ class UniADet(AnomalibModule):
         task: TaskType | None = None,
         max_drop: float = 0.01,
     ) -> "OVModel":
-        """Quantize learned computation while keeping fixed Gaussian smoothing in floating point."""
+        """Use transformer-aware quantization and keep fixed Gaussian smoothing in floating point."""
         if compression_type not in {CompressionType.INT8_PTQ, CompressionType.INT8_ACQ}:
             return super()._compress_ov_model(model, compression_type, datamodule, metric, task, max_drop)
         import nncf
@@ -234,7 +234,12 @@ class UniADet(AnomalibModule):
         ]
         ignored_scope = nncf.IgnoredScope(names=smoothing)
         if compression_type == CompressionType.INT8_PTQ:
-            return self._post_training_quantization_ov(model, datamodule, ignored_scope=ignored_scope)
+            return self._post_training_quantization_ov(
+                model,
+                datamodule,
+                ignored_scope=ignored_scope,
+                model_type=nncf.ModelType.TRANSFORMER,
+            )
         return self._accuracy_control_quantization_ov(
             model,
             datamodule,
@@ -242,4 +247,5 @@ class UniADet(AnomalibModule):
             task,
             max_drop,
             ignored_scope=ignored_scope,
+            model_type=nncf.ModelType.TRANSFORMER,
         )

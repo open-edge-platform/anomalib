@@ -10,6 +10,7 @@ import pytest
 import torch
 from torch.utils.data import DataLoader
 
+from anomalib.callbacks import ModelCheckpoint
 from anomalib.data import ImageBatch, ImageItem
 from anomalib.deploy import TorchInferencer
 from anomalib.engine import Engine
@@ -33,6 +34,7 @@ def test_engine_torch_and_checkpoint(tmp_path: Path, monkeypatch: pytest.MonkeyP
         accelerator="cpu",
         default_root_dir=tmp_path,
         logger=False,
+        callbacks=[ModelCheckpoint(save_top_k=0)],
         enable_progress_bar=False,
     )
     loader = DataLoader(
@@ -41,6 +43,8 @@ def test_engine_torch_and_checkpoint(tmp_path: Path, monkeypatch: pytest.MonkeyP
         collate_fn=ImageBatch.collate,
     )
     engine.fit(model, val_dataloaders=loader)
+    assert len(engine.trainer.checkpoint_callbacks) == 1
+    assert not list(tmp_path.rglob("*.ckpt"))
     checkpoint = tmp_path / "model.ckpt"
     engine.trainer.save_checkpoint(checkpoint)
     predictions = engine.predict(model, dataloaders=loader, return_predictions=True, ckpt_path=checkpoint)

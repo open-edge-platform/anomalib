@@ -22,11 +22,11 @@ import numpy as np
 import onnxruntime as ort
 import openvino as ov
 import torch
-from lightning.pytorch.callbacks import ModelCheckpoint
 from torch.utils.data import DataLoader
 from torchvision.transforms.v2 import Resize
 
 from anomalib import TaskType
+from anomalib.callbacks import ModelCheckpoint
 from anomalib.data import ImageBatch, ImageItem
 from anomalib.data.datasets.image.mvtecad import CATEGORIES as MVTEC_CATEGORIES
 from anomalib.data.datasets.image.mvtecad import MVTecADDataset

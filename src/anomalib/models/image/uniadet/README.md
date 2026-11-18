@@ -94,6 +94,18 @@ and Albumentations pipeline. Temperature (0.07), prototype initialization, loss 
 explicit implementation choices; matching the published headline numbers is not asserted.
 
 Full training/evaluation and real-backbone export measurements are being collected under `results/UniADet/`.
+The completed DINOv2-R VisA-to-MVTec run covers all 15 target categories and every default shot/seed setting.
+Selected macro category means are percentages:
+
+| Encoder  | Target   | Shots | Image AUROC | Pixel AUROC | Image AP | Pixel AP |
+| -------- | -------- | ----- | ----------- | ----------- | -------- | -------- |
+| DINOv2-R | MVTec AD | 0     | 89.70       | 91.09       | 94.44    | 42.24    |
+| DINOv2-R | MVTec AD | 4     | 96.05       | 96.62       | 97.96    | 54.71    |
+
+The paper reports image/pixel AUROC of 93.5/92.4 for zero-shot and 98.7/97.7 for four-shot in this direction.
+These measured results are below the paper, particularly for pixel AP; they do not establish author-level reproduction.
+See [comparison.csv](/results/UniADet/comparison.csv) for every shot count, seed variability, attributed paper
+comparators, and signed gaps. Other encoder/dataset combinations are still running, not inferred from these rows.
 No paper numbers or smoke-run outputs are presented as measured reproduction results.
 Real-IAD data support and benchmarks are reserved for a separate follow-up PR.
 
@@ -120,7 +132,9 @@ The same report records CPU latency with four threads, one warmup and three meas
 These shared-host timings include in-model preprocessing/postprocessing, but exclude image decoding and compilation.
 
 PTQ and ACQ use disjoint auxiliary-domain calibration and validation subsets (300 images each by default).
-ACQ uses image AUROC with maximum drop 0.01; metric state is reset between candidates. The fixed Gaussian smoothing
+ACQ uses image AUROC with maximum drop 0.01; metric state is reset between candidates. Both paths use NNCF's
+transformer-aware recipe, including SmoothQuant, rather than generic convolutional-network quantization.
+The fixed Gaussian smoothing
 filter remains floating point because quantizing it can alter shared score-fusion scales. This is not a fully integer
 graph. Final target-dataset accuracy still needs separate measurement.
 

@@ -70,7 +70,7 @@ if TYPE_CHECKING:
     from anomalib import TaskType
 
     if module_available("nncf"):
-        from nncf import IgnoredScope
+        from nncf import IgnoredScope, ModelType
 
     if module_available("openvino"):
         from openvino import CompiledModel
@@ -363,6 +363,7 @@ class ExportMixin:
         model: CompiledModel,
         datamodule: AnomalibDataModule | None = None,
         ignored_scope: IgnoredScope | None = None,
+        model_type: ModelType | None = None,
     ) -> CompiledModel:
         """Apply post-training quantization to OpenVINO model.
 
@@ -371,6 +372,7 @@ class ExportMixin:
             datamodule (AnomalibDataModule | None): DataModule for calibration.
                 Must contain at least 300 images. Defaults to ``None``.
             ignored_scope (IgnoredScope | None): Operations to keep in floating point.
+            model_type (ModelType | None): Architecture-specific NNCF quantization recipe.
 
         Returns:
             CompiledModel: Quantized OpenVINO model.
@@ -397,7 +399,7 @@ class ExportMixin:
             )
 
         calibration_dataset = nncf.Dataset(dataloader, lambda x: x["image"])
-        return nncf.quantize(model, calibration_dataset, ignored_scope=ignored_scope)
+        return nncf.quantize(model, calibration_dataset, ignored_scope=ignored_scope, model_type=model_type)
 
     @staticmethod
     def _accuracy_control_quantization_ov(
@@ -407,6 +409,7 @@ class ExportMixin:
         task: TaskType | None = None,
         max_drop: float = 0.01,
         ignored_scope: IgnoredScope | None = None,
+        model_type: ModelType | None = None,
     ) -> CompiledModel:
         """Apply accuracy-aware quantization to OpenVINO model.
 
@@ -425,6 +428,7 @@ class ExportMixin:
                 Value should be between 0 and 1 (e.g., 0.01 means 1% drop is acceptable).
                 Defaults to ``0.01``.
             ignored_scope (IgnoredScope | None): Operations to keep in floating point.
+            model_type (ModelType | None): Architecture-specific NNCF quantization recipe.
 
         Returns:
             CompiledModel: Quantized OpenVINO model.
@@ -502,4 +506,5 @@ class ExportMixin:
             val_fn,
             max_drop=max_drop,
             ignored_scope=ignored_scope,
+            model_type=model_type,
         )
