@@ -1,0 +1,46 @@
+{
+  "complete": false,
+  "metric": "auxiliary-domain aggregate image AUROC",
+  "maximum_absolute_drop": 0.01,
+  "cases": {
+    "clip_mvtec_0": {
+      "head_sha256": "c3eb37752561a4e0d41275de1f3246cc4decad4737386586767530b8c0362438",
+      "validation_images": 300,
+      "calibration_source": "visa",
+      "initial_auroc": 0.9350597262382507,
+      "initial_quantized_auroc": 0.9304243326187134,
+      "initial_absolute_drop": 0.0046353936195373535,
+      "native_log_events": [
+        "INFO:nncf:Metric of initial model: 0.9350597262382507",
+        "INFO:nncf:Metric of quantized model: 0.9304243326187134",
+        "INFO:nncf:Accuracy drop: 0.0046353936195373535 (absolute)"
+      ]
+    },
+    "dinov2_mvtec_0": {
+      "head_sha256": "5bcb0ee1f7d0f9a6e5813153c81e653347cdf80929b2ae5032b53548c7529d08",
+      "validation_images": 300,
+      "calibration_source": "visa",
+      "initial_auroc": 0.9283740520477295,
+      "initial_quantized_auroc": 0.9210198521614075,
+      "initial_absolute_drop": 0.0073541998863220215,
+      "native_log_events": [
+        "INFO:nncf:Metric of initial model: 0.9283740520477295",
+        "INFO:nncf:Metric of quantized model: 0.9210198521614075",
+        "INFO:nncf:Accuracy drop: 0.0073541998863220215 (absolute)"
+      ]
+    },
+    "dinov3_mvtec_0": {
+      "head_sha256": "45f99be67668acfb182eb91243acf937d7c3b50689e5562736d86f6abe2eb2d9",
+      "validation_images": 300,
+      "calibration_source": "visa",
+      "initial_auroc": 0.9344803094863892,
+      "initial_quantized_auroc": 0.9339008331298828,
+      "initial_absolute_drop": 0.0005794763565063477,
+      "native_log_events": [
+        "INFO:nncf:Metric of initial model: 0.9344803094863892",
+        "INFO:nncf:Metric of quantized model: 0.9339008331298828",
+        "INFO:nncf:Accuracy drop: 0.0005794763565063477 (absolute)"
+      ]
+    }
+  }
+}

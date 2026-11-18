@@ -1,0 +1,157 @@
+{
+  "backbone": "dinov2",
+  "head_sha256": "5bcb0ee1f7d0f9a6e5813153c81e653347cdf80929b2ae5032b53548c7529d08",
+  "training_recipe_version": 2,
+  "complete_training_recipe": true,
+  "target": "mvtec",
+  "category": "bottle",
+  "shots": 0,
+  "images": [
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/good/000.png",
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/broken_large/000.png",
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/broken_large/001.png"
+  ],
+  "calibration_source": "visa",
+  "calibration_size": 300,
+  "quantized_max_drop": 0.01,
+  "activation_quantization": {
+    "model_type": "TRANSFORMER",
+    "floating_point_postprocessing": [
+      "Interpolate",
+      "Gaussian smoothing"
+    ],
+    "accuracy_control_ranking": "continuous_task_outputs"
+  },
+  "timing_protocol": {
+    "device": "CPU",
+    "threads": 4,
+    "warmup": 1,
+    "repeats": 3,
+    "includes": "In-memory model preprocessing, forward and postprocessing; excludes decoding and compilation.",
+    "isolation": "Shared development host; other training/compilation jobs may be running.",
+    "host": "Linux-6.8.0-147-generic-x86_64-with-glibc2.39",
+    "torch": "2.14.0+cu130",
+    "openvino": "2026.3.1-22476-759c5a6ab8c-releases/2026/3",
+    "onnxruntime": "1.32.0"
+  },
+  "pytorch_cpu_timing": {
+    "1": {
+      "median_batch_seconds": 3.5982872270978987,
+      "images_per_second": 0.27790999908768343
+    },
+    "3": {
+      "median_batch_seconds": 14.944770799949765,
+      "images_per_second": 0.20073911070018444
+    }
+  },
+  "results": {
+    "int8_ptq": {
+      "duration_seconds": 1089.6232505477965,
+      "inference_timing": {
+        "1": {
+          "median_batch_seconds": 0.811938505154103,
+          "images_per_second": 1.231620367370314
+        },
+        "3": {
+          "median_batch_seconds": 2.6106967218220234,
+          "images_per_second": 1.1491185379457938
+        }
+      },
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.02199655771255493,
+            "mean_absolute_error": 0.02199655771255493,
+            "rmse": 0.02199655771255493,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.03904983401298523,
+            "mean_absolute_error": 0.0024009428452700377,
+            "rmse": 0.00472903111949563,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.02199655771255493,
+            "mean_absolute_error": 0.014035423286259174,
+            "rmse": 0.015427052974700928,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.06150832772254944,
+            "mean_absolute_error": 0.0032789071556180716,
+            "rmse": 0.006974580232053995,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": false
+          }
+        }
+      }
+    },
+    "int8_acq": {
+      "duration_seconds": 3405.679887793027,
+      "inference_timing": {
+        "1": {
+          "median_batch_seconds": 0.9026721739210188,
+          "images_per_second": 1.1078218969088296
+        },
+        "3": {
+          "median_batch_seconds": 2.643760812934488,
+          "images_per_second": 1.1347471319351685
+        }
+      },
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.02199655771255493,
+            "mean_absolute_error": 0.02199655771255493,
+            "rmse": 0.02199655771255493,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.03904983401298523,
+            "mean_absolute_error": 0.0024009428452700377,
+            "rmse": 0.00472903111949563,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.02199655771255493,
+            "mean_absolute_error": 0.014035423286259174,
+            "rmse": 0.015427052974700928,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.06150832772254944,
+            "mean_absolute_error": 0.0032789071556180716,
+            "rmse": 0.006974580232053995,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": false
+          }
+        }
+      }
+    }
+  },
+  "accuracy_control_cpu_affinity": [
+    0,
+    1,
+    2,
+    3
+  ]
+}

@@ -92,9 +92,14 @@ batches 1/3. CPU/CUDA FP32 map differences stay below `3.61e-5` with a predeclar
 Full measurements are in `results/UniADet/gpu_inference_api.json`.
 Conversion-time CPU timings are contended; controlled CPU measurements follow the task-owned activation jobs.
 ACQ ranks continuous task outputs rather than undefined single-image AUROCs while constraining aggregate image AUROC.
-The first corrected DINOv2-R zero-shot PTQ map error is 0.06151, exceeding the unchanged 0.05 tolerance.
+All three zero-shot PTQ/ACQ conversions are complete. Native ACQ preserves auxiliary image AUROC within 0.01
+without reverting quantizers, so PTQ and ACQ have identical measured numerical errors.
+Maximum map errors are 0.10547/0.06151/0.09730 for CLIP/DINOv2-R/DINOv3, exceeding the unchanged 0.05 tolerance.
+Auxiliary AUROC preservation does not imply per-pixel amplitude equivalence; scores pass their numerical checks.
+The numerical sample is MVTec bottle at batches 1/3, not an all-category quantized benchmark.
+Native metrics are in `results/UniADet/activation_accuracy_control.json`.
 Cached-IR replay found no batch-size effect; a narrow head-only exclusion did not resolve it and was not adopted.
-Activation quantization is not certified equivalent; the full matrix is still being measured.
+Zero-shot activation quantization is not certified equivalent; four-shot cases are still being measured.
 Authors' gated checkpoints are unavailable to the current account, and licensing clarification is
 required before opening an upstream PR. The encoder adapter requires timm 1.0.20 or newer.
 

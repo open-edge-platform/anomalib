@@ -208,11 +208,23 @@ transformer-aware recipe, including SmoothQuant, rather than generic convolution
 Fixed map resizing and Gaussian smoothing remain floating point: calibrating these operations on the auxiliary domain
 can clip unseen-domain anomaly maps. This is not a fully integer
 graph. Final target-dataset accuracy still needs separate measurement.
-The first corrected DINOv2-R zero-shot PTQ check exceeds the unchanged maximum map-error tolerance:
-0.06151 versus 0.05, despite small mean error and passing score checks.
+All three corrected zero-shot PTQ/ACQ cases have completed. Both formats produce the same measured errors because
+native ACQ already meets its auxiliary image-AUROC constraint without reverting quantizers:
+
+| Encoder  | Initial auxiliary AUROC | Quantized AUROC | Absolute drop | Maximum map error |
+| -------- | ----------------------- | --------------- | ------------- | ----------------- |
+| CLIP     | 0.935060                | 0.930424        | 0.004635      | 0.10547           |
+| DINOv2-R | 0.928374                | 0.921020        | 0.007354      | 0.06151           |
+| DINOv3   | 0.934480                | 0.933901        | 0.000579      | 0.09730           |
+
+AUROC values use 300 disjoint auxiliary-domain validation images. Map errors use the MVTec bottle numerical
+inputs at batches 1/3, not an all-category quantized benchmark. All three maximum map errors exceed the unchanged
+0.05 tolerance, despite small mean errors and passing score checks.
+Preserving AUROC does not guarantee per-pixel amplitude agreement.
+See [activation_accuracy_control.json](/results/UniADet/activation_accuracy_control.json) and each parity report.
 Cached-IR replay rules out a batch-size effect; a narrow binary-head-only exclusion did not fix the drift and was
 not adopted. See [the numerical diagnosis](/results/UniADet/deployment/dinov2_mvtec_0_activation/ptq_diagnosis.json).
-ACQ and the remaining activation cases are still being measured; activation quantization is not certified equivalent.
+Four-shot activation cases are still being measured; zero-shot activation quantization is not certified equivalent.
 
 The legacy TorchInferencer requires `TRUST_REMOTE_CODE=1` for locally generated full-model exports. Never enable this
 for an untrusted downloaded pickle. The helper scopes this flag to loading its own newly generated export.
