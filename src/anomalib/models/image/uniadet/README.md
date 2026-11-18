@@ -100,13 +100,28 @@ Backbone implementations, augmentation sampling and score processing can still d
 is not asserted.
 
 Full training/evaluation and real-backbone export measurements are being collected under `results/UniADet/`.
-All six auxiliary runs are being restarted from scratch with corrected **recipe version 2**.
+Replacement runs train from scratch with corrected **recipe version 2**.
 Initial-recipe measurements are archived under `results/UniADet/initial_recipe/`, with explicit deviations in
 [provenance.json](/results/UniADet/initial_recipe/provenance.json): prototype standard deviation 1 instead of 0.02,
 seed 1015 instead of 10, a different Dice/interpolation convention, and missing color/geometric transforms.
 Cosine normalization does not cancel the initialization scale's effect on Adam's angular updates.
 Those initial measurements must not be used as corrected-recipe or paper-reproduction results.
-No corrected-recipe benchmark numbers are claimed until the complete replacement sweeps finish.
+Both corrected DINOv2-R directions are complete, covering all 15 MVTec AD and 12 VisA categories
+and every default shot/seed setting.
+Selected macro category means are percentages:
+
+| Target   | Shots | Image AUROC | Pixel AUROC | Image AP | Pixel AP |
+| -------- | ----- | ----------- | ----------- | -------- | -------- |
+| MVTec AD | 0     | 91.31       | 91.79       | 95.67    | 46.83    |
+| MVTec AD | 4     | 94.73       | 97.09       | 97.70    | 55.93    |
+| VisA     | 0     | 89.08       | 95.86       | 91.36    | 31.87    |
+| VisA     | 4     | 94.41       | 97.81       | 95.94    | 37.12    |
+
+The corresponding paper MVTec image/pixel AUROC is 93.5/92.4 and 98.7/97.7;
+for VisA it is 91.3/95.9 and 96.9/98.6.
+These measurements remain below the paper; matching its headline accuracy is not claimed.
+All shot counts, reference-seed variability and attributed paper gaps are in
+[comparison.csv](/results/UniADet/comparison.csv). Other corrected sweeps are still running, not inferred from these rows.
 Real-IAD data support and benchmarks are reserved for a separate follow-up PR.
 
 ## Deployment
@@ -126,6 +141,8 @@ uv run python -m tools.uniadet.validate \
 
 This checks TorchInferencer, Engine, ONNX Runtime, and OpenVINO FP32/FP16/INT8/INT8_PTQ/INT8_ACQ for batches 1 and 3.
 It additionally checks a raw-resolution image path through TorchInferencer and both Engine predict/test APIs.
+Corrected DINOv2-R zero-/four-shot file/tensor Torch, Engine predict/test, ONNX, FP32, FP16 and weight-only INT8
+checks pass. Other encoders and activation PTQ/ACQ measurements remain in progress.
 `parity.json` records maximum/mean absolute error and RMSE for scores and maps. Tolerances are fixed before comparison:
 `1e-5` for Torch/Engine, `1e-4` for ONNX/FP32, `0.005` for FP16, and `0.05` for INT8 variants.
 Quantization is approximate, not bit-identical; conversion success alone does not establish accuracy.
@@ -162,5 +179,15 @@ derived VisA assets.
 
 ## Sample results
 
-Sample panels will be regenerated from completed corrected-recipe checkpoints and visually inspected before use.
-Earlier panels came from the initial recipe; their provenance remains archived and they are not current-model examples.
+These VisA examples use the completed recipe-v2 MVTec-trained DINOv2-R head and four normal references (seed 10).
+Panels show input, ground truth, and a raw anomaly-map overlay on a fixed 0-to-1 scale.
+All six candidates were visually inspected; three with distracting normal-region activations were excluded.
+The retained examples are qualitative, not evidence that the paper's accuracy is reproduced.
+Run and selection provenance is in [sample_images.json](/results/UniADet/sample_images.json).
+
+![VisA chewing-gum anomaly](/docs/source/images/uniadet/results/0.png)
+![VisA PCB missing-pin anomaly](/docs/source/images/uniadet/results/1.png)
+![VisA capsule anomaly](/docs/source/images/uniadet/results/2.png)
+
+Photographs/masks: VisA, Zou et al. (2022), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/);
+resized and overlaid with model outputs. See the [asset notice](/docs/source/images/uniadet/results/LICENSE).

@@ -1,6 +1,6 @@
 UniADet sample-result panels
 
-The input photographs and ground-truth masks in 0.png and 1.png are derived
+The input photographs and ground-truth masks in 0.png, 1.png and 2.png are derived
 from the Visual Anomaly (VisA) dataset by Yang Zou, Jongheon Jeong, Latha
 Pemula, Dongqing Zhang, and Onkar Dabeer (2022).
 
@@ -10,7 +10,7 @@ License: Creative Commons Attribution 4.0 International (CC BY 4.0)
 https://creativecommons.org/licenses/by/4.0/
 
 Changes: resized photographs and masks, added independently computed UniADet
-anomaly-map overlays, labels, and color bars. These composite panels are
+anomaly-map overlays and labels. These composite panels are
 distributed under CC BY 4.0, not anomalib's source-code Apache-2.0 license.
 
-Initial-recipe provenance: results/UniADet/initial_recipe/sample_images.json
+Corrected-recipe provenance: results/UniADet/sample_images.json

@@ -25,5 +25,6 @@
     "https://github.com/gaobb/UniADet/blob/2b81369d418ed08fd882452597ad5ebe7df3cb1d/datasets/dataset.py"
   ],
   "implementation_provenance": "Factual hyperparameters and mathematical conventions were checked read-only. No upstream source was copied or vendored.",
+  "original_documentation_assets_commit": "3156ad940440bf8c95eba218bff853b0427046f5",
   "large_generated_files": "Obsolete exported model binaries and training-resume checkpoints were removed after stopping all initial-recipe jobs; head-only weights and numerical CSV/JSON evidence remain local."
 }
