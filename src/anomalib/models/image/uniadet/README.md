@@ -94,18 +94,21 @@ and Albumentations pipeline. Temperature (0.07), prototype initialization, loss 
 explicit implementation choices; matching the published headline numbers is not asserted.
 
 Full training/evaluation and real-backbone export measurements are being collected under `results/UniADet/`.
-The completed DINOv2-R VisA-to-MVTec run covers all 15 target categories and every default shot/seed setting.
+Both DINOv2-R directions are complete, covering all 15 MVTec AD and 12 VisA categories and every default shot/seed setting.
 Selected macro category means are percentages:
 
 | Encoder  | Target   | Shots | Image AUROC | Pixel AUROC | Image AP | Pixel AP |
 | -------- | -------- | ----- | ----------- | ----------- | -------- | -------- |
 | DINOv2-R | MVTec AD | 0     | 89.70       | 91.09       | 94.44    | 42.24    |
 | DINOv2-R | MVTec AD | 4     | 96.05       | 96.62       | 97.96    | 54.71    |
+| DINOv2-R | VisA     | 0     | 87.61       | 95.35       | 90.67    | 28.60    |
+| DINOv2-R | VisA     | 4     | 95.16       | 97.56       | 96.40    | 36.33    |
 
 The paper reports image/pixel AUROC of 93.5/92.4 for zero-shot and 98.7/97.7 for four-shot in this direction.
+For VisA, the corresponding paper AUROC pairs are 91.3/95.9 and 96.9/98.6.
 These measured results are below the paper, particularly for pixel AP; they do not establish author-level reproduction.
 See [comparison.csv](/results/UniADet/comparison.csv) for every shot count, seed variability, attributed paper
-comparators, and signed gaps. Other encoder/dataset combinations are still running, not inferred from these rows.
+comparators, and signed gaps. CLIP and DINOv3 combinations are still running, not inferred from these rows.
 No paper numbers or smoke-run outputs are presented as measured reproduction results.
 Real-IAD data support and benchmarks are reserved for a separate follow-up PR.
 
@@ -157,4 +160,14 @@ use restrictions. No dataset images or checkpoints are committed as part of this
 
 ## Sample results
 
-Sample visualizations will be added only from completed, numerically validated runs; none are claimed yet.
+The following VisA examples use the completed MVTec-trained DINOv2-R head with four normal references
+(seed 10). Each panel shows the input, ground-truth mask, and raw anomaly-map overlay on a fixed 0-to-1 scale.
+They are qualitative examples, not evidence that the paper's accuracy is reproduced.
+Other candidates with distracting false-positive regions were excluded; only two validated examples are published.
+Run provenance is in [sample_images.json](/results/UniADet/sample_images.json).
+
+![VisA chewing-gum anomaly](/docs/source/images/uniadet/results/0.png)
+![VisA PCB missing-pin anomaly](/docs/source/images/uniadet/results/1.png)
+
+Photographs/masks: VisA, Zou et al. (2022), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/);
+resized and overlaid with model outputs. See the [asset notice](/docs/source/images/uniadet/results/LICENSE).

@@ -1,0 +1,337 @@
+{
+  "backbone": "dinov2",
+  "head_sha256": "67d060a003e8db533576902717dd88c7c37795352896bd5c9822a4981e5314f1",
+  "complete_training_recipe": true,
+  "target": "mvtec",
+  "category": "bottle",
+  "shots": 4,
+  "images": [
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/good/000.png",
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/broken_large/000.png",
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/broken_large/001.png"
+  ],
+  "calibration_source": "visa",
+  "calibration_size": 300,
+  "quantized_max_drop": 0.01,
+  "timing_protocol": {
+    "device": "CPU",
+    "threads": 4,
+    "warmup": 1,
+    "repeats": 3,
+    "includes": "In-memory model preprocessing, forward and postprocessing; excludes decoding and compilation.",
+    "isolation": "Shared development host; other training/compilation jobs may be running.",
+    "host": "Linux-6.8.0-147-generic-x86_64-with-glibc2.39",
+    "torch": "2.14.0+cu130",
+    "openvino": "2026.3.1-22476-759c5a6ab8c-releases/2026/3",
+    "onnxruntime": "1.32.0"
+  },
+  "pytorch_cpu_timing": {
+    "1": {
+      "median_batch_seconds": 5.003646163735539,
+      "images_per_second": 0.19985425972915652
+    },
+    "3": {
+      "median_batch_seconds": 14.15472798794508,
+      "images_per_second": 0.21194331692950652
+    }
+  },
+  "results": {
+    "torch_inferencer": {
+      "duration_seconds": 107.81915400270373,
+      "inference_timing": {
+        "1": {
+          "median_batch_seconds": 4.742206342983991,
+          "images_per_second": 0.21087230872597562
+        },
+        "3": {
+          "median_batch_seconds": 16.91757155302912,
+          "images_per_second": 0.17733041592857013
+        }
+      },
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "engine": {
+      "duration_seconds": 37.03590830415487,
+      "inference_timing": {},
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "onnx": {
+      "duration_seconds": 192.554614584893,
+      "inference_timing": {
+        "1": {
+          "median_batch_seconds": 6.171057994943112,
+          "images_per_second": 0.1620467674780325
+        },
+        "3": {
+          "median_batch_seconds": 18.699795741587877,
+          "images_per_second": 0.16042955984423268
+        }
+      },
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 1.1920928955078125e-07,
+            "mean_absolute_error": 1.1920928955078125e-07,
+            "rmse": 1.1920928955078125e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 2.7567148208618164e-06,
+            "mean_absolute_error": 1.007326559943067e-07,
+            "rmse": 1.904463431401382e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 1.1920928955078125e-07,
+            "mean_absolute_error": 5.960464477539063e-08,
+            "rmse": 7.694926296153426e-08,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 2.7567148208618164e-06,
+            "mean_absolute_error": 1.2450294661903172e-07,
+            "rmse": 2.0763064867423964e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "fp32": {
+      "duration_seconds": 228.25040561892092,
+      "inference_timing": {
+        "1": {
+          "median_batch_seconds": 7.74761698814109,
+          "images_per_second": 0.12907194580354872
+        },
+        "3": {
+          "median_batch_seconds": 22.5133328367956,
+          "images_per_second": 0.13325437072101673
+        }
+      },
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 3.2782554626464844e-07,
+            "mean_absolute_error": 3.2782554626464844e-07,
+            "rmse": 3.2782554626464844e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 1.0281801223754883e-06,
+            "mean_absolute_error": 9.146409496452179e-08,
+            "rmse": 1.241039626620477e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 4.172325134277344e-07,
+            "mean_absolute_error": 2.8808912588829116e-07,
+            "rmse": 3.1398695909956587e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 1.7657876014709473e-06,
+            "mean_absolute_error": 1.0708771469580824e-07,
+            "rmse": 1.5462697433576977e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "fp16": {
+      "duration_seconds": 221.16925568692386,
+      "inference_timing": {
+        "1": {
+          "median_batch_seconds": 6.788102527149022,
+          "images_per_second": 0.14731657278311563
+        },
+        "3": {
+          "median_batch_seconds": 25.446758914273232,
+          "images_per_second": 0.11789320636496788
+        }
+      },
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 2.2143125534057617e-05,
+            "mean_absolute_error": 2.2143125534057617e-05,
+            "rmse": 2.2143125534057617e-05,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.00019424408674240112,
+            "mean_absolute_error": 3.480208761175163e-05,
+            "rmse": 4.409260873217136e-05,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 3.361701965332031e-05,
+            "mean_absolute_error": 2.1884838133701123e-05,
+            "rmse": 2.393268732703291e-05,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.00028204917907714844,
+            "mean_absolute_error": 3.7067726225359365e-05,
+            "rmse": 4.614242061506957e-05,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "int8": {
+      "duration_seconds": 183.8248675330542,
+      "inference_timing": {
+        "1": {
+          "median_batch_seconds": 5.074519363231957,
+          "images_per_second": 0.19706299817192952
+        },
+        "3": {
+          "median_batch_seconds": 14.203453329857439,
+          "images_per_second": 0.21121623948266327
+        }
+      },
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.000493168830871582,
+            "mean_absolute_error": 0.000493168830871582,
+            "rmse": 0.000493168830871582,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.004283204674720764,
+            "mean_absolute_error": 0.00046247203135862947,
+            "rmse": 0.0006302375695668161,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.0006895661354064941,
+            "mean_absolute_error": 0.0004925529356114566,
+            "rmse": 0.0005182332242839038,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.009382307529449463,
+            "mean_absolute_error": 0.0005364971584640443,
+            "rmse": 0.0007770335651002824,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    }
+  }
+}
