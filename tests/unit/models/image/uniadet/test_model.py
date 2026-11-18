@@ -101,9 +101,10 @@ def test_require_trained_head_and_validate_checkpoint(tmp_path: Path) -> None:
 
 
 @pytest.mark.usefixtures("tiny_backbone")
-def test_model_discovery_and_learning_type() -> None:
+@pytest.mark.parametrize("name", ["UniADet", "uniadet", "uni_adet"])
+def test_model_discovery_and_learning_type(name: str) -> None:
     """Public discovery and target learning types do not change the Engine training lifecycle."""
-    model = get_model("UniADet", pretrained=False, image_size=28, visualizer=False)
+    model = get_model(name, pretrained=False, image_size=28, visualizer=False)
     assert isinstance(model, UniADet)
     assert model.learning_type == LearningType.ZERO_SHOT
     assert UniADet(k_shot=4, pretrained=False, image_size=28).learning_type == LearningType.FEW_SHOT

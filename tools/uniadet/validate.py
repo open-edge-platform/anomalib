@@ -22,6 +22,7 @@ import numpy as np
 import onnxruntime as ort
 import openvino as ov
 import torch
+from lightning.pytorch.callbacks import ModelCheckpoint
 from torch.utils.data import DataLoader
 from torchvision.transforms.v2 import Resize
 
@@ -260,6 +261,7 @@ def main() -> None:
                 accelerator="cpu",
                 devices=1,
                 logger=False,
+                callbacks=[ModelCheckpoint(save_top_k=0)],
                 enable_progress_bar=False,
                 default_root_dir=args.output,
             )

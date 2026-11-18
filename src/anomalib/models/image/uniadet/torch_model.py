@@ -32,7 +32,7 @@ class UniADetModel(DynamicBufferMixin, nn.Module):
         temperature (float): Cosine-logit temperature.
         few_shot_weight (float): Weight of reference distance in pixel predictions.
         image_score_weight (float): Weight of peak pixel score in image predictions.
-        sigma (float): Gaussian smoothing standard deviation at encoder resolution.
+        sigma (float): Gaussian smoothing standard deviation at input-image resolution.
 
     Raises:
         ValueError: If fusion weights are outside ``[0, 1]`` or sigma is nonpositive.
@@ -166,7 +166,7 @@ class UniADetModel(DynamicBufferMixin, nn.Module):
             features (HierarchicalFeatures): Tokens from this model's frozen encoder.
 
         Returns:
-            InferenceBatch: Image scores and encoder-resolution anomaly maps.
+            InferenceBatch: Image scores ``(B,)`` and input-resolution maps ``(B, 1, H, W)``.
 
         Raises:
             RuntimeError: If the auxiliary head has not been trained or loaded.
