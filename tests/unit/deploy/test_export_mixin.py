@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, NamedTuple
 import pytest
 import torch
 from lightning.pytorch import LightningModule
+from timm.layers import Attention
 
 from anomalib.models.components.base.export_mixin import ExportMixin
 
@@ -43,6 +44,21 @@ class DummyExportModel(ExportMixin, LightningModule):
             DummyOutput: Dummy export output.
         """
         return DummyOutput(pred_score=batch.mean(dim=(1, 2, 3)) * self._weight, anomaly_map=None)
+
+
+class DummyAttentionExportModel(DummyExportModel):
+    """Small timm attention model reproducing AnomalyDINO's export layout."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.projection = torch.nn.Linear(3, 384)
+        self.attention = Attention(384, num_heads=6)
+        self.attention.fused_attn = True
+
+    def forward(self, batch: torch.Tensor) -> DummyOutput:
+        """Return image scores from attention over projected image tokens."""
+        tokens = self.projection(batch.flatten(2).transpose(1, 2))
+        return DummyOutput(pred_score=self.attention(tokens).mean(dim=(1, 2)), anomaly_map=None)
 
 
 def test_to_onnx_uses_dynamo_exporter_by_default(mocker: pytest.MockFixture, tmp_path: Path) -> None:
@@ -224,3 +240,57 @@ def test_to_onnx_dynamo_export_keeps_axes_dynamic(
     images = torch.rand(*run_shape)
     result = ov.Core().compile_model(str(onnx_path), "CPU", {"INFERENCE_PRECISION_HINT": "f32"})(images.numpy())[0]
     torch.testing.assert_close(torch.from_numpy(result), model(images).pred_score)
+
+
+@pytest.mark.parametrize("fail_export", [False, True])
+def test_to_onnx_restores_attention_backends(
+    mocker: pytest.MockFixture,
+    tmp_path: Path,
+    fail_export: bool,
+) -> None:
+    """Only graph capture uses math SDPA, restoring backend settings even after failure."""
+    checks = (
+        torch.backends.cuda.math_sdp_enabled,
+        torch.backends.cuda.flash_sdp_enabled,
+        torch.backends.cuda.mem_efficient_sdp_enabled,
+        torch.backends.cuda.cudnn_sdp_enabled,
+    )
+    original = tuple(check() for check in checks)
+
+    def export(*_args: object, **_kwargs: object) -> None:
+        assert tuple(check() for check in checks) == (True, False, False, False)
+        if fail_export:
+            msg = "capture failed"
+            raise RuntimeError(msg)
+
+    mocker.patch("torch.onnx.export", side_effect=export)
+    if fail_export:
+        with pytest.raises(RuntimeError, match="capture failed"):
+            DummyExportModel().to_onnx(tmp_path, input_size=(32, 32))
+    else:
+        DummyExportModel().to_onnx(tmp_path, input_size=(32, 32))
+
+    assert tuple(check() for check in checks) == original
+
+
+@pytest.mark.parametrize("device", ["cpu", "cuda", "xpu"])
+def test_to_onnx_attention_keeps_dynamic_batch(tmp_path: Path, device: str) -> None:
+    """Real attention export preserves eager outputs for batches 1, 2 and 3."""
+    pytest.importorskip("onnxscript")
+    onnx = pytest.importorskip("onnx")
+    ov = pytest.importorskip("openvino")
+    if device == "cuda" and not torch.cuda.is_available():
+        pytest.skip("CUDA is unavailable")
+    if device == "xpu" and not (hasattr(torch, "xpu") and torch.xpu.is_available()):
+        pytest.skip("XPU is unavailable")
+    model = DummyAttentionExportModel().to(device).eval()
+
+    path = model.to_onnx(tmp_path, input_size=(13, 25))
+
+    assert onnx.load(path).graph.input[0].type.tensor_type.shape.dim[0].dim_param
+    compiled = ov.Core().compile_model(str(path), "CPU", {"INFERENCE_PRECISION_HINT": "f32"})
+    with torch.inference_mode():
+        for batch_size in (1, 2, 3):
+            image = torch.rand(batch_size, 3, 13, 25, device=device)
+            actual = torch.from_numpy(compiled(image.cpu().numpy())[0])
+            torch.testing.assert_close(actual, model(image).pred_score.cpu(), rtol=1e-4, atol=1e-5)
