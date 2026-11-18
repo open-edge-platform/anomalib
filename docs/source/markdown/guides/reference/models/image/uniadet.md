@@ -24,17 +24,22 @@ training seed 10, focal smoothing 1e-5, linear-denominator Dice, and the declare
 Initial-recipe measurements are archived under `results/UniADet/initial_recipe/`; `provenance.json` records their
 incorrect initialization scale, seed, loss/interpolation convention, and missing color/geometric transforms.
 They are not current-recipe results.
-The report helper rejects obsolete recipes. Both corrected DINOv2-R directions are complete:
+The report helper rejects obsolete recipes. Both corrected CLIP and DINOv2-R directions are complete:
 
-| Target   | Shots | Image AUROC | Pixel AUROC | Image AP | Pixel AP |
-| -------- | ----- | ----------- | ----------- | -------- | -------- |
-| MVTec AD | 0     | 91.31       | 91.79       | 95.67    | 46.83    |
-| MVTec AD | 4     | 94.73       | 97.09       | 97.70    | 55.93    |
-| VisA     | 0     | 89.08       | 95.86       | 91.36    | 31.87    |
-| VisA     | 4     | 94.41       | 97.81       | 95.94    | 37.12    |
+| Encoder  | Target   | Shots | Image AUROC | Pixel AUROC | Image AP | Pixel AP |
+| -------- | -------- | ----- | ----------- | ----------- | -------- | -------- |
+| CLIP     | MVTec AD | 0     | 90.26       | 91.33       | 95.19    | 40.88    |
+| CLIP     | MVTec AD | 4     | 94.25       | 95.44       | 97.21    | 51.50    |
+| CLIP     | VisA     | 0     | 88.04       | 95.59       | 90.02    | 27.39    |
+| CLIP     | VisA     | 4     | 91.70       | 97.18       | 93.51    | 31.99    |
+| DINOv2-R | MVTec AD | 0     | 91.31       | 91.79       | 95.67    | 46.83    |
+| DINOv2-R | MVTec AD | 4     | 94.73       | 97.09       | 97.70    | 55.93    |
+| DINOv2-R | VisA     | 0     | 89.08       | 95.86       | 91.36    | 31.87    |
+| DINOv2-R | VisA     | 4     | 94.41       | 97.81       | 95.94    | 37.12    |
 
-Values are macro category means in percent. Paper MVTec image/pixel AUROC is 93.5/92.4 and 98.7/97.7;
-for VisA it is 91.3/95.9 and 96.9/98.6. Paper-level accuracy is not claimed as reproduced.
+Values are macro category means in percent. Some zero-shot VisA metrics match/exceed the paper;
+CLIP image AUROC is 88.04 versus 88.0. Four-shot MVTec image AUROC remains 94.25/94.73 for CLIP/DINOv2-R
+versus the paper's 97.7/98.7. Overall paper-level accuracy is not claimed as reproduced.
 The complete default shot/seed coverage and paper gaps are in `results/UniADet/comparison.csv`.
 Other corrected sweeps are still running; no missing results are inferred.
 Paper and released-demo fusion settings differ.
@@ -47,8 +52,12 @@ OpenVINO FP32/FP16/INT8/PTQ/ACQ on batches 1 and 3. PTQ/ACQ use transformer-awar
 fixed map resizing and smoothing stay floating point to avoid
 auxiliary-domain range clipping. CPU checks request FP32 floating-point execution; FP16 refers to compressed weights,
 and INT8 is weight-only compression rather than activation PTQ/ACQ.
-Corrected DINOv2-R zero-/four-shot basic APIs and floating/weight-only exports pass; other encoders
-and activation PTQ/ACQ measurements remain in progress.
+Corrected CLIP and DINOv2-R zero-/four-shot basic APIs and floating/weight-only exports pass;
+DINOv3 and activation PTQ/ACQ measurements remain in progress.
+ACQ ranks continuous task outputs rather than undefined single-image AUROCs while constraining aggregate image AUROC.
+The first corrected DINOv2-R zero-shot PTQ map error is 0.06151, exceeding the unchanged 0.05 tolerance.
+Cached-IR replay found no batch-size effect; a narrow head-only exclusion did not resolve it and was not adopted.
+Activation quantization is not certified equivalent; the full matrix is still being measured.
 Authors' gated checkpoints are unavailable to the current account, and licensing clarification is
 required before opening an upstream PR. The encoder adapter requires timm 1.0.20 or newer.
 

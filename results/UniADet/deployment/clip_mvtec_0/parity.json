@@ -1,0 +1,408 @@
+{
+  "backbone": "clip",
+  "head_sha256": "c3eb37752561a4e0d41275de1f3246cc4decad4737386586767530b8c0362438",
+  "training_recipe_version": 2,
+  "complete_training_recipe": true,
+  "target": "mvtec",
+  "category": "bottle",
+  "shots": 0,
+  "images": [
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/good/000.png",
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/broken_large/000.png",
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/broken_large/001.png"
+  ],
+  "calibration_source": "visa",
+  "calibration_size": 300,
+  "quantized_max_drop": 0.01,
+  "activation_quantization": {
+    "model_type": "TRANSFORMER",
+    "floating_point_postprocessing": [
+      "Interpolate",
+      "Gaussian smoothing"
+    ]
+  },
+  "timing_protocol": {
+    "device": "CPU",
+    "threads": 4,
+    "warmup": 1,
+    "repeats": 3,
+    "includes": "In-memory model preprocessing, forward and postprocessing; excludes decoding and compilation.",
+    "isolation": "Shared development host; other training/compilation jobs may be running.",
+    "host": "Linux-6.8.0-147-generic-x86_64-with-glibc2.39",
+    "torch": "2.14.0+cu130",
+    "openvino": "2026.3.1-22476-759c5a6ab8c-releases/2026/3",
+    "onnxruntime": "1.32.0"
+  },
+  "pytorch_cpu_timing": {
+    "1": {
+      "median_batch_seconds": 4.610723115038127,
+      "images_per_second": 0.21688571945221458
+    },
+    "3": {
+      "median_batch_seconds": 13.485663645900786,
+      "images_per_second": 0.22245846246594655
+    }
+  },
+  "results": {
+    "torch_file": {
+      "duration_seconds": 4.661449925042689,
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "torch_inferencer": {
+      "duration_seconds": 81.02689732098952,
+      "inference_timing": {
+        "1": {
+          "median_batch_seconds": 4.645261907950044,
+          "images_per_second": 0.21527311480297145
+        },
+        "3": {
+          "median_batch_seconds": 7.825448593124747,
+          "images_per_second": 0.3833646038689371
+        }
+      },
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "engine_test": {
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "engine": {
+      "duration_seconds": 42.402296907268465,
+      "inference_timing": {},
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "onnx": {
+      "duration_seconds": 156.31471015606076,
+      "inference_timing": {
+        "1": {
+          "median_batch_seconds": 4.647774207871407,
+          "images_per_second": 0.21515675144167148
+        },
+        "3": {
+          "median_batch_seconds": 15.051673096138984,
+          "images_per_second": 0.1993133906668191
+        }
+      },
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 5.364418029785156e-07,
+            "mean_absolute_error": 5.364418029785156e-07,
+            "rmse": 5.364418029785156e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 2.1457672119140625e-06,
+            "mean_absolute_error": 3.633280698522867e-08,
+            "rmse": 1.1195408688990938e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 5.364418029785156e-07,
+            "mean_absolute_error": 2.384185791015625e-07,
+            "rmse": 3.264680970005429e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 2.8312206268310547e-06,
+            "mean_absolute_error": 5.551143900106581e-08,
+            "rmse": 1.7042820843471418e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "fp32": {
+      "duration_seconds": 145.684517624788,
+      "inference_timing": {
+        "1": {
+          "median_batch_seconds": 4.241330689750612,
+          "images_per_second": 0.2357750605055508
+        },
+        "3": {
+          "median_batch_seconds": 11.709929555654526,
+          "images_per_second": 0.25619283068627435
+        }
+      },
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 6.556510925292969e-07,
+            "mean_absolute_error": 6.556510925292969e-07,
+            "rmse": 6.556510925292969e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 1.5795230865478516e-06,
+            "mean_absolute_error": 2.6427105837001363e-08,
+            "rmse": 8.135096152273036e-08,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 7.152557373046875e-07,
+            "mean_absolute_error": 5.165736070011917e-07,
+            "rmse": 5.696325047210848e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 3.11434268951416e-06,
+            "mean_absolute_error": 4.192981961637088e-08,
+            "rmse": 1.4056951158636366e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "fp16": {
+      "duration_seconds": 132.6499408450909,
+      "inference_timing": {
+        "1": {
+          "median_batch_seconds": 3.397359793074429,
+          "images_per_second": 0.294346216152471
+        },
+        "3": {
+          "median_batch_seconds": 10.59900818997994,
+          "images_per_second": 0.28304535162413885
+        }
+      },
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 3.445148468017578e-05,
+            "mean_absolute_error": 3.445148468017578e-05,
+            "rmse": 3.445148468017578e-05,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0002661794424057007,
+            "mean_absolute_error": 7.835851647541858e-06,
+            "rmse": 2.378732278884854e-05,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 8.213520050048828e-05,
+            "mean_absolute_error": 6.284316623350605e-05,
+            "rmse": 6.610310811083764e-05,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0009866505861282349,
+            "mean_absolute_error": 1.566231730976142e-05,
+            "rmse": 5.240207246970385e-05,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "int8": {
+      "duration_seconds": 148.1853258223273,
+      "inference_timing": {
+        "1": {
+          "median_batch_seconds": 3.9695581570267677,
+          "images_per_second": 0.2519172060068792
+        },
+        "3": {
+          "median_batch_seconds": 11.220944650936872,
+          "images_per_second": 0.26735716941171445
+        }
+      },
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.006727814674377441,
+            "mean_absolute_error": 0.006727814674377441,
+            "rmse": 0.006727814674377441,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.012670516967773438,
+            "mean_absolute_error": 0.00024662166833877563,
+            "rmse": 0.0007232618518173695,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.007241010665893555,
+            "mean_absolute_error": 0.004831830505281687,
+            "rmse": 0.005714691709727049,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.024095207452774048,
+            "mean_absolute_error": 0.0005281092599034309,
+            "rmse": 0.0017455590423196554,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    }
+  }
+}

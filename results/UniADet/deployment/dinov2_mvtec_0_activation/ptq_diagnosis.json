@@ -1,0 +1,291 @@
+{
+  "hypotheses": [
+    "Accumulated learned-layer activation error: reproducible per-image drift with little batch dependence.",
+    "Residual fixed-map clipping: final map quantizers or boundary saturation despite ignored resizing/smoothing.",
+    "Dynamic-batch kernel artifact: separately inferred images disagree with the same images in a batch."
+  ],
+  "last_quantizers": [
+    {
+      "name": "node_layer_norm_50_0_0/nncf_smooth_quant/fq_output_0",
+      "input": "node_layer_norm_50_0_0/nncf_smooth_quant",
+      "consumers": [
+        [
+          "MatMul",
+          "node_MatMul_1571"
+        ]
+      ],
+      "input_range": [
+        [
+          -0.9939597845077515
+        ],
+        [
+          1.0176255702972412
+        ]
+      ]
+    },
+    {
+      "name": "node_Mul_1613/fq_output_0",
+      "input": "node_Mul_1613",
+      "consumers": [
+        [
+          "ScaledDotProductAttention",
+          "node_scaled_dot_product_attention_23"
+        ]
+      ],
+      "input_range": [
+        [
+          -4.345034599304199
+        ],
+        [
+          4.311089038848877
+        ]
+      ]
+    },
+    {
+      "name": "node_Slice_1586/fq_output_0",
+      "input": "node_Slice_1586",
+      "consumers": [
+        [
+          "Reshape",
+          "node_Reshape_1608"
+        ]
+      ],
+      "input_range": [
+        [
+          -13.681524276733398
+        ],
+        [
+          13.574637413024902
+        ]
+      ]
+    },
+    {
+      "name": "node_Reshape_2620_0_0/nncf_smooth_quant/fq_output_0",
+      "input": "node_Reshape_2620_0_0/nncf_smooth_quant",
+      "consumers": [
+        [
+          "MatMul",
+          "node_MatMul_1625"
+        ]
+      ],
+      "input_range": [
+        [
+          -0.9508219361305237
+        ],
+        [
+          0.9583086967468262
+        ]
+      ]
+    },
+    {
+      "name": "node_layer_norm_51_0_0/nncf_smooth_quant/fq_output_0",
+      "input": "node_layer_norm_51_0_0/nncf_smooth_quant",
+      "consumers": [
+        [
+          "MatMul",
+          "node_MatMul_1627"
+        ]
+      ],
+      "input_range": [
+        [
+          -1.0197967290878296
+        ],
+        [
+          0.9653037786483765
+        ]
+      ]
+    },
+    {
+      "name": "node_gelu_23_0_0/nncf_smooth_quant/fq_output_0",
+      "input": "node_gelu_23_0_0/nncf_smooth_quant",
+      "consumers": [
+        [
+          "MatMul",
+          "node_MatMul_1636"
+        ]
+      ],
+      "input_range": [
+        [
+          -0.38269564509391785
+        ],
+        [
+          0.9726847410202026
+        ]
+      ]
+    },
+    {
+      "name": "node_div_21_0_0/nncf_smooth_quant/fq_output_0",
+      "input": "node_div_21_0_0/nncf_smooth_quant",
+      "consumers": [
+        [
+          "MatMul",
+          "node_matmul_9"
+        ]
+      ],
+      "input_range": [
+        [
+          -0.7737617492675781
+        ],
+        [
+          0.8047122359275818
+        ]
+      ]
+    },
+    {
+      "name": "node_div_3_0_0/nncf_smooth_quant/fq_output_0",
+      "input": "node_div_3_0_0/nncf_smooth_quant",
+      "consumers": [
+        [
+          "MatMul",
+          "node_matmul"
+        ]
+      ],
+      "input_range": [
+        [
+          -0.739719569683075
+        ],
+        [
+          0.7455441355705261
+        ]
+      ]
+    },
+    {
+      "name": "node_div_7_0_0/nncf_smooth_quant/fq_output_0",
+      "input": "node_div_7_0_0/nncf_smooth_quant",
+      "consumers": [
+        [
+          "MatMul",
+          "node_matmul_2"
+        ]
+      ],
+      "input_range": [
+        [
+          -0.7513768076896667
+        ],
+        [
+          0.757293164730072
+        ]
+      ]
+    },
+    {
+      "name": "node_div_11_0_0/nncf_smooth_quant/fq_output_0",
+      "input": "node_div_11_0_0/nncf_smooth_quant",
+      "consumers": [
+        [
+          "MatMul",
+          "node_matmul_4"
+        ]
+      ],
+      "input_range": [
+        [
+          -0.7438434958457947
+        ],
+        [
+          0.7615540623664856
+        ]
+      ]
+    },
+    {
+      "name": "node_div_15_0_0/nncf_smooth_quant/fq_output_0",
+      "input": "node_div_15_0_0/nncf_smooth_quant",
+      "consumers": [
+        [
+          "MatMul",
+          "node_matmul_6"
+        ]
+      ],
+      "input_range": [
+        [
+          -0.7411085963249207
+        ],
+        [
+          0.7469440698623657
+        ]
+      ]
+    },
+    {
+      "name": "node_div_19_0_0/nncf_smooth_quant/fq_output_0",
+      "input": "node_div_19_0_0/nncf_smooth_quant",
+      "consumers": [
+        [
+          "MatMul",
+          "node_matmul_8"
+        ]
+      ],
+      "input_range": [
+        [
+          -0.7364122271537781
+        ],
+        [
+          0.7422107458114624
+        ]
+      ]
+    }
+  ],
+  "images": [
+    {
+      "path": "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/good/000.png",
+      "max_absolute_error": 0.03904946148395538,
+      "mean_absolute_error": 0.0024009437765926123,
+      "rmse": 0.004729034379124641,
+      "p99_absolute_error": 0.01969432830810547,
+      "fp32_range": [
+        0.00047693916712887585,
+        0.5179630517959595
+      ],
+      "ptq_range": [
+        0.0005727469688281417,
+        0.5146398544311523
+      ],
+      "ptq_batch_dependence": 0.0,
+      "float_head_activation_max_error": 0.038681745529174805
+    },
+    {
+      "path": "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/broken_large/000.png",
+      "max_absolute_error": 0.05750963091850281,
+      "mean_absolute_error": 0.0037935213185846806,
+      "rmse": 0.007953216321766376,
+      "p99_absolute_error": 0.03266966715455055,
+      "fp32_range": [
+        0.00033396962680853903,
+        0.8920225501060486
+      ],
+      "ptq_range": [
+        0.0004511374281719327,
+        0.895254909992218
+      ],
+      "ptq_batch_dependence": 0.0,
+      "float_head_activation_max_error": 0.05583268404006958
+    },
+    {
+      "path": "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/broken_large/001.png",
+      "max_absolute_error": 0.06150826811790466,
+      "mean_absolute_error": 0.0036422766279429197,
+      "rmse": 0.007766444701701403,
+      "p99_absolute_error": 0.03286397084593773,
+      "fp32_range": [
+        0.00035727210342884064,
+        0.930779755115509
+      ],
+      "ptq_range": [
+        0.0004629174363799393,
+        0.9397811889648438
+      ],
+      "ptq_batch_dependence": 0.0,
+      "float_head_activation_max_error": 0.06121370196342468
+    }
+  ],
+  "backbone": "dinov2",
+  "head_sha256": "5bcb0ee1f7d0f9a6e5813153c81e653347cdf80929b2ae5032b53548c7529d08",
+  "training_recipe_version": 2,
+  "baseline": "Cached OpenVINO FP32 IR, previously verified against PyTorch within 1e-4.",
+  "quantized": "Unchanged 300-image auxiliary-domain transformer PTQ IR with floating resize/smoothing.",
+  "nncf": "3.3.0",
+  "strict_map_tolerance": 0.05,
+  "head_activation_exclusion_adopted": false,
+  "conclusion": "Drift reproduces exactly for single images and batches. Final-map clipping was not observed. Bypassing only the ten binary-projection activation quantizers did not resolve the strict map failure and was not adopted. Results are consistent with accumulated learned-backbone quantization error; tolerances and production scopes are unchanged.",
+  "ir_sha256": {
+    "fp32": "aac09ec6c9d959c75e0c56c7f81a2a130719de80ef5e19d3d0a31df6b8d16458",
+    "ptq": "b17801dca9de956a325f53fda3720d6902be55df34a658da3136f9618fdbfd9a"
+  }
+}

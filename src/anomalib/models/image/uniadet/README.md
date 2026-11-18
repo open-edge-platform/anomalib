@@ -106,20 +106,24 @@ Initial-recipe measurements are archived under `results/UniADet/initial_recipe/`
 seed 1015 instead of 10, a different Dice/interpolation convention, and missing color/geometric transforms.
 Cosine normalization does not cancel the initialization scale's effect on Adam's angular updates.
 Those initial measurements must not be used as corrected-recipe or paper-reproduction results.
-Both corrected DINOv2-R directions are complete, covering all 15 MVTec AD and 12 VisA categories
+Both corrected CLIP and DINOv2-R directions are complete, covering all 15 MVTec AD and 12 VisA categories
 and every default shot/seed setting.
 Selected macro category means are percentages:
 
-| Target   | Shots | Image AUROC | Pixel AUROC | Image AP | Pixel AP |
-| -------- | ----- | ----------- | ----------- | -------- | -------- |
-| MVTec AD | 0     | 91.31       | 91.79       | 95.67    | 46.83    |
-| MVTec AD | 4     | 94.73       | 97.09       | 97.70    | 55.93    |
-| VisA     | 0     | 89.08       | 95.86       | 91.36    | 31.87    |
-| VisA     | 4     | 94.41       | 97.81       | 95.94    | 37.12    |
+| Encoder  | Target   | Shots | Image AUROC | Pixel AUROC | Image AP | Pixel AP |
+| -------- | -------- | ----- | ----------- | ----------- | -------- | -------- |
+| CLIP     | MVTec AD | 0     | 90.26       | 91.33       | 95.19    | 40.88    |
+| CLIP     | MVTec AD | 4     | 94.25       | 95.44       | 97.21    | 51.50    |
+| CLIP     | VisA     | 0     | 88.04       | 95.59       | 90.02    | 27.39    |
+| CLIP     | VisA     | 4     | 91.70       | 97.18       | 93.51    | 31.99    |
+| DINOv2-R | MVTec AD | 0     | 91.31       | 91.79       | 95.67    | 46.83    |
+| DINOv2-R | MVTec AD | 4     | 94.73       | 97.09       | 97.70    | 55.93    |
+| DINOv2-R | VisA     | 0     | 89.08       | 95.86       | 91.36    | 31.87    |
+| DINOv2-R | VisA     | 4     | 94.41       | 97.81       | 95.94    | 37.12    |
 
-The corresponding paper MVTec image/pixel AUROC is 93.5/92.4 and 98.7/97.7;
-for VisA it is 91.3/95.9 and 96.9/98.6.
-These measurements remain below the paper; matching its headline accuracy is not claimed.
+Some zero-shot VisA metrics match or exceed the paper: CLIP image AUROC is 88.04 versus 88.0.
+Other gaps remain substantial: four-shot MVTec image AUROC is 94.25/94.73 for CLIP/DINOv2-R,
+versus the paper's 97.7/98.7. Reproducing its overall headline accuracy is not claimed.
 All shot counts, reference-seed variability and attributed paper gaps are in
 [comparison.csv](/results/UniADet/comparison.csv). Other corrected sweeps are still running, not inferred from these rows.
 Real-IAD data support and benchmarks are reserved for a separate follow-up PR.
@@ -141,8 +145,8 @@ uv run python -m tools.uniadet.validate \
 
 This checks TorchInferencer, Engine, ONNX Runtime, and OpenVINO FP32/FP16/INT8/INT8_PTQ/INT8_ACQ for batches 1 and 3.
 It additionally checks a raw-resolution image path through TorchInferencer and both Engine predict/test APIs.
-Corrected DINOv2-R zero-/four-shot file/tensor Torch, Engine predict/test, ONNX, FP32, FP16 and weight-only INT8
-checks pass. Other encoders and activation PTQ/ACQ measurements remain in progress.
+Corrected CLIP and DINOv2-R zero-/four-shot file/tensor Torch, Engine predict/test, ONNX, FP32, FP16 and weight-only
+INT8 checks pass. DINOv3 and activation PTQ/ACQ measurements remain in progress.
 `parity.json` records maximum/mean absolute error and RMSE for scores and maps. Tolerances are fixed before comparison:
 `1e-5` for Torch/Engine, `1e-4` for ONNX/FP32, `0.005` for FP16, and `0.05` for INT8 variants.
 Quantization is approximate, not bit-identical; conversion success alone does not establish accuracy.
@@ -152,11 +156,18 @@ The CPU checks request FP32 floating-point execution: FP16 denotes compressed st
 CPU-kernel benchmark. INT8 denotes weight-only compression; PTQ/ACQ also quantize activations.
 
 PTQ and ACQ use disjoint auxiliary-domain calibration and validation subsets (300 images each by default).
-ACQ uses image AUROC with maximum drop 0.01; metric state is reset between candidates. Both paths use NNCF's
+ACQ uses aggregate image AUROC with maximum drop 0.01; metric state is reset between candidates.
+Continuous task outputs drive sensitivity ranking, because single-image AUROC is undefined.
+Both paths use NNCF's
 transformer-aware recipe, including SmoothQuant, rather than generic convolutional-network quantization.
 Fixed map resizing and Gaussian smoothing remain floating point: calibrating these operations on the auxiliary domain
 can clip unseen-domain anomaly maps. This is not a fully integer
 graph. Final target-dataset accuracy still needs separate measurement.
+The first corrected DINOv2-R zero-shot PTQ check exceeds the unchanged maximum map-error tolerance:
+0.06151 versus 0.05, despite small mean error and passing score checks.
+Cached-IR replay rules out a batch-size effect; a narrow binary-head-only exclusion did not fix the drift and was
+not adopted. See [the numerical diagnosis](/results/UniADet/deployment/dinov2_mvtec_0_activation/ptq_diagnosis.json).
+ACQ and the remaining activation cases are still being measured; activation quantization is not certified equivalent.
 
 The legacy TorchInferencer requires `TRUST_REMOTE_CODE=1` for locally generated full-model exports. Never enable this
 for an untrusted downloaded pickle. The helper scopes this flag to loading its own newly generated export.
