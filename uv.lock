@@ -653,7 +653,7 @@ requires-dist = [
     { name = "tensorboard", marker = "extra == 'full'" },
     { name = "tensorboard", marker = "extra == 'loggers'" },
     { name = "tifffile" },
-    { name = "timm" },
+    { name = "timm", specifier = ">=1.0.20" },
     { name = "torch", marker = "(sys_platform == 'linux' and extra == 'cu126') or (sys_platform == 'win32' and extra == 'cu126')", specifier = ">=2.10.0", index = "https://download.pytorch.org/whl/cu126", conflict = { package = "anomalib", extra = "cu126" } },
     { name = "torch", marker = "(sys_platform == 'linux' and extra == 'cu130') or (sys_platform == 'win32' and extra == 'cu130')", specifier = ">=2.10.0", index = "https://download.pytorch.org/whl/cu130", conflict = { package = "anomalib", extra = "cu130" } },
     { name = "torch", marker = "sys_platform == 'linux' and extra == 'rocm'", specifier = ">=2.13.0", index = "https://download.pytorch.org/whl/rocm7.2", conflict = { package = "anomalib", extra = "rocm" } },

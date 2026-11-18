@@ -150,7 +150,8 @@ No source from `gaobb/UniADet` is copied or vendored. Its repository currently h
 an MIT grant must not be assumed. The independent implementation is covered by anomalib's Apache-2.0 license.
 The paper and upstream repository are acknowledged as the algorithm's origin, not as licensed source dependencies.
 
-The encoder implementations come from Apache-2.0 timm. Pretrained weights have separate terms, especially DINOv3's
+The encoder implementations come from Apache-2.0 timm (minimum 1.0.20 for DINOv3 and the required feature API).
+Pretrained weights have separate terms, especially DINOv3's
 custom Meta license; see each publisher's model card before use or redistribution. The authors' gated
 `csgaobb/UniADet` head checkpoints could not be accessed with the current credentials (HTTP 403) and are not bundled.
 Source/head-weight licensing clarification remains a gate before an upstream PR.

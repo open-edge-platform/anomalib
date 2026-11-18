@@ -36,7 +36,7 @@ fixed map resizing and smoothing stay floating point to avoid
 auxiliary-domain range clipping. CPU checks request FP32 floating-point execution; FP16 refers to compressed weights,
 and INT8 is weight-only compression rather than activation PTQ/ACQ.
 Authors' gated checkpoints are unavailable to the current account, and licensing clarification is
-required before opening an upstream PR.
+required before opening an upstream PR. The encoder adapter requires timm 1.0.20 or newer.
 
 ## Sample results
 
