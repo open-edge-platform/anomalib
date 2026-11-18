@@ -13,7 +13,7 @@ The CLI provides the following subcommands:
 - **`anomalib predict`**: Run batch or single-image inference and generate anomaly maps.
 - **`anomalib export`**: Export trained PyTorch checkpoints to ONNX, OpenVINO IR, or PyTorch (`.pt`).
 - **`anomalib install`**: Manage extra dependencies and hardware accelerator packages.
-- **`anomalib benchmark`**: Run benchmarking sweeps across models and datasets.
+- **`anomalib benchmark`** (when pipeline support is available): Run benchmarking sweeps across models and datasets.
 
 ## Examples
 
