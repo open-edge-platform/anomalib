@@ -71,6 +71,17 @@ def test_random_tiling_respects_non_square_tile_size() -> None:
     assert patches.shape == torch.Size([4, 3, 128, 256])
 
 
+def test_stride_defaults_to_tile_size() -> None:
+    """Without a stride, tiles should not overlap (stride equals tile size)."""
+    tiler = Tiler(tile_size=(128, 256))
+    assert (tiler.stride_h, tiler.stride_w) == (128, 256)
+    assert not tiler.overlapping
+    image = torch.rand(1, 3, 256, 512)
+    tiles = tiler.tile(image)
+    assert tiles.shape == torch.Size([4, 3, 128, 256])
+    assert torch.equal(tiler.untile(tiles), image)
+
+
 def test_stride_size_cannot_be_larger_than_tile_size() -> None:
     """Larger stride size than tile size is not desired, and causes issues."""
     kernel_size = (128, 128)
