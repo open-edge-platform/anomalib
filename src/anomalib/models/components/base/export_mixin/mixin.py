@@ -69,6 +69,9 @@ if TYPE_CHECKING:
 
     from anomalib import TaskType
 
+    if module_available("nncf"):
+        from nncf import IgnoredScope
+
     if module_available("openvino"):
         from openvino import CompiledModel
 
@@ -359,6 +362,7 @@ class ExportMixin:
     def _post_training_quantization_ov(
         model: CompiledModel,
         datamodule: AnomalibDataModule | None = None,
+        ignored_scope: IgnoredScope | None = None,
     ) -> CompiledModel:
         """Apply post-training quantization to OpenVINO model.
 
@@ -366,6 +370,7 @@ class ExportMixin:
             model (CompiledModel): OpenVINO model to quantize.
             datamodule (AnomalibDataModule | None): DataModule for calibration.
                 Must contain at least 300 images. Defaults to ``None``.
+            ignored_scope (IgnoredScope | None): Operations to keep in floating point.
 
         Returns:
             CompiledModel: Quantized OpenVINO model.
@@ -392,7 +397,7 @@ class ExportMixin:
             )
 
         calibration_dataset = nncf.Dataset(dataloader, lambda x: x["image"])
-        return nncf.quantize(model, calibration_dataset)
+        return nncf.quantize(model, calibration_dataset, ignored_scope=ignored_scope)
 
     @staticmethod
     def _accuracy_control_quantization_ov(
@@ -401,6 +406,7 @@ class ExportMixin:
         metric: Metric | None = None,
         task: TaskType | None = None,
         max_drop: float = 0.01,
+        ignored_scope: IgnoredScope | None = None,
     ) -> CompiledModel:
         """Apply accuracy-aware quantization to OpenVINO model.
 
@@ -418,6 +424,7 @@ class ExportMixin:
             max_drop (float): Maximum acceptable accuracy drop during quantization.
                 Value should be between 0 and 1 (e.g., 0.01 means 1% drop is acceptable).
                 Defaults to ``0.01``.
+            ignored_scope (IgnoredScope | None): Operations to keep in floating point.
 
         Returns:
             CompiledModel: Quantized OpenVINO model.
@@ -468,12 +475,13 @@ class ExportMixin:
         validation_dataset = nncf.Dataset(datamodule.test_dataloader())
 
         def val_fn(nncf_model: CompiledModel, validation_data: Iterable) -> float:
+            metric.reset()
             for batch in validation_data:
                 ov_model_output = nncf_model(batch["image"])
                 result_batch = ImageBatch(
                     image=batch["image"],
-                    pred_score=torch.from_numpy(ov_model_output["pred_score"]).squeeze(),
-                    pred_label=torch.from_numpy(ov_model_output["pred_label"]).squeeze(),
+                    pred_score=torch.from_numpy(ov_model_output["pred_score"]).reshape(-1),
+                    pred_label=torch.from_numpy(ov_model_output["pred_label"]).reshape(-1),
                     gt_label=batch["gt_label"],
                     anomaly_map=torch.from_numpy(ov_model_output["anomaly_map"])
                     if "anomaly_map" in ov_model_output
@@ -493,4 +501,5 @@ class ExportMixin:
             validation_dataset,
             val_fn,
             max_drop=max_drop,
+            ignored_scope=ignored_scope,
         )

@@ -1,0 +1,31 @@
+<!-- Copyright (C) 2026 Intel Corporation -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="270" viewBox="0 0 1000 270">
+  <rect width="1000" height="270" fill="#ffffff"/>
+  <g font-family="sans-serif" font-size="16" text-anchor="middle" fill="#243746">
+    <rect x="15" y="95" width="130" height="65" rx="8" fill="#edf5ff" stroke="#2866a8"/>
+    <text x="80" y="123">Query image</text>
+    <text x="80" y="145">518 / 512 pixels</text>
+    <rect x="185" y="75" width="195" height="105" rx="8" fill="#edf5ff" stroke="#2866a8"/>
+    <text x="282" y="106">Frozen ViT encoder</text>
+    <text x="282" y="132" font-size="12">CLIP / DINOv2-R / DINOv3</text>
+    <text x="282" y="157">5 intermediate blocks</text>
+    <rect x="425" y="20" width="230" height="65" rx="8" fill="#edf9ef" stroke="#318045"/>
+    <text x="540" y="47">Image prototypes per block</text>
+    <text x="540" y="70">normal / anomaly</text>
+    <rect x="425" y="105" width="230" height="65" rx="8" fill="#edf9ef" stroke="#318045"/>
+    <text x="540" y="132">Patch prototypes per block</text>
+    <text x="540" y="155">normal / anomaly</text>
+    <rect x="425" y="195" width="230" height="60" rx="8" fill="#fff6e5" stroke="#a56c18"/>
+    <text x="540" y="220">Normal reference memory</text>
+    <text x="540" y="243">optional 1 / 2 / 4 shots</text>
+    <rect x="725" y="85" width="255" height="105" rx="8" fill="#edf5ff" stroke="#2866a8"/>
+    <text x="852" y="113">Multi-scale score fusion</text>
+    <text x="852" y="140">Anomaly map + image score</text>
+    <text x="852" y="167">Fixed floating-point smoothing</text>
+  </g>
+  <g stroke="#526677" stroke-width="2" fill="none">
+    <path d="M145 128 H185 M380 100 L425 52 M380 135 H425 M380 160 L425 225"/>
+    <path d="M655 52 L725 112 M655 138 H725 M655 225 L725 165"/>
+  </g>
+</svg>

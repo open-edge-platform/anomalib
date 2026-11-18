@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- 🚀 **model**: Add an independent UniADet implementation with auxiliary training and deployment validation tools by @rajeshgangireddy. PR reference pending licensing clearance.
+
 ### Removed
 
 ### Changed
