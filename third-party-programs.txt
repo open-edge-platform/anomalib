@@ -82,7 +82,3 @@ terms are listed below.
 17. FoundAD model (anomalib.models.image.foundad)
     Copyright (c) 2026 FoundAD authors, https://github.com/ymxlzgy/FoundAD
     SPDX-License-Identifier: MIT
-
-18. ViT positional embedding adaptation (anomalib.models.components.feature_extractors.timm)
-    Copyright (c) 2020 Ross Wightman, https://github.com/huggingface/pytorch-image-models
-    SPDX-License-Identifier: Apache-2.0

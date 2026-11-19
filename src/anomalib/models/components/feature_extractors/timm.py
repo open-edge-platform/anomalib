@@ -1,8 +1,5 @@
 # Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
-# Positional embedding adaptation based on timm, Copyright 2020 Ross Wightman.
-# See LICENSE in this directory for upstream attribution and license.
 
 """Feature extractor using timm models and any nn.Module torch model.
 
@@ -32,6 +29,7 @@ Example:
 import functools
 import logging
 from collections.abc import Sequence
+from types import FunctionType
 from typing import cast
 
 import timm
@@ -45,38 +43,27 @@ from .utils import dryrun_find_featuremap_dims
 logger = logging.getLogger(__name__)
 
 
-def _pos_embed_without_antialiasing(model: vit.VisionTransformer, inputs: torch.Tensor) -> torch.Tensor:
-    """Apply timm positional embeddings with the existing export-compatible interpolation policy."""
-    prefix = []
-    if model.cls_token is not None:
-        prefix.append(model.cls_token.expand(inputs.shape[0], -1, -1))
-    if model.reg_token is not None:
-        prefix.append(model.reg_token.expand(inputs.shape[0], -1, -1))
-    if model.pos_embed is None:
-        return torch.cat([*prefix, inputs.view(inputs.shape[0], -1, inputs.shape[-1])], dim=1)
+def _create_pos_embed_without_antialiasing() -> FunctionType:
+    """Reuse timm's method with private interpolation globals and a stable pickle name."""
+    original = vit.VisionTransformer._pos_embed  # noqa: SLF001
+    namespace = original.__globals__.copy()
+    resampler = namespace.get("resample_abs_pos_embed")
+    if resampler is not None:
+        namespace["resample_abs_pos_embed"] = functools.partial(resampler, antialias=False)
+    implementation = FunctionType(
+        original.__code__,
+        namespace,
+        name="_pos_embed_without_antialiasing",
+        argdefs=original.__defaults__,
+        closure=original.__closure__,
+    )
+    implementation.__qualname__ = implementation.__name__
+    implementation.__module__ = __name__
+    implementation.__kwdefaults__ = original.__kwdefaults__
+    return implementation
 
-    if model.dynamic_img_size:
-        batch, height, width, channels = inputs.shape
-        pos_embed = vit.resample_abs_pos_embed(
-            model.pos_embed,
-            new_size=(height, width),
-            old_size=model.patch_embed.grid_size,
-            num_prefix_tokens=0 if model.no_embed_class else model.num_prefix_tokens,
-            antialias=False,
-        )
-        inputs = inputs.view(batch, -1, channels)
-    else:
-        pos_embed = model.pos_embed
 
-    if model.no_embed_class:
-        inputs = inputs + pos_embed
-        if prefix:
-            inputs = torch.cat([*prefix, inputs], dim=1)
-    else:
-        if prefix:
-            inputs = torch.cat([*prefix, inputs], dim=1)
-        inputs = inputs + pos_embed
-    return model.pos_drop(inputs)
+_pos_embed_without_antialiasing = _create_pos_embed_without_antialiasing()
 
 
 def _disable_pos_embed_antialiasing(model: nn.Module) -> None:
