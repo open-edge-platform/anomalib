@@ -66,6 +66,8 @@ def test_transformer_cold_load_preserves_interpolation(
     if legacy_layout:
         tiny_vit.__dict__.pop("_pos_embed", None)
     payload = tmp_path / "extractor.pt"
+    # Full-object loading is intentional; only this test's locally generated payload is loaded.
+    # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
     torch.save({"model": model, "method": method, "images": images, "expected": expected}, payload)
 
     script = """
