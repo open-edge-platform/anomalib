@@ -104,7 +104,12 @@ def _reference_images(
     if len(normal) < shots:
         msg = f"Requested {shots} references but only {len(normal)} normal images are available."
         raise ValueError(msg)
-    order = torch.randperm(len(normal), generator=torch.Generator().manual_seed(10))[:shots]
+    generator = torch.Generator().manual_seed(10)
+    order = (
+        torch.randint(len(normal), (shots,), generator=generator)
+        if model.protocol == "author"
+        else torch.randperm(len(normal), generator=generator)[:shots]
+    )
     references = torch.stack([dataset[normal[int(index)]].image for index in order])
     if model.pre_processor is None:
         msg = "Reference initialization requires backbone preprocessing."
@@ -228,8 +233,12 @@ def main() -> None:
     args = _parse_args()
     logging.basicConfig(level=logging.INFO)
     torch.set_num_threads(4)
-    manifest = json.loads((args.weights.parent / "training.json").read_text())
-    if manifest.get("recipe_version") != 2:
+    provenance = args.weights.parent / "provenance.json"
+    manifest = json.loads(
+        (provenance if provenance.is_file() else args.weights.parent / "training.json").read_text(),
+    )
+    author = manifest.get("origin") == "author"
+    if not author and manifest.get("recipe_version") != 2:
         msg = "Retrain with corrected recipe version 2 before collecting final deployment measurements."
         raise ValueError(msg)
     if manifest["source_dataset"] == args.target:
@@ -241,6 +250,7 @@ def main() -> None:
         k_shot=args.shots,
         evaluator=False,
         visualizer=False,
+        protocol="author" if author else "legacy",
     ).eval()
     dataset_class = MVTecADDataset if args.target == "mvtec" else VisaDataset
     resize = Resize((model.image_size, model.image_size), antialias=False)
@@ -274,8 +284,10 @@ def main() -> None:
     report = {
         "backbone": manifest["backbone"],
         "head_sha256": manifest["head_sha256"],
-        "training_recipe_version": manifest["recipe_version"],
-        "complete_training_recipe": manifest["complete_recipe"],
+        "protocol": model.protocol,
+        "weight_origin": "author" if author else "independently-trained",
+        "training_recipe_version": manifest.get("recipe_version"),
+        "complete_training_recipe": manifest.get("complete_recipe", False),
         "target": args.target,
         "category": args.category,
         "shots": args.shots,

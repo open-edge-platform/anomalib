@@ -30,9 +30,12 @@ class UniADetModel(DynamicBufferMixin, nn.Module):
         pretrained (bool): Load pretrained encoder weights.
         image_size (int | None): Fixed square encoder resolution.
         temperature (float): Cosine-logit temperature.
-        few_shot_weight (float): Weight of reference distance in pixel predictions.
-        image_score_weight (float): Weight of peak pixel score in image predictions.
+        few_shot_weight (float): Legacy reference-distance weight; author protocol fixes its own weights.
+        image_score_weight (float): Legacy pixel-peak weight; author protocol fixes its own weights.
         sigma (float): Gaussian smoothing standard deviation at input-image resolution.
+        protocol (str): ``"legacy"`` preserves existing heads and scores. ``"author"``
+            uses raw DINO features and published executable scoring, including a 256-square
+            image-score pooling map. Requires a head trained for that protocol.
 
     Raises:
         ValueError: If fusion weights are outside ``[0, 1]`` or sigma is nonpositive.
@@ -48,14 +51,22 @@ class UniADetModel(DynamicBufferMixin, nn.Module):
         few_shot_weight: float = 0.5,
         image_score_weight: float = 0.5,
         sigma: float = 4.0,
+        protocol: str = "legacy",
     ) -> None:
         super().__init__()
+        if protocol not in {"legacy", "author"}:
+            msg = "protocol must be 'legacy' or 'author'."
+            raise ValueError(msg)
+        if protocol == "author" and (few_shot_weight != 0.5 or image_score_weight != 0.5):
+            msg = "The author protocol fixes its fusion weights; custom weights require the legacy protocol."
+            raise ValueError(msg)
         if not 0 <= few_shot_weight <= 1 or not 0 <= image_score_weight <= 1 or sigma <= 0:
             msg = "Fusion weights must be in [0, 1] and sigma must be positive."
             raise ValueError(msg)
         self.backbone_name = backbone
         self.layers = layers
-        self.backbone = UniADetBackbone(backbone, layers, pretrained, image_size)
+        self.protocol = protocol
+        self.backbone = UniADetBackbone(backbone, layers, pretrained, image_size, protocol=protocol)
         self.head = MSDCSHead(self.backbone.feature_dim, len(layers), temperature)
         self.few_shot_weight = few_shot_weight
         self.image_score_weight = image_score_weight
@@ -103,6 +114,8 @@ class UniADetModel(DynamicBufferMixin, nn.Module):
             "image_size": self.backbone.image_size,
             "temperature": self.head.temperature,
         }
+        if self.protocol != "legacy":
+            expected["protocol"] = self.protocol
         if checkpoint.get("config") != expected:
             msg = f"Head checkpoint configuration does not match {expected}."
             raise ValueError(msg)
@@ -115,14 +128,17 @@ class UniADetModel(DynamicBufferMixin, nn.Module):
         Args:
             path (str | Path): Destination checkpoint path.
         """
+        config = {
+            "backbone": self.backbone_name,
+            "layers": list(self.layers),
+            "image_size": self.backbone.image_size,
+            "temperature": self.head.temperature,
+        }
+        if self.protocol != "legacy":
+            config["protocol"] = self.protocol
         torch.save(
             {
-                "config": {
-                    "backbone": self.backbone_name,
-                    "layers": list(self.layers),
-                    "image_size": self.backbone.image_size,
-                    "temperature": self.head.temperature,
-                },
+                "config": config,
                 "state_dict": {key: value.detach().cpu() for key, value in self.head.state_dict().items()},
             },
             path,
@@ -177,6 +193,8 @@ class UniADetModel(DynamicBufferMixin, nn.Module):
         logits = self.head(features, self.backbone.grid_size)
         image_scores = torch.stack([image.softmax(dim=-1)[:, 1] for image in logits.image]).mean(dim=0)
         anomaly_map = torch.stack([pixel.softmax(dim=1)[:, 1:2] for pixel in logits.pixel]).mean(dim=0)
+        if self.protocol == "author":
+            return self._author_predictions(features, image_scores, anomaly_map)
         if self.memory_bank.shape[1]:
             anomaly_map = (1 - self.few_shot_weight) * anomaly_map + self.few_shot_weight * self._reference_distances(
                 features,
@@ -193,3 +211,27 @@ class UniADetModel(DynamicBufferMixin, nn.Module):
             1,
         ).amax(dim=1)
         return InferenceBatch(pred_score=pred_score, anomaly_map=anomaly_map)
+
+    def _author_predictions(
+        self,
+        features: HierarchicalFeatures,
+        image_scores: torch.Tensor,
+        patch_scores: torch.Tensor,
+    ) -> InferenceBatch:
+        size = (self.backbone.image_size,) * 2
+        anomaly_map = functional.interpolate(patch_scores, size=size, mode="bilinear", align_corners=False)
+        anomaly_map = torch.sigmoid(15 * (anomaly_map - 0.4))
+        if self.memory_bank.shape[1]:
+            reference = functional.interpolate(
+                self._reference_distances(features),
+                size=size,
+                mode="bilinear",
+                align_corners=False,
+            )
+            reference = torch.sigmoid(15 * (self.blur(reference) - 0.3))
+            anomaly_map = 0.2 * anomaly_map + 0.8 * reference
+        anomaly_map = self.blur(anomaly_map)
+        score_map = functional.interpolate(anomaly_map, size=(256, 256), mode="bilinear", align_corners=False)
+        peak_weight = 0.5 if self.memory_bank.shape[1] else 0.1
+        score = (1 - peak_weight) * image_scores + peak_weight * score_map.flatten(1).amax(1)
+        return InferenceBatch(pred_score=score, anomaly_map=anomaly_map)

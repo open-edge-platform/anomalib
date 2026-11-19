@@ -1,0 +1,628 @@
+{
+  "protocol": "author-v1",
+  "weights": {
+    "origin": "author",
+    "backbone": "dinov3",
+    "source_dataset": "mvtec",
+    "repository": "csgaobb/UniADet",
+    "revision": "88de3178cff5ab6f895f53d5934dac9f3f80b3b8",
+    "filename": "train_on_mvtec_zs_ViT-L-16-DINOv3_imagesize512_1015/epoch_15.pth",
+    "original_sha256": "43d767e189ea0aca0ca97a367457c5ae87c1c50d543b7bc8d606cfaa1afb148b",
+    "head_sha256": "8c86268299d7ca8b9f4bd3952cb1ec660c0a83be845f6d4738090beae58ab3e2",
+    "conversion": "Stack only; no tensor values changed.",
+    "source_revision": "2b81369d418ed08fd882452597ad5ebe7df3cb1d",
+    "protocol": "author-v1",
+    "training_reproduced": false,
+    "license": "Author research/evaluation terms; see pinned HF model card. No weights redistributed."
+  },
+  "target_dataset": "visa",
+  "categories": [
+    "candle",
+    "capsules",
+    "cashew",
+    "chewinggum",
+    "fryum",
+    "macaroni1",
+    "macaroni2",
+    "pcb1",
+    "pcb2",
+    "pcb3",
+    "pcb4",
+    "pipe_fryum"
+  ],
+  "shots": [
+    0,
+    1,
+    2,
+    4
+  ],
+  "seeds": [
+    10,
+    20,
+    30
+  ],
+  "batch_size": 32,
+  "pixel_resolution": 256,
+  "reference_sampling": "CPU torch.randint with replacement, reseeded per category",
+  "preprocessing": "PIL RGB decode; OpenCV uint8 INTER_LINEAR image and INTER_NEAREST mask resize; backbone normalization",
+  "encoder_precision": "fp32",
+  "precision_details": "FP32 throughout; no autocast or TF32",
+  "metric_backend": "Torchmetrics exact AUROC/PR curve; paper recall-sorted trapezoid and separate standard AP",
+  "paper_ap_definition": "torchmetrics_auc_reorder",
+  "metric_device": "cuda:1",
+  "aggregation": "category macro mean per seed, then seed mean and population standard deviation",
+  "training_reproduced": false,
+  "implementation_sha256": {
+    "/home/devuser/workspace/code/Anomalib/anomalib/tools/uniadet/reproduce.py": "b46371e86d5d0b29f29cc640c2b3881e3e735731fa178b6e19011790790d0e45",
+    "/home/devuser/workspace/code/Anomalib/anomalib/tools/uniadet/author.py": "4588391b4579d4be2d4a4ee9bb734292435996fdc4405a654dd771a84a7aa13b",
+    "src/anomalib/models/image/uniadet/backbones.py": "912642cf205432c9ebd1177636b8d5586135c673fcce213c2b1ec19c57940700",
+    "src/anomalib/models/image/uniadet/head.py": "4837499db803298163c5f33dd97e834ac7a6eb24c60c1a173b94cc3f94e590e5",
+    "src/anomalib/models/image/uniadet/torch_model.py": "9fa5630f001da9470d10133ffa97d721f72e3baa02fce1c65c35e2f69760183b",
+    "src/anomalib/models/image/uniadet/lightning_model.py": "e116c2df5b00f4e1306c3aded83ee72536c70a8c8014c5da4a1aa9bb7f662d5f"
+  },
+  "references": {
+    "candle/1/10": [
+      "candle/Data/Images/Normal/0207.JPG"
+    ],
+    "candle/1/20": [
+      "candle/Data/Images/Normal/0433.JPG"
+    ],
+    "candle/1/30": [
+      "candle/Data/Images/Normal/0399.JPG"
+    ],
+    "candle/2/10": [
+      "candle/Data/Images/Normal/0207.JPG",
+      "candle/Data/Images/Normal/0211.JPG"
+    ],
+    "candle/2/20": [
+      "candle/Data/Images/Normal/0433.JPG",
+      "candle/Data/Images/Normal/0744.JPG"
+    ],
+    "candle/2/30": [
+      "candle/Data/Images/Normal/0399.JPG",
+      "candle/Data/Images/Normal/0628.JPG"
+    ],
+    "candle/4/10": [
+      "candle/Data/Images/Normal/0207.JPG",
+      "candle/Data/Images/Normal/0211.JPG",
+      "candle/Data/Images/Normal/0313.JPG",
+      "candle/Data/Images/Normal/0539.JPG"
+    ],
+    "candle/4/20": [
+      "candle/Data/Images/Normal/0433.JPG",
+      "candle/Data/Images/Normal/0744.JPG",
+      "candle/Data/Images/Normal/0734.JPG",
+      "candle/Data/Images/Normal/0166.JPG"
+    ],
+    "candle/4/30": [
+      "candle/Data/Images/Normal/0399.JPG",
+      "candle/Data/Images/Normal/0628.JPG",
+      "candle/Data/Images/Normal/0501.JPG",
+      "candle/Data/Images/Normal/0999.JPG"
+    ],
+    "capsules/1/10": [
+      "capsules/Data/Images/Normal/275.JPG"
+    ],
+    "capsules/1/20": [
+      "capsules/Data/Images/Normal/512.JPG"
+    ],
+    "capsules/1/30": [
+      "capsules/Data/Images/Normal/144.JPG"
+    ],
+    "capsules/2/10": [
+      "capsules/Data/Images/Normal/275.JPG",
+      "capsules/Data/Images/Normal/040.JPG"
+    ],
+    "capsules/2/20": [
+      "capsules/Data/Images/Normal/512.JPG",
+      "capsules/Data/Images/Normal/407.JPG"
+    ],
+    "capsules/2/30": [
+      "capsules/Data/Images/Normal/144.JPG",
+      "capsules/Data/Images/Normal/101.JPG"
+    ],
+    "capsules/4/10": [
+      "capsules/Data/Images/Normal/275.JPG",
+      "capsules/Data/Images/Normal/040.JPG",
+      "capsules/Data/Images/Normal/340.JPG",
+      "capsules/Data/Images/Normal/550.JPG"
+    ],
+    "capsules/4/20": [
+      "capsules/Data/Images/Normal/512.JPG",
+      "capsules/Data/Images/Normal/407.JPG",
+      "capsules/Data/Images/Normal/195.JPG",
+      "capsules/Data/Images/Normal/000.JPG"
+    ],
+    "capsules/4/30": [
+      "capsules/Data/Images/Normal/144.JPG",
+      "capsules/Data/Images/Normal/101.JPG",
+      "capsules/Data/Images/Normal/396.JPG",
+      "capsules/Data/Images/Normal/111.JPG"
+    ],
+    "cashew/1/10": [
+      "cashew/Data/Images/Normal/005.JPG"
+    ],
+    "cashew/1/20": [
+      "cashew/Data/Images/Normal/211.JPG"
+    ],
+    "cashew/1/30": [
+      "cashew/Data/Images/Normal/038.JPG"
+    ],
+    "cashew/2/10": [
+      "cashew/Data/Images/Normal/005.JPG",
+      "cashew/Data/Images/Normal/082.JPG"
+    ],
+    "cashew/2/20": [
+      "cashew/Data/Images/Normal/211.JPG",
+      "cashew/Data/Images/Normal/171.JPG"
+    ],
+    "cashew/2/30": [
+      "cashew/Data/Images/Normal/038.JPG",
+      "cashew/Data/Images/Normal/304.JPG"
+    ],
+    "cashew/4/10": [
+      "cashew/Data/Images/Normal/005.JPG",
+      "cashew/Data/Images/Normal/082.JPG",
+      "cashew/Data/Images/Normal/049.JPG",
+      "cashew/Data/Images/Normal/388.JPG"
+    ],
+    "cashew/4/20": [
+      "cashew/Data/Images/Normal/211.JPG",
+      "cashew/Data/Images/Normal/171.JPG",
+      "cashew/Data/Images/Normal/318.JPG",
+      "cashew/Data/Images/Normal/410.JPG"
+    ],
+    "cashew/4/30": [
+      "cashew/Data/Images/Normal/038.JPG",
+      "cashew/Data/Images/Normal/304.JPG",
+      "cashew/Data/Images/Normal/388.JPG",
+      "cashew/Data/Images/Normal/408.JPG"
+    ],
+    "chewinggum/1/10": [
+      "chewinggum/Data/Images/Normal/447.JPG"
+    ],
+    "chewinggum/1/20": [
+      "chewinggum/Data/Images/Normal/041.JPG"
+    ],
+    "chewinggum/1/30": [
+      "chewinggum/Data/Images/Normal/035.JPG"
+    ],
+    "chewinggum/2/10": [
+      "chewinggum/Data/Images/Normal/447.JPG",
+      "chewinggum/Data/Images/Normal/381.JPG"
+    ],
+    "chewinggum/2/20": [
+      "chewinggum/Data/Images/Normal/041.JPG",
+      "chewinggum/Data/Images/Normal/328.JPG"
+    ],
+    "chewinggum/2/30": [
+      "chewinggum/Data/Images/Normal/035.JPG",
+      "chewinggum/Data/Images/Normal/425.JPG"
+    ],
+    "chewinggum/4/10": [
+      "chewinggum/Data/Images/Normal/447.JPG",
+      "chewinggum/Data/Images/Normal/381.JPG",
+      "chewinggum/Data/Images/Normal/313.JPG",
+      "chewinggum/Data/Images/Normal/438.JPG"
+    ],
+    "chewinggum/4/20": [
+      "chewinggum/Data/Images/Normal/041.JPG",
+      "chewinggum/Data/Images/Normal/328.JPG",
+      "chewinggum/Data/Images/Normal/048.JPG",
+      "chewinggum/Data/Images/Normal/195.JPG"
+    ],
+    "chewinggum/4/30": [
+      "chewinggum/Data/Images/Normal/035.JPG",
+      "chewinggum/Data/Images/Normal/425.JPG",
+      "chewinggum/Data/Images/Normal/162.JPG",
+      "chewinggum/Data/Images/Normal/282.JPG"
+    ],
+    "fryum/1/10": [
+      "fryum/Data/Images/Normal/005.JPG"
+    ],
+    "fryum/1/20": [
+      "fryum/Data/Images/Normal/211.JPG"
+    ],
+    "fryum/1/30": [
+      "fryum/Data/Images/Normal/038.JPG"
+    ],
+    "fryum/2/10": [
+      "fryum/Data/Images/Normal/005.JPG",
+      "fryum/Data/Images/Normal/082.JPG"
+    ],
+    "fryum/2/20": [
+      "fryum/Data/Images/Normal/211.JPG",
+      "fryum/Data/Images/Normal/171.JPG"
+    ],
+    "fryum/2/30": [
+      "fryum/Data/Images/Normal/038.JPG",
+      "fryum/Data/Images/Normal/304.JPG"
+    ],
+    "fryum/4/10": [
+      "fryum/Data/Images/Normal/005.JPG",
+      "fryum/Data/Images/Normal/082.JPG",
+      "fryum/Data/Images/Normal/049.JPG",
+      "fryum/Data/Images/Normal/388.JPG"
+    ],
+    "fryum/4/20": [
+      "fryum/Data/Images/Normal/211.JPG",
+      "fryum/Data/Images/Normal/171.JPG",
+      "fryum/Data/Images/Normal/318.JPG",
+      "fryum/Data/Images/Normal/410.JPG"
+    ],
+    "fryum/4/30": [
+      "fryum/Data/Images/Normal/038.JPG",
+      "fryum/Data/Images/Normal/304.JPG",
+      "fryum/Data/Images/Normal/388.JPG",
+      "fryum/Data/Images/Normal/408.JPG"
+    ],
+    "macaroni1/1/10": [
+      "macaroni1/Data/Images/Normal/0207.JPG"
+    ],
+    "macaroni1/1/20": [
+      "macaroni1/Data/Images/Normal/0433.JPG"
+    ],
+    "macaroni1/1/30": [
+      "macaroni1/Data/Images/Normal/0399.JPG"
+    ],
+    "macaroni1/2/10": [
+      "macaroni1/Data/Images/Normal/0207.JPG",
+      "macaroni1/Data/Images/Normal/0211.JPG"
+    ],
+    "macaroni1/2/20": [
+      "macaroni1/Data/Images/Normal/0433.JPG",
+      "macaroni1/Data/Images/Normal/0744.JPG"
+    ],
+    "macaroni1/2/30": [
+      "macaroni1/Data/Images/Normal/0399.JPG",
+      "macaroni1/Data/Images/Normal/0628.JPG"
+    ],
+    "macaroni1/4/10": [
+      "macaroni1/Data/Images/Normal/0207.JPG",
+      "macaroni1/Data/Images/Normal/0211.JPG",
+      "macaroni1/Data/Images/Normal/0313.JPG",
+      "macaroni1/Data/Images/Normal/0539.JPG"
+    ],
+    "macaroni1/4/20": [
+      "macaroni1/Data/Images/Normal/0433.JPG",
+      "macaroni1/Data/Images/Normal/0744.JPG",
+      "macaroni1/Data/Images/Normal/0734.JPG",
+      "macaroni1/Data/Images/Normal/0166.JPG"
+    ],
+    "macaroni1/4/30": [
+      "macaroni1/Data/Images/Normal/0399.JPG",
+      "macaroni1/Data/Images/Normal/0628.JPG",
+      "macaroni1/Data/Images/Normal/0501.JPG",
+      "macaroni1/Data/Images/Normal/0999.JPG"
+    ],
+    "macaroni2/1/10": [
+      "macaroni2/Data/Images/Normal/0207.JPG"
+    ],
+    "macaroni2/1/20": [
+      "macaroni2/Data/Images/Normal/0433.JPG"
+    ],
+    "macaroni2/1/30": [
+      "macaroni2/Data/Images/Normal/0399.JPG"
+    ],
+    "macaroni2/2/10": [
+      "macaroni2/Data/Images/Normal/0207.JPG",
+      "macaroni2/Data/Images/Normal/0211.JPG"
+    ],
+    "macaroni2/2/20": [
+      "macaroni2/Data/Images/Normal/0433.JPG",
+      "macaroni2/Data/Images/Normal/0744.JPG"
+    ],
+    "macaroni2/2/30": [
+      "macaroni2/Data/Images/Normal/0399.JPG",
+      "macaroni2/Data/Images/Normal/0628.JPG"
+    ],
+    "macaroni2/4/10": [
+      "macaroni2/Data/Images/Normal/0207.JPG",
+      "macaroni2/Data/Images/Normal/0211.JPG",
+      "macaroni2/Data/Images/Normal/0313.JPG",
+      "macaroni2/Data/Images/Normal/0539.JPG"
+    ],
+    "macaroni2/4/20": [
+      "macaroni2/Data/Images/Normal/0433.JPG",
+      "macaroni2/Data/Images/Normal/0744.JPG",
+      "macaroni2/Data/Images/Normal/0734.JPG",
+      "macaroni2/Data/Images/Normal/0166.JPG"
+    ],
+    "macaroni2/4/30": [
+      "macaroni2/Data/Images/Normal/0399.JPG",
+      "macaroni2/Data/Images/Normal/0628.JPG",
+      "macaroni2/Data/Images/Normal/0501.JPG",
+      "macaroni2/Data/Images/Normal/0999.JPG"
+    ],
+    "pcb1/1/10": [
+      "pcb1/Data/Images/Normal/0081.JPG"
+    ],
+    "pcb1/1/20": [
+      "pcb1/Data/Images/Normal/0700.JPG"
+    ],
+    "pcb1/1/30": [
+      "pcb1/Data/Images/Normal/0885.JPG"
+    ],
+    "pcb1/2/10": [
+      "pcb1/Data/Images/Normal/0081.JPG",
+      "pcb1/Data/Images/Normal/0021.JPG"
+    ],
+    "pcb1/2/20": [
+      "pcb1/Data/Images/Normal/0700.JPG",
+      "pcb1/Data/Images/Normal/0326.JPG"
+    ],
+    "pcb1/2/30": [
+      "pcb1/Data/Images/Normal/0885.JPG",
+      "pcb1/Data/Images/Normal/0058.JPG"
+    ],
+    "pcb1/4/10": [
+      "pcb1/Data/Images/Normal/0081.JPG",
+      "pcb1/Data/Images/Normal/0021.JPG",
+      "pcb1/Data/Images/Normal/0435.JPG",
+      "pcb1/Data/Images/Normal/0293.JPG"
+    ],
+    "pcb1/4/20": [
+      "pcb1/Data/Images/Normal/0700.JPG",
+      "pcb1/Data/Images/Normal/0326.JPG",
+      "pcb1/Data/Images/Normal/0150.JPG",
+      "pcb1/Data/Images/Normal/0667.JPG"
+    ],
+    "pcb1/4/30": [
+      "pcb1/Data/Images/Normal/0885.JPG",
+      "pcb1/Data/Images/Normal/0058.JPG",
+      "pcb1/Data/Images/Normal/0443.JPG",
+      "pcb1/Data/Images/Normal/0317.JPG"
+    ],
+    "pcb2/1/10": [
+      "pcb2/Data/Images/Normal/0626.JPG"
+    ],
+    "pcb2/1/20": [
+      "pcb2/Data/Images/Normal/0431.JPG"
+    ],
+    "pcb2/1/30": [
+      "pcb2/Data/Images/Normal/0263.JPG"
+    ],
+    "pcb2/2/10": [
+      "pcb2/Data/Images/Normal/0626.JPG",
+      "pcb2/Data/Images/Normal/0408.JPG"
+    ],
+    "pcb2/2/20": [
+      "pcb2/Data/Images/Normal/0431.JPG",
+      "pcb2/Data/Images/Normal/0085.JPG"
+    ],
+    "pcb2/2/30": [
+      "pcb2/Data/Images/Normal/0263.JPG",
+      "pcb2/Data/Images/Normal/0125.JPG"
+    ],
+    "pcb2/4/10": [
+      "pcb2/Data/Images/Normal/0626.JPG",
+      "pcb2/Data/Images/Normal/0408.JPG",
+      "pcb2/Data/Images/Normal/0752.JPG",
+      "pcb2/Data/Images/Normal/0865.JPG"
+    ],
+    "pcb2/4/20": [
+      "pcb2/Data/Images/Normal/0431.JPG",
+      "pcb2/Data/Images/Normal/0085.JPG",
+      "pcb2/Data/Images/Normal/0632.JPG",
+      "pcb2/Data/Images/Normal/0409.JPG"
+    ],
+    "pcb2/4/30": [
+      "pcb2/Data/Images/Normal/0263.JPG",
+      "pcb2/Data/Images/Normal/0125.JPG",
+      "pcb2/Data/Images/Normal/0226.JPG",
+      "pcb2/Data/Images/Normal/0278.JPG"
+    ],
+    "pcb3/1/10": [
+      "pcb3/Data/Images/Normal/0121.JPG"
+    ],
+    "pcb3/1/20": [
+      "pcb3/Data/Images/Normal/0640.JPG"
+    ],
+    "pcb3/1/30": [
+      "pcb3/Data/Images/Normal/0002.JPG"
+    ],
+    "pcb3/2/10": [
+      "pcb3/Data/Images/Normal/0121.JPG",
+      "pcb3/Data/Images/Normal/0986.JPG"
+    ],
+    "pcb3/2/20": [
+      "pcb3/Data/Images/Normal/0640.JPG",
+      "pcb3/Data/Images/Normal/0131.JPG"
+    ],
+    "pcb3/2/30": [
+      "pcb3/Data/Images/Normal/0002.JPG",
+      "pcb3/Data/Images/Normal/0662.JPG"
+    ],
+    "pcb3/4/10": [
+      "pcb3/Data/Images/Normal/0121.JPG",
+      "pcb3/Data/Images/Normal/0986.JPG",
+      "pcb3/Data/Images/Normal/0190.JPG",
+      "pcb3/Data/Images/Normal/0530.JPG"
+    ],
+    "pcb3/4/20": [
+      "pcb3/Data/Images/Normal/0640.JPG",
+      "pcb3/Data/Images/Normal/0131.JPG",
+      "pcb3/Data/Images/Normal/0084.JPG",
+      "pcb3/Data/Images/Normal/0448.JPG"
+    ],
+    "pcb3/4/30": [
+      "pcb3/Data/Images/Normal/0002.JPG",
+      "pcb3/Data/Images/Normal/0662.JPG",
+      "pcb3/Data/Images/Normal/0894.JPG",
+      "pcb3/Data/Images/Normal/0931.JPG"
+    ],
+    "pcb4/1/10": [
+      "pcb4/Data/Images/Normal/0081.JPG"
+    ],
+    "pcb4/1/20": [
+      "pcb4/Data/Images/Normal/0700.JPG"
+    ],
+    "pcb4/1/30": [
+      "pcb4/Data/Images/Normal/0885.JPG"
+    ],
+    "pcb4/2/10": [
+      "pcb4/Data/Images/Normal/0081.JPG",
+      "pcb4/Data/Images/Normal/0021.JPG"
+    ],
+    "pcb4/2/20": [
+      "pcb4/Data/Images/Normal/0700.JPG",
+      "pcb4/Data/Images/Normal/0326.JPG"
+    ],
+    "pcb4/2/30": [
+      "pcb4/Data/Images/Normal/0885.JPG",
+      "pcb4/Data/Images/Normal/0058.JPG"
+    ],
+    "pcb4/4/10": [
+      "pcb4/Data/Images/Normal/0081.JPG",
+      "pcb4/Data/Images/Normal/0021.JPG",
+      "pcb4/Data/Images/Normal/0435.JPG",
+      "pcb4/Data/Images/Normal/0293.JPG"
+    ],
+    "pcb4/4/20": [
+      "pcb4/Data/Images/Normal/0700.JPG",
+      "pcb4/Data/Images/Normal/0326.JPG",
+      "pcb4/Data/Images/Normal/0150.JPG",
+      "pcb4/Data/Images/Normal/0667.JPG"
+    ],
+    "pcb4/4/30": [
+      "pcb4/Data/Images/Normal/0885.JPG",
+      "pcb4/Data/Images/Normal/0058.JPG",
+      "pcb4/Data/Images/Normal/0443.JPG",
+      "pcb4/Data/Images/Normal/0317.JPG"
+    ],
+    "pipe_fryum/1/10": [
+      "pipe_fryum/Data/Images/Normal/005.JPG"
+    ],
+    "pipe_fryum/1/20": [
+      "pipe_fryum/Data/Images/Normal/211.JPG"
+    ],
+    "pipe_fryum/1/30": [
+      "pipe_fryum/Data/Images/Normal/038.JPG"
+    ],
+    "pipe_fryum/2/10": [
+      "pipe_fryum/Data/Images/Normal/005.JPG",
+      "pipe_fryum/Data/Images/Normal/082.JPG"
+    ],
+    "pipe_fryum/2/20": [
+      "pipe_fryum/Data/Images/Normal/211.JPG",
+      "pipe_fryum/Data/Images/Normal/171.JPG"
+    ],
+    "pipe_fryum/2/30": [
+      "pipe_fryum/Data/Images/Normal/038.JPG",
+      "pipe_fryum/Data/Images/Normal/304.JPG"
+    ],
+    "pipe_fryum/4/10": [
+      "pipe_fryum/Data/Images/Normal/005.JPG",
+      "pipe_fryum/Data/Images/Normal/082.JPG",
+      "pipe_fryum/Data/Images/Normal/049.JPG",
+      "pipe_fryum/Data/Images/Normal/388.JPG"
+    ],
+    "pipe_fryum/4/20": [
+      "pipe_fryum/Data/Images/Normal/211.JPG",
+      "pipe_fryum/Data/Images/Normal/171.JPG",
+      "pipe_fryum/Data/Images/Normal/318.JPG",
+      "pipe_fryum/Data/Images/Normal/410.JPG"
+    ],
+    "pipe_fryum/4/30": [
+      "pipe_fryum/Data/Images/Normal/038.JPG",
+      "pipe_fryum/Data/Images/Normal/304.JPG",
+      "pipe_fryum/Data/Images/Normal/388.JPG",
+      "pipe_fryum/Data/Images/Normal/408.JPG"
+    ]
+  },
+  "splits": {
+    "candle": {
+      "train": 900,
+      "test": 200,
+      "test_normal": 100,
+      "test_anomalous": 100,
+      "ordered_split_sha256": "0e4f6e24e876b8a2fdf2f0eff036cb761c6af91f952a7efd506b3d7499aa8178"
+    },
+    "capsules": {
+      "train": 542,
+      "test": 160,
+      "test_normal": 60,
+      "test_anomalous": 100,
+      "ordered_split_sha256": "3470ecfda583fa1f5ac3a2366006815fe5777df0f32a3c0bc3f7fbe75cc95a2a"
+    },
+    "cashew": {
+      "train": 450,
+      "test": 150,
+      "test_normal": 50,
+      "test_anomalous": 100,
+      "ordered_split_sha256": "a619a3e24c0e2d585e1210b0a0a5725c36e59a2f9b03ac54fc7f77d9862ce308"
+    },
+    "chewinggum": {
+      "train": 453,
+      "test": 150,
+      "test_normal": 50,
+      "test_anomalous": 100,
+      "ordered_split_sha256": "d257c7dbc2a8f3dd78c2672097f6a0cb4a68329578414ba078b60079fd907a3f"
+    },
+    "fryum": {
+      "train": 450,
+      "test": 150,
+      "test_normal": 50,
+      "test_anomalous": 100,
+      "ordered_split_sha256": "95ff377919352e8ac8049030075bdef31f4863b984d302669452323bcd242511"
+    },
+    "macaroni1": {
+      "train": 900,
+      "test": 200,
+      "test_normal": 100,
+      "test_anomalous": 100,
+      "ordered_split_sha256": "12773362dc467aa0a153e06f3202b9b009ffe799b39564f41d92ff999987aa54"
+    },
+    "macaroni2": {
+      "train": 900,
+      "test": 200,
+      "test_normal": 100,
+      "test_anomalous": 100,
+      "ordered_split_sha256": "25b250a3d155f6e64343955681bd4397bddab8a646ae413d99942f9cf8a42fb1"
+    },
+    "pcb1": {
+      "train": 904,
+      "test": 200,
+      "test_normal": 100,
+      "test_anomalous": 100,
+      "ordered_split_sha256": "e0b62c5679d459a22e9e51e3a0bf07dd276b6e603a81af42d75f921a397175ee"
+    },
+    "pcb2": {
+      "train": 901,
+      "test": 200,
+      "test_normal": 100,
+      "test_anomalous": 100,
+      "ordered_split_sha256": "5c8256cd8840294877d61097b64ded7a1efd5e5836d4d0d159504be0606dd1a8"
+    },
+    "pcb3": {
+      "train": 905,
+      "test": 201,
+      "test_normal": 101,
+      "test_anomalous": 100,
+      "ordered_split_sha256": "fcf8e033913942a422a08ebb75177d65c00a9b5ff27a82c608d0d8550ad24742"
+    },
+    "pcb4": {
+      "train": 904,
+      "test": 201,
+      "test_normal": 101,
+      "test_anomalous": 100,
+      "ordered_split_sha256": "dc83f94d3e61377700dc74874b527d674ec81f938e19052c7163b88449bee49d"
+    },
+    "pipe_fryum": {
+      "train": 450,
+      "test": 150,
+      "test_normal": 50,
+      "test_anomalous": 100,
+      "ordered_split_sha256": "929b02e44dc5b172ec1d31ffce55176e6e8ea092635d75b495b19196bac3f810"
+    }
+  },
+  "visa_split_sha256": "a48557e6033318cb90556f706196bc9d247a776a23ea51aecee5a80dd0332995",
+  "torch": "2.14.0+cu130",
+  "timm": "1.0.29",
+  "torchmetrics": "1.9.0",
+  "opencv": "5.0.0",
+  "python": "3.13.12",
+  "device": "NVIDIA GeForce RTX 3090",
+  "duration_seconds": 264.4090804522857,
+  "complete": true
+}

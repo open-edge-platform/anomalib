@@ -5,6 +5,7 @@
 
 import csv
 import json
+import math
 from pathlib import Path
 
 import pytest
@@ -44,6 +45,23 @@ def test_macro_summary_and_seed_variation(benchmark_run: Path) -> None:
         assert row["measured_std"] == pytest.approx(10)
 
 
+@pytest.mark.parametrize(
+    "value",
+    [math.nextafter(1.0, math.inf), 1.0 + 2 * math.ulp(1.0), 1.000001, -0.000001],
+)
+def test_metric_roundoff_is_bounded_to_one_ulp(benchmark_run: Path, value: float) -> None:
+    """Perfect sklearn AP can exceed one by a float64 ULP; genuine out-of-range values remain invalid."""
+    path = benchmark_run / "categories.csv"
+    path.write_text(path.read_text().replace("0.8", str(value)))
+    if value == math.nextafter(1.0, math.inf):
+        for row in summarize_run(benchmark_run):
+            assert row["measured_mean"] == pytest.approx(80)
+            assert row["measured_std"] == pytest.approx(20)
+    else:
+        with pytest.raises(ValueError, match="invalid or nonfinite"):
+            summarize_run(benchmark_run)
+
+
 @pytest.mark.parametrize("version", [None, 1])
 def test_reject_outdated_training_recipe(benchmark_run: Path, version: int | None) -> None:
     """Initial-recipe measurements cannot masquerade as corrected author-parameter runs."""
@@ -69,3 +87,43 @@ def test_reject_incomplete_or_invalid_measurements(benchmark_run: Path, corrupti
     path.write_text("\n".join(lines) + "\n")
     with pytest.raises(ValueError, match=r"missing|duplicated|nonfinite"):
         summarize_run(benchmark_run)
+
+
+def test_author_evaluation_is_not_reported_as_independent_training(tmp_path: Path) -> None:
+    """Complete author-head inference is accepted without inventing a locally reproduced training run."""
+    manifest = {
+        "complete": True,
+        "protocol": "author-v1",
+        "paper_ap_definition": "torchmetrics_auc_reorder",
+        "weights": {"origin": "author", "backbone": "dinov2", "source_dataset": "visa"},
+        "target_dataset": "mvtec",
+        "categories": list(CATEGORIES),
+        "shots": [0, 1, 2, 4],
+        "seeds": [10, 20, 30],
+    }
+    path = tmp_path / "evaluation.json"
+    path.write_text(json.dumps(manifest))
+    rows = [
+        {"category": category, "shots": shots, "seed": seed, **dict.fromkeys(METRICS, value)}
+        for category in CATEGORIES
+        for shots in manifest["shots"]
+        for seed, value in ([(10, 0.6)] if shots == 0 else [(10, 0.6), (20, 0.8), (30, 1.0)])
+    ]
+    with (tmp_path / "categories.csv").open("w", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+    summary = summarize_run(tmp_path)
+    assert len(summary) == 16
+    assert all(row["weight_origin"] == "author" for row in summary)
+    for row in summary:
+        assert row["measured_mean"] == pytest.approx(60 if row["shots"] == 0 else 80)
+    manifest["paper_ap_definition"] = "stepwise_average_precision"
+    path.write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="complete full-training"):
+        summarize_run(tmp_path)
+    manifest["paper_ap_definition"] = "torchmetrics_auc_reorder"
+    manifest["weights"]["source_dataset"] = "mvtec"
+    path.write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="complete full-training"):
+        summarize_run(tmp_path)

@@ -63,6 +63,118 @@ runs validation before predicting with a zero-/few-shot model.
 
 ## Reproduction and benchmarks
 
+### Author-checkpoint evaluation
+
+The explicit `protocol="author"` option uses the released detection-forward conventions and scoring.
+It preserves legacy behavior by default and rejects heads saved for the other protocol.
+This option uses raw DINO intermediate features, the published CLIP positional-grid interpolation,
+the official rounded DINOv3 rotary periods, and executable score recalibration/fusion.
+Its fusion weights are fixed by the preset; `few_shot_weight`/`image_score_weight` customize legacy scoring only.
+
+Authorized author heads are now accessible. They are **not** bundled with anomalib.
+Using an existing Hugging Face login with approved access, import the six small heads locally:
+
+```bash
+uv run --no-sync python -m tools.uniadet.author --output results/UniADet/author_weights
+```
+
+The importer pins both source and checkpoint revisions, uses `torch.load(weights_only=True)`,
+validates every prototype, and only stacks tensors; their values are unchanged.
+Author-head evaluation is **not independent auxiliary-training reproduction**.
+Do not attribute its accuracy to the legacy training recipe below.
+
+For Engine inference, select the matching head protocol explicitly:
+
+```python
+model = UniADet(
+    backbone="dinov2",
+    weights="results/UniADet/author_weights/dinov2_visa/head.pt",
+    protocol="author",
+    k_shot=4,
+)
+```
+
+```bash
+uv run --no-sync python -m tools.uniadet.reproduce \
+  --weights results/UniADet/author_weights/dinov2_visa/head.pt \
+  --dataset mvtec --root datasets/MVTecAD \
+  --output results/UniADet/reproduction/dinov2_mvtec
+```
+
+For VisA, use the MVTec-trained head and the **original** `datasets/visa` directory, not `visa_pytorch`.
+The helper follows the original `split_csv/1cls.csv` row order. Both directions use normal target training
+references, with-replacement `torch.randint` seeded separately per category, shots 0/1/2/4, and reference
+seeds 10/20/30 (zero-shot once). Images are decoded as RGB and resized as uint8 with OpenCV bilinear;
+binary masks use nearest interpolation. Pixel evaluation and image-peak pooling use 256-square maps.
+Batch size is 32. Reference filenames, ordered split identities, weight/code hashes and software versions are recorded.
+All-category coverage is required before a report is accepted.
+
+For one-to-one paper comparison, **AP follows the released evaluator's recall-sorted trapezoidal PR area**,
+not standard stepwise average precision. The latter is retained in separate `*_average_precision` CSV columns;
+anomalib's standard metrics are unchanged. The distinction matters even for perfect rankings and tied scores.
+Use this helper to replay the original uint8 resizing and VisA reference order; generic Engine datamodule loading
+alone is not claimed to reproduce those dataset-specific details.
+
+The primary runs use FP32. Separate CLIP runs with `--encoder-precision author` measure the released CUDA
+loader's FP16 encoder/FP32 LayerNorm and head convention. Do not mix precision variants in a table without labeling them.
+
+All six full evaluations and both CLIP precision supplements are complete: **810 FP32 plus 270 supplemental
+category/shot/seed rows**. Every one of the **96 paper comparisons is within 0.07 percentage points** of the
+published mean, for both uniform FP32 and the author-loader precision policy. The largest gap is 0.06956 points
+(four-shot VisA DINOv3 image AUROC: 97.03044 versus 97.1).
+Changing CLIP from FP32 to the author-loader precision changes any aggregate metric by less than 0.01 points.
+
+The following complete table uses the **prespecified author-loader precision**: CLIP's FP16 encoder with FP32
+LayerNorm/head, and FP32 DINO encoders. Values are category/seed macro means in percent; AP uses the paper's
+PR-area convention, not standard average precision.
+
+| Encoder  | Target   | Shots | Image AUROC | Pixel AUROC | Image AP | Pixel AP |
+| -------- | -------- | ----- | ----------- | ----------- | -------- | -------- |
+| CLIP     | MVTec AD | 0     | 92.40       | 91.83       | 96.08    | 42.81    |
+| CLIP     | MVTec AD | 1     | 96.32       | 95.60       | 98.08    | 55.74    |
+| CLIP     | MVTec AD | 2     | 96.94       | 95.91       | 98.31    | 56.98    |
+| CLIP     | MVTec AD | 4     | 97.75       | 96.30       | 98.58    | 58.85    |
+| CLIP     | VisA     | 0     | 87.96       | 95.76       | 89.11    | 27.98    |
+| CLIP     | VisA     | 1     | 89.34       | 97.51       | 90.56    | 32.82    |
+| CLIP     | VisA     | 2     | 92.33       | 97.81       | 92.99    | 35.84    |
+| CLIP     | VisA     | 4     | 93.26       | 97.96       | 93.78    | 36.67    |
+| DINOv2-R | MVTec AD | 0     | 93.50       | 92.44       | 97.23    | 50.85    |
+| DINOv2-R | MVTec AD | 1     | 97.54       | 97.11       | 98.62    | 63.07    |
+| DINOv2-R | MVTec AD | 2     | 97.96       | 97.40       | 98.94    | 64.14    |
+| DINOv2-R | MVTec AD | 4     | 98.73       | 97.65       | 99.22    | 65.44    |
+| DINOv2-R | VisA     | 0     | 91.27       | 95.87       | 90.99    | 32.73    |
+| DINOv2-R | VisA     | 1     | 95.24       | 98.18       | 95.56    | 42.14    |
+| DINOv2-R | VisA     | 2     | 96.15       | 98.44       | 96.27    | 44.25    |
+| DINOv2-R | VisA     | 4     | 96.92       | 98.58       | 96.80    | 45.25    |
+| DINOv3   | MVTec AD | 0     | 93.98       | 93.20       | 97.14    | 52.69    |
+| DINOv3   | MVTec AD | 1     | 97.16       | 97.39       | 98.11    | 66.51    |
+| DINOv3   | MVTec AD | 2     | 97.65       | 97.64       | 98.57    | 67.51    |
+| DINOv3   | MVTec AD | 4     | 98.20       | 97.90       | 98.80    | 68.99    |
+| DINOv3   | VisA     | 0     | 91.94       | 96.34       | 92.80    | 32.54    |
+| DINOv3   | VisA     | 1     | 95.82       | 98.17       | 95.55    | 43.94    |
+| DINOv3   | VisA     | 2     | 96.79       | 98.32       | 96.31    | 45.25    |
+| DINOv3   | VisA     | 4     | 97.03       | 98.38       | 96.57    | 45.47    |
+
+Full means, population standard deviations, paper references and signed gaps are in
+[paper_precision_comparison.csv](/results/UniADet/reproduction/paper_precision_comparison.csv).
+The separate [FP32 baseline](/results/UniADet/reproduction/comparison.csv) and
+[CLIP precision deltas](/results/UniADet/reproduction/clip_precision_deltas.csv) avoid selecting settings by target accuracy.
+[Verification](/results/UniADet/reproduction/verification.json) checks exact head conversion, all reference selections,
+cross-backbone split identity and final code hashes. Dataset byte fingerprints and released environment differences
+are recorded alongside [the protocol](/results/UniADet/reproduction/protocol.json).
+These results establish close **author-head evaluation**, not independently reproduced training or bit-exact equality
+with the authors' vendored encoders, released requirements or unavailable original paper-run manifests.
+
+The changed author graph also passes **114 floating-export/API batch checks** across three encoders and zero/four
+shots: CPU file/tensor TorchInferencer, CPU/CUDA Engine predict/test and CUDA TorchInferencer, ONNX, and OpenVINO
+FP32/FP16 at batches 1/3. These use MVTec bottle and VisA-trained heads, not an all-category deployment benchmark.
+Maximum map errors are `1.40e-5` for ONNX, `3.36e-5` for OV FP32, `0.00264` for compressed FP16, and `9.48e-6`
+between CPU/CUDA APIs, within the unchanged tolerances.
+See [deployment_summary.csv](/results/UniADet/reproduction/deployment_summary.csv) and per-case parity reports.
+Quantization is **not re-certified for the author graph**; activation PTQ/ACQ investigation remains deferred.
+
+### Independently trained legacy recipe
+
 Train on VisA to evaluate MVTec AD; train on MVTec AD to evaluate VisA. Evaluating a head on the dataset used for its
 auxiliary supervision is test-label leakage. The helper rejects that combination.
 
@@ -87,8 +199,9 @@ The report helper rejects partial category/seed coverage, smoke-trained heads, o
 duplicated rows, and nonfinite scores.
 It averages categories within each seed before reporting seed mean/population standard deviation, and computes
 signed percentage-point gaps to the explicitly attributed paper Tables 2/5/10/11.
+Legacy AP uses standard average precision, so its historical AP gaps are not a metric-identical paper comparison.
 
-**This independent implementation does not reproduce the paper's overall headline accuracy.** The paper specifies fusion
+**The legacy recipe does not reproduce the paper's overall headline accuracy.** The paper specifies fusion
 weights of 0.5, whereas the released demo documentation gives different weights and source-side score recalibration.
 This implementation follows the paper equations. It uses torchvision/timm rather than the authors' vendored encoders
 and Albumentations pipeline. The corrected recipe uses temperature 0.07, Gaussian prototype standard deviation 0.02,
@@ -153,7 +266,8 @@ aggregation, and independently checked metric arithmetic pass their component ch
 curves are finite and improve; this alone does not establish training equivalence.
 The public demo exposes a rendered overlay and rounded score, not a feature/logit oracle; no local data was uploaded.
 Detailed evidence and targeted author questions are under `results/UniADet/diagnosis/`.
-Production scoring and quantization settings have **not** been changed by these diagnostic experiments.
+Those diagnostic experiments did not change production defaults. The separate explicit author protocol above
+now implements the verified inference differences; legacy defaults and quantization policy remain unchanged.
 
 To reproduce the fixed-protocol scoring ablations without retraining:
 
@@ -260,6 +374,9 @@ All 72 backend/batch/case timing entries, including batch-3 latency/throughput a
 
 ## Deployment
 
+The historical deployment/timing/quantization measurements below use **legacy recipe-v2 heads and scoring**.
+They must not be interpreted as quantization certification of `protocol="author"`.
+
 Standard `to_torch`, `to_onnx`, `to_openvino`, and `Engine.export` entrypoints are used. Export at the model's fixed
 spatial resolution with dynamic batch size; initialize the normal reference bank first for few-shot deployment.
 ONNX export uses the dynamo exporter and opset 18. Full Torch exports contain encoder weights and are for local use,
@@ -339,9 +456,11 @@ The paper and upstream repository are acknowledged as the algorithm's origin, no
 
 The encoder implementations come from Apache-2.0 timm (minimum 1.0.20 for DINOv3 and the required feature API).
 Pretrained weights have separate terms, especially DINOv3's
-custom Meta license; see each publisher's model card before use or redistribution. The authors' gated
-`csgaobb/UniADet` head checkpoints could not be accessed with the current credentials (HTTP 403) and are not bundled.
-Source/head-weight licensing clarification remains a gate before an upstream PR.
+custom Meta license; see each publisher's model card before use or redistribution. Authorized access to all six
+`csgaobb/UniADet` heads is verified at revision `88de3178cff5ab6f895f53d5934dac9f3f80b3b8`.
+Their model card permits research/evaluation with citation and conditions on redistribution; this is **not**
+an Apache-2.0 grant for the weights or source. No author weights are committed or redistributed.
+Source licensing clarification remains a gate before an upstream PR.
 
 MVTec AD is CC BY-NC-SA 4.0; VisA's dataset license is CC BY 4.0. Training on public datasets does not remove their
 use restrictions. No raw dataset files or checkpoints are committed. Documentation panels are separately attributed

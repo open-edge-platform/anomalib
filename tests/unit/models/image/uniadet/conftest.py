@@ -14,9 +14,16 @@ from anomalib.models.image.uniadet.backbones import HierarchicalFeatures
 class TinyBackbone(nn.Module):
     """Deterministic, frozen test encoder; not a substitute for real-backbone benchmarks."""
 
-    def __init__(self, backbone: str, layers: tuple[int, ...], pretrained: bool, image_size: int | None) -> None:
+    def __init__(
+        self,
+        backbone: str,
+        layers: tuple[int, ...],
+        pretrained: bool,
+        image_size: int | None,
+        protocol: str = "legacy",
+    ) -> None:
         super().__init__()
-        del backbone, pretrained
+        del backbone, pretrained, protocol
         self.layers = layers
         self.feature_dim = 3
         self.image_size = image_size or 28

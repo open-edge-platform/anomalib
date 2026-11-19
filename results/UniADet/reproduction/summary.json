@@ -1,0 +1,51 @@
+{
+  "complete": true,
+  "scope": "Author-head evaluation, not independently reproduced auxiliary training or bit-exact author executable.",
+  "primary_fp32_category_shot_seed_rows": 810,
+  "supplemental_clip_category_shot_seed_rows": 270,
+  "primary_fp32_paper_comparisons": 96,
+  "author_loader_precision_paper_comparisons": 96,
+  "author_loader_precision_policy": "CLIP mixed FP16 encoder/FP32 LayerNorm and head; DINOv2-R and DINOv3 FP32. Prespecified from source, never selected by target accuracy.",
+  "largest_absolute_paper_gap_percentage_points": 0.06955886814328949,
+  "largest_gap": {
+    "backbone": "dinov3",
+    "weight_origin": "author",
+    "encoder_precision": "fp32",
+    "aupr_definition": "torchmetrics_auc_reorder",
+    "target_dataset": "visa",
+    "shots": "4",
+    "metric": "image_AUROC",
+    "measured_mean": "97.0304411318567",
+    "measured_std": "0.08497299755890733",
+    "categories": "12",
+    "seeds": "3",
+    "paper_mean": "97.1",
+    "gap_percentage_points": "-0.06955886814328949",
+    "paper_source": "https://arxiv.org/html/2601.05552v1#S6.T11"
+  },
+  "all_96_author_precision_cells_within_0_1_percentage_points": true,
+  "all_96_fp32_cells_within_0_1_percentage_points": true,
+  "maximum_clip_precision_change_percentage_points": 0.009704828262329102,
+  "standard_average_precision_separate_from_paper_pr_area": true,
+  "deployment": {
+    "cases": 6,
+    "batch_format_checks": 114,
+    "all_passed": true,
+    "scope": "MVTec bottle, VisA-trained heads, 0/4 shots, batches1/3; CPU Torch file/tensor and Engine predict/test, CUDA tensor/Engine APIs, ONNX and OV FP32/FP16.",
+    "maximum_map_errors": {
+      "onnx": 1.3962388038635254e-05,
+      "fp32": 3.364682197570801e-05,
+      "fp16": 0.002639979124069214
+    },
+    "maximum_cpu_cuda_map_error": 9.47713851928711e-06,
+    "quantization": "Not rerun or certified for this author graph; activation PTQ/ACQ remains deferred.",
+    "temporary_export_binaries": "Removed selectively after preserving SHA256 and size; no checkpoint/export binaries redistributed."
+  },
+  "validation": {
+    "command": "uv run --no-sync pytest -q --no-showlocals tests/unit/models/image/uniadet tests/unit/deploy/test_export_mixin.py tests/unit/deploy/test_onnx_export.py tests/unit/models/test_model_utils.py",
+    "result": "102 passed",
+    "cli_command": "uv run --no-sync anomalib train --model UniADet --model.protocol author --print_config",
+    "cli_result": "Passed; serialized model.init_args.protocol is author."
+  },
+  "licensing": "Authorized research/evaluation access only; no source licensing clearance inferred and no upstream PR opened."
+}

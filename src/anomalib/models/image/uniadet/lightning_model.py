@@ -58,12 +58,15 @@ class UniADet(AnomalibModule):
         pretrained (bool): Load pretrained encoder weights. Disable for offline checkpoint restoration.
         image_size (int | None): Square encoder resolution; defaults to 518 or 512.
         temperature (float): Cosine-logit temperature.
-        few_shot_weight (float): Reference-distance fusion weight.
-        image_score_weight (float): Pixel-peak fusion weight for image scores.
+        few_shot_weight (float): Legacy reference-distance fusion weight; author protocol fixes this to 0.8.
+        image_score_weight (float): Legacy image-map fusion weight; author protocol uses 0.1/0.5 for zero-/few-shot.
         pre_processor (nn.Module | bool): Input preprocessing component or enable flag.
         post_processor (nn.Module | bool): Prediction postprocessor or enable flag.
         evaluator (Evaluator | bool): Evaluation component or enable flag.
         visualizer (Visualizer | bool): Visualization component or enable flag.
+        protocol (str): ``"legacy"`` preserves existing checkpoints; ``"author"`` selects
+            the published executable's features, score processing and with-replacement references.
+            Author heads must first be imported using ``tools.uniadet.author``.
 
     Raises:
         ValueError: If ``k_shot`` is negative or the backbone is unknown.
@@ -91,6 +94,7 @@ class UniADet(AnomalibModule):
         post_processor: nn.Module | bool = True,
         evaluator: Evaluator | bool = True,
         visualizer: Visualizer | bool = True,
+        protocol: str = "legacy",
     ) -> None:
         if k_shot < 0:
             msg = "k_shot must be nonnegative."
@@ -106,6 +110,7 @@ class UniADet(AnomalibModule):
         self.k_shot = k_shot
         self.few_shot_source = Path(few_shot_source) if few_shot_source is not None else None
         self.seed = seed
+        self.protocol = protocol
         self.model = UniADetModel(
             backbone,
             tuple(layers),
@@ -114,6 +119,7 @@ class UniADet(AnomalibModule):
             temperature,
             few_shot_weight,
             image_score_weight,
+            protocol=protocol,
         )
         if weights is not None:
             self.model.load_head(weights)
@@ -137,11 +143,15 @@ class UniADet(AnomalibModule):
         else:
             msg = "Few-shot setup needs a normal reference directory or an attached training datamodule."
             raise ValueError(msg)
-        if len(paths) < self.k_shot:
+        if not paths or (self.protocol == "legacy" and len(paths) < self.k_shot):
             msg = f"Requested {self.k_shot} references but found only {len(paths)} normal images."
             raise ValueError(msg)
         generator = torch.Generator().manual_seed(self.seed)
-        selected = torch.randperm(len(paths), generator=generator)[: self.k_shot].tolist()
+        selected = (
+            torch.randint(len(paths), (self.k_shot,), generator=generator).tolist()
+            if self.protocol == "author"
+            else torch.randperm(len(paths), generator=generator)[: self.k_shot].tolist()
+        )
         images = []
         for index in selected:
             image = read_image(paths[index], as_tensor=True).to(self.device).unsqueeze(0)

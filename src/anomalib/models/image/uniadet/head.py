@@ -58,7 +58,9 @@ class MSDCSHead(nn.Module):
         pixel_weights = functional.normalize(self.pixel_prototypes, dim=-1)
         image_logits, pixel_logits = [], []
         for layer, (image, patches) in enumerate(zip(features.image_tokens, features.patch_tokens, strict=True)):
-            image_logits.append(functional.normalize(image, dim=-1) @ image_weights[layer].T / self.temperature)
-            pixels = functional.normalize(patches, dim=-1) @ pixel_weights[layer].T / self.temperature
+            image_features = functional.normalize(image.to(dtype=image_weights.dtype), dim=-1)
+            patch_features = functional.normalize(patches.to(dtype=pixel_weights.dtype), dim=-1)
+            image_logits.append(image_features @ image_weights[layer].T / self.temperature)
+            pixels = patch_features @ pixel_weights[layer].T / self.temperature
             pixel_logits.append(pixels.transpose(1, 2).reshape(-1, 2, grid_size, grid_size))
         return UniADetLogits(image_logits, pixel_logits)

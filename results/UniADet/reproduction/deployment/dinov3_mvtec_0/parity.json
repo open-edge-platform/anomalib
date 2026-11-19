@@ -1,0 +1,533 @@
+{
+  "backbone": "dinov3",
+  "head_sha256": "1fffefb1f82dc0ce137d67397f59a252f25394e1036775e334ba2fa591549f2f",
+  "protocol": "author",
+  "weight_origin": "author",
+  "training_recipe_version": null,
+  "complete_training_recipe": false,
+  "target": "mvtec",
+  "category": "bottle",
+  "shots": 0,
+  "images": [
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/good/000.png",
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/broken_large/000.png",
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/broken_large/001.png"
+  ],
+  "calibration_source": "visa",
+  "calibration_size": 300,
+  "quantized_max_drop": 0.01,
+  "activation_quantization": {
+    "model_type": "TRANSFORMER",
+    "floating_point_postprocessing": [
+      "Interpolate",
+      "Gaussian smoothing"
+    ],
+    "accuracy_control_ranking": "continuous_task_outputs"
+  },
+  "timing_protocol": {
+    "device": "CPU",
+    "threads": 4,
+    "warmup": 1,
+    "repeats": 3,
+    "includes": "In-memory model preprocessing, forward and postprocessing; excludes decoding and compilation.",
+    "isolation": "Shared development host; other training/compilation jobs may be running.",
+    "host": "Linux-6.8.0-147-generic-x86_64-with-glibc2.39",
+    "torch": "2.14.0+cu130",
+    "openvino": "2026.3.1-22476-759c5a6ab8c-releases/2026/3",
+    "onnxruntime": "1.32.0"
+  },
+  "pytorch_cpu_timing": {
+    "1": {
+      "median_batch_seconds": 1.584195555653423,
+      "images_per_second": 0.6312352010024017
+    },
+    "3": {
+      "median_batch_seconds": 4.806243401020765,
+      "images_per_second": 0.6241881131868707
+    }
+  },
+  "results": {
+    "torch_file": {
+      "duration_seconds": 1.4427317958325148,
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "torch_inferencer": {
+      "duration_seconds": 34.60683229425922,
+      "inference_timing": {
+        "1": {
+          "median_batch_seconds": 1.4916237769648433,
+          "images_per_second": 0.6704103376756305
+        },
+        "3": {
+          "median_batch_seconds": 4.832189260981977,
+          "images_per_second": 0.6208366100690255
+        }
+      },
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "engine_test": {
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "engine": {
+      "duration_seconds": 19.951979605015367,
+      "inference_timing": {},
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "onnx": {
+      "duration_seconds": 88.6352348360233,
+      "inference_timing": {
+        "1": {
+          "median_batch_seconds": 2.1025666119530797,
+          "images_per_second": 0.47560918846280803
+        },
+        "3": {
+          "median_batch_seconds": 6.462543822824955,
+          "images_per_second": 0.4642134865537543
+        }
+      },
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 1.1920928955078125e-07,
+            "mean_absolute_error": 1.1920928955078125e-07,
+            "rmse": 1.1920928955078125e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 7.301568984985352e-07,
+            "mean_absolute_error": 5.626312749029694e-09,
+            "rmse": 2.0642049847197086e-08,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 2.384185791015625e-07,
+            "mean_absolute_error": 1.7881393432617188e-07,
+            "rmse": 1.8531837042701227e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 4.887580871582031e-06,
+            "mean_absolute_error": 3.723519270693032e-08,
+            "rmse": 1.9938124751206487e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "fp32": {
+      "duration_seconds": 79.38148505985737,
+      "inference_timing": {
+        "1": {
+          "median_batch_seconds": 1.4216100578196347,
+          "images_per_second": 0.7034277750775972
+        },
+        "3": {
+          "median_batch_seconds": 4.649268921930343,
+          "images_per_second": 0.64526273923394
+        }
+      },
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 4.470348358154297e-07,
+            "mean_absolute_error": 4.470348358154297e-07,
+            "rmse": 4.470348358154297e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 2.4586915969848633e-06,
+            "mean_absolute_error": 7.257511924763094e-09,
+            "rmse": 6.310246902785366e-08,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 4.470348358154297e-07,
+            "mean_absolute_error": 2.086162567138672e-07,
+            "rmse": 2.7797756274594576e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 4.649162292480469e-06,
+            "mean_absolute_error": 4.4102623775188476e-08,
+            "rmse": 2.191568171383551e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "fp16": {
+      "duration_seconds": 74.01762649184093,
+      "inference_timing": {
+        "1": {
+          "median_batch_seconds": 1.2989375409670174,
+          "images_per_second": 0.7698599574353144
+        },
+        "3": {
+          "median_batch_seconds": 3.7930123447440565,
+          "images_per_second": 0.790928087581121
+        }
+      },
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.0002549588680267334,
+            "mean_absolute_error": 0.0002549588680267334,
+            "rmse": 0.0002549588680267334,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0005575269460678101,
+            "mean_absolute_error": 2.6418285870022373e-06,
+            "rmse": 2.0909625163767487e-05,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.0002549588680267334,
+            "mean_absolute_error": 0.0001913607120513916,
+            "rmse": 0.00019664027786348015,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0016733407974243164,
+            "mean_absolute_error": 1.5373743735835887e-05,
+            "rmse": 8.388833521166816e-05,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    }
+  },
+  "gpu_results": {
+    "torch_cuda": {
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 3.5762786865234375e-07,
+            "mean_absolute_error": 3.5762786865234375e-07,
+            "rmse": 3.5762786865234375e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 1.996755599975586e-06,
+            "mean_absolute_error": 8.897811376584741e-09,
+            "rmse": 7.309657945597792e-08,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 4.172325134277344e-07,
+            "mean_absolute_error": 3.5762786865234375e-07,
+            "rmse": 3.609240479818254e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 6.22868537902832e-06,
+            "mean_absolute_error": 6.101058858121178e-08,
+            "rmse": 3.426137880069291e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "engine_cuda_predict": {
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 3.5762786865234375e-07,
+            "mean_absolute_error": 3.5762786865234375e-07,
+            "rmse": 3.5762786865234375e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 1.996755599975586e-06,
+            "mean_absolute_error": 8.897811376584741e-09,
+            "rmse": 7.309657945597792e-08,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 4.172325134277344e-07,
+            "mean_absolute_error": 3.5762786865234375e-07,
+            "rmse": 3.609240479818254e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 6.22868537902832e-06,
+            "mean_absolute_error": 6.101058858121178e-08,
+            "rmse": 3.426137880069291e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "engine_cuda_test": {
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 3.5762786865234375e-07,
+            "mean_absolute_error": 3.5762786865234375e-07,
+            "rmse": 3.5762786865234375e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 1.996755599975586e-06,
+            "mean_absolute_error": 8.897811376584741e-09,
+            "rmse": 7.309657945597792e-08,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 4.172325134277344e-07,
+            "mean_absolute_error": 3.5762786865234375e-07,
+            "rmse": 3.609240479818254e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 6.22868537902832e-06,
+            "mean_absolute_error": 6.101058858121178e-08,
+            "rmse": 3.426137880069291e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    }
+  },
+  "complete": true,
+  "exported_files": [
+    {
+      "relative_path": "engine.ckpt",
+      "bytes": 1212546347,
+      "sha256": "8c6d9b3e095b14c27e7503152b375cc1c2dfd6192e97668f8f3ad52a0d562191",
+      "retained": false
+    },
+    {
+      "relative_path": "torch_inferencer/weights/torch/model.pt",
+      "bytes": 1212603691,
+      "sha256": "cedc74c9a465c7a9e33296bf2bdcfe36654433dfbe2fb80d7efdbae4194279d9",
+      "retained": false
+    },
+    {
+      "relative_path": "onnx/weights/onnx/model.onnx",
+      "bytes": 1889766,
+      "sha256": "84eeea86e6ddfba8677fcb87a3f782a4061e12ed4bdbd2f884cf34ad9abc381f",
+      "retained": false
+    },
+    {
+      "relative_path": "onnx/weights/onnx/model.onnx.data",
+      "bytes": 1212547072,
+      "sha256": "932516f0596f2e249b0022b27033176dce10e5f842f436170797d8bcda9af886",
+      "retained": false
+    },
+    {
+      "relative_path": "fp32/weights/openvino/model.xml",
+      "bytes": 1205333,
+      "sha256": "3b4a2096d0d993c49d9d68a27f54748063c2b9590c7932ef05469c0f5192e533",
+      "retained": false
+    },
+    {
+      "relative_path": "fp32/weights/openvino/model.bin",
+      "bytes": 1212920556,
+      "sha256": "c3f0bc7c5fc4e48fd36698920d0f818984779b915b7057bbef63bbf316b24e62",
+      "retained": false
+    },
+    {
+      "relative_path": "fp16/weights/openvino/model.xml",
+      "bytes": 1480570,
+      "sha256": "d9e6cd45a4361ce3d8954f2f5024b5813d81ff4f13edb7710a6c78d825527167",
+      "retained": false
+    },
+    {
+      "relative_path": "fp16/weights/openvino/model.bin",
+      "bytes": 606460506,
+      "sha256": "e400d09e7519a35205559d1b044f1398ece871366cf0115b54493ae3de0bbc9e",
+      "retained": false
+    }
+  ]
+}

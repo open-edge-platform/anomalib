@@ -17,6 +17,64 @@ zero-shot/few-shot. A fixed per-category reference buffer supports deployment wi
 
 ## Reproduction status
 
+### Author-checkpoint evaluation
+
+Use the explicit `protocol="author"` with authorized heads imported by `python -m tools.uniadet.author`.
+This preserves legacy defaults and uses raw DINO intermediate features, published CLIP positional interpolation,
+rounded DINOv3 rotary periods, and executable scoring/256-square peak pooling. Head files are protocol-validated.
+The author's ten prototype tensors are stacked without changing values; no upstream source is copied.
+This is **author-head evaluation through anomalib**, not independently reproduced auxiliary training.
+
+`python -m tools.uniadet.reproduce` evaluates both datasets/all backbones using original public splits,
+VisA `1cls.csv` row order, category-local with-replacement reference seeds 10/20/30, and 0/1/2/4 shots
+(zero-shot once). It uses original RGB images, OpenCV uint8 bilinear resizing, nearest binary masks,
+256-square pixel evaluation and batch 32. Paper AP follows the released evaluator's **recall-sorted
+trapezoidal PR area**, not standard stepwise average precision. Both definitions are retained separately in CSVs;
+anomalib's standard metrics are unchanged.
+The primary measurements use FP32; separate `--encoder-precision author` CLIP runs quantify its CUDA mixed precision.
+Reference manifests, split identities and checkpoint/software/code provenance are recorded.
+Generic Engine datamodule loading alone is not claimed to replay the helper's exact uint8 resize/VisA reference order.
+All six full evaluations and both CLIP precision supplements are complete: **810 FP32 plus 270 supplemental
+category/shot/seed rows**. All **96 image/pixel AUROC/paper-AP comparisons are within 0.07 percentage points**
+of their published means, for both uniform FP32 and the prespecified author-loader precision policy.
+The largest gap is 0.06956 points (four-shot VisA DINOv3 image AUROC, 97.03044 versus 97.1).
+CLIP's precision variant changes any aggregate metric by less than 0.01 points.
+
+Selected complete results use the **author-loader precision**: CLIP mixed FP16 with FP32 LayerNorm/head,
+and FP32 DINO encoders. Values are category/seed macro means in percent, with paper-convention AP:
+
+| Encoder  | Target   | Shots | Image AUROC | Pixel AUROC | Image AP | Pixel AP |
+| -------- | -------- | ----- | ----------- | ----------- | -------- | -------- |
+| CLIP     | MVTec AD | 0     | 92.40       | 91.83       | 96.08    | 42.81    |
+| CLIP     | MVTec AD | 4     | 97.75       | 96.30       | 98.58    | 58.85    |
+| CLIP     | VisA     | 0     | 87.96       | 95.76       | 89.11    | 27.98    |
+| CLIP     | VisA     | 4     | 93.26       | 97.96       | 93.78    | 36.67    |
+| DINOv2-R | MVTec AD | 0     | 93.50       | 92.44       | 97.23    | 50.85    |
+| DINOv2-R | MVTec AD | 4     | 98.73       | 97.65       | 99.22    | 65.44    |
+| DINOv2-R | VisA     | 0     | 91.27       | 95.87       | 90.99    | 32.73    |
+| DINOv2-R | VisA     | 4     | 96.92       | 98.58       | 96.80    | 45.25    |
+| DINOv3   | MVTec AD | 0     | 93.98       | 93.20       | 97.14    | 52.69    |
+| DINOv3   | MVTec AD | 4     | 98.20       | 97.90       | 98.80    | 68.99    |
+| DINOv3   | VisA     | 0     | 91.94       | 96.34       | 92.80    | 32.54    |
+| DINOv3   | VisA     | 4     | 97.03       | 98.38       | 96.57    | 45.47    |
+
+All 0/1/2/4-shot means, seed standard deviations, paper references and gaps are in
+`results/UniADet/reproduction/paper_precision_comparison.csv`. The uniform FP32 baseline is in `comparison.csv`;
+CLIP precision differences are in `clip_precision_deltas.csv`.
+`verification.json` checks exact head conversion, all reference selections, split identities and final code hashes.
+`protocol.json` records the released environment differences and dataset-specific details.
+This is close **author-head evaluation**, not independent training reproduction or bit-exact replay of the unpublished
+paper environment. See the model README for exact import/evaluation commands.
+
+The changed author graph passes all **114 floating-export/API batch checks** for three encoders at zero/four shots:
+CPU file/tensor TorchInferencer, CPU/CUDA Engine predict/test and CUDA TorchInferencer, ONNX, and OV FP32/FP16,
+using MVTec bottle/VisA-trained heads at batches 1/3. Maximum map errors are `1.40e-5`/`3.36e-5`/`0.00264`
+for ONNX/OV FP32/FP16, and `9.48e-6` between CPU/CUDA APIs.
+Evidence is in `results/UniADet/reproduction/deployment_summary.csv` and per-case parity reports.
+Quantization is not re-certified for the author graph; activation PTQ/ACQ remains deferred.
+
+### Independently trained legacy recipe
+
 This is an independent implementation of [the published algorithm](https://arxiv.org/abs/2601.05552), not a port of
 the unlicensed upstream source. All six full training runs, cross-dataset benchmarks and export conversions are complete
 under `results/UniADet/`. Activation formats fail the strict maximum-map criterion described below.
@@ -46,6 +104,7 @@ Values are macro category means in percent. Some zero-shot VisA metrics match/ex
 CLIP image AUROC is 88.04 versus 88.0. Four-shot MVTec image AUROC remains 94.25/94.73 for CLIP/DINOv2-R
 versus the paper's 97.7/98.7. The paper's overall headline accuracy is not reproduced.
 All 96 default metric/shot/dataset/encoder comparisons and paper gaps are in `results/UniADet/comparison.csv`.
+Legacy AP is standard average precision, so its historical AP gaps are not a metric-identical paper comparison.
 No missing results or partial category/seed coverage are presented as complete.
 Paper and released-demo fusion settings differ.
 The FP32 component audit has now measured the effect of this difference: with unchanged recipe-v2 heads,
@@ -70,11 +129,13 @@ On the four-category probe, with-replacement sampling changes executable-scoring
 Block selection, token exclusion, CLIP projection and macro aggregation match.
 The published executable is not proof of the unpublished paper-run configuration.
 Use `python -m tools.uniadet.diagnose` for fixed-protocol scoring ablations; measured artifacts and author questions
-are under `results/UniADet/diagnosis/`. Production scoring and PTQ/ACQ settings remain unchanged.
+are under `results/UniADet/diagnosis/`. Legacy defaults and PTQ/ACQ policy remain unchanged.
+The separate explicit author protocol implements the verified inference differences.
 The [model README](https://github.com/open-edge-platform/anomalib/tree/main/src/anomalib/models/image/uniadet)
 documents the protocol, explicit implementation choices, commands, licenses, and validation tolerances.
 Real-IAD is reserved for a separate follow-up PR.
 
+The following training, speed and quantization measurements use legacy recipe-v2 heads/scoring, not the author preset.
 Complete 15-epoch FP32 training uses one RTX 3090 per run, batch size 16, with one head covering all target categories:
 
 | Encoder  | VisA training (min) | MVTec training (min) | Peak allocated GPU (GiB) |
@@ -146,8 +207,9 @@ No broad precision exclusions or relaxed tolerances are used.
 The complete `results/UniADet/deployment_summary.csv` contains 114 batch/format measurements, with 18 map failures
 confined to activation PTQ/ACQ. All score checks pass. Use FP32, compressed FP16 or weight-only INT8 for the
 checked numerical consistency; activation variants are not certified equivalent.
-Authors' gated checkpoints are unavailable to the current account, and licensing clarification is
-required before opening an upstream PR. The encoder adapter requires timm 1.0.20 or newer.
+Authorized access to all six author heads is now verified; none are redistributed.
+Their research/evaluation model-card terms are separate from source licensing, which still needs
+clarification before an upstream PR. The encoder adapter requires timm 1.0.20 or newer.
 
 ## Sample results
 

@@ -8,6 +8,7 @@ from typing import NamedTuple
 import timm
 import torch
 from torch import nn
+from torch.nn import functional
 
 
 class BackboneSpec(NamedTuple):
@@ -34,7 +35,7 @@ class HierarchicalFeatures(NamedTuple):
 
 
 class UniADetBackbone(nn.Module):
-    """Extract frozen, normalized hierarchical features from a pretrained vision transformer.
+    """Extract frozen hierarchical features from a pretrained vision transformer.
 
     CLIP uses the original QuickGELU activation and projects both image and patch
     tokens into its 768-dimensional embedding space. DINO register tokens are
@@ -46,6 +47,8 @@ class UniADetBackbone(nn.Module):
         layers (tuple[int, ...]): One-based transformer block numbers.
         pretrained (bool): Download pretrained backbone weights.
         image_size (int | None): Square input resolution. Defaults to the paper's resolution.
+        protocol (str): ``"legacy"`` preserves existing features; ``"author"`` matches
+            the published detection forwards and positional-embedding conventions.
 
     Raises:
         ValueError: If the backbone, block numbers, or image size are invalid.
@@ -57,10 +60,14 @@ class UniADetBackbone(nn.Module):
         layers: tuple[int, ...] = (12, 15, 18, 21, 24),
         pretrained: bool = True,
         image_size: int | None = None,
+        protocol: str = "legacy",
     ) -> None:
         super().__init__()
         if backbone not in BACKBONES:
             msg = f"Unknown UniADet backbone {backbone!r}; choose from {tuple(BACKBONES)}."
+            raise ValueError(msg)
+        if protocol not in {"legacy", "author"}:
+            msg = "protocol must be 'legacy' or 'author'."
             raise ValueError(msg)
         if not layers or tuple(sorted(set(layers))) != layers or not all(1 <= layer <= 24 for layer in layers):
             msg = "layers must contain unique, increasing, one-based block numbers between 1 and 24."
@@ -74,15 +81,39 @@ class UniADetBackbone(nn.Module):
         self.grid_size = self.image_size // spec.patch_size
         self.indices = [layer - 1 for layer in layers]
         self.is_clip = backbone == "clip"
+        self.normalize_intermediates = protocol == "legacy" or self.is_clip
         self.encoder = timm.create_model(
             spec.name,
             pretrained=pretrained,
-            img_size=self.image_size,
+            img_size=336 if protocol == "author" and self.is_clip else self.image_size,
             dynamic_img_size=False,
             global_pool="token",
         )
+        if protocol == "author":
+            if self.is_clip:
+                self._resize_clip_positions()
+            elif backbone == "dinov3":
+                # Official checkpoints store these periods rounded to bfloat16.
+                self.encoder.rope.periods.copy_(self.encoder.rope.periods.bfloat16().float())
+                self.encoder.rope.pos_embed_cached = None
         self.encoder.requires_grad_(requires_grad=False)
         self.encoder.eval()
+
+    def _resize_clip_positions(self) -> None:
+        positions = self.encoder.pos_embed.detach()
+        old_grid = self.encoder.patch_embed.grid_size[0]
+        self.encoder.patch_embed.set_input_size(img_size=self.image_size)
+        if old_grid != self.grid_size:
+            patches = positions[:, 1:].reshape(1, old_grid, old_grid, -1).permute(0, 3, 1, 2)
+            patches = functional.interpolate(
+                patches,
+                scale_factor=(self.grid_size + 0.1) / old_grid,
+                mode="bicubic",
+                align_corners=False,
+                antialias=False,
+            )
+            patches = patches.flatten(2).transpose(1, 2)
+            self.encoder.pos_embed = nn.Parameter(torch.cat((positions[:, :1], patches), dim=1), requires_grad=False)
 
     def train(self, mode: bool = True) -> "UniADetBackbone":
         """Keep the frozen encoder in evaluation mode, including during head training.
@@ -108,10 +139,10 @@ class UniADetBackbone(nn.Module):
         """
         with torch.no_grad():
             intermediates = self.encoder.forward_intermediates(
-                images,
+                images.to(dtype=self.encoder.patch_embed.proj.weight.dtype),
                 indices=self.indices,
                 return_prefix_tokens=True,
-                norm=True,
+                norm=self.normalize_intermediates,
                 output_fmt="NLC",
                 intermediates_only=True,
             )

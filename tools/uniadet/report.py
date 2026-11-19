@@ -19,6 +19,9 @@ METRICS = ("image_AUROC", "image_AUPR", "pixel_AUROC", "pixel_AUPR")
 def summarize_run(directory: Path) -> list[dict[str, str | int | float]]:
     """Compute macro-category means, then population standard deviations across reference seeds.
 
+    Only one float64 ULP beyond a metric endpoint is clipped for reduction roundoff.
+    Raw category measurements remain unchanged.
+
     Args:
         directory (Path): Completed benchmark directory containing category CSV and metadata.
 
@@ -32,12 +35,17 @@ def summarize_run(directory: Path) -> list[dict[str, str | int | float]]:
     with (directory / "categories.csv").open(newline="") as stream:
         rows = list(csv.DictReader(stream))
     expected = set(MVTEC_CATEGORIES if manifest["target_dataset"] == "mvtec" else VISA_CATEGORIES)
-    if (
-        not manifest["complete"]
-        or not manifest["training"]["complete_recipe"]
-        or manifest["training"].get("recipe_version") != 2
-        or set(manifest["categories"]) != expected
-    ):
+    author = manifest.get("protocol") == "author-v1"
+    valid_weights = (
+        manifest["weights"]["origin"] == "author"
+        and manifest["weights"]["source_dataset"] != manifest["target_dataset"]
+        and manifest.get("paper_ap_definition") == "torchmetrics_auc_reorder"
+        and manifest["shots"] == [0, 1, 2, 4]
+        and manifest["seeds"] == [10, 20, 30]
+        if author
+        else manifest["training"]["complete_recipe"] and manifest["training"].get("recipe_version") == 2
+    )
+    if not manifest["complete"] or not valid_weights or set(manifest["categories"]) != expected:
         msg = f"{directory} is not a complete full-training, all-category benchmark."
         raise ValueError(msg)
     keys = [(row["category"], int(row["shots"]), int(row["seed"])) for row in rows]
@@ -50,8 +58,11 @@ def summarize_run(directory: Path) -> list[dict[str, str | int | float]]:
     if len(keys) != len(set(keys)) or set(keys) != required:
         msg = f"{directory} has missing, duplicated, or unexpected category/shot/seed results."
         raise ValueError(msg)
+    minimum, maximum = math.nextafter(0.0, -math.inf), math.nextafter(1.0, math.inf)
     if any(
-        not math.isfinite(float(row[metric])) or not 0 <= float(row[metric]) <= 1 for row in rows for metric in METRICS
+        not math.isfinite(float(row[metric])) or not minimum <= float(row[metric]) <= maximum
+        for row in rows
+        for metric in METRICS
     ):
         msg = f"{directory} contains invalid or nonfinite metrics."
         raise ValueError(msg)
@@ -62,12 +73,17 @@ def summarize_run(directory: Path) -> list[dict[str, str | int | float]]:
             seed_means = [
                 100
                 * statistics.mean(
-                    float(row[metric]) for row in rows if int(row["shots"]) == shots and int(row["seed"]) == seed
+                    min(1.0, max(0.0, float(row[metric])))
+                    for row in rows
+                    if int(row["shots"]) == shots and int(row["seed"]) == seed
                 )
                 for seed in seeds
             ]
             summary.append({
-                "backbone": manifest["training"]["backbone"],
+                "backbone": manifest["weights" if author else "training"]["backbone"],
+                "weight_origin": "author" if author else "independently-trained",
+                "encoder_precision": manifest.get("encoder_precision", "fp32"),
+                "aupr_definition": manifest.get("paper_ap_definition", "stepwise_average_precision"),
                 "target_dataset": manifest["target_dataset"],
                 "shots": shots,
                 "metric": metric,
