@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Limit temporary memory when computing PatchCore nearest neighbors against large memory banks.
+
 - 🐞 **model**: Keep PatchCore's batch size dynamic when exporting by @varunikarai in https://github.com/open-edge-platform/anomalib/pull/3853
 - 📚 **docs**: Align custom-data, export, benchmark, and Lightning examples with current APIs
 

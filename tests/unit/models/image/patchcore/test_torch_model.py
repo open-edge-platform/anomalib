@@ -43,6 +43,17 @@ def test_large_bank_search(model: PatchcoreModel, n_neighbors: int, monkeypatch:
         block_shapes.append((x.size(0), y.size(1)))
         return matmul(x, y)
 
+    squared_rows = []
+    square = torch.Tensor.square
+
+    def record_square(tensor: torch.Tensor) -> torch.Tensor:
+        if tensor.untyped_storage().data_ptr() == bank.untyped_storage().data_ptr():
+            assert tensor.numel() * tensor.element_size() <= budget
+            start = tensor.storage_offset() // bank.stride(0)
+            squared_rows.extend(range(start, start + len(tensor)))
+        return square(tensor)
+
+    monkeypatch.setattr(torch.Tensor, "square", record_square)
     monkeypatch.setattr(torch, "matmul", record_block)
     actual, indices = model.nearest_neighbors(queries, n_neighbors)
     torch.testing.assert_close(actual, expected.values)
@@ -51,6 +62,7 @@ def test_large_bank_search(model: PatchcoreModel, n_neighbors: int, monkeypatch:
         assert indices[0] == 0
     else:
         torch.testing.assert_close(actual, distances.gather(1, indices))
+    assert sorted(squared_rows) == list(range(len(bank)))
     assert sum(rows for rows, _ in block_shapes) == len(queries)
     assert all(rows * cols * bank.element_size() <= budget for rows, cols in block_shapes)
 
