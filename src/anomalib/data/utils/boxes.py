@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Helper functions for processing bounding box detections and annotations.
@@ -138,8 +138,8 @@ def scale_boxes(boxes: torch.Tensor, image_size: torch.Size, new_size: torch.Siz
 
     Args:
         boxes: Boxes of shape ``(N, 4)`` in ``(x1, y1, x2, y2)`` format
-        image_size: Original image size the boxes were computed for
-        new_size: Target image size to scale boxes to
+        image_size: Original image size as ``(height, width)``
+        new_size: Target image size as ``(height, width)``
 
     Returns:
         Scaled boxes of shape ``(N, 4)`` in ``(x1, y1, x2, y2)`` format
@@ -150,5 +150,5 @@ def scale_boxes(boxes: torch.Tensor, image_size: torch.Size, new_size: torch.Siz
         >>> scaled
         tensor([[20., 30., 40., 50.]])
     """
-    scale = torch.tensor([*new_size]) / torch.tensor([*image_size])
+    scale = torch.tensor([new_size[1], new_size[0]]) / torch.tensor([image_size[1], image_size[0]])
     return boxes * scale.repeat(2).to(boxes.device)
