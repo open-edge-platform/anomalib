@@ -18,8 +18,8 @@ zero-shot/few-shot. A fixed per-category reference buffer supports deployment wi
 ## Reproduction status
 
 This is an independent implementation of [the published algorithm](https://arxiv.org/abs/2601.05552), not a port of
-the unlicensed upstream source. All six full training runs and cross-dataset benchmarks are complete;
-remaining activation-deployment measurements are being collected under `results/UniADet/`.
+the unlicensed upstream source. All six full training runs, cross-dataset benchmarks and export conversions are complete
+under `results/UniADet/`. Activation formats fail the strict maximum-map criterion described below.
 Replacement heads were trained from scratch with corrected recipe version 2: prototype standard deviation 0.02,
 training seed 10, focal smoothing 1e-5, linear-denominator Dice, and the declared color/geometric augmentation parameters.
 Initial-recipe measurements are archived under `results/UniADet/initial_recipe/`; `provenance.json` records their
@@ -80,26 +80,49 @@ Image decoding, initial CPU resizing and checkpoint loading are excluded.
 Values are median batch latencies, not end-to-end serving times. Task-owned GPU training/evaluation had finished;
 the host remains shared. Protocol, head hashes and memory measurements are in `results/UniADet/gpu_inference.json`.
 
+Controlled CPU timings use an Intel Core i9-10920X, four threads pinned to four physical cores, two warmups and five
+repetitions, after task-owned conversion/training jobs finished. The host remains shared.
+OpenVINO requests FP32 execution, including compressed FP16 weights. Median batch-1 latency is in **seconds**:
+
+| Encoder  | Shots | Torch FP32 | OV FP32 | OV FP16 | OV INT8 | OV PTQ | OV ACQ |
+| -------- | ----- | ---------- | ------- | ------- | ------- | ------ | ------ |
+| CLIP     | 0     | 2.307      | 1.908   | 1.666   | 1.303   | 0.775  | 0.781  |
+| CLIP     | 4     | 2.057      | 1.980   | 1.746   | 1.361   | 0.804  | 0.805  |
+| DINOv2-R | 0     | 1.904      | 1.890   | 1.653   | 1.288   | 0.767  | 0.767  |
+| DINOv2-R | 4     | 2.012      | 2.032   | 1.759   | 1.377   | 0.809  | 0.808  |
+| DINOv3   | 0     | 1.405      | 1.376   | 1.233   | 0.968   | 0.579  | 0.578  |
+| DINOv3   | 4     | 1.451      | 1.491   | 1.283   | 0.986   | 0.599  | 0.599  |
+
+INT8 is weight-only. PTQ/ACQ speeds are measured but **not numerically certified** because their maps fail the
+declared tolerance. This is not real-time CPU inference on this hardware.
+All 72 timing entries, including batch-3 latency/throughput and repeated numerical checks, are in
+`results/UniADet/cpu_inference.json`. Decoding, initial resizing, loading and compilation are excluded.
+
 The validation helper exercises file/tensor TorchInferencer, Engine predict/test, ONNX Runtime, and
 OpenVINO FP32/FP16/INT8/PTQ/ACQ on batches 1 and 3. PTQ/ACQ use transformer-aware SmoothQuant;
 fixed map resizing and smoothing stay floating point to avoid
 auxiliary-domain range clipping. CPU checks request FP32 floating-point execution; FP16 refers to compressed weights,
 and INT8 is weight-only compression rather than activation PTQ/ACQ.
-Corrected CLIP, DINOv2-R and DINOv3 zero-/four-shot basic APIs and floating/weight-only exports pass;
-activation PTQ/ACQ measurements remain in progress.
+Corrected CLIP, DINOv2-R and DINOv3 zero-/four-shot basic APIs and floating/weight-only exports pass.
+All activation PTQ/ACQ conversions run successfully, with strict numerical limitations below.
 Real CUDA TorchInferencer file/tensor and checkpoint-restored Engine predict/test also pass all six cases at
 batches 1/3. CPU/CUDA FP32 map differences stay below `3.61e-5` with a predeclared `1e-4` cross-device tolerance.
 Full measurements are in `results/UniADet/gpu_inference_api.json`.
-Conversion-time CPU timings are contended; controlled CPU measurements follow the task-owned activation jobs.
+Use the controlled CPU measurements above rather than contended conversion-time timings.
 ACQ ranks continuous task outputs rather than undefined single-image AUROCs while constraining aggregate image AUROC.
-All three zero-shot PTQ/ACQ conversions are complete. Native ACQ preserves auxiliary image AUROC within 0.01
+All six zero-/four-shot PTQ/ACQ cases are complete. Native ACQ preserves auxiliary image AUROC within 0.01
 without reverting quantizers, so PTQ and ACQ have identical measured numerical errors.
-Maximum map errors are 0.10547/0.06151/0.09730 for CLIP/DINOv2-R/DINOv3, exceeding the unchanged 0.05 tolerance.
+Zero-shot maximum map errors are 0.10547/0.06151/0.09730 for CLIP/DINOv2-R/DINOv3;
+four-shot errors are 0.06266/0.08991/0.06512. All exceed the unchanged 0.05 tolerance.
 Auxiliary AUROC preservation does not imply per-pixel amplitude equivalence; scores pass their numerical checks.
 The numerical sample is MVTec bottle at batches 1/3, not an all-category quantized benchmark.
 Native metrics are in `results/UniADet/activation_accuracy_control.json`.
-Cached-IR replay found no batch-size effect; a narrow head-only exclusion did not resolve it and was not adopted.
-Zero-shot activation quantization is not certified equivalent; four-shot cases are still being measured.
+Cached-IR DINOv2-R zero-shot replay found no batch-size effect; a narrow head-only exclusion did not resolve it.
+Four-shot reference-query and RGB-input probes also fail the fixed map tolerance; neither is adopted.
+No broad precision exclusions or relaxed tolerances are used.
+The complete `results/UniADet/deployment_summary.csv` contains 114 batch/format measurements, with 18 map failures
+confined to activation PTQ/ACQ. All score checks pass. Use FP32, compressed FP16 or weight-only INT8 for the
+checked numerical consistency; activation variants are not certified equivalent.
 Authors' gated checkpoints are unavailable to the current account, and licensing clarification is
 required before opening an upstream PR. The encoder adapter requires timm 1.0.20 or newer.
 

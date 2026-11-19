@@ -100,7 +100,7 @@ Backbone implementations, augmentation sampling and score processing can still d
 is not asserted.
 
 All six full auxiliary runs and cross-dataset evaluations are complete under `results/UniADet/`.
-Remaining activation-export measurements are still being collected.
+All deployment conversions are complete, with activation-quantization limitations detailed below.
 Every replacement head was trained from scratch with corrected **recipe version 2**.
 Initial-recipe measurements are archived under `results/UniADet/initial_recipe/`, with explicit deviations in
 [provenance.json](/results/UniADet/initial_recipe/provenance.json): prototype standard deviation 1 instead of 0.02,
@@ -167,6 +167,27 @@ Task-owned GPU training and category evaluation had finished; the development ho
 Values are median batch latencies. Full protocol, head hashes and memory measurements are in
 [gpu_inference.json](/results/UniADet/gpu_inference.json). These are not end-to-end file-serving latencies.
 
+### CPU inference
+
+Controlled timings use an Intel Core i9-10920X, four threads pinned to four physical cores, two warmups and five
+repetitions. Task-owned conversion/training jobs had finished; the development host remains shared.
+OpenVINO requests FP32 floating-point execution, including for compressed FP16 weights.
+Median batch-1 latency is in **seconds**:
+
+| Encoder  | Shots | Torch FP32 | OV FP32 | OV FP16 | OV INT8 | OV PTQ | OV ACQ |
+| -------- | ----- | ---------- | ------- | ------- | ------- | ------ | ------ |
+| CLIP     | 0     | 2.307      | 1.908   | 1.666   | 1.303   | 0.775  | 0.781  |
+| CLIP     | 4     | 2.057      | 1.980   | 1.746   | 1.361   | 0.804  | 0.805  |
+| DINOv2-R | 0     | 1.904      | 1.890   | 1.653   | 1.288   | 0.767  | 0.767  |
+| DINOv2-R | 4     | 2.012      | 2.032   | 1.759   | 1.377   | 0.809  | 0.808  |
+| DINOv3   | 0     | 1.405      | 1.376   | 1.233   | 0.968   | 0.579  | 0.578  |
+| DINOv3   | 4     | 1.451      | 1.491   | 1.283   | 0.986   | 0.599  | 0.599  |
+
+OV INT8 is weight-only compression. PTQ/ACQ timings are measured, **not numerically certified**: their maximum map
+errors fail the declared tolerance. This is not a real-time CPU detector on this hardware.
+All 72 backend/batch/case timing entries, including batch-3 latency/throughput and repeated numerical checks, are in
+[cpu_inference.json](/results/UniADet/cpu_inference.json). Decoding, initial resizing, loading and compilation are excluded.
+
 ## Deployment
 
 Standard `to_torch`, `to_onnx`, `to_openvino`, and `Engine.export` entrypoints are used. Export at the model's fixed
@@ -185,7 +206,7 @@ uv run python -m tools.uniadet.validate \
 This checks TorchInferencer, Engine, ONNX Runtime, and OpenVINO FP32/FP16/INT8/INT8_PTQ/INT8_ACQ for batches 1 and 3.
 It additionally checks a raw-resolution image path through TorchInferencer and both Engine predict/test APIs.
 Corrected CLIP, DINOv2-R and DINOv3 zero-/four-shot file/tensor Torch, Engine predict/test, ONNX, FP32, FP16 and
-weight-only INT8 checks pass. Activation PTQ/ACQ measurements remain in progress.
+weight-only INT8 checks pass. Activation PTQ/ACQ conversions run successfully but fail strict map tolerances below.
 Separate real CUDA checks also pass file/tensor TorchInferencer and checkpoint-restored Engine predict/test for
 all six encoder/shot cases and batches 1/3. Same-device API tolerance is `1e-5`; CPU/CUDA FP32 tolerance is `1e-4`.
 The largest observed CPU/CUDA map difference is `3.61e-5`. See
@@ -193,10 +214,10 @@ The largest observed CPU/CUDA map difference is `3.61e-5`. See
 `parity.json` records maximum/mean absolute error and RMSE for scores and maps. Tolerances are fixed before comparison:
 `1e-5` for Torch/Engine, `1e-4` for ONNX/FP32, `0.005` for FP16, and `0.05` for INT8 variants.
 Quantization is approximate, not bit-identical; conversion success alone does not establish accuracy.
-The same report records CPU latency with four threads, one warmup and three measured repetitions per batch size.
+The per-export reports retain CPU timings with four threads, one warmup and three measured repetitions per batch size.
 These shared-host timings include in-model preprocessing/postprocessing, but exclude image decoding and compilation.
-Conversion-time CPU measurements were collected under concurrent calibration load and are not a fair speed ranking.
-Controlled CPU timing is scheduled separately after the task-owned activation jobs finish.
+These conversion-time measurements had concurrent calibration load and are not a fair speed ranking.
+Use the separately controlled CPU measurements above.
 The CPU checks request FP32 floating-point execution: FP16 denotes compressed stored weights, not a native FP16
 CPU-kernel benchmark. INT8 denotes weight-only compression; PTQ/ACQ also quantize activations.
 
@@ -208,23 +229,34 @@ transformer-aware recipe, including SmoothQuant, rather than generic convolution
 Fixed map resizing and Gaussian smoothing remain floating point: calibrating these operations on the auxiliary domain
 can clip unseen-domain anomaly maps. This is not a fully integer
 graph. Final target-dataset accuracy still needs separate measurement.
-All three corrected zero-shot PTQ/ACQ cases have completed. Both formats produce the same measured errors because
+All six corrected zero-/four-shot PTQ/ACQ cases have completed. Both formats produce the same measured errors because
 native ACQ already meets its auxiliary image-AUROC constraint without reverting quantizers:
 
-| Encoder  | Initial auxiliary AUROC | Quantized AUROC | Absolute drop | Maximum map error |
-| -------- | ----------------------- | --------------- | ------------- | ----------------- |
-| CLIP     | 0.935060                | 0.930424        | 0.004635      | 0.10547           |
-| DINOv2-R | 0.928374                | 0.921020        | 0.007354      | 0.06151           |
-| DINOv3   | 0.934480                | 0.933901        | 0.000579      | 0.09730           |
+| Encoder  | Shots | Initial auxiliary AUROC | Quantized AUROC | Absolute drop | Maximum map error |
+| -------- | ----- | ----------------------- | --------------- | ------------- | ----------------- |
+| CLIP     | 0     | 0.935060                | 0.930424        | 0.004635      | 0.10547           |
+| CLIP     | 4     | 0.943751                | 0.935951        | 0.007800      | 0.06266           |
+| DINOv2-R | 0     | 0.928374                | 0.921020        | 0.007354      | 0.06151           |
+| DINOv2-R | 4     | 0.936219                | 0.927839        | 0.008379      | 0.08991           |
+| DINOv3   | 0     | 0.934480                | 0.933901        | 0.000579      | 0.09730           |
+| DINOv3   | 4     | 0.935728                | 0.934792        | 0.000936      | 0.06512           |
 
 AUROC values use 300 disjoint auxiliary-domain validation images. Map errors use the MVTec bottle numerical
-inputs at batches 1/3, not an all-category quantized benchmark. All three maximum map errors exceed the unchanged
+inputs at batches 1/3, not an all-category quantized benchmark. All six maximum map errors exceed the unchanged
 0.05 tolerance, despite small mean errors and passing score checks.
 Preserving AUROC does not guarantee per-pixel amplitude agreement.
 See [activation_accuracy_control.json](/results/UniADet/activation_accuracy_control.json) and each parity report.
-Cached-IR replay rules out a batch-size effect; a narrow binary-head-only exclusion did not fix the drift and was
-not adopted. See [the numerical diagnosis](/results/UniADet/deployment/dinov2_mvtec_0_activation/ptq_diagnosis.json).
-Four-shot activation cases are still being measured; zero-shot activation quantization is not certified equivalent.
+Cached-IR replay of DINOv2-R zero-shot rules out a batch-size effect.
+A narrow binary-head-only exclusion did not fix the drift and was not adopted.
+See [the numerical diagnosis](/results/UniADet/deployment/dinov2_mvtec_0_activation/ptq_diagnosis.json).
+For DINOv2-R four-shot, bypassing only reference-query quantizers does not improve the map maximum.
+Bypassing only RGB patch-input quantization reduces 0.08991 to 0.06544 but still fails, and worsens score error;
+neither change is adopted. See [the four-shot diagnosis](/results/UniADet/deployment/dinov2_mvtec_4_activation/ptq_diagnosis.json).
+No broad precision exclusions or relaxed tolerances are used.
+The [complete deployment summary](/results/UniADet/deployment_summary.csv) contains 114 batch/format measurements:
+18 fail the map criterion, all in activation PTQ/ACQ; all score checks pass.
+Use FP32, compressed FP16 or weight-only INT8 for the checked numerical consistency.
+Activation variants are not certified equivalent under the declared maximum-map tolerance.
 
 The legacy TorchInferencer requires `TRUST_REMOTE_CODE=1` for locally generated full-model exports. Never enable this
 for an untrusted downloaded pickle. The helper scopes this flag to loading its own newly generated export.
