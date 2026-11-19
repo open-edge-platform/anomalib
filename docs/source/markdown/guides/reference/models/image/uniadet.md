@@ -48,6 +48,29 @@ versus the paper's 97.7/98.7. The paper's overall headline accuracy is not repro
 All 96 default metric/shot/dataset/encoder comparisons and paper gaps are in `results/UniADet/comparison.csv`.
 No missing results or partial category/seed coverage are presented as complete.
 Paper and released-demo fusion settings differ.
+The FP32 component audit has now measured the effect of this difference: with unchanged recipe-v2 heads,
+features and seed-10 references, the published executable's scoring raises four-shot MVTec image AUROC from
+94.35/94.89/94.34 to **97.64/98.62/98.24** for CLIP/DINOv2-R/DINOv3 across all 15 categories.
+The paper reports 97.7/98.7/98.2. These are single-reference-seed diagnostic image metrics, not replacement
+three-seed benchmarks or new pixel results; the original tables above remain unchanged.
+All 12 VisA categories are also checked: four-shot values change 91.71/94.55/93.95 to 92.80/96.62/95.41,
+versus paper 93.3/96.9/97.1. Zero-shot VisA DINOv3 improves 87.80 to 92.10, but CLIP worsens 88.04 to 87.10.
+The scorer is therefore not a universal fix, and residual gaps remain. Both directions are recorded in
+`results/UniADet/diagnosis/scoring_comparison.csv`.
+Reference fusion weight 0.8, sigmoid recalibration, smoothing and resize/peak-extraction ordering account for
+this controlled change. The zero-shot executable also uses image-map weight 0.1.
+The audit additionally confirms DINO intermediate final-LayerNorm, dataset-specific CAA and reference-RNG
+differences from the author executable, plus training-map interpolation alignment.
+A paired 15-epoch, three-auxiliary-category/four-target-category experiment measures the LayerNorm effect:
+baseline zero-/four-shot image AUROC changes 89.58/94.83 to 91.26/96.45, but with executable scoring
+94.54/98.68 changes to 94.22/98.73. It is not a uniformly beneficial change or full-dataset retraining.
+The remaining training/reference differences have not all had their accuracy contributions isolated.
+On the four-category probe, with-replacement sampling changes executable-scoring four-shot image AUROC
+98.52 to 98.07; this does not establish parity with unavailable original author reference manifests.
+Block selection, token exclusion, CLIP projection and macro aggregation match.
+The published executable is not proof of the unpublished paper-run configuration.
+Use `python -m tools.uniadet.diagnose` for fixed-protocol scoring ablations; measured artifacts and author questions
+are under `results/UniADet/diagnosis/`. Production scoring and PTQ/ACQ settings remain unchanged.
 The [model README](https://github.com/open-edge-platform/anomalib/tree/main/src/anomalib/models/image/uniadet)
 documents the protocol, explicit implementation choices, commands, licenses, and validation tolerances.
 Real-IAD is reserved for a separate follow-up PR.

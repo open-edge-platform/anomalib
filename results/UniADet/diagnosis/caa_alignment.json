@@ -1,0 +1,8 @@
+{
+  "complete": true,
+  "cases": 8,
+  "all_labels_consistent": true,
+  "max_image_mask_boundary_difference": 1.0,
+  "interpretation": "Bilinear image versus nearest-neighbor mask resizing gives boundary differences; this is not itself mask misalignment. Non-boundary supervision and labels are preserved.",
+  "panel": "caa_synthetic.png"
+}

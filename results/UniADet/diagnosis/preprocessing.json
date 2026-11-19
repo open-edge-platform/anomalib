@@ -1,0 +1,6 @@
+{
+  "image": "datasets/MVTecAD/bottle/test/broken_small/009.png",
+  "cv2_vs_torchvision_bilinear_raw_max_error": 0.002967655658721924,
+  "cv2_vs_torchvision_bilinear_raw_mae": 0.000526061630807817,
+  "note": "Integer OpenCV versus float tensor resizing differs by rounding; same mean/std, RGB order, square resize and bilinear family. Author preprocessing, not generic native backbone defaults, is the relevant comparator."
+}

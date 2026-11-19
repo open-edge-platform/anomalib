@@ -1,0 +1,31 @@
+{
+  "complete": true,
+  "seed": 2026,
+  "samples": 1024,
+  "counts": {
+    "crop": 248,
+    "crop_grid_2": 137,
+    "color_jitter": 499,
+    "horizontal_flip": 527,
+    "channel_shuffle": 256,
+    "vertical_flip": 499,
+    "rotate90": 520,
+    "mosaic": 258,
+    "mosaic_grid_2": 125,
+    "grayscale": 264,
+    "crop_grid_3": 111,
+    "mosaic_grid_3": 133
+  },
+  "observed_frequencies": {
+    "mosaic": 0.251953125,
+    "crop": 0.2421875,
+    "color_jitter": 0.4873046875,
+    "rotate90": 0.5078125,
+    "channel_shuffle": 0.25,
+    "grayscale": 0.2578125,
+    "horizontal_flip": 0.5146484375,
+    "vertical_flip": 0.4873046875
+  },
+  "supervision_consistent": true,
+  "finding": "Intended local gates fire, but the local recipe is not the author executable: author VisA uses mask-centered jittered crops (and a per-category crop history for normals), whereas author MVTec uses mosaics, not a 50/50 crop/mosaic mixture for both."
+}

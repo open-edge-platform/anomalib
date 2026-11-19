@@ -1,0 +1,201 @@
+{
+  "diagnostic_only": true,
+  "backbone": "dinov3",
+  "target_dataset": "visa",
+  "head_sha256": "e14f7b6f6f3ba037c99b75098656947f53dae18991e6b0073edf73b6e03084f8",
+  "diagnostic_sha256": "ffeb22da189b37fb8730054733d247292f9cb157a9aabaf8e979c5cb2d20118d",
+  "source_revision": "2b81369d418ed08fd882452597ad5ebe7df3cb1d",
+  "categories": [
+    "candle",
+    "capsules",
+    "cashew",
+    "chewinggum",
+    "fryum",
+    "macaroni1",
+    "macaroni2",
+    "pcb1",
+    "pcb2",
+    "pcb3",
+    "pcb4",
+    "pipe_fryum"
+  ],
+  "shots": [
+    0,
+    4
+  ],
+  "reference_seed": 10,
+  "references": {
+    "candle/4": [
+      "candle/train/good/0476.JPG",
+      "candle/train/good/0702.JPG",
+      "candle/train/good/0706.JPG",
+      "candle/train/good/0970.JPG"
+    ],
+    "capsules/4": [
+      "capsules/train/good/281.JPG",
+      "capsules/train/good/199.JPG",
+      "capsules/train/good/349.JPG",
+      "capsules/train/good/068.JPG"
+    ],
+    "cashew/4": [
+      "cashew/train/good/486.JPG",
+      "cashew/train/good/158.JPG",
+      "cashew/train/good/251.JPG",
+      "cashew/train/good/343.JPG"
+    ],
+    "chewinggum/4": [
+      "chewinggum/train/good/256.JPG",
+      "chewinggum/train/good/180.JPG",
+      "chewinggum/train/good/063.JPG",
+      "chewinggum/train/good/074.JPG"
+    ],
+    "fryum/4": [
+      "fryum/train/good/486.JPG",
+      "fryum/train/good/158.JPG",
+      "fryum/train/good/251.JPG",
+      "fryum/train/good/343.JPG"
+    ],
+    "macaroni1/4": [
+      "macaroni1/train/good/0476.JPG",
+      "macaroni1/train/good/0702.JPG",
+      "macaroni1/train/good/0706.JPG",
+      "macaroni1/train/good/0970.JPG"
+    ],
+    "macaroni2/4": [
+      "macaroni2/train/good/0476.JPG",
+      "macaroni2/train/good/0702.JPG",
+      "macaroni2/train/good/0706.JPG",
+      "macaroni2/train/good/0970.JPG"
+    ],
+    "pcb1/4": [
+      "pcb1/train/good/0375.JPG",
+      "pcb1/train/good/0092.JPG",
+      "pcb1/train/good/0560.JPG",
+      "pcb1/train/good/0452.JPG"
+    ],
+    "pcb2/4": [
+      "pcb2/train/good/0146.JPG",
+      "pcb2/train/good/0783.JPG",
+      "pcb2/train/good/0301.JPG",
+      "pcb2/train/good/0815.JPG"
+    ],
+    "pcb3/4": [
+      "pcb3/train/good/0099.JPG",
+      "pcb3/train/good/0181.JPG",
+      "pcb3/train/good/0134.JPG",
+      "pcb3/train/good/0645.JPG"
+    ],
+    "pcb4/4": [
+      "pcb4/train/good/0375.JPG",
+      "pcb4/train/good/0092.JPG",
+      "pcb4/train/good/0560.JPG",
+      "pcb4/train/good/0452.JPG"
+    ],
+    "pipe_fryum/4": [
+      "pipe_fryum/train/good/486.JPG",
+      "pipe_fryum/train/good/158.JPG",
+      "pipe_fryum/train/good/251.JPG",
+      "pipe_fryum/train/good/343.JPG"
+    ]
+  },
+  "baseline_max_absolute_error": 2.384185791015625e-07,
+  "macro_results": [
+    {
+      "shots": 0,
+      "variant": "baseline",
+      "image_auroc": 0.8779751650165016,
+      "image_ap": 0.901195205692495
+    },
+    {
+      "shots": 0,
+      "variant": "fusion_weights_only",
+      "image_auroc": 0.9254297304730473,
+      "image_ap": 0.9350416026149425
+    },
+    {
+      "shots": 0,
+      "variant": "image_head_only",
+      "image_auroc": 0.9130278602860287,
+      "image_ap": 0.9228355826181857
+    },
+    {
+      "shots": 0,
+      "variant": "peak_resolution_only",
+      "image_auroc": 0.8776031903190319,
+      "image_ap": 0.9009285941624877
+    },
+    {
+      "shots": 0,
+      "variant": "published_executable",
+      "image_auroc": 0.9210176842684268,
+      "image_ap": 0.9280344641118302
+    },
+    {
+      "shots": 0,
+      "variant": "recalibration_only",
+      "image_auroc": 0.8945474422442244,
+      "image_ap": 0.9151336249312229
+    },
+    {
+      "shots": 0,
+      "variant": "reference_smoothing_only",
+      "image_auroc": 0.8779751650165016,
+      "image_ap": 0.901195205692495
+    },
+    {
+      "shots": 0,
+      "variant": "resize_alignment_only",
+      "image_auroc": 0.877644691969197,
+      "image_ap": 0.9007659925878552
+    },
+    {
+      "shots": 4,
+      "variant": "baseline",
+      "image_auroc": 0.9394896864686468,
+      "image_ap": 0.9508738272461111
+    },
+    {
+      "shots": 4,
+      "variant": "fusion_weights_only",
+      "image_auroc": 0.9618536303630364,
+      "image_ap": 0.9636169769942424
+    },
+    {
+      "shots": 4,
+      "variant": "image_head_only",
+      "image_auroc": 0.9130278602860287,
+      "image_ap": 0.9228355826181857
+    },
+    {
+      "shots": 4,
+      "variant": "peak_resolution_only",
+      "image_auroc": 0.9392270352035204,
+      "image_ap": 0.9505872929680117
+    },
+    {
+      "shots": 4,
+      "variant": "published_executable",
+      "image_auroc": 0.9541301705170517,
+      "image_ap": 0.9536539927461566
+    },
+    {
+      "shots": 4,
+      "variant": "recalibration_only",
+      "image_auroc": 0.9443902365236524,
+      "image_ap": 0.9505413086414181
+    },
+    {
+      "shots": 4,
+      "variant": "reference_smoothing_only",
+      "image_auroc": 0.9372894114411441,
+      "image_ap": 0.9492179812931273
+    },
+    {
+      "shots": 4,
+      "variant": "resize_alignment_only",
+      "image_auroc": 0.9391437843784378,
+      "image_ap": 0.9505141584541441
+    }
+  ],
+  "complete": true
+}

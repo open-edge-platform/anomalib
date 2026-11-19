@@ -99,6 +99,76 @@ right-angle rotation (0.5), channel shuffle/grayscale (0.25 each), and horizonta
 Backbone implementations, augmentation sampling and score processing can still differ; matching headline numbers
 is not asserted.
 
+### FP32 reproduction diagnosis
+
+The component audit now confirms concrete differences, rather than attributing the gap to unspecified variance.
+Using the **same recipe-v2 heads, features and seed-10 normal references**, the published industrial executable's
+score processing recovers most of the four-shot MVTec image-AUROC gap across all 15 categories:
+
+| Encoder  | Existing scoring | Published executable scoring | Paper |
+| -------- | ---------------- | ---------------------------- | ----- |
+| CLIP     | 94.35            | 97.64                        | 97.7  |
+| DINOv2-R | 94.89            | 98.62                        | 98.7  |
+| DINOv3   | 94.34            | 98.24                        | 98.2  |
+
+These are **single-reference-seed diagnostic image metrics**, not replacement three-seed benchmarks or new pixel
+results. The original measurements below remain unchanged. The executable uses reference fusion weight 0.8,
+zero-shot image-map weight 0.1, sigmoid map recalibration, additional reference smoothing, and different interpolation/
+peak-extraction ordering. On DINOv2-R, changing the reference fusion weight alone raises four-shot image AUROC
+from 94.89 to 97.53; the complete executable scoring combination reaches 98.62.
+The comparator is pinned to upstream commit `2b81369d418ed08fd882452597ad5ebe7df3cb1d`.
+This does not prove which undocumented executable settings generated the paper tables.
+
+The inverse checks cover all 12 VisA categories too. Four-shot image AUROC changes 91.71/94.55/93.95
+to 92.80/96.62/95.41 for CLIP/DINOv2-R/DINOv3, versus paper 93.3/96.9/97.1.
+Zero-shot DINOv3 improves 87.80 to 92.10, but CLIP worsens 88.04 to 87.10.
+Thus this is not a universal fix: residual gaps remain, including 1.69 points for four-shot VisA DINOv3.
+Both directions and all prespecified variants are in `results/UniADet/diagnosis/scoring_comparison.csv`.
+
+Other verified differences remain:
+
+- The local DINOv2-R/DINOv3 adapters apply final LayerNorm to intermediate features; the authors' detection
+  forwards return those blocks without it. LayerNorm changes feature directions and is not canceled by cosine
+  normalization. Existing heads were trained on the local features; simply changing inference normalization
+  would invalidate that pairing.
+- The author training executable uses VisA mask-centered/history-based cropping and MVTec-specific mosaics,
+  rather than the local crop/mosaic mixture for both datasets. Equal transform probabilities did not establish
+  equivalent training distributions.
+- The author reference sampler uses `randint` with replacement, while the local sampler uses `randperm` without
+  replacement. All 45 audited MVTec category/seed four-shot selections differ despite equal numeric seeds.
+- Training probability-map interpolation also differs: local `align_corners=True` versus the executable's
+  `False`. Matching the CE/focal/Dice formulas does not remove this difference.
+
+A separate paired 15-epoch experiment uses 510 auxiliary images from three fixed VisA categories, identical
+initial heads/batches/augmentations, and four fixed MVTec categories. Removing final LayerNorm changes baseline
+zero-/four-shot image AUROC from 89.58/94.83 to 91.26/96.45. With executable scoring, the corresponding changes
+are 94.54/98.68 to 94.22/98.73. Thus the feature mismatch has a measured effect, but is not a uniform improvement
+or an established dominant cause of the four-shot headline gap. This bounded experiment is not full-dataset retraining.
+A separate fixed-head reference-sampler probe on those four target categories changes executable-scoring
+four-shot image AUROC from 98.52 to 98.07 when switching to the author's with-replacement RNG algorithm
+on the local normal-image pool. Original author reference manifests remain unavailable.
+
+Block indexing, CLS/register-token exclusion, CLIP projection, normal-only reference pools, macro-category
+aggregation, and independently checked metric arithmetic pass their component checks. All six existing loss
+curves are finite and improve; this alone does not establish training equivalence.
+The public demo exposes a rendered overlay and rounded score, not a feature/logit oracle; no local data was uploaded.
+Detailed evidence and targeted author questions are under `results/UniADet/diagnosis/`.
+Production scoring and quantization settings have **not** been changed by these diagnostic experiments.
+
+To reproduce the fixed-protocol scoring ablations without retraining:
+
+```bash
+uv run --no-sync python -m tools.uniadet.diagnose \
+  --weights results/UniADet/training/dinov2_visa/head.pt \
+  --dataset mvtec --root datasets/MVTecAD \
+  --output results/UniADet/diagnosis/dinov2_scoring_full
+```
+
+The helper verifies its baseline against the integrated detector before marking results complete, and writes
+per-category/per-image measurements and head provenance. It never selects a variant by optimizing target labels.
+
+### Recipe-v2 benchmark measurements
+
 All six full auxiliary runs and cross-dataset evaluations are complete under `results/UniADet/`.
 All deployment conversions are complete, with activation-quantization limitations detailed below.
 Every replacement head was trained from scratch with corrected **recipe version 2**.

@@ -1,0 +1,220 @@
+{
+  "diagnostic_only": true,
+  "backbone": "clip",
+  "head_sha256": "c3eb37752561a4e0d41275de1f3246cc4decad4737386586767530b8c0362438",
+  "source_revision": "2b81369d418ed08fd882452597ad5ebe7df3cb1d",
+  "categories": [
+    "bottle",
+    "cable",
+    "capsule",
+    "carpet",
+    "grid",
+    "hazelnut",
+    "leather",
+    "metal_nut",
+    "pill",
+    "screw",
+    "tile",
+    "toothbrush",
+    "transistor",
+    "wood",
+    "zipper"
+  ],
+  "shots": [
+    0,
+    4
+  ],
+  "reference_seed": 10,
+  "references": {
+    "bottle/4": [
+      "bottle/train/good/010.png",
+      "bottle/train/good/142.png",
+      "bottle/train/good/116.png",
+      "bottle/train/good/084.png"
+    ],
+    "cable/4": [
+      "cable/train/good/009.png",
+      "cable/train/good/200.png",
+      "cable/train/good/152.png",
+      "cable/train/good/211.png"
+    ],
+    "capsule/4": [
+      "capsule/train/good/143.png",
+      "capsule/train/good/042.png",
+      "capsule/train/good/090.png",
+      "capsule/train/good/106.png"
+    ],
+    "carpet/4": [
+      "carpet/train/good/177.png",
+      "carpet/train/good/139.png",
+      "carpet/train/good/188.png",
+      "carpet/train/good/219.png"
+    ],
+    "grid/4": [
+      "grid/train/good/065.png",
+      "grid/train/good/033.png",
+      "grid/train/good/202.png",
+      "grid/train/good/151.png"
+    ],
+    "hazelnut/4": [
+      "hazelnut/train/good/171.png",
+      "hazelnut/train/good/376.png",
+      "hazelnut/train/good/087.png",
+      "hazelnut/train/good/338.png"
+    ],
+    "leather/4": [
+      "leather/train/good/037.png",
+      "leather/train/good/002.png",
+      "leather/train/good/179.png",
+      "leather/train/good/126.png"
+    ],
+    "metal_nut/4": [
+      "metal_nut/train/good/197.png",
+      "metal_nut/train/good/007.png",
+      "metal_nut/train/good/070.png",
+      "metal_nut/train/good/067.png"
+    ],
+    "pill/4": [
+      "pill/train/good/044.png",
+      "pill/train/good/036.png",
+      "pill/train/good/159.png",
+      "pill/train/good/082.png"
+    ],
+    "screw/4": [
+      "screw/train/good/137.png",
+      "screw/train/good/200.png",
+      "screw/train/good/212.png",
+      "screw/train/good/138.png"
+    ],
+    "tile/4": [
+      "tile/train/good/217.png",
+      "tile/train/good/195.png",
+      "tile/train/good/086.png",
+      "tile/train/good/184.png"
+    ],
+    "toothbrush/4": [
+      "toothbrush/train/good/017.png",
+      "toothbrush/train/good/059.png",
+      "toothbrush/train/good/044.png",
+      "toothbrush/train/good/013.png"
+    ],
+    "transistor/4": [
+      "transistor/train/good/056.png",
+      "transistor/train/good/186.png",
+      "transistor/train/good/002.png",
+      "transistor/train/good/130.png"
+    ],
+    "wood/4": [
+      "wood/train/good/086.png",
+      "wood/train/good/196.png",
+      "wood/train/good/139.png",
+      "wood/train/good/162.png"
+    ],
+    "zipper/4": [
+      "zipper/train/good/137.png",
+      "zipper/train/good/155.png",
+      "zipper/train/good/076.png",
+      "zipper/train/good/217.png"
+    ]
+  },
+  "baseline_max_absolute_error": 2.384185791015625e-07,
+  "macro_results": [
+    {
+      "shots": 0,
+      "variant": "baseline",
+      "image_auroc": 0.9026487327350586,
+      "image_ap": 0.9518574667439962
+    },
+    {
+      "shots": 0,
+      "variant": "fusion_weights_only",
+      "image_auroc": 0.9194389456800525,
+      "image_ap": 0.9640621265250268
+    },
+    {
+      "shots": 0,
+      "variant": "image_head_only",
+      "image_auroc": 0.8963920107921894,
+      "image_ap": 0.9535687058450439
+    },
+    {
+      "shots": 0,
+      "variant": "peak_resolution_only",
+      "image_auroc": 0.9033397896427221,
+      "image_ap": 0.9521179236678857
+    },
+    {
+      "shots": 0,
+      "variant": "published_executable",
+      "image_auroc": 0.9172698137132894,
+      "image_ap": 0.9625121680922561
+    },
+    {
+      "shots": 0,
+      "variant": "recalibration_only",
+      "image_auroc": 0.8932054299450023,
+      "image_ap": 0.9481764266659436
+    },
+    {
+      "shots": 0,
+      "variant": "reference_smoothing_only",
+      "image_auroc": 0.9026487327350586,
+      "image_ap": 0.9518574667439962
+    },
+    {
+      "shots": 0,
+      "variant": "resize_alignment_only",
+      "image_auroc": 0.9034334142312499,
+      "image_ap": 0.9525628443507396
+    },
+    {
+      "shots": 4,
+      "variant": "baseline",
+      "image_auroc": 0.9435165525472161,
+      "image_ap": 0.9725379857707163
+    },
+    {
+      "shots": 4,
+      "variant": "fusion_weights_only",
+      "image_auroc": 0.9734694172303071,
+      "image_ap": 0.986538549727193
+    },
+    {
+      "shots": 4,
+      "variant": "image_head_only",
+      "image_auroc": 0.8963920107921894,
+      "image_ap": 0.9535687058450439
+    },
+    {
+      "shots": 4,
+      "variant": "peak_resolution_only",
+      "image_auroc": 0.9435828643134483,
+      "image_ap": 0.9725705171718952
+    },
+    {
+      "shots": 4,
+      "variant": "published_executable",
+      "image_auroc": 0.9764184955522477,
+      "image_ap": 0.986594520769143
+    },
+    {
+      "shots": 4,
+      "variant": "recalibration_only",
+      "image_auroc": 0.9504673490829577,
+      "image_ap": 0.9741947858572089
+    },
+    {
+      "shots": 4,
+      "variant": "reference_smoothing_only",
+      "image_auroc": 0.9430084458248916,
+      "image_ap": 0.972476550213823
+    },
+    {
+      "shots": 4,
+      "variant": "resize_alignment_only",
+      "image_auroc": 0.9442671664352652,
+      "image_ap": 0.9731644591452207
+    }
+  ],
+  "complete": true
+}

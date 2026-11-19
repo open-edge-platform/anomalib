@@ -1,0 +1,789 @@
+{
+  "complete": true,
+  "scope": "FP32 diagnosis; no production scoring or quantization policy changes",
+  "full_category_scoring": [
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "baseline",
+      "categories": 15,
+      "image_auroc_percent": 90.26487327350587,
+      "image_ap_percent": 95.18574667439962,
+      "paper_image_auroc_percent": 92.4,
+      "gap_percentage_points": -2.1351267264941356,
+      "pooled_image_auroc_percent_diagnostic_only": 80.06148231617435
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "fusion_weights_only",
+      "categories": 15,
+      "image_auroc_percent": 91.94389456800525,
+      "image_ap_percent": 96.40621265250267,
+      "paper_image_auroc_percent": 92.4,
+      "gap_percentage_points": -0.4561054319947573,
+      "pooled_image_auroc_percent_diagnostic_only": 69.2709273072039
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "recalibration_only",
+      "categories": 15,
+      "image_auroc_percent": 89.32054299450023,
+      "image_ap_percent": 94.81764266659437,
+      "paper_image_auroc_percent": 92.4,
+      "gap_percentage_points": -3.0794570054997763,
+      "pooled_image_auroc_percent_diagnostic_only": 81.5857739588688
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "published_executable",
+      "categories": 15,
+      "image_auroc_percent": 91.72698137132895,
+      "image_ap_percent": 96.25121680922561,
+      "paper_image_auroc_percent": 92.4,
+      "gap_percentage_points": -0.6730186286710591,
+      "pooled_image_auroc_percent_diagnostic_only": 71.38195633598076
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "baseline",
+      "categories": 15,
+      "image_auroc_percent": 94.3516552547216,
+      "image_ap_percent": 97.25379857707162,
+      "paper_image_auroc_percent": 97.7,
+      "gap_percentage_points": -3.3483447452783963,
+      "pooled_image_auroc_percent_diagnostic_only": 82.46698644733661
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "fusion_weights_only",
+      "categories": 15,
+      "image_auroc_percent": 97.34694172303071,
+      "image_ap_percent": 98.6538549727193,
+      "paper_image_auroc_percent": 97.7,
+      "gap_percentage_points": -0.3530582769692927,
+      "pooled_image_auroc_percent_diagnostic_only": 83.05559621846308
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "recalibration_only",
+      "categories": 15,
+      "image_auroc_percent": 95.04673490829578,
+      "image_ap_percent": 97.41947858572088,
+      "paper_image_auroc_percent": 97.7,
+      "gap_percentage_points": -2.6532650917042275,
+      "pooled_image_auroc_percent_diagnostic_only": 89.09335711829729
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "published_executable",
+      "categories": 15,
+      "image_auroc_percent": 97.64184955522477,
+      "image_ap_percent": 98.6594520769143,
+      "paper_image_auroc_percent": 97.7,
+      "gap_percentage_points": -0.058150444775236565,
+      "pooled_image_auroc_percent_diagnostic_only": 91.55128803069348
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "baseline",
+      "categories": 12,
+      "image_auroc_percent": 88.04427117711772,
+      "image_ap_percent": 90.01823753021098,
+      "paper_image_auroc_percent": 88.0,
+      "gap_percentage_points": 0.04427117711772155,
+      "pooled_image_auroc_percent_diagnostic_only": 75.14180526680528
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "fusion_weights_only",
+      "categories": 12,
+      "image_auroc_percent": 88.14874312431243,
+      "image_ap_percent": 89.408077367741,
+      "paper_image_auroc_percent": 88.0,
+      "gap_percentage_points": 0.14874312431243197,
+      "pooled_image_auroc_percent_diagnostic_only": 68.18087318087318
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "recalibration_only",
+      "categories": 12,
+      "image_auroc_percent": 87.54005500550055,
+      "image_ap_percent": 89.07225387254462,
+      "paper_image_auroc_percent": 88.0,
+      "gap_percentage_points": -0.4599449944994518,
+      "pooled_image_auroc_percent_diagnostic_only": 68.8097713097713
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "published_executable",
+      "categories": 12,
+      "image_auroc_percent": 87.10471122112212,
+      "image_ap_percent": 88.24106801752288,
+      "paper_image_auroc_percent": 88.0,
+      "gap_percentage_points": -0.8952887788778838,
+      "pooled_image_auroc_percent_diagnostic_only": 66.7924462924463
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "baseline",
+      "categories": 12,
+      "image_auroc_percent": 91.71126512651266,
+      "image_ap_percent": 93.55254624845219,
+      "paper_image_auroc_percent": 93.3,
+      "gap_percentage_points": -1.5887348734873399,
+      "pooled_image_auroc_percent_diagnostic_only": 79.72531185031185
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "fusion_weights_only",
+      "categories": 12,
+      "image_auroc_percent": 93.4114301430143,
+      "image_ap_percent": 94.56369478465675,
+      "paper_image_auroc_percent": 93.3,
+      "gap_percentage_points": 0.11143014301430298,
+      "pooled_image_auroc_percent_diagnostic_only": 82.19360706860705
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "recalibration_only",
+      "categories": 12,
+      "image_auroc_percent": 92.5348707370737,
+      "image_ap_percent": 93.88722919273673,
+      "paper_image_auroc_percent": 93.3,
+      "gap_percentage_points": -0.765129262926294,
+      "pooled_image_auroc_percent_diagnostic_only": 84.60351697851698
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "published_executable",
+      "categories": 12,
+      "image_auroc_percent": 92.79722772277226,
+      "image_ap_percent": 93.3609316688648,
+      "paper_image_auroc_percent": 93.3,
+      "gap_percentage_points": -0.5027722772277343,
+      "pooled_image_auroc_percent_diagnostic_only": 85.87967775467776
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "baseline",
+      "categories": 15,
+      "image_auroc_percent": 91.30925512005079,
+      "image_ap_percent": 95.67285709978083,
+      "paper_image_auroc_percent": 93.5,
+      "gap_percentage_points": -2.1907448799492073,
+      "pooled_image_auroc_percent_diagnostic_only": 72.78164926483355
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "fusion_weights_only",
+      "categories": 15,
+      "image_auroc_percent": 93.2029066931884,
+      "image_ap_percent": 97.09888368329345,
+      "paper_image_auroc_percent": 93.5,
+      "gap_percentage_points": -0.29709330681160395,
+      "pooled_image_auroc_percent_diagnostic_only": 61.41116554266826
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "recalibration_only",
+      "categories": 15,
+      "image_auroc_percent": 92.43503556972966,
+      "image_ap_percent": 96.64242522303047,
+      "paper_image_auroc_percent": 93.5,
+      "gap_percentage_points": -1.0649644302703365,
+      "pooled_image_auroc_percent_diagnostic_only": 69.15160531485004
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "published_executable",
+      "categories": 15,
+      "image_auroc_percent": 92.9624546963127,
+      "image_ap_percent": 96.91374375764033,
+      "paper_image_auroc_percent": 93.5,
+      "gap_percentage_points": -0.5375453036872955,
+      "pooled_image_auroc_percent_diagnostic_only": 61.37422849225344
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "baseline",
+      "categories": 15,
+      "image_auroc_percent": 94.8889869246786,
+      "image_ap_percent": 97.78375582613151,
+      "paper_image_auroc_percent": 98.7,
+      "gap_percentage_points": -3.811013075321398,
+      "pooled_image_auroc_percent_diagnostic_only": 75.88112738005672
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "fusion_weights_only",
+      "categories": 15,
+      "image_auroc_percent": 97.52874346234786,
+      "image_ap_percent": 98.92588613234145,
+      "paper_image_auroc_percent": 98.7,
+      "gap_percentage_points": -1.171256537652141,
+      "pooled_image_auroc_percent_diagnostic_only": 77.57001868980709
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "recalibration_only",
+      "categories": 15,
+      "image_auroc_percent": 96.44697504268595,
+      "image_ap_percent": 98.3578813480656,
+      "paper_image_auroc_percent": 98.7,
+      "gap_percentage_points": -2.2530249573140537,
+      "pooled_image_auroc_percent_diagnostic_only": 83.84914704350402
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "published_executable",
+      "categories": 15,
+      "image_auroc_percent": 98.62233136602083,
+      "image_ap_percent": 99.38289017755905,
+      "paper_image_auroc_percent": 98.7,
+      "gap_percentage_points": -0.07766863397917234,
+      "pooled_image_auroc_percent_diagnostic_only": 90.6612242674719
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "baseline",
+      "categories": 12,
+      "image_auroc_percent": 89.08231573157316,
+      "image_ap_percent": 91.35694478963431,
+      "paper_image_auroc_percent": 91.3,
+      "gap_percentage_points": -2.2176842684268365,
+      "pooled_image_auroc_percent_diagnostic_only": 78.92550242550243
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "fusion_weights_only",
+      "categories": 12,
+      "image_auroc_percent": 91.54669141914192,
+      "image_ap_percent": 91.90375369618643,
+      "paper_image_auroc_percent": 91.3,
+      "gap_percentage_points": 0.24669141914192494,
+      "pooled_image_auroc_percent_diagnostic_only": 77.71327096327096
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "recalibration_only",
+      "categories": 12,
+      "image_auroc_percent": 88.58095434543455,
+      "image_ap_percent": 89.64028867825942,
+      "paper_image_auroc_percent": 91.3,
+      "gap_percentage_points": -2.7190456545654484,
+      "pooled_image_auroc_percent_diagnostic_only": 75.46682259182259
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "published_executable",
+      "categories": 12,
+      "image_auroc_percent": 89.82531628162816,
+      "image_ap_percent": 89.94694793871379,
+      "paper_image_auroc_percent": 91.3,
+      "gap_percentage_points": -1.4746837183718355,
+      "pooled_image_auroc_percent_diagnostic_only": 76.10239085239084
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "baseline",
+      "categories": 12,
+      "image_auroc_percent": 94.5458800880088,
+      "image_ap_percent": 96.08269324236348,
+      "paper_image_auroc_percent": 96.9,
+      "gap_percentage_points": -2.354119911991205,
+      "pooled_image_auroc_percent_diagnostic_only": 87.68260568260568
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "fusion_weights_only",
+      "categories": 12,
+      "image_auroc_percent": 97.30416391639164,
+      "image_ap_percent": 97.8565673878316,
+      "paper_image_auroc_percent": 96.9,
+      "gap_percentage_points": 0.4041639163916386,
+      "pooled_image_auroc_percent_diagnostic_only": 93.89518364518365
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "recalibration_only",
+      "categories": 12,
+      "image_auroc_percent": 95.45182618261826,
+      "image_ap_percent": 96.79824256252655,
+      "paper_image_auroc_percent": 96.9,
+      "gap_percentage_points": -1.4481738173817433,
+      "pooled_image_auroc_percent_diagnostic_only": 91.62300762300764
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "published_executable",
+      "categories": 12,
+      "image_auroc_percent": 96.6224587458746,
+      "image_ap_percent": 96.93947669921495,
+      "paper_image_auroc_percent": 96.9,
+      "gap_percentage_points": -0.27754125412540986,
+      "pooled_image_auroc_percent_diagnostic_only": 94.48406098406097
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "baseline",
+      "categories": 15,
+      "image_auroc_percent": 91.74657535035341,
+      "image_ap_percent": 95.79148895831418,
+      "paper_image_auroc_percent": 94.0,
+      "gap_percentage_points": -2.2534246496465897,
+      "pooled_image_auroc_percent_diagnostic_only": 71.38740327429079
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "fusion_weights_only",
+      "categories": 15,
+      "image_auroc_percent": 93.31767556404851,
+      "image_ap_percent": 97.1071896308247,
+      "paper_image_auroc_percent": 94.0,
+      "gap_percentage_points": -0.682324435951486,
+      "pooled_image_auroc_percent_diagnostic_only": 61.455421916437146
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "recalibration_only",
+      "categories": 15,
+      "image_auroc_percent": 92.55737435574899,
+      "image_ap_percent": 96.63648848394494,
+      "paper_image_auroc_percent": 94.0,
+      "gap_percentage_points": -1.4426256442510095,
+      "pooled_image_auroc_percent_diagnostic_only": 69.13849861954158
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "published_executable",
+      "categories": 15,
+      "image_auroc_percent": 93.26598602762512,
+      "image_ap_percent": 97.0020296914827,
+      "paper_image_auroc_percent": 94.0,
+      "gap_percentage_points": -0.734013972374882,
+      "pooled_image_auroc_percent_diagnostic_only": 61.75228005433322
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "baseline",
+      "categories": 15,
+      "image_auroc_percent": 94.3349880201772,
+      "image_ap_percent": 97.53260549097934,
+      "paper_image_auroc_percent": 98.2,
+      "gap_percentage_points": -3.865011979822796,
+      "pooled_image_auroc_percent_diagnostic_only": 74.23359875809807
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "fusion_weights_only",
+      "categories": 15,
+      "image_auroc_percent": 96.96673826875745,
+      "image_ap_percent": 98.74126913064948,
+      "paper_image_auroc_percent": 98.2,
+      "gap_percentage_points": -1.2332617312425498,
+      "pooled_image_auroc_percent_diagnostic_only": 76.70021072842586
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "recalibration_only",
+      "categories": 15,
+      "image_auroc_percent": 95.47479074868822,
+      "image_ap_percent": 98.15736514935959,
+      "paper_image_auroc_percent": 98.2,
+      "gap_percentage_points": -2.7252092513117816,
+      "pooled_image_auroc_percent_diagnostic_only": 80.84516056552837
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "published_executable",
+      "categories": 15,
+      "image_auroc_percent": 98.2443832065405,
+      "image_ap_percent": 99.27338370648967,
+      "paper_image_auroc_percent": 98.2,
+      "gap_percentage_points": 0.044383206540501874,
+      "pooled_image_auroc_percent_diagnostic_only": 85.64289191572225
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "baseline",
+      "categories": 12,
+      "image_auroc_percent": 87.79751650165016,
+      "image_ap_percent": 90.1195205692495,
+      "paper_image_auroc_percent": 91.9,
+      "gap_percentage_points": -4.102483498349841,
+      "pooled_image_auroc_percent_diagnostic_only": 72.90583853083852
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "fusion_weights_only",
+      "categories": 12,
+      "image_auroc_percent": 92.54297304730473,
+      "image_ap_percent": 93.50416026149425,
+      "paper_image_auroc_percent": 91.9,
+      "gap_percentage_points": 0.6429730473047215,
+      "pooled_image_auroc_percent_diagnostic_only": 67.94650900900902
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "recalibration_only",
+      "categories": 12,
+      "image_auroc_percent": 89.45474422442244,
+      "image_ap_percent": 91.51336249312229,
+      "paper_image_auroc_percent": 91.9,
+      "gap_percentage_points": -2.4452557755775643,
+      "pooled_image_auroc_percent_diagnostic_only": 67.82207207207207
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "shots": 0,
+      "reference_seed": 10,
+      "variant": "published_executable",
+      "categories": 12,
+      "image_auroc_percent": 92.10176842684268,
+      "image_ap_percent": 92.80344641118302,
+      "paper_image_auroc_percent": 91.9,
+      "gap_percentage_points": 0.20176842684267626,
+      "pooled_image_auroc_percent_diagnostic_only": 67.66987179487181
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "baseline",
+      "categories": 12,
+      "image_auroc_percent": 93.94896864686469,
+      "image_ap_percent": 95.08738272461112,
+      "paper_image_auroc_percent": 97.1,
+      "gap_percentage_points": -3.151031353135309,
+      "pooled_image_auroc_percent_diagnostic_only": 77.40609840609842
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "fusion_weights_only",
+      "categories": 12,
+      "image_auroc_percent": 96.18536303630364,
+      "image_ap_percent": 96.36169769942424,
+      "paper_image_auroc_percent": 97.1,
+      "gap_percentage_points": -0.9146369636963527,
+      "pooled_image_auroc_percent_diagnostic_only": 80.7058212058212
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "recalibration_only",
+      "categories": 12,
+      "image_auroc_percent": 94.43902365236524,
+      "image_ap_percent": 95.05413086414181,
+      "paper_image_auroc_percent": 97.1,
+      "gap_percentage_points": -2.660976347634758,
+      "pooled_image_auroc_percent_diagnostic_only": 79.84433471933473
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "shots": 4,
+      "reference_seed": 10,
+      "variant": "published_executable",
+      "categories": 12,
+      "image_auroc_percent": 95.41301705170517,
+      "image_ap_percent": 95.36539927461565,
+      "paper_image_auroc_percent": 97.1,
+      "gap_percentage_points": -1.6869829482948262,
+      "pooled_image_auroc_percent_diagnostic_only": 81.92385654885655
+    }
+  ],
+  "paired_feature_experiment": [
+    {
+      "features": "normalized",
+      "shots": 0,
+      "scoring": "baseline",
+      "image_auroc": 0.8958452964863208
+    },
+    {
+      "features": "normalized",
+      "shots": 0,
+      "scoring": "published_executable",
+      "image_auroc": 0.9453683735312653
+    },
+    {
+      "features": "normalized",
+      "shots": 4,
+      "scoring": "baseline",
+      "image_auroc": 0.9483181710375417
+    },
+    {
+      "features": "normalized",
+      "shots": 4,
+      "scoring": "published_executable",
+      "image_auroc": 0.9868237508787072
+    },
+    {
+      "features": "raw",
+      "shots": 0,
+      "scoring": "baseline",
+      "image_auroc": 0.9126453172557648
+    },
+    {
+      "features": "raw",
+      "shots": 0,
+      "scoring": "published_executable",
+      "image_auroc": 0.9421808237133439
+    },
+    {
+      "features": "raw",
+      "shots": 4,
+      "scoring": "baseline",
+      "image_auroc": 0.9644551229601892
+    },
+    {
+      "features": "raw",
+      "shots": 4,
+      "scoring": "published_executable",
+      "image_auroc": 0.9873395991610936
+    }
+  ],
+  "bounded_reference_sampler_experiment": [
+    {
+      "shots": 0,
+      "variant": "baseline",
+      "image_auroc": 0.9127693966352832,
+      "image_ap": 0.9522487242423711
+    },
+    {
+      "shots": 0,
+      "variant": "fusion_weights_only",
+      "image_auroc": 0.9358377454196924,
+      "image_ap": 0.9638226170297852
+    },
+    {
+      "shots": 0,
+      "variant": "image_head_only",
+      "image_auroc": 0.9226402270039405,
+      "image_ap": 0.9534013070121109
+    },
+    {
+      "shots": 0,
+      "variant": "peak_resolution_only",
+      "image_auroc": 0.9124882871900059,
+      "image_ap": 0.9520380336258494
+    },
+    {
+      "shots": 0,
+      "variant": "published_executable",
+      "image_auroc": 0.927197272484678,
+      "image_ap": 0.9570069124438241
+    },
+    {
+      "shots": 0,
+      "variant": "recalibration_only",
+      "image_auroc": 0.9156597883174518,
+      "image_ap": 0.9559939420847632
+    },
+    {
+      "shots": 0,
+      "variant": "reference_smoothing_only",
+      "image_auroc": 0.9127693966352832,
+      "image_ap": 0.9522487242423711
+    },
+    {
+      "shots": 0,
+      "variant": "resize_alignment_only",
+      "image_auroc": 0.9114249895851967,
+      "image_ap": 0.9516291774220952
+    },
+    {
+      "shots": 4,
+      "variant": "baseline",
+      "image_auroc": 0.9409229873760284,
+      "image_ap": 0.9691462337654078
+    },
+    {
+      "shots": 4,
+      "variant": "fusion_weights_only",
+      "image_auroc": 0.9706577162194718,
+      "image_ap": 0.984127494123166
+    },
+    {
+      "shots": 4,
+      "variant": "image_head_only",
+      "image_auroc": 0.9226402270039405,
+      "image_ap": 0.9534013070121109
+    },
+    {
+      "shots": 4,
+      "variant": "peak_resolution_only",
+      "image_auroc": 0.9408783362465369,
+      "image_ap": 0.9690516239731218
+    },
+    {
+      "shots": 4,
+      "variant": "published_executable",
+      "image_auroc": 0.9807258029960408,
+      "image_ap": 0.9899251052457071
+    },
+    {
+      "shots": 4,
+      "variant": "recalibration_only",
+      "image_auroc": 0.9445895228883685,
+      "image_ap": 0.9719861538554049
+    },
+    {
+      "shots": 4,
+      "variant": "reference_smoothing_only",
+      "image_auroc": 0.9420358634219541,
+      "image_ap": 0.9696246534287416
+    },
+    {
+      "shots": 4,
+      "variant": "resize_alignment_only",
+      "image_auroc": 0.9400757680282384,
+      "image_ap": 0.9687234233889557
+    }
+  ],
+  "confirmed_findings": [
+    "Published executable score processing explains most of the four-shot MVTec headline gap for all three encoders with unchanged trained heads.",
+    "The local DINO adapter applies final LayerNorm unlike the author detection forward; paired experiment measures this separately.",
+    "The training CAA policy and few-shot reference RNG protocol are not executable-equivalent."
+  ],
+  "not_claimed": [
+    "A new three-reference-seed paper benchmark: full-category scoring diagnostics use seed 10.",
+    "Full-dataset raw-feature retraining, isolated CAA accuracy effects, or full-category reference RNG effects.",
+    "Author-checkpoint or stagewise feature equivalence; gated checkpoints remain unavailable.",
+    "Updated deployment or PTQ/ACQ validation; production model semantics remain unchanged."
+  ]
+}

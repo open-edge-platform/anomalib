@@ -1,0 +1,1141 @@
+{
+  "complete": true,
+  "checks": 162,
+  "maximum_auroc_delta": 9.741101947291497e-08,
+  "rows": [
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "bottle",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 4.730527414231744e-09
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "bottle",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 7.682376446105366e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "cable",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 3.1723611515488415e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "cable",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 3.386830638163474e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "capsule",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 1.1554789458578796e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "capsule",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 1.4217621635559397e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "carpet",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 4.1618010371280434e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "carpet",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 8.323602140869468e-09
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "grid",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 5.4276576566536505e-09
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "grid",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 4.1429460750919134e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "hazelnut",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 3.882816856926041e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "hazelnut",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 2.7247838430000115e-09
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "leather",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 0.0
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "leather",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 0.0
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "metal_nut",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 2.9015750913075067e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "metal_nut",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 2.8782692562678847e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "pill",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 1.9282899277328625e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "pill",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 7.092074749692756e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "screw",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 1.7775109273365786e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "screw",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 2.0743735729134016e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "tile",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 1.3761534134459907e-09
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "tile",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 3.8188257334148545e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "toothbrush",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 1.8543667268389186e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "toothbrush",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 2.6490953208835322e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "transistor",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 2.0662943467364414e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "transistor",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 5.801518754289248e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "wood",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 8.449219823791765e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "wood",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 2.5305831652389088e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "zipper",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 1.2021104778270342e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "mvtec",
+      "category": "zipper",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 6.010552389135171e-09
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "candle",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 9.4413757922851e-09
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "candle",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 3.9100646942458184e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "capsules",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 2.2252400699862562e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "capsules",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 1.9709269216683367e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "cashew",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 3.77655030581181e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "cashew",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 7.057189943537878e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "chewinggum",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 1.5449523882438143e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "chewinggum",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 3.1280517509557626e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "fryum",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 5.0354003855446194e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "fryum",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 3.2424927187690855e-09
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "macaroni1",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 1.0967254659988157e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "macaroni1",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 1.6784667988822832e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "macaroni2",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 9.346008300603614e-09
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "macaroni2",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 3.27110291076238e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "pcb1",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 4.7683716974944446e-09
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "pcb1",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 3.8719177197776844e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "pcb2",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 1.1444092340440193e-09
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "pcb2",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 3.862380981711766e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "pcb3",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 2.0088535723772338e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "pcb3",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 2.3605799981396558e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "pcb4",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 5.146064385730398e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "pcb4",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 5.5945745813801295e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "pipe_fryum",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 5.826950078002824e-08
+    },
+    {
+      "backbone": "clip",
+      "target_dataset": "visa",
+      "category": "pipe_fryum",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 1.9645690962910578e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "bottle",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 7.568843329863739e-10
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "bottle",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 1.4570024298166118e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "cable",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 5.325992236127064e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "cable",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 1.5191588653706845e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "capsule",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 1.1174383640621954e-09
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "capsule",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 8.958528174840552e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "carpet",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 5.022863325265803e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "carpet",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 2.793668740785904e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "grid",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 0.0
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "grid",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 0.0
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "hazelnut",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 9.741101947291497e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "hazelnut",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 5.245208745119356e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "leather",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 1.5549037724049697e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "leather",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 0.0
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "metal_nut",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 5.150587101265813e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "metal_nut",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 4.7194293584240654e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "pill",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 4.334587644372334e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "pill",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 1.560841789149947e-09
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "screw",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 4.4272849497595246e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "screw",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 4.702157774261195e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "tile",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 2.7265039559409843e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "tile",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 5.728238594571167e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "toothbrush",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 5.960464477539063e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "toothbrush",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 1.8543667157366883e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "transistor",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 3.3378601105304995e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "transistor",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 9.695688873989639e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "wood",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 0.0
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "wood",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 0.0
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "zipper",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 6.0606403451402e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "mvtec",
+      "category": "zipper",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 5.15905749232104e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "candle",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 2.994537351419524e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "candle",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 3.995895392350235e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "capsules",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 1.6053517515324245e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "capsules",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 9.552637736387481e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "cashew",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 2.0027160485547313e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "cashew",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 2.7275085412448163e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "chewinggum",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 6.837844845897223e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "chewinggum",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 3.1852722126579636e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "fryum",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 7.55310058941916e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "fryum",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 4.081726079352421e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "macaroni1",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 3.385543823064552e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "macaroni1",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 2.9563903547469295e-09
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "macaroni2",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 2.5653839275108226e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "macaroni2",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 5.5408477916962795e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "pcb1",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 1.792907722286685e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "pcb1",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 7.095336918006012e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "pcb2",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 2.4795531183841035e-09
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "pcb2",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 3.070831300355792e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "pcb3",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 2.3157289752440136e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "pcb3",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 4.2986161741254136e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "pcb4",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 1.6736512065129716e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "pcb4",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 2.5329023323195088e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "pipe_fryum",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 2.441406254938272e-08
+    },
+    {
+      "backbone": "dinov2",
+      "target_dataset": "visa",
+      "category": "pipe_fryum",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 1.2874603272372553e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "bottle",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 4.352085170022946e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "bottle",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 4.3899293866722644e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "cable",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 4.637902639714753e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "cable",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 1.2331995313807909e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "capsule",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 9.308024895293698e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "capsule",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 5.373214762016687e-09
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "carpet",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 6.955469777913947e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "carpet",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 3.731269893059164e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "grid",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 9.560644831374532e-09
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "grid",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 3.1868816474656114e-09
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "hazelnut",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 2.997262138482171e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "hazelnut",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 1.1580330916416415e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "leather",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 0.0
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "leather",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 0.0
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "metal_nut",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 3.8454609496696435e-09
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "metal_nut",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 3.495873590608767e-10
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "pill",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 1.1738830685281698e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "pill",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 4.259797314887237e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "screw",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 2.1085799772890823e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "screw",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 1.1165944946434081e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "tile",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 2.3996675202475615e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "tile",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 9.056809657792542e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "toothbrush",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 6.755193082685906e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "toothbrush",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 9.271833634194593e-09
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "transistor",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 2.5431315053836556e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "transistor",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 4.847844436994819e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "wood",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 0.0
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "wood",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 0.0
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "zipper",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 2.5043968010507456e-09
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "mvtec",
+      "category": "zipper",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 1.0017587426247587e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "candle",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 1.811981198418522e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "candle",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 1.4305113760215704e-09
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "capsules",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 2.717971803178898e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "capsules",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 3.3378600994282692e-09
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "cashew",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 5.006790160244634e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "cashew",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 4.386901952813105e-09
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "chewinggum",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 6.198883073516015e-09
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "chewinggum",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 2.0980834847250662e-09
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "fryum",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 5.8555603144050394e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "fryum",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 4.692077637535874e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "macaroni1",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 4.959106447710582e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "macaroni1",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 3.643035884071111e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "macaroni2",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 2.508163443604161e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "macaroni2",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 3.7956237708414164e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "pcb1",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 3.2806396488282985e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "pcb1",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 1.1920928910669204e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "pcb2",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 5.426406857189647e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "pcb2",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 2.050399772191014e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "pcb3",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 2.7052246664993618e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "pcb3",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 4.499265471302749e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "pcb4",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 1.2227804324638214e-08
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "pcb4",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 1.01504937788377e-09
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "pipe_fryum",
+      "shots": 0,
+      "image_auroc_delta_from_historical_seed_10": 7.4386595771969155e-09
+    },
+    {
+      "backbone": "dinov3",
+      "target_dataset": "visa",
+      "category": "pipe_fryum",
+      "shots": 4,
+      "image_auroc_delta_from_historical_seed_10": 1.9645690962910578e-08
+    }
+  ]
+}

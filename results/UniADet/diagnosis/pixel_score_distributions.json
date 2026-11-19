@@ -1,0 +1,223 @@
+{
+  "complete": true,
+  "shots": 0,
+  "samples": [
+    {
+      "backbone": "clip",
+      "category": "bottle",
+      "label": 0,
+      "image": "bottle/test/good/000.png",
+      "image_score": 0.5161018967628479,
+      "pixel_quantiles_0_1_50_99_100": [
+        0.0001181723055196926,
+        0.00013973879686091095,
+        0.0011655681300908327,
+        0.09953125566244125,
+        0.29964616894721985
+      ],
+      "pixel_std": 0.01963053084909916,
+      "finite": true,
+      "near_zero_fraction": 0.0,
+      "near_one_fraction": 0.0
+    },
+    {
+      "backbone": "clip",
+      "category": "bottle",
+      "label": 1,
+      "image": "bottle/test/broken_large/000.png",
+      "image_score": 0.8418865203857422,
+      "pixel_quantiles_0_1_50_99_100": [
+        9.844180021900684e-05,
+        0.0001070706857717596,
+        0.0011998253175988793,
+        0.5471041798591614,
+        0.8399043083190918
+      ],
+      "pixel_std": 0.10662530362606049,
+      "finite": true,
+      "near_zero_fraction": 0.0,
+      "near_one_fraction": 0.0
+    },
+    {
+      "backbone": "clip",
+      "category": "cable",
+      "label": 0,
+      "image": "cable/test/good/000.png",
+      "image_score": 0.5681836605072021,
+      "pixel_quantiles_0_1_50_99_100": [
+        9.152767597697675e-05,
+        0.0001308865612372756,
+        0.0015414252411574125,
+        0.09734437614679337,
+        0.3023276925086975
+      ],
+      "pixel_std": 0.02080342173576355,
+      "finite": true,
+      "near_zero_fraction": 0.0,
+      "near_one_fraction": 0.0
+    },
+    {
+      "backbone": "clip",
+      "category": "cable",
+      "label": 1,
+      "image": "cable/test/bent_wire/000.png",
+      "image_score": 0.5769593119621277,
+      "pixel_quantiles_0_1_50_99_100": [
+        8.377416816074401e-05,
+        0.00011343472579028457,
+        0.0014736838638782501,
+        0.19148553907871246,
+        0.31938856840133667
+      ],
+      "pixel_std": 0.03914657607674599,
+      "finite": true,
+      "near_zero_fraction": 0.0,
+      "near_one_fraction": 0.0
+    },
+    {
+      "backbone": "dinov2",
+      "category": "bottle",
+      "label": 0,
+      "image": "bottle/test/good/000.png",
+      "image_score": 0.39465028047561646,
+      "pixel_quantiles_0_1_50_99_100": [
+        0.00047693445230834186,
+        0.000941651698667556,
+        0.007223582826554775,
+        0.19597817957401276,
+        0.5179643034934998
+      ],
+      "pixel_std": 0.038684602826833725,
+      "finite": true,
+      "near_zero_fraction": 0.0,
+      "near_one_fraction": 0.0
+    },
+    {
+      "backbone": "dinov2",
+      "category": "bottle",
+      "label": 1,
+      "image": "bottle/test/broken_large/000.png",
+      "image_score": 0.8297942876815796,
+      "pixel_quantiles_0_1_50_99_100": [
+        0.0003339681134093553,
+        0.0007046159007586539,
+        0.0059509798884391785,
+        0.6172486543655396,
+        0.8920220732688904
+      ],
+      "pixel_std": 0.12395687401294708,
+      "finite": true,
+      "near_zero_fraction": 0.0,
+      "near_one_fraction": 0.0
+    },
+    {
+      "backbone": "dinov2",
+      "category": "cable",
+      "label": 0,
+      "image": "cable/test/good/000.png",
+      "image_score": 0.7616819143295288,
+      "pixel_quantiles_0_1_50_99_100": [
+        0.0003986037918366492,
+        0.0006771342596039176,
+        0.004546944051980972,
+        0.44244658946990967,
+        0.5759664177894592
+      ],
+      "pixel_std": 0.076435886323452,
+      "finite": true,
+      "near_zero_fraction": 0.0,
+      "near_one_fraction": 0.0
+    },
+    {
+      "backbone": "dinov2",
+      "category": "cable",
+      "label": 1,
+      "image": "cable/test/bent_wire/000.png",
+      "image_score": 0.8646255731582642,
+      "pixel_quantiles_0_1_50_99_100": [
+        0.00028800065047107637,
+        0.0005561746074818075,
+        0.004268620628863573,
+        0.6005595326423645,
+        0.7741427421569824
+      ],
+      "pixel_std": 0.12609252333641052,
+      "finite": true,
+      "near_zero_fraction": 0.0,
+      "near_one_fraction": 0.0
+    },
+    {
+      "backbone": "dinov3",
+      "category": "bottle",
+      "label": 0,
+      "image": "bottle/test/good/000.png",
+      "image_score": 0.27226656675338745,
+      "pixel_quantiles_0_1_50_99_100": [
+        0.0008033478516153991,
+        0.0009726703283376992,
+        0.0025005205534398556,
+        0.12742090225219727,
+        0.2656591534614563
+      ],
+      "pixel_std": 0.021469639614224434,
+      "finite": true,
+      "near_zero_fraction": 0.0,
+      "near_one_fraction": 0.0
+    },
+    {
+      "backbone": "dinov3",
+      "category": "bottle",
+      "label": 1,
+      "image": "bottle/test/broken_large/000.png",
+      "image_score": 0.8352113962173462,
+      "pixel_quantiles_0_1_50_99_100": [
+        0.0005696866428479552,
+        0.0007521845400333405,
+        0.0028284681029617786,
+        0.6372246146202087,
+        0.9534511566162109
+      ],
+      "pixel_std": 0.1244458258152008,
+      "finite": true,
+      "near_zero_fraction": 0.0,
+      "near_one_fraction": 0.0
+    },
+    {
+      "backbone": "dinov3",
+      "category": "cable",
+      "label": 0,
+      "image": "cable/test/good/000.png",
+      "image_score": 0.7115486860275269,
+      "pixel_quantiles_0_1_50_99_100": [
+        0.0005083454307168722,
+        0.0007119173533283174,
+        0.005894483998417854,
+        0.34972652792930603,
+        0.5294502377510071
+      ],
+      "pixel_std": 0.06269638240337372,
+      "finite": true,
+      "near_zero_fraction": 0.0,
+      "near_one_fraction": 0.0
+    },
+    {
+      "backbone": "dinov3",
+      "category": "cable",
+      "label": 1,
+      "image": "cable/test/bent_wire/000.png",
+      "image_score": 0.7592931389808655,
+      "pixel_quantiles_0_1_50_99_100": [
+        0.00022338890994433314,
+        0.00036657508462667465,
+        0.004339198116213083,
+        0.54639732837677,
+        0.6131709218025208
+      ],
+      "pixel_std": 0.10554482787847519,
+      "finite": true,
+      "near_zero_fraction": 0.0,
+      "near_one_fraction": 0.0
+    }
+  ],
+  "limitation": "Twelve deterministic images, not proof of correctness on every category. Full per-category image-score distributions are measured separately."
+}
