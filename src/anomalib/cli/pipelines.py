@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Anomalib pipeline subcommands.
@@ -7,20 +7,49 @@ This module provides functionality for managing and running Anomalib pipelines t
 the CLI. It includes support for benchmarking and other pipeline operations.
 """
 
+import importlib.util
 import logging
+from typing import Any, ClassVar
 
 from jsonargparse import Namespace
-from lightning_utilities.core.imports import module_available
 
 from anomalib.cli.utils.help_formatter import get_short_docstring
 
 logger = logging.getLogger(__name__)
 
-if module_available("anomalib.pipelines"):
-    from anomalib.pipelines import Benchmark
-    from anomalib.pipelines.components.base import Pipeline
 
-    PIPELINE_REGISTRY: dict[str, type[Pipeline]] | None = {"benchmark": Benchmark}
+class _PipelineRegistry(dict):
+    """Lazy dictionary for pipeline classes to defer importing heavy dependencies."""
+
+    _SUBCOMMANDS: ClassVar[tuple[str, ...]] = ("benchmark",)
+
+    @classmethod
+    def registered_subcommands(cls) -> list[str]:
+        """Return list of registered pipeline subcommands."""
+        return list(cls._SUBCOMMANDS)
+
+    def __getitem__(self, key: str) -> Any:  # noqa: ANN401
+        if dict.__contains__(self, key):
+            return super().__getitem__(key)
+        if key == "benchmark":
+            from anomalib.pipelines.benchmark import Benchmark
+
+            self[key] = Benchmark
+            return Benchmark
+        raise KeyError(key)
+
+    def __contains__(self, key: object) -> bool:
+        return key in self._SUBCOMMANDS or dict.__contains__(self, key)
+
+    def get(self, key: str, default: Any = None) -> Any:  # noqa: ANN401
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+
+if importlib.util.find_spec("anomalib.pipelines") is not None:
+    PIPELINE_REGISTRY: dict[str, Any] | None = _PipelineRegistry()
 else:
     PIPELINE_REGISTRY = None
 
@@ -42,7 +71,14 @@ def pipeline_subcommands() -> dict[str, dict[str, str]]:
         }
     """
     if PIPELINE_REGISTRY is not None:
-        return {name: {"description": get_short_docstring(pipeline)} for name, pipeline in PIPELINE_REGISTRY.items()}
+        descriptions = {
+            "benchmark": "Benchmarking pipeline for evaluating anomaly detection models.",
+        }
+        result = {}
+        for name in _PipelineRegistry.registered_subcommands():
+            desc = descriptions[name] if name in descriptions else get_short_docstring(PIPELINE_REGISTRY[name])
+            result[name] = {"description": desc}
+        return result
     return {}
 
 

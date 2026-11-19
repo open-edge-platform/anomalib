@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Custom help formatters for Anomalib CLI.
@@ -10,6 +10,7 @@ including rich text formatting and customized help output for different verbosit
 import argparse
 import re
 import sys
+from typing import Any
 
 import docstring_parser
 from jsonargparse import DefaultHelpFormatter
@@ -26,19 +27,34 @@ REQUIRED_ARGUMENTS = {
     "export": {"model", "model.help", "export_type", "ckpt_path", "config"},
 }
 
-try:
-    from anomalib.engine import Engine
 
-    DOCSTRING_USAGE = {
-        "train": Engine.train,
-        "fit": Engine.fit,
-        "validate": Engine.validate,
-        "test": Engine.test,
-        "predict": Engine.predict,
-        "export": Engine.export,
-    }
-except ImportError:
-    print("To use other subcommand using `anomalib install`")
+class _LazyDocstringUsage(dict):
+    """Lazy dictionary resolving engine methods on access to prevent startup import delays."""
+
+    def __getitem__(self, key: str) -> Any:  # noqa: ANN401
+        if dict.__contains__(self, key):
+            return super().__getitem__(key)
+        try:
+            from anomalib.engine import Engine
+
+            mapping = {
+                "train": Engine.train,
+                "fit": Engine.fit,
+                "validate": Engine.validate,
+                "test": Engine.test,
+                "predict": Engine.predict,
+                "export": Engine.export,
+            }
+            self.update(mapping)
+            return super().__getitem__(key)
+        except (ImportError, KeyError):
+            return None
+
+    def __contains__(self, key: object) -> bool:
+        return key in {"train", "fit", "validate", "test", "predict", "export"}
+
+
+DOCSTRING_USAGE = _LazyDocstringUsage()
 
 
 def get_short_docstring(component: type) -> str:
