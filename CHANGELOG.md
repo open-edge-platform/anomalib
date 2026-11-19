@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - 🐞 **data**: Use the tile size as the default `Tiler` stride instead of raising `AttributeError` by @Viranshul-P in https://github.com/open-edge-platform/anomalib/pull/3911
+- 📚 **docs**: clarify benchmark command availability by @anomalibbot in https://github.com/open-edge-platform/anomalib/pull/3931
 
 ## [v2.7.1] - 2026-11-16
 
