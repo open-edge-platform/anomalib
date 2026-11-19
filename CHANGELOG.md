@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- 📚 **docs**: clarify benchmark command availability by @anomalibbot in https://github.com/open-edge-platform/anomalib/pull/3931
 - 🐞 **metric**: Handle floating-point scores and integer masks in PRO by @A-P-S-Bhaidav in https://github.com/open-edge-platform/anomalib/pull/3906
 
 ## [v2.7.1] - 2026-11-16
