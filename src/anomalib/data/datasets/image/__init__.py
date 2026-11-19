@@ -34,6 +34,7 @@ from .datumaro import DatumaroDataset
 from .folder import FolderDataset
 from .kaputt import KaputtDataset
 from .kolektor import KolektorDataset
+from .mad_sim import MADSimDataset
 from .mpdd import MPDDDataset
 from .mvtec_loco import MVTecLOCODataset
 from .mvtecad import MVTecADDataset
@@ -51,6 +52,7 @@ __all__ = [
     "FolderDataset",
     "KaputtDataset",
     "KolektorDataset",
+    "MADSimDataset",
     "MPDDDataset",
     "MVTecADDataset",
     "MVTecAD2Dataset",

@@ -56,6 +56,13 @@ Kaputt datamodule for industrial defect detection.
 Kolektor Surface-Defect dataset datamodule.
 :::
 
+:::{grid-item-card} MAD-Sim
+:link: image/mad_sim
+:link-type: doc
+
+MAD-Sim dataset with 20 LEGO categories for pose-agnostic anomaly detection.
+:::
+
 :::{grid-item-card} MPDD
 :link: image/mpdd
 :link-type: doc
