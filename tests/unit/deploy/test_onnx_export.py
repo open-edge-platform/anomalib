@@ -1,73 +1,188 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Tests for ViT pos-embed antialiasing handling that enables ONNX export."""
+"""Tests for backbone-local positional interpolation and its deployment round trip."""
+
+from __future__ import annotations
+
+import copy
+import functools
+import inspect
+import subprocess
+import sys
+from typing import TYPE_CHECKING
 
 import pytest
+import timm.models.vision_transformer as vit
 import torch
 
 from anomalib.models.components.feature_extractors import TimmFeatureExtractor
-from anomalib.models.components.feature_extractors.timm import _disable_pos_embed_antialiasing
+from anomalib.models.image.foundad.components.encoder_loader import load_encoder
 
-timm_vit = pytest.importorskip("timm.models.vision_transformer")
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+    from pathlib import Path
 
-
-class TestDisablePosEmbedAntialiasing:
-    """Tests for the ``_disable_pos_embed_antialiasing`` global patch."""
-
-    @staticmethod
-    def test_installs_wrapper(monkeypatch: pytest.MonkeyPatch) -> None:
-        """The timm resample function is wrapped to force ``antialias=False``."""
-        captured: dict[str, object] = {}
-
-        def fake_resample(*_args: object, **kwargs: object) -> str:
-            captured.update(kwargs)
-            return "resampled"
-
-        monkeypatch.setattr(timm_vit, "resample_abs_pos_embed", fake_resample)
-
-        _disable_pos_embed_antialiasing()
-
-        result = timm_vit.resample_abs_pos_embed("posemb", antialias=True)
-        assert result == "resampled"
-        assert captured["antialias"] is False
-
-    @staticmethod
-    def test_idempotent(monkeypatch: pytest.MonkeyPatch) -> None:
-        """Calling the patch twice does not stack wrappers."""
-        monkeypatch.setattr(timm_vit, "resample_abs_pos_embed", lambda *a, **k: (a, k))
-
-        _disable_pos_embed_antialiasing()
-        wrapped_once = timm_vit.resample_abs_pos_embed
-        _disable_pos_embed_antialiasing()
-
-        assert timm_vit.resample_abs_pos_embed is wrapped_once
+    from pytest_mock import MockerFixture
 
 
-class TestFeatureExtractorPosEmbedPatch:
-    """The NLC ViT feature extractor disables pos-embed antialiasing for export compatibility."""
-
-    @staticmethod
-    def test_forward_resamples_without_antialiasing(monkeypatch: pytest.MonkeyPatch) -> None:
-        """Building an NLC ViT extractor makes pos-embed resampling use ``antialias=False``."""
-        real_resample = timm_vit.resample_abs_pos_embed
-        captured: dict[str, object] = {}
-
-        def spy_resample(*args: object, **kwargs: object) -> torch.Tensor:
-            captured.update(kwargs)
-            return real_resample(*args, **kwargs)
-
-        monkeypatch.setattr(timm_vit, "resample_abs_pos_embed", spy_resample)
-
-        model = TimmFeatureExtractor(
-            backbone="vit_base_patch14_reg4_dinov2",
-            layers=["blocks.2"],
-            pre_trained=False,
-            output_fmt="NLC",
+@pytest.fixture
+def tiny_vit(mocker: MockerFixture) -> Iterator[vit.VisionTransformer]:
+    """Provide an offline transformer and isolate any legacy global patch."""
+    mocker.patch.object(vit, "resample_abs_pos_embed", inspect.unwrap(vit.resample_abs_pos_embed))
+    with torch.random.fork_rng(devices=[]):
+        torch.manual_seed(42)
+        yield vit.VisionTransformer(
+            img_size=32,
+            patch_size=4,
+            embed_dim=24,
+            depth=2,
+            num_heads=3,
+            reg_tokens=2,
             dynamic_img_size=True,
         )
-        # Input size differs from the backbone default, forcing a pos-embed resample.
-        features = model(torch.rand((1, 3, 392, 392)))
 
-        assert captured.get("antialias") is False
-        assert features["blocks.2"].shape == torch.Size((1, 28 * 28, 768))
+
+@pytest.mark.parametrize("legacy_layout", [False, True])
+@pytest.mark.parametrize("wrapper", ["extractor", "foundad"])
+def test_transformer_cold_load_preserves_interpolation(
+    mocker: MockerFixture,
+    tmp_path: Path,
+    tiny_vit: vit.VisionTransformer,
+    legacy_layout: bool,
+    wrapper: str,
+) -> None:
+    """A fresh process restores both new and older full-object exports without a constructor."""
+    mocker.patch("timm.create_model", return_value=tiny_vit)
+    model = (
+        TimmFeatureExtractor("vit_tiny", ["blocks.0"], pre_trained=False, output_fmt="NLC")
+        if wrapper == "extractor"
+        else load_encoder("dinov2_vit_small_14")
+    ).eval()
+    method = "forward" if wrapper == "extractor" else "get_intermediate_layers"
+    images = torch.rand(1, 3, 24, 40)
+    with torch.no_grad():
+        expected = getattr(model, method)(images)
+    if legacy_layout:
+        tiny_vit.__dict__.pop("_pos_embed", None)
+    payload = tmp_path / "extractor.pt"
+    torch.save({"model": model, "method": method, "images": images, "expected": expected}, payload)
+
+    script = """
+import sys
+import torch
+torch.set_num_threads(2)
+payload = torch.load(sys.argv[1], map_location="cpu", weights_only=False)
+with torch.no_grad():
+    actual = getattr(payload["model"], payload["method"])(payload["images"])
+torch.testing.assert_close(actual, payload["expected"], rtol=1e-6, atol=1e-6)
+"""
+    result = subprocess.run(  # noqa: S603 - fixed script and locally generated payload
+        [sys.executable, "-c", script, str(payload)],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_transformer_does_not_change_other_timm_models(
+    mocker: MockerFixture,
+    tiny_vit: vit.VisionTransformer,
+) -> None:
+    """Creating an extractor leaves timm's shared resampler and other instances untouched."""
+    original = vit.resample_abs_pos_embed
+    unrelated = copy.deepcopy(tiny_vit).eval()
+    images = torch.rand(1, 3, 24, 40)
+    with torch.no_grad():
+        expected = unrelated.forward_features(images)
+    mocker.patch("timm.create_model", return_value=tiny_vit)
+
+    TimmFeatureExtractor("vit_tiny", ["blocks.0"], pre_trained=False, output_fmt="NLC")
+
+    assert vit.resample_abs_pos_embed is original
+    with torch.no_grad():
+        torch.testing.assert_close(unrelated.forward_features(images), expected, rtol=0, atol=0)
+
+
+@pytest.mark.parametrize("output_fmt", ["NLC", "NCHW"])
+@pytest.mark.parametrize("requires_grad", [False, True])
+@torch.enable_grad()
+def test_transformer_preserves_no_antialias_features_and_gradients(
+    mocker: MockerFixture,
+    tiny_vit: vit.VisionTransformer,
+    output_fmt: str,
+    requires_grad: bool,
+) -> None:
+    """Local interpolation matches the previous policy without changing state or gradient behavior."""
+    reference = copy.deepcopy(tiny_vit).eval()
+    original_state = {key: value.clone() for key, value in tiny_vit.state_dict().items()}
+    mocker.patch("timm.create_model", return_value=tiny_vit)
+    extractor = TimmFeatureExtractor(
+        "vit_tiny",
+        ["blocks.0"],
+        pre_trained=False,
+        requires_grad=requires_grad,
+        output_fmt=output_fmt,
+        return_class_token=output_fmt == "NLC",
+        norm=False,
+    ).eval()
+    images = torch.rand(1, 3, 24, 40)
+    actual = extractor(images)["blocks.0"]
+    mocker.patch.object(
+        vit,
+        "resample_abs_pos_embed",
+        functools.partial(inspect.unwrap(vit.resample_abs_pos_embed), antialias=False),
+    )
+    expected = reference.forward_intermediates(
+        images,
+        indices=[0],
+        return_prefix_tokens=output_fmt == "NLC",
+        output_fmt=output_fmt,
+        intermediates_only=True,
+    )[0]
+    if output_fmt == "NLC":
+        patches, prefix = expected
+        expected = torch.cat([prefix, patches], dim=1)
+    torch.testing.assert_close(actual, expected, rtol=0, atol=0)
+    assert tiny_vit.state_dict().keys() == original_state.keys()
+    for key, value in tiny_vit.state_dict().items():
+        torch.testing.assert_close(value, original_state[key], rtol=0, atol=0)
+    assert actual.requires_grad == requires_grad
+    if requires_grad:
+        actual.square().sum().backward()
+        expected.square().sum().backward()
+        torch.testing.assert_close(tiny_vit.pos_embed.grad, reference.pos_embed.grad, rtol=0, atol=0)
+
+
+def test_transformer_exports_dynamic_batches(
+    mocker: MockerFixture,
+    tmp_path: Path,
+    tiny_vit: vit.VisionTransformer,
+) -> None:
+    """The serialized interpolation callable remains traceable with real variable-batch inference."""
+    pytest.importorskip("onnx")
+    ov = pytest.importorskip("openvino")
+    mocker.patch("timm.create_model", return_value=tiny_vit)
+    extractor = TimmFeatureExtractor("vit_tiny", ["blocks.0"], pre_trained=False, output_fmt="NLC").eval()
+    images = torch.rand(3, 3, 24, 40)
+    path = tmp_path / "extractor.onnx"
+    torch.onnx.export(
+        extractor,
+        (images[:2],),
+        path,
+        dynamo=True,
+        input_names=["images"],
+        output_names=["features"],
+        dynamic_shapes={"inputs": {0: torch.export.Dim("batch", min=1, max=3)}},
+    )
+    compiled = ov.Core().compile_model(
+        path,
+        "CPU",
+        {"INFERENCE_PRECISION_HINT": "f32", "INFERENCE_NUM_THREADS": 2},
+    )
+    for batch in (1, 2, 3):
+        actual = compiled(images[:batch].numpy())[0]
+        expected = extractor(images[:batch])["blocks.0"]
+        torch.testing.assert_close(torch.from_numpy(actual), expected, rtol=1e-4, atol=1e-5)
