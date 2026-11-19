@@ -207,9 +207,8 @@ class Ganomaly(AnomalibModule):
         """Perform the training step.
 
         Args:
-            batch (dict[str, str | torch.Tensor]): Input batch containing images.
+            batch (Batch): Input batch containing images.
             batch_idx (int): Batch index.
-            optimizer_idx (int): Optimizer which is being called for current training step.
 
         Returns:
             STEP_OUTPUT: Loss
