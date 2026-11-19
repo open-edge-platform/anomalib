@@ -109,6 +109,35 @@ class TestCreateVersionedDir:
         assert r2.name == "v1"
         assert r1 != r2
 
+    @staticmethod
+    @pytest.mark.parametrize("directory_name", ["results (trial)", "R&D", "O'Brien"])
+    @pytest.mark.parametrize("symlink_error", [PermissionError, NotImplementedError])
+    def test_windows_rejected_command_path_uses_pointer(
+        tmp_path: Path,
+        directory_name: str,
+        symlink_error: type[Exception],
+    ) -> None:
+        """Valid directory names rejected by mklink validation still support versioned output."""
+        root = tmp_path / directory_name
+        with (
+            patch("anomalib.utils.path.sys.platform", "win32"),
+            patch.object(Path, "symlink_to", side_effect=symlink_error("Symlinks unavailable")),
+            patch("subprocess.run") as run,
+        ):
+            first = create_versioned_dir(root)
+            checkpoint = first / "model.ckpt"
+            checkpoint.write_text("existing checkpoint")
+            second = create_versioned_dir(root)
+            resolved = resolve_versioned_path(root / "latest" / "model.ckpt")
+
+        assert first.name == "v0"
+        assert second.name == "v1"
+        assert checkpoint.read_text() == "existing checkpoint"
+        assert (root / "latest" / ".version_pointer").read_text() == str(second)
+        assert resolved == second / "model.ckpt"
+        assert not (root / "latest_tmp").exists()
+        run.assert_not_called()
+
 
 class TestGetCacheSubdir:
     """Tests for _get_cache_subdir, get_pretrained_weights_dir, get_datasets_dir."""
