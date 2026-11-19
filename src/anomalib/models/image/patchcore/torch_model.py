@@ -50,6 +50,7 @@ if TYPE_CHECKING:
     from anomalib.data.utils.tiler import Tiler
 
 DEFAULT_CHUNK_SIZE = 1024
+_DISTANCE_BLOCK_BYTES = 64 * 1024 * 1024
 
 
 class PatchcoreModel(DynamicBufferMixin, nn.Module):
@@ -310,8 +311,13 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
             This implementation avoids using ``torch.cdist()`` for better
             compatibility with ONNX export and OpenVINO conversion.
         """
-        x_norm = x.pow(2).sum(dim=-1, keepdim=True)
         y_norm = y.pow(2).sum(dim=-1, keepdim=True)
+        return PatchcoreModel._euclidean_dist(x, y, y_norm)
+
+    @staticmethod
+    def _euclidean_dist(x: torch.Tensor, y: torch.Tensor, y_norm: torch.Tensor) -> torch.Tensor:
+        """Compute distances with precomputed squared norms of the reference vectors."""
+        x_norm = x.pow(2).sum(dim=-1, keepdim=True)
         res = torch.matmul(x, y.transpose(-2, -1))
         res.mul_(-2)
         res.add_(x_norm)
@@ -322,9 +328,9 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         """Find nearest neighbors in memory bank for input embeddings.
 
         Uses brute force search with Euclidean distance to find the closest
-        matches in the memory bank for each input embedding. Processes embeddings
-        in chunks to reduce memory usage for large embedding sets, except while
-        exporting, where all embeddings are processed at once.
+        matches in the memory bank for each input embedding. The bank size
+        determines how many queries fit in each distance block. Export uses a
+        single block so the number of queries can vary at runtime.
 
         Args:
             embedding (torch.Tensor): Query embeddings to find neighbors for.
@@ -344,47 +350,34 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
             >>> scores.shape, locations.shape
             (torch.Size([100, 5]), torch.Size([100, 5]))
         """
-        n = embedding.shape[0]
-        # Rows are searched independently, so chunking only bounds memory. When exporting, search all rows
-        # at once: branching on the row count would fix the exported batch size to the one used for tracing.
-        # ``is_exporting`` rather than ``is_compiling`` keeps chunking under ``torch.compile``.
-        chunk_size = n if torch.compiler.is_exporting() else DEFAULT_CHUNK_SIZE
 
-        if n <= chunk_size:
-            # Small embedding set: process all at once
-            distances = self.euclidean_dist(embedding, self.memory_bank)
+        def nearest(distances: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
             if n_neighbors == 1:
-                # when n_neighbors is 1, speed up computation by using min instead of topk
-                patch_scores, locations = distances.min(1)
+                scores, locations = distances.min(1)
             else:
-                patch_scores, locations = distances.topk(k=n_neighbors, largest=False, dim=1)
-        else:
-            # Large embedding set: process in chunks
-            all_scores = []
-            all_locations = []
+                scores, locations = distances.topk(k=n_neighbors, largest=False, dim=1)
+            return scores, locations
 
-            for start_idx in range(0, n, chunk_size):
-                end_idx = min(start_idx + chunk_size, n)
-                embedding_chunk = embedding[start_idx:end_idx]
+        bank = self.memory_bank
+        if torch.compiler.is_exporting():
+            return nearest(self.euclidean_dist(embedding, bank))
 
-                # Compute distances for this chunk against full memory bank
-                distances = self.euclidean_dist(embedding_chunk, self.memory_bank)
+        block_elements = _DISTANCE_BLOCK_BYTES // bank.element_size()
+        query_rows = min(DEFAULT_CHUNK_SIZE, max(1, block_elements // max(1, bank.size(0))))
+        if embedding.size(0) <= query_rows and bank.numel() <= block_elements:
+            return nearest(self.euclidean_dist(embedding, bank))
 
-                # Find top-k neighbors immediately and discard full distance matrix
-                if n_neighbors == 1:
-                    chunk_scores, chunk_locations = distances.min(1)
-                else:
-                    chunk_scores, chunk_locations = distances.topk(k=n_neighbors, largest=False, dim=1)
-
-                all_scores.append(chunk_scores)
-                all_locations.append(chunk_locations)
-                del distances  # Drop reference to allow garbage collection
-
-            # Concatenate results from all chunks
-            patch_scores = torch.cat(all_scores, dim=0)
-            locations = torch.cat(all_locations, dim=0)
-
-        return patch_scores, locations
+        # Squaring a large bank can itself allocate more than the distance matrix.
+        # Compute its norms in blocks once, then reuse them across query blocks.
+        bank_rows = max(1, block_elements // max(1, bank.size(1)))
+        bank_norm = torch.cat([rows.square().sum(dim=-1, keepdim=True) for rows in bank.split(bank_rows)])
+        all_scores = []
+        all_locations = []
+        for rows in embedding.split(query_rows):
+            scores, locations = nearest(self._euclidean_dist(rows, bank, bank_norm))
+            all_scores.append(scores)
+            all_locations.append(locations)
+        return torch.cat(all_scores), torch.cat(all_locations)
 
     def compute_anomaly_score(
         self,
