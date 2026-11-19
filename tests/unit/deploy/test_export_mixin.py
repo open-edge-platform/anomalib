@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, NamedTuple
 import pytest
 import torch
 from lightning.pytorch import LightningModule
-from timm.layers import Attention
+from timm.models.vision_transformer import Attention
 
 from anomalib.models.components.base.export_mixin import ExportMixin
 
