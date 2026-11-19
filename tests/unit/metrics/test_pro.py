@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Test PRO metric."""
@@ -43,6 +43,29 @@ def test_pro() -> None:
         pro = PRO(threshold=threshold)
         pro.update(preds, labels)
         assert pro.compute() == target
+
+
+@pytest.mark.parametrize(
+    ("dtype", "positive", "negative"),
+    [
+        pytest.param(torch.float16, 0.75, 0.5, id="float16"),
+        pytest.param(torch.bfloat16, 0.75, 0.5, id="bfloat16"),
+        pytest.param(torch.float32, 0.75, 0.5, id="float32"),
+        pytest.param(torch.float64, 0.75, 0.5, id="float64"),
+        pytest.param(torch.bool, 1, 0, id="bool"),
+        pytest.param(torch.int32, 1, 0, id="int32"),
+        pytest.param(torch.uint8, 1, 0, id="uint8"),
+    ],
+)
+def test_pro_prediction_dtype(dtype: torch.dtype, positive: float, negative: float) -> None:
+    """Measure overlap consistently for anomaly scores and binary masks."""
+    targets = torch.tensor([[[1, 1], [0, 1]]])
+    predictions = torch.tensor([[[positive, negative], [positive, negative]]], dtype=dtype)
+
+    metric = PRO(threshold=0.5)
+    metric.update(predictions, targets)
+
+    assert metric.compute().item() == pytest.approx(1 / 3)
 
 
 @pytest.mark.gpu
