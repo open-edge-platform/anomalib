@@ -42,6 +42,13 @@ Datumaro format datamodule (compatible with Intel Geti™).
 Custom folder-based datamodule for organizing your own image dataset.
 :::
 
+:::{grid-item-card} GRD-Net Folder
+:link: grdnet
+:link-type: doc
+
+Folder data with optional, spatially aligned ROI supervision for GRD-Net training.
+:::
+
 :::{grid-item-card} Kaputt
 :link: kaputt
 :link-type: doc
@@ -111,6 +118,13 @@ Valeo Anomaly Detection dataset datamodule for automotive scenes.
 
 Visual Anomaly (VisA) dataset datamodule.
 :::
+
+:::{grid-item-card} LIBAD
+:link: libad
+:link-type: doc
+
+LIBAD dataset datamodule for Li-Ion Battery Electrode Manufacturing defects.
+:::
 ```
 
 ```{toctree}
@@ -122,6 +136,7 @@ bmad
 btech
 datumaro
 folder
+grdnet
 kaputt
 kolektor
 mpdd
@@ -132,4 +147,5 @@ realiad
 tabular
 vad
 visa
+libad
 ```
