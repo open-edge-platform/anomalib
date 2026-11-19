@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - 🐞 **post_processing**: Use an explicit `None` check for `pred_score` in `OneClassPostProcessor` so batches no longer raise by @Viranshul-P in https://github.com/open-edge-platform/anomalib/pull/3912
+- 📚 **docs**: clarify benchmark command availability by @anomalibbot in https://github.com/open-edge-platform/anomalib/pull/3931
 
 ## [v2.7.1] - 2026-11-16
 
