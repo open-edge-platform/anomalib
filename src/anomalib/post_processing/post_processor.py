@@ -269,12 +269,11 @@ class PostProcessor(nn.Module, Callback):
             pred_score = self._normalize(pred_score, self.image_min, self.image_max, self.image_threshold)
             anomaly_map = self._normalize(predictions.anomaly_map, self.pixel_min, self.pixel_max, self.pixel_threshold)
         else:
-            pred_score = predictions.pred_score
             anomaly_map = predictions.anomaly_map
 
         if self.enable_thresholding:
-            pred_label = self._apply_threshold(pred_score, self.normalized_image_threshold)
-            pred_mask = self._apply_threshold(anomaly_map, self.normalized_pixel_threshold)
+            pred_label = self._apply_threshold(pred_score, self.image_decision_threshold)
+            pred_mask = self._apply_threshold(anomaly_map, self.pixel_decision_threshold)
         else:
             pred_label = None
             pred_mask = None
@@ -310,12 +309,12 @@ class PostProcessor(nn.Module, Callback):
         batch.pred_label = (
             batch.pred_label
             if batch.pred_label is not None
-            else self._apply_threshold(batch.pred_score, self.normalized_image_threshold)
+            else self._apply_threshold(batch.pred_score, self.image_decision_threshold)
         )
         batch.pred_mask = (
             batch.pred_mask
             if batch.pred_mask is not None
-            else self._apply_threshold(batch.anomaly_map, self.normalized_pixel_threshold)
+            else self._apply_threshold(batch.anomaly_map, self.pixel_decision_threshold)
         )
 
     def normalize_batch(self, batch: Batch) -> None:
@@ -428,3 +427,43 @@ class PostProcessor(nn.Module, Callback):
             float: Normalized pixel-level threshold value, adjusted by sensitivity.
         """
         return torch.tensor(1.0) - self.pixel_sensitivity
+
+    def _decision_threshold(self, raw_threshold: torch.Tensor, normalized_threshold: torch.Tensor) -> torch.Tensor:
+        """Select the threshold on the same scale as the predictions.
+
+        Args:
+            raw_threshold (torch.Tensor): Threshold learned on raw anomaly scores.
+            normalized_threshold (torch.Tensor): Threshold on the normalized ``[0, 1]`` scale.
+
+        Returns:
+            torch.Tensor: ``normalized_threshold`` when predictions are normalized.
+            Otherwise ``raw_threshold``, or ``normalized_threshold`` if no threshold
+            has been learned yet.
+        """
+        if self.enable_normalization:
+            return normalized_threshold
+        return torch.where(torch.isnan(raw_threshold), normalized_threshold.to(raw_threshold), raw_threshold)
+
+    @property
+    def image_decision_threshold(self) -> torch.Tensor:
+        """Get the threshold that image-level predictions are compared against.
+
+        The sensitivity is defined on the normalized scale, so it has no effect
+        on the learned threshold when normalization is disabled.
+
+        Returns:
+            torch.Tensor: Decision threshold on the scale of the image-level predictions.
+        """
+        return self._decision_threshold(self.image_threshold, self.normalized_image_threshold)
+
+    @property
+    def pixel_decision_threshold(self) -> torch.Tensor:
+        """Get the threshold that pixel-level predictions are compared against.
+
+        The sensitivity is defined on the normalized scale, so it has no effect
+        on the learned threshold when normalization is disabled.
+
+        Returns:
+            torch.Tensor: Decision threshold on the scale of the pixel-level predictions.
+        """
+        return self._decision_threshold(self.pixel_threshold, self.normalized_pixel_threshold)
