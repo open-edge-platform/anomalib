@@ -16,8 +16,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
-- 🐞 **metric**: Correct PGn and PBn names and missing-class errors by @Viranshul-P in https://github.com/open-edge-platform/anomalib/pull/3908
+- 🐞 **model**: Fix device-specific fused-attention layout errors during ONNX export by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3936
 - 📚 **docs**: clarify benchmark command availability by @anomalibbot in https://github.com/open-edge-platform/anomalib/pull/3931
+- 🐞 **metric**: Correct PGn and PBn names and missing-class errors by @Viranshul-P in https://github.com/open-edge-platform/anomalib/pull/3908
 
 ## [v2.7.1] - 2026-11-16
 
