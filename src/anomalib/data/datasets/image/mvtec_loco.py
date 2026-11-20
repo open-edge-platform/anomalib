@@ -24,7 +24,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import torch
-from pandas import DataFrame
+from pandas import DataFrame, Series
 from torchvision.transforms.v2 import Transform
 from torchvision.tv_tensors import Mask
 
@@ -270,7 +270,8 @@ def make_dataset(
     )
 
     # assign mask paths to anomalous test images
-    samples["mask_path"] = ""
+    # object dtype: the column later holds lists of mask paths, which pandas 3's str dtype rejects
+    samples["mask_path"] = Series("", index=samples.index, dtype=object)
     samples.loc[
         (samples.split == "test") & (samples.label_index == LabelName.ABNORMAL),
         "mask_path",
