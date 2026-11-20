@@ -78,7 +78,7 @@ jobs:
     permissions:
       contents: read # Required by the called workflow to checkout the repository
     with:
-      python-version: "3.10"
+      python-version: "3.11"
 
   # Code quality - covers both library (src/) and application/ via prek workspace mode
   quality:
@@ -87,7 +87,7 @@ jobs:
     permissions:
       contents: read # Required by the called workflow to checkout the repository
     with:
-      python-version: "3.10"
+      python-version: "3.11"
 
   # Security scanning
   security:

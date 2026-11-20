@@ -9,7 +9,7 @@ functionality and stability of the framework.
 Before running the tests, make sure you have the following prerequisites
 installed:
 
-- Python 3.8 or newer
+- Python 3.11 or newer
 - `prek`
 - `pytest`
 - `pytest-cov`
@@ -26,7 +26,7 @@ dependencies easily.
 To create and activate a virtual environment:
 
 ```bash
-conda create -n anomalib_env python=3.10
+conda create -n anomalib_env python=3.11
 conda activate anomalib_env
 
 # Or using your favorite virtual environment

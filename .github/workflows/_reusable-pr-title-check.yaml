@@ -24,7 +24,7 @@
 #    - Detailed feedback
 #
 # Required Inputs:
-# - python-version: Python version for validation (default: "3.10")
+# - python-version: Python version for validation (default: "3.11")
 #
 # Example Usage:
 # 1. Basic Validation:
@@ -49,7 +49,7 @@ on:
       python-version:
         description: "Python version for validation"
         type: string
-        default: "3.10"
+        default: "3.11"
 
 permissions: {} # No permissions by default on workflow level
 
