@@ -43,7 +43,7 @@ from typing import Any
 
 import torch
 import tqdm
-from lightning.pytorch.utilities.types import STEP_OUTPUT
+from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision.transforms.v2 import CenterCrop, Compose, Normalize, RandomGrayscale, Resize, ToTensor
@@ -317,14 +317,14 @@ class EfficientAd(AnomalibModule):
         transform = Compose([Resize(image_size, antialias=True)])
         return PreProcessor(transform=transform)
 
-    def configure_optimizers(self) -> torch.optim.Optimizer:
+    def configure_optimizers(self) -> OptimizerLRScheduler:
         """Configure optimizers for training.
 
         Sets up Adam optimizer with learning rate scheduler that decays LR by 0.1
         at 95% of training.
 
         Returns:
-            dict: Dictionary containing:
+            OptimizerLRScheduler: Dictionary containing:
                 - ``optimizer``: Adam optimizer
                 - ``lr_scheduler``: StepLR scheduler
 
@@ -356,7 +356,13 @@ class EfficientAd(AnomalibModule):
             )
 
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=int(0.95 * num_steps), gamma=0.1)
-        return {"optimizer": optimizer, "lr_scheduler": scheduler}
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "interval": "step",
+            },
+        }
 
     def on_train_start(self) -> None:
         """Set up model before training begins.
