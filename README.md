@@ -11,7 +11,7 @@
 [Notebooks](examples/notebooks) •
 [License](LICENSE)
 
-![python](https://img.shields.io/badge/python-3.10%2B-green)
+![python](https://img.shields.io/badge/python-3.11%2B-green)
 ![pytorch](https://img.shields.io/badge/pytorch-2.10%2B-orange)
 ![lightning](https://img.shields.io/badge/lightning-2.6%2B-blue)
 ![openvino](https://img.shields.io/badge/openvino-2024.0%2B-purple)
