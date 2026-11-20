@@ -113,7 +113,7 @@ class SerialRunner(Runner):
         for job in tqdm(self.generator(args, prev_stage_results), desc=self.generator.job_class.name):
             try:
                 results.append(job.run())
-            except Exception:  # noqa: PERF203
+            except Exception:
                 failures = True
                 logger.exception("Error running job.")
         gathered_result = self.generator.job_class.collect(results)

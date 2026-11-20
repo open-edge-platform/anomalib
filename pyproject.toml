@@ -341,6 +341,7 @@ lint.ignore = [
     "RUF021", # Parenthesize the `and` subexpression
     "RUF022", # Apply an isort-style sorting to '__all__'
     "S404", # `subprocess` module is possibly insecure
+    "UP042", # `(str, Enum)` -> `StrEnum` changes `str()`/f-string output of existing enums
     # End of disable rules
 
     # flake8-annotations
