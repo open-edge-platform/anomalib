@@ -43,7 +43,7 @@ dependencies = [
     "freia>=0.2",
     "einops>=0.3.2",
     # Image processing and computer vision
-    "pillow>=10.1.0",
+    "pillow>=13.0.0",  # 13.0.0 fixes GHSA-5x8w-8jj5-q52h and GHSA-78g4-xqwv-q3g8; requires Python>=3.11
     "opencv-python-headless>=4.5.3.56",
     "scikit-image",
     "tifffile",
