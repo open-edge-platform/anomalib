@@ -3,7 +3,7 @@
 
 """Clef-Flash decisions and image views used by VerdictAD.
 
-Adapted from Shangquan Sun et al.'s VerdictAD-Jev-AD (see LICENSE).
+Adapted from Shangquan Sun et al.'s VerdictAD-Jev-AD (Apache-2.0).
 The optional decision model is loaded only on first inference.
 """
 

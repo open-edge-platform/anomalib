@@ -154,5 +154,5 @@ by the model.
 
 The refinement equations, prompts and view construction are adapted from
 [the official implementation](https://github.com/sgstq0811/VerdictAD-Jev-AD),
-released under Apache-2.0. See the colocated `LICENSE` and the repository's
+released under Apache-2.0. See the repository's `LICENSE` and
 `third-party-programs.txt`. Clef-Flash weights and datasets retain their own licenses.
