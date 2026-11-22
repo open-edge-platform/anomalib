@@ -143,12 +143,13 @@ def random_split(
     if isinstance(split_ratio, float):
         split_ratio = [1 - split_ratio, split_ratio]
 
-    if not (math.isclose(sum(split_ratio), 1) and sum(split_ratio) <= 1):
-        msg = f"Split ratios must sum to 1, found {sum(split_ratio)}"
-        raise ValueError(msg)
-
     if not all(0 < ratio < 1 for ratio in split_ratio):
         msg = f"All split ratios must be between 0 and 1, found {split_ratio}"
+        raise ValueError(msg)
+
+    total_ratio = math.fsum(split_ratio)
+    if not (math.isclose(total_ratio, 1) and total_ratio <= 1):
+        msg = f"Split ratios must sum to 1, found {total_ratio}"
         raise ValueError(msg)
 
     # create list of source data
