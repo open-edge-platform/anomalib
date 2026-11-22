@@ -139,8 +139,21 @@ def test_decision_views(shots: int) -> None:
         decision_records(references[0], [])
 
 
-@pytest.mark.parametrize("include_local", [False, True])
-def test_decider_option_order_and_batching(monkeypatch: pytest.MonkeyPatch, include_local: bool) -> None:
+@pytest.mark.parametrize(
+    ("include_global", "include_local", "sizes_expected"),
+    [
+        (True, True, [3] * 11 + [1]),
+        (True, False, [2]),
+        (False, True, [3] * 10 + [2]),
+        (False, False, []),
+    ],
+)
+def test_decider_option_order_and_batching(
+    monkeypatch: pytest.MonkeyPatch,
+    include_global: bool,
+    include_local: bool,
+    sizes_expected: list[int],
+) -> None:
     """Interpret option IDs, not assumed logit positions, including the final partial batch."""
     decider = ClefFlash(batch_size=3)
     sizes = []
@@ -167,9 +180,15 @@ def test_decider_option_order_and_batching(monkeypatch: pytest.MonkeyPatch, incl
             Mock(side_effect=AssertionError("Disabled local refinement must not build crops")),
         )
     image = Image.new("RGB", (14, 14))
-    logits = decider.predict(image, [image], torch.device("cpu"), include_local=include_local)
-    assert torch.equal(logits, torch.full((34 if include_local else 2,), 2.0))
-    assert sizes == ([3] * 11 + [1] if include_local else [2])
+    logits = decider.predict(
+        image,
+        [image],
+        torch.device("cpu"),
+        include_global=include_global,
+        include_local=include_local,
+    )
+    assert torch.equal(logits, torch.full((sum(sizes_expected),), 2.0))
+    assert sizes == sizes_expected
 
 
 @pytest.mark.parametrize("name", ["VerdictAD", "verdict_ad", "verdict_a_d"])
@@ -226,22 +245,47 @@ def test_training_validation_and_disabled_backend(monkeypatch: pytest.MonkeyPatc
         model.training_step(batch)
 
 
-def test_disabled_local_refinement(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Global-only inference requests two decisions and preserves the detector map."""
-    model = VerdictADModel(n_shots=1, gamma=0)
-    images = torch.rand(2, 3, 28, 28)
+@pytest.mark.parametrize(("alpha", "gamma", "count"), [(0.5, 0.0, 2), (0.0, 0.25, 32)])
+def test_single_stage_refinement(monkeypatch: pytest.MonkeyPatch, alpha: float, gamma: float, count: int) -> None:
+    """Refine BF16 queries with only the enabled decisions."""
+    model = VerdictADModel(n_shots=1, alpha=alpha, gamma=gamma)
+    images = torch.rand(2, 3, 28, 28, dtype=torch.bfloat16)
     model(images[:1])
     model.fit()
     model.eval()
-    backend = Mock(return_value=torch.zeros(2))
+    backend = Mock(return_value=torch.zeros(count))
     monkeypatch.setattr(model.decider, "predict", backend)
     result = model(images)
     assert backend.call_count == 2
-    assert backend.call_args.kwargs == {"include_local": False}
-    model.alpha = 0
+    assert backend.call_args.kwargs == {"include_global": bool(alpha), "include_local": bool(gamma)}
+    model.alpha = model.gamma = 0
     baseline = model(images)
-    torch.testing.assert_close(result.pred_score, baseline.pred_score * 0.5**0.5)
-    assert torch.equal(result.anomaly_map, baseline.anomaly_map)
+    torch.testing.assert_close(result.pred_score, baseline.pred_score * 0.5**alpha)
+    torch.testing.assert_close(result.anomaly_map, baseline.anomaly_map * 0.5**gamma)
+
+
+def test_refine_fp16_outputs_before_rounding() -> None:
+    """A small gate can yield a representable FP16 prediction after scaling."""
+    score = torch.tensor([65504], dtype=torch.float16)
+    raw = InferenceBatch(pred_score=score, anomaly_map=score.reshape(1, 1, 1))
+    result = refine_predictions(raw, torch.full((1, 2), -40.0), torch.full((1, 1), -80.0), [(0, 0, 1, 1)])
+    expected = (score.double() * torch.tensor(-20.0).exp()).half()
+    torch.testing.assert_close(result.pred_score, expected, rtol=0, atol=0)
+    torch.testing.assert_close(result.anomaly_map, expected.reshape(1, 1, 1), rtol=0, atol=0)
+
+
+def test_refine_fp64_logits() -> None:
+    """Wide finite logits cancel globally and retain small local probabilities."""
+    score = torch.ones(1, dtype=torch.float64)
+    raw = InferenceBatch(pred_score=score, anomaly_map=score.reshape(1, 1, 1))
+    result = refine_predictions(
+        raw,
+        torch.tensor([[-1e100, 1e100]], dtype=torch.float64),
+        torch.tensor([[-500.0]], dtype=torch.float64),
+        [(0, 0, 1, 1)],
+    )
+    torch.testing.assert_close(result.pred_score, score * 0.5**0.5)
+    torch.testing.assert_close(result.anomaly_map, (-125 * raw.anomaly_map).exp(), rtol=1e-12, atol=0)
 
 
 def test_external_weights_follow_parent_device(monkeypatch: pytest.MonkeyPatch) -> None:

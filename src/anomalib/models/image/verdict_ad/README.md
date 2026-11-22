@@ -17,7 +17,7 @@ decision model's references. Training needs one category and at least `n_shots`
 normal images; choose 1, 2 or 4 shots to match the paper's evaluation settings.
 Seed the training loader to make reference selection reproducible.
 
-For each query, Clef-Flash produces 34 binary defect decisions:
+With both refinement stages enabled, Clef-Flash produces 34 binary defect decisions per query:
 
 - Two global views: the query alone, and the query with normal references.
 - Sixteen overlapping crops, each compared with corresponding reference crops.
@@ -44,7 +44,7 @@ rejected examples.
 Install the optional decision-model dependencies with `uv`:
 
 ```bash
-uv pip install -e ".[huggingface]" "transformers>=5.14" "huggingface_hub>=1.24" "torch>=2.11"
+uv pip install -e ".[huggingface]" "transformers>=5.14" "huggingface_hub>=1.24" "torch>=2.11" accelerate
 ```
 
 Download a pinned revision of
@@ -116,6 +116,22 @@ coordinates, and references must match those used by the base detector.
 
 ## Validation and limitations
 
+A one-shot CPU evaluation used all 83 MVTec AD bottle test images (20 normal,
+63 defective). AnomalyDINO used pretrained `vit_small_patch14_dinov2` at 224 × 224
+and the single normal reference `bottle/train/good/037.png`. Both runs used the
+same raw detector outputs. Refinement used the default exponents and the authors'
+[recorded Clef-Flash decisions for seed 42](https://huggingface.co/datasets/sunsean/VerdictAD/blob/4c00ac858a914cd5bdf6c3afc6a1164d21b89437/decisions/mvtec_k1_s42/bottle.json).
+Pixel AUROC pools all pixels using ground-truth masks resized with nearest-neighbor interpolation.
+
+| Model                   | Image AUROC | Pixel AUROC |
+| ----------------------- | ----------: | ----------: |
+| AnomalyDINO             |      0.9857 |      0.9861 |
+| AnomalyDINO + VerdictAD |      0.9952 |      0.9866 |
+
+This comparison covers one category and reference. It measures the effect of
+applying recorded decisions. Live Clef-Flash inference and production acceptance
+criteria require separate evaluation.
+
 Offline tests cover the equations, overlap averaging, decision views and option
 ordering, reference selection, model registration, and checkpoint restoration.
 They replace pretrained feature extraction and decision inference; they do not
@@ -123,9 +139,8 @@ establish detection accuracy or reproduce the paper's results.
 
 For an ablation, use identical references and set `alpha=0`, `gamma=0` to recover
 the detector outputs without loading Clef-Flash. Setting only `gamma=0` skips all
-32 local decisions and runs only the two global decisions per query image.
-Changing refinement requires
-recalibrating thresholds. The upstream implementation reports decision batches
+32 local decisions. Setting only `alpha=0` skips both global decisions.
+Changing refinement requires recalibrating thresholds. The upstream implementation reports decision batches
 of four fitting on a 24 GB GPU; the combined detector also consumes memory.
 This 9B decision model is intended for accuracy-oriented inspection and adds
 substantial inference cost. GPU memory and runtime have not been measured here.

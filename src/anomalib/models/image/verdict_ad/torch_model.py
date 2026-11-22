@@ -101,18 +101,21 @@ class VerdictADModel(DynamicBufferMixin, nn.Module):
         predictions = predictions._replace(pred_score=predictions.pred_score.reshape(-1))
         if self.alpha == 0 and self.gamma == 0:
             return predictions
-        references = [F.to_pil_image(image.cpu()) for image in self.reference_images]
+        # PIL's NumPy conversion cannot represent bfloat16.
+        references = [F.to_pil_image(image) for image in self.reference_images.to(device="cpu", dtype=torch.float32)]
         decisions = torch.stack([
             self.decider.predict(
-                F.to_pil_image(image.cpu()),
+                F.to_pil_image(image),
                 references,
                 images.device,
+                include_global=self.alpha > 0,
                 include_local=self.gamma > 0,
             )
-            for image in images
+            for image in images.to(device="cpu", dtype=torch.float32)
         ])
         boxes = BOXES * 2 if self.gamma > 0 else []
-        return refine_predictions(predictions, decisions[:, :2], decisions[:, 2:], boxes, self.alpha, self.gamma)
+        global_logits, window_logits = decisions.split([2 if self.alpha else 0, len(boxes)], dim=1)
+        return refine_predictions(predictions, global_logits, window_logits, boxes, self.alpha, self.gamma)
 
     @torch.no_grad()
     def fit(self) -> None:

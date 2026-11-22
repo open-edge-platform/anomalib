@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- 🚀 **model**: Add VerdictAD to refine AnomalyDINO image scores and anomaly maps using visual decisions by @andersendsa ([#3918](https://github.com/open-edge-platform/anomalib/issues/3918))
+
 ### Removed
 
 ### Changed

@@ -66,13 +66,15 @@ def decision_records(
     image: Image.Image,
     references: list[Image.Image],
     *,
+    include_global: bool = True,
     include_local: bool = True,
 ) -> list[tuple[str, list[Image.Image], str]]:
-    """Build two global queries and optionally sixteen crop and sixteen boxed queries.
+    """Build queries for the enabled refinement stages.
 
     Args:
         image (Image.Image): RGB query image.
         references (list[Image.Image]): One to four normal RGB reference images.
+        include_global (bool): Whether to build the global queries.
         include_local (bool): Whether to build crop and boxed-view queries.
 
     Returns:
@@ -85,10 +87,13 @@ def decision_records(
         msg = "VerdictAD needs one to four normal reference images."
         raise ValueError(msg)
     task = "Inspect an industrial product against normal references."
-    records = [
-        ("Inspect this industrial product photo.", [_resize(image, 896)], Q_FREE),
-        (task, [_resize(image, 896), _mosaic(references, 896)], Q_REF),
-    ]
+    records = []
+    if include_global:
+        query = _resize(image, 896)
+        records.extend([
+            ("Inspect this industrial product photo.", [query], Q_FREE),
+            (task, [query, _mosaic(references, 896)], Q_REF),
+        ])
     if include_local:
         records.extend(
             (task, [_resize(_crop(image, box), 448), _mosaic([_crop(r, box) for r in references], 448)], Q_CROP)
@@ -163,6 +168,7 @@ class ClefFlash:
         references: list[Image.Image],
         device: torch.device,
         *,
+        include_global: bool = True,
         include_local: bool = True,
     ) -> torch.Tensor:
         """Return true-minus-false decision logits in global/crop/box order.
@@ -171,13 +177,15 @@ class ClefFlash:
             image (Image.Image): Query image.
             references (list[Image.Image]): Normal reference images.
             device (torch.device): Device on which to run the decision model.
+            include_global (bool): Whether to run the two global decisions.
             include_local (bool): Whether to run the 32 local decisions.
 
         Returns:
-            torch.Tensor: Float32 logits on ``device``, shape ``(34,)`` when
-                including local decisions or ``(2,)`` for global decisions only.
+            torch.Tensor: One float32 logit per requested decision on ``device``.
         """
-        records = decision_records(image, references, include_local=include_local)
+        records = decision_records(image, references, include_global=include_global, include_local=include_local)
+        if not records:
+            return torch.empty(0, dtype=torch.float32, device=device)
         self._load(device)
         if self._release is None or self._model is None or self._processor is None:
             msg = "Clef-Flash did not initialize its model and processor."
