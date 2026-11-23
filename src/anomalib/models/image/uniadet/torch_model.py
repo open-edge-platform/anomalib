@@ -90,10 +90,13 @@ class UniADetModel(DynamicBufferMixin, nn.Module):
             msg = "At least one reference image is required in a (K, 3, H, W) tensor."
             raise ValueError(msg)
         features = self.backbone(images)
-        self.memory_bank = torch.stack([
-            functional.normalize(patches.flatten(0, 1), dim=-1) for patches in features.patch_tokens
-        ])
+        # Lightning can initialize references in inference mode, but checkpoint restore writes into this buffer.
+        with torch.inference_mode(mode=False):
+            self.memory_bank = torch.stack([
+                functional.normalize(patches.flatten(0, 1), dim=-1) for patches in features.patch_tokens
+            ])
 
+    @torch.inference_mode(mode=False)
     def clear_reference_images(self) -> None:
         """Remove category-specific memory before zero-shot inference or switching categories."""
         self.memory_bank = self.memory_bank.new_empty(len(self.layers), 0, self.backbone.feature_dim)

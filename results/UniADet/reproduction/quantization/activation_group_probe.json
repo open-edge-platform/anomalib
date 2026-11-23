@@ -1,0 +1,96 @@
+{
+  "scope": "Legacy DINOv2 0-shot, eight disjoint VisA validation images, cached IR perturbations",
+  "results": {
+    "unchanged": {
+      "activation_groups": {
+        "stem": 1,
+        "attention": 96,
+        "feedforward": 48,
+        "head": 10
+      },
+      "removed_quantizers": 0,
+      "map_max": 0.06447911262512207,
+      "mean_image_map_max": 0.029676720965653658,
+      "score_max": 0.01726175844669342,
+      "median_seconds": 1.307525775860995
+    },
+    "head": {
+      "activation_groups": {
+        "stem": 1,
+        "attention": 96,
+        "feedforward": 48,
+        "head": 10
+      },
+      "removed_quantizers": 10,
+      "map_max": 0.06419429183006287,
+      "mean_image_map_max": 0.029719092650339007,
+      "score_max": 0.01753474771976471,
+      "median_seconds": 1.3189652140717953
+    },
+    "map": {
+      "activation_groups": {
+        "stem": 1,
+        "attention": 96,
+        "feedforward": 48,
+        "head": 10
+      },
+      "removed_quantizers": 0,
+      "map_max": 0.06447911262512207,
+      "mean_image_map_max": 0.029676720965653658,
+      "score_max": 0.01726175844669342,
+      "median_seconds": 1.0840566612314433
+    },
+    "stem": {
+      "activation_groups": {
+        "stem": 1,
+        "attention": 96,
+        "feedforward": 48,
+        "head": 10
+      },
+      "removed_quantizers": 1,
+      "map_max": 0.05111980438232422,
+      "mean_image_map_max": 0.030273021897301078,
+      "score_max": 0.02655719220638275,
+      "median_seconds": 1.1461045206524432
+    },
+    "attention": {
+      "activation_groups": {
+        "stem": 1,
+        "attention": 96,
+        "feedforward": 48,
+        "head": 10
+      },
+      "removed_quantizers": 96,
+      "map_max": 0.04594936966896057,
+      "mean_image_map_max": 0.027609400916844606,
+      "score_max": 0.018728122115135193,
+      "median_seconds": 1.4586951516103
+    },
+    "feedforward": {
+      "activation_groups": {
+        "stem": 1,
+        "attention": 96,
+        "feedforward": 48,
+        "head": 10
+      },
+      "removed_quantizers": 48,
+      "map_max": 0.042976975440979004,
+      "mean_image_map_max": 0.025833927560597658,
+      "score_max": 0.01669803261756897,
+      "median_seconds": 1.5256884819827974
+    },
+    "all_activations": {
+      "activation_groups": {
+        "stem": 1,
+        "attention": 96,
+        "feedforward": 48,
+        "head": 10
+      },
+      "removed_quantizers": 155,
+      "map_max": 0.05199208855628967,
+      "mean_image_map_max": 0.02587961545214057,
+      "score_max": 0.020907968282699585,
+      "median_seconds": 1.7348745281342417
+    }
+  }
+}

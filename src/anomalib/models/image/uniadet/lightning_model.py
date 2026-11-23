@@ -6,9 +6,8 @@
 Paper: One Language-Free Foundation Model Is Enough for Universal Vision Anomaly Detection.
 https://arxiv.org/abs/2601.05552
 
-This is an independent implementation of the published algorithm, not a source
-port of the unlicensed gaobb/UniADet repository. Auxiliary supervised pretraining
-uses the standalone reproduction tool; Engine does not optimize the head.
+This independent implementation uses a pretrained or separately trained head.
+Engine does not optimize the backbone or head.
 """
 
 from pathlib import Path
@@ -49,7 +48,7 @@ class UniADet(AnomalibModule):
 
     Args:
         backbone (str): One of ``"clip"``, ``"dinov2"`` or ``"dinov3"``.
-        weights (str | Path | None): Auxiliary head checkpoint from ``tools/uniadet/train.py``.
+        weights (str | Path | None): Head checkpoint from ``tools.uniadet.author`` or ``tools.uniadet.train``.
         k_shot (int): Number of normal references; zero selects zero-shot detection.
         few_shot_source (str | Path | None): Directory of normal reference images.
             If omitted, use the attached datamodule's training split.
@@ -73,8 +72,7 @@ class UniADet(AnomalibModule):
 
     Example:
         >>> from anomalib.models import UniADet
-        >>> model = UniADet(weights="visa_head.pt", k_shot=4)  # doctest: +SKIP
-        >>> # Engine uses normal target training images as references, without head optimization.
+        >>> model = UniADet(weights="head.pt", protocol="author", k_shot=4)  # doctest: +SKIP
     """
 
     def __init__(

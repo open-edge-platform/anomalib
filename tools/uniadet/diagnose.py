@@ -94,6 +94,14 @@ def scoring_variants(
     return results
 
 
+def _image_score(prediction: InferenceBatch) -> torch.Tensor:
+    score = prediction.pred_score
+    if score is None:
+        msg = "The diagnostic prediction is missing its image score."
+        raise RuntimeError(msg)
+    return score
+
+
 def main() -> None:
     """Compare predeclared inference variants on fixed cross-dataset categories and references."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -188,11 +196,11 @@ def main() -> None:
                     detector.model.memory_bank = bank
                     variants = scoring_variants(detector.model, features)
                     original = detector.model.predict_from_features(features)
-                    error = (original.pred_score - variants["baseline"].pred_score).abs().max()
+                    error = (_image_score(original) - _image_score(variants["baseline"])).abs().max()
                     map_error = (original.anomaly_map - variants["baseline"].anomaly_map).abs().max()
                     largest_baseline_error = max(largest_baseline_error, float(error), float(map_error))
                     for name, prediction in variants.items():
-                        predictions.setdefault((shots, name), []).append(prediction.pred_score.cpu())
+                        predictions.setdefault((shots, name), []).append(_image_score(prediction).cpu())
             target = torch.cat(labels).numpy()
             for (shots, name), values in predictions.items():
                 scores = torch.cat(values).numpy()

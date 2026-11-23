@@ -1,11 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Import authorized UniADet author heads without copying source or redistributing weights.
-
-Uses the existing Hugging Face login. The weights have separate research/evaluation
-terms; access does not establish a license for the author's source code.
-"""
+"""Import Apache-2.0 UniADet heads using an authorized Hugging Face login."""
 
 import argparse
 import hashlib
@@ -20,6 +16,8 @@ from anomalib.models.image.uniadet.backbones import BACKBONES
 REPOSITORY = "csgaobb/UniADet"
 REVISION = "88de3178cff5ab6f895f53d5934dac9f3f80b3b8"
 SOURCE_REVISION = "2b81369d418ed08fd882452597ad5ebe7df3cb1d"
+LICENSE_URL = "https://github.com/gaobb/UniADet/blob/45272f0e65ba4e27f4921cd4c9819c40dd8e5aa4/LICENSE"
+LICENSE_CONFIRMATION = "https://github.com/gaobb/UniADet/issues/7#issuecomment-7075731743"
 AUTHOR_NAMES = {
     "clip": "ViT-L-14@336px",
     "dinov2": "ViT-L-14-DINOv2Reg",
@@ -113,19 +111,26 @@ def download_head(backbone: str, source_dataset: str, output: Path) -> Path:
         "source_revision": SOURCE_REVISION,
         "protocol": "author-v1",
         "training_reproduced": False,
-        "license": "Author research/evaluation terms; see pinned HF model card. No weights redistributed.",
+        "license": "Apache-2.0",
+        "license_url": LICENSE_URL,
+        "license_confirmation": LICENSE_CONFIRMATION,
+        "access_terms": "Gated Hugging Face download; see the pinned model card.",
     }
     (output / "provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
     return destination
 
 
 def main() -> None:
-    """Download every head needed for a two-dataset, three-backbone reproduction."""
+    """Download selected heads or the complete reproduction matrix."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--backbone", choices=tuple(BACKBONES))
+    parser.add_argument("--source-dataset", choices=("mvtec", "visa"))
     args = parser.parse_args()
-    for backbone in BACKBONES:
-        for dataset in ("mvtec", "visa"):
+    backbones = (args.backbone,) if args.backbone else tuple(BACKBONES)
+    datasets = (args.source_dataset,) if args.source_dataset else ("mvtec", "visa")
+    for backbone in backbones:
+        for dataset in datasets:
             download_head(backbone, dataset, args.output / f"{backbone}_{dataset}")
 
 

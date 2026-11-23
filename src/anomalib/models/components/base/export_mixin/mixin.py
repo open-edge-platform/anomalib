@@ -49,7 +49,6 @@ from lightning_utilities.core.imports import module_available
 from torch import nn
 from torch.nn.attention import SDPBackend, sdpa_kernel
 
-from anomalib import TaskType
 from anomalib.data import AnomalibDataModule, ImageBatch
 from anomalib.deploy.export import CompressionType, ExportType
 
@@ -70,6 +69,8 @@ if TYPE_CHECKING:
     import numpy as np
     from numpy.typing import NDArray
     from torchmetrics import Metric
+
+    from anomalib import TaskType
 
     if module_available("nncf"):
         from nncf import IgnoredScope, ModelType
@@ -257,8 +258,7 @@ class ExportMixin:
             metric (Metric | None): Metric for accuracy-aware quantization.
                 Used for ``INT8_ACQ``. If not provided, a default F1Score at image level
                 will be used. Defaults to ``None``.
-            task (TaskType | None): Task type (classification/segmentation).
-                Defaults to ``None``.
+            task (TaskType | None): Task type, retained for compatibility.
             max_drop (float): Maximum acceptable accuracy drop during quantization.
                 Only used for ``INT8_ACQ`` compression. Value should be between 0 and 1
                 (e.g., 0.01 means 1% accuracy drop is acceptable).
@@ -335,8 +335,7 @@ class ExportMixin:
                 Required for ``INT8_PTQ`` and ``INT8_ACQ``. Defaults to ``None``.
             metric (Metric | None): Metric for accuracy-aware quantization.
                 Required for ``INT8_ACQ``. Defaults to ``None``.
-            task (TaskType | None): Task type (classification/segmentation).
-                Defaults to ``None``.
+            task (TaskType | None): Task type, retained for compatibility.
             max_drop (float): Maximum acceptable accuracy drop during quantization.
                 Only used for ``INT8_ACQ``. Defaults to ``0.01``.
 
@@ -450,7 +449,7 @@ class ExportMixin:
             raise ValueError(msg)
         datamodule.setup("fit")
 
-        task = task or datamodule.task
+        del task
 
         if not 0 <= max_drop <= 1:
             msg = f"max_drop must be between 0 and 1, got {max_drop}"
@@ -491,7 +490,6 @@ class ExportMixin:
         ) -> tuple[float, list[list[NDArray[np.float32]]]]:
             metric.reset()
             ranking_outputs: list[list[NDArray[np.float32]]] = []
-            ranking_name = "pred_score" if task == TaskType.CLASSIFICATION else "anomaly_map"
             for batch in validation_data:
                 ov_model_output = nncf_model(batch["image"])
                 result_batch = ImageBatch(
@@ -508,10 +506,10 @@ class ExportMixin:
                     gt_mask=batch.gt_mask,
                 )
                 metric.update(result_batch)
-                ranking_outputs.append([ov_model_output[ranking_name].copy()])
+                # NNCF compares against all candidate outputs in graph order, including boolean outputs.
+                ranking_outputs.append([output.astype("float32", copy=True) for output in ov_model_output.values()])
 
-            # Image-level AUROC cannot rank single images. Return continuous task
-            # outputs for NNCF's output-based ranking instead.
+            # Aggregate metrics like AUROC cannot rank single images.
             return float(metric.compute()), ranking_outputs
 
         return nncf.quantize_with_accuracy_control(

@@ -92,7 +92,7 @@ def test_accuracy_control_resets_metric(
     monkeypatch: pytest.MonkeyPatch,
     task: TaskType,
 ) -> None:
-    """Score each candidate independently and return task outputs for non-additive metric ranking."""
+    """Score each candidate independently and keep every graph output aligned for NNCF ranking."""
     pytest.importorskip("nncf")
     samples = [
         ImageItem(
@@ -124,17 +124,20 @@ def test_accuracy_control_resets_metric(
                 scores = images[:, 0, 0, 0].numpy()
                 if inverted:
                     scores = 1 - scores
+                maps = np.broadcast_to(scores[:, None, None, None], (len(scores), 1, 28, 28)).copy()
                 return {
                     "pred_score": scores,
                     "pred_label": scores > 0.5,
-                    "anomaly_map": np.broadcast_to(scores[:, None, None, None], (len(scores), 1, 28, 28)).copy(),
+                    "anomaly_map": maps,
+                    "pred_mask": maps > 0.5,
                 }
 
             metric_value, ranking_outputs = validation_fn(infer, validation_dataset.get_data())
             observed.append(metric_value)
             for output, batch in zip(ranking_outputs, validation_dataset.get_data(), strict=True):
-                expected = infer(batch.image)["pred_score" if task == TaskType.CLASSIFICATION else "anomaly_map"]
-                np.testing.assert_array_equal(output[0], expected)
+                for reference, candidate in zip(output, infer(batch.image).values(), strict=True):
+                    np.testing.assert_array_equal(reference, candidate)
+                    np.testing.assert_array_equal(reference - candidate, np.zeros_like(reference))
         return model
 
     monkeypatch.setattr("nncf.quantize_with_accuracy_control", quantize)
