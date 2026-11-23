@@ -27,7 +27,7 @@
 #    - Artifact creation
 #
 # Required Inputs:
-# - python-version: Python version for tests (default: "3.10")
+# - python-version: Python version for tests (default: "3.11")
 # - test-type: Type of test to run (unit/integration/e2e)
 # - runner: Runner to use for the tests
 # - timeout: Test timeout in minutes
@@ -68,7 +68,7 @@ on:
       python-version:
         description: "Python version to use for tests"
         type: string
-        default: "3.10"
+        default: "3.11"
       test-type:
         description: "Type of test to run (unit/integration/e2e)"
         type: string
