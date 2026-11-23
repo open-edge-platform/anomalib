@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- 🚀 **model**: Add UniADet for zero- and few-shot anomaly detection with pretrained heads by @rajeshgangireddy.
+- 🚀 **model**: Add UniADet for zero- and few-shot anomaly detection with pretrained heads by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3947
 
 ### Removed
 
