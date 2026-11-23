@@ -47,6 +47,7 @@ import torch
 from lightning.pytorch import LightningModule
 from lightning_utilities.core.imports import module_available
 from torch import nn
+from torch.nn.attention import SDPBackend, sdpa_kernel
 
 from anomalib import TaskType
 from anomalib.data import AnomalibDataModule, ImageBatch
@@ -136,6 +137,10 @@ class ExportMixin:
     ) -> Path:
         """Export model to ONNX format.
 
+        Graph capture uses math scaled-dot-product attention to avoid
+        device-specific fused attention layouts. Backend settings are restored
+        afterward; training and PyTorch inference are unchanged.
+
         Args:
             export_root (Path | str): Path to the output folder.
             model_file_name (str): Name of the exported model.
@@ -209,13 +214,14 @@ class ExportMixin:
         }
 
         try:
-            torch.onnx.export(
-                model=self,
-                args=(input_shape.to(self.device),),
-                f=str(onnx_path),
-                **export_kwargs,
-                **kwargs,
-            )
+            with sdpa_kernel(SDPBackend.MATH):
+                torch.onnx.export(
+                    model=self,
+                    args=(input_shape.to(self.device),),
+                    f=str(onnx_path),
+                    **export_kwargs,
+                    **kwargs,
+                )
         except ModuleNotFoundError as exception:
             if exception.name == "onnxscript" or "onnxscript" in str(exception):
                 raise_missing_onnxscript_error(exception)
