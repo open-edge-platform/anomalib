@@ -1,0 +1,13 @@
+{
+  "status": "unresolved_dependency_limitation",
+  "installed_nncf": "3.3.0",
+  "released_source_checked": "https://github.com/openvinotoolkit/nncf/blob/v3.4.0/src/nncf/quantization/algorithms/accuracy_control/rank_functions.py",
+  "function": "normalized_mse",
+  "reference_outputs": [[0.1], [0.0]],
+  "candidate_scores": [0.1, 0.3, 0.9],
+  "candidate_label": false,
+  "observed_ranking_errors": ["NaN", "NaN", "NaN"],
+  "cause": "Identical all-zero reference and candidate outputs contribute 0/0 to normalized MSE.",
+  "impact": "Output-based ACQ rollback ranking is undefined for these samples. Aggregate validation AUROC is still measurable; it does not prove score/map parity.",
+  "scope": "No NNCF monkeypatch, output-schema change, numerical-tolerance change, or accuracy claim was introduced."
+}

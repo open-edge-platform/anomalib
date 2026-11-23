@@ -11,7 +11,7 @@ Engine does not optimize the backbone or head.
 """
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import torch
 from torch import nn
@@ -124,6 +124,42 @@ class UniADet(AnomalibModule):
         # A full checkpoint is self-contained and must not reopen an old head-file path.
         self.hparams["weights"] = None
         self.hparams["pretrained"] = False
+
+    def _reference_config(self) -> dict[str, int | str | None]:
+        return {
+            "k_shot": self.k_shot,
+            "seed": self.seed,
+            "few_shot_source": str(self.few_shot_source) if self.few_shot_source is not None else None,
+            "protocol": self.protocol,
+        }
+
+    def on_save_checkpoint(self, checkpoint: dict[str, Any]) -> None:
+        """Persist reference settings separately from overridable Lightning hyperparameters.
+
+        Args:
+            checkpoint (dict[str, Any]): Lightning checkpoint to populate.
+        """
+        super().on_save_checkpoint(checkpoint)
+        checkpoint["uniadet_reference_config"] = self._reference_config()
+
+    def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
+        """Restore a self-contained checkpoint without silently changing its reference configuration.
+
+        Args:
+            checkpoint (dict[str, Any]): Lightning checkpoint to restore.
+
+        Raises:
+            ValueError: If reference settings or bank size differ from this model.
+        """
+        config = checkpoint.get("uniadet_reference_config")
+        memory = checkpoint["state_dict"].get("model.memory_bank")
+        incompatible_bank = (
+            memory is not None and memory.shape[1] and memory.shape[1] != self.k_shot * self.model.backbone.grid_size**2
+        )
+        if (config is not None and config != self._reference_config()) or incompatible_bank:
+            msg = "Checkpoint reference configuration differs; load a head checkpoint to choose new references."
+            raise ValueError(msg)
+        super().on_load_checkpoint(checkpoint)
 
     def _initialize_references(self) -> None:
         if not self.k_shot or self.model.memory_bank.shape[1]:

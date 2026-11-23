@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- 🐞 **post_processing**: Apply calibrated thresholds to unnormalized scores and anomaly maps by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3947
+- 🐞 **openvino**: Reset validation metrics and align outputs during accuracy-controlled quantization by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3947
 - 🐞 **model**: Fix device-specific fused-attention layout errors during ONNX export by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3936
 - 📚 **docs**: clarify benchmark command availability by @anomalibbot in https://github.com/open-edge-platform/anomalib/pull/3931
 

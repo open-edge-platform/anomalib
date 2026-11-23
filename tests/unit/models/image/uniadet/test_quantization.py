@@ -15,7 +15,7 @@ from tools.uniadet.data import CalibrationData
 
 from anomalib import TaskType
 from anomalib.data import ImageBatch, ImageItem
-from anomalib.deploy import CompressionType
+from anomalib.deploy import CompressionType, OpenVINOInferencer
 from anomalib.metrics import AUROC
 from anomalib.models import UniADet
 
@@ -27,12 +27,17 @@ if TYPE_CHECKING:
 
 @pytest.mark.usefixtures("tiny_backbone")
 @pytest.mark.parametrize("compression", [None, *CompressionType])
+@pytest.mark.parametrize("protocol", ["legacy", "author"])
+@pytest.mark.parametrize("shots", [0, 4])
 def test_openvino_compressions(
     tmp_path: Path,
     compression: CompressionType | None,
+    protocol: str,
+    shots: int,
     mocker: "MockerFixture",
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Every export path preserves raw scores/maps for singleton and dynamic batches."""
+    """Every export and inferencer path preserves single-image and batched predictions."""
     ov = pytest.importorskip("openvino")
     nncf = pytest.importorskip("nncf")
     quantize = None
@@ -50,9 +55,12 @@ def test_openvino_compressions(
         pre_processor=False,
         evaluator=False,
         visualizer=False,
+        protocol=protocol,
+        k_shot=shots,
     ).eval()
     model.model.head_trained.fill_(value=True)
-    model.model.set_reference_images(torch.rand(4, 3, 28, 28))
+    if shots:
+        model.model.set_reference_images(torch.rand(shots, 3, 28, 28))
     samples = [
         ImageItem(image=torch.rand(3, 28, 28), gt_label=index % 2, gt_mask=torch.zeros(28, 28)) for index in range(16)
     ]
@@ -66,7 +74,12 @@ def test_openvino_compressions(
         task=TaskType.CLASSIFICATION,
         onnx_kwargs={"opset_version": 18},
     )
-    compiled = ov.Core().compile_model(path, "CPU", {"INFERENCE_PRECISION_HINT": "f32"})
+    monkeypatch.chdir(tmp_path)
+    inferencer = OpenVINOInferencer(
+        path,
+        device="CPU",
+        config={"INFERENCE_PRECISION_HINT": "f32", "INFERENCE_NUM_THREADS": 2},
+    )
     if ranking_mode is not None:
         assert ranking_mode.spy_return is False, "AUROC cannot rank models using single-image AUROCs."
     if quantize is not None:
@@ -79,10 +92,16 @@ def test_openvino_compressions(
         images = torch.stack([item.image for item in samples[:batch_size]])
         with torch.no_grad():
             baseline = model(images)
-        actual = compiled(images.numpy())
+        actual = inferencer.model(images.numpy())
         tolerance = 1e-4 if compression is None else 0.05
         np.testing.assert_allclose(actual["pred_score"], baseline.pred_score.numpy(), atol=tolerance, rtol=0)
         np.testing.assert_allclose(actual["anomaly_map"], baseline.anomaly_map.numpy(), atol=tolerance, rtol=0)
+        for inputs in (images[0] if batch_size == 1 else images, images.numpy().transpose(0, 2, 3, 1)):
+            prediction = inferencer.predict(inputs)
+            np.testing.assert_array_equal(prediction.pred_score, actual["pred_score"])
+            np.testing.assert_array_equal(prediction.anomaly_map, actual["anomaly_map"])
+            np.testing.assert_array_equal(prediction.pred_label, actual["pred_label"])
+            np.testing.assert_array_equal(prediction.pred_mask, actual["pred_mask"].transpose(0, 2, 3, 1))
 
 
 @pytest.mark.usefixtures("tiny_backbone")

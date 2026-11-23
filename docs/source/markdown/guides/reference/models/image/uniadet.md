@@ -35,7 +35,8 @@ Engine().test(model=model, datamodule=MVTecAD(root="datasets/MVTecAD", category=
 ```
 
 Set `k_shot=4` to use the same head with normal references from the training split or `few_shot_source`.
-`Engine.fit` calibrates thresholds without updating weights. Full checkpoints retain the reference bank.
+`Engine.fit` calibrates thresholds without updating weights or normalizing scores.
+Full checkpoints retain the reference bank and reject changed reference settings; load a head to select new references.
 Optional auxiliary head training uses `python -m tools.uniadet.train` and `protocol="legacy"`.
 
 ## Benchmarks and deployment
@@ -49,6 +50,7 @@ TorchInferencer, Engine, ONNX, and OpenVINO FP32/FP16 were checked at batches 1 
 backbones at zero and four shots. Use the fixed encoder resolution and initialize references before few-shot
 export. Use FP32 or FP16 for score and map agreement with Torch. Weight-only INT8, INT8_PTQ, and INT8_ACQ
 can exceed the `0.05` maximum map error limit on author graphs.
+NNCF's ACQ ranking also has an unresolved zero-output limitation; aggregate AUROC alone does not certify parity.
 See the [model README](https://github.com/open-edge-platform/anomalib/tree/main/src/anomalib/models/image/uniadet)
 for reproduction commands, timings and deployment reports.
 

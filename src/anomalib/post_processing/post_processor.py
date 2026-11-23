@@ -40,7 +40,8 @@ class PostProcessor(nn.Module, Callback):
 
     Args:
         enable_normalization (bool, optional): Enable normalization of anomaly scores.
-            Defaults to True.
+            Defaults to True. When disabled, calibrated thresholds apply to raw scores;
+            sensitivity is used only as a fallback before calibration.
         enable_thresholding (bool, optional): Enable thresholding of anomaly scores.
             Defaults to True.
         enable_threshold_matching (bool, optional): Use image-level threshold for pixel-level predictions when
@@ -273,8 +274,14 @@ class PostProcessor(nn.Module, Callback):
             anomaly_map = predictions.anomaly_map
 
         if self.enable_thresholding:
-            pred_label = self._apply_threshold(pred_score, self.normalized_image_threshold)
-            pred_mask = self._apply_threshold(anomaly_map, self.normalized_pixel_threshold)
+            pred_label = self._apply_threshold(
+                pred_score,
+                self._select_threshold(self.image_threshold, self.normalized_image_threshold),
+            )
+            pred_mask = self._apply_threshold(
+                anomaly_map,
+                self._select_threshold(self.pixel_threshold, self.normalized_pixel_threshold),
+            )
         else:
             pred_label = None
             pred_mask = None
@@ -310,13 +317,24 @@ class PostProcessor(nn.Module, Callback):
         batch.pred_label = (
             batch.pred_label
             if batch.pred_label is not None
-            else self._apply_threshold(batch.pred_score, self.normalized_image_threshold)
+            else self._apply_threshold(
+                batch.pred_score,
+                self._select_threshold(self.image_threshold, self.normalized_image_threshold),
+            )
         )
         batch.pred_mask = (
             batch.pred_mask
             if batch.pred_mask is not None
-            else self._apply_threshold(batch.anomaly_map, self.normalized_pixel_threshold)
+            else self._apply_threshold(
+                batch.anomaly_map,
+                self._select_threshold(self.pixel_threshold, self.normalized_pixel_threshold),
+            )
         )
+
+    def _select_threshold(self, raw: torch.Tensor, normalized: torch.Tensor) -> torch.Tensor:
+        if self.enable_normalization:
+            return normalized
+        return torch.where(torch.isnan(raw), normalized, raw)
 
     def normalize_batch(self, batch: Batch) -> None:
         """Normalize predicted scores and anomaly maps.

@@ -1,0 +1,532 @@
+{
+  "backbone": "dinov3",
+  "head_sha256": "1fffefb1f82dc0ce137d67397f59a252f25394e1036775e334ba2fa591549f2f",
+  "protocol": "author",
+  "weight_origin": "author",
+  "training_recipe_version": null,
+  "complete_training_recipe": false,
+  "target": "mvtec",
+  "category": "bottle",
+  "shots": 4,
+  "images": [
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/good/000.png",
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/broken_large/000.png",
+    "/home/devuser/workspace/code/Anomalib/anomalib/datasets/MVTecAD/bottle/test/broken_large/001.png"
+  ],
+  "calibration_source": "visa",
+  "calibration_size": 32,
+  "quantized_max_drop": 0.01,
+  "activation_quantization": {
+    "model_type": "TRANSFORMER",
+    "floating_point_postprocessing": [
+      "Interpolate",
+      "Gaussian smoothing"
+    ],
+    "accuracy_control_ranking": "graph_outputs_in_order"
+  },
+  "timing_protocol": {
+    "device": "CPU",
+    "threads": 4,
+    "host": "Linux-6.8.0-147-generic-x86_64-with-glibc2.39",
+    "torch": "2.14.0+cu130",
+    "openvino": "2026.3.1-22476-759c5a6ab8c-releases/2026/3",
+    "onnxruntime": "1.32.0",
+    "inference_timing": "Not measured in this run."
+  },
+  "pytorch_cpu_timing": {},
+  "results": {
+    "torch_file": {
+      "duration_seconds": 1.4733539749868214,
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "torch_inferencer": {
+      "duration_seconds": 9.335482880007476,
+      "inference_timing": {},
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "engine_test": {
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "engine": {
+      "duration_seconds": 23.0624090898782,
+      "inference_timing": {},
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0,
+            "mean_absolute_error": 0.0,
+            "rmse": 0.0,
+            "tolerance": 1e-05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "onnx": {
+      "duration_seconds": 52.59608704876155,
+      "inference_timing": {},
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 4.470348358154297e-08,
+            "mean_absolute_error": 4.470348358154297e-08,
+            "rmse": 4.470348358154297e-08,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 1.169741153717041e-06,
+            "mean_absolute_error": 4.27038564509985e-08,
+            "rmse": 9.270527812077489e-08,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 5.960464477539063e-08,
+            "mean_absolute_error": 5.4637592228345966e-08,
+            "rmse": 5.5087291173094854e-08,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 3.039836883544922e-06,
+            "mean_absolute_error": 8.204727919292054e-08,
+            "rmse": 1.8748539787338814e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "fp32": {
+      "duration_seconds": 20.70401405217126,
+      "inference_timing": {},
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 7.450580596923828e-08,
+            "mean_absolute_error": 7.450580596923828e-08,
+            "rmse": 7.450580596923828e-08,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 7.897615432739258e-07,
+            "mean_absolute_error": 3.523853564502133e-08,
+            "rmse": 5.404568881317573e-08,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 2.384185791015625e-07,
+            "mean_absolute_error": 1.2417633854511223e-07,
+            "rmse": 1.4826467520379083e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 2.4437904357910156e-06,
+            "mean_absolute_error": 7.432571891285988e-08,
+            "rmse": 1.5914902462554892e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        }
+      },
+      "inferencer_batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 7.450580596923828e-08,
+            "mean_absolute_error": 7.450580596923828e-08,
+            "rmse": 7.450580596923828e-08,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 7.897615432739258e-07,
+            "mean_absolute_error": 3.523853564502133e-08,
+            "rmse": 5.404568881317573e-08,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 2.384185791015625e-07,
+            "mean_absolute_error": 1.2417633854511223e-07,
+            "rmse": 1.4826467520379083e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 2.4437904357910156e-06,
+            "mean_absolute_error": 7.432571891285988e-08,
+            "rmse": 1.5914902462554892e-07,
+            "tolerance": 0.0001,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "fp16": {
+      "duration_seconds": 17.39519022917375,
+      "inference_timing": {},
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.00011827051639556885,
+            "mean_absolute_error": 0.00011827051639556885,
+            "rmse": 0.00011827051639556885,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0001395605504512787,
+            "mean_absolute_error": 6.8351778281794395e-06,
+            "rmse": 1.2192932445032056e-05,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.00011827051639556885,
+            "mean_absolute_error": 6.74972907290794e-05,
+            "rmse": 7.658115646336228e-05,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0005304217338562012,
+            "mean_absolute_error": 1.834611248341389e-05,
+            "rmse": 4.625497604138218e-05,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          }
+        }
+      },
+      "inferencer_batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 0.00011827051639556885,
+            "mean_absolute_error": 0.00011827051639556885,
+            "rmse": 0.00011827051639556885,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0001395605504512787,
+            "mean_absolute_error": 6.8351778281794395e-06,
+            "rmse": 1.2192932445032056e-05,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.00011827051639556885,
+            "mean_absolute_error": 6.74972907290794e-05,
+            "rmse": 7.658115646336228e-05,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.0005304217338562012,
+            "mean_absolute_error": 1.834611248341389e-05,
+            "rmse": 4.625497604138218e-05,
+            "tolerance": 0.005,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    },
+    "int8": {
+      "duration_seconds": 23.654806823004037,
+      "inference_timing": {},
+      "batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 3.6954879760742188e-06,
+            "mean_absolute_error": 3.6954879760742188e-06,
+            "rmse": 3.6954879760742188e-06,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.004162922501564026,
+            "mean_absolute_error": 0.00017253527767024934,
+            "rmse": 0.00032079624361358583,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.002034425735473633,
+            "mean_absolute_error": 0.0010590553283691406,
+            "rmse": 0.0013461456401273608,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.01193341612815857,
+            "mean_absolute_error": 0.0004963715909980237,
+            "rmse": 0.001139078289270401,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      },
+      "inferencer_batches": {
+        "1": {
+          "pred_score": {
+            "max_absolute_error": 3.6954879760742188e-06,
+            "mean_absolute_error": 3.6954879760742188e-06,
+            "rmse": 3.6954879760742188e-06,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.004162922501564026,
+            "mean_absolute_error": 0.00017253527767024934,
+            "rmse": 0.00032079624361358583,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          }
+        },
+        "3": {
+          "pred_score": {
+            "max_absolute_error": 0.002034425735473633,
+            "mean_absolute_error": 0.0010590553283691406,
+            "rmse": 0.0013461456401273608,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          },
+          "anomaly_map": {
+            "max_absolute_error": 0.01193341612815857,
+            "mean_absolute_error": 0.0004963715909980237,
+            "rmse": 0.001139078289270401,
+            "tolerance": 0.05,
+            "finite": true,
+            "passed": true
+          }
+        }
+      }
+    }
+  },
+  "exported_files": [
+    {
+      "relative_path": "engine.ckpt",
+      "bytes": 1296432491,
+      "sha256": "caa53bc15095d2114ffea9b4ff870d9885ebcc59579849e3f850e3d9109fbc45"
+    },
+    {
+      "relative_path": "fp16/weights/openvino/model.bin",
+      "bytes": 648405762,
+      "sha256": "7da2b5e8825552f13d02fac6cd52124ae12a6fb02f0bab67327ca7a86af50cf1"
+    },
+    {
+      "relative_path": "fp16/weights/openvino/model.xml",
+      "bytes": 1513321,
+      "sha256": "05ab403d3a72e31fd84042b4a18f427043101aedfc2cd0067cbda14ba5e592aa",
+      "fake_quantize_nodes": 0
+    },
+    {
+      "relative_path": "fp32/weights/openvino/model.bin",
+      "bytes": 1296811036,
+      "sha256": "5eba7655190dd7999d1dddc20853480b19bdd10522004b4b5d84c43111804491"
+    },
+    {
+      "relative_path": "fp32/weights/openvino/model.xml",
+      "bytes": 1230164,
+      "sha256": "d272bb83db0ffaf33f1eefff1cf04a3ca0fb4617a5d09328cf4e3de6b03e8590",
+      "fake_quantize_nodes": 0
+    },
+    {
+      "relative_path": "int8/weights/openvino/model.bin",
+      "bytes": 326226582,
+      "sha256": "3d27d5d7baa2868c15baa74aa6fad10b7296d27abc44e8933d99866f7c1b0610"
+    },
+    {
+      "relative_path": "int8/weights/openvino/model.xml",
+      "bytes": 1575830,
+      "sha256": "06d85bcfc88e8c3e77e7a2f9cdef593d3decaf5e3ad882fd2955837b7e5cb635",
+      "fake_quantize_nodes": 0
+    },
+    {
+      "relative_path": "onnx/weights/onnx/model.onnx",
+      "bytes": 1937322,
+      "sha256": "ed6f5a2562641e8efe0861b0190126d49fb3f1cf7e83fdad09c6a6ea77b1b3c6"
+    },
+    {
+      "relative_path": "onnx/weights/onnx/model.onnx.data",
+      "bytes": 1296433152,
+      "sha256": "b70846640fb5bc92049f3d736847a7e5124ed369912195b1597c7efa28640b1f"
+    },
+    {
+      "relative_path": "torch_inferencer/weights/torch/model.pt",
+      "bytes": 1296489771,
+      "sha256": "5270c071f1821d99b516eecf11f09becbc34008b6315c583a143a146b38fdc0c"
+    }
+  ],
+  "complete": true,
+  "review_baseline_commit": "ee78612ef80eaf3b38408033b9c38b6f7de542ce",
+  "review_source_hashes": {
+    "src/anomalib/models/image/uniadet/lightning_model.py": "af422232b6b421347e4d09d4029e76ea4a817312b1998cb48e5fd89d068ea15b",
+    "src/anomalib/post_processing/post_processor.py": "8b4f3e9a933b4bd8116fe1d402379f7f70090aa5944cdfbdaf131a064c59efea",
+    "tools/uniadet/validate.py": "3623b0584d11979550dde8f00c2fec345760794e86906fbbe3286d831d786487"
+  },
+  "validation_returncode": 0,
+  "onnx_reused_for_openvino": true
+}

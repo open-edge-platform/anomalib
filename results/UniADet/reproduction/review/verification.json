@@ -1,0 +1,154 @@
+{
+  "scope": "Post-review author-head deployment refresh, MVTec AD bottle, zero/four shots, batches 1/3.",
+  "rows": 134,
+  "floating_rows": 102,
+  "all_floating_rows_passed": true,
+  "all_outputs_finite": true,
+  "all_formats_refreshed": [
+    "dinov2_0"
+  ],
+  "other_five_cases_refreshed": "Torch APIs, Engine predict/test, ONNX, OpenVINO FP32/FP16/weight-only INT8.",
+  "not_rerun": "PTQ/ACQ for the other five cases; their earlier all-format evidence remains under ../quantization/.",
+  "public_openvino_inferencer_rows": 40,
+  "source_hashes": {
+    "src/anomalib/models/image/uniadet/lightning_model.py": "af422232b6b421347e4d09d4029e76ea4a817312b1998cb48e5fd89d068ea15b",
+    "src/anomalib/post_processing/post_processor.py": "8b4f3e9a933b4bd8116fe1d402379f7f70090aa5944cdfbdaf131a064c59efea",
+    "tools/uniadet/validate.py": "3623b0584d11979550dde8f00c2fec345760794e86906fbbe3286d831d786487"
+  },
+  "validation_tool_followup": {
+    "change": "Renamed the OpenVINO inferencer and prediction locals after deployment validation to keep their types distinct from Torch.",
+    "current_tool_sha256": "c39e9c779bc0d5e9b22ec7c4b320618618e1a8eef6ef5a34e88d962538d7fa46",
+    "only_local_identifier_names_changed": true
+  },
+  "accuracy_control_validation": {
+    "case": "dinov2_0",
+    "nncf": "3.3.0",
+    "initial_image_auroc": 0.9473683834075928,
+    "quantized_image_auroc": 0.95546555519104,
+    "absolute_drop": -0.008097171783447266,
+    "max_drop": 0.01,
+    "rollback_required": false,
+    "numerical_parity": false
+  },
+  "reports": [
+    "floating/clip_0/parity.json",
+    "floating/clip_4/parity.json",
+    "all_formats/dinov2_0/parity.json",
+    "floating/dinov2_4/parity.json",
+    "floating/dinov3_0/parity.json",
+    "floating/dinov3_4/parity.json"
+  ],
+  "backends": [
+    {
+      "backend": "engine",
+      "entrypoint": "native",
+      "rows": 12,
+      "score_failures": 0,
+      "map_failures": 0
+    },
+    {
+      "backend": "engine_test",
+      "entrypoint": "native",
+      "rows": 12,
+      "score_failures": 0,
+      "map_failures": 0
+    },
+    {
+      "backend": "fp16",
+      "entrypoint": "OpenVINOInferencer",
+      "rows": 12,
+      "score_failures": 0,
+      "map_failures": 0
+    },
+    {
+      "backend": "fp16",
+      "entrypoint": "native",
+      "rows": 12,
+      "score_failures": 0,
+      "map_failures": 0
+    },
+    {
+      "backend": "fp32",
+      "entrypoint": "OpenVINOInferencer",
+      "rows": 12,
+      "score_failures": 0,
+      "map_failures": 0
+    },
+    {
+      "backend": "fp32",
+      "entrypoint": "native",
+      "rows": 12,
+      "score_failures": 0,
+      "map_failures": 0
+    },
+    {
+      "backend": "int8",
+      "entrypoint": "OpenVINOInferencer",
+      "rows": 12,
+      "score_failures": 0,
+      "map_failures": 3
+    },
+    {
+      "backend": "int8",
+      "entrypoint": "native",
+      "rows": 12,
+      "score_failures": 0,
+      "map_failures": 3
+    },
+    {
+      "backend": "int8_acq",
+      "entrypoint": "OpenVINOInferencer",
+      "rows": 2,
+      "score_failures": 2,
+      "map_failures": 2
+    },
+    {
+      "backend": "int8_acq",
+      "entrypoint": "native",
+      "rows": 2,
+      "score_failures": 2,
+      "map_failures": 2
+    },
+    {
+      "backend": "int8_ptq",
+      "entrypoint": "OpenVINOInferencer",
+      "rows": 2,
+      "score_failures": 2,
+      "map_failures": 2
+    },
+    {
+      "backend": "int8_ptq",
+      "entrypoint": "native",
+      "rows": 2,
+      "score_failures": 2,
+      "map_failures": 2
+    },
+    {
+      "backend": "onnx",
+      "entrypoint": "native",
+      "rows": 12,
+      "score_failures": 0,
+      "map_failures": 0
+    },
+    {
+      "backend": "torch_file",
+      "entrypoint": "native",
+      "rows": 6,
+      "score_failures": 0,
+      "map_failures": 0
+    },
+    {
+      "backend": "torch_inferencer",
+      "entrypoint": "native",
+      "rows": 12,
+      "score_failures": 0,
+      "map_failures": 0
+    }
+  ],
+  "limitations": [
+    "INT8 numerical failures remain failures; tolerances were not relaxed.",
+    "NNCF output ranking is undefined on zero-valued reference outputs, including boolean predictions.",
+    "This does not rerun or certify independent training or the full paper evaluation.",
+    "ONNX was reused across OpenVINO conversions; latency was not measured."
+  ]
+}

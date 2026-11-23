@@ -44,8 +44,9 @@ Set `k_shot=4` to use the same head with four normal references from the datamod
 `few_shot_source` (a directory of normal images). The author protocol samples with replacement using `seed`.
 Use one reference bank per category. Neither mode updates weights.
 
-`Engine.fit` calibrates thresholds. Save a full checkpoint and pass it as `ckpt_path` to `Engine.predict` to
-predict without a datamodule. Full checkpoints retain the reference bank.
+`Engine.fit` calibrates label/mask thresholds without normalizing scores. Save a full checkpoint and pass it as
+`ckpt_path` to `Engine.predict` to predict without a datamodule. Full checkpoints retain the reference bank and
+reject changed reference settings. Load the head instead to change shots, seed, or reference source.
 
 To train your own head, use a _different_, labeled auxiliary dataset:
 
@@ -97,6 +98,7 @@ recover much of the four-shot MVTec gap without retraining. Legacy FP32 GPU infe
 
 Use `Engine.export` or the model's `to_torch`, `to_onnx`, and `to_openvino` methods at the encoder's fixed resolution.
 Batch size is dynamic. Initialize the few-shot reference bank before export.
+ONNX/OpenVINO inputs must already have the fixed spatial size; `OpenVINOInferencer` does not resize image files.
 
 ```bash
 uv run --extra openvino --with onnxruntime python -m tools.uniadet.validate \
@@ -109,6 +111,7 @@ uv run --extra openvino --with onnxruntime python -m tools.uniadet.validate \
 The [author deployment checks](/results/UniADet/reproduction/quantization/deployment_summary.csv) compare raw scores
 and maps at batches 1 and 3. TorchInferencer, Engine, ONNX, and OpenVINO FP32/FP16 passed for all three encoders
 at zero and four shots. FP16 refers to compressed weights, not FP16 CPU execution.
+The [review refresh](/results/UniADet/reproduction/review/verification.json) also checks `OpenVINOInferencer`.
 Use `TRUST_REMOTE_CODE=1` only for full-model Torch exports you created or otherwise trust.
 
 Use FP32 or FP16 when scores and maps must agree with Torch. Weight-only INT8, INT8_PTQ, and INT8_ACQ
@@ -119,6 +122,10 @@ DINOv2-R zero-shot PTQ still had `0.168` maximum map error with
 The author zero-shot [scoring sigmoid](/results/UniADet/reproduction/quantization/author_sigmoid_probe.json) can
 amplify drift. OpenVINO's CPU [dynamic activation quantization](/results/UniADet/reproduction/quantization/weight_only_runtime_probe.json)
 also contributes with weight-only INT8.
+
+NNCF's output-based ACQ ranking can become undefined on all-zero outputs, including normal labels and masks.
+This is also present in [NNCF 3.4.0](https://github.com/openvinotoolkit/nncf/blob/v3.4.0/src/nncf/quantization/algorithms/accuracy_control/rank_functions.py).
+Aggregate AUROC remains measurable, but rollback ordering is not reliable for those samples.
 
 ## Licenses
 
