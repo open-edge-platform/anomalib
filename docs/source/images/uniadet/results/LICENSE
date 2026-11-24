@@ -1,0 +1,17 @@
+UniADet sample-result panels
+
+The input photographs and ground-truth masks in 0.png, 1.png and 2.png are derived
+from the Visual Anomaly (VisA) dataset by Yang Zou, Jongheon Jeong, Latha
+Pemula, Dongqing Zhang, and Onkar Dabeer (2022).
+
+Source: https://github.com/amazon-science/spot-diff
+Dataset license: https://github.com/amazon-science/spot-diff/blob/main/LICENSE-DATASET
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+
+Changes: resized photographs and masks, added independently computed UniADet
+anomaly-map overlays and labels. These composite panels are
+distributed under CC BY 4.0, not anomalib's source-code Apache-2.0 license.
+
+Corrected-recipe provenance:
+https://github.com/rajeshgangireddy/anomalib/blob/7c0285d89a993f01695b3eb2373ebab500d5df38/results/UniADet/sample_images.json

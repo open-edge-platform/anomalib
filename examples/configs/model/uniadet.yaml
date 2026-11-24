@@ -1,0 +1,15 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+model:
+  class_path: anomalib.models.UniADet
+  init_args:
+    backbone: dinov2
+    weights: null
+    k_shot: 0
+    seed: 10
+    layers: [12, 15, 18, 21, 24]
+    pretrained: true
+    temperature: 0.07
+    few_shot_weight: 0.5
+    image_score_weight: 0.5

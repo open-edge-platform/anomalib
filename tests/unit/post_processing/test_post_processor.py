@@ -6,12 +6,38 @@
 import pytest
 import torch
 
-from anomalib.data import ImageBatch
+from anomalib.data import ImageBatch, InferenceBatch
 from anomalib.post_processing import PostProcessor
 
 
 class TestPostProcessor:
     """Test the PreProcessor class."""
+
+    @staticmethod
+    @pytest.mark.parametrize("entrypoint", ["forward", "callback"])
+    def test_calibrated_thresholds_without_normalization(entrypoint: str) -> None:
+        """Raw scores retain their scale while both inference paths use calibrated thresholds."""
+        processor = PostProcessor(enable_normalization=False)
+        calibration = ImageBatch(
+            image=torch.zeros(4, 3, 2, 2),
+            pred_score=torch.tensor([0.1, 0.6, 0.8, 0.95]),
+            gt_label=torch.tensor([0, 0, 1, 1]),
+            anomaly_map=torch.tensor([0.1, 0.3, 0.4, 0.8])[:, None, None].expand(-1, 2, 2),
+            gt_mask=torch.tensor([0, 0, 1, 1])[:, None, None].expand(-1, 2, 2),
+        )
+        processor.on_validation_batch_end(None, None, calibration)
+        processor.on_validation_epoch_end(None, None)
+        scores = torch.tensor([0.6, 0.9])
+        maps = torch.tensor([0.45, 0.35])[:, None, None].expand(-1, 2, 2)
+        if entrypoint == "forward":
+            output = processor(InferenceBatch(pred_score=scores, anomaly_map=maps))
+        else:
+            output = ImageBatch(image=torch.zeros(2, 3, 2, 2), pred_score=scores, anomaly_map=maps)
+            processor.on_predict_batch_end(None, None, output)
+        torch.testing.assert_close(output.pred_score, scores)
+        torch.testing.assert_close(output.anomaly_map, maps)
+        torch.testing.assert_close(output.pred_label, torch.tensor([False, True]))
+        torch.testing.assert_close(output.pred_mask, torch.tensor([True, False])[:, None, None].expand(-1, 2, 2))
 
     @staticmethod
     @pytest.mark.parametrize(

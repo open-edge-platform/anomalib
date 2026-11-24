@@ -51,6 +51,7 @@ Available Models:
     - :class:`SuperADD`: Supervised Anomaly Detection with Additive Feature Fusion
     - :class:`SuperSimpleNet`: SuperSimpleNet
     - :class:`Uflow`: Unsupervised Flow
+    - :class:`UniADet`: Language-Free Zero-/Few-Shot Detection
     - :class:`UniNet`: Student-Teacher Contrastive Learning Model
     - :class:`VlmAd`: Vision Language Model Anomaly Detection
     - :class:`WinClip`: Zero-/Few-Shot CLIP-based Detection
@@ -86,6 +87,7 @@ from .stfpm import Stfpm
 from .super_add import SuperADD
 from .supersimplenet import Supersimplenet
 from .uflow import Uflow
+from .uniadet import UniADet
 from .uninet import UniNet
 from .vlm_ad import VlmAd
 from .winclip import WinClip
@@ -121,6 +123,7 @@ __all__ = [
     "Supersimplenet",
     "SuperADD",
     "Uflow",
+    "UniADet",
     "UniNet",
     "VlmAd",
     "WinClip",

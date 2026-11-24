@@ -66,9 +66,14 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from pathlib import Path
 
+    import numpy as np
+    from numpy.typing import NDArray
     from torchmetrics import Metric
 
     from anomalib import TaskType
+
+    if module_available("nncf"):
+        from nncf import IgnoredScope, ModelType
 
     if module_available("openvino"):
         from openvino import CompiledModel
@@ -253,8 +258,7 @@ class ExportMixin:
             metric (Metric | None): Metric for accuracy-aware quantization.
                 Used for ``INT8_ACQ``. If not provided, a default F1Score at image level
                 will be used. Defaults to ``None``.
-            task (TaskType | None): Task type (classification/segmentation).
-                Defaults to ``None``.
+            task (TaskType | None): Task type, retained for compatibility.
             max_drop (float): Maximum acceptable accuracy drop during quantization.
                 Only used for ``INT8_ACQ`` compression. Value should be between 0 and 1
                 (e.g., 0.01 means 1% accuracy drop is acceptable).
@@ -331,8 +335,7 @@ class ExportMixin:
                 Required for ``INT8_PTQ`` and ``INT8_ACQ``. Defaults to ``None``.
             metric (Metric | None): Metric for accuracy-aware quantization.
                 Required for ``INT8_ACQ``. Defaults to ``None``.
-            task (TaskType | None): Task type (classification/segmentation).
-                Defaults to ``None``.
+            task (TaskType | None): Task type, retained for compatibility.
             max_drop (float): Maximum acceptable accuracy drop during quantization.
                 Only used for ``INT8_ACQ``. Defaults to ``0.01``.
 
@@ -365,6 +368,8 @@ class ExportMixin:
     def _post_training_quantization_ov(
         model: CompiledModel,
         datamodule: AnomalibDataModule | None = None,
+        ignored_scope: IgnoredScope | None = None,
+        model_type: ModelType | None = None,
     ) -> CompiledModel:
         """Apply post-training quantization to OpenVINO model.
 
@@ -372,6 +377,8 @@ class ExportMixin:
             model (CompiledModel): OpenVINO model to quantize.
             datamodule (AnomalibDataModule | None): DataModule for calibration.
                 Must contain at least 300 images. Defaults to ``None``.
+            ignored_scope (IgnoredScope | None): Operations to keep in floating point.
+            model_type (ModelType | None): Architecture-specific NNCF quantization recipe.
 
         Returns:
             CompiledModel: Quantized OpenVINO model.
@@ -398,7 +405,7 @@ class ExportMixin:
             )
 
         calibration_dataset = nncf.Dataset(dataloader, lambda x: x["image"])
-        return nncf.quantize(model, calibration_dataset)
+        return nncf.quantize(model, calibration_dataset, ignored_scope=ignored_scope, model_type=model_type)
 
     @staticmethod
     def _accuracy_control_quantization_ov(
@@ -407,6 +414,8 @@ class ExportMixin:
         metric: Metric | None = None,
         task: TaskType | None = None,
         max_drop: float = 0.01,
+        ignored_scope: IgnoredScope | None = None,
+        model_type: ModelType | None = None,
     ) -> CompiledModel:
         """Apply accuracy-aware quantization to OpenVINO model.
 
@@ -424,6 +433,8 @@ class ExportMixin:
             max_drop (float): Maximum acceptable accuracy drop during quantization.
                 Value should be between 0 and 1 (e.g., 0.01 means 1% drop is acceptable).
                 Defaults to ``0.01``.
+            ignored_scope (IgnoredScope | None): Operations to keep in floating point.
+            model_type (ModelType | None): Architecture-specific NNCF quantization recipe.
 
         Returns:
             CompiledModel: Quantized OpenVINO model.
@@ -438,7 +449,7 @@ class ExportMixin:
             raise ValueError(msg)
         datamodule.setup("fit")
 
-        task = task or datamodule.task
+        del task
 
         if not 0 <= max_drop <= 1:
             msg = f"max_drop must be between 0 and 1, got {max_drop}"
@@ -471,15 +482,20 @@ class ExportMixin:
             )
 
         calibration_dataset = nncf.Dataset(dataloader, lambda x: x["image"])
-        validation_dataset = nncf.Dataset(datamodule.test_dataloader())
+        validation_dataset = nncf.Dataset(datamodule.test_dataloader(), lambda x: x["image"])
 
-        def val_fn(nncf_model: CompiledModel, validation_data: Iterable) -> float:
+        def val_fn(
+            nncf_model: CompiledModel,
+            validation_data: Iterable[ImageBatch],
+        ) -> tuple[float, list[list[NDArray[np.float32]]]]:
+            metric.reset()
+            ranking_outputs: list[list[NDArray[np.float32]]] = []
             for batch in validation_data:
                 ov_model_output = nncf_model(batch["image"])
                 result_batch = ImageBatch(
                     image=batch["image"],
-                    pred_score=torch.from_numpy(ov_model_output["pred_score"]).squeeze(),
-                    pred_label=torch.from_numpy(ov_model_output["pred_label"]).squeeze(),
+                    pred_score=torch.from_numpy(ov_model_output["pred_score"]).reshape(-1),
+                    pred_label=torch.from_numpy(ov_model_output["pred_label"]).reshape(-1),
                     gt_label=batch["gt_label"],
                     anomaly_map=torch.from_numpy(ov_model_output["anomaly_map"])
                     if "anomaly_map" in ov_model_output
@@ -487,11 +503,14 @@ class ExportMixin:
                     pred_mask=torch.from_numpy(ov_model_output["pred_mask"])
                     if "pred_mask" in ov_model_output
                     else None,
-                    gt_mask=batch["gt_mask"][:, None, :, :] if "gt_mask" in batch else None,
+                    gt_mask=batch.gt_mask,
                 )
                 metric.update(result_batch)
+                # NNCF compares against all candidate outputs in graph order, including boolean outputs.
+                ranking_outputs.append([output.astype("float32", copy=True) for output in ov_model_output.values()])
 
-            return metric.compute()
+            # Aggregate metrics like AUROC cannot rank single images.
+            return float(metric.compute()), ranking_outputs
 
         return nncf.quantize_with_accuracy_control(
             model,
@@ -499,4 +518,6 @@ class ExportMixin:
             validation_dataset,
             val_fn,
             max_drop=max_drop,
+            ignored_scope=ignored_scope,
+            model_type=model_type,
         )

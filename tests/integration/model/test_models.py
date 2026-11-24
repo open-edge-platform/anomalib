@@ -16,6 +16,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 import timm
+import torch
 from lightning import seed_everything
 from lightning.pytorch.trainer.states import TrainerFn
 from PIL import Image
@@ -25,11 +26,15 @@ from anomalib.data import AnomalibDataModule, MVTec3D, MVTecAD
 from anomalib.deploy import ExportType
 from anomalib.engine import Engine
 from anomalib.models import AnomalibModule, get_model, list_models
+from anomalib.models.image.uniadet.backbones import BACKBONES, BackboneSpec
+from anomalib.models.image.uniadet.head import MSDCSHead
 
 _FIT_CACHE: dict[str, Path] = {}
 # ONNX files from ``test_export[onnx-*]``, reused by the OpenVINO export tests.
 _ONNX_CACHE: dict[str, Path] = {}
 _REAL_TIMM_CREATE_MODEL = timm.create_model
+_UNIADET_TEST_BACKBONE = BackboneSpec("vit_tiny_patch16_224", 64, 16, 192)
+_UNIADET_TEST_LAYERS = (3, 6, 9, 12)
 
 
 def _timm_create_model_offline(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
@@ -46,6 +51,32 @@ def models() -> set[str]:
 def export_types() -> list[ExportType]:
     """Return all available export frameworks."""
     return list(ExportType)
+
+
+@pytest.fixture(autouse=True)
+def _patch_uniadet_backbone(model_name: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    if model_name == "uni_a_det":
+        monkeypatch.setitem(BACKBONES, "dinov2", _UNIADET_TEST_BACKBONE)
+
+
+def _uniadet_test_args(project_path: Path) -> dict[str, Any]:
+    weights = project_path / "uniadet_test_head.pt"
+    if not weights.exists():
+        head = MSDCSHead(_UNIADET_TEST_BACKBONE.feature_dim, len(_UNIADET_TEST_LAYERS))
+        torch.save(
+            {
+                "config": {
+                    "backbone": "dinov2",
+                    "layers": list(_UNIADET_TEST_LAYERS),
+                    "image_size": _UNIADET_TEST_BACKBONE.image_size,
+                    "temperature": head.temperature,
+                    "protocol": "author",
+                },
+                "state_dict": head.state_dict(),
+            },
+            weights,
+        )
+    return {"pretrained": False, "weights": weights, "layers": _UNIADET_TEST_LAYERS, "protocol": "author", "k_shot": 1}
 
 
 @contextlib.contextmanager
@@ -274,6 +305,8 @@ class TestAPI:
             export_kwargs["input_size"] = (448, 448)
         if model_name == "found_a_d":
             export_kwargs["input_size"] = (224, 224)
+        if model_name == "uni_a_det":
+            export_kwargs["input_size"] = (_UNIADET_TEST_BACKBONE.image_size,) * 2
         if model_name in {"cfm", "c_f_m"}:
             export_kwargs["input_size"] = (224, 224)
             if export_type in {ExportType.ONNX, ExportType.OPENVINO}:
@@ -318,7 +351,7 @@ class TestAPI:
         # TODO(ashwinvaidya17): Fix these Edge cases
         # https://github.com/open-edge-platform/anomalib/issues/1478
 
-        extra_args = {}
+        extra_args = _uniadet_test_args(project_path) if model_name == "uni_a_det" else {}
         if model_name == "dfkde":
             extra_args["n_pca_components"] = 2
         if model_name == "m_h_patchcore":

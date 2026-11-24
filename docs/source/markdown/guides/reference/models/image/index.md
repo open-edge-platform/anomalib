@@ -208,6 +208,13 @@ SuperSimpleNet: A Unified Surface Defect Detection Model for all Supervision Reg
 U-Flow: A U-shaped Normalizing Flow for Anomaly Detection with Unsupervised Threshold
 :::
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` UniADet
+:link: ./uniadet
+:link-type: doc
+
+Language-Free Zero-/Few-Shot Visual Anomaly Detection
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` UniNet
 :link: ./uninet
 :link-type: doc
@@ -271,6 +278,7 @@ WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation
 ./super_add
 ./supersimplenet
 ./uflow
+./uniadet
 ./uninet
 ./vlm_ad
 ./winclip

@@ -82,3 +82,10 @@ terms are listed below.
 17. FoundAD model (anomalib.models.image.foundad)
     Copyright (c) 2026 FoundAD authors, https://github.com/ymxlzgy/FoundAD
     SPDX-License-Identifier: MIT
+
+18. VisA photographs and masks in UniADet sample-result panels
+    (docs/source/images/uniadet/results)
+    Attribution: Yang Zou, Jongheon Jeong, Latha Pemula, Dongqing Zhang, and Onkar Dabeer (2022)
+    https://github.com/amazon-science/spot-diff
+    SPDX-License-Identifier: CC-BY-4.0
+    Changes and license links: docs/source/images/uniadet/results/LICENSE

@@ -40,7 +40,7 @@ dependencies = [
     "torchmetrics>=1.8.2",
     "lightning-utilities",
     # Deep learning models and utilities
-    "timm",
+    "timm>=1.0.20",
     "freia>=0.2",
     "einops>=0.3.2",
     # Image processing and computer vision
