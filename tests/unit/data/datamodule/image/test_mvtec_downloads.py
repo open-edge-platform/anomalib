@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Regression tests for temporarily unavailable MVTec downloads."""
+"""Regression tests for MVTec dataset download behavior."""
 
 from pathlib import Path
 
@@ -9,6 +9,8 @@ import pytest
 
 from anomalib.data import MVTec3D, MVTecAD, MVTecAD2, MVTecLOCO
 from anomalib.data.datamodules.base.image import AnomalibDataModule
+from anomalib.data.datamodules.depth import mvtec_3d
+from anomalib.data.datamodules.image import mvtecad, mvtecad2
 
 
 @pytest.fixture(autouse=True)
@@ -21,28 +23,33 @@ def block_network(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("socket.socket.connect", fail_connect)
 
 
-@pytest.mark.parametrize("datamodule_class", [MVTecAD, MVTecAD2, MVTec3D, MVTecLOCO])
-@pytest.mark.parametrize("root_exists", [False, True])
-def test_missing_dataset_requires_manual_download(
+@pytest.mark.parametrize(
+    ("datamodule_class", "module"),
+    [
+        (MVTecAD, mvtecad),
+        (MVTecAD2, mvtecad2),
+        (MVTec3D, mvtec_3d),
+    ],
+)
+def test_missing_dataset_triggers_autodownload(
     datamodule_class: type[AnomalibDataModule],
-    root_exists: bool,
+    module: object,
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Missing categories fail early with actionable guidance and no downloads."""
+    """Missing categories invoke download_and_extract with the module DOWNLOAD_INFO."""
+    calls: list[tuple[Path, object]] = []
+
+    def fake_download(root: Path, info: object) -> None:
+        calls.append((root, info))
+
+    monkeypatch.setattr(module, "download_and_extract", fake_download)
     root = tmp_path / "dataset"
-    if root_exists:
-        (root / "another_category").mkdir(parents=True)
     datamodule = datamodule_class(root=root, category="missing")
 
-    with pytest.raises(FileNotFoundError, match="automatic download") as exc_info:
-        datamodule.prepare_data()
+    datamodule.prepare_data()
 
-    message = str(exc_info.value)
-    assert "https://www.mvtec.com/research-teaching/datasets/" in message
-    assert str(root / "missing") in message
-    assert "https://github.com/open-edge-platform/anomalib/issues/3892" in message
-    assert not (root / "missing").exists()
-    assert root.exists() == root_exists
+    assert calls == [(root, module.DOWNLOAD_INFO)]
 
 
 @pytest.mark.parametrize("datamodule_class", [MVTecAD, MVTecAD2, MVTec3D, MVTecLOCO])
