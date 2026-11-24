@@ -40,6 +40,9 @@ from anomalib.models.image.glass.lightning_model import DTD_DOWNLOAD_INFO as GLA
 MVTEC_DOWNLOAD_UNAVAILABLE = pytest.mark.skip(
     reason="MVTec download URLs return HTTP 404: https://github.com/open-edge-platform/anomalib/issues/3892",
 )
+VAD_DOWNLOAD_UNAVAILABLE = pytest.mark.skip(
+    reason="VAD download URL returns HTTP 404 and upstream Google Drive link is quota-limited",
+)
 
 ALL_DOWNLOAD_INFOS = [
     pytest.param(ADAM3D_INFO, id="adam_3d"),
@@ -49,7 +52,7 @@ ALL_DOWNLOAD_INFOS = [
     pytest.param(KOLEKTOR_INFO, id="kolektor"),
     pytest.param(MVTECAD_INFO, id="mvtecad", marks=MVTEC_DOWNLOAD_UNAVAILABLE),
     pytest.param(MVTECAD2_INFO, id="mvtecad2", marks=MVTEC_DOWNLOAD_UNAVAILABLE),
-    pytest.param(VAD_INFO, id="vad"),
+    pytest.param(VAD_INFO, id="vad", marks=VAD_DOWNLOAD_UNAVAILABLE),
     pytest.param(VISA_INFO, id="visa"),
     pytest.param(AVENUE_DATASET_INFO, id="avenue_dataset"),
     pytest.param(AVENUE_ANNOTATIONS_INFO, id="avenue_annotations"),
