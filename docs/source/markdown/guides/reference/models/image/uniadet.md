@@ -41,10 +41,11 @@ Optional auxiliary head training uses `python -m tools.uniadet.train` and `proto
 
 ## Benchmarks and deployment
 
-Author-head evaluations on MVTec AD and VisA match all [96 published metric means](https://github.com/open-edge-platform/anomalib/blob/main/results/UniADet/reproduction/paper_precision_comparison.csv)
+Author-head evaluations on MVTec AD and VisA match all [96 published metric means][paper-comparison]
 within 0.07 percentage points. DINOv2-R four-shot image AUROC is 98.73% on MVTec AD and 96.92% on VisA.
 Paper AP is trapezoidal precision-recall area, not Anomalib's standard average precision.
-These results reproduce evaluation with pretrained heads, not the authors' training runs.
+These results reproduce evaluation with pretrained heads, not the authors' training runs. New runs write to
+the ignored `results/` directory.
 
 TorchInferencer, Engine, ONNX, and OpenVINO FP32/FP16 were checked at batches 1 and 3 for all three author
 backbones at zero and four shots. Use the fixed encoder resolution and initialize references before few-shot
@@ -88,3 +89,5 @@ Photos and masks: VisA, Zou et al. (2022), [CC BY 4.0](https://creativecommons.o
    :members:
    :show-inheritance:
 ```
+
+[paper-comparison]: https://github.com/rajeshgangireddy/anomalib/blob/7c0285d89a993f01695b3eb2373ebab500d5df38/results/UniADet/reproduction/paper_precision_comparison.csv

@@ -1,8 +1,0 @@
-{
-  "complete": true,
-  "fixture": "Two fixed nonconstant 2x2 probability grids resized to 7x7 with fixed masks; no learned parameters or target tuning.",
-  "local_align_corners_true_loss": 1.9110604524612427,
-  "author_align_corners_false_loss": 1.9977256059646606,
-  "absolute_loss_difference": 0.08666515350341797,
-  "finding": "Declared CE/focal/Dice math agrees, but segmentation training resize alignment does not: local loss uses align_corners=True, while upstream head interpolation defaults to False. This discrepancy requires retraining to measure its accuracy contribution."
-}

@@ -1,8 +1,0 @@
-{
-  "scope": "DINOv2-R author zero-shot, same 3 MVTec bottle validation inputs; probe only, not calibration or policy selection",
-  "maximum_absolute_errors": {
-    "upsampled_patch_probability": 0.025531113147735596,
-    "sigmoid_output": 0.09279787540435791,
-    "final_anomaly_map": 0.053041279315948486
-  }
-}

@@ -71,10 +71,9 @@ of the paper. This reproduces evaluation with the authors' pretrained heads, not
 | DINOv2-R | 93.50 / 98.73                        | 91.27 / 96.92                    |
 | DINOv3   | 93.98 / 98.20                        | 91.94 / 97.03                    |
 
-The [full comparison](/results/UniADet/reproduction/paper_precision_comparison.csv) uses the released loader's
-mixed FP16 CLIP and FP32 DINO precision. [Uniform FP32 results](/results/UniADet/reproduction/comparison.csv)
-are also available. Paper AP is trapezoidal area under the precision-recall curve, not Anomalib's standard
-average precision.
+The [full comparison][paper-comparison] uses the released loader's mixed FP16 CLIP and FP32 DINO precision.
+The [benchmark archive][benchmark-archive] also includes uniform FP32 results and the evaluation protocol.
+Paper AP is trapezoidal area under the precision-recall curve, not Anomalib's standard average precision.
 
 ```bash
 uv run python -m tools.uniadet.reproduce \
@@ -84,15 +83,12 @@ uv run python -m tools.uniadet.reproduce \
 ```
 
 For VisA, use the MVTec-trained head and the original `datasets/visa` directory, not `visa_pytorch`.
-The [reproduction protocol](/results/UniADet/reproduction/protocol.json) records split order, preprocessing,
-reference sampling and environment differences. Use the reproduction tool rather than generic Engine
-evaluation to replay the released protocol.
+Use the reproduction tool rather than generic Engine evaluation to replay the released protocol.
+Generated output stays in the ignored `results/` directory.
 
-The [independent training runs](/results/UniADet/training_summary.csv) took 32–46 minutes per head on an RTX 3090.
-They [did not match the paper overall](/results/UniADet/comparison.csv); [scoring ablations](/results/UniADet/diagnosis/scoring_comparison.csv)
-recover much of the four-shot MVTec gap without retraining. Legacy FP32 GPU inference took 62–85 ms/image
-([timings](/results/UniADet/gpu_inference.json)). On a four-thread i9-10920X, weight-only INT8 OpenVINO took
-0.97–1.38 s/image ([CPU timings](/results/UniADet/cpu_inference.json)). These exclude image decoding.
+Independent training took 32–46 minutes per head on an RTX 3090 and did not match the paper overall.
+Legacy FP32 GPU inference took 62–85 ms/image. On a four-thread i9-10920X, weight-only INT8 OpenVINO took
+0.97–1.38 s/image. Timings exclude image decoding; see the [benchmark archive][benchmark-archive] for details.
 
 ## Deployment
 
@@ -108,20 +104,17 @@ uv run --extra openvino --with onnxruntime python -m tools.uniadet.validate \
   --output results/UniADet/deployment/dinov2_bottle_4
 ```
 
-The [author deployment checks](/results/UniADet/reproduction/quantization/deployment_summary.csv) compare raw scores
-and maps at batches 1 and 3. TorchInferencer, Engine, ONNX, and OpenVINO FP32/FP16 passed for all three encoders
-at zero and four shots. FP16 refers to compressed weights, not FP16 CPU execution.
-The [review refresh](/results/UniADet/reproduction/review/verification.json) also checks `OpenVINOInferencer`.
+The [author deployment checks][deployment-checks] compare raw scores and maps at batches 1 and 3.
+TorchInferencer, Engine, ONNX, and OpenVINO FP32/FP16 passed for all three encoders at zero and four shots.
+FP16 refers to compressed weights, not FP16 CPU execution. The [review refresh][review-refresh] also checks
+`OpenVINOInferencer`.
 Use `TRUST_REMOTE_CODE=1` only for full-model Torch exports you created or otherwise trust.
 
 Use FP32 or FP16 when scores and maps must agree with Torch. Weight-only INT8, INT8_PTQ, and INT8_ACQ
 can exceed the `0.05` maximum map error limit. PTQ/ACQ use 32 calibration and 32 disjoint VisA
 validation images, with bounded rollback for CLIP zero-shot ACQ. ACQ targets image AUROC, not map agreement.
-DINOv2-R zero-shot PTQ still had `0.168` maximum map error with
-[300 calibration images](/results/UniADet/reproduction/quantization/calibration_300_probe.json).
-The author zero-shot [scoring sigmoid](/results/UniADet/reproduction/quantization/author_sigmoid_probe.json) can
-amplify drift. OpenVINO's CPU [dynamic activation quantization](/results/UniADet/reproduction/quantization/weight_only_runtime_probe.json)
-also contributes with weight-only INT8.
+DINOv2-R zero-shot PTQ still had `0.168` maximum map error with 300 calibration images.
+The [quantization reports][quantization-reports] include the calibration, scoring, and runtime probes.
 
 NNCF's output-based ACQ ranking can become undefined on all-zero outputs, including normal labels and masks.
 This is also present in [NNCF 3.4.0](https://github.com/openvinotoolkit/nncf/blob/v3.4.0/src/nncf/quantization/algorithms/accuracy_control/rank_functions.py).
@@ -138,7 +131,7 @@ DINOv2 (Apache-2.0), and DINOv3 (Meta's DINOv3 License).
 ## Sample results
 
 VisA examples from the independently trained DINOv2-R head at four shots. Panels show input, ground truth,
-and anomaly overlay. See [sample provenance](/results/UniADet/sample_images.json).
+and anomaly overlay. See [sample provenance][sample-provenance].
 
 ![VisA chewing-gum anomaly](/docs/source/images/uniadet/results/0.png)
 ![VisA PCB missing-pin anomaly](/docs/source/images/uniadet/results/1.png)
@@ -146,3 +139,10 @@ and anomaly overlay. See [sample provenance](/results/UniADet/sample_images.json
 
 Photos and masks: VisA, Zou et al. (2022), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 See the [asset notice](/docs/source/images/uniadet/results/LICENSE).
+
+[benchmark-archive]: https://github.com/rajeshgangireddy/anomalib/tree/7c0285d89a993f01695b3eb2373ebab500d5df38/results/UniADet
+[paper-comparison]: https://github.com/rajeshgangireddy/anomalib/blob/7c0285d89a993f01695b3eb2373ebab500d5df38/results/UniADet/reproduction/paper_precision_comparison.csv
+[deployment-checks]: https://github.com/rajeshgangireddy/anomalib/blob/7c0285d89a993f01695b3eb2373ebab500d5df38/results/UniADet/reproduction/quantization/deployment_summary.csv
+[review-refresh]: https://github.com/rajeshgangireddy/anomalib/blob/7c0285d89a993f01695b3eb2373ebab500d5df38/results/UniADet/reproduction/review/verification.json
+[quantization-reports]: https://github.com/rajeshgangireddy/anomalib/tree/7c0285d89a993f01695b3eb2373ebab500d5df38/results/UniADet/reproduction/quantization
+[sample-provenance]: https://github.com/rajeshgangireddy/anomalib/blob/7c0285d89a993f01695b3eb2373ebab500d5df38/results/UniADet/sample_images.json

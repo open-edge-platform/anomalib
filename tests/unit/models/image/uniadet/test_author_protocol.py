@@ -4,6 +4,7 @@
 """Offline regressions for author-head conversion and source-aligned evaluation."""
 
 import csv
+import math
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -12,7 +13,6 @@ import pytest
 import torch
 from PIL import Image
 from tools.uniadet.author import convert_head
-from tools.uniadet.diagnose import scoring_variants
 from tools.uniadet.reproduce import (
     EvaluationDataset,
     Sample,
@@ -28,19 +28,27 @@ from anomalib.models.image.uniadet.torch_model import UniADetModel
 
 
 @pytest.mark.usefixtures("tiny_backbone")
-@pytest.mark.parametrize("shots", [0, 4])
-def test_author_scoring_matches_prespecified_probe(shots: int) -> None:
-    """Production author scoring must agree with the independently tested diagnostic combination."""
-    torch.manual_seed(10)
-    model = UniADetModel(pretrained=False, image_size=28, protocol="author")
+@pytest.mark.parametrize(("shots", "peak_weight"), [(0, 0.1), (4, 0.5)])
+def test_author_scoring_recalibration(shots: int, peak_weight: float) -> None:
+    """Constant maps isolate the author's score recalibration and fusion."""
+    model = UniADetModel(pretrained=False, layers=(1,), image_size=28, temperature=1, protocol="author")
     model.head_trained.fill_(value=True)
+    with torch.no_grad():
+        model.head.image_prototypes.copy_(torch.tensor([[[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]]))
+        model.head.pixel_prototypes.copy_(model.head.image_prototypes)
+    patch_count = model.backbone.grid_size**2
+    image = torch.tensor([[1.0, 0.0, 0.0]])
+    features = HierarchicalFeatures([image], [image.unsqueeze(1).expand(1, patch_count, 3)])
     if shots:
-        model.set_reference_images(torch.rand(shots, 3, 28, 28))
-    features = model.backbone(torch.rand(3, 3, 28, 28))
-    expected = scoring_variants(model, features)["published_executable"]
-    actual = model.predict_from_features(features)
-    torch.testing.assert_close(actual.pred_score, expected.pred_score)
-    torch.testing.assert_close(actual.anomaly_map, expected.anomaly_map)
+        model.memory_bank = torch.tensor([[[0.0, 1.0, 0.0]]]).repeat(1, shots * patch_count, 1)
+
+    probability = 1 / (1 + math.e)
+    expected_map = 1 / (1 + math.exp(-15 * (probability - 0.4)))
+    if shots:
+        expected_map = 0.2 * expected_map + 0.8 / (1 + math.exp(-15 * (1 - 0.3)))
+    prediction = model.predict_from_features(features)
+    torch.testing.assert_close(prediction.anomaly_map, torch.full((1, 1, 28, 28), expected_map))
+    assert prediction.pred_score.item() == pytest.approx((1 - peak_weight) * probability + peak_weight * expected_map)
 
 
 @pytest.mark.usefixtures("tiny_backbone")

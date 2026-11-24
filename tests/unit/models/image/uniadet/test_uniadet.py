@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 import torch
+from torch import nn
 
 from anomalib import LearningType
 from anomalib.models import UniADet, get_model
@@ -111,6 +112,30 @@ def test_reference_distance_and_replacement() -> None:
     assert model.memory_bank.shape[1] == 0
     with pytest.raises(ValueError, match="At least one"):
         model.set_reference_images(images[:0])
+
+
+@pytest.mark.usefixtures("tiny_backbone")
+def test_legacy_fusion_has_hand_computed_nearest_distance() -> None:
+    """Orthogonal unit vectors isolate nearest-neighbor reduction and both fusion weights."""
+    model = UniADetModel(pretrained=False, layers=(1, 2), image_size=28, temperature=1)
+    model.head_trained.fill_(value=True)
+    model.backbone.grid_size = 2
+    model.blur = nn.Identity()
+    normal_and_anomaly = torch.tensor([[[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]] * 2)
+    with torch.no_grad():
+        model.head.image_prototypes.copy_(normal_and_anomaly)
+        model.head.pixel_prototypes.copy_(normal_and_anomaly)
+    image = torch.tensor([[1.0, 0.0, 0.0]])
+    patches = torch.tensor([[[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [-1.0, 0.0, 0.0], [0.0, -1.0, 0.0]]])
+    features = HierarchicalFeatures([image, image], [patches, patches])
+    model.memory_bank = normal_and_anomaly
+    distances = model._reference_distances(features)  # noqa: SLF001
+    torch.testing.assert_close(distances, torch.tensor([[[[0.0, 0.0], [1.0, 1.0]]]]))
+    prediction = model.predict_from_features(features)
+    probability = 1 / (1 + math.exp(-1))
+    expected_corners = torch.tensor([[[[1 - probability, probability], [1 + probability, 2 - probability]]]]) / 2
+    torch.testing.assert_close(prediction.anomaly_map[:, :, ::27, ::27], expected_corners)
+    assert prediction.pred_score.item() == pytest.approx((1 - probability) / 2 + (1 + probability) / 4)
 
 
 @pytest.mark.usefixtures("tiny_backbone")
