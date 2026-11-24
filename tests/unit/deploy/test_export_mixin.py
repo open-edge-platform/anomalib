@@ -12,6 +12,7 @@ import torch
 from lightning.pytorch import LightningModule
 from timm.models.vision_transformer import Attention
 
+from anomalib.models import Dfm, Fre
 from anomalib.models.components.base.export_mixin import ExportMixin
 
 if TYPE_CHECKING:
@@ -294,3 +295,48 @@ def test_to_onnx_attention_keeps_dynamic_batch(tmp_path: Path, device: str) -> N
             image = torch.rand(batch_size, 3, 13, 25, device=device)
             actual = torch.from_numpy(compiled(image.cpu().numpy())[0])
             torch.testing.assert_close(actual, model(image).pred_score.cpu(), rtol=1e-4, atol=1e-5)
+
+
+@pytest.mark.parametrize("model_type", [Dfm, Fre])
+def test_feature_reconstruction_exports_keep_dynamic_batch(tmp_path: Path, model_type: type[Dfm | Fre]) -> None:
+    """Run the exported feature reconstruction on single images and mixed batches."""
+    pytest.importorskip("onnxscript")
+    onnx = pytest.importorskip("onnx")
+    ov = pytest.importorskip("openvino")
+    kwargs = {
+        "backbone": "resnet18",
+        "layer": "layer1",
+        "pre_trained": False,
+        "pooling_kernel_size": 4,
+        "pre_processor": False,
+        "post_processor": False,
+    }
+    with torch.random.fork_rng(devices=[]):
+        torch.manual_seed(42)
+        if model_type is Dfm:
+            model = Dfm(**kwargs)
+            model.model(torch.rand(8, 3, 32, 32))
+            model.fit()
+        else:
+            model = Fre(**kwargs, input_dim=256, latent_dim=4)
+        images = torch.rand(3, 3, 32, 32)
+
+    path = model.to_onnx(tmp_path, input_size=(32, 32))
+    assert onnx.load(path).graph.input[0].type.tensor_type.shape.dim[0].dim_param
+    compiled = ov.Core().compile_model(
+        str(path),
+        "CPU",
+        {"INFERENCE_PRECISION_HINT": "f32", "INFERENCE_NUM_THREADS": 1},
+    )
+    with torch.inference_mode():
+        for batch_size in (1, 2, 3):
+            batch = images[:batch_size]
+            actual = compiled(batch.numpy())
+            expected = model(batch)
+            for name in ("pred_score", "anomaly_map"):
+                torch.testing.assert_close(
+                    torch.from_numpy(actual[name]),
+                    getattr(expected, name),
+                    rtol=1e-4,
+                    atol=1e-5,
+                )
