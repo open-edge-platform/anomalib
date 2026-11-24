@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- 🔧 **data**: Switch VAD dataset to manual download pointing to the official Google Drive link by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3949
+
 ### Deprecated
 
 ### Fixed
