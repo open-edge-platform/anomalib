@@ -5,8 +5,8 @@
 
 Description:
     This script contains PyTorch Dataset, Dataloader and PyTorch Lightning
-    DataModule for the MVTec LOCO AD dataset. Download and extract the dataset manually
-    before use.
+    DataModule for the MVTec LOCO AD dataset. If the dataset is not on the file system,
+    the script downloads and extracts the dataset and create PyTorch data objects.
 
 License:
     MVTec LOCO AD dataset is released under the Creative Commons

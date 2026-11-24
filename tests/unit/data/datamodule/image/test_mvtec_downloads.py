@@ -10,7 +10,8 @@ import pytest
 from anomalib.data import MVTec3D, MVTecAD, MVTecAD2, MVTecLOCO
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datamodules.depth import mvtec_3d
-from anomalib.data.datamodules.image import mvtecad, mvtecad2
+from anomalib.data.datamodules.image import mvtec_loco, mvtecad, mvtecad2
+from anomalib.data.datasets.image import mvtec_loco as mvtec_loco_dataset
 
 
 @pytest.fixture(autouse=True)
@@ -24,16 +25,18 @@ def block_network(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.mark.parametrize(
-    ("datamodule_class", "module"),
+    ("datamodule_class", "module", "expected_info"),
     [
-        (MVTecAD, mvtecad),
-        (MVTecAD2, mvtecad2),
-        (MVTec3D, mvtec_3d),
+        (MVTecAD, mvtecad, mvtecad.DOWNLOAD_INFO),
+        (MVTecAD2, mvtecad2, mvtecad2.DOWNLOAD_INFO),
+        (MVTec3D, mvtec_3d, mvtec_3d.DOWNLOAD_INFO),
+        (MVTecLOCO, mvtec_loco, mvtec_loco_dataset.DOWNLOAD_INFO),
     ],
 )
 def test_missing_dataset_triggers_autodownload(
     datamodule_class: type[AnomalibDataModule],
     module: object,
+    expected_info: object,
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -49,7 +52,7 @@ def test_missing_dataset_triggers_autodownload(
 
     datamodule.prepare_data()
 
-    assert calls == [(root, module.DOWNLOAD_INFO)]
+    assert calls == [(root, expected_info)]
 
 
 @pytest.mark.parametrize("datamodule_class", [MVTecAD, MVTecAD2, MVTec3D, MVTecLOCO])

@@ -21,9 +21,8 @@ Example:
         ... )
 
 Notes:
-    Download the dataset from https://www.mvtec.com/research-teaching/datasets/mvtec-loco-ad
-    and extract it under ``root``. Automatic downloads are not implemented for this
-    datamodule. The expected directory structure is::
+    The dataset will be automatically downloaded and converted to the required
+    format when first used. The directory structure after preparation will be::
 
         datasets/
         └── MVTec_LOCO/
@@ -50,8 +49,8 @@ from pathlib import Path
 from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datamodules.base.image import AnomalibDataModule
-from anomalib.data.datasets.image.mvtec_loco import MVTecLOCODataset
-from anomalib.data.utils import Split, TestSplitMode, ValSplitMode
+from anomalib.data.datasets.image.mvtec_loco import DOWNLOAD_INFO, MVTecLOCODataset
+from anomalib.data.utils import Split, TestSplitMode, ValSplitMode, download_and_extract
 from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
@@ -157,6 +156,13 @@ class MVTecLOCO(AnomalibDataModule):
         root = resolve_dataset_root(root, "MVTec_LOCO")
         self.root = Path(root)
         self.category = category
+
+    def prepare_data(self) -> None:
+        """Download the dataset if not available."""
+        if (self.root / self.category).is_dir():
+            logger.info("Found the dataset.")
+        else:
+            download_and_extract(self.root, DOWNLOAD_INFO)
 
     def _setup(self, _stage: str | None = None) -> None:
         """Set up the datasets and perform dynamic subset splitting.
