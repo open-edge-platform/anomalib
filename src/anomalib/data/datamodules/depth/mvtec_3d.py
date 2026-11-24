@@ -47,7 +47,7 @@ DOWNLOAD_INFO = DownloadInfo(
     name="mvtec_3d",
     url="https://www.mydrive.ch/shares/163793/e458caf2858886bbd6fa2b7a86c89b9b/download/428824485-1643299897"
     "/mvtec_3d_anomaly_detection.tar.xz",
-    hashsum="d8bb2800fbf3ac88e798da6ae10dc819",
+    hashsum="5f6a09dfa2c4af94008a43b79d08bf5534e5946497cd816b14c8e783c92d713c",
 )
 
 

@@ -21,8 +21,9 @@ Example:
         ... )
 
 Notes:
-    The dataset will be automatically downloaded and converted to the required
-    format when first used. The directory structure after preparation will be::
+    Download the dataset from https://www.mvtec.com/research-teaching/datasets/mvtec-loco-ad
+    and extract it under ``root``. Automatic downloads are not implemented for this
+    datamodule. The expected directory structure is::
 
         datasets/
         └── MVTec_LOCO/
