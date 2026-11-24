@@ -84,7 +84,9 @@ class BufferListMixin(nn.Module):
         for i, value in enumerate(values):
             self.register_buffer(f"_{name}_{i}", value, persistent=persistent, **kwargs)
 
-        setattr(BufferListMixin, name, BufferListDescriptor(name, len(values)))
+        # the descriptor is shared by all modules, so the length is kept on the instance
+        setattr(self, f"_{name}_length", len(values))
+        setattr(BufferListMixin, name, BufferListDescriptor(name))
 
 
 class BufferListDescriptor:
@@ -96,13 +98,10 @@ class BufferListDescriptor:
     Args:
         name (str):
             Name of the buffer list.
-        length (int):
-            Length of the buffer list.
     """
 
-    def __init__(self, name: str, length: int) -> None:
+    def __init__(self, name: str) -> None:
         self.name = name
-        self.length = length
 
     def __get__(
         self,
@@ -125,7 +124,7 @@ class BufferListDescriptor:
                 List of tensor buffers.
         """
         del object_type
-        return [getattr(instance, f"_{self.name}_{i}") for i in range(self.length)]
+        return [getattr(instance, f"_{self.name}_{i}") for i in range(getattr(instance, f"_{self.name}_length"))]
 
     def __set__(self, instance: object, values: list[torch.Tensor]) -> None:
         """Set the list of tensors.
