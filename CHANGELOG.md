@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- 🐞 **utils**: Keep fully anomalous masks as one region in CPU and GPU connected-component labeling by @Partha-Shankar in https://github.com/open-edge-platform/anomalib/pull/3952
 - 🐞 **data**: Restore automatic downloads for MVTec AD, AD 2, 3D-AD, and LOCO AD by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3948
 - 🐞 **model**: Preserve ViT positional interpolation when loading Torch exports in a new process without changing unrelated timm models by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3940
 - 🐞 **model**: Fix device-specific fused-attention layout errors during ONNX export by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3936
