@@ -354,18 +354,13 @@ jobs:
           echo "ref=${IMAGE%:*}@${DIGEST}" >> "$GITHUB_OUTPUT"
           echo "revision=${REVISION}" >> "$GITHUB_OUTPUT"
 
-      - name: Checkout Dockerfile at image revision
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-          ref: ${{ steps.image.outputs.revision }}
-          sparse-checkout: application/docker/Dockerfile
-          sparse-checkout-cone-mode: false
-
-      - name: Resolve base image from Dockerfile
+      - name: Resolve base image from Dockerfile at image revision
         id: base
+        env:
+          REVISION: ${{ steps.image.outputs.revision }}
         run: |
-          BASE="$(grep -oP '^FROM\s+\K\S+(?=\s+AS\s+anomalib-studio-base\b)' application/docker/Dockerfile)"
+          DOCKERFILE="$(curl -sfL --retry 3 "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${REVISION}/application/docker/Dockerfile")"
+          BASE="$(grep -oP '^FROM\s+\K\S+(?=\s+AS\s+anomalib-studio-base\b)' <<< "$DOCKERFILE")"
           if [[ -z "$BASE" ]]; then
             echo "::error::Could not find anomalib-studio-base FROM line in application/docker/Dockerfile"
             exit 1
