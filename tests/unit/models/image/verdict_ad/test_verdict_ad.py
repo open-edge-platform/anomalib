@@ -17,8 +17,9 @@ from torch.utils.data import DataLoader
 
 from anomalib import LearningType
 from anomalib.data import ImageBatch, InferenceBatch
+from anomalib.engine import Engine
 from anomalib.models import VerdictAD, get_model
-from anomalib.models.image.verdict_ad.decider import BOXES, ClefFlash, decision_records
+from anomalib.models.image.verdict_ad.decider import BOXES, Q_REF, ClefFlash, decision_records
 from anomalib.models.image.verdict_ad.refinement import refine_predictions
 from anomalib.models.image.verdict_ad.torch_model import VerdictADModel
 
@@ -36,6 +37,24 @@ class TinyEncoder(nn.Module):
         """Return deterministic patch tokens."""
         patches = F.avg_pool2d(images, self.patch_size, self.patch_size)
         return {self.layer: patches.flatten(2).transpose(1, 2)}
+
+
+class TinyDinomalyEncoder(nn.Module):
+    """Return small tokens while retaining Dinomaly's actual decoder and loss."""
+
+    patch_size = 14
+    num_register_tokens = 0
+
+    def __init__(self, **kwargs) -> None:
+        super().__init__()
+        self.layers = kwargs["layers"]
+        self.weight = nn.Parameter(torch.ones(24), requires_grad=False)
+
+    def forward(self, images: torch.Tensor) -> dict[str, torch.Tensor]:
+        """Provide a class token and four patch tokens for every encoder layer."""
+        patches = F.avg_pool2d(images, 14, 14).flatten(2).transpose(1, 2).repeat(1, 1, 8)
+        tokens = torch.cat([patches.mean(1, keepdim=True), patches], dim=1) * self.weight
+        return dict.fromkeys(self.layers, tokens)
 
 
 @pytest.fixture(autouse=True)
@@ -243,6 +262,249 @@ def test_training_validation_and_disabled_backend(monkeypatch: pytest.MonkeyPatc
     batch.gt_label = torch.ones(2, dtype=torch.bool)
     with pytest.raises(ValueError, match="normal"):
         model.training_step(batch)
+
+
+@pytest.mark.parametrize("detector", ["anomaly_dino", "patchcore"])
+def test_base_detector_training_and_refinement(detector: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Both detectors fit the selected references and refine their own raw outputs."""
+    model = VerdictAD(
+        n_shots=1,
+        detector=detector,
+        patchcore_backbone="resnet18",
+        patchcore_pre_trained=False,
+        patchcore_coreset_sampling_ratio=0.5,
+        patchcore_num_neighbors=1,
+        pre_processor=False,
+        post_processor=False,
+        evaluator=False,
+        visualizer=False,
+    )
+    images = torch.rand(2, 3, 56, 56)
+    model.training_step(ImageBatch(image=images[:1], gt_label=[0]))
+    model.on_train_epoch_end()
+    model.eval()
+    calls = Mock(return_value=torch.zeros(34))
+    monkeypatch.setattr(model.model.decider, "predict", calls)
+    result = model.validation_step(ImageBatch(image=images, gt_label=[0, 1]))
+    assert calls.call_count == 2
+    assert torch.equal(model.model.reference_images, images[:1])
+    assert result.pred_score.shape == (2,)
+    assert result.anomaly_map.shape == (2, 56, 56)
+    assert torch.isfinite(result.pred_score).all()
+    assert torch.isfinite(result.anomaly_map).all()
+    model.model.alpha = model.model.gamma = 0
+    baseline = model.model(images)
+    torch.testing.assert_close(result.pred_score, baseline.pred_score * 0.5**0.5)
+    torch.testing.assert_close(result.anomaly_map, baseline.anomaly_map.squeeze(1) * 0.5**0.25)
+
+
+def test_patchcore_checkpoint_restores_detector(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Lightning checkpoints retain the selected detector and its memory bank."""
+    model = VerdictAD(
+        n_shots=1,
+        detector="patchcore",
+        patchcore_backbone="resnet18",
+        patchcore_pre_trained=False,
+        patchcore_coreset_sampling_ratio=0.5,
+        alpha=0,
+        gamma=0,
+        pre_processor=False,
+        evaluator=False,
+        visualizer=False,
+    )
+    data = DataLoader([ImageBatch(image=torch.rand(1, 3, 56, 56), gt_label=[0])], batch_size=None)
+    trainer = Trainer(
+        accelerator="cpu",
+        max_epochs=1,
+        num_sanity_val_steps=0,
+        logger=False,
+        enable_checkpointing=False,
+        enable_progress_bar=False,
+        enable_model_summary=False,
+        limit_val_batches=0,
+        default_root_dir=tmp_path,
+    )
+    trainer.fit(model, train_dataloaders=data)
+    checkpoint = tmp_path / "patchcore.ckpt"
+    trainer.save_checkpoint(checkpoint)
+    restored = VerdictAD.load_from_checkpoint(checkpoint, weights_only=True)
+    assert type(restored.model.detector) is type(model.model.detector)
+    assert torch.equal(restored.model.reference_images, model.model.reference_images)
+    assert torch.equal(restored.model.detector.memory_bank, model.model.detector.memory_bank)
+    model.eval()
+    restored.eval()
+    images = torch.rand(1, 3, 56, 56)
+    torch.testing.assert_close(model.model(images).pred_score, restored.model(images).pred_score)
+    monkeypatch.setattr(restored.model.decider, "predict", Mock(side_effect=AssertionError("Refinement disabled")))
+    restored.model(images)
+
+
+@pytest.mark.parametrize(
+    "options",
+    [
+        {"detector": "unknown"},
+        {"detector": "patchcore", "patchcore_coreset_sampling_ratio": 0},
+        {"detector": "patchcore", "patchcore_coreset_sampling_ratio": 1.1},
+        {"detector": "patchcore", "patchcore_num_neighbors": 0},
+    ],
+)
+def test_invalid_detector_configuration(options: dict) -> None:
+    """Reject invalid detector choices and PatchCore settings before loading weights."""
+    with pytest.raises(ValueError, match=r"detector|patchcore"):
+        VerdictADModel(**options)
+
+
+def test_patchcore_empty_coreset_is_rejected() -> None:
+    """Report insufficient retained features and leave fit retryable."""
+    model = VerdictADModel(
+        n_shots=1,
+        detector="patchcore",
+        patchcore_backbone="resnet18",
+        patchcore_pre_trained=False,
+        patchcore_coreset_sampling_ratio=1e-9,
+    )
+    model(torch.rand(1, 3, 56, 56))
+    with pytest.raises(ValueError, match="coreset would be empty"):
+        model.fit()
+    assert not model.detector.embedding_store
+    model.patchcore_coreset_sampling_ratio = 0.5
+    model.fit()
+    assert model.detector.memory_bank.numel() > 0
+
+
+def test_singleton_patchcore_scores_are_batch_invariant() -> None:
+    """A singleton bank retains informative scores in every query batch size."""
+    model = VerdictADModel(
+        n_shots=1,
+        detector="patchcore",
+        patchcore_backbone="resnet18",
+        patchcore_pre_trained=False,
+        alpha=0,
+        gamma=0,
+    )
+    model(torch.rand(1, 3, 28, 28))
+    model.fit()
+    assert len(model.detector.memory_bank) == 1
+    restored = VerdictADModel(
+        n_shots=1,
+        detector="patchcore",
+        patchcore_backbone="resnet18",
+        patchcore_pre_trained=False,
+        alpha=0,
+        gamma=0,
+    )
+    restored.load_state_dict(model.state_dict())
+    restored.eval()
+    query = torch.rand(3, 3, 28, 28)
+    single = restored(query[:1]).pred_score
+    assert single.item() > 0
+    torch.testing.assert_close(single, restored(query).pred_score[:1])
+
+
+def test_prompt_overrides_reach_decision_encoding(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Custom questions reach the release while omitted questions retain their defaults."""
+    image = Image.new("RGB", (28, 28))
+    prompts = {"free": "Does this image contain an unacceptable scratch?", "crop": "Is this crop defective?"}
+    records = decision_records(image, [image], prompts=prompts)
+    assert records[0][2] == prompts["free"]
+    assert records[1][2] == Q_REF
+    assert all(record[2] == prompts["crop"] for record in records[2:18])
+    decider = ClefFlash(prompts=prompts, batch_size=2)
+    seen = []
+
+    def encode(_tokenizer: SimpleNamespace, record: dict, **_kwargs) -> SimpleNamespace:
+        seen.append(record["questions"]["defect"])
+        return SimpleNamespace(questions=[SimpleNamespace(option_ids=["true", "false"])])
+
+    monkeypatch.setattr(
+        decider,
+        "_release",
+        SimpleNamespace(encode_record=encode, collate_records=lambda batch, *_: batch),
+    )
+    monkeypatch.setattr(decider, "_processor", SimpleNamespace(tokenizer=SimpleNamespace(pad_token_id=0)))
+    monkeypatch.setattr(decider, "_load", lambda _device: None)
+    monkeypatch.setattr(decider, "_model", lambda batch: [[torch.tensor([1.0, 0.0])] for _ in batch])
+    decider.predict(image, [image], torch.device("cpu"), include_local=False)
+    assert seen == [{"type": "noul", "instructions": prompts["free"]}, {"type": "noul", "instructions": Q_REF}]
+
+
+@pytest.mark.parametrize("prompts", [{"unknown": "question"}, {"free": ""}, {"box": "  "}, {"crop": 1}])
+def test_invalid_prompts_are_rejected(prompts: dict) -> None:
+    """Reject misspelled keys and unusable questions before loading decision weights."""
+    with pytest.raises(ValueError, match="decision_prompts"):
+        ClefFlash(prompts=prompts)
+
+
+def test_dinomaly_training_refinement_and_checkpoint(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Train the real reconstruction path, refine its outputs, and restore custom prompts."""
+    monkeypatch.setattr("anomalib.models.image.dinomaly.torch_model.TimmFeatureExtractor", TinyDinomalyEncoder)
+    monkeypatch.setattr(
+        "anomalib.models.image.dinomaly.torch_model.DINO_ARCHITECTURES",
+        {
+            "small": {"embed_dim": 24, "num_heads": 3, "target_layers": list(range(2, 10))},
+        },
+    )
+    model = VerdictAD(
+        detector="dinomaly",
+        dinomaly_encoder_name="vit_small_patch14_dinov2",
+        n_shots=1,
+        decision_prompts={"free": "Is there an unacceptable defect?"},
+        pre_processor=False,
+        evaluator=False,
+        visualizer=False,
+    )
+    assert "max_epochs" not in model.trainer_arguments
+    assert "max_steps" not in model.trainer_arguments
+    before = [parameter.detach().clone() for parameter in model.model.detector.decoder.parameters()]
+    batches = [ImageBatch(image=torch.rand(1, 3, 28, 28), gt_label=[0]) for _ in range(2)]
+    validation_images = torch.rand(2, 3, 28, 28)
+    validation = DataLoader([ImageBatch(image=validation_images.clone(), gt_label=[0, 1])], batch_size=None)
+    monkeypatch.setattr(
+        ClefFlash,
+        "predict",
+        lambda _self, _image, _refs, device, **_kwargs: torch.zeros(34, device=device),
+    )
+    engine = Engine(
+        accelerator="cpu",
+        max_steps=2,
+        max_epochs=3,
+        num_sanity_val_steps=0,
+        logger=False,
+        enable_checkpointing=True,
+        enable_progress_bar=False,
+        enable_model_summary=False,
+        limit_val_batches=1,
+        default_root_dir=tmp_path,
+    )
+    engine.fit(model, train_dataloaders=DataLoader(batches, batch_size=None), val_dataloaders=validation)
+    trainer = engine.trainer
+    assert trainer.max_steps == 2
+    assert trainer.global_step == 2
+    assert any(
+        not torch.equal(old, current)
+        for old, current in zip(before, model.model.detector.decoder.parameters(), strict=True)
+    )
+    assert all(parameter.grad is None for parameter in model.model.detector.encoder.parameters())
+    assert torch.equal(model.model.reference_images, batches[0].image)
+    model.eval()
+    calibrated = model.model(validation_images)
+    torch.testing.assert_close(model.post_processor.image_max, calibrated.pred_score.max())
+    checkpoint = tmp_path / "dinomaly.ckpt"
+    trainer.save_checkpoint(checkpoint)
+    restored = VerdictAD.load_from_checkpoint(checkpoint, weights_only=True)
+    assert restored.model.decider.prompts == model.model.decider.prompts
+    restored.eval()
+    query = torch.rand(2, 3, 28, 28)
+    decisions = Mock(return_value=torch.zeros(34))
+    monkeypatch.setattr(restored.model.decider, "predict", decisions)
+    refined = restored.model(query)
+    restored.model.alpha = restored.model.gamma = 0
+    raw = restored.model(query)
+    torch.testing.assert_close(refined.pred_score, raw.pred_score * 0.5**0.5)
+    torch.testing.assert_close(refined.anomaly_map, raw.anomaly_map * 0.5**0.25)
+    assert decisions.call_count == 2
+    predictions = trainer.predict(restored, dataloaders=validation)
+    assert predictions[0].pred_score.shape == (2,)
 
 
 @pytest.mark.parametrize(("alpha", "gamma", "count"), [(0.5, 0.0, 2), (0.0, 0.25, 32)])

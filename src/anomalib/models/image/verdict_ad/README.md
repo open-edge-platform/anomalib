@@ -2,18 +2,20 @@
 
 VerdictAD uses a frozen typed decision model to refine an existing anomaly
 detector's image scores and anomaly maps. This implementation combines Anomalib's
-AnomalyDINO detector with the global (GVR) and local (LVR) refinement from
+AnomalyDINO, PatchCore, or Dinomaly detector with global (GVR) and local (LVR) refinement from
 [VerdictAD: Few-Shot Anomaly Detection via Decision-Guided Refinement](https://arxiv.org/abs/2611.02654).
 
-It is **AnomalyDINO + VerdictAD**, not a reproduction of the paper's separate
-intermediate-layer, max-pooled DINOv2-L baseline. The detector retains Anomalib's
-AnomalyDINO feature extraction, nearest-neighbor scoring and top-1% aggregation.
+The default is AnomalyDINO + VerdictAD. This uses Anomalib's AnomalyDINO feature
+extraction, nearest-neighbor scoring and top-1% aggregation, rather than the
+paper's separate intermediate-layer, max-pooled DINOv2-L baseline. Select
+`detector="patchcore"` or `detector="dinomaly"` to select another detector.
 
 ## How it works
 
-The first `n_shots` normal training images are saved as RGB tensors. Only those
-images populate the detector's memory bank, and the same images supply the
-decision model's references. Training needs one category and at least `n_shots`
+The first `n_shots` normal training images are saved as RGB decision references.
+AnomalyDINO and PatchCore fit their memory banks from exactly those images.
+Dinomaly trains its decoder and bottleneck on all normal training batches while
+its encoder stays frozen. Training needs one category and at least `n_shots`
 normal images; choose 1, 2 or 4 shots to match the paper's evaluation settings.
 Seed the training loader to make reference selection reproducible.
 
@@ -81,13 +83,81 @@ engine.fit(model=model, datamodule=data)
 engine.test(model=model, datamodule=data)
 ```
 
+To use PatchCore with the same reference-selection and refinement pipeline:
+
+```python
+model = VerdictAD(
+    detector="patchcore",
+    n_shots=4,
+    decision_model_path="models/clef-flash",
+    patchcore_backbone="wide_resnet50_2",
+    patchcore_layers=("layer2", "layer3"),
+    patchcore_coreset_sampling_ratio=0.1,
+    patchcore_num_neighbors=9,
+)
+engine.fit(model=model, datamodule=data)
+engine.test(model=model, datamodule=data)
+```
+
+The CLI exposes the same choice with `--model.detector patchcore`. Both detectors
+fit only the first `n_shots` normal training images and use those images for the
+decision references. The common preprocessor defaults to 896 × 896, including for
+PatchCore. Supply a resize-only preprocessor to use another input size.
+
+### Dinomaly
+
+```python
+model = VerdictAD(
+    detector="dinomaly",
+    dinomaly_encoder_name="vit_base_patch14_reg4_dinov2",
+    n_shots=4,
+    decision_model_path="models/clef-flash",
+)
+engine = Engine(max_steps=5000)
+engine.fit(model=model, datamodule=data)
+engine.test(model=model, datamodule=data)
+```
+
+Dinomaly uses its reconstruction loss, trainable bottleneck and decoder, and
+StableAdamW optimizer with a warmup/cosine schedule advanced per training step.
+Set the training duration through the Engine, for example `Engine(max_steps=5000)`.
+Its RGB preprocessor resizes to
+448 × 448 and center-crops to 392 × 392, matching the standalone model's geometry.
+ImageNet normalization is applied inside the detector. Refinement runs during
+validation, test, and prediction, before threshold calibration.
+
+### Custom decision questions
+
+Pass a partial dictionary to override any of the four question types:
+
+```python
+model = VerdictAD(
+    detector="dinomaly",
+    decision_model_path="models/clef-flash",
+    decision_prompts={
+        "free": "Does this object have an unacceptable defect? Ignore harmless colour variation.",
+        "reference": "Image 1 is the query; image 2 contains normal references. Is the query defective?",
+        "crop": "Does the crop in image 1 have an unacceptable defect compared with the reference crops in image 2?",
+        "box": "Is there an unacceptable defect inside the red box in image 1 compared with image 2's references?",
+    },
+)
+```
+
+Omitted keys retain the released questions. Keys must be `free`, `reference`,
+`crop`, or `box`, and values must be nonempty strings. Every question must use
+**true = unacceptable defect**. Keep the image roles and local-region descriptions
+consistent with the views above. The decision model's weights stay frozen.
+Prompt overrides are saved in Lightning checkpoints. Validate custom prompts on
+accepted and rejected examples and recalibrate thresholds after changing them.
+Prompt wording alone does not establish physical defect-size tolerances.
+
 The model is also discoverable as `get_model("VerdictAD")` and through the CLI:
 
 ```bash
 anomalib train --model VerdictAD --model.n_shots 4 --model.decision_model_path models/clef-flash --data MVTecAD --data.category bottle
 ```
 
-Default preprocessing resizes RGB images to 896 x 896 without normalization.
+AnomalyDINO and PatchCore preprocessing resizes RGB images to 896 x 896 without normalization.
 ImageNet normalization is applied only inside the base detector. Custom
 preprocessing must retain RGB floating-point values in `[0, 1]` and use consistent
 geometry for references and queries. Do not use externally normalized tensors.

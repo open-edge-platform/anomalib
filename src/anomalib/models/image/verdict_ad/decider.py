@@ -44,6 +44,17 @@ Q_BOX = (
 BOXES = [(x / 5, y / 5, (x + 2) / 5, (y + 2) / 5) for y in range(4) for x in range(4)]
 
 
+def _resolve_prompts(prompts: dict[str, str] | None) -> dict[str, str]:
+    """Merge validated overrides with the released defect questions."""
+    questions = {"free": Q_FREE, "reference": Q_REF, "crop": Q_CROP, "box": Q_BOX}
+    if prompts is not None:
+        if prompts.keys() - questions.keys() or any(not isinstance(q, str) or not q.strip() for q in prompts.values()):
+            msg = "decision_prompts must contain nonempty strings with keys free, reference, crop, or box."
+            raise ValueError(msg)
+        questions.update(prompts)
+    return questions
+
+
 def _resize(image: Image.Image, size: int) -> Image.Image:
     return image.resize((size, size), Image.Resampling.BICUBIC)
 
@@ -68,6 +79,7 @@ def decision_records(
     *,
     include_global: bool = True,
     include_local: bool = True,
+    prompts: dict[str, str] | None = None,
 ) -> list[tuple[str, list[Image.Image], str]]:
     """Build queries for the enabled refinement stages.
 
@@ -76,6 +88,7 @@ def decision_records(
         references (list[Image.Image]): One to four normal RGB reference images.
         include_global (bool): Whether to build the global queries.
         include_local (bool): Whether to build crop and boxed-view queries.
+        prompts (dict[str, str] | None): Optional free/reference/crop/box question overrides.
 
     Returns:
         list[tuple[str, list[Image.Image], str]]: Task, images and binary question per decision.
@@ -86,17 +99,22 @@ def decision_records(
     if not 1 <= len(references) <= 4:
         msg = "VerdictAD needs one to four normal reference images."
         raise ValueError(msg)
+    questions = _resolve_prompts(prompts)
     task = "Inspect an industrial product against normal references."
     records = []
     if include_global:
         query = _resize(image, 896)
         records.extend([
-            ("Inspect this industrial product photo.", [query], Q_FREE),
-            (task, [query, _mosaic(references, 896)], Q_REF),
+            ("Inspect this industrial product photo.", [query], questions["free"]),
+            (task, [query, _mosaic(references, 896)], questions["reference"]),
         ])
     if include_local:
         records.extend(
-            (task, [_resize(_crop(image, box), 448), _mosaic([_crop(r, box) for r in references], 448)], Q_CROP)
+            (
+                task,
+                [_resize(_crop(image, box), 448), _mosaic([_crop(r, box) for r in references], 448)],
+                questions["crop"],
+            )
             for box in BOXES
         )
         reference_grid = _mosaic(references, 448)
@@ -104,7 +122,7 @@ def decision_records(
             query = _resize(image, 448)
             coordinates = (int(box[0] * 448), int(box[1] * 448), int(box[2] * 448) - 1, int(box[3] * 448) - 1)
             ImageDraw.Draw(query).rectangle(coordinates, outline=(255, 0, 0), width=4)
-            records.append((task, [query, reference_grid], Q_BOX))
+            records.append((task, [query, reference_grid], questions["box"]))
     return records
 
 
@@ -118,14 +136,21 @@ class ClefFlash:
     Args:
         model_path (str | None): Local release directory, including code and weights.
         batch_size (int): Number of decision records per forward pass.
+        prompts (dict[str, str] | None): Optional defect question overrides.
     """
 
-    def __init__(self, model_path: str | None = None, batch_size: int = 4) -> None:
+    def __init__(
+        self,
+        model_path: str | None = None,
+        batch_size: int = 4,
+        prompts: dict[str, str] | None = None,
+    ) -> None:
         if not isinstance(batch_size, int) or isinstance(batch_size, bool) or batch_size < 1:
             msg = "Decision batch_size must be positive."
             raise ValueError(msg)
         self.model_path = model_path
         self.batch_size = batch_size
+        self.prompts = _resolve_prompts(prompts)
         self._release: ModuleType | None = None
         self._model: nn.Module | None = None
         self._processor: ProcessorMixin | None = None
@@ -183,7 +208,13 @@ class ClefFlash:
         Returns:
             torch.Tensor: One float32 logit per requested decision on ``device``.
         """
-        records = decision_records(image, references, include_global=include_global, include_local=include_local)
+        records = decision_records(
+            image,
+            references,
+            include_global=include_global,
+            include_local=include_local,
+            prompts=self.prompts,
+        )
         if not records:
             return torch.empty(0, dtype=torch.float32, device=device)
         self._load(device)
