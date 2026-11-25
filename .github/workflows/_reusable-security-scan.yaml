@@ -28,6 +28,7 @@
 # - Bandit: Python security linter
 # - Semgrep: Static Application Security Testing (SAST)
 # - Trivy: Vulnerability, secret, and config scanning
+# - Trivy scan diff: Container image CVEs split into non-base vs base image layers
 # - Zizmor: GitHub Actions workflow security scanner
 # - DAST scan: Runtime scanning via ZAP and Schemathesis
 #
@@ -321,9 +322,11 @@ jobs:
   trivy-image-scan:
     if: contains(inputs.tools, 'trivy-image-scan')
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     permissions:
       contents: read
     strategy:
+      fail-fast: false
       matrix:
         ai-device: [cpu, cuda, xpu]
     steps:
@@ -332,18 +335,16 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Run container image scan (${{ matrix.ai-device }})
-        uses: open-edge-platform/geti-ci/actions/trivy@7d25e47329bbfcde4ee51ab3581aea8613e245e2
+      - name: Run Trivy scan diff (${{ matrix.ai-device }})
+        uses: open-edge-platform/geti-ci/actions/trivy-scan-diff@f1328ee7c6ad00e90204ff9902491ead4b28c7da # trivy-scan-diff/v0.1.1
         with:
-          artifact-name: "trivy-scan-container-${{ matrix.ai-device }}"
-          scan_type: "image"
-          scan_target: "ghcr.io/open-edge-platform/anomalib-studio-${{ matrix.ai-device }}:main"
-          scan-scope: ${{ inputs.scan-scope }}
-          severity: "LOW"
-          scanners: "vuln,secret,config"
-          format: "table"
+          image: "ghcr.io/open-edge-platform/anomalib-studio-${{ matrix.ai-device }}:main"
+          # Must match the base image of anomalib-studio-base in application/docker/Dockerfile
+          # renovate: datasource=docker depName=python
+          base-image: "python:3.13-slim@sha256:7ce4b6dfe35e55397b7cda544f8a13f191b7ae28dc5aad71fe664dbc9bc2623f"
+          artifact-name: "trivy-scan-diff-${{ matrix.ai-device }}"
           timeout: "15m"
-          ignore_unfixed: "true"
+          ignore_unfixed: true
 
   summarize:
     needs: [bandit, semgrep, trivy-scan, zizmor, dast-scan, trivy-image-scan]
