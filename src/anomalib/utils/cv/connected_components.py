@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Connected component labeling for anomaly detection.
@@ -62,9 +62,10 @@ def connected_components_gpu(image: torch.Tensor, num_iterations: int = 1000) ->
     """
     components = connected_components(image, num_iterations=num_iterations)
 
-    # remap component values from 0 to N
+    # remap component values from 1 to N, keeping 0 for the background
     labels = components.unique()
-    for new_label, old_label in enumerate(labels):
+    labels = labels[labels != 0]
+    for new_label, old_label in enumerate(labels, start=1):
         components[components == old_label] = new_label
 
     return components.int()
@@ -113,7 +114,8 @@ def connected_components_cpu(image: torch.Tensor) -> torch.Tensor:
         mask = msk.squeeze().cpu().numpy().astype(np.uint8)
         _, comps = cv2.connectedComponents(mask)
         # remap component values to make sure every component has a unique value when outputs are concatenated
-        for label in np.unique(comps)[1:]:
+        unique = np.unique(comps)
+        for label in unique[unique != 0]:
             components[i, 0, ...][np.where(comps == label)] = label_idx
             label_idx += 1
     return components.int()
