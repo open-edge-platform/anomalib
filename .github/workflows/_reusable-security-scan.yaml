@@ -335,13 +335,48 @@ jobs:
         with:
           egress-policy: audit
 
+      - name: Resolve image digest and source revision (${{ matrix.ai-device }})
+        id: image
+        env:
+          IMAGE: ghcr.io/open-edge-platform/anomalib-studio-${{ matrix.ai-device }}:main
+        run: |
+          INFO="$(skopeo inspect --override-os linux --override-arch amd64 "docker://${IMAGE}")"
+          DIGEST="$(jq -r '.Digest' <<< "$INFO")"
+          REVISION="$(jq -r '.Labels["org.opencontainers.image.revision"] // empty' <<< "$INFO")"
+          if [[ ! "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "::error::Could not resolve digest for ${IMAGE}"
+            exit 1
+          fi
+          if [[ ! "$REVISION" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Image ${IMAGE} has no valid org.opencontainers.image.revision label"
+            exit 1
+          fi
+          echo "ref=${IMAGE%:*}@${DIGEST}" >> "$GITHUB_OUTPUT"
+          echo "revision=${REVISION}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Dockerfile at image revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          ref: ${{ steps.image.outputs.revision }}
+          sparse-checkout: application/docker/Dockerfile
+          sparse-checkout-cone-mode: false
+
+      - name: Resolve base image from Dockerfile
+        id: base
+        run: |
+          BASE="$(grep -oP '^FROM\s+\K\S+(?=\s+AS\s+anomalib-studio-base\b)' application/docker/Dockerfile)"
+          if [[ -z "$BASE" ]]; then
+            echo "::error::Could not find anomalib-studio-base FROM line in application/docker/Dockerfile"
+            exit 1
+          fi
+          echo "image=${BASE}" >> "$GITHUB_OUTPUT"
+
       - name: Run Trivy scan diff (${{ matrix.ai-device }})
         uses: open-edge-platform/geti-ci/actions/trivy-scan-diff@f1328ee7c6ad00e90204ff9902491ead4b28c7da # trivy-scan-diff/v0.1.1
         with:
-          image: "ghcr.io/open-edge-platform/anomalib-studio-${{ matrix.ai-device }}:main"
-          # Must match the base image of anomalib-studio-base in application/docker/Dockerfile
-          # renovate: datasource=docker depName=python
-          base-image: "python:3.13-slim@sha256:7ce4b6dfe35e55397b7cda544f8a13f191b7ae28dc5aad71fe664dbc9bc2623f"
+          image: ${{ steps.image.outputs.ref }}
+          base-image: ${{ steps.base.outputs.image }}
           artifact-name: "trivy-scan-diff-${{ matrix.ai-device }}"
           timeout: "15m"
           ignore_unfixed: true
