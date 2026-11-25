@@ -376,6 +376,20 @@ jobs:
           timeout: "15m"
           ignore_unfixed: true
 
+      # trivy-scan-diff only runs Trivy's default vuln,secret scanners
+      - name: Run container image config scan (${{ matrix.ai-device }})
+        uses: open-edge-platform/geti-ci/actions/trivy@c285ee78223169c3a185043921602c929657e5db
+        with:
+          artifact-name: "trivy-scan-container-config-${{ matrix.ai-device }}"
+          scan_type: "image"
+          scan_target: ${{ steps.image.outputs.ref }}
+          scan-scope: "all" # "changed" makes the action scan "." instead of the image
+          severity: "LOW"
+          scanners: "config"
+          format: "table"
+          timeout: "15m"
+          ignore_unfixed: "true"
+
   summarize:
     needs: [bandit, semgrep, trivy-scan, zizmor, dast-scan, trivy-image-scan]
     runs-on: ubuntu-latest
