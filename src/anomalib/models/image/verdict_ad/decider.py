@@ -55,6 +55,25 @@ def _resolve_prompts(prompts: dict[str, str] | None) -> dict[str, str]:
     return questions
 
 
+def validate_decision_options(batch_size: int, prompts: dict[str, str] | None) -> dict[str, str]:
+    """Validate decision settings before loading detector weights.
+
+    Args:
+        batch_size (int): Number of decision records per forward pass.
+        prompts (dict[str, str] | None): Optional defect question overrides.
+
+    Returns:
+        dict[str, str]: Default questions merged with validated overrides.
+
+    Raises:
+        ValueError: If the batch size or prompt overrides are invalid.
+    """
+    if not isinstance(batch_size, int) or isinstance(batch_size, bool) or batch_size < 1:
+        msg = "Decision batch_size must be positive."
+        raise ValueError(msg)
+    return _resolve_prompts(prompts)
+
+
 def _resize(image: Image.Image, size: int) -> Image.Image:
     return image.resize((size, size), Image.Resampling.BICUBIC)
 
@@ -145,12 +164,9 @@ class ClefFlash:
         batch_size: int = 4,
         prompts: dict[str, str] | None = None,
     ) -> None:
-        if not isinstance(batch_size, int) or isinstance(batch_size, bool) or batch_size < 1:
-            msg = "Decision batch_size must be positive."
-            raise ValueError(msg)
+        self.prompts = validate_decision_options(batch_size, prompts)
         self.model_path = model_path
         self.batch_size = batch_size
-        self.prompts = _resolve_prompts(prompts)
         self._release: ModuleType | None = None
         self._model: nn.Module | None = None
         self._processor: ProcessorMixin | None = None

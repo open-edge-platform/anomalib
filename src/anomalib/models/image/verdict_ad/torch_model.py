@@ -4,7 +4,6 @@
 """AnomalyDINO, PatchCore, and Dinomaly with VerdictAD's decision-guided refinement."""
 
 from collections.abc import Callable
-from typing import Literal
 
 import torch
 from torch import nn
@@ -20,80 +19,67 @@ from .decider import BOXES, ClefFlash
 from .refinement import refine_predictions
 
 
+def validate_refinement_options(n_shots: int, alpha: float, gamma: float) -> None:
+    """Validate refinement settings before loading detector weights.
+
+    Args:
+        n_shots (int): Number of normal references, one to four.
+        alpha (float): Global refinement exponent.
+        gamma (float): Local refinement exponent.
+
+    Raises:
+        ValueError: If the reference count or refinement exponents are invalid.
+    """
+    if not isinstance(n_shots, int) or isinstance(n_shots, bool) or not 1 <= n_shots <= 4:
+        msg = "n_shots must be between one and four."
+        raise ValueError(msg)
+    if not torch.isfinite(torch.tensor([alpha, gamma])).all() or min(alpha, gamma) < 0:
+        msg = "alpha and gamma must be finite and nonnegative."
+        raise ValueError(msg)
+
+
 class VerdictADModel(DynamicBufferMixin, nn.Module):
     """Fit a few-shot detector and refine its outputs with frozen Clef-Flash.
 
     Args:
         n_shots (int): Number of normal references, one to four.
-        encoder_name (str): AnomalyDINO backbone name.
         decision_model_path (str | None): Trusted local Clef-Flash release directory.
         decision_batch_size (int): Decision records per Clef-Flash forward pass.
         alpha (float): Global refinement exponent.
         gamma (float): Local refinement exponent.
-        detector (Literal["anomaly_dino", "patchcore", "dinomaly"]): Base detector.
-        patchcore_backbone (str): PatchCore backbone.
-        patchcore_layers (tuple[str, ...]): PatchCore feature layers.
-        patchcore_pre_trained (bool): Load pretrained PatchCore weights.
-        patchcore_coreset_sampling_ratio (float): Fraction of PatchCore embeddings retained.
-        patchcore_num_neighbors (int): Neighbors used for PatchCore image scores.
-        dinomaly_encoder_name (str): Dinomaly encoder backbone.
+        detector (AnomalyDINOModel | PatchcoreModel | DinomalyModel | None): Configured
+            PyTorch detector. Defaults to AnomalyDINO with a DINOv2-L encoder.
         decision_prompts (dict[str, str] | None): Optional free/reference/crop/box question overrides.
     """
 
     def __init__(
         self,
         n_shots: int = 4,
-        encoder_name: str = "vit_large_patch14_dinov2",
         decision_model_path: str | None = None,
         decision_batch_size: int = 4,
         alpha: float = 0.5,
         gamma: float = 0.25,
-        detector: Literal["anomaly_dino", "patchcore", "dinomaly"] = "anomaly_dino",
-        patchcore_backbone: str = "wide_resnet50_2",
-        patchcore_layers: tuple[str, ...] = ("layer2", "layer3"),
-        patchcore_pre_trained: bool = True,
-        patchcore_coreset_sampling_ratio: float = 0.1,
-        patchcore_num_neighbors: int = 9,
-        dinomaly_encoder_name: str = "vit_base_patch14_reg4_dinov2",
+        detector: AnomalyDINOModel | PatchcoreModel | DinomalyModel | None = None,
         decision_prompts: dict[str, str] | None = None,
     ) -> None:
         super().__init__()
-        if not isinstance(n_shots, int) or isinstance(n_shots, bool) or not 1 <= n_shots <= 4:
-            msg = "n_shots must be between one and four."
-            raise ValueError(msg)
-        if not torch.isfinite(torch.tensor([alpha, gamma])).all() or min(alpha, gamma) < 0:
-            msg = "alpha and gamma must be finite and nonnegative."
-            raise ValueError(msg)
-        if detector not in {"anomaly_dino", "patchcore", "dinomaly"}:
-            msg = "detector must be 'anomaly_dino', 'patchcore', or 'dinomaly'."
-            raise ValueError(msg)
-        if detector == "patchcore" and not 0 < patchcore_coreset_sampling_ratio <= 1:
-            msg = "patchcore_coreset_sampling_ratio must be in (0, 1]."
-            raise ValueError(msg)
-        if detector == "patchcore" and (
-            not isinstance(patchcore_num_neighbors, int)
-            or isinstance(patchcore_num_neighbors, bool)
-            or patchcore_num_neighbors < 1
-        ):
-            msg = "patchcore_num_neighbors must be a positive integer."
+        validate_refinement_options(n_shots, alpha, gamma)
+        if detector is not None and not isinstance(detector, (AnomalyDINOModel, PatchcoreModel, DinomalyModel)):
+            msg = "detector must be an AnomalyDINOModel, PatchcoreModel, or DinomalyModel instance."
             raise ValueError(msg)
         self.n_shots, self.alpha, self.gamma = n_shots, alpha, gamma
         self.decider = ClefFlash(decision_model_path, decision_batch_size, decision_prompts)
-        self.detector: AnomalyDINOModel | PatchcoreModel | DinomalyModel
-        if detector == "anomaly_dino":
-            self.detector = AnomalyDINOModel(encoder_name=encoder_name)
-        elif detector == "patchcore":
-            self.detector = PatchcoreModel(
-                backbone=patchcore_backbone,
-                layers=patchcore_layers,
-                pre_trained=patchcore_pre_trained,
-                num_neighbors=patchcore_num_neighbors,
-            )
-        else:
-            self.detector = DinomalyModel(encoder_name=dinomaly_encoder_name)
+        self.detector = detector if detector is not None else AnomalyDINOModel(encoder_name="vit_large_patch14_dinov2")
+        if isinstance(self.detector, DinomalyModel):
             self.detector.encoder.requires_grad_(requires_grad=False)
-        self.patchcore_coreset_sampling_ratio = patchcore_coreset_sampling_ratio
-        self.patchcore_num_neighbors = patchcore_num_neighbors
+        if isinstance(self.detector, PatchcoreModel) and (
+            not isinstance(self.detector.num_neighbors, int)
+            or isinstance(self.detector.num_neighbors, bool)
+            or self.detector.num_neighbors < 1
+        ):
+            msg = "PatchCore num_neighbors must be a positive integer."
+            raise ValueError(msg)
+        self._patchcore_num_neighbors = self.detector.num_neighbors if isinstance(self.detector, PatchcoreModel) else 1
         self.register_buffer("reference_images", torch.empty(0))
         self.reference_images: torch.Tensor
 
@@ -152,7 +138,7 @@ class VerdictADModel(DynamicBufferMixin, nn.Module):
             raise RuntimeError(msg)
         self.detector.eval()
         if isinstance(self.detector, PatchcoreModel):
-            self.detector.num_neighbors = 1 if len(self.detector.memory_bank) == 1 else self.patchcore_num_neighbors
+            self.detector.num_neighbors = 1 if len(self.detector.memory_bank) == 1 else self._patchcore_num_neighbors
         predictions = self.detector(F.normalize(images, [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]))
         predictions = predictions._replace(pred_score=predictions.pred_score.reshape(-1))
         if self.alpha == 0 and self.gamma == 0:
@@ -174,17 +160,23 @@ class VerdictADModel(DynamicBufferMixin, nn.Module):
         return refine_predictions(predictions, global_logits, window_logits, boxes, self.alpha, self.gamma)
 
     @torch.no_grad()
-    def fit(self) -> None:
+    def fit(self, sampling_ratio: float = 0.1) -> None:
         """Fit the detector using exactly the normal references used for decisions.
 
+        Args:
+            sampling_ratio (float): Fraction of PatchCore embeddings retained in its coreset.
+
         Raises:
-            ValueError: If fewer than ``n_shots`` training images were supplied.
+            ValueError: If references or the PatchCore sampling ratio are invalid.
         """
         if len(self.reference_images) != self.n_shots:
             msg = f"Expected {self.n_shots} normal references, collected {len(self.reference_images)}."
             raise ValueError(msg)
         if isinstance(self.detector, DinomalyModel):
             return
+        if isinstance(self.detector, PatchcoreModel) and not 0 < sampling_ratio <= 1:
+            msg = "PatchCore sampling_ratio must be in (0, 1]."
+            raise ValueError(msg)
         self.detector.train()
         if isinstance(self.detector, AnomalyDINOModel):
             self.detector.feature_encoder.eval()
@@ -195,9 +187,9 @@ class VerdictADModel(DynamicBufferMixin, nn.Module):
             self.detector.fit()
         else:
             num_embeddings = sum(len(embedding) for embedding in self.detector.embedding_store)
-            if int(num_embeddings * self.patchcore_coreset_sampling_ratio) < 1:
+            if int(num_embeddings * sampling_ratio) < 1:
                 self.detector.embedding_store.clear()
-                msg = "PatchCore coreset would be empty; increase patchcore_coreset_sampling_ratio or image size."
+                msg = "PatchCore coreset would be empty; increase sampling_ratio or image size."
                 raise ValueError(msg)
-            self.detector.subsample_embedding(self.patchcore_coreset_sampling_ratio)
+            self.detector.subsample_embedding(sampling_ratio)
         self.detector.eval()

@@ -8,7 +8,7 @@ AnomalyDINO, PatchCore, or Dinomaly detector with global (GVR) and local (LVR) r
 The default is AnomalyDINO + VerdictAD. This uses Anomalib's AnomalyDINO feature
 extraction, nearest-neighbor scoring and top-1% aggregation, rather than the
 paper's separate intermediate-layer, max-pooled DINOv2-L baseline. Select
-`detector="patchcore"` or `detector="dinomaly"` to select another detector.
+`detector=Patchcore(...)` or `detector=Dinomaly(...)` to select another detector.
 
 ## How it works
 
@@ -69,7 +69,7 @@ from lightning import seed_everything
 
 from anomalib.data import MVTecAD
 from anomalib.engine import Engine
-from anomalib.models import VerdictAD
+from anomalib.models import AnomalyDINO, Dinomaly, Patchcore, VerdictAD
 
 seed_everything(42, workers=True)
 model = VerdictAD(
@@ -87,19 +87,22 @@ To use PatchCore with the same reference-selection and refinement pipeline:
 
 ```python
 model = VerdictAD(
-    detector="patchcore",
+    detector=Patchcore(
+        backbone="wide_resnet50_2",
+        layers=("layer2", "layer3"),
+        coreset_sampling_ratio=0.1,
+        num_neighbors=9,
+    ),
     n_shots=4,
     decision_model_path="models/clef-flash",
-    patchcore_backbone="wide_resnet50_2",
-    patchcore_layers=("layer2", "layer3"),
-    patchcore_coreset_sampling_ratio=0.1,
-    patchcore_num_neighbors=9,
 )
 engine.fit(model=model, datamodule=data)
 engine.test(model=model, datamodule=data)
 ```
 
-The CLI exposes the same choice with `--model.detector patchcore`. Both detectors
+The detector instance supplies its architecture, precision, and fitting settings.
+For example, `VerdictAD(detector=AnomalyDINO(masking=True, num_neighbours=3))`
+retains those settings. AnomalyDINO and PatchCore
 fit only the first `n_shots` normal training images and use those images for the
 decision references. The common preprocessor defaults to 896 × 896, including for
 PatchCore. Supply a resize-only preprocessor to use another input size.
@@ -108,8 +111,7 @@ PatchCore. Supply a resize-only preprocessor to use another input size.
 
 ```python
 model = VerdictAD(
-    detector="dinomaly",
-    dinomaly_encoder_name="vit_base_patch14_reg4_dinov2",
+    detector=Dinomaly(encoder_name="vit_base_patch14_reg4_dinov2"),
     n_shots=4,
     decision_model_path="models/clef-flash",
 )
@@ -132,7 +134,7 @@ Pass a partial dictionary to override any of the four question types:
 
 ```python
 model = VerdictAD(
-    detector="dinomaly",
+    detector=Dinomaly(),
     decision_model_path="models/clef-flash",
     decision_prompts={
         "free": "Does this object have an unacceptable defect? Ignore harmless colour variation.",
@@ -150,6 +152,38 @@ consistent with the views above. The decision model's weights stay frozen.
 Prompt overrides are saved in Lightning checkpoints. Validate custom prompts on
 accepted and rejected examples and recalibrate thresholds after changing them.
 Prompt wording alone does not establish physical defect-size tolerances.
+
+Configure the supported detector directly, rather than duplicating its constructor
+parameters on VerdictAD. The Lightning wrapper accepts `AnomalyDINO`, `Patchcore`,
+or `Dinomaly` instances. `VerdictADModel` accepts the corresponding PyTorch model
+instances. For PatchCore's tensor-only API, pass the coreset ratio to
+`model.fit(sampling_ratio=0.1)`.
+
+VerdictAD owns the shared RGB preprocessor and the final postprocessor, evaluator,
+and visualizer. These components on the supplied detector are not applied.
+Pass geometry changes through `VerdictAD(pre_processor=...)` so query images,
+references, and masks remain aligned. Detector initialization and parameter
+values are preserved; a supplied Dinomaly's decoder is not reinitialized.
+Checkpoints store plain `class_path`/`init_args` detector configuration and weights,
+so restoration with `weights_only=True` reconstructs the configured architecture.
+The earlier PR API's literal detector names and prefixed hyperparameters are
+replaced by configured instances. For an earlier checkpoint, explicitly supply
+its matching detector to `VerdictAD.load_from_checkpoint(path, detector=...)`.
+
+The CLI accepts the same nested detector configuration:
+
+```yaml
+model:
+  class_path: anomalib.models.VerdictAD
+  init_args:
+    detector:
+      class_path: anomalib.models.Patchcore
+      init_args:
+        backbone: resnet18
+        coreset_sampling_ratio: 0.05
+        num_neighbors: 3
+    decision_model_path: models/clef-flash
+```
 
 The model is also discoverable as `get_model("VerdictAD")` and through the CLI:
 

@@ -325,7 +325,10 @@ class TestAPI:
         if model_name == "verdict_a_d":
             extra_args.update({
                 "n_shots": 1,
-                "encoder_name": "vit_small_patch14_dinov2",
+                "detector": {
+                    "class_path": "anomalib.models.AnomalyDINO",
+                    "init_args": {"encoder_name": "vit_small_patch14_dinov2"},
+                },
                 "pre_processor": VerdictAD.configure_pre_processor((56, 56)),
             })
         if model_name == "dfkde":

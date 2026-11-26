@@ -3,7 +3,9 @@
 
 """VerdictAD: few-shot anomaly detection via decision-guided refinement."""
 
-from typing import Any, Literal, NoReturn
+from enum import Enum
+from inspect import signature
+from typing import Any, NoReturn
 
 import torch
 from lightning.pytorch.utilities.types import OptimizerLRScheduler
@@ -13,14 +15,17 @@ from anomalib import LearningType
 from anomalib.data import Batch
 from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule, MemoryBankMixin
+from anomalib.models.image.anomaly_dino.lightning_model import AnomalyDINO
 from anomalib.models.image.dinomaly.components import StableAdamW, WarmCosineScheduler
 from anomalib.models.image.dinomaly.lightning_model import TRAINING_CONFIG, Dinomaly
 from anomalib.models.image.dinomaly.torch_model import DinomalyModel
+from anomalib.models.image.patchcore.lightning_model import Patchcore
 from anomalib.post_processing import PostProcessor
 from anomalib.pre_processing import PreProcessor
 from anomalib.visualization import Visualizer
 
-from .torch_model import VerdictADModel
+from .decider import validate_decision_options
+from .torch_model import VerdictADModel, validate_refinement_options
 
 
 class VerdictAD(MemoryBankMixin, AnomalibModule):
@@ -32,30 +37,24 @@ class VerdictAD(MemoryBankMixin, AnomalibModule):
 
     Args:
         n_shots (int): Number of normal references, one to four. Defaults to four.
-        encoder_name (str): AnomalyDINO backbone. Defaults to DINOv2-L.
-        decision_model_path (str | None): Trusted local Clef-Flash release, required
-            for refinement. Its Python code is executed on first inference.
+        decision_model_path (str | None): Trusted local Clef-Flash release directory.
         decision_batch_size (int): Number of decision records per forward pass.
         alpha (float): Global refinement strength; zero disables GVR.
         gamma (float): Local refinement strength; zero disables LVR.
-        pre_processor (PreProcessor | bool): Resize-only preprocessor or enable flag.
+        pre_processor (PreProcessor | bool): Shared RGB preprocessing or enable flag.
         post_processor (PostProcessor | bool): Calibration/thresholding or enable flag.
         evaluator (Evaluator | bool): Evaluator or enable flag.
         visualizer (Visualizer | bool): Visualizer or enable flag.
-        detector (Literal["anomaly_dino", "patchcore", "dinomaly"]): Base detector.
-        patchcore_backbone (str): PatchCore backbone.
-        patchcore_layers (tuple[str, ...]): PatchCore feature layers.
-        patchcore_pre_trained (bool): Load pretrained PatchCore weights.
-        patchcore_coreset_sampling_ratio (float): Fraction of PatchCore embeddings retained.
-        patchcore_num_neighbors (int): Neighbors used for PatchCore image scores.
-        dinomaly_encoder_name (str): Dinomaly encoder backbone.
+        detector (AnomalyDINO | Patchcore | Dinomaly | dict[str, Any] | None): Configured
+            detector instance, or its class_path/init_args configuration for CLI and
+            checkpoint restoration. Defaults to AnomalyDINO with a DINOv2-L encoder.
+            VerdictAD owns preprocessing, postprocessing, evaluation, and visualization.
         decision_prompts (dict[str, str] | None): Optional free/reference/crop/box question overrides.
     """
 
     def __init__(
         self,
         n_shots: int = 4,
-        encoder_name: str = "vit_large_patch14_dinov2",
         decision_model_path: str | None = None,
         decision_batch_size: int = 4,
         alpha: float = 0.5,
@@ -64,16 +63,27 @@ class VerdictAD(MemoryBankMixin, AnomalibModule):
         post_processor: PostProcessor | bool = True,
         evaluator: Evaluator | bool = True,
         visualizer: Visualizer | bool = True,
-        detector: Literal["anomaly_dino", "patchcore", "dinomaly"] = "anomaly_dino",
-        patchcore_backbone: str = "wide_resnet50_2",
-        patchcore_layers: tuple[str, ...] = ("layer2", "layer3"),
-        patchcore_pre_trained: bool = True,
-        patchcore_coreset_sampling_ratio: float = 0.1,
-        patchcore_num_neighbors: int = 9,
-        dinomaly_encoder_name: str = "vit_base_patch14_reg4_dinov2",
+        detector: AnomalyDINO | Patchcore | Dinomaly | dict[str, Any] | None = None,
         decision_prompts: dict[str, str] | None = None,
     ) -> None:
-        if detector == "dinomaly" and pre_processor is True:
+        validate_refinement_options(n_shots, alpha, gamma)
+        validate_decision_options(decision_batch_size, decision_prompts)
+        supported = {f"anomalib.models.{model.__name__}": model for model in (AnomalyDINO, Patchcore, Dinomaly)}
+        if isinstance(detector, dict):
+            model_class = supported.get(detector.get("class_path", ""))
+            if model_class is None or detector.keys() - {"class_path", "init_args"}:
+                msg = "detector configuration must select AnomalyDINO, Patchcore, or Dinomaly."
+                raise ValueError(msg)
+            detector = model_class(**detector.get("init_args", {}))
+        if detector is None:
+            detector = AnomalyDINO(encoder_name="vit_large_patch14_dinov2")
+        if type(detector) not in {AnomalyDINO, Patchcore, Dinomaly}:
+            msg = "detector must be an AnomalyDINO, Patchcore, or Dinomaly instance."
+            raise ValueError(msg)
+        configured_detector = detector
+        # Save constructor settings as plain data instead of pickling the live Lightning module.
+        detector = None
+        if isinstance(configured_detector, Dinomaly) and pre_processor is True:
             pre_processor = PreProcessor(Compose([Resize((448, 448)), CenterCrop(392)]))
         super().__init__(
             pre_processor=pre_processor,
@@ -81,26 +91,33 @@ class VerdictAD(MemoryBankMixin, AnomalibModule):
             evaluator=evaluator,
             visualizer=visualizer,
         )
+        self.save_hyperparameters({
+            "detector": {
+                "class_path": f"anomalib.models.{type(configured_detector).__name__}",
+                "init_args": {
+                    key: value.value if isinstance(value, Enum) else value
+                    for key, value in configured_detector.hparams.items()
+                    if key in signature(type(configured_detector).__init__).parameters
+                },
+            },
+        })
+        self._sampling_ratio = (
+            configured_detector.coreset_sampling_ratio if isinstance(configured_detector, Patchcore) else 0.1
+        )
+        self._detector_trainer_arguments = {
+            **configured_detector.trainer_arguments,
+            "devices": 1,
+            "num_sanity_val_steps": 0,
+        }
         self.model = VerdictADModel(
-            n_shots,
-            encoder_name,
-            decision_model_path,
-            decision_batch_size,
-            alpha,
-            gamma,
-            detector=detector,
-            patchcore_backbone=patchcore_backbone,
-            patchcore_layers=patchcore_layers,
-            patchcore_pre_trained=patchcore_pre_trained,
-            patchcore_coreset_sampling_ratio=patchcore_coreset_sampling_ratio,
-            patchcore_num_neighbors=patchcore_num_neighbors,
-            dinomaly_encoder_name=dinomaly_encoder_name,
+            n_shots=n_shots,
+            decision_model_path=decision_model_path,
+            decision_batch_size=decision_batch_size,
+            alpha=alpha,
+            gamma=gamma,
+            detector=configured_detector.model,
             decision_prompts=decision_prompts,
         )
-        if isinstance(self.model.detector, DinomalyModel):
-            Dinomaly._initialize_trainable_modules(  # noqa: SLF001
-                torch.nn.ModuleList([self.model.detector.bottleneck, self.model.detector.decoder]),
-            )
 
     def training_step(self, batch: Batch, *args, **kwargs) -> torch.Tensor:
         """Collect references and compute Dinomaly's loss when selected.
@@ -131,7 +148,7 @@ class VerdictAD(MemoryBankMixin, AnomalibModule):
 
     def fit(self) -> None:
         """Fit the detector on the collected references."""
-        self.model.fit()
+        self.model.fit(sampling_ratio=self._sampling_ratio)
 
     def validation_step(self, batch: Batch, *args, **kwargs) -> Batch:
         """Refine predictions before calibration and evaluation.
@@ -177,11 +194,7 @@ class VerdictAD(MemoryBankMixin, AnomalibModule):
     @property
     def trainer_arguments(self) -> dict[str, Any]:
         """Return single-device settings appropriate to the selected detector."""
-        if isinstance(self.model.detector, DinomalyModel):
-            trainer_config = TRAINING_CONFIG["trainer"].copy()
-            trainer_config.pop("max_steps", None)
-            return {**trainer_config, "devices": 1}
-        return {"max_epochs": 1, "num_sanity_val_steps": 0, "devices": 1}
+        return self._detector_trainer_arguments.copy()
 
     @property
     def learning_type(self) -> LearningType:
