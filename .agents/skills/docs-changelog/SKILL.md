@@ -35,7 +35,7 @@ Use this skill when code changes may affect user-visible documentation, examples
 
 ## Changelog
 
-- Regular PRs should **not** edit `CHANGELOG.md`. Instead, `CHANGELOG.md` and GitHub Release notes are auto-generated from squash-merged Conventional Commit PR titles at release time via `.github/scripts/changelog.py` (and mirrored into GitHub Releases by `.github/workflows/release-lib.yaml`).
+- Regular PRs should **not** edit `CHANGELOG.md`. Instead, `CHANGELOG.md` and GitHub Release notes are auto-generated from squash-merged Conventional Commit PR titles at release time via `git-cliff` (`cliff.toml`) and `.github/scripts/changelog.py` (and mirrored into GitHub Releases by `.github/workflows/release-lib.yaml`).
 - Reviewers should check that the **PR title** accurately describes the user-facing change and that breaking changes are marked with `!` or a `BREAKING CHANGE:` footer.
 - When reviewing a release-preparation PR (`docs(changelog): prepare CHANGELOG.md for v...` / `chore(release): ...`):
   - Use the existing Keep a Changelog section headings: `Added`, `Removed`, `Changed`, `Deprecated`, `Fixed`.

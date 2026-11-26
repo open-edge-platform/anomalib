@@ -147,11 +147,11 @@ PYPI_TOKEN: [Production PyPI token]
 
 ### {octicon}`pencil` 1. Prepare Release
 
-1. Update version, lockfiles, and `CHANGELOG.md` using the **Prepare Release** workflow (`.github/workflows/prepare-release.yaml`) or locally via `.github/scripts/changelog.py`:
+1. Update version, lockfiles, and `CHANGELOG.md` using the **Prepare Release** workflow (`.github/workflows/prepare-release.yaml`) or locally with `git-cliff` and `uv`:
 
    ```bash
-   python3 .github/scripts/changelog.py generate --version 1.2.3 --update --changelog CHANGELOG.md --pyproject pyproject.toml
-   uv lock
+   uvx git-cliff==2.14.2 --unreleased --tag lib/v1.2.3 | python3 .github/scripts/changelog.py update --version 1.2.3 --changelog CHANGELOG.md
+   uv version 1.2.3 --no-sync
    uv lock --directory application/backend
    ```
 

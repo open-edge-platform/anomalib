@@ -1,0 +1,90 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+# Configuration for git-cliff (https://git-cliff.org)
+
+[remote.github]
+owner = "open-edge-platform"
+repo = "anomalib"
+
+[changelog]
+body = """
+{%- if version %}{% set clean_version = version | trim_start_matches(pat="lib/") %}## [{{ clean_version }}] - {{ timestamp | date(format="%Y-%m-%d") }}{% else %}## [Unreleased]{% endif %}
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | striptags | trim }}
+
+{% for commit in commits -%}
+{%- if commit.scope -%}
+  {%- set scope = commit.scope -%}
+{%- elif commit.breaking -%}
+  {%- set scope = "breaking" -%}
+{%- else -%}
+  {%- set scope = commit.raw_message | split(pat=":") | first | trim_end_matches(pat="!") -%}
+{%- endif -%}
+{%- set summary = commit.message | upper_first -%}
+{%- set is_security = commit.scope == "security" or summary is matching("(?i)\\[security\\]|security fix") -%}
+{%- if commit.breaking -%}
+  {%- set emoji = "⚠️" -%}
+{%- elif is_security -%}
+  {%- set emoji = "🔒" -%}
+{%- elif commit.raw_message is starting_with("feat") -%}
+  {%- set emoji = "🚀" -%}
+{%- elif commit.raw_message is starting_with("fix") -%}
+  {%- set emoji = "🐞" -%}
+{%- elif commit.raw_message is starting_with("docs") -%}
+  {%- set emoji = "📚" -%}
+{%- elif commit.raw_message is starting_with("perf") -%}
+  {%- set emoji = "⚡" -%}
+{%- elif commit.raw_message is starting_with("refactor") -%}
+  {%- set emoji = "🔄" -%}
+{%- elif commit.raw_message is starting_with("revert") -%}
+  {%- set emoji = "⏪" -%}
+{%- elif commit.raw_message is starting_with("build") -%}
+  {%- set emoji = "📦" -%}
+{%- else -%}
+  {%- set emoji = "🔧" -%}
+{%- endif -%}
+- {{ emoji }} **{{ scope }}**: {{ summary }}
+  {%- if commit.breaking_description %} ({{ commit.breaking_description }}){% endif -%}
+  {%- if commit.remote.username %} by @{{ commit.remote.username }}{% endif -%}
+  {%- if commit.remote.pr_number %} in https://github.com/open-edge-platform/anomalib/pull/{{ commit.remote.pr_number }}{% endif %}
+{% endfor -%}
+{% endfor -%}
+"""
+trim = true
+postprocessors = [
+  # Drop duplicate trailing (#123) when GitHub metadata already appended the PR URL.
+  { pattern = '\s+\(#\d+\)((?: \([^)\n]*\))? (?:by @\S+ )?in https://github\.com/\S+/pull/\d+)', replace = '$1' },
+  # Convert trailing (#123) into a PR link when running offline without GitHub metadata.
+  { pattern = '(?m)\s+\(#(\d+)\)((?: \([^)\n]*\))?)$', replace = '$2 in https://github.com/open-edge-platform/anomalib/pull/$1' },
+]
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+split_commits = false
+commit_preprocessors = [
+  # Strip optional leading emoji prefixes allowed in Anomalib PR titles.
+  { pattern = '^[\s\p{Emoji_Presentation}\x{2300}-\x{23FF}\x{2600}-\x{27BF}\x{FE0F}\x{200D}]+', replace = '' },
+]
+commit_parsers = [
+  # Skip release housekeeping commits.
+  { message = "^chore\\((?:release|lib)\\):\\s*(?i)(?:prepare|prep|restore|sync|bump version)\\b", skip = true },
+  { message = "^docs\\(changelog\\):\\s*(?i)(?:prepare|prep|restore|sync)\\b", skip = true },
+  # Breaking changes.
+  { breaking = true, message = "^[a-z]+(?:\\([^)]+\\))?!?:\\s*(?i)(?:remove|drop)\\b", group = "<!-- 1 -->Removed" },
+  { breaking = true, group = "<!-- 2 -->Changed" },
+  # Keep a Changelog sections in canonical order (numeric comments stripped by template).
+  { message = "^feat", group = "<!-- 0 -->Added" },
+  { message = "^fix", group = "<!-- 4 -->Fixed" },
+  { message = "^docs(?:\\([^)]+\\))?:\\s*(?i)(?:fix|correct|clarify|restore)\\b", group = "<!-- 4 -->Fixed" },
+  { message = "^docs", group = "<!-- 2 -->Changed" },
+  { message = "^perf", group = "<!-- 2 -->Changed" },
+  { message = "^refactor", group = "<!-- 2 -->Changed" },
+  { message = "^revert", group = "<!-- 2 -->Changed" },
+  { message = "^(?:build|chore|ci)", group = "<!-- 2 -->Changed" },
+  # Omit purely internal commits (test, style).
+  { message = "^(?:test|style)", skip = true },
+]
+filter_commits = true
+tag_pattern = "^lib/v[0-9]+\\.[0-9]+\\.[0-9]+$"
+sort_commits = "newest"

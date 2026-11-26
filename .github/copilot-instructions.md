@@ -123,7 +123,7 @@ For detailed topic-specific policy, consult the `.agents/skills/` files referenc
 **Changelog policy:**
 
 - Regular PRs do **not** edit `CHANGELOG.md`. Ensure the PR title accurately summarizes the user-facing change in Conventional Commit format, and document breaking changes with `BREAKING CHANGE:` or `!` in the PR title/description.
-- Release-preparation PRs (`docs(changelog): prepare CHANGELOG.md for v...` / `chore(release): ...`) generate versioned `CHANGELOG.md` sections via `.github/scripts/changelog.py`, using Keep a Changelog headings (`Added`, `Removed`, `Changed`, `Deprecated`, `Fixed`) with change-type emoji, bold scope, author attribution, and PR URL:
+- Release-preparation PRs (`docs(changelog): prepare CHANGELOG.md for v...` / `chore(release): ...`) generate versioned `CHANGELOG.md` sections via `git-cliff` (`cliff.toml`) and `.github/scripts/changelog.py`, using Keep a Changelog headings (`Added`, `Removed`, `Changed`, `Deprecated`, `Fixed`) with change-type emoji, bold scope, author attribution, and PR URL:
 
   ```markdown
   - 🐞 **data**: Describe the user-facing fix by @github-user in https://github.com/open-edge-platform/anomalib/pull/1234

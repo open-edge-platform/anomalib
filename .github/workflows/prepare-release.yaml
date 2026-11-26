@@ -1,10 +1,9 @@
 # Prepare Release Workflow
 #
 # Prepares a library release in a single reviewable PR by:
-# 1. Updating [project].version in pyproject.toml
-# 2. Refreshing uv.lock and application/backend/uv.lock
-# 3. Generating the matching [vX.Y.Z] section in CHANGELOG.md from
-#    Conventional Commit PR titles since the previous lib/v*.*.* tag
+# 1. Updating [project].version in pyproject.toml and refreshing uv.lock files
+# 2. Generating the matching [vX.Y.Z] section in CHANGELOG.md with git-cliff
+#    from Conventional Commit PR titles since the previous lib/v*.*.* tag
 #
 # Once merged and tagged (lib/vX.Y.Z), release-lib.yaml validates pyproject.toml
 # and CHANGELOG.md and publishes identical GitHub Release notes.
@@ -61,7 +60,6 @@ jobs:
           python-version: "3.13"
 
       - name: Install uv
-        if: ${{ !inputs.dry_run }}
         uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: "0.9.18"
@@ -70,7 +68,7 @@ jobs:
       - name: Prepare pyproject.toml, lockfiles, and CHANGELOG.md
         id: prepare
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           INPUT_VERSION: ${{ inputs.version }}
           INPUT_SINCE_TAG: ${{ inputs.since_tag }}
           INPUT_REPO: ${{ github.repository }}
@@ -84,24 +82,27 @@ jobs:
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-          ARGS=(generate --version "$VERSION" --repo "$INPUT_REPO")
+          CLIFF_ARGS=(--tag "lib/v$VERSION" --github-repo "$INPUT_REPO" --output "$RUNNER_TEMP/section.md")
           if [[ -n "$INPUT_SINCE_TAG" ]]; then
-            ARGS+=(--since-tag "$INPUT_SINCE_TAG")
+            CLIFF_ARGS+=(-- "${INPUT_SINCE_TAG}..HEAD")
+          else
+            CLIFF_ARGS+=(--unreleased)
           fi
 
+          uvx git-cliff==2.14.2 "${CLIFF_ARGS[@]}"
+
           if [[ "$DRY_RUN" == "true" ]]; then
-            python3 .github/scripts/changelog.py "${ARGS[@]}" --output "$RUNNER_TEMP/preview.md"
             {
               echo "### Changelog Preview for v$VERSION"
               echo ""
-              cat "$RUNNER_TEMP/preview.md"
+              cat "$RUNNER_TEMP/section.md"
             } >> "$GITHUB_STEP_SUMMARY"
           else
-            python3 .github/scripts/changelog.py "${ARGS[@]}" \
-              --update \
-              --changelog CHANGELOG.md \
-              --pyproject pyproject.toml
-            uv lock
+            python3 .github/scripts/changelog.py update \
+              --version "$VERSION" \
+              --input "$RUNNER_TEMP/section.md" \
+              --changelog CHANGELOG.md
+            uv version "$VERSION" --no-sync
             uv lock --directory application/backend
             uv lock --check
             uv lock --check --directory application/backend
