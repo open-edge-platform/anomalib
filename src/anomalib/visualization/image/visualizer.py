@@ -1,4 +1,4 @@
-# Copyright (C) 2024-2025 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Image visualization module for anomaly detection.
@@ -169,7 +169,7 @@ class ImageVisualizer(Visualizer):
 
     def __init__(
         self,
-        fields: list[str] | None = ["image", "gt_mask"],
+        fields: list[str] | tuple[str, ...] | None = ("image", "gt_mask"),
         overlay_fields: list[tuple[str, list[str]]] | None = None,
         field_size: tuple[int, int] = (256, 256),
         fields_config: dict[str, dict[str, Any]] | None = None,
@@ -178,7 +178,7 @@ class ImageVisualizer(Visualizer):
         output_dir: str | Path | None = None,
     ) -> None:
         super().__init__()
-        self.fields = fields or ["image", "gt_mask"]
+        self.fields = list(fields) if fields is not None else None
         self.overlay_fields = overlay_fields or [("image", ["anomaly_map"]), ("image", ["pred_mask"])]
         self.field_size = field_size
         self.fields_config = {**DEFAULT_FIELDS_CONFIG, **(fields_config or {})}
