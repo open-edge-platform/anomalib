@@ -287,6 +287,9 @@ def make_mvtec2_dataset(
         columns=["path", "split", "label", "image_path", "mask_path", "label_index"],
     )
 
+    # pandas 3 infers a str dtype and turns None into NaN, which is not a valid mask path
+    samples["mask_path"] = samples["mask_path"].astype(object).where(samples["mask_path"].notna(), None)
+
     # Filter by split if specified
     if split:
         split = Split(split) if isinstance(split, str) else split

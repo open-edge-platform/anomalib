@@ -312,7 +312,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=1.1.0" },
     { name = "pandoc", marker = "extra == 'dev'" },
     { name = "pandoc", marker = "extra == 'docs'" },
-    { name = "pillow", specifier = ">=10.1.0" },
+    { name = "pillow", specifier = ">=13.0.0" },
     { name = "platformdirs", specifier = ">=4.9.4" },
     { name = "prek", marker = "extra == 'dev'" },
     { name = "prek", marker = "extra == 'test'" },

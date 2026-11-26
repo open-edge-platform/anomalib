@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 
+- 💥 **deps**: Drop Python 3.10 support; the minimum supported Python version is now 3.11 by @ivanzati in https://github.com/open-edge-platform/anomalib/pull/3943
+
 ### Changed
 
 ### Deprecated
