@@ -169,7 +169,7 @@ class ImageVisualizer(Visualizer):
 
     def __init__(
         self,
-        fields: list[str] | None = None,
+        fields: list[str] | None = ["image", "gt_mask"],
         overlay_fields: list[tuple[str, list[str]]] | None = None,
         field_size: tuple[int, int] = (256, 256),
         fields_config: dict[str, dict[str, Any]] | None = None,
