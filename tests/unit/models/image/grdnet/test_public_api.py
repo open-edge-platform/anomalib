@@ -90,4 +90,4 @@ def test_cli_configuration_with_roi_folder(tmp_path: Path) -> None:
 
     assert isinstance(cli.model, GRDNet)
     assert isinstance(cli.datamodule, GRDNetFolder)
-    assert cli.datamodule.roi_dir == "roi"
+    assert str(cli.datamodule.roi_dir) == "roi"
