@@ -139,7 +139,6 @@ jobs:
               - tox.ini
               - .github/actions/pytest/**
               - .github/scripts/**
-              - cliff.toml
               - .github/workflows/pr.yaml
               - .github/workflows/_reusable-code-quality.yaml
               - .github/workflows/_reusable-test-suite.yaml

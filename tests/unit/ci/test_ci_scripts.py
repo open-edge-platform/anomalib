@@ -1,6 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Compact unit tests for `.github/scripts/{changelog,check_pr_title}.py` and `cliff.toml`."""
+"""Compact unit tests for `.github/scripts/{changelog,check_pr_title}.py` and `[tool.git-cliff]`."""
 
 from __future__ import annotations
 
@@ -39,8 +39,8 @@ check_pr_title = _load("check_pr_title")
 
 
 def test_cliff_config_is_valid_toml() -> None:
-    """Verifies `cliff.toml` parses cleanly and targets `lib/v*` tags."""
-    config = tomllib.loads((REPO_ROOT / "cliff.toml").read_text(encoding="utf-8"))
+    """Verifies `[tool.git-cliff]` in `pyproject.toml` parses cleanly and targets `lib/v*` tags."""
+    config = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))["tool"]["git-cliff"]
     assert config["remote"]["github"] == {"owner": "open-edge-platform", "repo": "anomalib"}
     assert "lib/v" in config["git"]["tag_pattern"]
     assert config["git"]["conventional_commits"] is True
