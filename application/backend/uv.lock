@@ -245,6 +245,7 @@ xpu = [
 requires-dist = [
     { name = "anomalib", extras = ["clip", "datasets", "openvino", "loggers", "notebooks", "vlm", "video", "huggingface"], marker = "extra == 'full'" },
     { name = "anomalib", extras = ["full", "docs", "test"], marker = "extra == 'dev'" },
+    { name = "atheris", marker = "python_full_version >= '3.12' and python_full_version < '3.15' and implementation_name == 'cpython' and platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'fuzz'", specifier = "==3.1.0" },
     { name = "av", marker = "extra == 'video'", specifier = ">=10.0.0" },
     { name = "comet-ml", marker = "extra == 'loggers'", specifier = ">=3.31.7" },
     { name = "coverage", extras = ["toml"], marker = "extra == 'test'" },
@@ -326,7 +327,7 @@ requires-dist = [
     { name = "triton-xpu", marker = "(sys_platform == 'linux' and extra == 'xpu') or (sys_platform == 'win32' and extra == 'xpu')", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "anomalib", extra = "xpu" } },
     { name = "wandb", marker = "extra == 'loggers'" },
 ]
-provides-extras = ["huggingface", "openvino", "clip", "vlm", "video", "loggers", "notebooks", "datasets", "docs", "test", "cpu", "cu126", "cu130", "rocm", "xpu", "full", "dev"]
+provides-extras = ["huggingface", "openvino", "clip", "vlm", "video", "loggers", "notebooks", "datasets", "docs", "fuzz", "test", "cpu", "cu126", "cu130", "rocm", "xpu", "full", "dev"]
 
 [[package]]
 name = "anomalib-studio"
