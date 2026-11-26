@@ -1,11 +1,11 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """VAD Data Module.
 
-This module provides a PyTorch Lightning DataModule for the VAD dataset. If
-the dataset is not available locally, it will be downloaded and extracted
-automatically.
+This module provides a PyTorch Lightning DataModule for the VAD dataset.
+Automatic downloads are unavailable. Download and extract the dataset manually
+before use.
 
 Example:
     Create a VAD datamodule::
@@ -17,8 +17,10 @@ Example:
         ... )
 
 Notes:
-    The dataset will be automatically downloaded and converted to the required
-    format when first used. The directory structure after preparation will be::
+    Download the dataset from
+    https://drive.google.com/file/d/1sWNZCUnb2u4hcr6ak7gjpwsm6jtx6IF1/view?usp=sharing
+    (listed at https://github.com/abc-125/segad) and extract it under ``root``.
+    The expected directory structure is::
 
         datasets/
         └── VAD/
@@ -44,7 +46,8 @@ from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets import VADDataset
-from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
+from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode
+from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +63,7 @@ class VAD(AnomalibDataModule):
     """VAD Datamodule.
 
     Args:
-        root (Path | str): Path to the root of the dataset.
+        root (Path | str | None): Path to the root of the dataset.
             Defaults to ``"./datasets/VAD"``.
         category (str): Category of the VAD dataset. Defaults to ``"vad"``.
         train_batch_size (int, optional): Training batch size.
@@ -117,7 +120,7 @@ class VAD(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/VAD",
+        root: Path | str | None = "./datasets/VAD",
         category: str = "vad",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
@@ -147,6 +150,7 @@ class VAD(AnomalibDataModule):
             seed=seed,
         )
 
+        root = resolve_dataset_root(root, "VAD")
         self.root = Path(root)
         self.category = category
 
@@ -175,28 +179,19 @@ class VAD(AnomalibDataModule):
         )
 
     def prepare_data(self) -> None:
-        """Download the dataset if not available.
+        """Check that the manually downloaded dataset is available.
 
-        This method checks if the specified dataset is available in the file
-        system. If not, it downloads and extracts the dataset into the
-        appropriate directory.
-
-        Example:
-            Assume the dataset is not available on the file system::
-
-                >>> datamodule = VAD(
-                ...     root="./datasets/VAD",
-                ...     category="vad"
-                ... )
-                >>> datamodule.prepare_data()
-
-            Directory structure after download::
-
-                datasets/
-                    └── VAD/
-                        └── vad/
+        Raises:
+            FileNotFoundError: If the requested category directory is missing.
         """
         if (self.root / self.category).is_dir():
             logger.info("Found the dataset.")
         else:
-            download_and_extract(self.root, DOWNLOAD_INFO)
+            msg = (
+                "VAD automatic download is unavailable. "
+                "Download the dataset manually from "
+                "https://drive.google.com/file/d/1sWNZCUnb2u4hcr6ak7gjpwsm6jtx6IF1/view?usp=sharing "
+                "(listed at https://github.com/abc-125/segad) "
+                f"and extract it so that '{self.root / self.category}' exists."
+            )
+            raise FileNotFoundError(msg)

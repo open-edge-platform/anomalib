@@ -2,6 +2,6 @@ model:
   class_path: anomalib.models.AnomalyDINO
   init_args:
     num_neighbours: 1
-    encoder_name: dinov2_vit_small_14
+    encoder_name: vit_small_patch14_dinov2
     masking: False
     coreset_subsampling: False

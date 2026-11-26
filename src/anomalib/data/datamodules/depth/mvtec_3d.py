@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """MVTec 3D-AD Datamodule.
@@ -38,15 +38,16 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.depth.mvtec_3d import MVTec3DDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
+from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
 
 
 DOWNLOAD_INFO = DownloadInfo(
     name="mvtec_3d",
-    url="https://www.mydrive.ch/shares/45920/dd1eb345346df066c63b5c95676b961b/download/428824485-1643285832"
+    url="https://www.mydrive.ch/shares/163793/e458caf2858886bbd6fa2b7a86c89b9b/download/428824485-1643299897"
     "/mvtec_3d_anomaly_detection.tar.xz",
-    hashsum="d8bb2800fbf3ac88e798da6ae10dc819",
+    hashsum="5f6a09dfa2c4af94008a43b79d08bf5534e5946497cd816b14c8e783c92d713c",
 )
 
 
@@ -54,7 +55,7 @@ class MVTec3D(AnomalibDataModule):
     """MVTec 3D-AD Datamodule.
 
     Args:
-        root (Path | str): Path to the root of the dataset.
+        root (Path | str | None): Path to the root of the dataset.
             Defaults to ``"./datasets/MVTec3D"``.
         category (str): Category of the MVTec3D dataset (e.g. ``"bottle"`` or
             ``"cable"``). Defaults to ``"bagel"``.
@@ -86,7 +87,7 @@ class MVTec3D(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/MVTec3D",
+        root: Path | str | None = "./datasets/MVTec3D",
         category: str = "bagel",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
@@ -116,6 +117,7 @@ class MVTec3D(AnomalibDataModule):
             seed=seed,
         )
 
+        root = resolve_dataset_root(root, "MVTec3D")
         self.root = Path(root)
         self.category = category
 

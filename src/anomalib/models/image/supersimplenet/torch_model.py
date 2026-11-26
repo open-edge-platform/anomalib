@@ -361,8 +361,11 @@ class SegmentationDetectionModule(nn.Module):
             map_avg = map_avg.detach()
 
         # final dec layer: conv channel max and avg and map max and avg
-        dec_cat = torch.cat((dec_max, dec_avg, map_max, map_avg), dim=1).squeeze()
-        ano_score = self.cls_fc(dec_cat).reshape(-1)
+        dec_cat = torch.cat((dec_max, dec_avg, map_max, map_avg), dim=1)
+        # Torch Squeeze can be porblmatic with openvino exported models
+        batch_size = dec_cat.shape[0]
+        dec_cat = dec_cat.reshape(batch_size, -1)
+        ano_score = self.cls_fc(dec_cat).squeeze(dim=1)
 
         return ano_map, ano_score
 

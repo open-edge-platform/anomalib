@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """MVTec AD Dataset.
@@ -36,7 +36,8 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datasets.base import AnomalibDataset
 from anomalib.data.errors import MisMatchError
 from anomalib.data.utils import LabelName, Split, validate_path
-from anomalib.utils import deprecate
+from anomalib.data.utils.path import is_within_directory
+from anomalib.utils.path import get_datasets_dir
 
 IMG_EXTENSIONS = (".png", ".PNG")
 CATEGORIES = (
@@ -65,8 +66,8 @@ class MVTecADDataset(AnomalibDataset):
     both classification and segmentation tasks.
 
     Args:
-        root (Path | str): Path to root directory containing the dataset.
-            Defaults to ``"./datasets/MVTecAD"``.
+        root (Path | str | None): Path to root directory containing the dataset.
+            Defaults to ``None``.
         category (str): Category name, must be one of ``CATEGORIES``.
             Defaults to ``"bottle"``.
         augmentations (Transform, optional): Augmentations that should be applied to the input images.
@@ -105,12 +106,14 @@ class MVTecADDataset(AnomalibDataset):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/MVTecAD",
+        root: Path | str | None = None,
         category: str = "bottle",
         augmentations: Transform | None = None,
         split: str | Split | None = None,
     ) -> None:
         super().__init__(augmentations=augmentations)
+
+        root = root if root is not None else get_datasets_dir() / "MVTecAD"
 
         self.root_category = Path(root) / Path(category)
         self.category = category
@@ -165,7 +168,11 @@ def make_mvtec_ad_dataset(
         extensions = IMG_EXTENSIONS
 
     root = validate_path(root)
-    samples_list = [(str(root), *f.parts[-3:]) for f in root.glob(r"**/*") if f.suffix in extensions]
+    samples_list = [
+        (str(root), *f.parts[-3:])
+        for f in root.glob(r"**/*")
+        if f.suffix in extensions and is_within_directory(root, f)
+    ]
     if not samples_list:
         msg = f"Found 0 images in {root}"
         raise RuntimeError(msg)
@@ -218,18 +225,7 @@ def make_mvtec_ad_dataset(
     samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
 
     if split:
-        samples = samples[samples.split == split].reset_index(drop=True)
+        split_value = split.value if isinstance(split, Split) else split
+        samples = samples[samples.split == split_value].reset_index(drop=True)
 
     return samples
-
-
-@deprecate(since="2.1.0", remove="2.3.0", use="MVTecADDataset")
-class MVTecDataset(MVTecADDataset):
-    """MVTec dataset class (Deprecated).
-
-    This class is deprecated and will be removed in a future version.
-    Please use MVTecADDataset instead.
-    """
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)

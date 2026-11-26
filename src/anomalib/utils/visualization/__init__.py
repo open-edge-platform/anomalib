@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Tools for visualizing anomaly detection results.
@@ -25,13 +25,13 @@ The module ensures consistent and informative visualization across different
 detection approaches and result types.
 """
 
-from .base import BaseVisualizer, GeneratorResult, VisualizationStep
+from .base import GeneratorResult, VisualizationStep, Visualizer
 from .explanation import ExplanationVisualizer
 from .image import ImageResult, ImageVisualizer
 from .metrics import MetricsVisualizer
 
 __all__ = [
-    "BaseVisualizer",
+    "Visualizer",
     "ExplanationVisualizer",
     "ImageResult",
     "ImageVisualizer",

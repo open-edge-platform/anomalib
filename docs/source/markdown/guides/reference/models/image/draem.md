@@ -1,5 +1,12 @@
 # DRAEM
 
+## Architecture
+
+```{eval-rst}
+.. image:: ../../../../../images/draem/architecture.png
+    :alt: DRAEM Architecture
+```
+
 ```{eval-rst}
 .. automodule:: anomalib.models.image.draem.lightning_model
    :members:

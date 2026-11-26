@@ -1,0 +1,16 @@
+Generic single-database configuration.
+
+# Generate a new migration
+```
+uv run alembic -c src/alembic.ini revision --autogenerate -m "migration_name"
+```
+
+# Upgrade the database to the latest revision
+```
+uv run alembic -c src/alembic.ini upgrade head
+```
+
+# Downgrade the database to a specific revision
+```
+uv run alembic -c src/alembic.ini downgrade <revision_id>
+```

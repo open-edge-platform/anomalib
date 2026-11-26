@@ -1,0 +1,229 @@
+// Copyright (C) 2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+.logViewer {
+    display: flex;
+    flex-direction: column;
+    height: 75vh;
+    gap: var(--spectrum-global-dimension-size-100);
+}
+
+.filtersContainer {
+    flex-shrink: 0;
+    padding: var(--spectrum-global-dimension-size-100) var(--spectrum-global-dimension-size-150);
+    background: var(--spectrum-global-color-gray-100);
+    border-radius: var(--spectrum-global-dimension-size-50);
+}
+
+.searchContainer {
+    flex: 1;
+    min-width: 180px;
+    max-width: 280px;
+}
+
+.levelDropdownDialog {
+    // Remove all default Dialog padding and sizing
+    padding: 0 !important;
+    margin: 0 !important;
+    min-width: 0 !important;
+    width: fit-content !important;
+    max-width: none !important;
+
+    // Target Spectrum dialog grid/content wrappers
+    &,
+    > div,
+    [class*='spectrum-Dialog'],
+    [class*='Dialog-grid'],
+    [class*='Dialog-content'] {
+        padding: 0 !important;
+        margin: 0 !important;
+        min-width: 0 !important;
+        width: fit-content !important;
+        display: block !important;
+    }
+}
+
+.levelPopoverContent {
+    padding: 12px;
+}
+
+.levelPopoverActions {
+    display: flex;
+    gap: 8px;
+    border-top: 1px solid var(--spectrum-global-color-gray-300);
+    padding-top: 10px;
+    margin-top: 8px;
+}
+
+.levelMenuItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+
+    &:hover {
+        background: var(--spectrum-global-color-gray-200);
+    }
+}
+
+.levelMenuCheckbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--spectrum-global-color-blue-500);
+    margin: 0;
+}
+
+.levelMenuDot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.levelMenuLabel {
+    font-size: 13px;
+    color: var(--spectrum-global-color-gray-800);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.levelBadgeCount {
+    font-size: 12px;
+    color: var(--spectrum-global-color-gray-600);
+    margin-left: 2px;
+}
+
+.levelQuickButton {
+    font-size: 12px;
+    padding: 5px 12px;
+    cursor: pointer;
+    background: var(--spectrum-global-color-gray-200);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 4px;
+    color: var(--spectrum-global-color-gray-700);
+    transition: background-color 0.1s ease;
+
+    &:hover:not(:disabled) {
+        background: var(--spectrum-global-color-gray-300);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: default;
+    }
+}
+
+.statsText {
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    color: var(--spectrum-global-color-gray-600);
+    white-space: nowrap;
+}
+
+.logsContainer {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    background: var(--spectrum-global-color-gray-75);
+    border-radius: var(--spectrum-global-dimension-size-50);
+}
+
+.logsInner {
+    padding: var(--spectrum-global-dimension-size-50);
+}
+
+.logEntry {
+    padding: var(--spectrum-global-dimension-size-50) var(--spectrum-global-dimension-size-75);
+    border-bottom: 1px solid var(--spectrum-global-color-gray-100);
+    font-family: var(--spectrum-global-font-family-code);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    line-height: 1.3;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background: var(--spectrum-global-color-gray-100);
+    }
+}
+
+.levelTextOnly {
+    min-width: 64px;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.timestamp {
+    flex-shrink: 0;
+    cursor: default;
+}
+
+.timestampText {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    font-family: var(--spectrum-global-font-family-code);
+    min-width: 80px;
+    display: inline-block;
+}
+
+.source {
+    flex-shrink: 0;
+    cursor: default;
+}
+
+.sourceText {
+    color: var(--spectrum-global-color-gray-600);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    font-family: var(--spectrum-global-font-family-code);
+    white-space: nowrap;
+    min-width: 180px;
+}
+
+.message {
+    flex: 1;
+    min-width: 0;
+}
+
+.messageText {
+    color: var(--spectrum-global-color-gray-900);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    word-break: break-word;
+}
+
+.messagePreformatted {
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+}
+
+.messagePre {
+    margin: 0;
+    padding: var(--spectrum-global-dimension-size-25);
+    background: var(--spectrum-global-color-gray-100);
+    border-radius: var(--spectrum-global-dimension-size-50);
+    font-size: var(--spectrum-global-dimension-font-size-50);
+    font-family: var(--spectrum-global-font-family-code);
+    color: var(--spectrum-global-color-gray-900);
+    white-space: pre;
+    overflow-x: auto;
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 120px;
+    gap: var(--spectrum-global-dimension-size-100);
+    color: var(--spectrum-global-color-gray-600);
+}
+
+.autoScroll {
+    font-size: var(--spectrum-global-dimension-font-size-75);
+}

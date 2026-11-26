@@ -19,6 +19,7 @@ Example:
     >>> predictions = post_processor(anomaly_maps=anomaly_maps)
 """
 
+from .mebin_post_processor import MEBinPostProcessor
 from .post_processor import PostProcessor
 
-__all__ = ["PostProcessor"]
+__all__ = ["PostProcessor", "MEBinPostProcessor"]

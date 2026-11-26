@@ -142,6 +142,9 @@ One key advantage of Anomalib's post-processor design is that it becomes part of
 ### Example: OpenVINO Deployment
 
 ```python
+from anomalib.data import MVTecAD
+from anomalib.deploy import ExportType
+from anomalib.engine import Engine
 from anomalib.models import Patchcore
 from anomalib.post_processing import PostProcessor
 from openvino import Core
@@ -154,13 +157,16 @@ model = Patchcore(
         pixel_sensitivity=0.5
     )
 )
+datamodule = MVTecAD(category="bottle")
+engine = Engine()
+engine.fit(model=model, datamodule=datamodule)
 
 # Export: Post-processing is included in the graph
-model.export("model", export_mode="openvino")
+engine.export(model, export_type=ExportType.OPENVINO, export_root="exported_models")
 
 # Deployment: Simple inference without manual post-processing
 core = Core()
-ov_model = core.read_model("model.xml")
+ov_model = core.read_model("exported_models/weights/openvino/model.xml")
 compiled_model = core.compile_model(ov_model)
 
 # Get input and output names
@@ -210,6 +216,38 @@ post_processor = CustomPostProcessor()
 model = Padim(post_processor=post_processor)
 ```
 
+## MEBin Post-processor
+
+Anomalib also provides the `MEBinPostProcessor`, which uses the **MEBin (Main Element
+Binarization)** algorithm from [AnomalyNCD](https://arxiv.org/abs/2410.14379). Unlike the default `PostProcessor` which applies a single global
+threshold, MEBin computes a **per-image adaptive threshold** based on
+connected-component stability analysis.
+
+```python
+from anomalib.models import Patchcore
+from anomalib.post_processing import MEBinPostProcessor
+
+post_processor = MEBinPostProcessor(
+    sample_rate=4,         # threshold sweep step size
+    min_interval_len=4,    # minimum stable interval length
+    erode=True,            # apply erosion to suppress noise
+    kernel_size=6,         # erosion kernel size
+)
+model = Patchcore(post_processor=post_processor)
+```
+
+The MEBin post-processor inherits all normalization and metric-tracking from the base
+`PostProcessor`. The key difference is that `pred_mask` is computed using per-image
+MEBin thresholds instead of the global F1-adaptive threshold. Image-level predictions
+(`pred_label`) still use the global threshold.
+
+```{note}
+MEBin is an *alternative* post-processor designed for precision-oriented use cases
+(e.g., anomaly class discovery).  It intentionally suppresses false positives at the
+cost of recall, so pixel-level F1 will typically be lower than the default
+post-processor.  Use it when downstream tasks benefit from high-confidence masks.
+```
+
 ## Best Practices
 
 **Validation**:
@@ -219,6 +257,6 @@ model = Padim(post_processor=post_processor)
 
 ```{seealso}
 For more information:
-- {doc}`PreProcessing guide <./pre_processing>`
-- {doc}`AnomalibModule Documentation <../../reference/models/base>`
+- {doc}`PreProcessor guide <./pre_processor>`
+- {doc}`AnomalibModule Guide <./anomalib_module>`
 ```

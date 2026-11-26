@@ -211,25 +211,27 @@ def make_folder3d_dataset(
     samples = DataFrame({"image_path": filenames, "label": labels})
     samples = samples.sort_values(by="image_path", ignore_index=True)
 
+    # Use .value for enum comparisons to ensure compatibility with pandas >= 3.0,
+    # where StringDtype no longer matches str-based Enum members directly.
     samples.loc[
-        (samples.label == DirType.NORMAL) | (samples.label == DirType.NORMAL_TEST),
+        (samples.label == DirType.NORMAL.value) | (samples.label == DirType.NORMAL_TEST.value),
         "label_index",
     ] = LabelName.NORMAL
-    samples.loc[(samples.label == DirType.ABNORMAL), "label_index"] = LabelName.ABNORMAL
+    samples.loc[(samples.label == DirType.ABNORMAL.value), "label_index"] = LabelName.ABNORMAL
     samples.label_index = samples.label_index.astype("Int64")
 
     # If a path to mask is provided, add it to the sample dataframe.
     if normal_depth_dir:
-        samples.loc[samples.label == DirType.NORMAL, "depth_path"] = samples.loc[
-            samples.label == DirType.NORMAL_DEPTH
+        samples.loc[samples.label == DirType.NORMAL.value, "depth_path"] = samples.loc[
+            samples.label == DirType.NORMAL_DEPTH.value
         ].image_path.to_numpy()
-        samples.loc[samples.label == DirType.ABNORMAL, "depth_path"] = samples.loc[
-            samples.label == DirType.ABNORMAL_DEPTH
+        samples.loc[samples.label == DirType.ABNORMAL.value, "depth_path"] = samples.loc[
+            samples.label == DirType.ABNORMAL_DEPTH.value
         ].image_path.to_numpy()
 
         if normal_test_dir:
-            samples.loc[samples.label == DirType.NORMAL_TEST, "depth_path"] = samples.loc[
-                samples.label == DirType.NORMAL_TEST_DEPTH
+            samples.loc[samples.label == DirType.NORMAL_TEST.value, "depth_path"] = samples.loc[
+                samples.label == DirType.NORMAL_TEST_DEPTH.value
             ].image_path.to_numpy()
 
         # make sure every rgb image has a corresponding depth image and that the file exists
@@ -258,8 +260,8 @@ def make_folder3d_dataset(
 
     # If a path to mask is provided, add it to the sample dataframe.
     if mask_dir and abnormal_dir:
-        samples.loc[samples.label == DirType.ABNORMAL, "mask_path"] = samples.loc[
-            samples.label == DirType.MASK
+        samples.loc[samples.label == DirType.ABNORMAL.value, "mask_path"] = samples.loc[
+            samples.label == DirType.MASK.value
         ].image_path.to_numpy()
         samples["mask_path"] = samples["mask_path"].fillna("")
         samples = samples.astype({"mask_path": "str"})
@@ -275,7 +277,9 @@ def make_folder3d_dataset(
 
     # Remove all the rows with temporal image samples that have already been assigned
     samples = samples.loc[
-        (samples.label == DirType.NORMAL) | (samples.label == DirType.ABNORMAL) | (samples.label == DirType.NORMAL_TEST)
+        (samples.label == DirType.NORMAL.value)
+        | (samples.label == DirType.ABNORMAL.value)
+        | (samples.label == DirType.NORMAL_TEST.value)
     ]
 
     # Ensure the pathlib objects are converted to str.
@@ -285,15 +289,19 @@ def make_folder3d_dataset(
     # Create train/test split.
     # By default, all the normal samples are assigned as train.
     #   and all the abnormal samples are test.
-    samples.loc[(samples.label == DirType.NORMAL), "split"] = Split.TRAIN
-    samples.loc[(samples.label == DirType.ABNORMAL) | (samples.label == DirType.NORMAL_TEST), "split"] = Split.TEST
+    samples.loc[(samples.label == DirType.NORMAL.value), "split"] = Split.TRAIN
+    samples.loc[
+        (samples.label == DirType.ABNORMAL.value) | (samples.label == DirType.NORMAL_TEST.value),
+        "split",
+    ] = Split.TEST
 
     # infer the task type
     samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
 
     # Get the data frame for the split.
     if split:
-        samples = samples[samples.split == split]
+        split_value = split.value if isinstance(split, Split) else split
+        samples = samples[samples.split == split_value]
         samples = samples.reset_index(drop=True)
 
     return samples

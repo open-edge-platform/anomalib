@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """PyTorch inferencer for running inference with trained anomaly detection models.
@@ -94,7 +94,7 @@ class TorchInferencer:
     Args:
         path (str | Path): Path to the PyTorch model weights file.
         device (str, optional): Device to use for inference.
-            Options are ``"auto"``, ``"cpu"``, ``"cuda"``, ``"gpu"``.
+            Options are ``"auto"``, ``"cpu"``, ``"cuda"``, ``"xpu"``.
             Defaults to ``"auto"``.
 
     Example:
@@ -129,27 +129,49 @@ class TorchInferencer:
 
         Args:
             device (str): Device to use for inference.
-                Options are ``"auto"``, ``"cpu"``, ``"cuda"``, ``"gpu"``.
+                Options are ``"auto"``, ``"cpu"``, ``"cuda"``, ``"xpu"``.
 
         Returns:
             torch.device: PyTorch device object.
 
         Raises:
             ValueError: If an invalid device is specified.
+            ValueError: If CUDA is requested but not available.
+            ValueError: If XPU is requested but PyTorch lacks XPU support or no XPU device is available.
 
         Example:
             >>> model = TorchInferencer(path="path/to/model.pt", device="cpu")
             >>> model.device
             device(type='cpu')
         """
-        if device not in {"auto", "cpu", "cuda", "gpu"}:
-            msg = f"Unknown device {device}"
+        # Validate device string
+        allowed_devices = ("auto", "cpu", "cuda", "xpu")
+        if device not in allowed_devices:
+            msg = f"Unknown device {device!r}. Expected one of: {', '.join(allowed_devices)}"
             raise ValueError(msg)
 
+        # Handle auto-detection
         if device == "auto":
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-        elif device == "gpu":
-            device = "cuda"
+            if torch.cuda.is_available():
+                device = "cuda"
+            elif hasattr(torch, "xpu") and torch.xpu.is_available():
+                device = "xpu"
+            else:
+                device = "cpu"
+
+        # Validate explicit device requests
+        if device == "cuda" and not torch.cuda.is_available():
+            msg = "CUDA device requested but CUDA is not available"
+            raise ValueError(msg)
+
+        if device == "xpu":
+            if not hasattr(torch, "xpu"):
+                msg = "XPU device requested but PyTorch installation does not have XPU support"
+                raise ValueError(msg)
+            if not torch.xpu.is_available():
+                msg = "XPU device requested but no XPU device is available"
+                raise ValueError(msg)
+
         return torch.device(device)
 
     def _load_checkpoint(self, path: str | Path) -> dict:

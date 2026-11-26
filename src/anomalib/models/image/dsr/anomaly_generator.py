@@ -49,12 +49,13 @@ class DsrAnomalyGenerator(nn.Module):
         # Replace imgaug with torchvision transform
         self.rot = v2.RandomAffine(degrees=(-90, 90))
 
-    def generate_anomaly(self, height: int, width: int) -> Tensor:
+    def generate_anomaly(self, height: int, width: int, device: torch.device | None = None) -> Tensor:
         """Generate an anomalous mask using Perlin noise.
 
         Args:
             height (int): Height of the mask to generate.
             width (int): Width of the mask to generate.
+            device (torch.device | None): Device to generate the mask on.
 
         Returns:
             Tensor: Binary mask of shape ``(1, height, width)`` where ``1``
@@ -73,7 +74,7 @@ class DsrAnomalyGenerator(nn.Module):
         threshold = 0.5
 
         # Generate perlin noise using the new function
-        perlin_noise = generate_perlin_noise(height, width, scale=(perlin_scalex, perlin_scaley))
+        perlin_noise = generate_perlin_noise(height, width, scale=(perlin_scalex, perlin_scaley), device=device)
 
         # Rescale with threshold at center if all values are below the threshold
         if not (perlin_noise > threshold).any():
@@ -115,7 +116,7 @@ class DsrAnomalyGenerator(nn.Module):
             if torch.rand(1) > self.p_anomalous:  # include normal samples
                 masks_list.append(torch.zeros((1, height, width), device=batch.device))
             else:
-                mask = self.generate_anomaly(height, width)
+                mask = self.generate_anomaly(height, width, device=batch.device)
                 masks_list.append(mask)
 
         return torch.stack(masks_list).to(batch.device)

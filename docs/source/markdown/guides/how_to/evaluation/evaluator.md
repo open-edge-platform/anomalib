@@ -68,12 +68,15 @@ engine.test(model, datamodule=datamodule)  # make sure to create a datamodule fi
 You can configure different metrics for validation and testing:
 
 ```python
-from anomalib.metrics import Evaluator, AUROC, F1Score
+from anomalib.metrics import Evaluator, AUROC, F1Score, F1Max
 
 # Validation metrics
+# Note: Use F1Max for validation as it finds the optimal F1 score across
+# different thresholds. F1Score requires pred_label which is only available
+# after thresholds are computed in the test phase.
 val_metrics = [
     AUROC(fields=["pred_score", "gt_label"]),     # Image-level AUROC
-    F1Score(fields=["pred_label", "gt_label"])    # Image-level F1
+    F1Max(fields=["pred_score", "gt_label"]),     # Maximum F1 score
 ]
 
 # Test metrics (more comprehensive)
@@ -153,9 +156,10 @@ Balance between accuracy and computational efficiency:
 # Memory-Efficient Configuration
 evaluator = Evaluator(
     # Validation: Light-weight metrics for quick feedback
+    # Use F1Max for validation - it finds optimal F1 across thresholds
     val_metrics=[
-        F1Score(fields=["pred_label", "gt_label"]),
-        AUROC(fields=["pred_score", "gt_label"])
+        AUROC(fields=["pred_score", "gt_label"]),
+        F1Max(fields=["pred_score", "gt_label"])
     ],
     # Testing: Comprehensive evaluation
     test_metrics=[

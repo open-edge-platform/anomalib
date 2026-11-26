@@ -1,0 +1,24 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capability for the main window",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "dialog:allow-open",
+    "dialog:allow-message",
+    "dialog:allow-confirm",
+    "dialog:allow-ask",
+    "dialog:allow-save",
+    "fs:default",
+    "fs:allow-write-file",
+    {
+      "identifier": "shell:allow-open",
+      "allow": [
+        { "url": "https://github.com/**" }
+      ]
+    }
+  ]
+}

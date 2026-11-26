@@ -1,10 +1,10 @@
 class_path: anomalib.data.Folder
 init_args:
-  root: "datasets/hazelnut_toy"
-  normal_dir: "good"
-  abnormal_dir: "crack"
-  mask_dir: "mask/crack"
-  normalization: imagenet
-  test_split_mode: NONE
-  val_split_mode: NONE
+  name: hazelnut_toy
+  root: datasets/hazelnut_toy
+  normal_dir: good
+  abnormal_dir: crack
+  mask_dir: mask/crack
+  test_split_mode: none
+  val_split_mode: none
   seed: null

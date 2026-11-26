@@ -10,7 +10,7 @@ Before running the tests, make sure you have the following prerequisites
 installed:
 
 - Python 3.8 or newer
-- `pre-commit`
+- `prek`
 - `pytest`
 - `pytest-cov`
 - `pytest-sugar`
@@ -43,6 +43,9 @@ can be installed via `pip install -e requirements/dev.txt`.
 
 ## Running Tests with `pytest`
 
+For the bounded security fuzz tests, CI schedule, and regression retention, see
+[Dataset metadata fuzzing](fuzzing.md).
+
 `pytest` is a powerful testing tool that allows for detailed test execution.
 
 To run all tests with pytest, execute:
@@ -62,6 +65,21 @@ For verbose output:
 ```bash
 pytest -v
 ```
+
+### Parallel tests with `pytest-xdist`
+
+CI CPU jobs run with `--numprocesses=auto --dist=loadfile`. Locally:
+
+```bash
+# Fast parallel unit feedback (same settings as CI CPU)
+uv run pytest tests/unit -n auto --dist loadfile
+
+# Keep GPU / heavy integration sequential unless you know the machine can share the device
+uv run pytest tests/integration --numprocesses=0
+```
+
+`loadfile` keeps an entire test module on one worker so session-scoped fixtures and
+per-model fit caches stay coherent. Default local runs without `-n` stay sequential.
 
 ### Checking Test Coverage with `pytest-cov
 
@@ -93,7 +111,7 @@ This will provide instructions on how to check test coverage with `pytest-cov.`
 ensuring compatibility. In Anomalib, `tox` is used to automate multiple tests.
 Here's a brief explanation of each:
 
-- `pre-commit`: These tests are run before each commit is made to the
+- `prek`: These tests are run before each commit is made to the
   repository. They're used to catch issues early and prevent problematic code
   from being committed to the repository. They can include things like style
   checks, unit tests, and static analysis.
@@ -118,7 +136,7 @@ environment. Here are some examples:
 To run the pre-commit tests
 
 ```bash
-tox -e pre-commit
+tox -e prek
 ```
 
 To run the unit and integration tests

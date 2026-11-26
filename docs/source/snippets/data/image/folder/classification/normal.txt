@@ -9,7 +9,6 @@ datamodule = Folder(
     normal_dir="good",
     val_split_mode=ValSplitMode.NONE,
     test_split_mode=TestSplitMode.NONE,
-    task="classification",
 )
 
 # Setup the datamodule

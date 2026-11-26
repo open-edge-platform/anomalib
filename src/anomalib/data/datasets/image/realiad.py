@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Real-IAD Dataset.
@@ -41,6 +41,8 @@ from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datasets.base import AnomalibDataset
 from anomalib.data.utils import LabelName, Split, validate_path
+from anomalib.data.utils.path import resolve_path_under_root
+from anomalib.utils.path import get_datasets_dir
 
 IMG_EXTENSIONS = (".jpg", ".png", ".PNG", ".JPG")
 RESOLUTIONS = ("256", "512", "1024", "raw")
@@ -92,8 +94,8 @@ class RealIADDataset(AnomalibDataset):
     - JSON metadata for flexible dataset organization
 
     Args:
-        root (Path | str): Path to root directory containing the dataset.
-            Defaults to ``"./datasets/Real-IAD"``.
+        root (Path | str | None): Path to root directory containing the dataset.
+            Defaults to ``None``.
         category (str): Category name, must be one of ``CATEGORIES``.
             Defaults to ``"audiojack"``.
         resolution (str | int): Image resolution, must be one of ``RESOLUTIONS`` or their integer equivalents.
@@ -153,7 +155,7 @@ class RealIADDataset(AnomalibDataset):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/Real-IAD",
+        root: Path | str | None = None,
         category: str = "audiojack",
         resolution: str | int = 256,
         augmentations: Transform | None = None,
@@ -178,6 +180,8 @@ class RealIADDataset(AnomalibDataset):
         """
         super().__init__(augmentations=augmentations)
 
+        root = root if root is not None else get_datasets_dir() / "Real-IAD"
+
         if category not in CATEGORIES:
             msg = f"Category {category} not found in Real-IAD dataset. Available categories: {CATEGORIES}"
             raise ValueError(msg)
@@ -199,14 +203,10 @@ class RealIADDataset(AnomalibDataset):
         if isinstance(json_path, str):
             json_path = json_path.format(category=category)
 
-        # Resolve JSON path
-        json_file = self.root / json_path
+        # Resolve JSON path and confine under dataset root
+        json_file = resolve_path_under_root(self.root, json_path)
 
         # Load JSON metadata
-        if not json_file.exists():
-            msg = f"JSON metadata file not found at {json_file}"
-            raise FileNotFoundError(msg)
-
         with json_file.open(encoding="utf-8") as f:
             self.metadata = json.load(f)
 
@@ -224,6 +224,7 @@ class RealIADDataset(AnomalibDataset):
             split=self.split,
             extensions=IMG_EXTENSIONS,
             metadata=self.metadata,
+            confinement_root=self.root,
         )
 
 
@@ -232,17 +233,22 @@ def make_realiad_dataset(
     split: str | Split | None = None,
     extensions: Sequence[str] | None = None,
     metadata: dict | None = None,
+    confinement_root: str | Path | None = None,
 ) -> DataFrame:
     """Create Real-IAD samples by parsing the JSON metadata.
 
     Args:
-        root (Path | str): Path to dataset root directory
+        root (Path | str): Path to the category directory containing the dataset samples.
         split (str | Split | None, optional): Dataset split (train or test)
             Defaults to ``None``.
         extensions (Sequence[str] | None, optional): Valid file extensions
             Defaults to ``None``.
         metadata (dict | None, optional): JSON metadata containing dataset organization.
             Defaults to ``None``.
+        confinement_root (Path | str | None, optional): Top-level dataset root that resolved
+            sample paths must remain under. If ``None``, ``root`` is used as the confinement
+            boundary, which is only safe when ``root`` is already known not to be a symlink
+            escape target. Defaults to ``None``.
 
     Returns:
         DataFrame: Dataset samples with columns:
@@ -254,7 +260,8 @@ def make_realiad_dataset(
     if extensions is None:
         extensions = IMG_EXTENSIONS
 
-    root = validate_path(root)
+    validation_root = validate_path(confinement_root) if confinement_root is not None else Path(root)
+    root = validate_path(root, base_dir=validation_root)
 
     if metadata is None:
         msg = "JSON metadata is required for RealIAD dataset"
@@ -275,9 +282,23 @@ def make_realiad_dataset(
 
     for sample in samples:
         # Create sample data with only essential columns
+        image_path = resolve_path_under_root(
+            validation_root,
+            root / sample["image_path"],
+            should_exist=False,
+        )
+        mask_path = (
+            resolve_path_under_root(
+                validation_root,
+                root / sample["mask_path"],
+                should_exist=False,
+            )
+            if sample.get("mask_path")
+            else ""
+        )
         sample_data = {
-            "image_path": str(root / sample["image_path"]),
-            "mask_path": str(root / sample["mask_path"]) if sample.get("mask_path") else "",
+            "image_path": str(image_path),
+            "mask_path": str(mask_path) if mask_path else "",
             "label_index": LabelName.NORMAL if sample["anomaly_class"] == "OK" else LabelName.ABNORMAL,
             "split": "train" if sample in metadata.get("train", []) else "test",
         }

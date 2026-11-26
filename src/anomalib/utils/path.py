@@ -1,4 +1,4 @@
-# Copyright (C) 2024-2025 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Path utilities for anomaly detection.
@@ -6,12 +6,18 @@
 This module provides utilities for managing paths and directories in anomaly
 detection projects. The key components include:
 
+    - Pre-trained weights cache directory management
     - Version directory creation and management
     - Symbolic link handling
     - Path resolution and validation
     - Output filename generation
 
 Examples:
+    Get the platform-appropriate cache directory for pre-trained weights:
+
+    >>> from anomalib.utils.path import get_pretrained_weights_dir
+    >>> weights_dir = get_pretrained_weights_dir()
+
     Test create_versioned_dir:
 
     >>> from anomalib.utils.path import create_versioned_dir
@@ -22,6 +28,7 @@ Examples:
     'v1'
 
 The module ensures consistent path handling by:
+    - Providing a centralized, cross-platform cache path for pre-trained weights
     - Creating incrementing version directories (v1, v2, etc.)
     - Maintaining a ``latest`` symbolic link
     - Handling both string and ``Path`` inputs
@@ -32,8 +39,282 @@ Note:
     across different working directories.
 """
 
+import logging
+import os
 import re
-from pathlib import Path
+import shutil
+import sys
+from contextlib import suppress
+from pathlib import Path, PurePath
+from typing import TypeAlias
+
+import platformdirs
+
+logger = logging.getLogger(__name__)
+
+PathValue: TypeAlias = (
+    str | int | float | bool | PurePath | list["PathValue"] | tuple["PathValue", ...] | dict[str, "PathValue"] | None
+)
+
+
+def paths_to_strings(value: PathValue) -> PathValue:
+    """Convert paths nested in checkpoint data to strings.
+
+    Args:
+        value: Checkpoint data containing zero or more path values.
+
+    Returns:
+        Equivalent data with all path values converted to strings.
+
+    Example:
+        >>> paths_to_strings({"weights": Path("models/model.ckpt")})
+        {'weights': 'models/model.ckpt'}
+    """
+    if isinstance(value, PurePath):
+        return str(value)
+    if isinstance(value, dict):
+        return {key: paths_to_strings(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [paths_to_strings(item) for item in value]
+    if isinstance(value, tuple):
+        return tuple(paths_to_strings(item) for item in value)
+    return value
+
+
+def _get_cache_subdir(subdir: str) -> Path:
+    """Return a subdirectory under the platform-appropriate anomalib cache root.
+
+    Uses ``platformdirs`` to resolve the user cache directory, then appends
+    ``anomalib/<subdir>``. Both the root and subdirectory are created if they
+    do not already exist.
+
+    The *subdir* argument is validated to prevent path traversal attacks:
+    it must be a simple relative path without ``..`` components, and it must
+    not be absolute.
+
+    Args:
+        subdir (str): Relative path component(s) under the anomalib cache root
+            (e.g. ``"datasets"`` or ``"datasets/MVTecAD"``).
+
+    Returns:
+        Path: Absolute path to the requested cache subdirectory.
+
+    Raises:
+        ValueError: If *subdir* is empty, absolute, or contains ``..`` components.
+    """
+    subdir_path = Path(subdir)
+    if not subdir or subdir_path.is_absolute() or ".." in subdir_path.parts:
+        msg = f"Invalid cache subdirectory name: {subdir!r}. Must be a relative path without '..' components."
+        raise ValueError(msg)
+
+    cache_dir = platformdirs.user_cache_path("anomalib", ensure_exists=True) / subdir_path
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    return cache_dir
+
+
+def get_pretrained_weights_dir() -> Path:
+    """Return the platform-appropriate cache directory for pre-trained model weights.
+
+    Returns:
+        Path: Path to the pre-trained weights cache directory.
+
+    Example:
+        >>> from anomalib.utils.path import get_pretrained_weights_dir
+        >>> get_pretrained_weights_dir().name
+        'pre_trained'
+        >>> get_pretrained_weights_dir()  # linux
+        PosixPath('/home/user/.cache/anomalib/pre_trained')
+    """
+    return _get_cache_subdir("pre_trained")
+
+
+def get_datasets_dir() -> Path:
+    """Return the platform-appropriate cache directory for anomalib datasets.
+
+    Returns:
+        Path: Path to the datasets cache directory.
+
+    Example:
+        >>> from anomalib.utils.path import get_datasets_dir
+        >>> get_datasets_dir().name
+        'datasets'
+        >>> get_datasets_dir()  # linux
+        PosixPath('/home/user/.cache/anomalib/datasets')
+    """
+    return _get_cache_subdir("datasets")
+
+
+def resolve_dataset_root(root: str | Path | None, dataset_name: str) -> Path:
+    """Resolve a dataset root path.
+
+    Args:
+        root: Root directory of the dataset. When ``None``, uses the anomalib
+            datasets cache directory for ``dataset_name``.
+        dataset_name: Name of the dataset. Used only when ``root`` is ``None``.
+
+    Returns:
+        Path: Resolved dataset root path.
+    """
+    return Path(root) if root is not None else get_datasets_dir() / dataset_name
+
+
+def _highest_version_dir(parent: Path) -> str | None:
+    """Return the highest version directory name (e.g. 'v2') under parent, or None.
+
+    Scans parent for directories matching v0, v1, v2, ... and returns the name of the one with the
+    highest number. Used by create_versioned_dir and resolve_versioned_path to avoid duplication.
+
+    Args:
+        parent (Path): Directory that may contain versioned subdirs (v0, v1, ...).
+
+    Returns:
+        str | None: Name of the highest version dir (e.g. 'v2'), or None if none exist.
+    """
+    try:
+        if not parent.is_dir():
+            return None
+
+        highest = -1
+        version_pattern = re.compile(r"^v(\d+)$")
+        for child in parent.iterdir():
+            if child.is_dir() and (match := version_pattern.match(child.name)):
+                highest = max(highest, int(match.group(1)))
+    except OSError:
+        return None
+    return f"v{highest}" if highest >= 0 else None
+
+
+def _validate_windows_path(path: Path) -> bool:
+    """Validate that a path is safe for use in Windows commands.
+
+    Args:
+        path: Path to validate
+
+    Returns:
+        True if path is safe, False otherwise
+    """
+    path_str = str(path)
+
+    # Check for shell metacharacters that could be dangerous
+    dangerous_chars = {"&", "|", ";", "<", ">", "^", '"', "'", "`", "$", "(", ")", "*", "?", "[", "]", "{", "}"}
+
+    # Perform all validation checks
+    if (
+        any(char in path_str for char in dangerous_chars)
+        or "\x00" in path_str
+        # Traditional Windows MAX_PATH is 260 characters. This is a conservative
+        # limit and does not take optional long-path support into account.
+        or (sys.platform.startswith("win") and len(path_str) > 260)
+    ):
+        return False
+
+    # Ensure the path exists and is actually a directory (for target)
+    # or that its parent exists (for tmp)
+    try:
+        return path.is_dir() if path.exists() else path.parent.exists()
+    except (OSError, ValueError):
+        return False
+
+
+def _is_windows_junction(p: Path) -> bool:
+    """Return True if path is a directory junction."""
+    if not sys.platform.startswith("win"):
+        return False
+
+    try:
+        # On Windows, check if it's a directory that's not a symlink
+        # Junctions appear as directories but resolve to different paths
+        return p.exists() and p.is_dir() and not p.is_symlink() and p.resolve() != p
+    except (OSError, RuntimeError):
+        # Handle cases where path operations fail
+        return False
+
+
+def _safe_remove_path(p: Path) -> None:
+    """Remove file/dir/symlink/junction at p without following links."""
+    if not os.path.lexists(str(p)):
+        return
+    with suppress(FileNotFoundError):
+        if p.is_symlink():
+            p.unlink()
+        elif _is_windows_junction(p):
+            # Use rmdir for Windows junctions
+            p.rmdir()
+        elif p.is_dir():
+            shutil.rmtree(p)
+        else:
+            p.unlink()
+
+
+def _make_latest_windows(latest: Path, target: Path) -> None:
+    # Clean previous latest (symlink/junction/dir/file)
+    _safe_remove_path(latest)
+
+    tmp = latest.with_name(latest.name + "_tmp")
+    _safe_remove_path(tmp)
+
+    # Try creating a directory junction using native Python API
+    try:
+        # Use Path.symlink_to with target_is_directory=True for directory junction on Windows
+        # This creates a junction point that doesn't require admin privileges
+        tmp.symlink_to(target.resolve(), target_is_directory=True)
+    except (OSError, NotImplementedError):
+        # Try using Windows mklink command via subprocess
+        try:
+            import subprocess  # nosec B404
+
+            # Note: Using subprocess with mklink is safe here as we control
+            # the command and arguments. This is a standard Windows command.
+            if not _validate_windows_path(tmp) or not _validate_windows_path(target):
+                logger.warning(
+                    "Warning: Unsafe characters detected in paths. Falling back to text pointer file for 'latest'.",
+                )
+                msg = f"Unsafe path detected: {tmp} -> {target}"
+                raise ValueError(msg)
+            cmd_exe = shutil.which("cmd.exe")
+            if not cmd_exe:
+                msg = "Cannot locate cmd.exe on PATH"
+                raise OSError(msg)  # noqa: TRY301
+            result = subprocess.run(  # noqa: S603  # nosec B603
+                [
+                    cmd_exe,
+                    "/c",
+                    "mklink",
+                    "/J",
+                    str(tmp),
+                    str(target.resolve()),
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            if result.returncode == 0 and tmp.exists():
+                tmp.replace(latest)
+                return
+            logger.warning(
+                "Failed to create Windows junction with mklink (return code %s). Command: %s, stderr: %r",
+                result.returncode,
+                result.args,
+                result.stderr,
+            )
+        except (subprocess.SubprocessError, OSError):
+            # Subprocess failed; intentionally fall through to the final
+            # fallback below that creates a text pointer file.
+            logger.debug(
+                "Failed to create Windows junction using mklink; falling back to pointer file.",
+                exc_info=True,
+            )
+    else:
+        # Only reached if symlink creation succeeded
+        tmp.replace(latest)
+        return
+
+    # Final fallback: create a text file indicating the latest version
+    # This preserves the intended behavior without breaking the system
+    latest.mkdir(exist_ok=True)
+    version_file = latest / ".version_pointer"
+    version_file.write_text(str(target.resolve()))
 
 
 def create_versioned_dir(root_dir: str | Path) -> Path:
@@ -75,36 +356,71 @@ def create_versioned_dir(root_dir: str | Path) -> Path:
         - Version directories follow the pattern ``v1``, ``v2``, etc.
         - The ``latest`` link always points to the most recently created version
     """
-    # Compile a regular expression to match version directories
-    version_pattern = re.compile(r"^v(\d+)$")
-
-    # Resolve the path
     root_dir = Path(root_dir).resolve()
     root_dir.mkdir(parents=True, exist_ok=True)
 
-    # Find the highest existing version number
-    highest_version = -1
-    for version_dir in root_dir.iterdir():
-        if version_dir.is_dir():
-            match = version_pattern.match(version_dir.name)
-            if match:
-                version_number = int(match.group(1))
-                highest_version = max(highest_version, version_number)
-
-    # The new directory will have the next highest version number
-    new_version_number = highest_version + 1
-    new_version_dir = root_dir / f"v{new_version_number}"
+    highest = _highest_version_dir(root_dir)
+    next_num = int(highest[1:]) + 1 if highest else 0
+    new_version_dir = root_dir / f"v{next_num}"
 
     # Create the new version directory
     new_version_dir.mkdir()
 
     # Update the 'latest' symbolic link to point to the new version directory
     latest_link_path = root_dir / "latest"
-    if latest_link_path.is_symlink() or latest_link_path.exists():
-        latest_link_path.unlink()
-    latest_link_path.symlink_to(new_version_dir, target_is_directory=True)
+    if sys.platform.startswith("win"):
+        _make_latest_windows(latest_link_path, new_version_dir)
+    else:
+        if latest_link_path.is_symlink() or latest_link_path.exists():
+            latest_link_path.unlink()
+        latest_link_path.symlink_to(new_version_dir, target_is_directory=True)
 
-    return latest_link_path
+    # Return the versioned directory path, not the latest link
+    # This ensures training saves to the versioned directory directly
+    return new_version_dir
+
+
+def resolve_versioned_path(path: str | Path) -> Path:
+    """Resolve a path by replacing a ``latest`` component with the actual version dir.
+
+    If the path contains a component named ``latest`` (e.g. from a symlink or junction used by
+    ``create_versioned_dir``), returns the concrete path. On POSIX, the symlink is followed via
+    ``Path.resolve()``. On Windows, traversing the junction can raise WinError 448 (untrusted
+    mount point), so the path is resolved by replacing ``latest`` with the highest version dir
+    (v0, v1, ...) using ``_highest_version_dir`` without traversing the junction.
+
+    Args:
+        path (str | Path): Path that may contain ``latest`` as a component (e.g.
+            ``.../latest/weights/lightning/model.ckpt``).
+
+    Returns:
+        Path: Resolved path (symlink followed on POSIX; ``latest`` replaced by actual version on
+            Windows), or the original path if no ``latest`` component or resolution not possible.
+
+    Example:
+        >>> from pathlib import Path
+        >>> # If /exp contains v0, v1 and a 'latest' link to v1:
+        >>> resolve_versioned_path(Path("/exp/latest/weights/model.ckpt"))
+        PosixPath('/exp/v1/weights/model.ckpt')
+    """
+    path = Path(path)
+    result = path
+    if "latest" in (parts := list(path.parts)):
+        if sys.platform != "win32":
+            # POSIX: follow the symlink directly
+            try:
+                result = path.resolve()
+            except OSError:
+                result = path
+        else:
+            # Windows: avoid traversing the junction; replace "latest" with highest vN.
+            idx = parts.index("latest")
+            parent = Path(*parts[:idx])
+            version_dir = _highest_version_dir(parent)
+            if version_dir:
+                parts[idx] = version_dir
+                result = Path(*parts)
+    return result
 
 
 def convert_to_snake_case(s: str) -> str:

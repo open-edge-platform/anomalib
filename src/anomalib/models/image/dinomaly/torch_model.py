@@ -21,16 +21,16 @@ from torch import nn
 
 from anomalib.data import InferenceBatch
 from anomalib.models.components import GaussianBlur2d
-from anomalib.models.components.dinov2 import DinoV2Loader
+from anomalib.models.components.feature_extractors import TimmFeatureExtractor
 from anomalib.models.image.dinomaly.components import CosineHardMiningLoss, DinomalyMLP, LinearAttention
-from anomalib.models.image.dinomaly.components import vision_transformer as dinomaly_vision_transformer
 
 # Encoder architecture configurations for DINOv2 models.
 # The target layers are the
-DINOV2_ARCHITECTURES = {
+DINO_ARCHITECTURES = {
     "small": {"embed_dim": 384, "num_heads": 6, "target_layers": [2, 3, 4, 5, 6, 7, 8, 9]},
     "base": {"embed_dim": 768, "num_heads": 12, "target_layers": [2, 3, 4, 5, 6, 7, 8, 9]},
     "large": {"embed_dim": 1024, "num_heads": 16, "target_layers": [4, 6, 8, 10, 12, 14, 16, 18]},
+    "huge": {"embed_dim": 1280, "num_heads": 20, "target_layers": [3, 9, 12, 15, 18, 21, 24, 27]},
 }
 
 # Default fusion layer configurations
@@ -69,8 +69,8 @@ class DinomalyModel(nn.Module):
 
     Args:
         encoder_name (str): Name of the Vision Transformer encoder to use.
-            Supports DINOv2 variants like "dinov2reg_vit_base_14".
-            Defaults to "dinov2reg_vit_base_14".
+            Supports DINO variants like "vit_base_patch14_reg4_dinov2".
+            Defaults to "vit_base_patch14_reg4_dinov2".
         bottleneck_dropout (float): Dropout rate for the bottleneck MLP layer.
             Defaults to 0.2.
         decoder_depth (int): Number of Vision Transformer decoder layers.
@@ -84,10 +84,16 @@ class DinomalyModel(nn.Module):
             If None, uses [[0, 1, 2, 3], [4, 5, 6, 7]].
         remove_class_token (bool): Whether to remove class token from features
             before processing. Defaults to False.
+        use_context_recentering (bool): Whether to apply Context-Aware Recentering
+            from Dinomaly2. When enabled, the class token is subtracted from patch
+            features before reconstruction, conditioning the feature space on
+            class-specific context. This is particularly beneficial for multi-class
+            anomaly detection settings. Incompatible with ``remove_class_token=True``.
+            Defaults to False.
 
     Example:
         >>> model = DinomalyModel(
-        ...     encoder_name="dinov2reg_vit_base_14",
+        ...     encoder_name="vit_base_patch14_reg4_dinov2",
         ...     decoder_depth=8,
         ...     bottleneck_dropout=0.2
         ... )
@@ -96,35 +102,49 @@ class DinomalyModel(nn.Module):
 
     def __init__(
         self,
-        encoder_name: str = "dinov2reg_vit_base_14",
+        encoder_name: str = "vit_base_patch14_reg4_dinov2",
         bottleneck_dropout: float = 0.2,
         decoder_depth: int = 8,
         target_layers: list[int] | None = None,
         fuse_layer_encoder: list[list[int]] | None = None,
         fuse_layer_decoder: list[list[int]] | None = None,
         remove_class_token: bool = False,
+        use_context_recentering: bool = False,
     ) -> None:
         super().__init__()
 
-        if target_layers is None:
-            # 8 middle layers of the encoder are used for feature extraction.
-            target_layers = [2, 3, 4, 5, 6, 7, 8, 9]
-
-        # Instead of comparing layer to layer between encoder and decoder, dinomaly uses
-        # layer groups to fuse features from multiple layers.
-        if fuse_layer_encoder is None:
-            fuse_layer_encoder = DEFAULT_FUSE_LAYERS
-        if fuse_layer_decoder is None:
-            fuse_layer_decoder = DEFAULT_FUSE_LAYERS
-
-        self.encoder_name = encoder_name
-        encoder = DinoV2Loader(vit_factory=dinomaly_vision_transformer).load(encoder_name)
+        if use_context_recentering and remove_class_token:
+            msg = (
+                "use_context_recentering=True requires access "
+                "to the class token and is incompatible with remove_class_token=True"
+            )
+            raise ValueError(msg)
 
         # Extract architecture configuration based on the model name
         arch_config = self._get_architecture_config(encoder_name, target_layers)
         embed_dim = arch_config["embed_dim"]
         num_heads = arch_config["num_heads"]
-        target_layers = arch_config["target_layers"]
+
+        if target_layers is None:
+            self.target_layers = arch_config["target_layers"]
+        else:
+            self.target_layers = target_layers
+
+        if fuse_layer_encoder is None:
+            self.fuse_layer_encoder = DEFAULT_FUSE_LAYERS
+        if fuse_layer_decoder is None:
+            self.fuse_layer_decoder = DEFAULT_FUSE_LAYERS
+
+        self.encoder = TimmFeatureExtractor(
+            backbone=encoder_name,
+            layers=[f"blocks.{i}" for i in self.target_layers],
+            pre_trained=True,
+            requires_grad=False,
+            output_fmt="NLC",
+            return_class_token=True,
+            norm=False,
+            dynamic_img_size=True,
+        )
 
         # Add validation
         if decoder_depth <= 1:
@@ -142,7 +162,7 @@ class DinomalyModel(nn.Module):
             apply_input_dropout=True,  # Apply dropout to input
         )
         bottleneck.append(bottle_neck_mlp)
-        bottleneck = nn.ModuleList(bottleneck)
+        self.bottleneck = nn.ModuleList(bottleneck)
 
         decoder = []
         for _ in range(decoder_depth):
@@ -166,15 +186,10 @@ class DinomalyModel(nn.Module):
                 attn=LinearAttention,
             )
             decoder.append(decoder_block)
-        decoder = nn.ModuleList(decoder)
+        self.decoder = nn.ModuleList(decoder)
 
-        self.encoder = encoder
-        self.bottleneck = bottleneck
-        self.decoder = decoder
-        self.target_layers = target_layers
-        self.fuse_layer_encoder = fuse_layer_encoder
-        self.fuse_layer_decoder = fuse_layer_decoder
         self.remove_class_token = remove_class_token
+        self.use_context_recentering = use_context_recentering
 
         if not hasattr(self.encoder, "num_register_tokens"):
             self.encoder.num_register_tokens = 0
@@ -206,21 +221,24 @@ class DinomalyModel(nn.Module):
         """
         h_patches = x.shape[2] // self.encoder.patch_size
         w_patches = x.shape[3] // self.encoder.patch_size
-        x = self.encoder.prepare_tokens(x)
-        encoder_features = []
-        decoder_features = []
 
-        for i, block in enumerate(self.encoder.blocks):
-            if i <= self.target_layers[-1]:
-                with torch.no_grad():
-                    x = block(x)
-            else:
-                continue
-            if i in self.target_layers:
-                encoder_features.append(x)
+        # Extract token sequences ([CLS, reg..., patches]) from the target encoder blocks.
+        features = self.encoder(x)
+        encoder_features = [features[f"blocks.{i}"] for i in self.target_layers]
+        decoder_features = []
 
         if self.remove_class_token:
             encoder_features = [e[:, 1 + self.encoder.num_register_tokens :, :] for e in encoder_features]
+        elif self.use_context_recentering:
+            # Context-Aware Recentering (Dinomaly2): subtract the class token from
+            # patch features so reconstruction is conditioned on class-specific context.
+            recentered = []
+            for e in encoder_features:
+                cls_token = e[:, 0:1, :]  # (B, 1, D)
+                patch_start = 1 + self.encoder.num_register_tokens
+                patches = e[:, patch_start:, :] - cls_token  # (B, N, D)
+                recentered.append(patches)
+            encoder_features = recentered
 
         x = self._fuse_feature(encoder_features)
         for _i, block in enumerate(self.bottleneck):
@@ -262,6 +280,8 @@ class DinomalyModel(nn.Module):
                   and anomaly_map (pixel-level anomaly maps).
 
         """
+        dtype = next(self.encoder.parameters()).dtype
+        batch = batch.type(dtype)
         en, de = self.get_encoder_decoder_outputs(batch)
         image_size = (batch.shape[2], batch.shape[3])
 
@@ -363,7 +383,7 @@ class DinomalyModel(nn.Module):
         Returns:
             Dictionary containing embed_dim, num_heads, and target_layers
         """
-        for arch_name, config in DINOV2_ARCHITECTURES.items():
+        for arch_name, config in DINO_ARCHITECTURES.items():
             if arch_name in encoder_name:
                 result = config.copy()
                 # Override target_layers if explicitly provided
@@ -371,7 +391,7 @@ class DinomalyModel(nn.Module):
                     result["target_layers"] = target_layers
                 return result
 
-        msg = f"Architecture not supported. Encoder name must contain one of {list(DINOV2_ARCHITECTURES.keys())}"
+        msg = f"Architecture not supported. Encoder name must contain one of {list(DINO_ARCHITECTURES.keys())}"
         raise ValueError(msg)
 
     def _process_features_for_spatial_output(
@@ -391,7 +411,7 @@ class DinomalyModel(nn.Module):
             List of processed feature tensors with spatial dimensions
         """
         # Remove class token and register tokens if not already removed
-        if not self.remove_class_token:
+        if not self.remove_class_token and not self.use_context_recentering:
             features = [f[:, 1 + self.encoder.num_register_tokens :, :] for f in features]
 
         # Reshape to spatial dimensions

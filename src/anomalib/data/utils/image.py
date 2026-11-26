@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Image utilities for reading, writing and processing images.
@@ -385,22 +385,33 @@ def pad_nextpow2(batch: torch.Tensor) -> torch.Tensor:
 
 
 def show_image(image: np.ndarray | Figure, title: str = "Image") -> None:
-    """Display image in window.
+    """Display image using matplotlib.
 
     Args:
         image (np.ndarray | Figure): Image or matplotlib figure to display
-        title (str): Window title. Defaults to "Image"
+        title (str): Title displayed above the plot. Defaults to "Image"
 
     Examples:
         >>> img = read_image("image.jpg")
         >>> show_image(img, title="My Image")
     """
+    # Inline import exception as it is slow to import matplotlib
+    # also locks the Matplotlib backend before callers can configure it
+    # see https://github.com/open-edge-platform/anomalib/pull/3675#discussion_r3596551713
+    import matplotlib.pyplot as plt
+
     if isinstance(image, Figure):
-        image = figure_to_array(image)
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    cv2.imshow(title, image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+        image.suptitle(title)
+        plt.figure(image)
+        plt.show()
+        plt.close(image)
+    else:
+        fig, ax = plt.subplots()
+        ax.set_title(title)
+        ax.imshow(image)
+        ax.axis("off")
+        plt.show()
+        plt.close(fig)
 
 
 def save_image(filename: Path | str, image: np.ndarray | Figure, root: Path | None = None) -> None:
@@ -409,7 +420,8 @@ def save_image(filename: Path | str, image: np.ndarray | Figure, root: Path | No
     Args:
         filename (Path | str): Output filename
         image (np.ndarray | Figure): Image or matplotlib figure to save
-        root (Path | None): Optional root dir to save under. Defaults to None
+        root (Path | None): Optional root dir to save under. Defaults to None.
+            When provided, the final path must resolve under ``root``.
 
     Examples:
         >>> img = read_image("input.jpg")
@@ -426,10 +438,22 @@ def save_image(filename: Path | str, image: np.ndarray | Figure, root: Path | No
     if file_path.is_absolute() and root:
         file_path = Path(*file_path.parts[2:])  # OS-AGNOSTIC
     if root:
-        file_path = root / file_path
+        root_path = Path(root)
+        file_path = validate_path(root_path / file_path, base_dir=root_path, should_exist=False)
+
+    if file_path.is_dir():
+        msg = f"Output path must be a file, not a directory: {file_path}"
+        raise ValueError(msg)
 
     # Make unique file_path if file already exists
     file_path = duplicate_filename(file_path)
+
+    if root:
+        # Re-validate after duplicate selection so the final write target cannot
+        # escape ``root`` (e.g. a filename such as "." or "" that resolved to the
+        # root directory itself, causing ``duplicate_filename`` to return a
+        # sibling path such as ``root_1``).
+        file_path = validate_path(file_path, base_dir=root_path, should_exist=False)
 
     file_path.parent.mkdir(parents=True, exist_ok=True)
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)

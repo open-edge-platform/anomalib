@@ -48,9 +48,12 @@
 /src/anomalib/visualization                                 @samet-akcay @ashwinvaidya17
 
 
-# Geti Inspect
-/application/ui                                             @MarkRedeman
-/application/backend                                        @maxxgx
+# Anomalib Studio
+/application/ui                                             @ashwinvaidya17
+/application/backend                                        @ashwinvaidya17 @rajeshgangireddy
+/application/backend/uv.lock                                @ashwinvaidya17 @rajeshgangireddy @sys-geti
+/application/docker/Dockerfile                              @ashwinvaidya17 @rajeshgangireddy @sys-geti
+/application/binary/tauri/src-tauri/Cargo.lock              @ashwinvaidya17 @sys-geti
 
 # Tests
 /tests/                                                     @samet-akcay @ashwinvaidya17 @rajeshgangireddy
@@ -62,6 +65,7 @@
 /setup.py                                                   @samet-akcay @ashwinvaidya17 @rajeshgangireddy
 /third-party-programs.txt                                   @samet-akcay @ashwinvaidya17 @rajeshgangireddy
 /tox.ini                                                    @samet-akcay @ashwinvaidya17 @rajeshgangireddy
+/uv.lock                                                    @samet-akcay @ashwinvaidya17 @rajeshgangireddy @sys-geti
 
 # Tools
 /tools/experimental                                         @ashwinvaidya17

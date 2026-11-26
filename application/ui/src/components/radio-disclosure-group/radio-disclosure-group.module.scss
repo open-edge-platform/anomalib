@@ -1,0 +1,24 @@
+.disclosureTitle > button {
+    flex-direction: row-reverse;
+    justify-content: space-between;
+}
+
+.disclosure {
+    border: var(--spectrum-global-dimension-size-40) solid var(--spectrum-global-color-gray-200);
+    border-radius: var(--spectrum-global-dimension-size-50);
+
+    background-color: var(--spectrum-global-color-gray-75);
+}
+
+.disclosure[data-expanded='true'] {
+    border-color: var(--energy-blue);
+}
+
+.disclosurePanel {
+    padding: 0;
+}
+
+.radio {
+    display: flex;
+    align-items: center;
+}

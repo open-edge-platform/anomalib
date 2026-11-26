@@ -38,7 +38,7 @@ class TrainModelJob(Job):
         normalization_stage (str): Normalization stage flag.
         metrics (dict): metrics dict with pixel and image metric names.
         trainer_args (dict| None): Additional arguments to pass to the trainer class.
-        model (AnomalyModule): Model to train.
+        model (AnomalibModule): Model to train.
         datamodule (AnomalibDataModule): Datamodule with all dataloaders.
 
     """

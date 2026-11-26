@@ -4,6 +4,7 @@ datasets
 pre_trained
 results
 openvino_cache
+logs/
 
 # Test-related files and directories
 tmp*
@@ -53,7 +54,6 @@ MANIFEST
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
-*.spec
 
 # Installer logs
 pip-log.txt
@@ -171,8 +171,13 @@ docs/source/_build/
 
 # Misc
 .DS_Store
+fuzz-artifacts/
 
 # logs
 wandb/
 lightning_logs/
 mlruns
+
+# application data
+application/**/data/
+application/**/logs/

@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """MVTec AD Data Module.
@@ -53,14 +53,14 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.mvtecad import MVTecADDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
-from anomalib.utils import deprecate
+from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
 
 
 DOWNLOAD_INFO = DownloadInfo(
     name="mvtecad",
-    url="https://www.mydrive.ch/shares/38536/3830184030e49fe74747669442f0f283/"
+    url="https://www.mydrive.ch/shares/163178/c8212c2166a9e4dfe22dd1bed476a345/"
     "download/420938113-1629960298/mvtec_anomaly_detection.tar.xz",
     hashsum="cf4313b13603bec67abb49ca959488f7eedce2a9f7795ec54446c649ac98cd3d",
 )
@@ -70,7 +70,7 @@ class MVTecAD(AnomalibDataModule):
     """MVTec AD Datamodule.
 
     Args:
-        root (Path | str): Path to the root of the dataset.
+        root (Path | str | None): Path to the root of the dataset.
             Defaults to ``"./datasets/MVTecAD"``.
         category (str): Category of the MVTec AD dataset (e.g. ``"bottle"`` or
             ``"cable"``). Defaults to ``"bottle"``.
@@ -132,7 +132,7 @@ class MVTecAD(AnomalibDataModule):
 
     def __init__(
         self,
-        root: Path | str = "./datasets/MVTecAD",
+        root: Path | str | None = "./datasets/MVTecAD",
         category: str = "bottle",
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
@@ -162,6 +162,7 @@ class MVTecAD(AnomalibDataModule):
             seed=seed,
         )
 
+        root = resolve_dataset_root(root, "MVTecAD")
         self.root = Path(root)
         self.category = category
 
@@ -217,15 +218,3 @@ class MVTecAD(AnomalibDataModule):
             logger.info("Found the dataset.")
         else:
             download_and_extract(self.root, DOWNLOAD_INFO)
-
-
-@deprecate(since="2.1.0", remove="2.3.0", use="MVTecAD")
-class MVTec(MVTecAD):
-    """MVTec datamodule class (Deprecated).
-
-    This class is deprecated and will be removed in a future version.
-    Please use MVTecAD instead.
-    """
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)

@@ -42,6 +42,10 @@ We can then use selected model name and layer names with either API or using con
 Some models might not support every backbone.
 ```
 
+For ViT backbones, positional embeddings are interpolated without antialiasing.
+This backbone-local setting is preserved when a Torch export is loaded in a new
+process; constructing an extractor does not change unrelated timm models.
+
 ## Backbone and layer selection
 
 ::::{tab-set}
@@ -62,7 +66,7 @@ from anomalib.engine import Engine
 datamodule = MVTecAD(num_workers=0)
 # Specify backbone and layers
 model = Padim(backbone="resnet18", layers=["layer1", "layer2"])
-engine = Engine(image_metrics=["AUROC"], pixel_metrics=["AUROC"])
+engine = Engine()
 
 # Train the model
 engine.fit(datamodule=datamodule, model=model)
@@ -112,12 +116,12 @@ actually possesses the layers from which the feature will be extracted.
 import torch
 from torchvision import models
 
-from anomalib.data import MVTec
+from anomalib.data import MVTecAD
 from anomalib.models import Padim
 from anomalib.engine import Engine
 
 # Initialize the datamodule, model, and engine
-datamodule = MVTec(num_workers=0)
+datamodule = MVTecAD(num_workers=0)
 
 # Specify custom model
 weights = torch.hub.load_state_dict_from_url("https://huggingface.co/mzweilin/robust-imagenet-models/resolve/main/wide_resnet50_2_l2_eps5.pth")
@@ -126,7 +130,7 @@ custom_backbone.load_state_dict(weights)
 
 # Specify backbone and layers
 model = Padim(backbone=custom_backbone, layers=["layer1", "layer3"])
-engine = Engine(image_metrics=["AUROC"], pixel_metrics=["AUROC"])
+engine = Engine()
 
 # Train the model
 engine.fit(datamodule=datamodule, model=model)

@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Anomalib installation utilities.
@@ -13,18 +13,21 @@ import json
 import os
 import platform
 import re
+import subprocess  # nosec B404 - hardcoded nvcc invocation only
 from importlib.metadata import requires
 from pathlib import Path
 from warnings import warn
 
-from pkg_resources import Requirement
+from packaging.requirements import Requirement
+from packaging.version import Version
 
 AVAILABLE_TORCH_VERSIONS = {
-    "2.0.0": {"torchvision": "0.15.1", "cuda": ("11.7", "11.8")},
-    "2.0.1": {"torchvision": "0.15.2", "cuda": ("11.7", "11.8")},
-    "2.1.1": {"torchvision": "0.16.1", "cuda": ("11.8", "12.1")},
-    "2.1.2": {"torchvision": "0.16.2", "cuda": ("11.8", "12.1")},
-    "2.2.0": {"torchvision": "0.16.2", "cuda": ("11.8", "12.1")},
+    # NOTE: Minimum torch>=2.10.0 required as of anomalib 2.7.0 (dynamo ONNX exporter).
+    "2.10.0": {"torchvision": "0.25.0", "cuda": ("12.6", "12.8", "13.0")},
+    "2.11.0": {"torchvision": "0.26.0", "cuda": ("12.6", "12.8", "13.0")},
+    "2.12.0": {"torchvision": "0.27.0", "cuda": ("12.6", "13.0", "13.2")},
+    "2.13.0": {"torchvision": "0.28.0", "cuda": ("12.6", "13.0", "13.2")},
+    "2.14.0": {"torchvision": "0.29.0", "cuda": ("12.6", "13.0", "13.2")},
 }
 
 
@@ -66,7 +69,7 @@ def get_requirements(module: str = "anomalib") -> dict[str, list[Requirement]]:
         if isinstance(requirement_extra, list) and len(requirement_extra) > 1:
             extra = requirement_extra[-1].split("==")[-1].strip("'\"")
         requirement_name_ = requirement_extra[0]
-        requirement_ = Requirement.parse(requirement_name_)
+        requirement_ = Requirement(requirement_name_)
         if extra in extra_requirement:
             extra_requirement[extra].append(requirement_)
         else:
@@ -114,11 +117,14 @@ def parse_requirements(
     other_requirements: list[str] = []
 
     for requirement in requirements:
-        if requirement.unsafe_name == "torch":
+        if requirement.name.lower() == "torch":
             torch_requirement = str(requirement)
-            if len(requirement.specs) > 1:
+            specifiers = list(requirement.specifier)
+            if len(specifiers) > 1:
                 warn(
-                    "requirements.txt contains. Please remove other versions of torch from requirements.",
+                    f"Multiple version specifiers for 'torch' detected in requirements.txt "
+                    f"(requirement: '{requirement}'). Please specify only one torch version "
+                    "and remove any additional torch specifiers from your requirements.",
                     stacklevel=2,
                 )
 
@@ -179,8 +185,14 @@ def get_cuda_version() -> str | None:
                     return ".".join(cuda_version_parts[:2])
     # 2. 'nvcc --version' check & without version.json case
     try:
-        result = os.popen(cmd="nvcc --version")
-        output = result.read()
+        result = subprocess.run(
+            # command is a hardcoded literal with no user-controlled input
+            ["nvcc", "--version"],  # noqa: S607  # nosec B603, B607
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        output = result.stdout
 
         cuda_version_pattern = r"cuda_(\d+\.\d+)"
         cuda_version_match = re.search(cuda_version_pattern, output)
@@ -205,24 +217,26 @@ def update_cuda_version_with_available_torch_cuda_build(cuda_version: str, torch
 
     Example:
         ```python
-        update_cuda_version_with_available_torch_cuda_build("12.1", "2.0.1")
-        # Returns: "11.8"  # PyTorch 2.0.1 only supports up to CUDA 11.8
+        update_cuda_version_with_available_torch_cuda_build("12.8", "2.14.0")
+        # Returns: "12.6"  # PyTorch 2.14.0 has no cu128 wheel; cu126 is nearest below.
         ```
     """
-    max_supported_cuda = max(AVAILABLE_TORCH_VERSIONS[torch_version]["cuda"])
-    min_supported_cuda = min(AVAILABLE_TORCH_VERSIONS[torch_version]["cuda"])
-    bounded_cuda_version = max(min(cuda_version, max_supported_cuda), min_supported_cuda)
+    supported = sorted(AVAILABLE_TORCH_VERSIONS[torch_version]["cuda"], key=Version)
+    # Supported builds can have gaps (e.g. 12.6, 13.0), so pick the newest build not above
+    # the installed version; fall back to the oldest if the installed version is older.
+    compatible = [version for version in supported if Version(version) <= Version(cuda_version)]
+    selected_cuda_version = compatible[-1] if compatible else supported[0]
 
-    if cuda_version != bounded_cuda_version:
+    if cuda_version != selected_cuda_version:
         warn(
             f"Installed CUDA version is v{cuda_version}. \n"
-            f"v{min_supported_cuda} <= Supported CUDA version <= v{max_supported_cuda}.\n"
-            f"This script will use CUDA v{bounded_cuda_version}.\n"
+            f"Supported CUDA versions for torch {torch_version}: {', '.join(supported)}.\n"
+            f"This script will use CUDA v{selected_cuda_version}.\n"
             f"However, this may not be safe, and you are advised to install the correct version of CUDA.\n"
             f"For more details, refer to https://pytorch.org/get-started/locally/",
             stacklevel=2,
         )
-        cuda_version = bounded_cuda_version
+        cuda_version = selected_cuda_version
 
     return cuda_version
 
@@ -312,19 +326,19 @@ def get_torch_install_args(requirement: str | Requirement) -> list[str]:
 
     Example:
         ```python
-        requirement = "torch>=2.0.0"
+        requirement = "torch>=2.10.0"
         get_torch_install_args(requirement)
         # Returns:
         [
             '--extra-index-url',
-            'https://download.pytorch.org/whl/cu118',
-            'torch>=2.0.0',
-            'torchvision==0.15.1'
+            'https://download.pytorch.org/whl/cu130',
+            'torch>=2.10.0',
+            'torchvision>=0.25.0'
         ]
         ```
 
     Test:
-        >>> args = get_torch_install_args("torch>=2.0.0")
+        >>> args = get_torch_install_args("torch>=2.10.0")
         >>> isinstance(args, list)
         True
         >>> all(isinstance(arg, str) for arg in args)
@@ -333,20 +347,28 @@ def get_torch_install_args(requirement: str | Requirement) -> list[str]:
         True
     """
     if isinstance(requirement, str):
-        requirement = Requirement.parse(requirement)
+        requirement = Requirement(requirement)
 
     # NOTE: This does not take into account if the requirement has multiple versions
     #   such as torch<2.0.1,>=1.13.0
-    if len(requirement.specs) < 1:
+    specifiers = list(requirement.specifier)
+    if not specifiers:
         return [str(requirement)]
-    select_spec_idx = 0
-    for i, spec in enumerate(requirement.specs):
-        if "=" in spec[0]:
-            select_spec_idx = i
+    preferred_operators = ("==", "<=", "<", ">=", ">")
+    selected_spec = None
+    for operator in preferred_operators:
+        for spec in specifiers:
+            if spec.operator == operator:
+                selected_spec = spec
+                break
+        if selected_spec is not None:
             break
-    operator, version = requirement.specs[select_spec_idx]
+    if selected_spec is None:
+        selected_spec = specifiers[0]
+    operator = selected_spec.operator
+    version = selected_spec.version
     if version not in AVAILABLE_TORCH_VERSIONS:
-        version = max(AVAILABLE_TORCH_VERSIONS.keys())
+        version = max(AVAILABLE_TORCH_VERSIONS.keys(), key=Version)
         warn(
             f"Torch Version will be selected as {version}.",
             stacklevel=2,

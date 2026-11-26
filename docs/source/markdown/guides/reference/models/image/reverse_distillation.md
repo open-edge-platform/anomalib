@@ -1,5 +1,12 @@
 # Reverse Distillation
 
+## Architecture
+
+```{eval-rst}
+.. image:: ../../../../../images/reverse_distillation/architecture.png
+    :alt: Reverse Distillation Architecture
+```
+
 ```{eval-rst}
 .. automodule:: anomalib.models.image.reverse_distillation.lightning_model
    :members:

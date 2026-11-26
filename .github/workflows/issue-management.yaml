@@ -43,15 +43,22 @@ on:
     - cron: "0 5 * * *"
   workflow_dispatch:
 
+permissions: {} # No permissions by default on workflow level
+
 jobs:
   triage:
     if: github.event_name == 'issues'
     runs-on: ubuntu-latest
     permissions:
-      issues: write
+      issues: write # Required to post a triage comment on the issue
     steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
       - name: Add triage comment
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             github.rest.issues.createComment({
@@ -65,10 +72,15 @@ jobs:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
     permissions:
-      issues: write
-      pull-requests: write
+      issues: write # Required to mark issues as stale and close them
+      pull-requests: write # Required to mark pull requests as stale and close them
     steps:
-      - uses: actions/stale@997185467fa4f803885201cee163a9f38240193d # v10
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
+      - uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93 # v11
         with:
           # Number of days of inactivity before an issue is marked as stale
           days-before-stale: 90

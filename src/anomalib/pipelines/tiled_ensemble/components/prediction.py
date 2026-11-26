@@ -39,7 +39,7 @@ class PredictJob(Job):
         tile_index (tuple[int, int]): Index of tile that this model processes.
         normalization_stage (str): Normalization stage flag.
         dataloader (DataLoader): Dataloader to use for training (either val or test).
-        model (AnomalyModule): Model to train.
+        model (AnomalibModule): Model to train.
         engine (TiledEnsembleEngine | None):
             engine from train job. If job is used standalone, instantiate engine and model from checkpoint.
         ckpt_path (Path | None): Path to checkpoint to be loaded if engine doesn't contain correct weights.

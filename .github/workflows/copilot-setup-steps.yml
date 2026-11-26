@@ -1,0 +1,35 @@
+name: "Copilot Setup Steps"
+
+# This workflow configures the environment for GitHub Copilot Agent with gh-aw MCP server
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+permissions: {} # No permissions by default on workflow level
+
+jobs:
+  # The job MUST be called 'copilot-setup-steps' to be recognized by GitHub Copilot Agent
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+
+    # Set minimal permissions for setup steps
+    # Copilot Agent receives its own token with appropriate permissions
+    permissions:
+      contents: read
+
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install gh-aw extension
+        uses: github/gh-aw-actions/setup-cli@221ba4f4319de6b8e809d1a15528b3ae6a818aa5 # v1.0.1
+        with:
+          version: v0.68.3

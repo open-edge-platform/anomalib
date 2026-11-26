@@ -11,10 +11,10 @@
 [Notebooks](examples/notebooks) •
 [License](LICENSE)
 
-[![python](https://img.shields.io/badge/python-3.10%2B-green)]()
-[![pytorch](https://img.shields.io/badge/pytorch-2.0%2B-orange)]()
-[![lightning](https://img.shields.io/badge/lightning-2.2%2B-blue)]()
-[![openvino](https://img.shields.io/badge/openvino-2024.0%2B-purple)]()
+![python](https://img.shields.io/badge/python-3.10%2B-green)
+![pytorch](https://img.shields.io/badge/pytorch-2.10%2B-orange)
+![lightning](https://img.shields.io/badge/lightning-2.6%2B-blue)
+![openvino](https://img.shields.io/badge/openvino-2024.0%2B-purple)
 
 [![Pre-Merge Checks](https://github.com/open-edge-platform/anomalib/actions/workflows/pre_merge.yml/badge.svg)](https://github.com/open-edge-platform/anomalib/actions/workflows/pre_merge.yml)
 [![codecov](https://codecov.io/gh/open-edge-platform/anomalib/branch/main/graph/badge.svg?token=Z6A07N1BZK)](https://codecov.io/gh/open-edge-platform/anomalib)
@@ -25,30 +25,21 @@
 [![ReadTheDocs](https://readthedocs.org/projects/anomalib/badge/?version=latest)](https://anomalib.readthedocs.io/en/latest/?badge=latest)
 [![Anomalib - Gurubase docs](https://img.shields.io/badge/Gurubase-Ask%20Anomalib%20Guru-006BFF)](https://gurubase.io/g/anomalib)
 
-<a href="https://trendshift.io/repositories/6030" target="_blank"><img src="https://trendshift.io/api/badge/repositories/6030" alt="open-edge-platform%2Fanomalib | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+<a href="https://trendshift.io/repositories/14514" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/14514" alt="open-edge-platform%2Fanomalib | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
 </div>
 
 ---
 
-> 🌟 **Announcing v2.2.0 Release!** 🌟
+> 🌟 **Announcing v2.7.1 Release!** 🌟
 >
-> We’re thrilled to announce the release of Anomalib v2.2.0, packed with new datasets, metrics, and performance improvements! Some of the highlights are:
-> New datasets
+> This patch release fixes data loading and sampling edge cases, restores dynamic PatchCore export batches, and updates security-sensitive dependencies. MVTec datasets currently need to be downloaded manually because upstream download URLs return 404.
 >
-> - **3D-ADAM** : A comprehensive dataset for 3D anomaly detection in additive manufacturing.
-> - **BMAD** : Benchmarks for Medical Anomaly Detection, featuring six datasets across five medical domains
+> Key Changes
 >
-> New metrics
->
-> - **PGn and PBn (CVPR2025)** : Presorted good/bad metrics for more insightful performance evaluation.
-> - **Histogram visualization** of anomaly scores for better interpretability.
->
-> Other Improvements
->
-> - Faster coreset selection for PatchCore model, resulting in ~30% quicker training.
-> - Reduced memory usage for memory bank–based models like PatchCore, PaDiM, and DfKDE.
-> - Many more code and documentation updates.
+> - **Fixes**: Avoid duplicate coreset selections, handle missing mask paths and dataset split enums correctly, and keep PatchCore export batch sizes dynamic.
+> - **Data**: MVTec AD, AD 2, 3D-AD, and LOCO AD can still use local datasets; automatic downloads are temporarily disabled while upstream URLs are unavailable.
+> - **Security**: Update MLflow and Pillow dependencies to address published advisories.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 
@@ -62,7 +53,7 @@ Anomalib is a deep learning library that aims to collect state-of-the-art anomal
 
 ## Key features
 
-- Simple and modular API and CLI for training, inference, benchmarking, and hyperparameter optimization.
+- Simple and modular API and CLI for training, inference, and benchmarking.
 - The largest public collection of ready-to-use deep learning anomaly detection algorithms and benchmark datasets.
 - [**Lightning**](https://www.lightning.ai/) based model implementations to reduce boilerplate code and limit the implementation efforts to the bare essentials.
 - The majority of models can be exported to [**OpenVINO**](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html) Intermediate Representation (IR) for accelerated inference on Intel hardware.
@@ -97,19 +88,16 @@ To ensure compatibility with your hardware, you can specify a backend during ins
 # CPU support (default, works on all platforms)
 uv pip install "anomalib[cpu]"
 
-# CUDA 12.4 support (Linux/Windows with NVIDIA GPU)
-uv pip install "anomalib[cu124]"
+# CUDA 12.6 support (Linux/Windows with NVIDIA GPU)
+uv pip install "anomalib[cu126]"
 
-# CUDA 12.1 support (Linux/Windows with NVIDIA GPU)
-uv pip install "anomalib[cu121]"
-
-# CUDA 11.8 support (Linux/Windows with NVIDIA GPU)
-uv pip install "anomalib[cu118]"
+# CUDA 13.0 support (Linux/Windows with NVIDIA GPU)
+uv pip install "anomalib[cu130]"
 
 # ROCm support (Linux with AMD GPU)
 uv pip install "anomalib[rocm]"
 
-# Intel XPU support (Linux with Intel GPU)
+# Intel XPU support (Linux/Windows with Intel GPU)
 uv pip install "anomalib[xpu]"
 ```
 
@@ -117,7 +105,7 @@ uv pip install "anomalib[xpu]"
 The same extras can be used with `pip`:
 
 ```bash
-pip install "anomalib[cu124]"
+pip install "anomalib[cu130]"
 ```
 
 </details>
@@ -128,8 +116,8 @@ pip install "anomalib[cu124]"
 Anomalib includes most dependencies by default. For specialized features, you may need additional optional dependencies. Remember to include your hardware-specific extra.
 
 ```bash
-# Example: Install with OpenVINO support and CUDA 12.4
-uv pip install "anomalib[openvino,cu124]"
+# Example: Install with OpenVINO support and CUDA 13.0
+uv pip install "anomalib[openvino,cu130]"
 
 # Example: Install all optional dependencies for a CPU-only setup
 uv pip install "anomalib[full,cpu]"
@@ -137,14 +125,17 @@ uv pip install "anomalib[full,cpu]"
 
 Here is a list of available optional dependency groups:
 
-| Extra         | Description                              | Purpose                                     |
-| :------------ | :--------------------------------------- | :------------------------------------------ |
-| `[openvino]`  | Intel OpenVINO optimization              | For accelerated inference on Intel hardware |
-| `[clip]`      | Vision-language models                   | `winclip`                                   |
-| `[vlm]`       | Vision-language model backends           | Advanced VLM features                       |
-| `[loggers]`   | Experiment tracking (wandb, comet, etc.) | For experiment management                   |
-| `[notebooks]` | Jupyter notebook support                 | For running example notebooks               |
-| `[full]`      | All optional dependencies                | All optional features                       |
+| Extra           | Description                              | Purpose                                                                               |
+| :-------------- | :--------------------------------------- | :------------------------------------------------------------------------------------ |
+| `[openvino]`    | Intel OpenVINO optimization              | For accelerated inference on Intel hardware                                           |
+| `[clip]`        | Vision-language models                   | `winclip`                                                                             |
+| `[vlm]`         | Vision-language model backends           | Advanced VLM features                                                                 |
+| `[loggers]`     | Experiment tracking (wandb, comet, etc.) | For experiment management                                                             |
+| `[notebooks]`   | Jupyter notebook support                 | For running example notebooks                                                         |
+| `[video]`       | Video decoding                           | Video datasets such as Avenue                                                         |
+| `[huggingface]` | Hugging Face Hub and safetensors         | Hub-backed models and checkpoints                                                     |
+| `[datasets]`    | Dataset storage extras                   | Formats such as those that need `pyarrow`                                             |
+| `[full]`        | Optional feature dependencies            | `clip`, `datasets`, `openvino`, `loggers`, `notebooks`, `vlm`, `video`, `huggingface` |
 
 </details>
 
@@ -166,8 +157,8 @@ uv venv
 # Sync with the lockfile for a specific backend (e.g., CPU)
 uv sync --extra cpu
 
-# Or for a different backend like CUDA 12.4
-uv sync --extra cu124
+# Or for a different backend like CUDA 13.0
+uv sync --extra cu130
 
 # To set up a full development environment
 uv sync --extra dev --extra cpu
@@ -248,7 +239,7 @@ anomalib predict --model anomalib.models.Patchcore \
 anomalib predict --model anomalib.models.Patchcore \
                  --data anomalib.data.MVTecAD \
                  --ckpt_path path/to/model.ckpt \
-                 --return_predictions
+                 --return_predictions true
 ```
 
 > 📘 **Note:** For advanced inference options including Gradio and OpenVINO, check our [Inference Documentation](https://anomalib.readthedocs.io).
@@ -281,20 +272,9 @@ engine.train(Stfpm(), datamodule=MVTecAD())
 anomalib train --model Padim --data MVTecAD --trainer.accelerator xpu --trainer.strategy xpu_single
 ```
 
-# ⚙️ Hyperparameter Optimization
-
-Anomalib supports hyperparameter optimization (HPO) using [Weights & Biases](https://wandb.ai/) and [Comet.ml](https://www.comet.com/).
-
-```bash
-# Run HPO with Weights & Biases
-anomalib hpo --backend WANDB --sweep_config tools/hpo/configs/wandb.yaml
-```
-
-> 📘 **Note:** For detailed HPO configuration, check our [HPO Documentation](https://open-edge-platform.github.io/anomalib/tutorials/hyperparameter_optimization.html).
-
 # 🧪 Experiment Management
 
-Track your experiments with popular logging platforms through [PyTorch Lightning loggers](https://pytorch-lightning.readthedocs.io/en/stable/extensions/logging.html):
+Track your experiments with popular logging platforms through [PyTorch Lightning loggers](https://lightning.ai/docs/pytorch/stable/extensions/logging.html):
 
 - 📊 Weights & Biases
 - 📈 Comet.ml
@@ -307,7 +287,7 @@ Enable logging in your config file to track:
 - Model graphs
 - Test predictions
 
-> 📘 **Note:** For logging setup, see our [Logging Documentation](https://open-edge-platform.github.io/anomalib/tutorials/logging.html).
+> 📘 **Note:** For logging setup, see our [Logging Documentation](https://anomalib.readthedocs.io/en/latest/markdown/guides/reference/loggers/index.html).
 
 # 📊 Benchmarking
 
@@ -322,6 +302,66 @@ anomalib benchmark --config tools/experimental/benchmarking/sample.yaml
 >
 > - [Patchcore Results](src/anomalib/models/image/patchcore/README.md#mvtec-ad-dataset)
 > - [Other Models](src/anomalib/models/)
+
+# Anomalib Studio
+
+> [!IMPORTANT]
+> Anomalib Studio is currently under active development and should be considered a pre-release. Features may change, and some functionality may be incomplete or unstable. We welcome feedback and contributions as we work towards a stable release.
+
+Anomalib Studio is a low/no-code web application that allows users to train and deploy anomaly detection models. It enables users to leverage Anomalib's features in their operational environment. Users can connect USB and IP cameras, or use a folder of images, as input to the training pipeline. The tool allows direct output to their industrial pipelines through ROS messages, MQTT, etc.
+
+<p align="center">
+  <img src="docs/source/_static/images/anomalib_studio.png" alt="Anomalib Studio" />
+</p>
+
+The source code for Anomalib Studio lives in the [application](application) folder.
+
+Anomalib Studio is available as two distributions:
+
+1. As a [docker container](application/docker)
+2. As a [standalone application](application/ui)
+
+For more information on each, refer to the respective README files.
+
+## Get started with development build
+
+### Setup Backend Dependencies
+
+> [!NOTE]
+> This assumes that you have `uv` installed. If not, please refer to the [installation guide](https://docs.astral.sh/uv/getting-started/installation/).
+
+```bash
+cd application/backend
+uv sync --extra xpu # or uv sync --extra cu130 for CUDA 13.0, uv sync --extra cpu for CPU
+```
+
+### Setup Frontend Dependencies
+
+```bash
+cd application/ui
+npm install
+```
+
+### Run the application
+
+> [!IMPORTANT]
+> Both backend and frontend dependencies should be installed before running the application.
+
+Run the backend server:
+
+```bash
+cd application/backend
+./run.sh
+```
+
+Run the frontend server:
+
+```bash
+cd application/ui
+npm run start
+```
+
+Navigate to [http://localhost:3000](http://localhost:3000) to see the application.
 
 # ✍️ Reference
 

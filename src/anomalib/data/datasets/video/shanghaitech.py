@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """ShanghaiTech Campus Dataset.
@@ -8,8 +8,8 @@ dataset for abnormal event detection. The dataset contains surveillance videos
 with both normal and abnormal events.
 
 If the dataset is not already present on the file system, the DataModule class
-will download and extract the dataset, converting the video files to a format
-readable by pyav.
+will raise a ``RuntimeError`` with instructions for downloading it manually
+from the official project page.
 
 The dataset expects the following directory structure::
 
@@ -74,6 +74,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datasets.base.video import AnomalibVideoDataset, VideoTargetFrame
 from anomalib.data.utils import Split, read_image, validate_path
 from anomalib.data.utils.video import ClipsIndexer
+from anomalib.utils.path import get_datasets_dir
 
 
 class ShanghaiTechDataset(AnomalibVideoDataset):
@@ -81,8 +82,8 @@ class ShanghaiTechDataset(AnomalibVideoDataset):
 
     Args:
         split (Split): Dataset split - either ``Split.TRAIN`` or ``Split.TEST``
-        root (Path | str): Path to the root directory containing the dataset.
-            Defaults to ``"./datasets/shanghaitech"``.
+        root (Path | str | None): Path to the root directory containing the dataset.
+            Defaults to ``None``.
         scene (int): Index of the dataset scene (category) in range [1, 13].
             Defaults to ``1``.
         clip_length_in_frames (int, optional): Number of frames in each video
@@ -107,7 +108,7 @@ class ShanghaiTechDataset(AnomalibVideoDataset):
     def __init__(
         self,
         split: Split,
-        root: Path | str = "./datasets/shanghaitech",
+        root: Path | str | None = None,
         scene: int = 1,
         clip_length_in_frames: int = 2,
         frames_between_clips: int = 1,
@@ -121,6 +122,7 @@ class ShanghaiTechDataset(AnomalibVideoDataset):
             augmentations=augmentations,
         )
 
+        root = root if root is not None else get_datasets_dir() / "shanghaitech"
         self.root = Path(root)
         self.scene = scene
         self.split = split
@@ -285,7 +287,7 @@ def make_shanghaitech_dataset(root: Path, scene: int, split: Split | str | None 
     samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
 
     if split:
-        samples = samples[samples.split == split]
-        samples = samples.reset_index(drop=True)
+        split_value = split.value if isinstance(split, Split) else split
+        samples = samples[samples.split == split_value].reset_index(drop=True)
 
     return samples

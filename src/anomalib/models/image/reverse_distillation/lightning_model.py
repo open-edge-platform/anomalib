@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Anomaly Detection via Reverse Distillation from One-Class Embedding.
@@ -70,8 +70,19 @@ class ReverseDistillation(AnomalibModule):
             Defaults to ``True``.
         pre_processor (PreProcessor, optional): Pre-processor for the model.
             This is used to pre-process the input data before it is passed to the model.
-            Defaults to ``None``.
+            Defaults to ``True``.
+        post_processor (PostProcessor | bool, optional): Post-processor instance
+            or flag to use default. Defaults to ``True``.
+        evaluator (Evaluator | bool, optional): Evaluator instance or flag to use
+            default. Defaults to ``True``.
+        visualizer (Visualizer | bool, optional): Visualizer instance or flag to
+            use default. Defaults to ``True``.
     """
+
+    @classmethod
+    def checkpoint_safe_globals(cls) -> Sequence[Any]:
+        """Allowlist ``AnomalyMapGenerationMode`` for ``weights_only`` checkpoint loads."""
+        return (AnomalyMapGenerationMode,)
 
     def __init__(
         self,

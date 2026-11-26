@@ -1,0 +1,100 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Application data (will be mounted as volumes)
+application/backend/data/**
+application/backend/logs/**
+application/backend/openvino_cache/**
+application/backend/tests/**
+application/backend/**/__pycache__/**
+application/backend/.*_cache/**
+application/backend/.tmp/**
+application/backend/.venv/**
+application/ui/dist/
+application/ui/build/
+application/ui/node_modules/
+data/
+
+# Documentation and examples
+docs/
+examples/
+*.md
+!README.md
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Testing
+tests/
+*.test.js
+*.spec.js
+coverage/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.log
+
+# Datasets and model artifacts
+datasets/
+pre_trained/
+results/
+openvino_cache/
+
+# Experiment tracking and logs
+wandb/
+lightning_logs/
+mlruns/
