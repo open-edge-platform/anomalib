@@ -131,17 +131,16 @@ PYPI_TOKEN: [Production PyPI token]
 
 ### {octicon}`git-branch` Release Candidate (RC)
 
-- Format: `vX.Y.Z-rcN`
+- Format: `vX.Y.Z-rcN` (note: `.github/workflows/release-lib.yaml` only triggers on and validates stable `lib/vX.Y.Z` tags; RC suffixes are not published by `release-lib.yaml`)
 - Examples: `v1.2.3-rc1`, `v1.2.3-rc2`
-- Purpose: Testing and validation
-- Deploys to: Test PyPI
+- Purpose: Manual pre-release testing and validation
 
 ### {octicon}`git-merge` Production Release
 
-- Format: `vX.Y.Z`
-- Examples: `v1.2.3`, `v2.0.0`
-- Purpose: Production deployment
-- Deploys to: Production PyPI
+- Format: `lib/vX.Y.Z`
+- Examples: `lib/v1.2.3`, `lib/v2.0.0`
+- Purpose: Production deployment via `.github/workflows/release-lib.yaml`
+- Deploys to: Production PyPI and GitHub Releases
 
 ## {octicon}`workflow` Release Process
 
@@ -168,7 +167,9 @@ PYPI_TOKEN: [Production PyPI token]
 
 3. Create and merge PR to main
 
-### {octicon}`git-branch` 2. Create Release Candidate
+### {octicon}`git-branch` 2. Create Release Candidate (Optional)
+
+> **Note:** `.github/workflows/release-lib.yaml` only triggers on and validates stable `lib/vX.Y.Z` tags (it rejects `-rcN` suffixes). Use `vX.Y.Z-rcN` tags only for manual pre-release validation, or proceed directly to **4. Production Release** after merging the release-preparation PR.
 
 ```bash
 # Ensure you're on main and up-to-date
@@ -215,12 +216,16 @@ git push origin v1.2.3-rc1
 
 ### {octicon}`git-merge` 4. Production Release
 
-After successful RC validation:
+After merging the release-preparation PR to `main`:
 
 ```bash
-# Create and push production tag
-git tag v1.2.3
-git push origin v1.2.3
+# Ensure you're on main and up-to-date
+git checkout main
+git pull origin main
+
+# Create and push production tag (triggers .github/workflows/release-lib.yaml)
+git tag lib/v1.2.3
+git push origin lib/v1.2.3
 ```
 
 The workflow will:
@@ -316,20 +321,12 @@ git push origin v1.2.3-rc2
 ### {octicon}`terminal` Commands Cheatsheet
 
 ```bash
-# Create RC
-git tag v1.2.3-rc1
-git push origin v1.2.3-rc1
+# Create Production Library Release (triggers .github/workflows/release-lib.yaml)
+git tag lib/v1.2.3
+git push origin lib/v1.2.3
 
-# Create Release
-git tag v1.2.3
-git push origin v1.2.3
-
-# Delete Tag (only for RCs)
-git tag -d v1.2.3-rc1
-git push origin :refs/tags/v1.2.3-rc1
-
-# View Tags
-git tag -l "v*"
+# View Library Release Tags
+git tag -l "lib/v*"
 
 # Check Workflow Status
 gh workflow list
@@ -342,10 +339,12 @@ gh run list
 repository/
 ├── .github/
 │   ├── workflows/
-│   │   └── release.yaml
-│   └── actions/
+│   │   ├── prepare-release.yaml
+│   │   └── release-lib.yaml
+│   └── scripts/
+│       └── changelog.py
 ├── src/
-│   └── __init__.py
+│   └── anomalib/__init__.py
 ├── tests/
 ├── CHANGELOG.md
 └── pyproject.toml

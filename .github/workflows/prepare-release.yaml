@@ -50,6 +50,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          ref: main
           fetch-depth: 0
           persist-credentials: false
 
@@ -78,6 +79,10 @@ jobs:
           VERSION="${VERSION#v}"
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "::error::Invalid version '$INPUT_VERSION'. Expected X.Y.Z or vX.Y.Z."
+            exit 1
+          fi
+          if git rev-parse -q --verify "refs/tags/lib/v$VERSION" >/dev/null; then
+            echo "::error::Tag 'lib/v$VERSION' already exists. Refusing to overwrite a published release."
             exit 1
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"

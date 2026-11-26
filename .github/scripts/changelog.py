@@ -11,7 +11,28 @@ import sys
 from pathlib import Path
 
 _VERSION_HEADING_RE = re.compile(r"^## \[(?P<label>[^\]]+)\](?:\s*-\s*(?P<date>.+))?$")
+_FENCE_OPEN_RE = re.compile(r"^[ \t]{0,3}(?P<fence>`{3,}|~{3,})")
 _UNRELEASED_NOTE = "<!-- Release notes are auto-generated from Conventional Commit PR titles at release time. -->"
+
+
+def _update_fence_state(line: str, active_fence: tuple[str, int] | None) -> tuple[str, int] | None:
+    """Track CommonMark fenced code blocks (backticks or tildes)."""
+    stripped = line.lstrip(" \t")
+    if len(line) - len(stripped) > 3:
+        return active_fence
+    if active_fence is None:
+        match = _FENCE_OPEN_RE.match(line)
+        if match is None:
+            return None
+        fence = match.group("fence")
+        if fence[0] == "`" and "`" in line[match.end() :]:
+            return None
+        return (fence[0], len(fence))
+    fence_char, fence_len = active_fence
+    closing = stripped.rstrip()
+    if len(closing) >= fence_len and set(closing) == {fence_char}:
+        return None
+    return active_fence
 
 
 def normalize_version(version: str) -> str:
@@ -33,37 +54,39 @@ def update_changelog_content(existing: str, version: str, new_section: str) -> s
     lines = existing.splitlines()
     new_section_lines = new_section.strip("\n").splitlines()
 
-    target_indices: tuple[int, int] | None = None
+    target_start: int | None = None
+    target_end = len(lines)
     first_release_idx: int | None = None
     unreleased_idx: int | None = None
+    active_fence: tuple[str, int] | None = None
 
     for idx, line in enumerate(lines):
+        active_fence = _update_fence_state(line, active_fence)
+        if active_fence is not None:
+            continue
         match = _VERSION_HEADING_RE.match(line)
         if match is None:
             continue
+        if target_start is not None:
+            target_end = idx
+            break
         label = match.group("label").strip()
         if label.lower() == "unreleased":
             unreleased_idx = idx
             continue
         if first_release_idx is None:
             first_release_idx = idx
-        if normalize_version(label) == bare_version and target_indices is None:
-            end_idx = len(lines)
-            for next_idx in range(idx + 1, len(lines)):
-                if _VERSION_HEADING_RE.match(lines[next_idx]):
-                    end_idx = next_idx
-                    break
-            target_indices = (idx, end_idx)
+        if normalize_version(label) == bare_version:
+            target_start = idx
 
-    if target_indices is not None:
-        start_idx, end_idx = target_indices
-        tail = lines[end_idx:]
+    if target_start is not None:
+        tail = lines[target_end:]
         while tail and not tail[0].strip():
             tail.pop(0)
         if tail:
-            updated_lines = [*lines[:start_idx], *new_section_lines, "", *tail]
+            updated_lines = [*lines[:target_start], *new_section_lines, "", *tail]
         else:
-            updated_lines = [*lines[:start_idx], *new_section_lines]
+            updated_lines = [*lines[:target_start], *new_section_lines]
     elif first_release_idx is not None:
         if unreleased_idx is not None:
             prefix = [*lines[: unreleased_idx + 1], "", _UNRELEASED_NOTE]
@@ -96,11 +119,18 @@ def _strip_empty_subsections(section_lines: list[str]) -> list[str]:
     """Remove empty ``### <Subsection>`` blocks while preserving nonempty subsection bodies."""
     cleaned: list[str] = []
     idx = 0
+    active_fence: tuple[str, int] | None = None
     while idx < len(section_lines):
         line = section_lines[idx]
-        if line.startswith("### "):
+        active_fence = _update_fence_state(line, active_fence)
+        if active_fence is None and line.startswith("### "):
             block_end = idx + 1
-            while block_end < len(section_lines) and not section_lines[block_end].startswith("### "):
+            sub_fence: tuple[str, int] | None = None
+            while block_end < len(section_lines):
+                sub_line = section_lines[block_end]
+                sub_fence = _update_fence_state(sub_line, sub_fence)
+                if sub_fence is None and sub_line.startswith("### "):
+                    break
                 block_end += 1
             body = list(section_lines[idx + 1 : block_end])
             while body and not body[0].strip():
@@ -114,6 +144,7 @@ def _strip_empty_subsections(section_lines: list[str]) -> list[str]:
                 cleaned.append("")
                 cleaned.extend(body)
             idx = block_end
+            active_fence = sub_fence
         else:
             cleaned.append(line)
             idx += 1
@@ -127,8 +158,12 @@ def extract_release_notes(changelog_content: str, version: str) -> str:
 
     start_idx: int | None = None
     end_idx = len(lines)
+    active_fence: tuple[str, int] | None = None
 
     for idx, line in enumerate(lines):
+        active_fence = _update_fence_state(line, active_fence)
+        if active_fence is not None:
+            continue
         match = _VERSION_HEADING_RE.match(line)
         if match is None:
             continue

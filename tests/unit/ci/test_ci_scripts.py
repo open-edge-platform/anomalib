@@ -123,14 +123,30 @@ def test_extract_repo_changelog_and_rich_markdown() -> None:
         "- ⚠️ **breaking**: Drop legacy exporter\n\n"
         "#### Migration\n\n"
         "First paragraph.\n\n"
-        "```python\n"
-        "a = 1\n\n"
-        "b = 2\n"
-        "```\n"
+        "```markdown\n"
+        "## [v1.0.0] - 2024-01-01\n\n"
+        "### Fixed\n\n"
+        "- Example entry inside fenced block\n"
+        "```\n\n"
+        "Trailing migration note.\n\n"
+        "## [v2.7.1] - 2026-11-16\n\n"
+        "### Fixed\n\n"
+        "- Previous release\n"
     )
     extracted_rich = changelog.extract_release_notes(rich_changelog, "2.8.0")
     assert "### Added" not in extracted_rich
-    assert "First paragraph.\n\n```python\na = 1\n\nb = 2\n```" in extracted_rich
+    assert "## [v1.0.0] - 2024-01-01\n\n### Fixed\n\n- Example entry inside fenced block\n```" in extracted_rich
+    assert "Trailing migration note." in extracted_rich
+    assert "Previous release" not in extracted_rich
+
+    replaced = changelog.update_changelog_content(
+        rich_changelog,
+        "2.8.0",
+        "## [v2.8.0] - 2026-12-02\n\n### Fixed\n\n- Replaced\n",
+    )
+    assert "Trailing migration note." not in replaced
+    assert "## [v2.7.1] - 2026-11-16" in replaced
+    assert "- Previous release" in replaced
 
     with pytest.raises(ValueError, match="not found"):
         changelog.extract_release_notes(repo_changelog, "9.9.9")
