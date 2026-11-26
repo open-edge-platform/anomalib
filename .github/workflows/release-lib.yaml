@@ -69,7 +69,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-          sparse-checkout: src/anomalib/__init__.py
+          sparse-checkout: |
+            pyproject.toml
+            CHANGELOG.md
+            .github/scripts/changelog.py
       - name: Validate version
         id: validate-version
         env:
@@ -83,13 +86,18 @@ jobs:
           fi
 
           TAG_VERSION="${VERSION#v}"
-          PKG_VERSION=$(sed -n "s/^[[:space:]]*__version__[[:space:]]*=[[:space:]]*[\"']\([^\"']*\)[\"']/\1/p" src/anomalib/__init__.py)
+          PKG_VERSION=$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
           if [[ -z "$PKG_VERSION" ]]; then
-            echo "::error::Could not extract __version__ from src/anomalib/__init__.py"
+            echo "::error::Could not extract [project].version from pyproject.toml"
             exit 1
           fi
           if [[ "$PKG_VERSION" != "$TAG_VERSION" ]]; then
-            echo "::error::Tag version ($TAG_VERSION) does not match __version__ in src/anomalib/__init__.py ($PKG_VERSION)"
+            echo "::error::Tag version ($TAG_VERSION) does not match [project].version in pyproject.toml ($PKG_VERSION)"
+            exit 1
+          fi
+
+          if ! python3 .github/scripts/changelog.py extract --version "$VERSION" --output /dev/null; then
+            echo "::error::CHANGELOG.md is missing an entry for $VERSION. Run the Prepare Release workflow before releasing."
             exit 1
           fi
 
@@ -168,6 +176,20 @@ jobs:
         with:
           egress-policy: audit
 
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            CHANGELOG.md
+            .github/scripts/changelog.py
+      - name: Extract release notes from CHANGELOG.md
+        env:
+          RELEASE_VERSION: ${{ needs.version-check.outputs.version }}
+        run: |
+          python3 .github/scripts/changelog.py extract \
+            --version "$RELEASE_VERSION" \
+            --changelog CHANGELOG.md \
+            --output "$RUNNER_TEMP/release-notes.md"
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: ${{ needs.build.outputs.artifact-name }}
@@ -181,7 +203,7 @@ jobs:
           draft: false
           prerelease: false
           files: dist/*
-          generate_release_notes: true
+          body_path: ${{ runner.temp }}/release-notes.md
 
   status:
     needs: [version-check, publish]

@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "anomalib"
-dynamic = ["version"]
+version = "2.7.1"
 readme = "README.md"
 description = "anomalib - Anomaly Detection Library"
 requires-python = ">=3.10"
@@ -112,7 +112,6 @@ test = [
     "pytest-json-report",
     "coverage[toml]",
     "tox",
-    "commitizen",
 ]
 # PyTorch dependency groups
 # NOTE: Minimum torch>=2.10.0 required as of anomalib 2.7.0 (dynamo ONNX exporter;
@@ -150,9 +149,6 @@ dev = ["anomalib[full,docs,test]"]
 
 [project.scripts]
 anomalib = "anomalib.cli.cli:main"
-
-[tool.hatch.version]
-path = "src/anomalib/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 only-include = [
@@ -487,66 +483,3 @@ exclude_links = [
 ]
 exclude_files = ["docs/*"]
 force_get_requests_for_links = ["https://secure.ethicspoint.com/*"]
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# COMMITIZEN CONFIGURATION                                                    #
-[tool.commitizen]
-name = "cz_conventional_commits"
-tag_format = "v$version"
-version_scheme = "semver"
-version_provider = "pep621"
-update_changelog_on_bump = true
-changelog_file = "CHANGELOG.md"
-changelog_format = "## $version ($date)"
-major_version_zero = true
-types = [
-    "feat",
-    "fix",
-    "docs",
-    "style",
-    "refactor",
-    "perf",
-    "test",
-    "build",
-    "ci",
-    "chore",
-]
-scopes = [
-    "data",
-    "model",
-    "metric",
-    "utils",
-    "cli",
-    "docs",
-    "ci",
-    "engine",
-    "visualization",
-    "benchmarking",
-    "logger",
-    "openvino",
-    "notebooks"
-]
-
-# Conventional commit rules
-[tool.commitizen.rules]
-scope-enum = [2, "always", [
-    "data",
-    "model",
-    "metric",
-    "utils",
-    "cli",
-    "docs",
-    "ci",
-    "engine",
-    "visualization",
-    "benchmarking",
-    "logger",
-    "openvino",
-    "notebooks"
-]]
-scope-empty = [0]
-subject-case = [2, "never", ["sentence-case", "start-case", "pascal-case", "upper-case"]]
-subject-empty = [2, "never"]
-subject-full-stop = [2, "never", "."]
-type-case = [2, "always", "lower-case"]
-type-empty = [2, "never"]

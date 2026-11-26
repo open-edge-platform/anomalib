@@ -15,8 +15,9 @@ Use this skill when code changes may affect user-visible documentation, examples
 
 - user-facing behavior changes without matching docs updates;
 - public APIs change without docstring or reference-doc updates;
-- a significant user-facing change is missing a `CHANGELOG.md` entry under `## [Unreleased]`;
-- a new or modified changelog entry is missing its change-type emoji, bold scope, summary, author attribution, or PR URL;
+- the PR title does not accurately summarize the user-facing change (since `CHANGELOG.md` and release notes are auto-generated from Conventional Commit PR titles at release time);
+- a regular PR edits `CHANGELOG.md` unnecessarily (unless it is a release-preparation PR);
+- a release-preparation PR's `CHANGELOG.md` entry is missing its change-type emoji, bold scope, summary, author attribution, or PR URL;
 - examples or README usage snippets no longer match the actual API.
 
 ## Docstrings
@@ -34,21 +35,18 @@ Use this skill when code changes may affect user-visible documentation, examples
 
 ## Changelog
 
-- Significant user-facing changes should update `CHANGELOG.md` under `## [Unreleased]`.
-- Use the existing Keep a Changelog section headings already present in the repo: `Added`, `Removed`, `Changed`, `Deprecated`, `Fixed`.
-- Release-preparation PRs may move entries into a versioned section; regular PRs use `Unreleased`.
-- Check the entry format, not only its presence. Changelog format is a release requirement, not a style nit to skip because linters run.
-- Require a change-type emoji (for example, `🐞` for a bug fix), bold scope, user-facing summary, author attribution, and the actual PR URL:
+- Regular PRs should **not** edit `CHANGELOG.md`. Instead, `CHANGELOG.md` and GitHub Release notes are auto-generated from squash-merged Conventional Commit PR titles at release time via `.github/scripts/changelog.py` (and mirrored into GitHub Releases by `.github/workflows/release-lib.yaml`).
+- Reviewers should check that the **PR title** accurately describes the user-facing change and that breaking changes are marked with `!` or a `BREAKING CHANGE:` footer.
+- When reviewing a release-preparation PR (`docs(changelog): prepare CHANGELOG.md for v...` / `chore(release): ...`):
+  - Use the existing Keep a Changelog section headings: `Added`, `Removed`, `Changed`, `Deprecated`, `Fixed`.
+  - Verify each entry has a change-type emoji (for example, `🐞` for a bug fix), bold scope, user-facing summary, author attribution, and the actual PR URL:
 
-  ```markdown
-  - 🐞 **data**: Describe the user-facing fix by @github-user in https://github.com/open-edge-platform/anomalib/pull/1234
-  ```
+    ```markdown
+    - 🐞 **data**: Describe the user-facing fix by @github-user in https://github.com/open-edge-platform/anomalib/pull/1234
+    ```
 
-- Verify attribution and PR references against PR metadata; do not invent them. Grouped entries may credit multiple authors and PRs.
-- The example uses placeholders; replace `@github-user` and PR number `1234` with the actual metadata.
-- Keep neighboring bullets contiguous without an extra blank line. Review added or modified entries without demanding unrelated historical rewrites.
-- Flag missing fields with a corrected example even when the implementation and tests are correct. PR title emoji rules are separate from changelog entry rules.
-- Purely internal changes may not need a changelog entry, but reviewers should call out missing entries for behavior, API, docs, or user workflow changes.
+  - Verify attribution and PR references against PR metadata; do not invent them. Grouped entries may credit multiple authors and PRs.
+  - Keep neighboring bullets contiguous without an extra blank line. Review added or modified entries without demanding unrelated historical rewrites.
 
 ## Repo-grounded review anchors
 
@@ -61,13 +59,12 @@ Use this skill when code changes may affect user-visible documentation, examples
 
 - Does the code change require docstring, README, docs page, or example updates?
 - Are docstrings informative enough for users to understand behavior and expected inputs?
-- Should this change be recorded under `## [Unreleased]`?
+- Does the PR title accurately describe the user-facing change for release-note generation?
 - If a public symbol or module changed, is the reference documentation still accurate?
 
 ## Reviewer checklist
 
 - Check docstrings for public APIs.
 - Check README, docs, and examples for user-facing changes.
-- Check `CHANGELOG.md` for significant changes.
-- Check new or modified entries for the correct heading, emoji, bold scope, summary, author attribution, and PR URL.
+- Check PR title clarity (and `CHANGELOG.md` only on release-preparation PRs).
 - Check that docs match the current API and workflow.

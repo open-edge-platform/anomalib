@@ -147,32 +147,15 @@ PYPI_TOKEN: [Production PyPI token]
 
 ### {octicon}`pencil` 1. Prepare Release
 
-1. Update version in package files:
+1. Update version and `CHANGELOG.md` using the **Prepare Release** workflow (`.github/workflows/prepare-release.yaml`) or locally via `.github/scripts/changelog.py`:
 
-   ```python
-   # src/__init__.py or similar
-   __version__ = "1.2.3"
+   ```bash
+   python3 .github/scripts/changelog.py generate --version 1.2.3 --update --changelog CHANGELOG.md --pyproject pyproject.toml
    ```
 
-2. Update CHANGELOG.md:
+   This sets `[project].version` in `pyproject.toml` (`anomalib.__version__` reads installed package metadata via `importlib.metadata`) and generates the `## [v1.2.3]` section in `CHANGELOG.md`. Review the generated `## [v1.2.3]` section (polish wording, group dependency updates, or add breaking-change migration notes if needed). When the `lib/v1.2.3` tag is pushed, `.github/workflows/release-lib.yaml` validates that `pyproject.toml` and `CHANGELOG.md` match `lib/v1.2.3` and extracts that exact `CHANGELOG.md` section as the GitHub Release body so `CHANGELOG.md` and GitHub Releases remain identical.
 
-   ```markdown
-   ## [1.2.3] - YYYY-MM-DD
-
-   ### Added
-
-   - New feature X
-
-   ### Changed
-
-   - Modified behavior Y
-
-   ### Fixed
-
-   - Bug fix Z
-   ```
-
-3. Create release branch:
+2. Create release branch:
 
    ```bash
    git checkout -b release/v1.2.3
@@ -181,7 +164,7 @@ PYPI_TOKEN: [Production PyPI token]
    git push origin release/v1.2.3
    ```
 
-4. Create and merge PR to main
+3. Create and merge PR to main
 
 ### {octicon}`git-branch` 2. Create Release Candidate
 

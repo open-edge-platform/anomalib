@@ -221,7 +221,7 @@ that `prepare_data()` will use.
    stub). Add a grid card + toctree entry to that modality's `index.md` and a card under the
    matching modality in `docs/source/markdown/guides/reference/data/datamodules/index.md`.
 
-5. Add a `CHANGELOG.md` entry under `## [Unreleased]`.
+(Do **not** edit `CHANGELOG.md` in feature PRs; release notes are auto-generated from Conventional Commit PR titles at release time.)
 
 ## Tests
 
@@ -337,7 +337,6 @@ When writing a datamodule or dataset that parses metadata (split CSVs, JSON, Par
 - [ ] Datamodule exported from `src/anomalib/data/__init__.py` and `__all__` updated.
 - [ ] `anomalib.data.MyDataModule` resolves and works from the CLI `--data` flag.
 - [ ] `examples/configs/data/my_dataset.yaml` and a docs reference page added.
-- [ ] `CHANGELOG.md` entry added under `## [Unreleased]`.
 - [ ] Unit tests added under `tests/unit/data/datamodule/` (including path confinement tests if parsing external metadata).
 - [ ] If a new `DataFormat` was introduced, a matching `_generate_dummy_*_dataset` method was added to
       `DummyImageDatasetGenerator` in `tests/helpers/data.py`.

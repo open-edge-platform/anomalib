@@ -1,0 +1,120 @@
+# Prepare Release Workflow
+#
+# Prepares a library release in a single reviewable PR by:
+# 1. Updating [project].version in pyproject.toml
+# 2. Generating the matching [vX.Y.Z] section in CHANGELOG.md from
+#    Conventional Commit PR titles since the previous lib/v*.*.* tag
+#
+# Once merged and tagged (lib/vX.Y.Z), release-lib.yaml validates pyproject.toml
+# and CHANGELOG.md and publishes identical GitHub Release notes.
+
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Target release version (e.g., 2.7.2 or v2.7.2)"
+        required: true
+        type: string
+      since_tag:
+        description: "Starting git tag (optional; defaults to latest lib/v*.*.*)"
+        required: false
+        default: ""
+        type: string
+      create_pr:
+        description: "Open a pull request with pyproject.toml and CHANGELOG.md updates"
+        required: false
+        default: true
+        type: boolean
+      dry_run:
+        description: "Preview generated changelog in workflow summary without creating a PR"
+        required: false
+        default: false
+        type: boolean
+
+permissions: {}
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # Required by peter-evans/create-pull-request
+      pull-requests: write # Required by peter-evans/create-pull-request
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prepare pyproject.toml and CHANGELOG.md
+        id: prepare
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_SINCE_TAG: ${{ inputs.since_tag }}
+          INPUT_REPO: ${{ github.repository }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          VERSION="${INPUT_VERSION#lib/}"
+          VERSION="${VERSION#v}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version '$INPUT_VERSION'. Expected X.Y.Z or vX.Y.Z."
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          ARGS=(generate --version "$VERSION" --repo "$INPUT_REPO")
+          if [[ -n "$INPUT_SINCE_TAG" ]]; then
+            ARGS+=(--since-tag "$INPUT_SINCE_TAG")
+          fi
+
+          if [[ "$DRY_RUN" == "true" ]]; then
+            python3 .github/scripts/changelog.py "${ARGS[@]}" --output "$RUNNER_TEMP/preview.md"
+            {
+              echo "### Changelog Preview for v$VERSION"
+              echo ""
+              cat "$RUNNER_TEMP/preview.md"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            python3 .github/scripts/changelog.py "${ARGS[@]}" \
+              --update \
+              --changelog CHANGELOG.md \
+              --pyproject pyproject.toml
+            python3 .github/scripts/changelog.py extract \
+              --version "$VERSION" \
+              --changelog CHANGELOG.md \
+              --output "$RUNNER_TEMP/release-notes.md"
+            {
+              echo "### Generated Release Notes for v$VERSION"
+              echo ""
+              cat "$RUNNER_TEMP/release-notes.md"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Create Pull Request
+        if: ${{ !inputs.dry_run && inputs.create_pr }}
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(release): prepare v${{ steps.prepare.outputs.version }}"
+          title: "chore(release): prepare v${{ steps.prepare.outputs.version }}"
+          body: |
+            ## 🚀 Automated Release Preparation
+
+            Prepares `v${{ steps.prepare.outputs.version }}`:
+            - Updated `[project].version` in `pyproject.toml` to `${{ steps.prepare.outputs.version }}`
+            - Generated `[v${{ steps.prepare.outputs.version }}]` in `CHANGELOG.md` from Conventional Commit PR titles
+
+            - Review and polish wording or highlight any breaking-change migration notes before merging.
+            - Once merged and tagged as `lib/v${{ steps.prepare.outputs.version }}`, `release-lib.yaml` will publish the exact extracted `CHANGELOG.md` section as the GitHub Release body.
+          branch: "chore/release/v${{ steps.prepare.outputs.version }}"
+          base: main
+          delete-branch: true
