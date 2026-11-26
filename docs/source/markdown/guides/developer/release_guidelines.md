@@ -147,21 +147,23 @@ PYPI_TOKEN: [Production PyPI token]
 
 ### {octicon}`pencil` 1. Prepare Release
 
-1. Update version and `CHANGELOG.md` using the **Prepare Release** workflow (`.github/workflows/prepare-release.yaml`) or locally via `.github/scripts/changelog.py`:
+1. Update version, lockfiles, and `CHANGELOG.md` using the **Prepare Release** workflow (`.github/workflows/prepare-release.yaml`) or locally via `.github/scripts/changelog.py`:
 
    ```bash
    python3 .github/scripts/changelog.py generate --version 1.2.3 --update --changelog CHANGELOG.md --pyproject pyproject.toml
+   uv lock
+   uv lock --directory application/backend
    ```
 
-   This sets `[project].version` in `pyproject.toml` (`anomalib.__version__` reads installed package metadata via `importlib.metadata`) and generates the `## [v1.2.3]` section in `CHANGELOG.md`. Review the generated `## [v1.2.3]` section (polish wording, group dependency updates, or add breaking-change migration notes if needed). When the `lib/v1.2.3` tag is pushed, `.github/workflows/release-lib.yaml` validates that `pyproject.toml` and `CHANGELOG.md` match `lib/v1.2.3` and extracts that exact `CHANGELOG.md` section as the GitHub Release body so `CHANGELOG.md` and GitHub Releases remain identical.
+   This sets `[project].version` in `pyproject.toml` (`anomalib.__version__` reads installed package metadata via `importlib.metadata`), refreshes `uv.lock` and `application/backend/uv.lock`, and generates the `## [v1.2.3]` section in `CHANGELOG.md`. Review the generated `## [v1.2.3]` section (polish wording, group dependency updates, or add breaking-change migration notes if needed). When the `lib/v1.2.3` tag is pushed, `.github/workflows/release-lib.yaml` validates that `pyproject.toml` and `CHANGELOG.md` match `lib/v1.2.3` and extracts that exact `CHANGELOG.md` section as the GitHub Release body so `CHANGELOG.md` and GitHub Releases remain identical.
 
 2. Create release branch:
 
    ```bash
-   git checkout -b release/v1.2.3
-   git add .
-   git commit -m "chore: prepare release v1.2.3"
-   git push origin release/v1.2.3
+   git checkout -b chore/release/v1.2.3
+   git add pyproject.toml CHANGELOG.md uv.lock application/backend/uv.lock
+   git commit -m "chore(release): prepare v1.2.3"
+   git push origin chore/release/v1.2.3
    ```
 
 3. Create and merge PR to main

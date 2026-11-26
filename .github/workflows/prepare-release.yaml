@@ -2,7 +2,8 @@
 #
 # Prepares a library release in a single reviewable PR by:
 # 1. Updating [project].version in pyproject.toml
-# 2. Generating the matching [vX.Y.Z] section in CHANGELOG.md from
+# 2. Refreshing uv.lock and application/backend/uv.lock
+# 3. Generating the matching [vX.Y.Z] section in CHANGELOG.md from
 #    Conventional Commit PR titles since the previous lib/v*.*.* tag
 #
 # Once merged and tagged (lib/vX.Y.Z), release-lib.yaml validates pyproject.toml
@@ -23,7 +24,7 @@ on:
         default: ""
         type: string
       create_pr:
-        description: "Open a pull request with pyproject.toml and CHANGELOG.md updates"
+        description: "Open a pull request with version, lockfile, and CHANGELOG.md updates"
         required: false
         default: true
         type: boolean
@@ -40,8 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: write # Required by peter-evans/create-pull-request
-      pull-requests: write # Required by peter-evans/create-pull-request
+      contents: read # Required to checkout the repository
     steps:
       - name: Harden the runner (audit all outbound calls)
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
@@ -54,7 +54,20 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Prepare pyproject.toml and CHANGELOG.md
+      - name: Set up Python
+        if: ${{ !inputs.dry_run }}
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        if: ${{ !inputs.dry_run }}
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.9.18"
+          enable-cache: false
+
+      - name: Prepare pyproject.toml, lockfiles, and CHANGELOG.md
         id: prepare
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -88,6 +101,10 @@ jobs:
               --update \
               --changelog CHANGELOG.md \
               --pyproject pyproject.toml
+            uv lock
+            uv lock --directory application/backend
+            uv lock --check
+            uv lock --check --directory application/backend
             python3 .github/scripts/changelog.py extract \
               --version "$VERSION" \
               --changelog CHANGELOG.md \
@@ -99,11 +116,25 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
           fi
 
+      # GitHub App token is required so the opened PR triggers pull_request checks (GITHUB_TOKEN cannot trigger workflows)
+      - name: Get GitHub App token
+        if: ${{ !inputs.dry_run && inputs.create_pr }}
+        id: get-github-app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ secrets.RENOVATE_APP_ID }}
+          private-key: ${{ secrets.RENOVATE_APP_PEM }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - name: Create Pull Request
         if: ${{ !inputs.dry_run && inputs.create_pr }}
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.get-github-app-token.outputs.token }}
+          author: oep-renovate[bot] <212772560+oep-renovate[bot]@users.noreply.github.com>
+          committer: oep-renovate[bot] <212772560+oep-renovate[bot]@users.noreply.github.com>
+          signoff: true
           commit-message: "chore(release): prepare v${{ steps.prepare.outputs.version }}"
           title: "chore(release): prepare v${{ steps.prepare.outputs.version }}"
           body: |
@@ -111,6 +142,7 @@ jobs:
 
             Prepares `v${{ steps.prepare.outputs.version }}`:
             - Updated `[project].version` in `pyproject.toml` to `${{ steps.prepare.outputs.version }}`
+            - Refreshed `uv.lock` and `application/backend/uv.lock`
             - Generated `[v${{ steps.prepare.outputs.version }}]` in `CHANGELOG.md` from Conventional Commit PR titles
 
             - Review and polish wording or highlight any breaking-change migration notes before merging.
@@ -118,3 +150,8 @@ jobs:
           branch: "chore/release/v${{ steps.prepare.outputs.version }}"
           base: main
           delete-branch: true
+          add-paths: |
+            pyproject.toml
+            CHANGELOG.md
+            uv.lock
+            application/backend/uv.lock

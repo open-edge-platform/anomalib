@@ -4,7 +4,9 @@
 
 from __future__ import annotations
 
+import http.client
 import importlib.util
+import json
 import shutil
 import subprocess
 import sys
@@ -54,16 +56,68 @@ def test_parse_classify_and_normalize() -> None:
     doc_fix = changelog.parse_commit("3", "docs(cli): clarify usage (#3931)", "", "bot")
     internal = changelog.parse_commit("4", "test(data): add split test (#3999)", "", "user")
     housekeeping = changelog.parse_commit("5", "chore(release): restore 2.7.2.dev0 (#3934)", "", "bot")
+    docs_housekeeping = changelog.parse_commit("6", "docs(changelog): prepare CHANGELOG.md for v2.7.2 (#3950)", "", "b")
+    reverted = changelog.parse_commit("7", "⏪ revert(cli): restore legacy flag (#3955)", "", "user")
     assert sec is not None
     assert doc_fix is not None
     assert internal is not None
     assert housekeeping is not None
+    assert docs_housekeeping is not None
+    assert reverted is not None
 
     assert changelog.classify_commit(sec) == ("Changed", "🔒")
     assert changelog.classify_commit(doc_fix) == ("Fixed", "📚")
     assert changelog.classify_commit(internal) is None
     assert changelog.classify_commit(internal, include_internal=True) == ("Changed", "🧪")
     assert changelog.classify_commit(housekeeping) is None
+    assert changelog.classify_commit(docs_housekeeping) is None
+    assert changelog.classify_commit(reverted) == ("Changed", "⏪")
+
+
+def test_fetch_pr_author(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Validates repo slug checks, bot login normalization, and HTTP error fallback."""
+    with pytest.raises(ValueError, match="Invalid GitHub repository slug"):
+        changelog.fetch_pr_author("../evil/repo", 1)
+
+    class _FakeResponse:
+        def __init__(self, status: int, body: bytes) -> None:
+            self.status = status
+            self._body = body
+
+        def read(self) -> bytes:
+            return self._body
+
+    responses = [
+        _FakeResponse(200, json.dumps({"user": {"login": "app/oep-renovate"}}).encode()),
+        _FakeResponse(404, b'{"message": "Not Found"}'),
+    ]
+
+    class _FakeHTTPSConnection:
+        def __init__(self, host: str, timeout: int = 15) -> None:
+            assert host == "api.github.com"
+            self.timeout = timeout
+            self.closed = False
+            self.auth_header: str | None = None
+
+        def request(self, method: str, path: str, headers: dict[str, str]) -> None:
+            assert method == "GET"
+            assert path.startswith("/repos/open-edge-platform/anomalib/pulls/")
+            assert "User-Agent" in headers
+            self.auth_header = headers.get("Authorization")
+
+        def getresponse(self) -> _FakeResponse:
+            assert not self.closed
+            return responses.pop(0)
+
+        def close(self) -> None:
+            self.closed = True
+
+    monkeypatch.setattr(http.client, "HTTPSConnection", _FakeHTTPSConnection)
+    assert (
+        changelog.fetch_pr_author("open-edge-platform/anomalib", 3954, token="dummy")  # noqa: S106
+        == "oep-renovate[bot]"
+    )
+    assert changelog.fetch_pr_author("open-edge-platform/anomalib", 9999) is None
 
 
 def test_changelog_generate_bump_and_extract_roundtrip(tmp_path: Path) -> None:
@@ -72,7 +126,13 @@ def test_changelog_generate_bump_and_extract_roundtrip(tmp_path: Path) -> None:
     assert git_bin is not None
 
     def git(*args: str) -> None:
-        subprocess.run([git_bin, *args], cwd=tmp_path, check=True, capture_output=True, text=True)  # noqa: S603
+        subprocess.run(  # noqa: S603
+            [git_bin, "-c", "commit.gpgsign=false", *args],
+            cwd=tmp_path,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
 
     git("init")
     git("config", "user.name", "Maintainer")
@@ -170,6 +230,22 @@ def test_extract_repo_changelog_and_errors() -> None:
     with pytest.raises(ValueError, match="Could not find"):
         changelog.bump_pyproject_version('[project]\nname = "anomalib"\n', "2.7.2")
 
+    rich_changelog = (
+        "## [v2.8.0] - 2026-12-01\n\n"
+        "### Added\n\n"
+        "### Changed\n\n"
+        "- ⚠️ **breaking**: Drop legacy exporter\n\n"
+        "#### Migration\n\n"
+        "First paragraph.\n\n"
+        "```python\n"
+        "a = 1\n\n"
+        "b = 2\n"
+        "```\n"
+    )
+    extracted_rich = changelog.extract_release_notes(rich_changelog, "2.8.0")
+    assert "### Added" not in extracted_rich
+    assert "First paragraph.\n\n```python\na = 1\n\nb = 2\n```" in extracted_rich
+
 
 def test_check_pr_title(monkeypatch: pytest.MonkeyPatch) -> None:
     """Validates Conventional Commit PR titles with optional leading emojis and env fallback."""
@@ -177,7 +253,7 @@ def test_check_pr_title(monkeypatch: pytest.MonkeyPatch) -> None:
         "feat(model): add VerdictAD",
         "🐞 fix(post_processing): explicit None check",
         "📦 build!: require Python 3.11",
-        "revert(cli): restore parser",
+        "⏪ revert(cli): restore parser",
     ):
         assert check_pr_title.main([valid]) == 0
 

@@ -6,14 +6,13 @@
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import os
 import re
 import shutil
 import subprocess  # nosec B404
 import sys
-import urllib.error
-import urllib.request
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -23,8 +22,9 @@ CHANGELOG_SECTIONS = ("Added", "Removed", "Changed", "Deprecated", "Fixed")
 
 # Strip leading emoji/symbol prefixes allowed in PR titles before conventional header.
 _LEADING_EMOJI_RE = re.compile(
-    r"^[\s\U0001F300-\U0001FAFF\u2600-\u27BF\uFE0F\u200D]+",
+    r"^[\s\U0001F300-\U0001FAFF\u2300-\u23FF\u2600-\u27BF\uFE0F\u200D]+",
 )
+_REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 _CONVENTIONAL_RE = re.compile(
     r"^(?P<type>[a-z]+)(?:\((?P<scope>[^)]+)\))?(?P<breaking>!)?:\s*(?P<desc>.+?)(?:\s+\(#(?P<pr>\d+)\))?$",
 )
@@ -167,12 +167,10 @@ def parse_commit(sha: str, subject: str, body: str, git_author: str) -> CommitEn
 
 def is_housekeeping_commit(entry: CommitEntry) -> bool:
     """Return True for release-prep commits that should not appear in release notes."""
-    return (
-        entry.commit_type == "chore"
-        and entry.scope in {"release", "lib"}
-        and bool(
-            _RELEASE_HOUSEKEEPING_RE.match(entry.description),
-        )
+    is_release_chore = entry.commit_type == "chore" and entry.scope in {"release", "lib"}
+    is_changelog_prep = entry.commit_type == "docs" and entry.scope == "changelog"
+    return (is_release_chore or is_changelog_prep) and bool(
+        _RELEASE_HOUSEKEEPING_RE.match(entry.description),
     )
 
 
@@ -187,6 +185,7 @@ _TYPE_MAP: dict[str, tuple[str, str]] = {
     "feat": ("Added", "🚀"),
     "perf": ("Changed", "⚡"),
     "refactor": ("Changed", "🔄"),
+    "revert": ("Changed", "⏪"),
     "ci": ("Changed", "🔧"),
 }
 
@@ -241,9 +240,8 @@ def _resolve_github_token() -> str | None:
 
 def fetch_pr_author(repo: str, pr_number: int, token: str | None = None) -> str | None:
     """Look up the PR author login from GitHub's REST API."""
-    url = f"https://api.github.com/repos/{repo}/pulls/{pr_number}"
-    if not url.startswith("https://api.github.com/"):
-        msg = f"Refusing unexpected URL: {url}"
+    if not _REPO_RE.fullmatch(repo):
+        msg = f"Invalid GitHub repository slug: {repo!r}"
         raise ValueError(msg)
 
     headers = {
@@ -253,13 +251,23 @@ def fetch_pr_author(repo: str, pr_number: int, token: str | None = None) -> str 
     if token:
         headers["Authorization"] = f"Bearer {token}"
 
-    request = urllib.request.Request(url, headers=headers)  # noqa: S310
+    conn = http.client.HTTPSConnection("api.github.com", timeout=15)
     try:
-        with urllib.request.urlopen(request, timeout=15) as response:  # noqa: S310  # nosec B310
-            payload = json.loads(response.read().decode("utf-8"))
-    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+        conn.request("GET", f"/repos/{repo}/pulls/{pr_number}", headers=headers)
+        response = conn.getresponse()
+        raw_body = response.read()
+        if response.status != 200:
+            print(
+                f"Warning: could not fetch PR #{pr_number} metadata (HTTP {response.status}); falling back.",
+                file=sys.stderr,
+            )
+            return None
+        payload = json.loads(raw_body.decode("utf-8"))
+    except (http.client.HTTPException, OSError, TimeoutError, json.JSONDecodeError) as exc:
         print(f"Warning: could not fetch PR #{pr_number} metadata ({exc}); falling back.", file=sys.stderr)
         return None
+    finally:
+        conn.close()
 
     user = payload.get("user") or {}
     login = user.get("login")
@@ -394,7 +402,7 @@ def update_changelog_content(existing: str, version: str, new_section: str) -> s
 
 
 def _strip_empty_subsections(section_lines: list[str]) -> list[str]:
-    """Remove empty ``### <Subsection>`` blocks when extracting legacy changelog entries."""
+    """Remove empty ``### <Subsection>`` blocks while preserving nonempty subsection bodies."""
     cleaned: list[str] = []
     idx = 0
     while idx < len(section_lines):
@@ -403,7 +411,11 @@ def _strip_empty_subsections(section_lines: list[str]) -> list[str]:
             block_end = idx + 1
             while block_end < len(section_lines) and not section_lines[block_end].startswith("### "):
                 block_end += 1
-            body = [item for item in section_lines[idx + 1 : block_end] if item.strip()]
+            body = list(section_lines[idx + 1 : block_end])
+            while body and not body[0].strip():
+                body.pop(0)
+            while body and not body[-1].strip():
+                body.pop()
             if body:
                 if cleaned and cleaned[-1].strip():
                     cleaned.append("")
@@ -412,8 +424,7 @@ def _strip_empty_subsections(section_lines: list[str]) -> list[str]:
                 cleaned.extend(body)
             idx = block_end
         else:
-            if line.strip() or (cleaned and cleaned[-1].strip()):
-                cleaned.append(line)
+            cleaned.append(line)
             idx += 1
     return cleaned
 

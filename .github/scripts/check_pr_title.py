@@ -25,7 +25,7 @@ ALLOWED_TYPES = (
 )
 
 _LEADING_EMOJI_RE = re.compile(
-    r"^[\s\U0001F300-\U0001FAFF\u2600-\u27BF\uFE0F\u200D]+",
+    r"^[\s\U0001F300-\U0001FAFF\u2300-\u23FF\u2600-\u27BF\uFE0F\u200D]+",
 )
 _PR_TITLE_RE = re.compile(
     r"^(?P<type>[a-z]+)(?:\((?P<scope>[a-zA-Z0-9_.\-/]+)\))?(?P<breaking>!)?:\s+(?P<desc>.+)$",
