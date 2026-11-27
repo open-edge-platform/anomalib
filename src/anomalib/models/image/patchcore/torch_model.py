@@ -34,7 +34,7 @@ See Also:
 """
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import torch
 from torch import nn
@@ -128,7 +128,21 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         self.anomaly_map_generator = AnomalyMapGenerator()
         self.memory_bank: torch.Tensor
         self.register_buffer("memory_bank", torch.empty(0))
+        self.memory_bank_norm: torch.Tensor
+        self.register_buffer("memory_bank_norm", torch.empty(0), persistent=False)
         self.embedding_store: list[torch.tensor] = []
+
+    def __setattr__(self, name: str, value: Any) -> None:  # noqa: ANN401
+        """Set attribute and synchronize memory_bank_norm when memory_bank updates."""
+        super().__setattr__(name, value)
+        if name == "memory_bank" and isinstance(value, torch.Tensor) and value.numel() > 0:
+            self.memory_bank_norm = value.pow(2).sum(dim=-1)
+
+    def _load_from_state_dict(self, state_dict: dict, prefix: str, *args: Any) -> None:  # noqa: ANN401
+        """Load state dictionary and synchronize memory_bank_norm."""
+        super()._load_from_state_dict(state_dict, prefix, *args)
+        if self.memory_bank.numel() > 0:
+            self.memory_bank_norm = self.memory_bank.pow(2).sum(dim=-1)
 
     def forward(self, input_tensor: torch.Tensor) -> torch.Tensor | InferenceBatch:
         """Process input tensor through the model.
@@ -180,6 +194,9 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         if self.memory_bank.size(0) == 0:
             msg = "Memory bank is empty. Cannot provide anomaly scores"
             raise ValueError(msg)
+
+        if self.memory_bank_norm.numel() == 0 or self.memory_bank_norm.shape[0] != self.memory_bank.shape[0]:
+            self.memory_bank_norm = self.memory_bank.pow(2).sum(dim=-1)
 
         # apply nearest neighbor search
         patch_scores, locations = self.nearest_neighbors(embedding=embedding, n_neighbors=1)
@@ -284,18 +301,20 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         self.memory_bank = sampler.sample_coreset()
 
     @staticmethod
-    def euclidean_dist(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    def euclidean_dist(x: torch.Tensor, y: torch.Tensor, y_norm: torch.Tensor | None = None) -> torch.Tensor:
         """Compute pairwise Euclidean distances between two sets of vectors.
 
         Implements an efficient matrix computation of Euclidean distances between
         all pairs of vectors in ``x`` and ``y`` without using ``torch.cdist()``.
 
         Args:
-            x (torch.Tensor): First tensor of shape ``(n, d)``.
-            y (torch.Tensor): Second tensor of shape ``(m, d)``.
+            x (torch.Tensor): First tensor of shape ``(n, d)`` or ``(batch, n, d)``.
+            y (torch.Tensor): Second tensor of shape ``(m, d)`` or ``(batch, m, d)``.
+            y_norm (torch.Tensor | None, optional): Precomputed squared L2 norms of ``y``
+                along the last dimension. Defaults to ``None``.
 
         Returns:
-            torch.Tensor: Distance matrix of shape ``(n, m)`` where element
+            torch.Tensor: Distance matrix of shape ``(n, m)`` or ``(batch, n, m)`` where element
                 ``(i,j)`` is the distance between row ``i`` of ``x`` and row
                 ``j`` of ``y``.
 
@@ -309,13 +328,24 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         Note:
             This implementation avoids using ``torch.cdist()`` for better
             compatibility with ONNX export and OpenVINO conversion.
+            When ``y`` is 2-D, ``F.linear(x, y)`` is used to map to ``Gemm(transB=1)``
+            during ONNX export, avoiding a transposed copy of the memory bank initializer.
         """
         x_norm = x.pow(2).sum(dim=-1, keepdim=True)
-        y_norm = y.pow(2).sum(dim=-1, keepdim=True)
-        res = torch.matmul(x, y.transpose(-2, -1))
-        res.mul_(-2)
-        res.add_(x_norm)
-        res.add_(y_norm.transpose(-2, -1))
+        if y.ndim == 2:
+            res = F.linear(x, y)
+            res.mul_(-2)
+            res.add_(x_norm)
+            if y_norm is None:
+                y_norm = y.pow(2).sum(dim=-1)
+            res.add_(y_norm)
+        else:
+            if y_norm is None:
+                y_norm = y.pow(2).sum(dim=-1, keepdim=True)
+            res = torch.matmul(x, y.transpose(-2, -1))
+            res.mul_(-2)
+            res.add_(x_norm)
+            res.add_(y_norm.transpose(-2, -1))
         return res.clamp_min_(0).sqrt_()
 
     def nearest_neighbors(self, embedding: torch.Tensor, n_neighbors: int) -> tuple[torch.Tensor, torch.Tensor]:
@@ -352,7 +382,7 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
 
         if n <= chunk_size:
             # Small embedding set: process all at once
-            distances = self.euclidean_dist(embedding, self.memory_bank)
+            distances = self.euclidean_dist(embedding, self.memory_bank, self.memory_bank_norm)
             if n_neighbors == 1:
                 # when n_neighbors is 1, speed up computation by using min instead of topk
                 patch_scores, locations = distances.min(1)
@@ -368,7 +398,7 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
                 embedding_chunk = embedding[start_idx:end_idx]
 
                 # Compute distances for this chunk against full memory bank
-                distances = self.euclidean_dist(embedding_chunk, self.memory_bank)
+                distances = self.euclidean_dist(embedding_chunk, self.memory_bank, self.memory_bank_norm)
 
                 # Find top-k neighbors immediately and discard full distance matrix
                 if n_neighbors == 1:
@@ -431,7 +461,7 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         score = patch_scores[torch.arange(batch_size), max_patches]  # s^* in the paper
         nn_index = locations[torch.arange(batch_size), max_patches]  # indices of m^* in the paper
         # 3. Find the support samples of the nearest neighbor in the membank
-        nn_sample = self.memory_bank[nn_index, :]  # m^* in the paper
+        nn_sample = F.embedding(nn_index, self.memory_bank)  # m^* in the paper
         # indices of N_b(m^*) in the paper
         memory_bank_effective_size = self.memory_bank.shape[0]  # edge case when memory bank is too small
         _, support_samples = self.nearest_neighbors(
@@ -439,7 +469,10 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
             n_neighbors=min(self.num_neighbors, memory_bank_effective_size),
         )
         # 4. Find the distance of the patch features to each of the support samples
-        distances = self.euclidean_dist(max_patches_features.unsqueeze(1), self.memory_bank[support_samples])
+        distances = self.euclidean_dist(
+            max_patches_features.unsqueeze(1),
+            F.embedding(support_samples, self.memory_bank),
+        )
         # 5. Apply softmax to find the weights
         weights = (1 - F.softmax(distances.squeeze(1), 1))[..., 0]
         # 6. Apply the weight factor to the score
