@@ -257,7 +257,7 @@ jobs:
           persist-credentials: false
 
       - name: Build Windows MSIX
-        uses: $/.github/actions/windows-build
+        uses: $/.github/actions/windows-build # nosemgrep: yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag # Bound to this workflow's commit.
         with:
           accelerator: ${{ matrix.accelerator }}
           rc_version: ${{ needs.validate.outputs.rc_version }}
