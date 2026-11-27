@@ -58,6 +58,29 @@ def test_pg_no_negatives() -> None:
         metric.compute()
 
 
+@pytest.mark.parametrize(("rate", "percent"), [(0.05, 5), (0.29, 29), (0.57, 57), (0.58, 58)])
+def test_names_use_the_requested_percentage(rate: float, percent: int) -> None:
+    """Metric names match the requested rate despite floating-point rounding."""
+    assert PGn(fnr=rate).name == f"PG{percent}"
+    assert PBn(fpr=rate).name == f"PB{percent}"
+
+
+def test_pg_no_positives() -> None:
+    """Test PGn metric raises ValueError if no positive samples."""
+    metric = PGn(fnr=0.1)
+    metric.update(torch.tensor([0.2, 0.3]), torch.tensor([0, 0]))
+    with pytest.raises(ValueError, match="No positive samples found"):
+        metric.compute()
+
+
+def test_pb_no_negatives() -> None:
+    """Test PBn metric raises ValueError if no negative samples."""
+    metric = PBn(fpr=0.1)
+    metric.update(torch.tensor([0.5, 0.7]), torch.tensor([1, 1]))
+    with pytest.raises(ValueError, match="No negative samples found"):
+        metric.compute()
+
+
 def test_pb_no_positives() -> None:
     """Test PBn metric raises ValueError if no positive samples."""
     metric = PBn(fpr=0.1)
