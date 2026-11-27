@@ -44,6 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - 🐞 **sampling**: Avoid duplicate coreset indices when feature embeddings repeat by @llllgt in https://github.com/open-edge-platform/anomalib/pull/3838
 - 🐞 **data**: Fix missing-mask path casting and enum split filtering by @andersendsa in https://github.com/open-edge-platform/anomalib/pull/3852
+- 🐞 **model**: Fit GaussianKDE on the original data and honour the constructor dataset by @sohailshk in https://github.com/open-edge-platform/anomalib/pull/3921
 - 🐞 **model**: Keep PatchCore's batch size dynamic when exporting by @varunikarai in https://github.com/open-edge-platform/anomalib/pull/3853
 - 📚 **docs**: Expand dataset contribution guidance by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3830
 - 📚 **docs**: Align public API examples and references with current behavior by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3867, https://github.com/open-edge-platform/anomalib/pull/3880, and https://github.com/open-edge-platform/anomalib/pull/3890
