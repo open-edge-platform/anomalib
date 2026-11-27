@@ -83,7 +83,7 @@ Set up your development environment to start contributing. This involves install
 
 5. **Check Licensing:** Ensure you own the code or have rights to use it, adhering to appropriate licensing.
 
-6. **Follow Conventional Commits for PR Titles:** We use [Commitizen](https://commitizen-tools.github.io/commitizen/) to enforce conventional commit format for PR titles and branch names. Since we squash merge PRs, individual commit messages can be in any format during development, but your **PR title must follow conventional commit format**.
+6. **Follow Conventional Commits for PR Titles:** PR titles are validated against Conventional Commits (with optional leading emojis) by `.github/scripts/check_pr_title.py`. Since we squash merge PRs, individual commit messages can be in any format during development, but your **PR title must follow conventional commit format**.
 
    :::{dropdown} PR Title Format (Required)
    :icon: git-commit
@@ -216,19 +216,11 @@ Set up your development environment to start contributing. This involves install
    **Creating the PR:**
    Ensure your PR title follows conventional commit format. The PR title becomes the final commit message when merged.
 
-   **Optional - Using Commitizen for PR titles:**
-   You can use Commitizen to help format your PR titles:
+   **Optional - Validating PR titles locally:**
+   You can run the repo's PR title validator directly:
 
    ```bash
-   # Check if a message follows conventional format
-   echo "feat(model): add transformer architecture" | cz check --commit-msg-file -
-   ```
-
-   **Version Management:**
-   To bump the version based on PR history:
-
-   ```bash
-   cz bump
+   python3 .github/scripts/check_pr_title.py "feat(model): add transformer architecture"
    ```
 
    :::

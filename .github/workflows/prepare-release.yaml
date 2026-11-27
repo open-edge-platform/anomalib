@@ -1,0 +1,163 @@
+# Prepare Release Workflow
+#
+# Prepares a library release in a single reviewable PR by:
+# 1. Updating [project].version in pyproject.toml and refreshing uv.lock files
+# 2. Generating the matching [vX.Y.Z] section in CHANGELOG.md with git-cliff
+#    from Conventional Commit PR titles since the previous lib/v*.*.* tag
+#
+# Once merged and tagged (lib/vX.Y.Z), release-lib.yaml validates pyproject.toml
+# and CHANGELOG.md and publishes identical GitHub Release notes.
+
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Target release version (e.g., 2.7.2 or v2.7.2)"
+        required: true
+        type: string
+      since_tag:
+        description: "Starting git tag (optional; defaults to latest lib/v*.*.*)"
+        required: false
+        default: ""
+        type: string
+      create_pr:
+        description: "Open a pull request with version, lockfile, and CHANGELOG.md updates"
+        required: false
+        default: true
+        type: boolean
+      dry_run:
+        description: "Preview generated changelog in workflow summary without creating a PR"
+        required: false
+        default: false
+        type: boolean
+
+permissions: {}
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read # Required to checkout the repository
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        if: ${{ !inputs.dry_run }}
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.9.18"
+          enable-cache: false
+
+      - name: Prepare pyproject.toml, lockfiles, and CHANGELOG.md
+        id: prepare
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_SINCE_TAG: ${{ inputs.since_tag }}
+          INPUT_REPO: ${{ github.repository }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          VERSION="${INPUT_VERSION#lib/}"
+          VERSION="${VERSION#v}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version '$INPUT_VERSION'. Expected X.Y.Z or vX.Y.Z."
+            exit 1
+          fi
+          if git rev-parse -q --verify "refs/tags/lib/v$VERSION" >/dev/null; then
+            echo "::error::Tag 'lib/v$VERSION' already exists. Refusing to overwrite a published release."
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          CLIFF_ARGS=(--tag "lib/v$VERSION" --github-repo "$INPUT_REPO" --output "$RUNNER_TEMP/section.md")
+          if [[ -n "$INPUT_SINCE_TAG" ]]; then
+            CLIFF_ARGS+=(-- "${INPUT_SINCE_TAG}..HEAD")
+          else
+            CLIFF_ARGS+=(--unreleased)
+          fi
+
+          uvx git-cliff==2.14.2 "${CLIFF_ARGS[@]}"
+
+          if [[ "$DRY_RUN" == "true" ]]; then
+            {
+              echo "### Changelog Preview for v$VERSION"
+              echo ""
+              cat "$RUNNER_TEMP/section.md"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            python3 .github/scripts/changelog.py update \
+              --version "$VERSION" \
+              --input "$RUNNER_TEMP/section.md" \
+              --changelog CHANGELOG.md
+            uv version "$VERSION" --no-sync
+            uv lock --directory application/backend
+            uv lock --check
+            uv lock --check --directory application/backend
+            python3 .github/scripts/changelog.py extract \
+              --version "$VERSION" \
+              --changelog CHANGELOG.md \
+              --output "$RUNNER_TEMP/release-notes.md"
+            {
+              echo "### Generated Release Notes for v$VERSION"
+              echo ""
+              cat "$RUNNER_TEMP/release-notes.md"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # GitHub App token is required so the opened PR triggers pull_request checks (GITHUB_TOKEN cannot trigger workflows)
+      - name: Get GitHub App token
+        if: ${{ !inputs.dry_run && inputs.create_pr }}
+        id: get-github-app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ secrets.RENOVATE_APP_ID }}
+          private-key: ${{ secrets.RENOVATE_APP_PEM }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Create Pull Request
+        if: ${{ !inputs.dry_run && inputs.create_pr }}
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ steps.get-github-app-token.outputs.token }}
+          author: oep-renovate[bot] <212772560+oep-renovate[bot]@users.noreply.github.com>
+          committer: oep-renovate[bot] <212772560+oep-renovate[bot]@users.noreply.github.com>
+          signoff: true
+          commit-message: "chore(release): prepare v${{ steps.prepare.outputs.version }}"
+          title: "chore(release): prepare v${{ steps.prepare.outputs.version }}"
+          body: |
+            ## 🚀 Automated Release Preparation
+
+            Prepares `v${{ steps.prepare.outputs.version }}`:
+            - Updated `[project].version` in `pyproject.toml` to `${{ steps.prepare.outputs.version }}`
+            - Refreshed `uv.lock` and `application/backend/uv.lock`
+            - Generated `[v${{ steps.prepare.outputs.version }}]` in `CHANGELOG.md` from Conventional Commit PR titles
+
+            - Review and polish wording or highlight any breaking-change migration notes before merging.
+            - Once merged and tagged as `lib/v${{ steps.prepare.outputs.version }}`, `release-lib.yaml` will publish the exact extracted `CHANGELOG.md` section as the GitHub Release body.
+          branch: "chore/release/v${{ steps.prepare.outputs.version }}"
+          base: main
+          delete-branch: true
+          add-paths: |
+            pyproject.toml
+            CHANGELOG.md
+            uv.lock
+            application/backend/uv.lock

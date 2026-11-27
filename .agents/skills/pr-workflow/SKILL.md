@@ -15,7 +15,7 @@ Use this skill for merge readiness, contributor workflow, CI expectations, PR ti
 
 - the PR title does not follow the repository's Conventional Commit style;
 - branch naming does not match `<type>/<scope>/<description>`;
-- required quality gates, docs, tests, or changelog updates are missing;
+- required quality gates, docs, or tests are missing;
 - workflow or security-sensitive changes are not reviewed to the repo's standards.
 
 ## Quality gates
@@ -28,12 +28,12 @@ Use this skill for merge readiness, contributor workflow, CI expectations, PR ti
 
 - PR titles should follow Conventional Commits as described in `CONTRIBUTING.md`.
 - Branch names should follow `<type>/<scope>/<description>`.
-- Allowed types and scopes should match the repository's Commitizen configuration in `pyproject.toml`.
+- Allowed types and scopes should match the repository's PR title conventions validated by `.github/scripts/check_pr_title.py`.
 
 ## Reviewer expectations
 
 - Ask for precise, actionable fixes grounded in repo policy rather than generic preferences.
-- Escalate missing tests, missing docs, missing changelog entries, or workflow/security risks before approval.
+- Escalate missing tests, missing docs, or workflow/security risks before approval.
 - Be stricter when a PR changes CLI entrypoints, workflows, deployment, inferencers, or user-facing public APIs.
 
 ## Repo-grounded review anchors
@@ -48,12 +48,12 @@ Use this skill for merge readiness, contributor workflow, CI expectations, PR ti
 ## Review prompts
 
 - Is the PR title valid for the eventual squash commit?
-- Are branch naming, changelog, tests, and docs in good shape for merge?
+- Are branch naming, tests, and docs in good shape for merge?
 - Do the requested changes line up with the project's existing CI and security gates?
 
 ## Reviewer checklist
 
 - Check PR title.
 - Check branch naming.
-- Check CI, test, doc, and changelog readiness.
+- Check CI, test, and doc readiness.
 - Check workflow and security-sensitive files more strictly.

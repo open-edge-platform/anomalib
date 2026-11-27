@@ -33,8 +33,12 @@ Note:
 """
 
 from enum import Enum
+from importlib.metadata import PackageNotFoundError, version
 
-__version__ = "2.7.2.dev0"
+try:
+    __version__ = version("anomalib")
+except PackageNotFoundError:  # pragma: no cover
+    __version__ = "0.0.0.dev0"
 
 
 class LearningType(str, Enum):

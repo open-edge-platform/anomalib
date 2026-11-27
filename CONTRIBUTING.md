@@ -106,11 +106,11 @@ However, make sure to address any pre-commit issues before finalizing your pull 
    pytest tests/
    ```
 
-5. **Update the Changelog:** For significant changes, add a summary to the [CHANGELOG](CHANGELOG.md).
+5. **Do Not Edit `CHANGELOG.md` Manually:** [CHANGELOG](CHANGELOG.md) and GitHub Release notes are auto-generated from Conventional Commit PR titles at release time. Make sure your PR title clearly describes the user-facing change.
 
 6. **Check Licensing:** Ensure you own the code or have rights to use it, adhering to appropriate licensing.
 
-7. **Follow Conventional Commits for PR Titles:** We use [Commitizen](https://commitizen-tools.github.io/commitizen/) to enforce conventional commit format for PR titles and branch names. Since we squash merge PRs, individual commit messages can be in any format during development, but your **PR title must follow conventional commit format**.
+7. **Follow Conventional Commits for PR Titles:** PR titles are validated against Conventional Commits (with optional leading emojis) by `.github/scripts/check_pr_title.py`. Since we squash merge PRs, individual commit messages can be in any format during development, but your **PR title must follow conventional commit format**.
 
    <details>
    <summary>PR Title Format (Required)</summary>
@@ -241,24 +241,11 @@ However, make sure to address any pre-commit issues before finalizing your pull 
    **Creating the PR:**
    Ensure your PR title follows conventional commit format. The PR title becomes the final commit message when merged.
 
-   **Optional - Using Commitizen for PR titles:**
-   You can use Commitizen to help format your PR titles:
+   **Optional - Validating PR titles locally:**
+   You can run the repo's PR title validator directly:
 
    ```bash
-   # Check if a message follows conventional format
-   echo "feat(model): add transformer architecture" | cz check --commit-msg-file -
-   ```
-
-   To check if your commits follow the conventional format:
-
-   ```bash
-   cz check
-   ```
-
-   To bump the version based on commit history:
-
-   ```bash
-   cz bump
+   python3 .github/scripts/check_pr_title.py "feat(model): add transformer architecture"
    ```
 
    </details>
