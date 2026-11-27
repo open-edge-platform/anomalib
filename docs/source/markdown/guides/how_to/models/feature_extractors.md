@@ -42,6 +42,10 @@ We can then use selected model name and layer names with either API or using con
 Some models might not support every backbone.
 ```
 
+For ViT backbones, positional embeddings are interpolated without antialiasing.
+This backbone-local setting is preserved when a Torch export is loaded in a new
+process; constructing an extractor does not change unrelated timm models.
+
 ## Backbone and layer selection
 
 ::::{tab-set}
