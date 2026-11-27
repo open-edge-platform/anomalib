@@ -23,7 +23,7 @@ class TestVAD(_TestAnomalibImageDatamodule):
         make_dummy_dataset("vad")
         datamodule_ = VAD(
             root=dataset_path / "vad",
-            category="vad",
+            category="dummy",
             train_batch_size=4,
             eval_batch_size=4,
             augmentations=Resize((256, 256)),
