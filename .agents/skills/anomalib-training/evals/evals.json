@@ -1,0 +1,66 @@
+{
+  "SPDX-FileCopyrightText": "(C) 2026 Intel Corporation",
+  "SPDX-License-Identifier": "Apache-2.0",
+  "skill_name": "anomalib-training",
+  "evals": [
+    {
+      "id": 1,
+      "name": "basic-training-script",
+      "prompt": "Write a Python script to train PatchCore on the MVTecAD bottle category for 3 epochs.",
+      "expected_output": "Creates MVTecAD datamodule with category='bottle', instantiates Patchcore model, creates Engine with max_epochs=3, and calls engine.fit(model=model, datamodule=datamodule).",
+      "expectations": [
+        "Imports from anomalib.data, anomalib.models, and anomalib.engine",
+        "Creates MVTecAD datamodule with category='bottle'",
+        "Instantiates Patchcore() model",
+        "Creates Engine(max_epochs=3) passing trainer kwargs directly",
+        "Calls engine.fit(model=model, datamodule=datamodule)"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "custom-folder-training",
+      "prompt": "I have normal images in ./data/good/ and defect images in ./data/bad/ with masks in ./data/masks/. Train Padim on this data.",
+      "expected_output": "Uses Folder datamodule with name, root, normal_dir='good', abnormal_dir='bad', mask_dir='masks', then trains with Engine.fit().",
+      "expectations": [
+        "Uses anomalib.data.Folder datamodule",
+        "Sets normal_dir='good' and abnormal_dir='bad' and mask_dir='masks'",
+        "Provides the required name parameter to Folder",
+        "Trains via Engine().fit(model=model, datamodule=datamodule)"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "cli-training",
+      "prompt": "What's the CLI command to train Padim on MVTecAD transistor category with 5 max epochs?",
+      "expected_output": "anomalib train --model Padim --data anomalib.data.MVTecAD --data.category transistor --trainer.max_epochs 5",
+      "expectations": [
+        "Uses anomalib train subcommand",
+        "Specifies --model Padim (or anomalib.models.Padim)",
+        "Specifies --data anomalib.data.MVTecAD with --data.category transistor",
+        "Overrides epochs via --trainer.max_epochs 5 (not a custom Trainer object)"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "engine-kwargs-pattern",
+      "prompt": "How do I configure the training accelerator and devices in anomalib?",
+      "expected_output": "Pass Lightning Trainer kwargs directly to Engine(): Engine(accelerator='gpu', devices=1). For Intel XPU, use Engine(strategy=SingleXPUStrategy(), accelerator=XPUAccelerator()).",
+      "expectations": [
+        "Passes accelerator/devices as kwargs to Engine() directly",
+        "Does not construct a separate Trainer object",
+        "Mentions SingleXPUStrategy and XPUAccelerator for Intel XPU"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "negative-training-free-model",
+      "prompt": "Padim doesn't use gradient descent. Do I need special code to handle its training differently?",
+      "expected_output": "No — training-free models still go through engine.fit(). Engine/Trainer handles the single epoch needed to build their memory bank. No special-case code needed.",
+      "expectations": [
+        "States training-free models still use engine.fit() normally",
+        "Explains Trainer handles the single epoch for memory bank building",
+        "Does not suggest any special-case code or skipping fit()"
+      ]
+    }
+  ]
+}

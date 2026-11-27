@@ -28,14 +28,8 @@ name: Tauri Build
 on:
   push:
     branches: ["main", "feature/**", "release/**"]
-    paths:
-      - "application/**"
-      - ".github/workflows/tauri-build.yaml"
   pull_request:
     branches: ["main", "feature/**", "release/**"]
-    paths:
-      - "application/**"
-      - ".github/workflows/tauri-build.yaml"
   workflow_dispatch:
     inputs:
       accelerator:
@@ -59,6 +53,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check-paths:
+    name: Check if workflow should run
+    runs-on: ubuntu-latest
+    outputs:
+      run_workflow: ${{ steps.check_paths.outputs.run }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check paths
+        id: check_paths
+        uses: open-edge-platform/geti-ci/actions/check-paths@2ed3ce382d1dbd6db52c7c6b93ffdae280a1c06f # check-paths/v0.1.0
+        with:
+          files_yaml: |
+            test:
+              - application/**
+              - .github/workflows/tauri-build.yaml
+              - .github/actions/windows-build/action.yml
+
   # build-linux:
   #   runs-on: ubuntu-latest
   #   timeout-minutes: 90
@@ -139,9 +156,11 @@ jobs:
 
   build-windows:
     name: Build Windows MSIX
+    needs: check-paths
     # Only run in the source repo where MSIX signing secrets are configured.
     # Skipped on forks; run manually via workflow_dispatch from the repo.
     if: |
+      needs.check-paths.outputs.run_workflow == 'true' &&
       github.repository == 'open-edge-platform/anomalib' &&
       (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: windows-latest
@@ -156,7 +175,7 @@ jobs:
         accelerator: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', inputs.accelerator)) || fromJSON('["cpu", "cu130", "xpu"]') }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -243,3 +262,23 @@ jobs:
   #         path: application/binary/tauri/src-tauri/target/release/bundle/dmg/*.dmg
   #         retention-days: 30
   #         if-no-files-found: error
+
+  required-check:
+    name: Required Check tauri-build
+    needs:
+      - check-paths
+      - build-windows
+    runs-on: ubuntu-latest
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    if: always() && !cancelled()
+    steps:
+      - name: Check jobs results
+        run: |
+          for check in ${CHECKS}; do
+            echo "::notice::check=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error ::Required status checks failed. They must succeed before this pull request can be merged."
+              exit 1
+            fi
+          done

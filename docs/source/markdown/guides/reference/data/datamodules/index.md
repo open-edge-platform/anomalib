@@ -7,6 +7,13 @@ Anomalib provides various datamodules for different types of data modalities. Th
 ```{grid} 3
 :gutter: 2
 
+:::{grid-item-card} AutoVI
+:link: image/autovi
+:link-type: doc
+
+AutoVI dataset datamodule for automotive visual inspection.
+:::
+
 :::{grid-item-card} BMAD
 :link: image/bmad
 :link-type: doc
@@ -35,11 +42,25 @@ Datumaro format datamodule (compatible with Intel Geti™).
 Custom folder-based datamodule for organizing your own image dataset.
 :::
 
+:::{grid-item-card} Kaputt
+:link: image/kaputt
+:link-type: doc
+
+Kaputt datamodule for industrial defect detection.
+:::
+
 :::{grid-item-card} Kolektor
 :link: image/kolektor
 :link-type: doc
 
 Kolektor Surface-Defect dataset datamodule.
+:::
+
+:::{grid-item-card} MPDD
+:link: image/mpdd
+:link-type: doc
+
+Manufacturing Parts Defect Detection datamodule.
 :::
 
 :::{grid-item-card} MVTecAD
@@ -132,6 +153,13 @@ video/index
 
 ```{grid} 2
 :gutter: 2
+
+:::{grid-item-card} ADAM 3D
+:link: depth/adam_3d
+:link-type: doc
+
+3D-ADAM (3D Anomaly Detection in Additive Manufacturing) dataset datamodule.
+:::
 
 :::{grid-item-card} MVTec 3D
 :link: depth/mvtec_3d

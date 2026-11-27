@@ -87,7 +87,7 @@ class Patchflow(AnomalibModule):
 
     def __init__(
         self,
-        backbone: str = "tf_efficientnet_b5",  # supported: "tf_efficientnet_b5", "dinov2_vit_base_14"
+        backbone: str = "tf_efficientnet_b5",  # supported: "tf_efficientnet_b5", "vit_base_patch14_dinov2"
         pre_trained: bool = True,
         flow_steps: int = 1,
         flow_feature_dim: int = 128,

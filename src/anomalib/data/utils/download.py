@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Helper functions for downloading datasets with progress bars and hash verification.
@@ -9,6 +9,7 @@ This module provides utilities for:
 - Safely extracting compressed files
 """
 
+import contextlib
 import hashlib
 import io
 import logging
@@ -23,6 +24,8 @@ from urllib.request import urlretrieve
 from zipfile import ZipFile
 
 from tqdm import tqdm
+
+from anomalib.data.utils.path import is_within_directory
 
 logger = logging.getLogger(__name__)
 
@@ -191,13 +194,34 @@ def safe_extract(tar_file: TarFile, root: Path, members: list[TarInfo]) -> None:
         members: List of safe members to extract
     """
     for member in members:
+        member_path = root / member.name
+        # Reject absolute paths and members that would resolve outside of
+        # ``root`` (path traversal via ``..`` segments, symlinks, etc.). Also
+        # reject non-regular members (symlinks, hardlinks, devices, fifos,
+        # etc.), which the ``filter="data"`` protection below already blocks
+        # on Python>=3.11.4. These checks are applied on all supported
+        # Python versions, since ``filter="data"`` is unavailable on older
+        # ones.
+        if (
+            Path(member.name).is_absolute()
+            or not is_within_directory(root, member_path)
+            or not (member.isfile() or member.isdir())
+        ):
+            logger.warning("Skipping potentially unsafe archive member: %s", member.name)
+            continue
+
         # check if the file already exists
-        if not (root / member.name).exists():
+        if not member_path.exists():
             if sys.version_info[:3] >= (3, 11, 4):
                 # filter argument only works with python>=3.11.4
                 tar_file.extract(member, root, filter="data")
             else:
                 tar_file.extract(member, root)
+        if member.isdir():
+            extracted_path = member_path.resolve()
+            if extracted_path.is_dir():
+                with contextlib.suppress(OSError):
+                    extracted_path.chmod(extracted_path.stat().st_mode | 0o700)
 
 
 def generate_hash(file_path: str | Path, algorithm: str = "sha256") -> str:
@@ -268,8 +292,14 @@ def extract(file_name: Path, root: Path) -> None:
     if file_name.suffix == ".zip":
         with ZipFile(file_name, "r") as zip_file:
             for file_info in zip_file.infolist():
-                if not is_file_potentially_dangerous(file_info.filename):
-                    zip_file.extract(file_info, root)
+                member_path = root / file_info.filename
+                if is_file_potentially_dangerous(file_info.filename):
+                    logger.warning("Skipping potentially unsafe archive member: %s", file_info.filename)
+                    continue
+                if Path(file_info.filename).is_absolute() or not is_within_directory(root, member_path):
+                    logger.warning("Skipping potentially unsafe archive member: %s", file_info.filename)
+                    continue
+                zip_file.extract(file_info, root)
 
     # Safely extract tar files.
     elif file_name.suffix in {".tar", ".gz", ".xz", ".tgz"}:
@@ -321,19 +351,3 @@ def download_and_extract(root: Path, info: DownloadInfo) -> None:
             raise RuntimeError(msg)
 
     extract(downloaded_file_path, root)
-
-
-def is_within_directory(directory: Path, target: Path) -> bool:
-    """Check if a target path is located within a given directory.
-
-    Args:
-        directory: Path of the parent directory
-        target: Path to check
-
-    Returns:
-        ``True`` if target is within directory, ``False`` otherwise
-    """
-    abs_directory = directory.resolve()
-    abs_target = target.resolve()
-
-    return abs_target.is_relative_to(abs_directory)

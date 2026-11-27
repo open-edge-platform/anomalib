@@ -1,8 +1,9 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Unit Tests - MVTec3D Datamodule."""
 
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -17,8 +18,9 @@ class TestMVTec3D(_TestAnomalibDepthDatamodule):
 
     @pytest.fixture()
     @staticmethod
-    def datamodule(dataset_path: Path) -> MVTec3D:
+    def datamodule(dataset_path: Path, make_dummy_dataset: Callable[[str], Path]) -> MVTec3D:
         """Create and return a Folder 3D datamodule."""
+        make_dummy_dataset("mvtec_3d")
         datamodule_ = MVTec3D(
             root=dataset_path / "mvtec_3d",
             category="dummy",
@@ -37,3 +39,10 @@ class TestMVTec3D(_TestAnomalibDepthDatamodule):
     def fxt_data_config_path() -> str:
         """Return the path to the test data config."""
         return "examples/configs/data/mvtec_3d.yaml"
+
+    @staticmethod
+    def test_train_samples_mask_path_is_empty_string(datamodule: MVTec3D) -> None:
+        """Test if train samples mask path is an empty string and not the string 'nan'."""
+        train_samples = datamodule.train_data.samples
+        assert (train_samples["mask_path"] == "").all()
+        assert not (train_samples["mask_path"] == "nan").any()

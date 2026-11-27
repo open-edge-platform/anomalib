@@ -6,6 +6,7 @@
 import os
 import re
 from datetime import datetime
+from uuid import UUID
 
 import anyio
 from loguru import logger
@@ -13,7 +14,6 @@ from loguru import logger
 from pydantic_models import Video, VideoList
 from pydantic_models.base import Pagination
 from repositories.binary_repo import VideoBinaryRepository
-from utils.short_uuid import ShortUUID
 
 VALID_VIDEO_EXTENSIONS = {".mp4", ".avi", ".mov", ".mkv", ".webm"}
 
@@ -36,18 +36,22 @@ def _validate_filename(filename: str, expected_folder: str) -> str:
     if not filename:
         raise ValueError("Filename cannot be empty")
 
-    # Reject filenames with path separators or parent directory references
-    if os.path.sep in filename or (os.path.altsep and os.path.altsep in filename):
+    # Reject filenames with NUL bytes
+    if "\x00" in filename:
+        raise ValueError("Filename cannot contain NUL bytes")
+
+    # Reject filenames with path separators (both POSIX and Windows)
+    if os.path.sep in filename or "\\" in filename or (os.path.altsep and os.path.altsep in filename):
         raise ValueError("Filename cannot contain path separators")
-    if ".." in filename:
-        raise ValueError("Filename cannot contain parent directory references")
+    if filename in {".", ".."}:
+        raise ValueError("Filename cannot be a bare directory reference")
 
     # Build the full path and resolve to absolute path
     full_path = os.path.realpath(os.path.join(expected_folder, filename))
     expected_folder_resolved = os.path.realpath(expected_folder)
 
     # Ensure the resolved path is within the expected folder
-    if not full_path.startswith(expected_folder_resolved + os.path.sep):
+    if os.path.commonpath([expected_folder_resolved, full_path]) != expected_folder_resolved:
         raise ValueError("Invalid filename: path traversal detected")
 
     return full_path
@@ -89,7 +93,7 @@ class VideoService:
 
     @staticmethod
     async def upload_video(
-        project_id: ShortUUID,
+        project_id: UUID,
         video_bytes: bytes,
         original_filename: str,
     ) -> Video:
@@ -122,6 +126,9 @@ class VideoService:
         bin_repo = VideoBinaryRepository(project_id=project_id)
         folder_path = bin_repo.project_folder_path
 
+        # Validate the filename to prevent path traversal attacks
+        _validate_filename(original_filename, folder_path)
+
         # Get unique filename (adds suffix if name already taken)
         filename = VideoService._get_unique_filename(folder_path, original_filename)
 
@@ -146,7 +153,7 @@ class VideoService:
             raise
 
     @staticmethod
-    async def list_videos(project_id: ShortUUID, limit: int = 100, offset: int = 0) -> VideoList:
+    async def list_videos(project_id: UUID, limit: int = 100, offset: int = 0) -> VideoList:
         """
         List uploaded videos for a project.
 
@@ -197,7 +204,7 @@ class VideoService:
         )
 
     @staticmethod
-    async def get_video_by_filename(project_id: ShortUUID, filename: str) -> Video | None:
+    async def get_video_by_filename(project_id: UUID, filename: str) -> Video | None:
         """
         Get a video by its filename.
 
@@ -229,7 +236,7 @@ class VideoService:
         )
 
     @staticmethod
-    async def delete_video_by_filename(project_id: ShortUUID, filename: str) -> None:
+    async def delete_video_by_filename(project_id: UUID, filename: str) -> None:
         """
         Delete an uploaded video by filename.
 
@@ -253,7 +260,7 @@ class VideoService:
         logger.info(f"Deleted video file: {filename}")
 
     @staticmethod
-    async def cleanup_project_videos(project_id: ShortUUID) -> None:
+    async def cleanup_project_videos(project_id: UUID) -> None:
         """
         Delete all videos for a project.
 

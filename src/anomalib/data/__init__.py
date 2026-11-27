@@ -53,6 +53,7 @@ from .datamodules.image import (
     BMAD,
     MPDD,
     VAD,
+    AutoVI,
     BTech,
     Datumaro,
     Folder,
@@ -72,6 +73,7 @@ from .datamodules.video import Avenue, ShanghaiTech, UCSDped, VideoDataFormat
 from .datasets import AnomalibDataset
 from .datasets.depth import ADAM3DDataset, Folder3DDataset, MVTec3DDataset
 from .datasets.image import (
+    AutoVIDataset,
     BMADDataset,
     BTechDataset,
     DatumaroDataset,
@@ -180,6 +182,7 @@ __all__ = [
     "MVTec3D",
     "ADAM3D",
     # Image Data Modules
+    "AutoVI",
     "BMAD",
     "BTech",
     "Datumaro",
@@ -222,4 +225,5 @@ __all__ = [
     "get_datamodule",
     # Exceptions
     "UnknownDatamoduleError",
+    "AutoVIDataset",
 ]

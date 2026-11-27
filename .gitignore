@@ -4,6 +4,7 @@ datasets
 pre_trained
 results
 openvino_cache
+logs/
 
 # Test-related files and directories
 tmp*
@@ -170,6 +171,7 @@ docs/source/_build/
 
 # Misc
 .DS_Store
+fuzz-artifacts/
 
 # logs
 wandb/

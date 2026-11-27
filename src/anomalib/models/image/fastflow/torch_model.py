@@ -41,17 +41,10 @@ def subnet_conv_func(kernel_size: int, hidden_ratio: float) -> Callable:
 
     def subnet_conv(in_channels: int, out_channels: int) -> nn.Sequential:
         hidden_channels = int(in_channels * hidden_ratio)
-        # NOTE: setting padding="same" in nn.Conv2d breaks the onnx export so manual padding required.
-        # TODO(ashwinvaidya17): Use padding="same" in nn.Conv2d once PyTorch v2.1 is released
-        # CVS-122671
-        padding_dims = (kernel_size // 2 - ((1 + kernel_size) % 2), kernel_size // 2)
-        padding = (*padding_dims, *padding_dims)
         return nn.Sequential(
-            nn.ZeroPad2d(padding),
-            nn.Conv2d(in_channels, hidden_channels, kernel_size),
+            nn.Conv2d(in_channels, hidden_channels, kernel_size, padding="same"),
             nn.ReLU(),
-            nn.ZeroPad2d(padding),
-            nn.Conv2d(hidden_channels, out_channels, kernel_size),
+            nn.Conv2d(hidden_channels, out_channels, kernel_size, padding="same"),
         )
 
     return subnet_conv

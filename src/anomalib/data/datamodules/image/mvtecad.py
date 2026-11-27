@@ -53,14 +53,14 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.mvtecad import MVTecADDataset
 from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
-from anomalib.utils.path import resolve_with_warning
+from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
 
 
 DOWNLOAD_INFO = DownloadInfo(
     name="mvtecad",
-    url="https://www.mydrive.ch/shares/38536/3830184030e49fe74747669442f0f283/"
+    url="https://www.mydrive.ch/shares/163178/c8212c2166a9e4dfe22dd1bed476a345/"
     "download/420938113-1629960298/mvtec_anomaly_detection.tar.xz",
     hashsum="cf4313b13603bec67abb49ca959488f7eedce2a9f7795ec54446c649ac98cd3d",
 )
@@ -162,7 +162,7 @@ class MVTecAD(AnomalibDataModule):
             seed=seed,
         )
 
-        root = resolve_with_warning(root, "MVTecAD")
+        root = resolve_dataset_root(root, "MVTecAD")
         self.root = Path(root)
         self.category = category
 

@@ -8,8 +8,8 @@ dataset for abnormal event detection. The dataset contains surveillance videos
 with both normal and abnormal events.
 
 If the dataset is not already present on the file system, the DataModule class
-will download and extract the dataset, converting the video files to a format
-readable by pyav.
+will raise a ``RuntimeError`` with instructions for downloading it manually
+from the official project page.
 
 The dataset expects the following directory structure::
 
@@ -287,7 +287,7 @@ def make_shanghaitech_dataset(root: Path, scene: int, split: Split | str | None 
     samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
 
     if split:
-        samples = samples[samples.split == split]
-        samples = samples.reset_index(drop=True)
+        split_value = split.value if isinstance(split, Split) else split
+        samples = samples[samples.split == split_value].reset_index(drop=True)
 
     return samples

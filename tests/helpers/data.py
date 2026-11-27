@@ -1,7 +1,11 @@
 # Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Test Helpers - Dataset."""
+"""Test helpers for datasets.
+
+Generator defaults preserve their public test API. Shared fixtures pass 64x64
+shapes explicitly to keep the test suite lightweight.
+"""
 
 from __future__ import annotations
 
@@ -14,6 +18,7 @@ from tempfile import mkdtemp
 import cv2
 import numpy as np
 import pandas as pd
+import tifffile as tiff
 from scipy.io import savemat
 from skimage import img_as_ubyte
 from skimage.io import imsave
@@ -108,6 +113,22 @@ class DummyImageGenerator:
             self.save_image(filename=mask_filename, image=img_as_ubyte(mask))
 
         return image, mask
+
+    def generate_organized_point_cloud(self) -> np.ndarray:
+        """Generate a dummy organized point cloud (H, W, 3).
+
+        CFM and other 3D models expect non-zero XYZ values. Using random values in
+        (0, 1) avoids the common ``(0, 0, 0)`` padding pattern that gets filtered out.
+        """
+        h, w = self.image_shape
+        return self.rng.random((h, w, 3), dtype=np.float32)
+
+    @staticmethod
+    def save_organized_point_cloud(filename: Path | str, point_cloud: np.ndarray) -> None:
+        """Save an organized point cloud to a TIFF file."""
+        filename = Path(filename)
+        filename.parent.mkdir(parents=True, exist_ok=True)
+        tiff.imwrite(filename, point_cloud)
 
     @staticmethod
     def save_image(filename: Path | str, image: np.ndarray, check_contrast: bool = False) -> None:
@@ -451,6 +472,40 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
         # BeanTech AD follows the same convention as MVTec AD.
         self._generate_dummy_mvtecad_dataset(normal_dir="ok", abnormal_dir="ko", mask_suffix="")
 
+    def _generate_dummy_autovi_dataset(self) -> None:
+        """Generate dummy AutoVI dataset following the per-category layout on Zenodo.
+
+        Layout::
+
+            <root>/autovi/<category>/train/good/<image>.png
+            <root>/autovi/<category>/test/good/<image>.png
+            <root>/autovi/<category>/test/<defect>/<image>.png
+            <root>/autovi/<category>/ground_truth/<defect>/<image_stem>/0000.png
+        """
+        dataset_category = "engine_wiring"
+
+        # Train + test normal images.
+        for split in ("train", "test"):
+            path = self.dataset_root / dataset_category / split / "good"
+            num_images = self.num_train if split == "train" else self.num_test
+            for i in range(num_images):
+                self.image_generator.generate_image(
+                    label=LabelName.NORMAL,
+                    image_filename=path / f"{i:03}.png",
+                )
+
+        # Abnormal test images with matching per-image mask subdir.
+        abnormal_dir = self.abnormal_category
+        image_path = self.dataset_root / dataset_category / "test" / abnormal_dir
+        mask_root = self.dataset_root / dataset_category / "ground_truth" / abnormal_dir
+        for i in range(self.num_test):
+            stem = f"{i:03}"
+            self.image_generator.generate_image(
+                label=LabelName.ABNORMAL,
+                image_filename=image_path / f"{stem}.png",
+                mask_filename=mask_root / stem / "0000.png",
+            )
+
     def _generate_dummy_mvtec_3d_dataset(self, ground_truth_dir: str = "gt") -> None:
         """Generate dummy MVTec 3D AD dataset in a temporary directory using the same convention as MVTec AD."""
         # MVTec 3D AD has multiple subcategories within the dataset.
@@ -459,12 +514,14 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
         # Create training and validation images.
         for split in ("train", "validation"):
             split_path = self.dataset_root / dataset_category / split / self.normal_category
-            for directory in ("rgb", "xyz"):
-                extension = ".tiff" if directory == "xyz" else ".png"
-                for i in range(self.num_train):
-                    label = LabelName.NORMAL
-                    image_filename = split_path / directory / f"{i:03}{extension}"
-                    self.image_generator.generate_image(label=label, image_filename=image_filename)
+            for i in range(self.num_train):
+                label = LabelName.NORMAL
+                image, _ = self.image_generator.generate_image(label=label)
+                self.image_generator.save_image(split_path / "rgb" / f"{i:03}.png", image)
+                self.image_generator.save_organized_point_cloud(
+                    split_path / "xyz" / f"{i:03}.tiff",
+                    self.image_generator.generate_organized_point_cloud(),
+                )
 
         ## Create test images.
         test_path = self.dataset_root / dataset_category / "test"
@@ -474,16 +531,15 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
                 # Generate image and mask.
                 image, mask = self.image_generator.generate_image(label=label)
 
-                # Create rgb, xyz, and gt filenames.
-                for directory in ("rgb", "xyz", ground_truth_dir):
-                    extension = ".png" if directory == "gt" else ".tiff" if directory == "xyz" else ".png"
-                    filename = test_path / category / directory / f"{i:03}{extension}"
-
-                    # Save image or mask.
-                    if directory == ground_truth_dir:
-                        self.image_generator.save_image(filename=filename, image=img_as_ubyte(mask))
-                    else:
-                        self.image_generator.save_image(filename=filename, image=image)
+                self.image_generator.save_image(test_path / category / "rgb" / f"{i:03}.png", image)
+                self.image_generator.save_organized_point_cloud(
+                    test_path / category / "xyz" / f"{i:03}.tiff",
+                    self.image_generator.generate_organized_point_cloud(),
+                )
+                self.image_generator.save_image(
+                    test_path / category / ground_truth_dir / f"{i:03}.png",
+                    img_as_ubyte(mask),
+                )
 
     def _generate_dummy_adam_3d_dataset(self) -> None:
         """Generates dummy 3D-ADAM dataset in a temporary directory using the same convention as 3D-ADAM."""

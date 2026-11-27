@@ -88,7 +88,8 @@ def seed(with_model: bool, model_name: str) -> None:
         if with_model:
             model = ModelDB(
                 id="977eeb18-eaac-449d-bc80-e340fbe052ad",
-                name=model_name,
+                name=f"{model_name} (977eeb18)",
+                architecture=model_name,
                 format=ExportType.OPENVINO,
             )
             db.add(model)

@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Base classes for all anomaly components.
@@ -25,4 +25,9 @@ from .buffer_list import BufferListMixin
 from .dynamic_buffer import DynamicBufferMixin
 from .memory_bank_module import MemoryBankMixin
 
-__all__ = ["AnomalibModule", "BufferListMixin", "DynamicBufferMixin", "MemoryBankMixin"]
+__all__ = [
+    "AnomalibModule",
+    "BufferListMixin",
+    "DynamicBufferMixin",
+    "MemoryBankMixin",
+]

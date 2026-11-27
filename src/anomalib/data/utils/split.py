@@ -165,7 +165,7 @@ def random_split(
         # get subset lengths
         subset_lengths = [math.floor(len(label_dataset.samples) * ratio) for ratio in split_ratio]
         for i in range(len(label_dataset.samples) - sum(subset_lengths)):
-            subset_idx = i % sum(subset_lengths)
+            subset_idx = i % len(subset_lengths)
             subset_lengths[subset_idx] += 1
         if 0 in subset_lengths:
             msg = """Zero subset length encountered during splitting. This means one of your subsets
@@ -173,7 +173,7 @@ def random_split(
             logger.warning(msg)
 
         # perform random subsampling
-        random_state = torch.Generator().manual_seed(seed) if seed else None
+        random_state = torch.Generator().manual_seed(seed) if seed is not None else None
         indices = torch.randperm(len(label_dataset.samples), generator=random_state)
         subsets.append(
             [label_dataset.subsample(subset_indices) for subset_indices in torch.split(indices, subset_lengths)],

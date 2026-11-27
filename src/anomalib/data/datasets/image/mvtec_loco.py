@@ -48,7 +48,7 @@ IMG_EXTENSIONS = (".png", ".PNG")
 
 DOWNLOAD_INFO = DownloadInfo(
     name="mvtec_loco",
-    url="https://www.mydrive.ch/shares/48237/1b9106ccdfbb09a0c414bd49fe44a14a/download/430647091-1646842701"
+    url="https://www.mydrive.ch/shares/163663/e972fe04448cd278322578432afeb997/download/430647091-1646846593"
     "/mvtec_loco_anomaly_detection.tar.xz",
     hashsum="9e7c84dba550fd2e59d8e9e231c929c45ba737b6b6a6d3814100f54d63aae687",
 )
@@ -299,6 +299,7 @@ def make_dataset(
     samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
 
     if split:
-        samples = samples[samples.split == split].reset_index(drop=True)
+        split_value = split.value if isinstance(split, Split) else split
+        samples = samples[samples.split == split_value].reset_index(drop=True)
 
     return samples

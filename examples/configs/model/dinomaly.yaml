@@ -1,7 +1,7 @@
 model:
   class_path: anomalib.models.Dinomaly
   init_args:
-    encoder_name: dinov2reg_vit_base_14
+    encoder_name: vit_base_patch14_reg4_dinov2
     bottleneck_dropout: 0.2
     decoder_depth: 8
     use_context_recentering: false # Dinomaly2 Context-Aware Recentering

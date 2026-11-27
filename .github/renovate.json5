@@ -22,7 +22,12 @@
   // regenerate lock weekly https://docs.renovatebot.com/configuration-options/#lockfilemaintenance
   lockFileMaintenance: {
     enabled: true,
-    schedule: ["* * * * 0"], // weekly on Sunday
+    schedule: ["* * 1,15 * *"], // twice a month
+
+    // Keep the default `recreateWhen: "always"` (do not inherit the top-level
+    // "never") so a fresh lock PR is opened whenever new lock changes appear.
+    // These PRs are immortal by design; that is acceptable now that the lock
+    // no longer reintroduces blocked CVEs and is mergeable.
     automerge: true,
     automergeType: "pr",
     reviewers: ["sys-geti"],
@@ -49,6 +54,10 @@
   // `matchBaseBranches` in specific rule
   baseBranches: ["main"],
 
+  // Do not recreate PRs that were closed without merging.
+  // Note: security/vulnerability ("immortal") updates may still be recreated.
+  recreateWhen: "never",
+
   enabledManagers: [
     "github-actions",
     "pep621",
@@ -64,6 +73,16 @@
   // Set limit to 10
   ignorePresets: [":prHourlyLimit2"],
   prHourlyLimit: 10,
+
+  // Apply a default blanket cooldown of 7 days to all dependencies
+  minimumReleaseAge: "7 days",
+
+  // Pin the uv version Renovate uses to regenerate uv.lock so it matches the
+  // version pinned in the GitHub Actions workflows.
+  // This prevents uv.lock format/resolver drift between Renovate and CI.
+  constraints: {
+    uv: "0.9.18",
+  },
 
   packageRules: [
     // Enable pinning for container images
@@ -142,6 +161,15 @@
       matchManagers: ["github-actions", "custom.regex"],
       matchPackagePatterns: ["*"],
       schedule: ["* * 1 * *"], // every month
+    },
+
+    // Custom semver versioning for geti-ci actions to support tags like zizmor/v0.1.0
+    {
+      groupName: "GitHub Actions",
+      matchManagers: ["github-actions"],
+      matchPackagePatterns: ["^open-edge-platform/geti-ci/actions/"],
+      schedule: ["* * 1 * *"], // every month
+      versioning: "regex:^(?<compatibility>[^/]+)/v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$",
     },
 
     // uv version used in GitHub Actions is updated manually

@@ -14,7 +14,7 @@ def model() -> PatchflowModel:
     """Create a PatchflowModel with DINOv2 backbone and small settings for fast testing."""
     return PatchflowModel(
         input_size=(112, 112),
-        backbone="dinov2_vit_small_14",
+        backbone="vit_small_patch14_dinov2",
         pre_trained=False,
         flow_steps=1,
         flow_feature_dim=64,

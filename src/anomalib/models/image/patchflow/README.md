@@ -40,7 +40,7 @@ from anomalib.engine import Engine
 datamodule = MVTecAD(category="bottle")
 # DINOv2 requires input dimensions divisible by its patch size (14).
 # crop_size ensures the input is center-cropped to a compatible size.
-model = Patchflow(backbone="dinov2_vit_base_14", crop_size=(252, 252))
+model = Patchflow(backbone="vit_base_patch14_dinov2", crop_size=(252, 252))
 engine = Engine()
 engine.fit(model, datamodule=datamodule)
 predictions = engine.predict(model, datamodule=datamodule)

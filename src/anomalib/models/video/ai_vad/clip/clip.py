@@ -84,6 +84,9 @@ def _verify_checksum(file_path: str, url: str) -> bool:
 
 def _download(url: str, root: str):
     os.makedirs(root, exist_ok=True)
+    # nosemgrep ignore: os.path.basename strips all directory components from the URL path, preventing
+    # path traversal via "../" sequences. url is also sourced exclusively from the
+    # hardcoded _MODELS dict, so it is not attacker-controlled.
     filename = os.path.basename(urlparse(url).path)
     download_target = os.path.join(root, filename)
 
@@ -94,7 +97,7 @@ def _download(url: str, root: str):
             return download_target
 
         logger.warning("%s exists, but the checksum does not match; re-downloading the file", download_target)
-        os.remove(download_target)
+        os.remove(download_target)  # nosemgrep: path-join-without-realpath-validation
 
     response = requests.get(url, stream=True, timeout=10.0)  # Timeout is for bandit security linter
     response.raise_for_status()
@@ -102,7 +105,7 @@ def _download(url: str, root: str):
     total_size = int(response.headers.get("Content-Length", 0))
 
     with (
-        open(download_target, "wb") as file,
+        open(download_target, "wb") as file,  # nosemgrep: path-join-without-realpath-validation
         tqdm(total=total_size, ncols=80, unit="iB", unit_scale=True, unit_divisor=1024) as loop,
     ):
         for chunk in response.iter_content(chunk_size=8192):

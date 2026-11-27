@@ -1,18 +1,14 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { waitFor } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { SchemaPredictionResponse } from 'src/api/openapi-spec';
 import { http } from 'src/api/utils';
 import { server } from 'src/msw-node-setup';
-import { TestProviders } from 'src/providers';
 import { queryClient } from 'src/query-client/query-client';
 
 import { getMockedMediaItem } from '../../../../../../mocks/mock-media-item';
 import { getMockedPipeline } from '../../../../../../mocks/mock-pipeline';
+import { renderHook } from '../../../../../../tests/utils';
 import { useMediaItemInference } from './use-media-item-inference.hook';
-
-vi.mock('src/hooks/use-project-identifier.hook', () => ({
-    useProjectIdentifier: () => ({ projectId: 'project-123' }),
-}));
 
 vi.mock('./util', () => ({
     downloadImageAsFile: () => new Blob(['fake-image-data'], { type: 'image/jpeg' }),
@@ -20,7 +16,8 @@ vi.mock('./util', () => ({
 
 const mockedModel = {
     id: 'model-123',
-    name: 'Test Model',
+    name: 'Test Model (model-123)',
+    architecture: 'padim',
     format: 'onnx' as const,
     project_id: 'project-123',
     threshold: 0.5,
@@ -54,7 +51,7 @@ describe('useMediaItemInference', () => {
             })
         );
 
-        return renderHook(() => useMediaItemInference(mediaItem), { wrapper: TestProviders });
+        return renderHook(() => useMediaItemInference(mediaItem));
     };
 
     beforeEach(() => {

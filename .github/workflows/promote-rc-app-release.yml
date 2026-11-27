@@ -37,7 +37,12 @@ jobs:
       docker_rc_tag: ${{ steps.validate.outputs.docker_rc_tag }}
       docker_patch_tag: ${{ steps.validate.outputs.docker_patch_tag }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -149,6 +154,11 @@ jobs:
     permissions:
       contents: write # Permission to push release tag to git
     steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
       - name: Create release git tag
         env:
           GH_TOKEN: ${{ github.token }}
@@ -199,8 +209,13 @@ jobs:
       RC_TAG: ${{ inputs.rc_tag }}
       DEVICE: ${{ matrix.device }}
     steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
       - name: Log in to GHCR
-        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -244,7 +259,7 @@ jobs:
           docker push "${TARGET_IMAGE}"
 
       - name: Sign Docker image
-        uses: open-edge-platform/geti-ci/actions/sign-image@e80098b3d180db37914f11ff6021f9fa34d0bb9f
+        uses: open-edge-platform/geti-ci/actions/sign-image@3690cbcc173cf90e0e0999b4822c3f8ebab9c137 # sign-image/v0.1.2
         with:
           image-uri: ghcr.io/open-edge-platform/anomalib-studio-${{ matrix.device }}:${{ needs.validate.outputs.docker_patch_tag }}
 

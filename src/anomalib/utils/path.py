@@ -45,11 +45,40 @@ import re
 import shutil
 import sys
 from contextlib import suppress
-from pathlib import Path
+from pathlib import Path, PurePath
+from typing import TypeAlias
 
 import platformdirs
 
 logger = logging.getLogger(__name__)
+
+PathValue: TypeAlias = (
+    str | int | float | bool | PurePath | list["PathValue"] | tuple["PathValue", ...] | dict[str, "PathValue"] | None
+)
+
+
+def paths_to_strings(value: PathValue) -> PathValue:
+    """Convert paths nested in checkpoint data to strings.
+
+    Args:
+        value: Checkpoint data containing zero or more path values.
+
+    Returns:
+        Equivalent data with all path values converted to strings.
+
+    Example:
+        >>> paths_to_strings({"weights": Path("models/model.ckpt")})
+        {'weights': 'models/model.ckpt'}
+    """
+    if isinstance(value, PurePath):
+        return str(value)
+    if isinstance(value, dict):
+        return {key: paths_to_strings(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [paths_to_strings(item) for item in value]
+    if isinstance(value, tuple):
+        return tuple(paths_to_strings(item) for item in value)
+    return value
 
 
 def _get_cache_subdir(subdir: str) -> Path:
@@ -115,44 +144,18 @@ def get_datasets_dir() -> Path:
     return _get_cache_subdir("datasets")
 
 
-def _is_legacy_default_root(root: str | Path, dataset_name: str) -> bool:
-    """Check whether `root` matches the legacy ``./datasets/<dataset_name>`` default.
-
-    The comparison is done on the normalized ``PurePosixPath`` representation so
-    that it works regardless of whether `root` was passed as a ``str`` or
-    ``Path``, with or without a trailing separator, and on both POSIX and
-    Windows.
-
-    Note: This is a temporary helper and will be removed in v2.6.0.
-    """
-    # Normalize: convert to Path, collapse redundant separators / dots, and
-    # convert to forward-slash representation for a canonical comparison.
-    normalized = Path(root).as_posix().rstrip("/")
-    canonical = f"./datasets/{dataset_name}"
-    # Also accept the variant without the leading "./"
-    return normalized in {canonical, canonical.lstrip("./")}
-
-
-def resolve_with_warning(root: str | Path | None, dataset_name: str) -> Path:
-    """Warn change in default dataset location.
-
-    Note: This is a temporary function and will be removed in v2.6.0.
+def resolve_dataset_root(root: str | Path | None, dataset_name: str) -> Path:
+    """Resolve a dataset root path.
 
     Args:
-        root: Root directory of the dataset.
-        dataset_name: Name of the dataset. This is only used when root is None.
+        root: Root directory of the dataset. When ``None``, uses the anomalib
+            datasets cache directory for ``dataset_name``.
+        dataset_name: Name of the dataset. Used only when ``root`` is ``None``.
 
     Returns:
-        Path: Resolved path.
+        Path: Resolved dataset root path.
     """
-    default_path = Path(root) if root is not None else get_datasets_dir() / dataset_name
-    if root is not None and _is_legacy_default_root(root, dataset_name):
-        msg = (
-            f"Default path to local dataset {root} is deprecated and will be moved to "
-            f"{get_datasets_dir() / dataset_name} in v2.6.0."
-        )
-        logger.warning(msg)
-    return default_path
+    return Path(root) if root is not None else get_datasets_dir() / dataset_name
 
 
 def _highest_version_dir(parent: Path) -> str | None:

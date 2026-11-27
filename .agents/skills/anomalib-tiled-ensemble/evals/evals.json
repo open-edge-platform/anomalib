@@ -1,0 +1,64 @@
+{
+  "SPDX-FileCopyrightText": "(C) 2026 Intel Corporation",
+  "SPDX-License-Identifier": "Apache-2.0",
+  "skill_name": "anomalib-tiled-ensemble",
+  "evals": [
+    {
+      "id": 1,
+      "name": "basic-tiled-ensemble-run",
+      "prompt": "How do I run the tiled ensemble pipeline to train Padim on MVTecAD bottle with 128x128 tiles?",
+      "expected_output": "Run python tools/tiled_ensemble/train.py --config ens_config.yaml with tiling.tile_size=[128,128] and TrainModels.model.class_path=Padim in the config.",
+      "expectations": [
+        "Uses tools/tiled_ensemble/train.py with a --config flag",
+        "Sets tiling.tile_size to [128, 128] in the YAML config",
+        "Sets TrainModels.model.class_path to Padim",
+        "Configures data.class_path to anomalib.data.MVTecAD with category bottle"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "config-structure",
+      "prompt": "Show me the YAML config structure for the tiled ensemble pipeline with overlapping tiles and seam smoothing enabled.",
+      "expected_output": "Config with tiling.stride < tiling.tile_size for overlap, SeamSmoothing.apply=True with sigma and width parameters.",
+      "expectations": [
+        "Shows tiling section with image_size, tile_size, and stride",
+        "Sets stride less than tile_size to create overlap",
+        "Includes SeamSmoothing section with apply: True",
+        "Shows sigma and width parameters for seam smoothing"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "eval-pipeline",
+      "prompt": "I've trained a tiled ensemble. How do I run evaluation on it?",
+      "expected_output": "Run python tools/tiled_ensemble/eval.py --config ens_config.yaml --root results/Padim/MVTecAD/bottle/v0 pointing at the training output directory.",
+      "expectations": [
+        "Uses tools/tiled_ensemble/eval.py",
+        "Passes --root pointing to the training run's output directory",
+        "Uses the same config file as the training run"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "cost-awareness",
+      "prompt": "I want to use 64x64 tiles with stride 32 on 512x512 images. Any concerns?",
+      "expected_output": "Warns that the pipeline trains one model per tile position, so many tiles = high cost. With 512/32 stride = 16x16 = 256 tile positions, each getting its own model instance.",
+      "expectations": [
+        "Warns that one model is trained per tile position (not shared)",
+        "Calculates or mentions the tile count grows with smaller stride",
+        "Advises budgeting compute cost before scaling up tile configurations"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "negative-single-model-redirect",
+      "prompt": "I just want to train a single Padim model on MVTecAD normally without any tiling. Should I use the tiled ensemble?",
+      "expected_output": "No — for single-model training, use the standard Engine.fit() flow (see anomalib-training skill). Tiled ensemble is for high-resolution scenarios needing per-tile models.",
+      "expectations": [
+        "Redirects to standard Engine.fit() training flow",
+        "Does not suggest using tiled ensemble for simple single-model training",
+        "Explains tiled ensemble is specifically for high-resolution multi-tile scenarios"
+      ]
+    }
+  ]
+}

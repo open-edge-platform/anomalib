@@ -1,0 +1,10 @@
+model:
+  class_path: anomalib.models.InpFormer
+  init_args:
+    encoder_name: vit_base_patch14_reg4_dinov2
+    inp_num: 8
+
+trainer:
+  max_epochs: 200
+  gradient_clip_val: 0.1
+  num_sanity_val_steps: 0

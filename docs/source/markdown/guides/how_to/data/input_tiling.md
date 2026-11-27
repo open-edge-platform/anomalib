@@ -4,7 +4,7 @@ This tutorial will show you how to tile the input to a model, using the {py:clas
 
 ```{warning}
 This tutorial assumes that you have already installed anomalib.
-If not, please refer to the [Installation](../../../../index.md#installation) section.
+If not, please refer to the {ref}`Installation <installation>` section.
 ```
 
 ```{warning}
@@ -62,14 +62,14 @@ from anomalib.models import Padim
 from anomalib.callbacks import TilerConfigurationCallback
 
 # Initialize the datamodule and model
-datamodule = MVTecAD(num_workers=0, image_size=(128, 128))
+datamodule = MVTecAD(num_workers=0)
 model = Padim()
 
 # prepare tiling configuration callback
 tiler_config_callback = TilerConfigurationCallback(enable=True, tile_size=[128, 64], stride=64)
 
 # pass the tiling configuration callback to the engine
-engine = Engine(image_metrics=["AUROC"], pixel_metrics=["AUROC"], callbacks=[tiler_config_callback])
+engine = Engine(callbacks=[tiler_config_callback])
 
 # train the model (tiling is seamlessly utilized in the background)
 engine.fit(datamodule=datamodule, model=model)

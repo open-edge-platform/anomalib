@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import torch
 
-from anomalib.models.components.dinov2 import DinoV2Loader
+from anomalib.models.components.feature_extractors import TimmFeatureExtractor
 
 
 class FeatureExtractor(torch.nn.Module):
@@ -30,12 +30,22 @@ class FeatureExtractor(torch.nn.Module):
             msg = f"FeatureExtractor requires exactly 2 layer indices (middle, last), got {len(layers)}: {list(layers)}"
             raise ValueError(msg)
 
-        loader = DinoV2Loader()
-        self.fe = loader.load("dinov2reg_base_14")
         self.layers = list(layers)
+        # DINOv2-reg ViT-Base/14 loaded via timm. Patch tokens (CLS/register removed) from the two
+        # selected blocks, with the backbone's final norm applied (matches get_intermediate_layers).
+        self.fe = TimmFeatureExtractor(
+            backbone="vit_base_patch14_reg4_dinov2",
+            layers=[f"blocks.{i}" for i in self.layers],
+            pre_trained=True,
+            requires_grad=False,
+            output_fmt="NLC",
+            return_class_token=False,
+            norm=True,
+            dynamic_img_size=True,
+        )
 
         self.patch_size = self.fe.patch_size
-        self.embed_dim = self.fe.embed_dim
+        self.embed_dim = self.fe.out_dims[0]
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Return intermediate patch features from the selected transformer layers.
@@ -46,5 +56,5 @@ class FeatureExtractor(torch.nn.Module):
         Returns:
             Tuple containing the selected intermediate feature tensors.
         """
-        middle_patch, last_patch = self.fe.get_intermediate_layers(x, self.layers)
-        return middle_patch, last_patch
+        features = self.fe(x)
+        return features[f"blocks.{self.layers[0]}"], features[f"blocks.{self.layers[1]}"]

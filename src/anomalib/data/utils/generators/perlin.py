@@ -169,6 +169,9 @@ class PerlinAnomalyGenerator(v2.Transform):
             ``(0.2, 1.0)``.
         rotation_range: Range of rotation angles in degrees for the Perlin noise
             pattern. Default: ``(-90, 90)``.
+        dual_mask: When ``True``, generates two independent Perlin noise masks and
+            combines them with equal probability using union, or single (first mask only).
+            Produces more varied anomaly shapes. Default: ``False``.
 
     Example:
         >>> # Single image usage with default parameters
@@ -204,10 +207,12 @@ class PerlinAnomalyGenerator(v2.Transform):
         probability: float = 0.5,
         blend_factor: float | tuple[float, float] = (0.2, 1.0),
         rotation_range: tuple[float, float] = (-90, 90),
+        dual_mask: bool = False,
     ) -> None:
         super().__init__()
         self.probability = probability
         self.blend_factor = blend_factor
+        self.dual_mask = dual_mask
 
         # Load anomaly source paths
         self.anomaly_source_paths: list[Path] = []
@@ -271,8 +276,11 @@ class PerlinAnomalyGenerator(v2.Transform):
         perlin_noise = generate_perlin_noise(height, width, device=device)
         # in some cases the perlin noise is all less than 0.5, so we need to rescale it between 0 and 1
         if not (perlin_noise > 0.5).any():
-            perlin_noise = (perlin_noise - perlin_noise.min()) / (perlin_noise.max() - perlin_noise.min())
-            # rescale to [-1, 1] range
+            noise_range = perlin_noise.max() - perlin_noise.min()
+            if noise_range > 0:
+                perlin_noise = (perlin_noise - perlin_noise.min()) / noise_range
+            else:
+                perlin_noise = torch.zeros_like(perlin_noise)
             perlin_noise = (perlin_noise * 2) - 1
 
         # Create rotated noise pattern
@@ -284,7 +292,30 @@ class PerlinAnomalyGenerator(v2.Transform):
             perlin_noise > 0.5,
             torch.ones_like(perlin_noise, device=device),
             torch.zeros_like(perlin_noise, device=device),
-        ).unsqueeze(-1)  # [H, W, 1]
+        )
+
+        if self.dual_mask:
+            perlin_noise_2 = generate_perlin_noise(height, width, device=device)
+            if not (perlin_noise_2 > 0.5).any():
+                noise_range = perlin_noise_2.max() - perlin_noise_2.min()
+                if noise_range > 0:
+                    perlin_noise_2 = (perlin_noise_2 - perlin_noise_2.min()) / noise_range
+                else:
+                    perlin_noise_2 = torch.zeros_like(perlin_noise_2)
+                perlin_noise_2 = (perlin_noise_2 * 2) - 1
+            perlin_noise_2 = perlin_noise_2.unsqueeze(0)
+            perlin_noise_2 = self.perlin_rotation_transform(perlin_noise_2).squeeze(0)
+            mask_2 = torch.where(
+                perlin_noise_2 > 0.5,
+                torch.ones_like(perlin_noise_2, device=device),
+                torch.zeros_like(perlin_noise_2, device=device),
+            )
+
+            mode = torch.rand(1, device=device).item()
+            if mode > 0.5:
+                mask = torch.where(mask + mask_2 > 0, torch.ones_like(mask), torch.zeros_like(mask))
+
+        mask = mask.unsqueeze(-1)  # [H, W, 1]
 
         # Generate anomaly source image
         if anomaly_source_path:
@@ -298,11 +329,10 @@ class PerlinAnomalyGenerator(v2.Transform):
             anomaly_source_img = perlin_noise.unsqueeze(-1).repeat(1, 1, 3)  # [H, W, C]
             anomaly_source_img = (anomaly_source_img * 0.5) + 0.25  # Adjust intensity range
 
-        # Apply augmentations to source image
         anomaly_augmented = self.augmenters(anomaly_source_img.permute(2, 0, 1))  # [C, H, W]
+
         anomaly_augmented = anomaly_augmented.permute(1, 2, 0)  # [H, W, C]
 
-        # Create final perturbation by applying mask
         perturbation = anomaly_augmented * mask
 
         return perturbation, mask
@@ -337,6 +367,10 @@ class PerlinAnomalyGenerator(v2.Transform):
         )
 
         perturbation, mask = self.generate_perturbation(h, w, device, anomaly_source_path)
+        for _ in range(10):
+            if mask.max() > 0:
+                break
+            perturbation, mask = self.generate_perturbation(h, w, device, anomaly_source_path)
         perturbation = perturbation.permute(2, 0, 1)
         mask = mask.permute(2, 0, 1)
 

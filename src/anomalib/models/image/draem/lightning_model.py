@@ -31,7 +31,7 @@ from anomalib.metrics import Evaluator
 from anomalib.models.components import AnomalibModule
 from anomalib.post_processing import PostProcessor
 from anomalib.pre_processing import PreProcessor
-from anomalib.utils.path import resolve_with_warning
+from anomalib.utils.path import resolve_dataset_root
 from anomalib.visualization import Visualizer
 
 from .loss import DraemLoss
@@ -100,7 +100,7 @@ class Draem(AnomalibModule):
             evaluator=evaluator,
             visualizer=visualizer,
         )
-        dtd_dir = resolve_with_warning(dtd_dir, "dtd")
+        dtd_dir = resolve_dataset_root(dtd_dir, "dtd")
         if not dtd_dir.is_dir():
             download_and_extract(dtd_dir, DTD_DOWNLOAD_INFO)
         self.augmenter = PerlinAnomalyGenerator(anomaly_source_path=dtd_dir, blend_factor=beta)

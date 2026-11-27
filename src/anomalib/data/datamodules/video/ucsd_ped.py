@@ -18,7 +18,7 @@ from anomalib.data.datamodules.base.video import AnomalibVideoDataModule
 from anomalib.data.datasets.base.video import VideoTargetFrame
 from anomalib.data.datasets.video.ucsd_ped import UCSDpedDataset
 from anomalib.data.utils import DownloadInfo, Split, ValSplitMode, download_and_extract
-from anomalib.utils.path import resolve_with_warning
+from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ class UCSDped(AnomalibVideoDataModule):
             seed=seed,
         )
 
-        root = resolve_with_warning(root, "ucsd")
+        root = resolve_dataset_root(root, "ucsd")
         self.root = Path(root)
         self.category = category
 

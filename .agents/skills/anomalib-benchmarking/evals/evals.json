@@ -1,0 +1,63 @@
+{
+  "SPDX-FileCopyrightText": "(C) 2026 Intel Corporation",
+  "SPDX-License-Identifier": "Apache-2.0",
+  "skill_name": "anomalib-benchmarking",
+  "evals": [
+    {
+      "id": 1,
+      "name": "basic-benchmark-run",
+      "prompt": "How do I run the anomalib benchmarking pipeline to compare Padim and Patchcore on MVTecAD bottle and capsule categories?",
+      "expected_output": "Run anomalib benchmark --config sample.yaml with grid fields: model.class_path grid [Padim, Patchcore] and data category grid [bottle, capsule], producing a 2x2=4 job sweep.",
+      "expectations": [
+        "Uses anomalib benchmark CLI or tools/experimental/benchmarking/benchmark.py",
+        "Shows model.class_path with grid: [Padim, Patchcore]",
+        "Shows data category with grid: [bottle, capsule]",
+        "Explains this produces a Cartesian product (4 jobs)"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "config-grid-syntax",
+      "prompt": "How does the grid syntax work in a benchmarking config?",
+      "expected_output": "Any field can use grid: [...] to sweep multiple values. The generator produces the Cartesian product of all grid fields as separate jobs.",
+      "expectations": [
+        "Explains grid: [...] syntax on any field",
+        "States the generator computes Cartesian product of all grid fields",
+        "Non-grid fields are held constant across all jobs"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "results-location",
+      "prompt": "After running a benchmark, where do I find the results?",
+      "expected_output": "Results are written to runs/benchmark/<timestamp>/results.csv with one row per job including model/dataset/category and measured metrics.",
+      "expectations": [
+        "Points to runs/benchmark/<timestamp>/results.csv",
+        "States each row contains model/dataset/category combination plus metrics",
+        "Timestamp is generated at run start"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "sweep-size-warning",
+      "prompt": "I want to benchmark 5 models across 15 MVTecAD categories. Any issues?",
+      "expected_output": "Warns about sweep size: 5 models × 15 categories = 75 full train+test runs. Check Cartesian product size before launching.",
+      "expectations": [
+        "Calculates 5 × 15 = 75 jobs",
+        "Warns about compute cost of large grid sweeps",
+        "Advises checking the Cartesian product size before launching"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "negative-no-fabricated-numbers",
+      "prompt": "Can I just manually fill in benchmark numbers in the README based on what I expect the results to be?",
+      "expected_output": "No — never hand-write or infer numbers into docs. Always source them from results.csv produced by an actual run of the benchmarking pipeline.",
+      "expectations": [
+        "Explicitly forbids hand-writing or inferring benchmark numbers",
+        "Requires numbers come from an actual pipeline run's results.csv",
+        "Does not endorse fabricating or estimating benchmark values"
+      ]
+    }
+  ]
+}

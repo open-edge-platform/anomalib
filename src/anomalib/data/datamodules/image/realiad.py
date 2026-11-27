@@ -49,7 +49,7 @@ from torchvision.transforms.v2 import Transform
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.realiad import CATEGORIES, RESOLUTIONS, RealIADDataset
 from anomalib.data.utils import Split, TestSplitMode, ValSplitMode
-from anomalib.utils.path import resolve_with_warning
+from anomalib.utils.path import resolve_dataset_root
 
 
 class RealIAD(AnomalibDataModule):
@@ -183,7 +183,7 @@ class RealIAD(AnomalibDataModule):
             seed=seed,
         )
 
-        root = resolve_with_warning(root, "Real-IAD")
+        root = resolve_dataset_root(root, "Real-IAD")
         self.root = Path(root)
         self.category = category
 
@@ -309,6 +309,6 @@ def get_download_instructions(root_path: Path) -> str:
 
         For more information about the dataset, see:
         - Paper: https://arxiv.org/abs/2401.02749
-        - Code: https://github.com/REAL-IAD/REAL-IAD
+        - Code: https://github.com/Tencent/AnomalyDetection_Real-IAD
         - Dataset: https://huggingface.co/datasets/REAL-IAD/Real-IAD
     """)

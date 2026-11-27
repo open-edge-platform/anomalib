@@ -41,15 +41,15 @@ from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image import MVTecAD2Dataset
 from anomalib.data.datasets.image.mvtecad2 import TestType
 from anomalib.data.utils import DownloadInfo, Split, download_and_extract
-from anomalib.utils.path import resolve_with_warning
+from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
 
 # Download information for MVTec AD 2 dataset
 DOWNLOAD_INFO = DownloadInfo(
     name="mvtecad2",
-    url="https://www.mydrive.ch/shares/121573/7f68fe2c4f7c2ceaa08f463aaeb2f414/download/"
-    "466712769-1743422799/mvtec_ad_2.tar.gz",
+    url="https://www.mydrive.ch/shares/163625/c79a666796c298c4cfd41eb727860759/download/"
+    "466712769-1743429042/mvtec_ad_2.tar.gz",
     hashsum="c0ded99ef32bfc8e352d52beb44515e5b292b8598cb963aadfa91ca0763505e4",
 )
 
@@ -136,7 +136,7 @@ class MVTecAD2(AnomalibDataModule):
             seed=seed,
         )
 
-        root = resolve_with_warning(root, "MVTec_AD_2")
+        root = resolve_dataset_root(root, "MVTec_AD_2")
         self.root = Path(root)
         self.category = category
         self.test_type = TestType(test_type) if isinstance(test_type, str) else test_type

@@ -179,6 +179,7 @@ def make_mvtec_3d_dataset(
         mask_samples.path + "/" + samples.split + "/" + samples.label + "/" + "gt/" + samples.file_name
     )
     samples = samples.dropna(subset=["image_path"])
+    samples["mask_path"] = samples["mask_path"].fillna("")
     samples = samples.astype({"image_path": "str", "mask_path": "str", "depth_path": "str"})
 
     # assert that the right mask files are associated with the right test images
@@ -212,6 +213,7 @@ def make_mvtec_3d_dataset(
     samples.attrs["task"] = "classification" if (samples["mask_path"] == "").all() else "segmentation"
 
     if split:
-        samples = samples[samples.split == split].reset_index(drop=True)
+        split_value = split.value if isinstance(split, Split) else split
+        samples = samples[samples.split == split_value].reset_index(drop=True)
 
     return samples

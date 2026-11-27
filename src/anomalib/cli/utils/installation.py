@@ -13,7 +13,7 @@ import json
 import os
 import platform
 import re
-import subprocess
+import subprocess  # nosec B404 - hardcoded nvcc invocation only
 from importlib.metadata import requires
 from pathlib import Path
 from warnings import warn
@@ -22,13 +22,12 @@ from packaging.requirements import Requirement
 from packaging.version import Version
 
 AVAILABLE_TORCH_VERSIONS = {
-    # NOTE: Minimum torch>=2.6.0 required due to Critical CVE-2025-32434
-    #   (torch.load weights_only=True RCE, patched in 2.6.0)
-    "2.6.0": {"torchvision": "0.21.0", "cuda": ("11.8", "12.6")},
-    "2.7.0": {"torchvision": "0.22.0", "cuda": ("11.8", "12.6")},
-    "2.7.1": {"torchvision": "0.22.1", "cuda": ("11.8", "12.6")},
-    "2.8.0": {"torchvision": "0.23.0", "cuda": ("12.6", "12.8")},
-    "2.9.0": {"torchvision": "0.24.0", "cuda": ("12.6", "12.8", "13.0")},
+    # NOTE: Minimum torch>=2.10.0 required as of anomalib 2.7.0 (dynamo ONNX exporter).
+    "2.10.0": {"torchvision": "0.25.0", "cuda": ("12.6", "12.8", "13.0")},
+    "2.11.0": {"torchvision": "0.26.0", "cuda": ("12.6", "12.8", "13.0")},
+    "2.12.0": {"torchvision": "0.27.0", "cuda": ("12.6", "13.0", "13.2")},
+    "2.13.0": {"torchvision": "0.28.0", "cuda": ("12.6", "13.0", "13.2")},
+    "2.14.0": {"torchvision": "0.29.0", "cuda": ("12.6", "13.0", "13.2")},
 }
 
 
@@ -187,7 +186,8 @@ def get_cuda_version() -> str | None:
     # 2. 'nvcc --version' check & without version.json case
     try:
         result = subprocess.run(
-            ["nvcc", "--version"],  # noqa: S607
+            # command is a hardcoded literal with no user-controlled input
+            ["nvcc", "--version"],  # noqa: S607  # nosec B603, B607
             capture_output=True,
             text=True,
             check=False,
@@ -217,24 +217,26 @@ def update_cuda_version_with_available_torch_cuda_build(cuda_version: str, torch
 
     Example:
         ```python
-        update_cuda_version_with_available_torch_cuda_build("12.1", "2.0.1")
-        # Returns: "11.8"  # PyTorch 2.0.1 only supports up to CUDA 11.8
+        update_cuda_version_with_available_torch_cuda_build("12.8", "2.14.0")
+        # Returns: "12.6"  # PyTorch 2.14.0 has no cu128 wheel; cu126 is nearest below.
         ```
     """
-    max_supported_cuda = max(AVAILABLE_TORCH_VERSIONS[torch_version]["cuda"])
-    min_supported_cuda = min(AVAILABLE_TORCH_VERSIONS[torch_version]["cuda"])
-    bounded_cuda_version = max(min(cuda_version, max_supported_cuda), min_supported_cuda)
+    supported = sorted(AVAILABLE_TORCH_VERSIONS[torch_version]["cuda"], key=Version)
+    # Supported builds can have gaps (e.g. 12.6, 13.0), so pick the newest build not above
+    # the installed version; fall back to the oldest if the installed version is older.
+    compatible = [version for version in supported if Version(version) <= Version(cuda_version)]
+    selected_cuda_version = compatible[-1] if compatible else supported[0]
 
-    if cuda_version != bounded_cuda_version:
+    if cuda_version != selected_cuda_version:
         warn(
             f"Installed CUDA version is v{cuda_version}. \n"
-            f"v{min_supported_cuda} <= Supported CUDA version <= v{max_supported_cuda}.\n"
-            f"This script will use CUDA v{bounded_cuda_version}.\n"
+            f"Supported CUDA versions for torch {torch_version}: {', '.join(supported)}.\n"
+            f"This script will use CUDA v{selected_cuda_version}.\n"
             f"However, this may not be safe, and you are advised to install the correct version of CUDA.\n"
             f"For more details, refer to https://pytorch.org/get-started/locally/",
             stacklevel=2,
         )
-        cuda_version = bounded_cuda_version
+        cuda_version = selected_cuda_version
 
     return cuda_version
 
@@ -324,19 +326,19 @@ def get_torch_install_args(requirement: str | Requirement) -> list[str]:
 
     Example:
         ```python
-        requirement = "torch>=2.9.0"
+        requirement = "torch>=2.10.0"
         get_torch_install_args(requirement)
         # Returns:
         [
             '--extra-index-url',
             'https://download.pytorch.org/whl/cu130',
-            'torch>=2.9.0',
-            'torchvision>=0.24.0'
+            'torch>=2.10.0',
+            'torchvision>=0.25.0'
         ]
         ```
 
     Test:
-        >>> args = get_torch_install_args("torch>=2.9.0")
+        >>> args = get_torch_install_args("torch>=2.10.0")
         >>> isinstance(args, list)
         True
         >>> all(isinstance(arg, str) for arg in args)

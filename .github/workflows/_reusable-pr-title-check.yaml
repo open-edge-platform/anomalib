@@ -51,21 +51,27 @@ on:
         type: string
         default: "3.10"
 
-permissions:
-  contents: read
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   validate-pr-title:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read # Required to checkout the repository
     steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: ${{ inputs.python-version }}
           cache: pip
@@ -88,7 +94,7 @@ jobs:
 
           # Remove emoji from the beginning if present and create clean title for validation
           # Use Python for reliable emoji removal (more compatible than sed with Unicode)
-          CLEAN_TITLE=$(python3 -c "import re; title='$PR_TITLE'; print(re.sub(r'^[\s]*[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F1E0-\U0001F1FF\U00002600-\U000027BF\U0001F900-\U0001F9FF]+[\s]*', '', title))")
+          CLEAN_TITLE=$(python3 -c "import os, re; title=os.environ['PR_TITLE']; print(re.sub(r'^[\s]*[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F1E0-\U0001F1FF\U00002600-\U000027BF\U0001F900-\U0001F9FF]+[\s]*', '', title))")
 
           echo "Clean title for validation: '$CLEAN_TITLE'"
 
