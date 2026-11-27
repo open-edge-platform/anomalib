@@ -19,9 +19,9 @@ def tensor_lists_are_equal(tensor_list1: list[torch.Tensor], tensor_list2: list[
 class BufferListModule(BufferListMixin):
     """Dummy module that uses the BufferListMixin to register a list of tensors as buffers."""
 
-    def __init__(self) -> None:
+    def __init__(self, length: int = 3) -> None:
         super().__init__()
-        tensor_list = [torch.empty(3) for _ in range(3)]
+        tensor_list = [torch.empty(3) for _ in range(length)]
         self.register_buffer_list("tensor_list", tensor_list)
         self.register_buffer_list("non_persistent_tensor_list", tensor_list, persistent=False)
 
@@ -47,6 +47,15 @@ class TestBufferListMixin:
         tensor_list = [torch.rand(3) for _ in range(3)]
         module.tensor_list = tensor_list
         assert tensor_lists_are_equal(module.tensor_list, tensor_list)
+
+    @staticmethod
+    def test_buffer_list_length_per_module() -> None:
+        """Test that modules with buffer lists of different lengths do not affect each other."""
+        module = BufferListModule(length=3)
+        shorter_module = BufferListModule(length=1)
+        assert len(module.tensor_list) == 3
+        BufferListModule(length=5)
+        assert len(shorter_module.tensor_list) == 1
 
     @staticmethod
     @pytest.mark.gpu

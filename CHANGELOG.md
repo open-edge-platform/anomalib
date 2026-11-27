@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 🐞 **data**: Restore automatic downloads for MVTec AD, AD 2, 3D-AD, and LOCO AD by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3948
 - 🐞 **model**: Preserve ViT positional interpolation when loading Torch exports in a new process without changing unrelated timm models by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3940
 - 🐞 **model**: Fix device-specific fused-attention layout errors during ONNX export by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3936
+- 🐞 **model**: Keep the buffer list length per module so modules with lists of different lengths do not affect each other by @aghasalim in https://github.com/open-edge-platform/anomalib/pull/3950
 - 📚 **docs**: clarify benchmark command availability by @anomalibbot in https://github.com/open-edge-platform/anomalib/pull/3931
 
 ## [v2.7.1] - 2026-11-16
