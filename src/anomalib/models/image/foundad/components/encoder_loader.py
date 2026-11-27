@@ -49,11 +49,21 @@ class TimmDinoWrapper(nn.Module):
 
     def __init__(self, timm_model: nn.Module) -> None:
         super().__init__()
+        _disable_pos_embed_antialiasing(timm_model)
         self._model = timm_model
         self.embed_dim: int = timm_model.embed_dim
         self.patch_size: int = timm_model.patch_embed.patch_size[0]
         self._num_blocks: int = len(timm_model.blocks)
         self.patch_embed = _PatchEmbedProxy(timm_model)
+
+    def __setstate__(self, state: dict[str, object]) -> None:
+        """Restore the local interpolation policy for older full-object exports.
+
+        Args:
+            state (dict[str, object]): Serialized module state.
+        """
+        super().__setstate__(state)
+        _disable_pos_embed_antialiasing(self._model)
 
     def get_intermediate_layers(self, x: torch.Tensor, n: int = 1) -> list[torch.Tensor]:
         """Extract patch-token features from the n last transformer blocks.
@@ -111,7 +121,6 @@ def load_encoder(encoder_name: str) -> TimmDinoWrapper:
         raise ValueError(msg)
 
     logger.info("Loading encoder '%s' via timm ('%s')", encoder_name, timm_name)
-    _disable_pos_embed_antialiasing()
     # `dynamic_img_size=True` lets the patch embedding accept resolutions other than
     # the checkpoint's native training size (verified to be numerically identical to
     # the default at that native size); without it, some encoders (e.g. DINOv2) raise

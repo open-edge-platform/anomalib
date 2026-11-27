@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Feature extractor using timm models and any nn.Module torch model.
@@ -29,9 +29,11 @@ Example:
 import functools
 import logging
 from collections.abc import Sequence
+from types import FunctionType
 from typing import cast
 
 import timm
+import timm.models.vision_transformer as vit
 import torch
 from torch import nn
 from torchvision.models.feature_extraction import create_feature_extractor
@@ -41,29 +43,33 @@ from .utils import dryrun_find_featuremap_dims
 logger = logging.getLogger(__name__)
 
 
-def _disable_pos_embed_antialiasing() -> None:
-    """Force timm ViT pos-embed resampling to ``antialias=False``.
+def _create_pos_embed_without_antialiasing() -> FunctionType:
+    """Reuse timm's method with private interpolation globals and a stable pickle name."""
+    original = vit.VisionTransformer._pos_embed  # noqa: SLF001
+    namespace = original.__globals__.copy()
+    resampler = namespace.get("resample_abs_pos_embed")
+    if resampler is not None:
+        namespace["resample_abs_pos_embed"] = functools.partial(resampler, antialias=False)
+    implementation = FunctionType(
+        original.__code__,
+        namespace,
+        name="_pos_embed_without_antialiasing",
+        argdefs=original.__defaults__,
+        closure=original.__closure__,
+    )
+    implementation.__qualname__ = implementation.__name__
+    implementation.__module__ = __name__
+    implementation.__kwdefaults__ = original.__kwdefaults__
+    return implementation
 
-    timm's ``VisionTransformer._pos_embed`` uses interpolation with
-    ``antialias=True``. This operation isn't supported in ONNX export
-    and is patched off. It doesn't affect model performance.
-    """
-    try:
-        import timm.models.vision_transformer as vit
-    except ImportError:
-        return
 
-    original = getattr(vit, "resample_abs_pos_embed", None)
-    if original is None or getattr(original, "_anomalib_no_antialias", False):
-        return
+_pos_embed_without_antialiasing = _create_pos_embed_without_antialiasing()
 
-    @functools.wraps(original)
-    def _no_antialias(*args, **kwargs):  # noqa: ANN202
-        kwargs["antialias"] = False
-        return original(*args, **kwargs)
 
-    setattr(_no_antialias, "_anomalib_no_antialias", True)  # noqa: B010
-    vit.resample_abs_pos_embed = _no_antialias
+def _disable_pos_embed_antialiasing(model: nn.Module) -> None:
+    """Keep the interpolation policy local and pickleable without changing timm classes or globals."""
+    if isinstance(model, vit.VisionTransformer) and type(model)._pos_embed is vit.VisionTransformer._pos_embed:  # noqa: SLF001
+        model.__dict__["_pos_embed"] = functools.partial(_pos_embed_without_antialiasing, model)
 
 
 class TimmFeatureExtractor(nn.Module):
@@ -79,6 +85,10 @@ class TimmFeatureExtractor(nn.Module):
       (e.g. DINOv2 ViTs) where downstream models operate on tokens. Optionally the
       class/register (prefix) tokens can be prepended and the backbone's final norm
       applied.
+
+    ViT positional embeddings are interpolated without antialiasing, consistently
+    during feature extraction, export, and loading in a fresh process. This
+    policy is local to the backbone and does not change other timm models.
 
     Args:
         backbone (str | nn.Module): Name of the timm model architecture or any torch model to use as backbone.
@@ -206,7 +216,7 @@ class TimmFeatureExtractor(nn.Module):
                 pretrained_cfg=None,
                 dynamic_img_size=dynamic_img_size,
             )
-            _disable_pos_embed_antialiasing()
+            _disable_pos_embed_antialiasing(self.feature_extractor)
             self.patch_size = self.feature_extractor.patch_embed.patch_size[0]
             self.num_prefix_tokens = getattr(self.feature_extractor, "num_prefix_tokens", 1)
             self.num_register_tokens = self.num_prefix_tokens - 1
@@ -234,6 +244,16 @@ class TimmFeatureExtractor(nn.Module):
             raise TypeError(msg)
 
         self._features = {layer: torch.empty(0) for layer in self.layers}
+
+    def __setstate__(self, state: dict[str, object]) -> None:
+        """Restore the local interpolation policy, including for older full-object exports.
+
+        Args:
+            state (dict[str, object]): Serialized module state.
+        """
+        super().__setstate__(state)
+        if getattr(self, "_uses_intermediates", False):
+            _disable_pos_embed_antialiasing(self.feature_extractor)
 
     @staticmethod
     def _block_name_to_idx(layer: str | int) -> int:
