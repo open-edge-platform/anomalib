@@ -591,6 +591,20 @@ class DummyImageDatasetGenerator(DummyDatasetGenerator):
                 mask_filename = self.dataset_root / category / f"Part{i}_label.bmp"
                 self.image_generator.generate_image(label, image_filename, mask_filename)
 
+    def _generate_dummy_mad_sim_dataset(self) -> None:
+        """Generate MAD-Sim split folders with repeated, unpadded image stems."""
+        category_root = self.dataset_root / "01Gorilla"
+        for split, count in (("train", self.num_train), ("test", self.num_test)):
+            for i in range(count):
+                self.image_generator.generate_image(LabelName.NORMAL, category_root / split / "good" / f"{i}.png")
+        for defect in ("Burrs", "Missing", "Stains"):
+            for i in range(self.num_test):
+                self.image_generator.generate_image(
+                    LabelName.ABNORMAL,
+                    category_root / "test" / defect / f"{i}.png",
+                    category_root / "ground_truth" / defect / f"{i}_mask.png",
+                )
+
     def _generate_dummy_mpdd_dataset(self) -> None:
         """Generate dummy MPDD dataset in directory using the same convention as MVTec AD."""
         # MPDD dataset follows the same convention as MVTec AD.
