@@ -15,7 +15,7 @@ jobs:
       contents: read
     timeout-minutes: 5
     outputs:
-      rc_version: "${{ steps.validate.outputs.rc_version }}"
+      rc_version: ${{ steps.validate.outputs.rc_version }}
     steps:
       - name: Harden the runner (audit all outbound calls)
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
@@ -232,3 +232,34 @@ jobs:
             --certificate-oidc-issuer='https://token.actions.githubusercontent.com'
           \`\`\`
           EOF
+
+  build-windows:
+    name: Build Windows MSIX for RC
+    needs: validate
+    # Only run in the source repo where MSIX signing secrets are configured.
+    # Skipped on forks.
+    if: |
+      github.repository == 'open-edge-platform/anomalib'
+    runs-on: windows-latest
+    environment: windows-msix-signing
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        accelerator: [cpu, cu130, xpu]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Build Windows MSIX
+        uses: $/.github/actions/windows-build # nosemgrep: yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag # Bound to this workflow's commit.
+        with:
+          accelerator: ${{ matrix.accelerator }}
+          rc_version: ${{ needs.validate.outputs.rc_version }}
+          MSIX_SIGN_CERTIFICATE: ${{ secrets.MSIX_SIGN_CERTIFICATE }}
+          MSIX_SIGN_CERTIFICATE_PASSWORD: ${{ secrets.MSIX_SIGN_CERTIFICATE_PASSWORD }}
