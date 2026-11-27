@@ -18,9 +18,10 @@ Example:
     >>> print(projected_data.shape)
 """
 
+from contextlib import nullcontext
+
 import numpy as np
 import torch
-from sklearn.utils.random import sample_without_replacement
 
 
 class NotFittedError(ValueError, AttributeError):
@@ -87,34 +88,33 @@ class SparseRandomProjection:
         """
         # Density 'auto'. Factorize density
         density = 1 / np.sqrt(n_features)
+        context = torch.random.fork_rng(devices=[]) if self.random_state is not None else nullcontext()
 
-        if density == 1:
-            # skip index generation if totally dense
-            binomial = torch.distributions.Binomial(total_count=1, probs=0.5)
-            components = binomial.sample((self.n_components, n_features)) * 2 - 1
-            components = 1 / np.sqrt(self.n_components) * components
+        with context:
+            if self.random_state is not None:
+                torch.default_generator.manual_seed(int(self.random_state))
 
-        else:
-            # Sparse matrix is not being generated here as it is stored as dense anyways
-            components = torch.zeros((self.n_components, n_features), dtype=torch.float32)
-            for i in range(self.n_components):
-                # find the indices of the non-zero components for row i
-                nnz_idx = torch.distributions.Binomial(total_count=n_features, probs=density).sample()
-                # get nnz_idx column indices
-                # pylint: disable=not-callable
-                c_idx = torch.tensor(
-                    sample_without_replacement(
-                        n_population=n_features,
-                        n_samples=nnz_idx,
-                        random_state=self.random_state,
-                    ),
-                    dtype=torch.int32,
-                )
-                data = torch.distributions.Binomial(total_count=1, probs=0.5).sample(sample_shape=c_idx.size()) * 2 - 1
-                # assign data to only those columns
-                components[i, c_idx] = data
+            if density == 1:
+                # skip index generation if totally dense
+                binomial = torch.distributions.Binomial(total_count=1, probs=0.5)
+                components = binomial.sample((self.n_components, n_features)) * 2 - 1
+                components = 1 / np.sqrt(self.n_components) * components
 
-            components *= np.sqrt(1 / density) / np.sqrt(self.n_components)
+            else:
+                # Sparse matrix is not being generated here as it is stored as dense anyways
+                components = torch.zeros((self.n_components, n_features), dtype=torch.float32)
+                for i in range(self.n_components):
+                    # find the indices of the non-zero components for row i
+                    nnz_idx = int(torch.distributions.Binomial(total_count=n_features, probs=density).sample().item())
+                    # get nnz_idx column indices
+                    c_idx = torch.randperm(n_features)[:nnz_idx]
+                    data = (
+                        torch.distributions.Binomial(total_count=1, probs=0.5).sample(sample_shape=c_idx.size()) * 2 - 1
+                    )
+                    # assign data to only those columns
+                    components[i, c_idx] = data
+
+                components *= np.sqrt(1 / density) / np.sqrt(self.n_components)
 
         return components
 
