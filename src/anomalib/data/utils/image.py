@@ -478,6 +478,4 @@ def figure_to_array(fig: Figure) -> np.ndarray:
         <class 'numpy.ndarray'>
     """
     fig.canvas.draw()
-    # convert figure to np.ndarray for saving via visualizer
-    img = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-    return img.reshape((*fig.canvas.get_width_height()[::-1], 3))
+    return np.asarray(fig.canvas.buffer_rgba())[..., :3].copy()
