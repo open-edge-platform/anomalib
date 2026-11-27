@@ -28,6 +28,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - 🔧 **data**: Switch VAD dataset to manual download pointing to the official Google Drive link by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3949
+- 🔧 **deps**: Refresh library and Studio lockfiles by @oep-renovate[bot] in https://github.com/open-edge-platform/anomalib/pull/3925
+- 🔒 **deps**: Update locked Pillow versions for security fixes by @oep-renovate[bot] in https://github.com/open-edge-platform/anomalib/pull/3939 and https://github.com/open-edge-platform/anomalib/pull/3956
+- 🔒 **ci**: Scan container image changes against the base image by @ivanzati in https://github.com/open-edge-platform/anomalib/pull/3953
+- 🧪 **data**: Expand fuzz-test coverage for dataset metadata path validation by @andersendsa in https://github.com/open-edge-platform/anomalib/pull/3875
 
 ### Deprecated
 

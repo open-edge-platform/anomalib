@@ -31,15 +31,15 @@
 
 ---
 
-> 🌟 **Announcing v2.7.1 Release!** 🌟
+> 🌟 **Announcing v2.8.0 Release!** 🌟
 >
-> This patch release fixes data loading and sampling edge cases, restores dynamic PatchCore export batches, and updates security-sensitive dependencies. MVTec datasets currently need to be downloaded manually because upstream download URLs return 404.
+> This release adds GRD-Net and the LIBAD dataset, restores MVTec automatic downloads, and fixes export compatibility for several models.
 >
 > Key Changes
 >
-> - **Fixes**: Avoid duplicate coreset selections, handle missing mask paths and dataset split enums correctly, and keep PatchCore export batch sizes dynamic.
-> - **Data**: MVTec AD, AD 2, 3D-AD, and LOCO AD can still use local datasets; automatic downloads are temporarily disabled while upstream URLs are unavailable.
-> - **Security**: Update MLflow and Pillow dependencies to address published advisories.
+> - **Models**: Add GRD-Net with optional region-of-interest supervision during training.
+> - **Data**: Add LIBAD, restore automatic downloads for MVTec AD, AD 2, 3D-AD, and LOCO AD, and document manual downloads for VAD.
+> - **Exports**: Keep DFM and FRE batch sizes dynamic in OpenVINO, preserve ViT positional interpolation in Torch exports, and fix fused-attention errors during ONNX export.
 >
 > We value your input! Please share feedback via [GitHub Issues](https://github.com/open-edge-platform/anomalib/issues) or our [Discussions](https://github.com/open-edge-platform/anomalib/discussions)
 
