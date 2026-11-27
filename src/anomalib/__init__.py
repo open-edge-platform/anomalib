@@ -34,7 +34,7 @@ Note:
 
 from enum import Enum
 
-__version__ = "2.7.2.dev0"
+__version__ = "2.8.0"
 
 
 class LearningType(str, Enum):
