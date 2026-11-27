@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- ⚡ **cli**: Defer heavy framework imports (PyTorch, Lightning, torchvision, OpenVINO) to reduce CLI startup latency on root help and programmatic inspection while preserving subcommand and config file compatibility by @Adnan9-63 in https://github.com/open-edge-platform/anomalib/pull/3898
+
 ### Deprecated
 
 ### Fixed
