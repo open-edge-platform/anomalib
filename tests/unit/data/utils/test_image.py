@@ -121,6 +121,49 @@ class TestReadImage:
         assert torch.isclose(img_tensor.max(), torch.tensor(1.0))
 
     @staticmethod
+    def test_read_planar_rgb_tiff(tmp_path: Path) -> None:
+        """Test ``read_image`` returns channel-last data for planar 16-bit RGB TIFFs."""
+        test_file = tmp_path / "planar.tiff"
+        data = np.zeros((3, 4, 5), dtype=np.uint16)
+        data[0] = 65535
+        tifffile.imwrite(test_file, data, photometric="rgb", planarconfig="separate")
+
+        img = read_image(test_file, as_tensor=True)
+        assert img.shape == (3, 4, 5)
+        assert torch.all(img[0] == 1.0)
+        assert torch.all(img[1:] == 0.0)
+
+    @staticmethod
+    def test_read_bilevel_tiff(tmp_path: Path) -> None:
+        """Test ``read_image`` reads bilevel TIFFs through Pillow."""
+        test_file = tmp_path / "bilevel.tiff"
+        tifffile.imwrite(test_file, np.array([[True, False], [False, True]]))
+
+        img = read_image(test_file)
+        assert img.shape == (2, 2, 3)
+        # tifffile writes booleans as MINISWHITE, so True decodes to black.
+        np.testing.assert_allclose(img[0, 0], 0.0)
+        np.testing.assert_allclose(img[0, 1], 1.0)
+
+    @staticmethod
+    def test_read_cmyk_tiff(tmp_path: Path) -> None:
+        """Test ``read_image`` keeps photometric conversion for CMYK TIFFs."""
+        test_file = tmp_path / "cmyk.tiff"
+        tifffile.imwrite(test_file, np.zeros((2, 2, 4), dtype=np.uint8), photometric="separated")
+
+        np.testing.assert_allclose(read_image(test_file), 1.0)
+
+    @staticmethod
+    def test_read_negative_float_tiff(tmp_path: Path) -> None:
+        """Test ``read_image`` bounds float TIFFs with negative values to [0, 1]."""
+        test_file = tmp_path / "negative.tiff"
+        tifffile.imwrite(test_file, np.array([[-1.0, 0.0, 1.0]], dtype=np.float32))
+
+        img = read_image(test_file)
+        assert img.min() == 0.0
+        assert img.max() == 1.0
+
+    @staticmethod
     def test_read_32bit_tiff(tmp_path: Path) -> None:
         """Test ``read_image`` correctly reads 32-bit float grayscale TIFF."""
         test_file = tmp_path / "test_32bit.tiff"

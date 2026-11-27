@@ -92,7 +92,7 @@ class LIBADDataset(AnomalibDataset):
             msg = f"Unknown modality {modality}. Must be one of 'A', 'B', 'L', 'X'"
             raise ValueError(msg)
 
-        self.root_category = Path(root) / category
+        self.root_category = validate_path(Path(root) / category, base_dir=root)
         self.modality = modality
         self.split = split
         self.samples = make_libad_dataset(path=self.root_category, modality=self.modality, split=self.split)
@@ -131,7 +131,7 @@ def make_libad_dataset(path: Path, modality: str = "A", split: str | Split | Non
     path = validate_path(path)
 
     samples_list = [
-        (str(path), filename.parent.name, str(filename))
+        (str(path), filename.parent.name, str(validate_path(filename, base_dir=path)))
         for filename in path.glob("**/*")
         if filename.suffix in {".tiff", ".tif"} and filename.stem.endswith(modality)
     ]
@@ -141,8 +141,9 @@ def make_libad_dataset(path: Path, modality: str = "A", split: str | Split | Non
 
     samples = pd.DataFrame(samples_list, columns=["path", "label", "image_path"])
 
-    # Set split to None by default so the datamodule handles train/test splitting
-    samples["split"] = None
+    # Normal images go to train and anomalous to test; the datamodule moves normal holdout images to test.
+    samples["split"] = Split.TRAIN.value
+    samples.loc[samples.label != "normal", "split"] = Split.TEST.value
 
     # Create mask_path column (LIBAD does not have masks)
     samples["mask_path"] = ""

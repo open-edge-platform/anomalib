@@ -11,6 +11,7 @@ from pytest_mock import MockerFixture
 from torchvision.transforms.v2 import Resize
 
 from anomalib.data import LIBAD
+from anomalib.data.datasets.image.libad import LIBADDataset
 from tests.unit.data.datamodule.base.image import _TestAnomalibImageDatamodule
 
 
@@ -72,3 +73,42 @@ class TestLIBAD(_TestAnomalibImageDatamodule):
     def fxt_data_config_path() -> str:
         """Return the path to the test data config."""
         return "examples/configs/data/libad.yaml"
+
+
+def _make_libad_category(root: Path) -> Path:
+    """Create a minimal LIBAD category with one normal and one anomalous image."""
+    category = root / "1_wrinkling"
+    for label in ("normal", "anomaly"):
+        (category / label).mkdir(parents=True)
+        (category / label / f"{label}A.tiff").touch()
+    return category
+
+
+@pytest.mark.parametrize(("split", "label"), [("train", "normal"), ("test", "anomaly")])
+def test_dataset_split_selection(tmp_path: Path, split: str, label: str) -> None:
+    """Select normal images for train and anomalous images for test."""
+    _make_libad_category(tmp_path)
+    samples = LIBADDataset(root=tmp_path, category="1_wrinkling", split=split).samples
+    assert samples.label.tolist() == [label]
+
+
+def test_dataset_rejects_category_symlink_escape(tmp_path: Path) -> None:
+    """Reject a category directory that links outside the dataset root."""
+    _make_libad_category(tmp_path / "outside")
+    root = tmp_path / "root"
+    root.mkdir()
+    (root / "1_wrinkling").symlink_to(tmp_path / "outside" / "1_wrinkling")
+
+    with pytest.raises(ValueError, match="outside"):
+        LIBADDataset(root=root, category="1_wrinkling")
+
+
+def test_dataset_rejects_image_symlink_escape(tmp_path: Path) -> None:
+    """Reject discovered images that link outside the category directory."""
+    category = _make_libad_category(tmp_path / "root")
+    secret = tmp_path / "secretA.tiff"
+    secret.touch()
+    (category / "normal" / "linkA.tiff").symlink_to(secret)
+
+    with pytest.raises(ValueError, match="outside"):
+        LIBADDataset(root=tmp_path / "root", category="1_wrinkling")

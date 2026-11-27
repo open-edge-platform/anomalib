@@ -26,7 +26,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 🐞 **model**: Preserve ViT positional interpolation when loading Torch exports in a new process without changing unrelated timm models by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3940
 - 🐞 **model**: Fix device-specific fused-attention layout errors during ONNX export by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3936
 - 📚 **docs**: clarify benchmark command availability by @anomalibbot in https://github.com/open-edge-platform/anomalib/pull/3931
-- 📚 **docs**: Align custom-data, export, benchmark, and Lightning examples with current APIs
+- 📚 **docs**: Correct OpenSSF badge attribution and links by @yashaskn8 in https://github.com/open-edge-platform/anomalib/pull/3946
+- 🐞 **data**: Fix LIBAD split selection, symlink confinement and dataset docs, and TIFF decoding of planar, bilevel, palette, CMYK and negative-float images by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3960
+- 🐞 **model**: Keep GRD-Net image tiles in the input dtype by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3960
+- 🐞 **ui**: Let fit-to-container zoom bypass interactive zoom limits for large images by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3960
 
 ## [v2.7.1] - 2026-11-16
 

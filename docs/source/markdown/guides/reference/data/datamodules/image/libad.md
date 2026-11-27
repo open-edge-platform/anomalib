@@ -6,6 +6,10 @@
    :show-inheritance:
 ```
 
-```{seealso}
-{doc}`../../datasets/image/libad` - LIBAD Dataset
+## LIBAD Dataset
+
+```{eval-rst}
+.. automodule:: anomalib.data.datasets.image.libad
+   :members:
+   :show-inheritance:
 ```

@@ -39,7 +39,8 @@ def tile_image_and_roi(
     roi_masks = roi_masks.to(device=images.device, dtype=images.dtype)
     combined = torch.cat((images, roi_masks), dim=1)
     tiles = Tiler(tile_size=tile_size, stride=stride).tile(combined)
-    image_tiles, roi_tiles = tiles[:, :3], tiles[:, 3:]
+    # Tiler allocates in the default dtype; restore the input dtype.
+    image_tiles, roi_tiles = tiles[:, :3].to(dtype=images.dtype), tiles[:, 3:]
     return image_tiles, (roi_tiles > 0.5).to(dtype=images.dtype)
 
 
