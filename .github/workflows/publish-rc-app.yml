@@ -257,7 +257,7 @@ jobs:
           persist-credentials: false
 
       - name: Build Windows MSIX
-        uses: $/.github/actions/windows-build
+        uses: $/.github/actions/windows-build@29d252e4abe31f0ac68efe8b431453823297cda7
         with:
           accelerator: ${{ matrix.accelerator }}
           rc_version: ${{ needs.validate.outputs.rc_version }}
