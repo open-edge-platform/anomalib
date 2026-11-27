@@ -52,6 +52,7 @@ Available Models:
     - :class:`SuperSimpleNet`: SuperSimpleNet
     - :class:`Uflow`: Unsupervised Flow
     - :class:`UniNet`: Student-Teacher Contrastive Learning Model
+    - :class:`VerdictAD`: Few-shot Anomaly Detection via Decision-Guided Refinement
     - :class:`VlmAd`: Vision Language Model Anomaly Detection
     - :class:`WinClip`: Zero-/Few-Shot CLIP-based Detection
 """
@@ -87,6 +88,7 @@ from .super_add import SuperADD
 from .supersimplenet import Supersimplenet
 from .uflow import Uflow
 from .uninet import UniNet
+from .verdict_ad import VerdictAD
 from .vlm_ad import VlmAd
 from .winclip import WinClip
 
@@ -122,6 +124,7 @@ __all__ = [
     "SuperADD",
     "Uflow",
     "UniNet",
+    "VerdictAD",
     "VlmAd",
     "WinClip",
 ]

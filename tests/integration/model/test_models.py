@@ -16,6 +16,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 import timm
+import torch
 from lightning import seed_everything
 from lightning.pytorch.trainer.states import TrainerFn
 from PIL import Image
@@ -24,7 +25,7 @@ from pytest_mock import MockerFixture
 from anomalib.data import AnomalibDataModule, MVTec3D, MVTecAD
 from anomalib.deploy import ExportType
 from anomalib.engine import Engine
-from anomalib.models import AnomalibModule, get_model, list_models
+from anomalib.models import AnomalibModule, VerdictAD, get_model, list_models
 
 _FIT_CACHE: dict[str, Path] = {}
 # ONNX files from ``test_export[onnx-*]``, reused by the OpenVINO export tests.
@@ -258,6 +259,8 @@ class TestAPI:
             make_dummy_dataset (Callable[[str], Path]): Lazy dummy dataset factory.
             mocker (MockerFixture): Pytest mock fixture.
         """
+        if model_name == "verdict_a_d":
+            pytest.skip("VerdictAD's external decision runtime is not packaged by model export")
         _make_required_dataset(model_name, make_dummy_dataset)
         model, _, engine, ckpt = _ensure_fit(model_name, dataset_path, project_path)
 
@@ -319,6 +322,15 @@ class TestAPI:
         # https://github.com/open-edge-platform/anomalib/issues/1478
 
         extra_args = {}
+        if model_name == "verdict_a_d":
+            extra_args.update({
+                "n_shots": 1,
+                "detector": {
+                    "class_path": "anomalib.models.AnomalyDINO",
+                    "init_args": {"encoder_name": "vit_small_patch14_dinov2"},
+                },
+                "pre_processor": VerdictAD.configure_pre_processor((56, 56)),
+            })
         if model_name == "dfkde":
             extra_args["n_pca_components"] = 2
         if model_name == "m_h_patchcore":
@@ -381,19 +393,20 @@ class TestAPI:
                 train_batch_size=1 if model_name == "efficient_ad" else 2,
             )
 
-        # FoundAD hard-codes pretrained=True in its encoder loader; force offline
-        # construction for CI without adding a public API knob.
-        foundad_offline = (
+        # These encoders require pretrained weights in production; keep CI offline.
+        pretrained_offline = (
             patch(
-                "anomalib.models.image.foundad.components.encoder_loader.timm.create_model",
+                "timm.create_model",
                 side_effect=_timm_create_model_offline,
             )
-            if model_name == "found_a_d"
+            if model_name in {"found_a_d", "verdict_a_d"}
             else contextlib.nullcontext()
         )
-        with foundad_offline:
+        with pretrained_offline:
             model = get_model(model_name, **extra_args)
 
+        if model_name == "verdict_a_d":
+            model.model.decider.predict = MagicMock(return_value=torch.zeros(34))
         if model_name == "vlm_ad":
             model.vlm_backend = MagicMock()
             model.vlm_backend.predict.return_value = "YES: Because reasons..."

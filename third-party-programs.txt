@@ -82,3 +82,7 @@ terms are listed below.
 17. FoundAD model (anomalib.models.image.foundad)
     Copyright (c) 2026 FoundAD authors, https://github.com/ymxlzgy/FoundAD
     SPDX-License-Identifier: MIT
+
+18. VerdictAD refinement and decision queries (anomalib.models.image.verdict_ad)
+    Shangquan Sun and contributors, https://github.com/sgstq0811/VerdictAD-Jev-AD
+    SPDX-License-Identifier: Apache-2.0

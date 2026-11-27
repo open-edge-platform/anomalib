@@ -215,6 +215,13 @@ U-Flow: A U-shaped Normalizing Flow for Anomaly Detection with Unsupervised Thre
 UniNet: A Contrastive Learning-guided Unified Framework with Feature Selection for Anomaly Detection
 :::
 
+:::{grid-item-card} {material-regular}`model_training;1.5em` VerdictAD
+:link: ./verdict_ad
+:link-type: doc
+
+Few-Shot Anomaly Detection via Decision-Guided Refinement
+:::
+
 :::{grid-item-card} {material-regular}`model_training;1.5em` VLM-AD
 :link: ./vlm_ad
 :link-type: doc
@@ -272,6 +279,7 @@ WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation
 ./supersimplenet
 ./uflow
 ./uninet
+./verdict_ad
 ./vlm_ad
 ./winclip
 ```
