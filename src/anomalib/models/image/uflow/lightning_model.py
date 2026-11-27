@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """U-Flow: A U-shaped Normalizing Flow for Anomaly Detection with Unsupervised Threshold.
@@ -32,9 +32,7 @@ import logging
 from typing import Any
 
 import torch
-from lightning.pytorch.core.optimizer import LightningOptimizer
-from lightning.pytorch.utilities.types import STEP_OUTPUT
-from torch.optim.lr_scheduler import LRScheduler
+from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 from torchvision.transforms.v2 import Compose, Normalize, Resize
 
 from anomalib import LearningType
@@ -196,13 +194,13 @@ class Uflow(AnomalibModule):
         ])
         return PreProcessor(transform=transform)
 
-    def configure_optimizers(self) -> tuple[list[LightningOptimizer], list[LRScheduler]]:
+    def configure_optimizers(self) -> OptimizerLRScheduler:
         """Configure optimizers and learning rate schedulers.
 
         Returns:
-            tuple[list[LightningOptimizer], list[LRScheduler]]: Tuple containing:
-                - List of optimizers (Adam with initial lr=1e-3)
-                - List of schedulers (LinearLR reducing to 0.4 over 25000 steps)
+            OptimizerLRScheduler: Dictionary containing:
+                - ``optimizer``: Adam with initial lr=1e-3
+                - ``lr_scheduler``: LinearLR reducing to 0.4 over 25000 steps
         """
         # Optimizer
         # values used in paper: bottle: 0.0001128999, cable: 0.0016160391, capsule: 0.0012118892, carpet: 0.0012118892,
@@ -218,7 +216,13 @@ class Uflow(AnomalibModule):
             end_factor=0.4,
             total_iters=25000,
         )
-        return [optimizer], [scheduler]
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "interval": "step",
+            },
+        }
 
     def training_step(self, batch: Batch, *args, **kwargs) -> STEP_OUTPUT:  # noqa: ARG002 | unused arguments
         """Perform a training step.
