@@ -180,7 +180,7 @@ jobs:
           persist-credentials: false
 
       - name: Build Windows MSIX
-        uses: ./.github/actions/windows-build
+        uses: $/.github/actions/windows-build
         with:
           accelerator: ${{ matrix.accelerator }}
           debug_build: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_build || false }}
