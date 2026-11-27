@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+<!-- v2.8.0: Finalize release notes after feature/v2.8.0 merges and main CI passes. -->
+
 ### Added
 
 ### Removed
