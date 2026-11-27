@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """PyTorch model for the Feature Reconstruction Error (FRE) algorithm implementation.
@@ -163,11 +163,10 @@ class FREModel(nn.Module):
         """
         self.feature_extractor.eval()
         features_in = self.feature_extractor(batch)[self.layer]
-        batch_size = len(features_in)
         if self.pooling_kernel_size > 1:
             features_in = F.avg_pool2d(input=features_in, kernel_size=self.pooling_kernel_size)
         feature_shapes = features_in.shape
-        features_in = features_in.view(batch_size, -1).detach()
+        features_in = features_in.flatten(1).detach()
         features_out = self.fre_model(features_in)
         return features_in, features_out, feature_shapes
 

@@ -5,8 +5,6 @@
 
 This module provides a PyTorch Lightning DataModule for the MVTec 3D-AD dataset.
 The dataset contains RGB and depth image pairs for anomaly detection tasks.
-Automatic downloads are temporarily unavailable because the upstream links are
-broken. Download and extract the dataset manually before use.
 
 Example:
     Create a MVTec3D datamodule::
@@ -39,7 +37,7 @@ from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.depth.mvtec_3d import MVTec3DDataset
-from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode
+from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
 from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
@@ -47,9 +45,9 @@ logger = logging.getLogger(__name__)
 
 DOWNLOAD_INFO = DownloadInfo(
     name="mvtec_3d",
-    url="https://www.mydrive.ch/shares/150646/25de33f1276dd418cd856f2f48a84cdb/download/428824485-1643299897"
+    url="https://www.mydrive.ch/shares/163793/e458caf2858886bbd6fa2b7a86c89b9b/download/428824485-1643299897"
     "/mvtec_3d_anomaly_detection.tar.xz",
-    hashsum="d8bb2800fbf3ac88e798da6ae10dc819",
+    hashsum="5f6a09dfa2c4af94008a43b79d08bf5534e5946497cd816b14c8e783c92d713c",
 )
 
 
@@ -142,20 +140,8 @@ class MVTec3D(AnomalibDataModule):
         )
 
     def prepare_data(self) -> None:
-        """Check that the manually downloaded dataset is available.
-
-        Raises:
-            FileNotFoundError: If the requested category directory is missing.
-        """
+        """Download the dataset if not available."""
         if (self.root / self.category).is_dir():
             logger.info("Found the dataset.")
         else:
-            # TODO(ashwinvaidya17): Restore autodownload once upstream links work.
-            # https://github.com/open-edge-platform/anomalib/issues/3892
-            msg = (
-                "MVTec 3D-AD automatic download is temporarily unavailable because upstream links are broken. "
-                "Download the dataset from https://www.mvtec.com/research-teaching/datasets/mvtec-3d-ad "
-                f"and extract it so that '{self.root / self.category}' exists. "
-                "See https://github.com/open-edge-platform/anomalib/issues/3892."
-            )
-            raise FileNotFoundError(msg)
+            download_and_extract(self.root, DOWNLOAD_INFO)

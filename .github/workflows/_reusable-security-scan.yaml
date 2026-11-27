@@ -28,6 +28,7 @@
 # - Bandit: Python security linter
 # - Semgrep: Static Application Security Testing (SAST)
 # - Trivy: Vulnerability, secret, and config scanning
+# - Trivy scan diff: Container image CVEs split into non-base vs base image layers
 # - Zizmor: GitHub Actions workflow security scanner
 # - DAST scan: Runtime scanning via ZAP and Schemathesis
 #
@@ -321,9 +322,11 @@ jobs:
   trivy-image-scan:
     if: contains(inputs.tools, 'trivy-image-scan')
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     permissions:
       contents: read
     strategy:
+      fail-fast: false
       matrix:
         ai-device: [cpu, cuda, xpu]
     steps:
@@ -332,15 +335,57 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Run container image scan (${{ matrix.ai-device }})
-        uses: open-edge-platform/geti-ci/actions/trivy@7d25e47329bbfcde4ee51ab3581aea8613e245e2
+      - name: Resolve image digest and source revision (${{ matrix.ai-device }})
+        id: image
+        env:
+          IMAGE: ghcr.io/open-edge-platform/anomalib-studio-${{ matrix.ai-device }}:main
+        run: |
+          INFO="$(skopeo inspect --override-os linux --override-arch amd64 "docker://${IMAGE}")"
+          DIGEST="$(jq -r '.Digest' <<< "$INFO")"
+          REVISION="$(jq -r '.Labels["org.opencontainers.image.revision"] // empty' <<< "$INFO")"
+          if [[ ! "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "::error::Could not resolve digest for ${IMAGE}"
+            exit 1
+          fi
+          if [[ ! "$REVISION" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Image ${IMAGE} has no valid org.opencontainers.image.revision label"
+            exit 1
+          fi
+          echo "ref=${IMAGE%:*}@${DIGEST}" >> "$GITHUB_OUTPUT"
+          echo "revision=${REVISION}" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve base image from Dockerfile at image revision
+        id: base
+        env:
+          REVISION: ${{ steps.image.outputs.revision }}
+        run: |
+          DOCKERFILE="$(curl -sfL --retry 3 "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${REVISION}/application/docker/Dockerfile")"
+          BASE="$(grep -oP '^FROM\s+\K\S+(?=\s+AS\s+anomalib-studio-base\b)' <<< "$DOCKERFILE")"
+          if [[ -z "$BASE" ]]; then
+            echo "::error::Could not find anomalib-studio-base FROM line in application/docker/Dockerfile"
+            exit 1
+          fi
+          echo "image=${BASE}" >> "$GITHUB_OUTPUT"
+
+      - name: Run Trivy scan diff (${{ matrix.ai-device }})
+        uses: open-edge-platform/geti-ci/actions/trivy-scan-diff@f1328ee7c6ad00e90204ff9902491ead4b28c7da # trivy-scan-diff/v0.1.1
         with:
-          artifact-name: "trivy-scan-container-${{ matrix.ai-device }}"
+          image: ${{ steps.image.outputs.ref }}
+          base-image: ${{ steps.base.outputs.image }}
+          artifact-name: "trivy-scan-diff-${{ matrix.ai-device }}"
+          timeout: "15m"
+          ignore_unfixed: true
+
+      # trivy-scan-diff only runs Trivy's default vuln,secret scanners
+      - name: Run container image config scan (${{ matrix.ai-device }})
+        uses: open-edge-platform/geti-ci/actions/trivy@c285ee78223169c3a185043921602c929657e5db
+        with:
+          artifact-name: "trivy-scan-container-config-${{ matrix.ai-device }}"
           scan_type: "image"
-          scan_target: "ghcr.io/open-edge-platform/anomalib-studio-${{ matrix.ai-device }}:main"
-          scan-scope: ${{ inputs.scan-scope }}
+          scan_target: ${{ steps.image.outputs.ref }}
+          scan-scope: "all" # "changed" makes the action scan "." instead of the image
           severity: "LOW"
-          scanners: "vuln,secret,config"
+          scanners: "config"
           format: "table"
           timeout: "15m"
           ignore_unfixed: "true"
