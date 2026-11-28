@@ -16,8 +16,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
-- 📚 **docs**: clarify benchmark command availability by @anomalibbot in https://github.com/open-edge-platform/anomalib/pull/3931
 - 🐞 **metric**: Handle floating-point scores and integer masks in PRO by @A-P-S-Bhaidav in https://github.com/open-edge-platform/anomalib/pull/3906
+
+## [v2.8.0] - 2026-11-27
+
+### Added
+
+- 🚀 **data**: Add LIBAD dataset by @andersendsa in https://github.com/open-edge-platform/anomalib/pull/3800
+- 🚀 **model**: Add GRD-Net with optional training-only ROI supervision, configurable contextual-loss coefficients, generator plateau scheduling, rotation and smoothing, and the model-local GRDNetFolder datamodule by @NickF93 in https://github.com/open-edge-platform/anomalib/pull/3812
+
+### Removed
+
+### Changed
+
+- 🔧 **data**: Switch VAD dataset to manual download pointing to the official Google Drive link by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3949
+
+### Deprecated
+
+### Fixed
+
+- 🐞 **model**: Preserve dynamic batches in DFM and FRE exports so OpenVINO can run single images by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3951
+- 🐞 **data**: Restore automatic downloads for MVTec AD, AD 2, 3D-AD, and LOCO AD by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3948
+- 🐞 **model**: Preserve ViT positional interpolation when loading Torch exports in a new process without changing unrelated timm models by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3940
+- 🐞 **model**: Fix device-specific fused-attention layout errors during ONNX export by @rajeshgangireddy in https://github.com/open-edge-platform/anomalib/pull/3936
+- 📚 **docs**: clarify benchmark command availability by @anomalibbot in https://github.com/open-edge-platform/anomalib/pull/3931
+- 📚 **docs**: Correct OpenSSF badge attribution and links by @yashaskn8 in https://github.com/open-edge-platform/anomalib/pull/3946
+- 🐞 **data**: Fix LIBAD split selection, symlink confinement and dataset docs, and TIFF decoding of planar, bilevel, palette, CMYK and negative-float images by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3960
+- 🐞 **model**: Keep GRD-Net image tiles in the input dtype by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3960
+- 🐞 **ui**: Let fit-to-container zoom bypass interactive zoom limits for large images by @ashwinvaidya17 in https://github.com/open-edge-platform/anomalib/pull/3960
 
 ## [v2.7.1] - 2026-11-16
 
