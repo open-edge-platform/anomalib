@@ -11,9 +11,9 @@ Anomalib is committed to excellence and innovation in open-source software devel
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8330/badge)](https://www.bestpractices.dev/projects/8330)
 
 - **Date:** January 25, 2024
-- **Details:** Anomalib received the passing grade for the [Open Source Initiative Best Practices Badge](https://opensource.org/best-practices-badge). This badge recognizes our commitment to high-quality coding standards and community engagement.
+- **Details:** Anomalib received the passing grade for the [OpenSSF Best Practices Badge](https://www.bestpractices.dev/en/projects/8330). This badge recognizes our commitment to high-quality coding standards and community engagement.
 
-[Learn more about this award](https://opensource.org/best-practices-badge)
+[Learn more about the OpenSSF Best Practices program](https://www.bestpractices.dev/)
 :::
 
 ---

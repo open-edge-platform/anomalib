@@ -3,9 +3,9 @@
 
 """MVTec AD Data Module.
 
-This module provides a PyTorch Lightning DataModule for the MVTec AD dataset.
-Automatic downloads are temporarily unavailable because the upstream links are
-broken. Download and extract the dataset manually before use.
+This module provides a PyTorch Lightning DataModule for the MVTec AD dataset. If
+the dataset is not available locally, it will be downloaded and extracted
+automatically.
 
 Example:
     Create a MVTec AD datamodule::
@@ -17,8 +17,8 @@ Example:
         ... )
 
 Notes:
-    Download the dataset from https://www.mvtec.com/research-teaching/datasets/mvtec-ad
-    and extract it under ``root``. The expected directory structure is::
+    The dataset will be automatically downloaded and converted to the required
+    format when first used. The directory structure after preparation will be::
 
         datasets/
         └── MVTecAD/
@@ -52,7 +52,7 @@ from torchvision.transforms.v2 import Transform
 
 from anomalib.data.datamodules.base.image import AnomalibDataModule
 from anomalib.data.datasets.image.mvtecad import MVTecADDataset
-from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode
+from anomalib.data.utils import DownloadInfo, Split, TestSplitMode, ValSplitMode, download_and_extract
 from anomalib.utils.path import resolve_dataset_root
 
 logger = logging.getLogger(__name__)
@@ -60,7 +60,7 @@ logger = logging.getLogger(__name__)
 
 DOWNLOAD_INFO = DownloadInfo(
     name="mvtecad",
-    url="https://www.mydrive.ch/shares/150996/b52ecdcbf521176e9db9c731f2304b27/"
+    url="https://www.mydrive.ch/shares/163178/c8212c2166a9e4dfe22dd1bed476a345/"
     "download/420938113-1629960298/mvtec_anomaly_detection.tar.xz",
     hashsum="cf4313b13603bec67abb49ca959488f7eedce2a9f7795ec54446c649ac98cd3d",
 )
@@ -191,20 +191,30 @@ class MVTecAD(AnomalibDataModule):
         )
 
     def prepare_data(self) -> None:
-        """Check that the manually downloaded dataset is available.
+        """Download the dataset if not available.
 
-        Raises:
-            FileNotFoundError: If the requested category directory is missing.
+        This method checks if the specified dataset is available in the file
+        system. If not, it downloads and extracts the dataset into the
+        appropriate directory.
+
+        Example:
+            Assume the dataset is not available on the file system::
+
+                >>> datamodule = MVTecAD(
+                ...     root="./datasets/MVTecAD",
+                ...     category="bottle"
+                ... )
+                >>> datamodule.prepare_data()
+
+            Directory structure after download::
+
+                datasets/
+                └── MVTecAD/
+                    ├── bottle/
+                    ├── cable/
+                    └── ...
         """
         if (self.root / self.category).is_dir():
             logger.info("Found the dataset.")
         else:
-            # TODO(ashwinvaidya17): Restore autodownload once upstream links work.
-            # https://github.com/open-edge-platform/anomalib/issues/3892
-            msg = (
-                "MVTec AD automatic download is temporarily unavailable because upstream links are broken. "
-                "Download the dataset from https://www.mvtec.com/research-teaching/datasets/mvtec-ad "
-                f"and extract it so that '{self.root / self.category}' exists. "
-                "See https://github.com/open-edge-platform/anomalib/issues/3892."
-            )
-            raise FileNotFoundError(msg)
+            download_and_extract(self.root, DOWNLOAD_INFO)

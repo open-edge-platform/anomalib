@@ -30,6 +30,20 @@ describe('Zoom', () => {
         });
     });
 
+    it('Fits large images below the interactive zoom limits', () => {
+        vi.mocked(useContainerSize).mockImplementation(() => ({ width: 1000, height: 1000 }));
+
+        render(
+            <ZoomProvider>
+                <ZoomTransform target={{ width: 20000, height: 1000 }}>Content</ZoomTransform>
+            </ZoomProvider>
+        );
+
+        expect(screen.getByTestId('zoom-transform')).toHaveStyle({
+            transform: 'translate(-9500px, 0px) scale(0.045)',
+        });
+    });
+
     it('Clamps scale and translations to boundaries', () => {
         const { result } = renderHook(() => ({ zoom: useZoom(), setZoom: useSetZoom() }), { wrapper: ZoomProvider });
 
