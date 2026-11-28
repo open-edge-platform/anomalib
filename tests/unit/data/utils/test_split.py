@@ -38,11 +38,12 @@ class TestRandomSplit:
     """Tests for the ``random_split`` function."""
 
     @staticmethod
-    def test_ratio_preserves_total_length(tmp_path: Path) -> None:
-        """Split subsets must add up to the source dataset."""
+    @pytest.mark.parametrize("ratios", [[0.6, 0.4], [0.33, 0.56, 0.11]])
+    def test_ratio_preserves_total_length(tmp_path: Path, ratios: list[float]) -> None:
+        """Valid ratios must produce one subset each and retain every sample."""
         dataset = _make_folder_dataset(tmp_path, num_normal=8, num_abnormal=4)
-        splits = random_split(dataset, [0.6, 0.4], seed=42)
-        assert len(splits) == 2
+        splits = random_split(dataset, ratios, seed=42)
+        assert len(splits) == len(ratios)
         assert sum(len(split) for split in splits) == len(dataset)
 
     @staticmethod
@@ -68,11 +69,12 @@ class TestRandomSplit:
             assert set(split.samples["label_index"]) == {0, 1}
 
     @staticmethod
-    def test_invalid_ratio_sum_raises(tmp_path: Path) -> None:
+    @pytest.mark.parametrize("ratios", [[0.5, 0.4], [0.6, 0.40000000001]])
+    def test_invalid_ratio_sum_raises(tmp_path: Path, ratios: list[float]) -> None:
         """Ratios that do not sum to 1 must raise a ``ValueError``."""
         dataset = _make_folder_dataset(tmp_path, num_normal=4, num_abnormal=0)
         with pytest.raises(ValueError, match="must sum to 1"):
-            random_split(dataset, [0.5, 0.4])
+            random_split(dataset, ratios)
 
     @staticmethod
     def test_seed_zero_is_reproducible(tmp_path: Path) -> None:
