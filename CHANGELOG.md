@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- 🐞 **utils**: Fall back to a text pointer for versioned output on Windows when symlinks are unavailable and directory names are rejected by junction command validation by @A-P-S-Bhaidav in https://github.com/open-edge-platform/anomalib/pull/3889
+
 ## [v2.8.0] - 2026-11-27
 
 ### Added
