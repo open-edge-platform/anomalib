@@ -5,8 +5,8 @@
 
 Description:
     This script contains PyTorch Dataset, Dataloader and PyTorch Lightning
-    DataModule for the MVTec LOCO AD dataset. Download and extract the dataset manually
-    before use; automatic downloads are unavailable because the upstream links are broken.
+    DataModule for the MVTec LOCO AD dataset. If the dataset is not on the file system,
+    the script downloads and extracts the dataset and create PyTorch data objects.
 
 License:
     MVTec LOCO AD dataset is released under the Creative Commons
@@ -48,7 +48,7 @@ IMG_EXTENSIONS = (".png", ".PNG")
 
 DOWNLOAD_INFO = DownloadInfo(
     name="mvtec_loco",
-    url="https://www.mydrive.ch/shares/48237/1b9106ccdfbb09a0c414bd49fe44a14a/download/430647091-1646842701"
+    url="https://www.mydrive.ch/shares/163663/e972fe04448cd278322578432afeb997/download/430647091-1646846593"
     "/mvtec_loco_anomaly_detection.tar.xz",
     hashsum="9e7c84dba550fd2e59d8e9e231c929c45ba737b6b6a6d3814100f54d63aae687",
 )

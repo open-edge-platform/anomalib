@@ -31,7 +31,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-import tifffile as tiff
+import tifffile
 import torch
 from matplotlib.figure import Figure
 from PIL import Image
@@ -297,6 +297,37 @@ def get_image_height_and_width(image_size: int | Sequence[int]) -> tuple[int, in
     return height_and_width
 
 
+def _read_high_bit_depth_tiff(path: Path) -> np.ndarray | None:
+    """Read a grayscale or RGB TIFF above 8 bits as ``[H, W, 3]`` float32 in ``[0, 1]``.
+
+    Pillow's RGB conversion loses precision for these images. Other TIFFs (8-bit,
+    bilevel, palette, CMYK, ...) return ``None`` so Pillow handles their photometric
+    conversion.
+    """
+    with tifffile.TiffFile(path) as tif:
+        page = tif.pages.first
+        photometric = page.photometric
+        if photometric not in {tifffile.PHOTOMETRIC.MINISBLACK, tifffile.PHOTOMETRIC.RGB}:
+            return None
+        if page.dtype is None or page.dtype in {np.dtype(np.uint8), np.dtype(np.int8), np.dtype(bool)}:
+            return None
+        image = page.asarray()
+        if page.planarconfig == tifffile.PLANARCONFIG.SEPARATE and image.ndim == 3:
+            image = np.moveaxis(image, 0, -1)
+
+    if image.ndim == 2:
+        image = image[..., None]
+    # Drop alpha/extra samples; expand grayscale to RGB.
+    image = image[..., :3] if photometric == tifffile.PHOTOMETRIC.RGB else np.repeat(image[..., :1], 3, axis=-1)
+
+    if np.issubdtype(image.dtype, np.integer):
+        scale = float(np.iinfo(image.dtype).max)
+    else:
+        max_val = float(np.max(image))
+        scale = max_val if max_val > 1.0 else 1.0
+    return np.clip(image.astype(np.float32) / scale, 0.0, 1.0)
+
+
 def read_image(path: str | Path, as_tensor: bool = False) -> torch.Tensor | np.ndarray:
     """Read RGB image from disk.
 
@@ -316,8 +347,15 @@ def read_image(path: str | Path, as_tensor: bool = False) -> torch.Tensor | np.n
         >>> type(image)
         <class 'torch.Tensor'>
     """
-    image = Image.open(path).convert("RGB")
-    return to_dtype(to_image(image), torch.float32, scale=True) if as_tensor else np.array(image) / 255.0
+    path = Path(path)
+    image_np = _read_high_bit_depth_tiff(path) if path.suffix.lower() in {".tiff", ".tif"} else None
+    if image_np is not None:
+        image = torch.from_numpy(image_np).permute(2, 0, 1) if as_tensor else image_np
+    else:
+        with Image.open(path) as pil_image:
+            rgb_image = pil_image.convert("RGB")
+        image = to_dtype(to_image(rgb_image), torch.float32, scale=True) if as_tensor else np.array(rgb_image) / 255.0
+    return image
 
 
 def read_mask(path: str | Path, as_tensor: bool = False) -> torch.Tensor | np.ndarray:
@@ -358,7 +396,7 @@ def read_depth_image(path: str | Path) -> np.ndarray:
         <class 'numpy.ndarray'>
     """
     path = path if isinstance(path, str) else str(path)
-    return tiff.imread(path)
+    return tifffile.imread(path)
 
 
 def pad_nextpow2(batch: torch.Tensor) -> torch.Tensor:
