@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2025 Intel Corporation
+# Copyright (C) 2022-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """PyTorch model for Deep Feature Modeling (DFM).
@@ -207,11 +207,10 @@ class DFMModel(nn.Module):
         """
         with torch.no_grad():
             features = self.feature_extractor(batch)[self.layer]
-            batch_size = len(features)
             if self.pooling_kernel_size > 1:
                 features = F.avg_pool2d(input=features, kernel_size=self.pooling_kernel_size)
             feature_shapes = features.shape
-            features = features.view(batch_size, -1)
+            features = features.flatten(1)
         return features, feature_shapes
 
     def forward(self, batch: torch.Tensor) -> torch.Tensor | InferenceBatch:

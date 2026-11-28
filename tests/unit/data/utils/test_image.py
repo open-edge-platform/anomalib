@@ -7,9 +7,10 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
+import tifffile
 from pytest_mock import MockerFixture
 
-from anomalib.data.utils.image import Image, get_image_filenames, np, read_mask, torch
+from anomalib.data.utils.image import Image, get_image_filenames, np, read_image, read_mask, torch
 
 
 class TestGetImageFilenames:
@@ -106,3 +107,90 @@ class TestReadMask:
         assert isinstance(result, torch.Tensor)
         assert result.dtype == torch.uint8
         assert torch.equal(result, torch.tensor([[0, 1], [1, 0]], dtype=torch.uint8))
+
+
+class TestReadImage:
+    """Tests for ``read_image`` function."""
+
+    @staticmethod
+    def test_read_16bit_tiff(tmp_path: Path) -> None:
+        """Test ``read_image`` correctly reads 16-bit grayscale TIFF without losing precision."""
+        test_file = tmp_path / "test_16bit.tiff"
+        data_16bit = np.array([[0, 32767], [65535, 0]], dtype=np.uint16)
+        tifffile.imwrite(test_file, data_16bit)
+
+        img_np = read_image(test_file, as_tensor=False)
+        assert img_np.shape == (2, 2, 3)
+        assert img_np.dtype == np.float32
+
+        # Verify min/max scaling
+        np.testing.assert_allclose(img_np[0, 1], np.full(3, 32767 / 65535, dtype=np.float32), rtol=0, atol=1e-6)
+        assert np.isclose(img_np.max(), 1.0)
+        assert np.isclose(img_np.min(), 0.0)
+
+        img_tensor = read_image(test_file, as_tensor=True)
+        assert img_tensor.shape == (3, 2, 2)
+        assert img_tensor.dtype == torch.float32
+        torch.testing.assert_close(
+            img_tensor[:, 0, 1],
+            torch.full((3,), 32767 / 65535, dtype=torch.float32),
+            rtol=0,
+            atol=1e-6,
+        )
+        assert torch.isclose(img_tensor.max(), torch.tensor(1.0))
+
+    @staticmethod
+    def test_read_planar_rgb_tiff(tmp_path: Path) -> None:
+        """Test ``read_image`` returns channel-last data for planar 16-bit RGB TIFFs."""
+        test_file = tmp_path / "planar.tiff"
+        data = np.zeros((3, 4, 5), dtype=np.uint16)
+        data[0] = 65535
+        tifffile.imwrite(test_file, data, photometric="rgb", planarconfig="separate")
+
+        img = read_image(test_file, as_tensor=True)
+        assert img.shape == (3, 4, 5)
+        assert torch.all(img[0] == 1.0)
+        assert torch.all(img[1:] == 0.0)
+
+    @staticmethod
+    def test_read_bilevel_tiff(tmp_path: Path) -> None:
+        """Test ``read_image`` reads bilevel TIFFs through Pillow."""
+        test_file = tmp_path / "bilevel.tiff"
+        tifffile.imwrite(test_file, np.array([[True, False], [False, True]]))
+
+        img = read_image(test_file)
+        assert img.shape == (2, 2, 3)
+        # tifffile writes booleans as MINISWHITE, so True decodes to black.
+        np.testing.assert_allclose(img[0, 0], 0.0)
+        np.testing.assert_allclose(img[0, 1], 1.0)
+
+    @staticmethod
+    def test_read_cmyk_tiff(tmp_path: Path) -> None:
+        """Test ``read_image`` keeps photometric conversion for CMYK TIFFs."""
+        test_file = tmp_path / "cmyk.tiff"
+        tifffile.imwrite(test_file, np.zeros((2, 2, 4), dtype=np.uint8), photometric="separated")
+
+        np.testing.assert_allclose(read_image(test_file), 1.0)
+
+    @staticmethod
+    def test_read_negative_float_tiff(tmp_path: Path) -> None:
+        """Test ``read_image`` bounds float TIFFs with negative values to [0, 1]."""
+        test_file = tmp_path / "negative.tiff"
+        tifffile.imwrite(test_file, np.array([[-1.0, 0.0, 1.0]], dtype=np.float32))
+
+        img = read_image(test_file)
+        assert img.min() == 0.0
+        assert img.max() == 1.0
+
+    @staticmethod
+    def test_read_32bit_tiff(tmp_path: Path) -> None:
+        """Test ``read_image`` correctly reads 32-bit float grayscale TIFF."""
+        test_file = tmp_path / "test_32bit.tiff"
+        data_32bit = np.array([[0.0, 0.5], [1.0, 0.0]], dtype=np.float32)
+        tifffile.imwrite(test_file, data_32bit)
+
+        img_np = read_image(test_file, as_tensor=False)
+        assert img_np.shape == (2, 2, 3)
+        assert img_np.dtype == np.float32
+        assert np.isclose(img_np.max(), 1.0)
+        assert np.isclose(img_np.min(), 0.0)
