@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- 🐞 **metric**: Handle floating-point scores and integer masks in PRO by @A-P-S-Bhaidav in https://github.com/open-edge-platform/anomalib/pull/3906
+
 ## [v2.8.0] - 2026-11-27
 
 ### Added
