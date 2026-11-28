@@ -190,9 +190,11 @@ runs:
           xdist_args="--numprocesses=0"
         fi
 
-        # Run pytest
+        # Run pytest, stopping at the first failing test (--exitfirst) so a
+        # broken run reports back quickly instead of finishing the suite.
         # shellcheck disable=SC2086 # intentional word-splitting for xdist_args
         PYTHONPATH=src pytest "$STEPS_TEST_SCOPE_OUTPUTS_PATH" \
+          --exitfirst \
           ${xdist_args} \
           --durations=10 \
           --durations-min=1.0 \
