@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useMemo, useRef } from 'react';
 
 import { useContainerSize } from './use-container-size';
-import { useSetZoom, useZoom } from './zoom';
+import { useSetFitZoom, useZoom } from './zoom';
 
 import classes from './zoom.module.scss';
 
@@ -24,7 +24,7 @@ const getCenterCoordinates = (container: Size, target: Size) => {
 
 const INITIAL_ZOOM = { scale: 1.0, translate: { x: 0, y: 0 } };
 const SyncZoom = ({ container, target }: { container: Size; target: Size }) => {
-    const setZoom = useSetZoom();
+    const setZoom = useSetFitZoom();
 
     const targetZoom = useMemo(() => {
         if (container.width === undefined || container.height === undefined) {
